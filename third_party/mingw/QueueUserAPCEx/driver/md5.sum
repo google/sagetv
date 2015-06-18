@@ -1,0 +1,7 @@
+277517b4ea054b293c4ed298ff2c79eb  MAKEFILE
+2db68a394d276980e8d5ff63746b7700  Sources
+4c3cb5ed88d3acc8d234610f6fb21e56  alertdrv.c
+979508ac1f30dda63fd9cbff00a75936  alertdrv.ini
+dbd2cc8498ae8a73205c35ab8f684ada  alertdrv.rc
+6dbb0a2e765ea57a4bf93fa522ba05ef  alertdrv.reg
+b3e4bebcd2de8f0d80e9b82d2d34d299  install.bat

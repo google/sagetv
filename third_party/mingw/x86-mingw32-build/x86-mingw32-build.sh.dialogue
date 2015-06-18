@@ -1,0 +1,405 @@
+# x86-mingw32-build.sh.dialogue -- vim: filetype=sh
+# $Id: x86-mingw32-build.sh.dialogue,v 1.1 2009-02-11 00:08:33 dave Exp $
+#
+# Manage dialogue for interactive execution of x86-mingw32-build script.
+#
+# Copyright (C) 2006, MinGW Project
+# Written by Keith Marshall <keithmarshall@users.sourceforge.net>
+#
+# This file is a component of the x86-mingw32-build script; it is not
+# intended for stand alone use.
+# 
+# x86-mingw32-build is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by the
+# Free Software Foundation; either version 2, or (at your option) any later
+# version.
+# 
+# x86-mingw32-build is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for further details.
+# 
+# You should have received a copy of the GNU General Public License along
+# with x86-mingw32-build; see the file COPYING.  If not, write to the Free
+# Software Foundation, 51 Franklin St - Fifth Floor, Boston, MA 02110-1301,
+# USA.
+
+BUILD_METHOD=interactive
+
+ask "
+ This script will build and install a locally hosted cross-compiler for the
+ $TARGET target.  This comprises the following components:--
+
+    binutils    assembler, linker and library management tools; these
+                must be built for the $TARGET target, and should be
+                installed prior to building GCC itself.
+
+    headers     the header files for the mingwrt and the w32api
+                libraries; these too, are best installed before GCC
+                is built.
+
+    gcc         the GCC compiler itself, complete with all supported
+                source language packages.
+
+    w32api      the runtime libraries supporting the Win32 API.
+
+    mingwrt
+                additional libraries specific to the $TARGET target.
+
+ For a first time installation, you should build all of the above.  On the
+ other hand, if you are upgrading an existing installation, you may wish to
+ select components individually, to reduce the build time.
+
+ Do you wish to select components individually?" "NO" REPLY \?
+
+if isyes $REPLY
+then echo; BUILD_COMPONENTS=`for COMPONENT in $BUILD_COMPONENTS
+do ask >&2 " Would you like to build the \`quote $COMPONENT\` component?" \
+    "YES" REPLY; isyes $REPLY && echo $COMPONENT
+done`
+fi
+
+echo "
+ Before proceeding to build the cross-compiler, the following packages must
+ be downloaded to a local package directory of your choice:--
+"
+case $BUILD_COMPONENTS in *gcc*) echo "\
+    gcc-core-$GCC_VERSION.tar.bz2"
+esac
+case $BUILD_COMPONENTS in *binutils*) echo "\
+    binutils-$BINUTILS_VERSION-src.tar.gz"
+esac
+case $BUILD_COMPONENTS in *headers* | *mingwrt*) echo "\
+    mingwrt-$RUNTIME_VERSION-mingw32-src.tar.gz"
+esac
+case $BUILD_COMPONENTS in *headers* | *w32api*) echo "\
+    w32api-$W32API_VERSION-src.tar.gz"
+esac
+ask "
+ Each of these packages is obtainable from the MinGW project download page,
+ found at https://sourceforge.net/project/showfiles.php?group_id=2435.  I can
+ automatically download each of the versions specified above; alternatively
+ you may choose to manually download these, or any alternative versions of
+ your choice; you are advised to choose the most recent versions published
+ under the \`Current' package designation.
+
+ Should I select the source packages for building the cross compiler by:--
+   1) Using exactly the above versions, downloading if necessary, or...
+   2) Selecting from existing versions in your package directory?
+
+ Please enter your preferred option:" 1 REPLY \:
+
+until test $REPLY = 1 || test $REPLY = 2
+do ask "$INVALID_CHOICE `fixrange 1 2`" "1" REPLY \:; done
+
+if test $REPLY = 1
+then
+  case $BUILD_COMPONENTS in *gcc*)
+    option DOWNLOAD gcc-core-$GCC_VERSION.tar.bz2
+  esac
+  case $BUILD_COMPONENTS in *binutils*)
+    option DOWNLOAD binutils-$BINUTILS_VERSION-src.tar.gz
+  esac
+  case $BUILD_COMPONENTS in *headers* | *mingwrt*)
+    option DOWNLOAD mingwrt-$RUNTIME_VERSION-mingw32-src.tar.gz
+  esac
+  case $BUILD_COMPONENTS in *headers* | *w32api*)
+    option DOWNLOAD w32api-$W32API_VERSION-src.tar.gz
+  esac
+
+case $BUILD_COMPONENTS in *gcc*)
+ask "
+ The mandatory packages listed above are sufficient to build a \`C' language
+ compiler only.  You may also require one or more of the following additional
+ packages, if you wish to add support for other optional languages:--
+
+    gcc-ada-$GCC_VERSION.tar.bz2      (ada)
+    gcc-g++-$GCC_VERSION.tar.bz2      (C++)
+    gcc-g77-$GCC_VERSION.tar.bz2      (f77, i.e. FORTRAN-77)
+    gcc-java-$GCC_VERSION.tar.bz2     (java)
+    gcc-objc-$GCC_VERSION.tar.bz2     (objc, i.e. Objective-C)
+
+ Would you like me to download any of these optional language packages?
+" YES REPLY \?
+
+GCC_LANGUAGE_SET=c
+isyes $REPLY && { echo
+for COMPONENT in $GCC_LANGUAGE_OPTIONS; do ask "\
+ Do you require support for language \`$COMPONENT'?" YES REPLY
+  if isyes $REPLY
+  then
+    option GCC_LANGUAGE_SET $COMPONENT \,
+    case $COMPONENT in c++) COMPONENT=g++ ;; f77) COMPONENT=g77 ;; esac
+    option DOWNLOAD gcc-$COMPONENT-$GCC_VERSION.tar.bz2
+  fi
+done; }
+esac
+
+ask "
+ Which directory should I use for the local package repository?
+ (If this doesn't exist, it will be created before downloading).
+" "$PACKAGE_DIR" PACKAGE_DIR \?
+
+else echo "
+ You have chosen not to download any new packages at this time;
+ to continue, you must already have the necessary packages available, in
+ some suitable package repository.  If these have not yet been downloaded,
+ please do that now; you may get them from:--
+
+    https://sourceforge.net/project/showfiles.php?group_id=2435
+
+ For reference, here is the list of mandatory packages again;
+ (remember, you may substitute alternative versions, if preferred):--
+"
+ALLOW_DOWNLOADS=NO
+case $BUILD_COMPONENTS in *gcc*) echo "\
+    gcc-core-$GCC_VERSION.tar.bz2"
+esac
+case $BUILD_COMPONENTS in *binutils*) echo "\
+    binutils-$BINUTILS_VERSION-src.tar.gz"
+esac
+case $BUILD_COMPONENTS in *headers* | *mingwrt*) echo "\
+    mingwrt-$RUNTIME_VERSION-mingw32-src.tar.gz"
+esac
+case $BUILD_COMPONENTS in *headers* | *w32api*) echo "\
+    w32api-$W32API_VERSION-src.tar.gz"
+esac
+case $BUILD_COMPONENTS in *gcc*) echo "
+ In addition to these, you may also require any of these optional extra
+ packages, if you want your cross-compiler to support other languages,
+ in addition to \`C'; (if you chose an alternative \`gcc-core' version,
+ then you must use the same version of these supplementary packages):--
+
+    gcc-ada-$GCC_VERSION.tar.bz2      (ada)
+    gcc-g++-$GCC_VERSION.tar.bz2      (C++)
+    gcc-g77-$GCC_VERSION.tar.bz2      (f77, i.e. FORTRAN-77)
+    gcc-java-$GCC_VERSION.tar.bz2     (java)
+    gcc-objc-$GCC_VERSION.tar.bz2     (objc, i.e. Objective-C)
+"
+esac
+ask "\
+ In which directory will I find these compiler source packages?
+" "$PACKAGE_DIR" PACKAGE_DIR \?
+
+ask "
+ Do you wish to quit this script, while you download packages for me?
+" NO REPLY \?
+ isyes $REPLY && die 1 "
+$script: quitting at user's request"
+
+test -d "$PACKAGE_DIR" && cd "$PACKAGE_DIR" || die 2 "
+$script: sorry, `quote $PACKAGE_DIR` does not seem to exist
+$script: I cannot continue with this build
+"
+
+ask "
+ I can automatically select the language components to build, based
+ on the packages you have downloaded, or, if you prefer, I can let you
+ select languages individually.
+
+ Would you prefer to select languages individually?" "NO" REPLY \?
+
+isyes $REPLY && echo
+GCC_LANGUAGE_SET=c CHOOSE=YES
+for COMPONENT in $GCC_LANGUAGE_OPTIONS
+do
+  case $COMPONENT in 'c++') FILE='g++' ;; 'f77') FILE='g77' ;;
+    *) FILE=$COMPONENT ;;
+  esac
+  if test -r $PACKAGE_DIR/gcc-$FILE-$GCC_VERSION.tar.bz2
+  then
+    if isyes $REPLY
+    then
+      ask "\
+ Should I build language component `quote $COMPONENT`"\? YES CHOOSE \?
+    fi
+    if isyes $CHOOSE
+    then
+      option GCC_LANGUAGE_SET $COMPONENT \,
+      option EXTRA_DOWNLOADS $FILE
+    fi
+  fi
+done
+fi
+
+isyes "$ALLOW_DOWNLOADS" && . $script.mirrors
+
+for OPTION in $GLOBAL_USER_OPTIONS
+do case $OPTION in
+#
+# Activate user configurable global options, as directed by the user.
+#
+   *disable-nls) ask "
+ The standard binary distribution of MinGW does not offer diagnostic
+ messages in any language but US English; if this is not your native
+ language, then you may prefer to enable National Language Support.
+
+ Would you like to enable NLS for your cross compiler?
+" "NO" REPLY \?; isyes $REPLY || option GLOBAL_BASE_OPTIONS $OPTION ;;
+
+   *disable-shared) ask "
+ Additionally, the standard binary distribution of the MinGW compiler
+ does not take advantage of any shared libraries which may be installed
+ on its Win32 host; (this is to avoid problems, should it be installed
+ on a host where an expected library is missing).  If you are building
+ this cross compiler on the host where it will run, you may prefer to
+ take advantage of shared libraries.
+
+ Would you like to use shared libraries available on this host?
+" "YES" REPLY \?; isyes $REPLY || option GLOBAL_BASE_OPTIONS $OPTION ;;
+
+   *) option GLOBAL_BASE_OPTIONS $OPTION ;;
+
+   esac
+done
+
+for OPTION in $BINUTILS_USER_OPTIONS
+do case $OPTION in
+#
+# Activate user configurable binutils options, as directed by the user.
+#
+   *) option BINUTILS_BASE_OPTIONS $OPTION ;;
+
+   esac
+done
+
+case $GCC_LANGUAGE_SET in *c++*)
+#
+# Add the `C++' build options to the base option set, only if the
+# `C++' compiler is to be built.
+#
+  option GCC_BASE_OPTIONS "$GCC_CXX_BASE_OPTIONS"
+  option GCC_USER_OPTIONS "$GCC_CXX_USER_OPTIONS" ;;
+esac
+
+case $GCC_LANGUAGE_SET in *java*)
+#
+# Add the `java' build options to the base option set, only if the
+# `GCJ' compiler is to be built.
+#
+  option GCC_BASE_OPTIONS "$GCC_JAVA_BASE_OPTIONS"
+  option GCC_USER_OPTIONS "$GCC_JAVA_USER_OPTIONS" ;;
+esac
+
+for OPTION in `
+case $BUILD_COMPONENTS in *gcc*) echo $GCC_USER_OPTIONS ;; esac`
+do case $OPTION in
+#
+# Activate user configurable GCC options, as directed by the user.
+#
+   *enable-sjlj-exceptions) ask "
+ Currently, the standard MinGW compiler uses the setjmp/longjmp model
+ for exception handling.  For compatibility, it is recommended that you
+ should build your cross compiler to use this same model; however, you
+ may, if you wish, use the experimental dwarf-2 model instead.
+
+ Do you wish to retain the standard setjmp/longjmp exception handler?
+" "YES" REPLY \?; isyes $REPLY && option GCC_BASE_OPTIONS $OPTION ;;
+
+   *) option GCC_BASE_OPTIONS $OPTION ;;
+
+   esac
+done
+
+if test -z "$DOWNLOAD"; then 
+CHOOSE_FROM="
+ There is a choice of"
+PACKAGE_CHOICES="packages in $PACKAGE_DIR;
+ I require only one of the following, to complete this build:--
+"
+SELECT_OPTION="
+ Please enter the index number, indicating which I should use:"
+SELECTING_PACKAGE="
+ There is only one"
+FROM_SOLE_CHOICE="package in $PACKAGE_DIR;
+ I will use the following package, to complete this build:--
+"
+BUILDING_PACKAGE="
+ Package selection confirmed;
+ you have chosen to build"
+FROM_SELECTION="using the following package:--
+"
+MISSING_PACKAGE="
+ Oops, there is no"
+FAILED_SELECTION="package in $PACKAGE_DIR;
+ Sorry, I cannot continue with this build.
+"
+
+for COMPONENT in $BUILD_COMPONENTS
+do
+  case $COMPONENT in
+    headers) continue ;;
+    binutils | gcc | mingwrt | w32api) ;;
+    *) die 2 \
+    "$script: configuration error; unknown component `quote $COMPONENT`" ;;
+  esac
+  VERSION_TAG=`echo $COMPONENT | sed 's?^.*-??' | tr a-z A-Z`_VERSION
+  test x$COMPONENT = xgcc && BASE_PACKAGE=gcc-core || BASE_PACKAGE=$COMPONENT
+  choose $COMPONENT $VERSION_TAG $BASE_PACKAGE $PACKAGE_DIR src.tar.gz
+  eval 'option DOWNLOAD $BASE_PACKAGE-$'$VERSION_TAG'-src.tar.gz'
+  test x$COMPONENT = xgcc && for FILE in $EXTRA_DOWNLOADS
+    do option DOWNLOAD gcc-$FILE-$GCC_VERSION.tar.bz2
+    done
+done
+fi
+
+ask "
+ Where should I install the cross-compiler, and its support tools?
+ (This directory will be created, if necessary, to allow the
+  installation to be completed).
+" "$INSTALL_DIR" INSTALL_DIR \?
+
+ask "
+ Which directory should I use to create the build tree?
+ (This is required during the build process; it should be a directory
+  which will be used exclusively for building the cross-compiler, and
+  will be created, if necessary; it may be optionally removed after
+  successful completion of the build and installation process).
+" "$WORKING_DIR" WORKING_DIR \?
+
+REPLY=MAYBE CLEAN_SLATE_AT_START="" CLEAN_SLATE_ON_EXIT=""
+echo "$WORKING_DIR"/* | grep \* > /dev/null 2>&1 || ask "
+ There are existing files in the nominated build tree.
+
+ When starting a new build, it is recommended that the build tree
+ should be completely erased first.  On the other hand, if you are
+ resuming a partially completed build, you should NOT accept this
+ offer to clear the build tree.
+
+ Should I clear the build tree, to start with a clean slate?
+" YES REPLY \?
+isyes "$REPLY" && CLEAN_SLATE_AT_START="rm -rf '$WORKING_DIR'"
+
+test "$REPLY" = MAYBE && REPLY=YES; isyes "$REPLY" || ask "
+ You have chosen not to erase the existing contents of the build tree;
+ may I safely assume that the build tree contains only artifacts from
+ a previous cross-compiler build?  (If you answer \`NO' to this, then
+ I will not continue this build; you should start again, specifying a
+ different build directory).
+" YES REPLY \?
+isyes "$REPLY" || die 1 "
+$script: build cancelled at user's request
+"
+ask "
+ You may choose whether you would like me to leave a clean slate,
+ after I have successfully completed the build and installation, or
+ if you would like to keep the build files for future reference.
+
+ Would you like me to delete all build files, when I'm done?
+" YES REPLY \?
+isyes "$REPLY" && CLEAN_SLATE_ON_EXIT="rm -rf '$WORKING_DIR'"
+
+( cd $CURDIR && . $script.detail > $script.log )
+
+ask "
+ Interactive setup for $TARGET cross compiler build completed.
+
+ Selected components: `echo $BUILD_COMPONENTS`
+ Selected languages:  $GCC_LANGUAGE_SET
+
+ Ok to commence building?" "YES" REPLY \?
+
+isyes $REPLY || die 1 "
+$script: build cancelled at user's request
+"
+# $RCSfile: x86-mingw32-build.sh.dialogue,v $Revision: 1.1 $: end of file

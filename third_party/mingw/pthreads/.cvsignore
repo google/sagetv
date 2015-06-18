@@ -1,0 +1,6 @@
+*.a
+*.dll
+*.stamp
+*.o
+*.def
+

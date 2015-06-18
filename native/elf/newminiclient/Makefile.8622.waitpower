@@ -1,0 +1,16 @@
+COMPILKIND=debug
+LINUX_KERNEL=/sage/dlink/uClinux-sigma/uClinux-2.4
+
+CC=arm-elf-gcc
+CFLAGS = -D_DEBUG -DEM86 -Os -c -D_FILE_OFFSET_BITS=64 -I/sage/mrua/mrua_EM8622L_2.8.2.0_dev.arm.bootirq.nodts/MRUA_src/ -DEM86XX_CHIP=EM86XX_CHIPID_TANGO15 -DEM86XX_REVISION=66 -DEM86XX_MODE=EM86XX_MODEID_STANDALONE -DLLAD_DIRECT -D__arm__ -I/sage/hdextender/apps/openssl-0.9.8d/include/ -DDEMUX_PSF=1 -DWITHOUT_DTS=1 -DEM8622DEMUX -DWAITPOWER
+BINDIR=/usr/local/bin
+
+OBJFILES=waitpower.o EM86/EM86input.o
+
+all: waitpower
+
+waitpower: $(OBJFILES)
+	$(CC) -Wl,-elf2flt="-s32768" -o waitpower $(OBJFILES)
+
+clean:
+	rm -f *.o waitpower waitpower.gdb *.c~ *.h~ STB/*.o EM86/*.o

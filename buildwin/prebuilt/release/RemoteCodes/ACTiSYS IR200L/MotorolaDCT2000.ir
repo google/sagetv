@@ -1,0 +1,30 @@
+MotorolaDCT2000 37616 411 3 600 1000
+1 258 n 00 00 c0 ff fd df ef f7 fb fd 7e bf df ef f7 fb bf ff fb bf ff fb
+ 253 r 00 00 c0 ef
+4 248 n 00 00 c0 ff fd 7e ff f7 fb fd 7e bf df ef f7 fb fd fe ef ff fe
+ 248 r 00 00 c0 ef
+6 253 n 00 00 c0 ff fd fe ef ff 7e bf df ef f7 fb fd 7e bf ff fb fd df
+ 248 r 00 00 c0 ef
+7 258 n 00 00 c0 ff fd df ff fd df ef f7 fb fd 7e bf df ef ff 7e bf ff fb
+ 253 r 00 00 c0 ef
+5 258 n 00 00 c0 ff fd df ef ff 7e bf df ef f7 fb fd 7e ff f7 7f bf ff fb
+ 253 r 00 00 c0 ef
+8 243 n 00 00 c0 ff fd 7e bf ff fb fd 7e bf df ef f7 fb fd 7e ff f7
+ 248 r 00 00 c0 ef
+3 258 n 00 00 c0 ff fd df ff fd 7e bf df ef f7 fb fd 7e ff f7 fb bf ff fb
+ 253 r 00 00 c0 ef
+9 258 n 00 00 c0 ff fd df ef f7 7f bf df ef f7 fb fd 7e ff f7 7f ff f7 fb
+ 253 r 00 00 c0 ef
+0 233 n 00 00 c0 ff fd 7e bf df ef f7 fb fd 7e bf df ef f7 fb fd
+ 248 r 00 00 c0 ef
+2 253 n 00 00 c0 ff fd fe ef f7 fb fd 7e bf df ef f7 fb fd df ff fd df
+ 248 r 00 00 c0 ef
+Power 253 n 00 00 c0 ff fd fe ef f7 7f bf df ef f7 fb fd 7e bf ff fb bf df
+ 248 r 00 00 c0 ef
+Guide 258 n 00 00 c0 ff fd 7e bf df ff fd df ef f7 fb fd 7e ff f7 fb bf ff fb
+ 248 r 00 00 c0 ef
+Exit 258 n 00 00 c0 ff fd fe ef f7 fb bf df ef f7 fb fd 7e ff f7 fb bf ff fb
+ 248 r 00 00 c0 ef
+Enter 258 n 00 00 c0 ff fd 7e bf df ff fd 7e bf df ef f7 fb bf ff fb bf ff fb
+ 248 r 00 00 c0 ef
+

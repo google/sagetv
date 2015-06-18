@@ -1,0 +1,12 @@
+#! /bin/sh
+set -x
+aclocal -I autotools
+if test "`uname -s`" = Darwin; then
+    glibtoolize --force --copy
+else
+    libtoolize --force --copy
+fi
+autoheader
+automake --add-missing --copy
+autoconf
+rm -f config.cache

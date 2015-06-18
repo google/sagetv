@@ -1,0 +1,16 @@
+CC=mipsel-linux-gcc
+CFLAGS = -msoft-float -D_FILE_OFFSET_BITS=64 -O2 -c -fpic -I/sage/svn/ffmpeg/libavformat -I/sage/svn/ffmpeg/libavutil -I/sage/svn/ffmpeg/libavcodec -I /sage/em8634/newffmpeg3/ -I/sage/svn/ffmpeg
+BINDIR=/usr/local/bin
+LIBRARY=-L/sage/smp86xx/build_mips/uclibclib/lib -L/sage/em8634/newffmpeg3/libavutil -L/sage/em8634/newffmpeg3/libavformat \
+ -L/sage/em8634/newffmpeg3/libavcodec -lavformat -lavcodec -lm -lavutil -lz \
+ /sage/em8634/tremor/.libs/libvorbisidec.a -lm
+OBJFILES=pullreader.o flashmpeg4.o
+
+libPullreader.so: $(OBJFILES)
+	$(CC) -W1 -shared -o libPullreader.so $(OBJFILES) $(LIBRARY) /sage/em8634/newffmpeg3/ffmpegadd.o
+	mipsel-linux-strip --strip-unneeded libPullreader.so
+
+#-lz -lfaac -lfaad -lxvidcore /usr/lib/libx264.a -lmp3lame -la52
+
+clean:
+	rm -f *.o libPullreader.so *.c~ *.h~

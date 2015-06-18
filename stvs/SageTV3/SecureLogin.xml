@@ -1,0 +1,2477 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Module xmlns="urn:tv.sage/stv" Name="SecureLogin" PersistentPrimaryRefs="true">
+ <Menu Name="Main Menu" Sym="OPUS4B-382589">
+  <VideoBackground>false</VideoBackground>
+  <Image Name="SageTVLogo" Sym="OPUS4B-382590">
+   <File>SageLogo256.png</File>
+   <AnchorX>0.5</AnchorX>
+   <AnchorY>0.02</AnchorY>
+   <AnchorPointY>0.0</AnchorPointY>
+   <FixedWidth>0.41</FixedWidth>
+   <FixedHeight>0.15</FixedHeight>
+   <HorizontalAlignment>0.5</HorizontalAlignment>
+   <VerticalAlignment>0.5</VerticalAlignment>
+   <PreserveAspectRatio>true</PreserveAspectRatio>
+   <ResizeImage>true</ResizeImage>
+   <AutoRepeatAction>false</AutoRepeatAction>
+   <BackgroundComponent>false</BackgroundComponent>
+  </Image>
+  <Text Name="Please enter the username and password to access this SageTV server:" Sym="OPUS4B-382591">
+   <AnchorX>0.5</AnchorX>
+   <AnchorY>0.17</AnchorY>
+   <AnchorPointY>0.0</AnchorPointY>
+   <FixedWidth>1.0</FixedWidth>
+   <FixedHeight>0.16</FixedHeight>
+   <AutosizeText>true</AutosizeText>
+   <WrapText>true</WrapText>
+   <TextAlignment>0.5</TextAlignment>
+   <TextShadow>true</TextShadow>
+   <DisableFontScaling>false</DisableFontScaling>
+   <IgnoreThemeProps>true</IgnoreThemeProps>
+   <BackgroundComponent>false</BackgroundComponent>
+   <MouseTransparency>false</MouseTransparency>
+  </Text>
+  <Text Name="Use Pause or Abc/123 to enter text via the number pad." Sym="OPUS4B-382592">
+   <AnchorX>0.5</AnchorX>
+   <AnchorY>0.33</AnchorY>
+   <AnchorPointY>0.0</AnchorPointY>
+   <FixedWidth>1.0</FixedWidth>
+   <FixedHeight>0.07</FixedHeight>
+   <AutosizeText>true</AutosizeText>
+   <WrapText>true</WrapText>
+   <TextAlignment>0.5</TextAlignment>
+   <TextShadow>true</TextShadow>
+   <DisableFontScaling>false</DisableFontScaling>
+   <IgnoreThemeProps>true</IgnoreThemeProps>
+   <BackgroundComponent>false</BackgroundComponent>
+   <MouseTransparency>false</MouseTransparency>
+   <Theme Name="SmallTextTheme" Sym="OPUS4B-382593">
+    <TileBackgroundImage>false</TileBackgroundImage>
+    <StretchBackgroundImage>false</StretchBackgroundImage>
+    <FontSize>=(GetProperty("ui/heading_font_size", 28)*1)*2/3</FontSize>
+    <DisableFontScaling>false</DisableFontScaling>
+   </Theme>
+  </Text>
+  <Item Name="User Name" Sym="OPUS4B-382594">
+   <AnchorY>0.42</AnchorY>
+   <AnchorPointY>0.0</AnchorPointY>
+   <FixedWidth>1.0</FixedWidth>
+   <FixedHeight>0.11</FixedHeight>
+   <Animation>0,60000,0</Animation>
+   <WrapHNav>false</WrapHNav>
+   <WrapVNav>false</WrapVNav>
+   <IgnoreThemeProps>false</IgnoreThemeProps>
+   <BackgroundComponent>false</BackgroundComponent>
+   <MouseTransparency>false</MouseTransparency>
+   <Text Name="Username:" Sym="OPUS4B-382595">
+    <AnchorX>0.0</AnchorX>
+    <AnchorY>0.5</AnchorY>
+    <AnchorPointX>0.0</AnchorPointX>
+    <FixedWidth>0.25</FixedWidth>
+    <AutosizeText>true</AutosizeText>
+    <WrapText>false</WrapText>
+    <TextAlignment>1.0</TextAlignment>
+    <TextShadow>true</TextShadow>
+    <DisableFontScaling>false</DisableFontScaling>
+    <IgnoreThemeProps>false</IgnoreThemeProps>
+   </Text>
+   <Panel Name="UserInputArea" Sym="OPUS4B-382596">
+    <Layout>Horizontal</Layout>
+    <AnchorX>0.97</AnchorX>
+    <AnchorY>0.5</AnchorY>
+    <AnchorPointX>1.0</AnchorPointX>
+    <FixedWidth>0.7</FixedWidth>
+    <FixedHeight>1.0</FixedHeight>
+    <Insets>.01</Insets>
+    <TextAlignment>0.5</TextAlignment>
+    <HideText>true</HideText>
+    <WrapHNav>false</WrapHNav>
+    <WrapVNav>false</WrapVNav>
+    <IgnoreThemeProps>true</IgnoreThemeProps>
+    <Conditional Name="Focused" Sym="OPUS4B-382597">
+     <Branch Name="true" Sym="OPUS4B-382598">
+      <TextInput Name="Username" Sym="OPUS4B-382599">
+       <HideText>false</HideText>
+       <IgnoreThemeProps>true</IgnoreThemeProps>
+      </TextInput>
+      <Shape Ref="11" Name="InputBorder"/>
+      <Panel Ref="12" Name="Cursor"/>
+     </Branch>
+     <Branch Name="else" Sym="OPUS4B-382607">
+      <Action Name="Username" Sym="OPUS4B-382608">
+       <Text Name="" Sym="OPUS4B-382609">
+        <AutosizeText>false</AutosizeText>
+        <WrapText>false</WrapText>
+        <HideText>true</HideText>
+        <TextShadow>false</TextShadow>
+        <DisableFontScaling>false</DisableFontScaling>
+        <IgnoreThemeProps>true</IgnoreThemeProps>
+       </Text>
+      </Action>
+      <Shape Ref="16" Name="InputBorder"/>
+     </Branch>
+    </Conditional>
+   </Panel>
+   <Action Ref="17" Name="&quot;REM If username enter..."/>
+   <Listener Ref="18" Name=""/>
+   <Listener Name="RawKeyboard" Sym="OPUS4B-382626">
+    <ListenerEvent>RawKeyboard</ListenerEvent>
+    <Conditional Name="RawKeyboard" Sym="OPUS4B-382627">
+     <Branch Name="&quot;Tab&quot;" Sym="OPUS4B-382628">
+      <Conditional Name="Size(Username) &gt; 0" Sym="OPUS4B-382629">
+       <Action ID="23" Name="SetFocusForVariable(&quot;EntryField&quot;, &quot;xPwd&quot;)" Sym="OPUS4B-382614">
+        <Action Name="Refresh()" Sym="OPUS4B-382615"/>
+       </Action>
+      </Conditional>
+     </Branch>
+     <Branch Name="&quot;Escape&quot;" Sym="OPUS4B-382630">
+      <Action Name="Username = &quot;&quot;" Sym="OPUS4B-382631">
+       <Action Name="Refresh()" Sym="OPUS4B-382632"/>
+      </Action>
+     </Branch>
+     <Branch Name="&quot;Enter&quot;" Sym="OPUS4B-382633">
+      <Action ID="17" Name="&quot;REM If username entered, set focus to next input field&quot;" Sym="OPUS4B-382611">
+       <Conditional Name="Size(Username) &gt; 0" Sym="OPUS4B-382612">
+        <Branch Name="true" Sym="OPUS4B-382613">
+         <Action Ref="23" Name="SetFocusForVariable(&quot;E..."/>
+        </Branch>
+        <Branch Ref="31" Name="else"/>
+       </Conditional>
+      </Action>
+     </Branch>
+     <Branch Name="else" Sym="OPUS4B-382634">
+      <Action Name="PassiveListen()" Sym="OPUS4B-382635"/>
+     </Branch>
+    </Conditional>
+   </Listener>
+   <Attribute Name="DefaultFocus" Sym="OPUS4B-382636">
+    <Value>true</Value>
+   </Attribute>
+   <Attribute Name="EntryField" Sym="OPUS4B-382637">
+    <Value>"xUser"</Value>
+   </Attribute>
+   <Hook Ref="36" Name="FocusGained"/>
+   <Listener Name="" Sym="OPUS4B-382640">
+    <ListenerEvent>Pause</ListenerEvent>
+    <Action Name="&quot;REM Get user name via NTE entry dialog.&quot;" Sym="OPUS4B-382641">
+     <Action Name="TextEntry = Username" Sym="OPUS4B-382642">
+      <Action Name="DialogTitle = DialogTitleUsername" Sym="OPUS4B-382643">
+       <OptionsMenu Ref="41" Name="TextEntryDialog"/>
+       <Action Name="Username = TextEntry" Sym="OPUS4B-383697">
+        <Action Name="Refresh()" Sym="OPUS4B-383698"/>
+       </Action>
+      </Action>
+     </Action>
+    </Action>
+   </Listener>
+  </Item>
+  <Item Name="Password" Sym="OPUS4B-383699">
+   <AnchorY>0.56</AnchorY>
+   <AnchorPointY>0.0</AnchorPointY>
+   <FixedWidth>1.0</FixedWidth>
+   <FixedHeight>0.11</FixedHeight>
+   <Animation>0,60000,0</Animation>
+   <WrapHNav>false</WrapHNav>
+   <WrapVNav>false</WrapVNav>
+   <IgnoreThemeProps>false</IgnoreThemeProps>
+   <BackgroundComponent>false</BackgroundComponent>
+   <MouseTransparency>false</MouseTransparency>
+   <Text Name="Password:" Sym="OPUS4B-383700">
+    <AnchorX>0.0</AnchorX>
+    <AnchorY>0.5</AnchorY>
+    <AnchorPointX>0.0</AnchorPointX>
+    <FixedWidth>0.25</FixedWidth>
+    <AutosizeText>true</AutosizeText>
+    <WrapText>false</WrapText>
+    <TextAlignment>1.0</TextAlignment>
+    <TextShadow>true</TextShadow>
+    <DisableFontScaling>false</DisableFontScaling>
+    <IgnoreThemeProps>false</IgnoreThemeProps>
+   </Text>
+   <Panel Name="PWDInputArea" Sym="OPUS4B-383701">
+    <Layout>Horizontal</Layout>
+    <AnchorX>0.97</AnchorX>
+    <AnchorY>0.5</AnchorY>
+    <AnchorPointX>1.0</AnchorPointX>
+    <FixedWidth>0.7</FixedWidth>
+    <FixedHeight>1.0</FixedHeight>
+    <Insets>.01</Insets>
+    <TextAlignment>0.5</TextAlignment>
+    <HideText>true</HideText>
+    <WrapHNav>false</WrapHNav>
+    <WrapVNav>false</WrapVNav>
+    <IgnoreThemeProps>true</IgnoreThemeProps>
+    <Conditional Name="Focused" Sym="OPUS4B-383702">
+     <Branch Name="true" Sym="OPUS4B-383703">
+      <TextInput Name="Password" Sym="OPUS4B-383704">
+       <HideText>true</HideText>
+       <IgnoreThemeProps>true</IgnoreThemeProps>
+      </TextInput>
+      <Panel ID="12" Name="Cursor" Sym="OPUS4B-382601">
+       <Animation>0,500,0</Animation>
+       <WrapHNav>false</WrapHNav>
+       <WrapVNav>false</WrapVNav>
+       <IgnoreThemeProps>false</IgnoreThemeProps>
+       <Attribute Name="BlinkerOn" Sym="OPUS4B-382602">
+        <Value>false</Value>
+       </Attribute>
+       <Action Name="BlinkerOn = !BlinkerOn" Sym="OPUS4B-382603">
+        <Conditional Name="BlinkerOn" Sym="OPUS4B-382604">
+         <Action Name="&quot;_&quot;" Sym="OPUS4B-382605">
+          <Text Name="" Sym="OPUS4B-382606">
+           <AutosizeText>false</AutosizeText>
+           <WrapText>false</WrapText>
+           <HideText>true</HideText>
+           <TextShadow>false</TextShadow>
+           <DisableFontScaling>false</DisableFontScaling>
+           <IgnoreThemeProps>true</IgnoreThemeProps>
+          </Text>
+         </Action>
+        </Conditional>
+       </Action>
+      </Panel>
+      <Shape ID="11" Name="InputBorder" Sym="OPUS4B-382600">
+       <ForegroundColor>0xFF0066</ForegroundColor>
+       <FixedWidth>1.0</FixedWidth>
+       <FixedHeight>1.0</FixedHeight>
+       <ShapeType>Rectangle</ShapeType>
+       <ShapeFill>false</ShapeFill>
+       <Thickness>4</Thickness>
+       <CornerArc>25</CornerArc>
+      </Shape>
+     </Branch>
+     <Branch Name="else" Sym="OPUS4B-383705">
+      <Action Name="java_lang_String_replaceAll(Password,&quot;.&quot;,&quot;*&quot;)" Sym="OPUS4B-383706">
+       <Text Name="" Sym="OPUS4B-383707">
+        <AutosizeText>false</AutosizeText>
+        <WrapText>false</WrapText>
+        <HideText>true</HideText>
+        <TextShadow>false</TextShadow>
+        <DisableFontScaling>false</DisableFontScaling>
+        <IgnoreThemeProps>true</IgnoreThemeProps>
+       </Text>
+      </Action>
+      <Shape ID="16" Name="InputBorder" Sym="OPUS4B-382610">
+       <ForegroundColor>0xf0f0f0</ForegroundColor>
+       <FixedWidth>1.0</FixedWidth>
+       <FixedHeight>1.0</FixedHeight>
+       <ShapeType>Rectangle</ShapeType>
+       <ShapeFill>false</ShapeFill>
+       <Thickness>4</Thickness>
+       <CornerArc>25</CornerArc>
+      </Shape>
+     </Branch>
+    </Conditional>
+   </Panel>
+   <Action Ref="58" Name="&quot;REM Make sure there i..."/>
+   <Listener Ref="18" Name=""/>
+   <Listener Name="RawKeyboard" Sym="OPUS4B-383779">
+    <ListenerEvent>RawKeyboard</ListenerEvent>
+    <Conditional Name="RawKeyboard" Sym="OPUS4B-383780">
+     <Branch Name="&quot;Tab&quot;" Sym="OPUS4B-383781">
+      <Conditional Name="Size(Password) &gt; 0" Sym="OPUS4B-383782">
+       <Action Name="SetFocusForVariable(&quot;EntryField&quot;, &quot;xAutoLogin&quot;)" Sym="OPUS4B-383783">
+        <Action Name="Refresh()" Sym="OPUS4B-383784"/>
+       </Action>
+      </Conditional>
+     </Branch>
+     <Branch Name="&quot;Escape&quot;" Sym="OPUS4B-383785">
+      <Action Name="Password = &quot;&quot;" Sym="OPUS4B-383786">
+       <Action Name="Refresh()" Sym="OPUS4B-383787"/>
+      </Action>
+     </Branch>
+     <Branch Name="&quot;Enter&quot;" Sym="OPUS4B-383788">
+      <Action Ref="58" Name="&quot;REM Make sure there i..."/>
+     </Branch>
+     <Branch Name="else" Sym="OPUS4B-383789">
+      <Action Name="PassiveListen()" Sym="OPUS4B-383790"/>
+     </Branch>
+    </Conditional>
+   </Listener>
+   <Attribute Name="DefaultFocus" Sym="OPUS4B-383791">
+    <Value>false</Value>
+   </Attribute>
+   <Attribute Name="EntryField" Sym="OPUS4B-383792">
+    <Value>"xPwd"</Value>
+   </Attribute>
+   <Hook Name="RenderingStarted" Sym="OPUS4B-383793">
+    <Action Name="&quot;Check to see if they've been sitting at this login screen for too long&quot;" Sym="OPUS4B-383794">
+     <Conditional Name="Time() - MenuInitTime &gt; 120000" Sym="OPUS4B-383795">
+      <Action Ref="76" Name="&quot;REM Login failed, so ..."/>
+     </Conditional>
+    </Action>
+   </Hook>
+   <Hook ID="36" Name="FocusGained" Sym="OPUS4B-382638">
+    <Action Name="LastFocus = EntryField" Sym="OPUS4B-382639"/>
+   </Hook>
+   <Listener Name="" Sym="OPUS4B-383796">
+    <ListenerEvent>Pause</ListenerEvent>
+    <Action Name="&quot;REM Get password via NTE entry dialog.&quot;" Sym="OPUS4B-383797">
+     <Action Name="HideTextEntry = true" Sym="OPUS4B-383798">
+      <Action Name="TextEntry = Password" Sym="OPUS4B-383799">
+       <Action Name="DialogTitle = DialogTitlePassword" Sym="OPUS4B-383800">
+        <OptionsMenu ID="41" Name="TextEntryDialog" Sym="OPUS4B-382644">
+         <Listener Name="" Sym="OPUS4B-382645">
+          <ListenerEvent>Select</ListenerEvent>
+          <Action Name="CloseOptionsMenu()" Sym="OPUS4B-382646"/>
+         </Listener>
+         <Action Name="DialogTitle" Sym="OPUS4B-382647">
+          <Text Name="" Sym="OPUS4B-382648"/>
+         </Action>
+         <Action Name="&quot;Use Pause or Abc/123 to toggle number pad text entry mode.&quot;" Sym="OPUS4B-382649">
+          <Text Name="" Sym="OPUS4B-382650"/>
+         </Action>
+         <Panel Name="InputArea" Sym="OPUS4B-382651">
+          <Layout>Horizontal</Layout>
+          <FixedWidth>0.99</FixedWidth>
+          <Insets>0.02</Insets>
+          <WrapHNav>false</WrapHNav>
+          <WrapVNav>false</WrapVNav>
+          <IgnoreThemeProps>true</IgnoreThemeProps>
+          <BackgroundComponent>false</BackgroundComponent>
+          <MouseTransparency>false</MouseTransparency>
+          <Conditional Name="HideTextEntry" Sym="OPUS4B-382652">
+           <Branch Name="true" Sym="OPUS4B-382653">
+            <TextInput Name="TextEntry" Sym="OPUS4B-382654">
+             <HideText>true</HideText>
+             <IgnoreThemeProps>true</IgnoreThemeProps>
+             <BackgroundComponent>false</BackgroundComponent>
+            </TextInput>
+           </Branch>
+           <Branch Name="else" Sym="OPUS4B-382655">
+            <TextInput Name="TextEntry" Sym="OPUS4B-382656">
+             <HideText>false</HideText>
+             <IgnoreThemeProps>true</IgnoreThemeProps>
+             <BackgroundComponent>false</BackgroundComponent>
+            </TextInput>
+           </Branch>
+          </Conditional>
+          <Panel Name="TextEntryCursor" Sym="OPUS4B-382657">
+           <Animation>0,500,0</Animation>
+           <WrapHNav>false</WrapHNav>
+           <WrapVNav>false</WrapVNav>
+           <IgnoreThemeProps>false</IgnoreThemeProps>
+           <BackgroundComponent>false</BackgroundComponent>
+           <MouseTransparency>false</MouseTransparency>
+           <Attribute Name="BlinkerOn" Sym="OPUS4B-382658">
+            <Value>false</Value>
+           </Attribute>
+           <Action Name="BlinkerOn = !BlinkerOn" Sym="OPUS4B-382659">
+            <Conditional Name="BlinkerOn" Sym="OPUS4B-382660">
+             <Action Name="&quot;_&quot;" Sym="OPUS4B-382661">
+              <Text Name="" Sym="OPUS4B-382662"/>
+             </Action>
+            </Conditional>
+           </Action>
+          </Panel>
+          <Shape Ref="16" Name="InputBorder"/>
+         </Panel>
+         <Theme Ref="101" Name="TextEntryWithNTE_WideT..."/>
+         <Conditional Ref="102" Name="EnableNumericText"/>
+        </OptionsMenu>
+        <Action Name="Password = TextEntry" Sym="OPUS4B-383801">
+         <Action Name="Refresh()" Sym="OPUS4B-383802"/>
+        </Action>
+       </Action>
+      </Action>
+     </Action>
+    </Action>
+   </Listener>
+  </Item>
+  <Action Name="&quot;REM If can auto login, show that option.&quot;" Sym="OPUS4B-384093">
+   <Conditional ID="106" Name="(CanCachePlaceshifterLogin() == true)" Sym="OPUS4B-384091">
+    <Item Name="AutoLogin" Sym="OPUS4B-384095">
+     <AnchorX>0.73</AnchorX>
+     <AnchorY>0.72</AnchorY>
+     <AnchorPointY>0.0</AnchorPointY>
+     <FixedWidth>0.5</FixedWidth>
+     <Insets>0.016,0.02,0.024,0.02</Insets>
+     <HorizontalAlignment>0.5</HorizontalAlignment>
+     <IgnoreThemeProps>true</IgnoreThemeProps>
+     <BackgroundComponent>false</BackgroundComponent>
+     <MouseTransparency>false</MouseTransparency>
+     <Attribute Name="EntryField" Sym="OPUS4B-384099">
+      <Value>"xAutoLogin"</Value>
+     </Attribute>
+     <Action ID="109" Name="&quot;REM Toggle AutoLogin setting&quot;" Sym="OPUS4B-384110">
+      <Action Name="AutoLogin = !AutoLogin" Sym="OPUS4B-384111">
+       <Action Name="Refresh()" Sym="OPUS4B-384112"/>
+      </Action>
+     </Action>
+     <Listener Name="RawKeyboard" Sym="OPUS4B-384100">
+      <ListenerEvent>RawKeyboard</ListenerEvent>
+      <Conditional Name="RawKeyboard" Sym="OPUS4B-384101">
+       <Branch Name="&quot;Tab&quot;" Sym="OPUS4B-384102">
+        <Action Name="SetFocusForVariable(&quot;EntryField&quot;, &quot;xLogin&quot;)" Sym="OPUS4B-384109">
+         <Action Name="Refresh()" Sym="OPUS4B-384104"/>
+        </Action>
+       </Branch>
+       <Branch Name="&quot;Space&quot;" Sym="OPUS4B-384105">
+        <Action Ref="109" Name="&quot;REM Toggle AutoLogin ..."/>
+       </Branch>
+       <Branch Name="&quot;Enter&quot;" Sym="OPUS4B-384106">
+        <Action Ref="109" Name="&quot;REM Toggle AutoLogin ..."/>
+       </Branch>
+       <Branch Name="else" Sym="OPUS4B-384107">
+        <Action Name="PassiveListen()" Sym="OPUS4B-384108"/>
+       </Branch>
+      </Conditional>
+     </Listener>
+     <Theme Ref="121" Name="LoginButtonTheme"/>
+     <Attribute Name="IsChecked" Sym="OPUS4B-384113">
+      <Value>AutoLogin</Value>
+     </Attribute>
+     <Attribute Name="ButtonText" Sym="OPUS4B-384114">
+      <Value>"Automatically Login"</Value>
+     </Attribute>
+     <Action Name="&quot;REM Draw the button contents&quot;" Sym="OPUS4B-384115">
+      <Action Name="IsChecked = AutoLogin" Sym="OPUS4B-384116">
+       <Panel Name="CheckmarkButtonDisplayPanel - send IsChecked and ButtonText" Sym="OPUS4B-384117">
+        <Layout>Horizontal</Layout>
+        <AnchorY>0.5</AnchorY>
+        <FixedWidth>1.0</FixedWidth>
+        <HorizontalAlignment>0.5</HorizontalAlignment>
+        <WrapHNav>false</WrapHNav>
+        <WrapVNav>false</WrapVNav>
+        <IgnoreThemeProps>false</IgnoreThemeProps>
+        <BackgroundComponent>false</BackgroundComponent>
+        <MouseTransparency>false</MouseTransparency>
+        <Panel Name="CheckMarkPanel" Sym="OPUS4B-384118">
+         <Layout>Passive</Layout>
+         <WrapHNav>false</WrapHNav>
+         <WrapVNav>false</WrapVNav>
+         <IgnoreThemeProps>false</IgnoreThemeProps>
+         <BackgroundComponent>false</BackgroundComponent>
+         <MouseTransparency>false</MouseTransparency>
+         <Action Name="&quot;REM Show Checkmark style button on/off&quot;" Sym="OPUS4B-384120">
+          <Conditional Name="IsChecked" Sym="OPUS4B-384119">
+           <Branch Name="true" Sym="OPUS4B-384121">
+            <Action Name="gMarkerChecked" Sym="OPUS4B-384123">
+             <Image Name="Checked" Sym="OPUS4B-384125">
+              <PreserveAspectRatio>true</PreserveAspectRatio>
+              <ResizeImage>true</ResizeImage>
+              <AutoRepeatAction>false</AutoRepeatAction>
+              <BackgroundComponent>false</BackgroundComponent>
+              <MouseTransparency>false</MouseTransparency>
+             </Image>
+            </Action>
+           </Branch>
+           <Branch Name="else" Sym="OPUS4B-384122">
+            <Action Name="gMarkerUnchecked" Sym="OPUS4B-384124">
+             <Image Name="UnChecked" Sym="OPUS4B-384126">
+              <PreserveAspectRatio>true</PreserveAspectRatio>
+              <ResizeImage>true</ResizeImage>
+              <AutoRepeatAction>false</AutoRepeatAction>
+              <BackgroundComponent>false</BackgroundComponent>
+              <MouseTransparency>false</MouseTransparency>
+             </Image>
+            </Action>
+           </Branch>
+          </Conditional>
+         </Action>
+        </Panel>
+        <Action Name="ButtonText" Sym="OPUS4B-384127">
+         <Text Name="" Sym="OPUS4B-384128">
+          <AnchorX>0.5</AnchorX>
+          <AnchorY>0.5</AnchorY>
+          <FixedWidth>1.0</FixedWidth>
+          <AutosizeText>true</AutosizeText>
+          <WrapText>false</WrapText>
+          <TextAlignment>0.5</TextAlignment>
+          <TextShadow>true</TextShadow>
+          <DisableFontScaling>false</DisableFontScaling>
+          <IgnoreThemeProps>true</IgnoreThemeProps>
+          <BackgroundComponent>false</BackgroundComponent>
+          <MouseTransparency>false</MouseTransparency>
+         </Text>
+        </Action>
+       </Panel>
+      </Action>
+     </Action>
+    </Item>
+   </Conditional>
+  </Action>
+  <Item Name="Login" Sym="OPUS4B-383803">
+   <AnchorX>0.72</AnchorX>
+   <AnchorY>0.85</AnchorY>
+   <AnchorPointY>0.0</AnchorPointY>
+   <FixedWidth>0.5</FixedWidth>
+   <Insets>0.016,0.02,0.024,0.02</Insets>
+   <HorizontalAlignment>0.5</HorizontalAlignment>
+   <IgnoreThemeProps>true</IgnoreThemeProps>
+   <BackgroundComponent>false</BackgroundComponent>
+   <MouseTransparency>false</MouseTransparency>
+   <Action Ref="58" Name="&quot;REM Make sure there i..."/>
+   <Listener Name="RawKeyboard" Sym="OPUS4B-383804">
+    <ListenerEvent>RawKeyboard</ListenerEvent>
+    <Conditional Name="RawKeyboard" Sym="OPUS4B-383805">
+     <Branch Name="&quot;Tab&quot;" Sym="OPUS4B-383806">
+      <Action Name="SetFocusForVariable(&quot;EntryField&quot;, &quot;xUser&quot;)" Sym="OPUS4B-383807">
+       <Action Name="Refresh()" Sym="OPUS4B-383808"/>
+      </Action>
+     </Branch>
+     <Branch Name="&quot;Space&quot;" Sym="OPUS4B-383809">
+      <Action Ref="58" Name="&quot;REM Make sure there i..."/>
+     </Branch>
+     <Branch Name="&quot;Enter&quot;" Sym="OPUS4B-383810">
+      <Action ID="58" Name="&quot;REM Make sure there is a username + pwd, then try to login&quot;" Sym="OPUS4B-383708">
+       <Conditional Name="Size(Username) &gt; 0" Sym="OPUS4B-383709">
+        <Branch Name="true" Sym="OPUS4B-383710">
+         <Conditional Name="Size(Password) &gt; 0" Sym="OPUS4B-383711">
+          <Branch Name="true" Sym="OPUS4B-383712">
+           <Action Name="&quot;REM Check the Place Shifter user list to to see if a user with this password is authenticated to login or not&quot;" Sym="OPUS4B-383713">
+            <Action Name="EncryptedPassword = &quot;&quot;" Sym="OPUS4B-383714">
+             <Action Name="&quot;REM Calculate Encrypted Password&quot;" Sym="OPUS4B-383715">
+              <Action Name="RawPasswordBytes = java_lang_String_getBytes(Password)" Sym="OPUS4B-383716">
+               <Action Name="CryptoAlgorithm = java_security_MessageDigest_getInstance(&quot;MD5&quot;)" Sym="OPUS4B-383717">
+                <Action Name="java_security_MessageDigest_reset(CryptoAlgorithm)" Sym="OPUS4B-383718">
+                 <Action Name="java_security_MessageDigest_update(CryptoAlgorithm, RawPasswordBytes)" Sym="OPUS4B-383719">
+                  <Action Name="EncryptedPasswordBytes = java_security_MessageDigest_digest(CryptoAlgorithm)" Sym="OPUS4B-383720">
+                   <Action Name="EncryptedPassword = java_math_BigInteger_toString(new_java_math_BigInteger(EncryptedPasswordBytes), 16)" Sym="OPUS4B-383721">
+                    <Action Name="DebugLog(&quot;EncryptedPW=&quot; + EncryptedPassword)" Sym="OPUS4B-383722"/>
+                   </Action>
+                  </Action>
+                 </Action>
+                </Action>
+               </Action>
+              </Action>
+             </Action>
+             <Action Name="&quot;REM Compare entered password with all the existing users' passwords&quot;" Sym="OPUS4B-383723">
+              <Action Name="FoundUser = null" Sym="OPUS4B-383724">
+               <Action Name="FoundSTV = null" Sym="OPUS4B-383725">
+                <Action Name="&quot;REM Run through user list&quot;" Sym="OPUS4B-383726">
+                 <Action Name="NameList = DataUnion(java_util_Map_keySet(UserNameList))" Sym="OPUS4B-383727">
+                  <Action Name="CurUser = 0" Sym="OPUS4B-383728">
+                   <Conditional ID="166" Name="(CurUser &lt; Size(NameList)) &amp;&amp; (FoundUser == null)" Sym="OPUS4B-383729">
+                    <Branch Name="true" Sym="OPUS4B-383730">
+                     <Action Name="CurNameInfo = GetSubgroup(UserNameList, GetElement(NameList,CurUser) )" Sym="OPUS4B-383731">
+                      <Action Name="TmpName = GetElement( CurNameInfo, ListNamePos )" Sym="OPUS4B-383732">
+                       <Action Name="TmpEnabled = GetElement( CurNameInfo, ListEnablePos )" Sym="OPUS4B-383733">
+                        <Conditional Name="TmpEnabled" Sym="OPUS4B-383734">
+                         <Branch Name="true" Sym="OPUS4B-383735">
+                          <Action Name="TmpSTV = GetElement( CurNameInfo, ListSTVPos )" Sym="OPUS4B-383736">
+                           <Action Name="TmpPWD = GetElement( CurNameInfo, ListPWDPos )" Sym="OPUS4B-383737">
+                            <Conditional Name="(TmpName == Username) &amp;&amp; (TmpPWD == EncryptedPassword)" Sym="OPUS4B-383738">
+                             <Branch Name="true" Sym="OPUS4B-383739">
+                              <Action Name="FoundUser = TmpName" Sym="OPUS4B-383740"/>
+                              <Action Name="FoundSTV = TmpSTV" Sym="OPUS4B-383741"/>
+                             </Branch>
+                            </Conditional>
+                           </Action>
+                          </Action>
+                         </Branch>
+                        </Conditional>
+                       </Action>
+                      </Action>
+                     </Action>
+                     <Action Name="CurUser = CurUser + 1" Sym="OPUS4B-383742">
+                      <Conditional Ref="166" Name="(CurUser &lt; Size(NameLi..."/>
+                     </Action>
+                    </Branch>
+                    <Branch Name="else" Sym="OPUS4B-383743"/>
+                   </Conditional>
+                  </Action>
+                 </Action>
+                </Action>
+                <Action Name="&quot;REM Matched a valid user?&quot;" Sym="OPUS4B-383744">
+                 <Conditional Name="FoundSTV == null || Size(FoundSTV) == 0" Sym="OPUS4B-383745">
+                  <Branch Name="true" Sym="OPUS4B-383746">
+                   <Action Name="Password = &quot;&quot;" Sym="OPUS4B-383747"/>
+                   <Action Name="LoginAttemptsLeft = LoginAttemptsLeft - 1" Sym="OPUS4B-383748">
+                    <Conditional Name="LoginAttemptsLeft &lt;= 0" Sym="OPUS4B-383749">
+                     <Branch Name="true" Sym="OPUS4B-383750">
+                      <Action Ref="76" Name="&quot;REM Login failed, so ..."/>
+                     </Branch>
+                     <Branch Name="else" Sym="OPUS4B-383757">
+                      <OptionsMenu Name="Untitled" Sym="OPUS4B-383758">
+                       <Action Name="&quot;You have entered an invalid username and password. You have &quot; + LoginAttemptsLeft + &quot; tries left before you will be disconnected.\n \n&quot;" Sym="OPUS4B-383759">
+                        <Text Name="Untitled" Sym="OPUS4B-383760"/>
+                       </Action>
+                       <Item Name="OK" Sym="OPUS4B-383761">
+                        <Action Name="CloseOptionsMenu()" Sym="OPUS4B-383762">
+                         <Action Name="Username = &quot;&quot;" Sym="OPUS4B-383763">
+                          <Action Name="Password = &quot;&quot;" Sym="OPUS4B-383764">
+                           <Action Name="SetFocusForVariable(&quot;EntryField&quot;, &quot;xUser&quot;)" Sym="OPUS4B-383765">
+                            <Action Name="Refresh()" Sym="OPUS4B-383766"/>
+                           </Action>
+                          </Action>
+                         </Action>
+                        </Action>
+                       </Item>
+                       <Theme Ref="198" Name="OptionsConfirmThemeNar..."/>
+                      </OptionsMenu>
+                     </Branch>
+                    </Conditional>
+                   </Action>
+                  </Branch>
+                  <Branch Name="else" Sym="OPUS4B-383767">
+                   <Action Name="&quot;REM If AutoLogin has been set, then cache the login before disabling encryption.&quot;" Sym="OPUS4B-384129">
+                    <Conditional Name="AutoLogin" Sym="OPUS4B-384130">
+                     <Action Name="CachePlaceshifterLogin()" Sym="OPUS4B-384131"/>
+                     <Action Name="&quot;REM Next, mark this user as using this autologin setting.&quot;" Sym="OPUS4B-388655">
+                      <Action Name="&quot;REM Get current list of this user's auto-login UI context authorizations&quot;" Sym="OPUS4B-384134">
+                       <Action Name="UserCachedAuthList = GetServerProperty( &quot;miniclient/&quot; + Username + &quot;/cached_auth&quot;, null )" Sym="OPUS4B-384150">
+                        <Conditional Name="UserCachedAuthList" Sym="OPUS4B-388657">
+                         <Branch Name="null" Sym="OPUS4B-388658">
+                          <Action Name="UserCachedAuthList = DataUnion()" Sym="OPUS4B-388660"/>
+                         </Branch>
+                         <Branch Name="else" Sym="OPUS4B-388659">
+                          <Action Name="UserCachedAuthList = DataUnion( java_lang_String_split( UserCachedAuthList, &quot;,&quot; ) )" Sym="OPUS4B-384135"/>
+                         </Branch>
+                        </Conditional>
+                        <Action Name="DebugLog( &quot;UserCachedAuthList = [&quot; + UserCachedAuthList + &quot;]&quot;)" Sym="OPUS4B-388668"/>
+                       </Action>
+                      </Action>
+                      <Action Name="&quot;REM If current UI context is not already in this user's list, add it &amp; write new list property.&quot;" Sym="OPUS4B-384137">
+                       <Action Name="ThisUIContext = GetUIContextName()" Sym="OPUS4B-384133"/>
+                       <Conditional Name="FindElementIndex(UserCachedAuthList,ThisUIContext) == -1" Sym="OPUS4B-384138">
+                        <Action Name="UserCachedAuthList = DataUnion( UserCachedAuthList, ThisUIContext )" Sym="OPUS4B-384151"/>
+                        <Action Name="NewAuthList = &quot;&quot;" Sym="OPUS4B-384139">
+                         <Action Name="i = 0" Sym="OPUS4B-384140">
+                          <Conditional ID="218" Name="i &lt; Size(UserCachedAuthList)" Sym="OPUS4B-384141">
+                           <Branch Name="true" Sym="OPUS4B-384142">
+                            <Action Name="ThisAuthItem = GetElement(UserCachedAuthList,i)" Sym="OPUS4B-384144">
+                             <Action Name="NewAuthList = NewAuthList + If(Size(NewAuthList)&gt;0,&quot;,&quot;,&quot;&quot;) + ThisAuthItem" Sym="OPUS4B-384145"/>
+                            </Action>
+                            <Action Name="i = i + 1" Sym="OPUS4B-384146">
+                             <Conditional Ref="218" Name="i &lt; Size(UserCachedAut..."/>
+                            </Action>
+                           </Branch>
+                           <Branch Name="else" Sym="OPUS4B-384143">
+                            <Action Name="SetServerProperty( &quot;miniclient/&quot; + Username + &quot;/cached_auth&quot;, NewAuthList )" Sym="OPUS4B-384149">
+                             <Action Name="DebugLog( &quot;Setting server property: [&quot; + &quot;miniclient/&quot; + Username + &quot;/cached_auth&quot; + &quot;=&quot; + NewAuthList + &quot;]&quot;)" Sym="OPUS4B-388661"/>
+                            </Action>
+                           </Branch>
+                          </Conditional>
+                         </Action>
+                        </Action>
+                       </Conditional>
+                      </Action>
+                     </Action>
+                    </Conditional>
+                   </Action>
+                   <Action Name="SetRemoteEventEncryptionEnabled(false)" Sym="OPUS4B-383768">
+                    <Action Name="AddGlobalContext(&quot;PlaceshifterUsername&quot;, Username)" Sym="OPUS4B-383769"/>
+                    <Action Name="LoadSTVFile(FoundSTV)" Sym="OPUS4B-383770"/>
+                   </Action>
+                  </Branch>
+                 </Conditional>
+                </Action>
+               </Action>
+              </Action>
+             </Action>
+            </Action>
+           </Action>
+          </Branch>
+          <Branch Name="else" Sym="OPUS4B-383771">
+           <OptionsMenu Name="No Password" Sym="OPUS4B-383772">
+            <Action Name="&quot;Please enter a password.\n \n&quot;" Sym="OPUS4B-383773">
+             <Text Name="Untitled" Sym="OPUS4B-383774"/>
+            </Action>
+            <Item Name="OK" Sym="OPUS4B-383775">
+             <Action Name="CloseOptionsMenu()" Sym="OPUS4B-383776">
+              <Action Name="SetFocusForVariable(&quot;EntryField&quot;, &quot;xPwd&quot;)" Sym="OPUS4B-383777">
+               <Action Name="Refresh()" Sym="OPUS4B-383778"/>
+              </Action>
+             </Action>
+            </Item>
+            <Theme Ref="198" Name="OptionsConfirmThemeNar..."/>
+           </OptionsMenu>
+          </Branch>
+         </Conditional>
+        </Branch>
+        <Branch ID="31" Name="else" Sym="OPUS4B-382616">
+         <OptionsMenu Name="No Username" Sym="OPUS4B-382617">
+          <IgnoreThemeProps>false</IgnoreThemeProps>
+          <Action Name="&quot;Please enter a username.\n \n&quot;" Sym="OPUS4B-382618">
+           <Text Name="Untitled" Sym="OPUS4B-382619"/>
+          </Action>
+          <Item Name="OK" Sym="OPUS4B-382620">
+           <Action Name="CloseOptionsMenu()" Sym="OPUS4B-382621">
+            <Action Name="SetFocusForVariable(&quot;EntryField&quot;, &quot;xUser&quot;)" Sym="OPUS4B-382622">
+             <Action Name="Refresh()" Sym="OPUS4B-382623"/>
+            </Action>
+           </Action>
+          </Item>
+          <Theme Ref="198" Name="OptionsConfirmThemeNar..."/>
+         </OptionsMenu>
+        </Branch>
+       </Conditional>
+      </Action>
+     </Branch>
+     <Branch Name="else" Sym="OPUS4B-383811">
+      <Action Name="PassiveListen()" Sym="OPUS4B-383812"/>
+     </Branch>
+    </Conditional>
+   </Listener>
+   <Attribute Name="EntryField" Sym="OPUS4B-383813">
+    <Value>"xLogin"</Value>
+   </Attribute>
+   <Hook Name="FocusGained" Sym="OPUS4B-383814">
+    <Conditional Name="false" Sym="OPUS4B-383815">
+     <Action Name="SetFocusForVariable(&quot;EntryField&quot;, LastFocus)" Sym="OPUS4B-383816">
+      <Action Name="Refresh()" Sym="OPUS4B-383817"/>
+     </Action>
+    </Conditional>
+   </Hook>
+   <Theme ID="121" Name="LoginButtonTheme" Sym="OPUS4B-383818">
+    <TileBackgroundImage>false</TileBackgroundImage>
+    <StretchBackgroundImage>false</StretchBackgroundImage>
+    <ForegroundColor>0xF7F7F7</ForegroundColor>
+    <ForegroundSelectedColor>0xF7F7F7</ForegroundSelectedColor>
+    <ForegroundShadowColor>0x1B1715</ForegroundShadowColor>
+    <ForegroundShadowAlpha>110</ForegroundShadowAlpha>
+    <ForegroundShadowSelectedColor>0x1B1715</ForegroundShadowSelectedColor>
+    <ForegroundShadowSelectedAlpha>110</ForegroundShadowSelectedAlpha>
+    <Item ID="251" Name="OptionsItem" Sym="OPUS4B-384010">
+     <AnchorX>0.5</AnchorX>
+     <AnchorY>0.5</AnchorY>
+     <FixedWidth>0.9</FixedWidth>
+     <Insets>0.03</Insets>
+     <HorizontalAlignment>0.5</HorizontalAlignment>
+     <IgnoreThemeProps>false</IgnoreThemeProps>
+     <Conditional Name="Focused" Sym="OPUS4B-384011">
+      <Branch Name="true" Sym="OPUS4B-384012">
+       <Action Name="gButtonHighlight" Sym="OPUS4B-384017">
+        <Image Name="" Sym="OPUS4B-384018">
+         <FixedWidth>1.0</FixedWidth>
+         <FixedHeight>1.0</FixedHeight>
+         <PreserveAspectRatio>false</PreserveAspectRatio>
+         <ResizeImage>true</ResizeImage>
+         <AutoRepeatAction>false</AutoRepeatAction>
+         <BackgroundComponent>true</BackgroundComponent>
+         <ScalingInsets>8,9,11,9</ScalingInsets>
+        </Image>
+       </Action>
+      </Branch>
+      <Branch Name="Focused" Sym="OPUS4B-384019">
+       <Action Name="gButtonBG" Sym="OPUS4B-384021">
+        <Image Name="" Sym="OPUS4B-384022">
+         <FixedWidth>1.0</FixedWidth>
+         <FixedHeight>1.0</FixedHeight>
+         <PreserveAspectRatio>false</PreserveAspectRatio>
+         <ResizeImage>true</ResizeImage>
+         <AutoRepeatAction>false</AutoRepeatAction>
+         <BackgroundComponent>true</BackgroundComponent>
+         <ScalingInsets>8,9,11,9</ScalingInsets>
+        </Image>
+       </Action>
+      </Branch>
+     </Conditional>
+     <Theme Name="CenteredItemText" Sym="OPUS4B-384023">
+      <TileBackgroundImage>false</TileBackgroundImage>
+      <StretchBackgroundImage>false</StretchBackgroundImage>
+      <Text Name="CenteredText" Sym="OPUS4B-384084">
+       <AnchorX>0.5</AnchorX>
+       <AnchorY>0.5</AnchorY>
+       <AutosizeText>false</AutosizeText>
+       <WrapText>true</WrapText>
+       <TextAlignment>0.5</TextAlignment>
+       <TextShadow>true</TextShadow>
+       <DisableFontScaling>false</DisableFontScaling>
+       <IgnoreThemeProps>false</IgnoreThemeProps>
+      </Text>
+     </Theme>
+    </Item>
+   </Theme>
+  </Item>
+  <Theme Name="LoginMenuTheme" Sym="OPUS4B-383819">
+   <BackgroundImage>=If(GetProperty("enable_extras", false) &amp;&amp; Size(GetProperty("ui/BackgroundImage", null)) &gt; 0, GetProperty("ui/BackgroundImage", null), "Background.jpg")</BackgroundImage>
+   <TileBackgroundImage>false</TileBackgroundImage>
+   <StretchBackgroundImage>true</StretchBackgroundImage>
+   <ForegroundColor>0xFFFFFF</ForegroundColor>
+   <FontFace>=GetProperty("ui/heading_font_face", "Arial")</FontFace>
+   <FontSize>=GetProperty("ui/heading_font_size", 28)</FontSize>
+   <FontStyle>=GetProperty("ui/heading_font_style", "Plain")</FontStyle>
+   <DisableFontScaling>false</DisableFontScaling>
+   <Listener Ref="262" Name="Customize"/>
+   <Listener ID="263" Name="Power Off" Sym="OPUS4B-384026"/>
+   <Listener ID="264" Name="Power" Sym="OPUS4B-384027"/>
+   <Listener ID="265" Name="" Sym="OPUS4B-384028">
+    <ListenerEvent>Eject</ListenerEvent>
+   </Listener>
+   <Listener ID="266" Name="" Sym="OPUS4B-384029">
+    <ListenerEvent>Stop/Eject</ListenerEvent>
+   </Listener>
+   <Listener ID="267" Name="" Sym="OPUS4B-384030">
+    <ListenerEvent>Live TV</ListenerEvent>
+   </Listener>
+   <Listener ID="268" Name="Home" Sym="OPUS4B-384031"/>
+   <Listener ID="18" Name="" Sym="OPUS4B-382625">
+    <ListenerEvent>MouseClick</ListenerEvent>
+   </Listener>
+  </Theme>
+  <Attribute Name="LoginAttemptsLeft" Sym="OPUS4B-383820">
+   <Value>4</Value>
+  </Attribute>
+  <Attribute Name="MenuInitTime" Sym="OPUS4B-383821">
+   <Value>Time()</Value>
+  </Attribute>
+  <Attribute Name="UserNameList" Sym="OPUS4B-383822">
+   <Value>null</Value>
+  </Attribute>
+  <Attribute Name="UserListCount" Sym="OPUS4B-383823">
+   <Value>0</Value>
+  </Attribute>
+  <Attribute Name="UserEnableCount" Sym="OPUS4B-383824">
+   <Value>0</Value>
+  </Attribute>
+  <Attribute Name="ListNamePos" Sym="OPUS4B-383825">
+   <Value>0</Value>
+  </Attribute>
+  <Attribute Name="ListEnablePos" Sym="OPUS4B-383826">
+   <Value>1</Value>
+  </Attribute>
+  <Attribute Name="ListSTVPos" Sym="OPUS4B-383827">
+   <Value>2</Value>
+  </Attribute>
+  <Attribute Name="ListPWDPos" Sym="OPUS4B-383828">
+   <Value>3</Value>
+  </Attribute>
+  <Attribute Name="Username" Sym="OPUS4B-383829">
+   <Value>""</Value>
+  </Attribute>
+  <Attribute Name="Password" Sym="OPUS4B-383830">
+   <Value>""</Value>
+  </Attribute>
+  <Attribute Name="LastFocus" Sym="OPUS4B-383831">
+   <Value>null</Value>
+  </Attribute>
+  <Hook Name="BeforeMenuLoad" Sym="OPUS4B-383832">
+   <Action Name="&quot;REM Get current list of usernames&quot;" Sym="OPUS4B-383833">
+    <Action Name="UserNameList = new_java_util_HashMap()" Sym="OPUS4B-383834"/>
+    <Action Name="UserEnableCount = 0" Sym="OPUS4B-383835"/>
+    <Action Name="UserList = GetServerProperty(&quot;miniclient/users&quot;, null)" Sym="OPUS4B-383836">
+     <Conditional Name="(UserList != null) &amp;&amp; (Size(UserList) &gt; 0)" Sym="OPUS4B-383837">
+      <Branch Name="true" Sym="OPUS4B-383838">
+       <Action Name="UserList = java_lang_String_split(UserList,&quot;;&quot;)" Sym="OPUS4B-383839">
+        <Action Name="UserList = java_util_Arrays_asList(UserList)" Sym="OPUS4B-383840">
+         <Action Name="UserListCount = Size(UserList)" Sym="OPUS4B-383841">
+          <Action Name="CurUser = 0" Sym="OPUS4B-383842">
+           <Conditional ID="292" Name="CurUser &lt; UserListCount" Sym="OPUS4B-383843">
+            <Branch Name="true" Sym="OPUS4B-383844">
+             <Action Name="UserSplit = java_lang_String_split(GetElement(UserList,CurUser),&quot;,&quot;)" Sym="OPUS4B-383845">
+              <Action Name="UserSplit = java_util_Arrays_asList(UserSplit)" Sym="OPUS4B-383846">
+               <Action Name="TmpUserName = GetElement(UserSplit,0)" Sym="OPUS4B-383847">
+                <Action Name="TmpUserEnable = GetElement(UserSplit,1)" Sym="OPUS4B-383848">
+                 <Action Name="TmpUserSTV = GetServerProperty(&quot;miniclient/&quot;+ TmpUserName + &quot;/stv&quot;, null )" Sym="OPUS4B-383849">
+                  <Action Name="TmpUserPWD = GetServerProperty(&quot;miniclient/&quot;+ TmpUserName + &quot;/pwd&quot;, null )" Sym="OPUS4B-383850">
+                   <Conditional Name="(TmpUserSTV == null) || (TmpUserPWD == null)" Sym="OPUS4B-383851">
+                    <Action Name="TmpUserEnable = &quot;false&quot;" Sym="OPUS4B-383852"/>
+                   </Conditional>
+                   <Action Name="AddToGrouping(UserNameList, TmpUserName, TmpUserName )" Sym="OPUS4B-383853">
+                    <Action Name="AddToGrouping(UserNameList, TmpUserName, TmpUserEnable )" Sym="OPUS4B-383854">
+                     <Conditional Name="TmpUserEnable" Sym="OPUS4B-383855">
+                      <Action Name="UserEnableCount = UserEnableCount + 1" Sym="OPUS4B-383856"/>
+                     </Conditional>
+                     <Action Name="AddToGrouping(UserNameList, TmpUserName, TmpUserSTV )" Sym="OPUS4B-383857">
+                      <Action Name="AddToGrouping(UserNameList, TmpUserName, TmpUserPWD )" Sym="OPUS4B-383858"/>
+                     </Action>
+                    </Action>
+                   </Action>
+                  </Action>
+                 </Action>
+                </Action>
+               </Action>
+              </Action>
+              <Action Name="CurUser = CurUser + 1" Sym="OPUS4B-383859">
+               <Conditional Ref="292" Name="CurUser &lt; UserListCount"/>
+              </Action>
+             </Action>
+            </Branch>
+            <Branch Name="else" Sym="OPUS4B-383860">
+             <Action Name="UserList" Sym="OPUS4B-383861"/>
+            </Branch>
+           </Conditional>
+          </Action>
+         </Action>
+        </Action>
+       </Action>
+      </Branch>
+      <Branch Name="else" Sym="OPUS4B-383862">
+       <Action Name="UserListCount = 0" Sym="OPUS4B-383863"/>
+      </Branch>
+     </Conditional>
+    </Action>
+   </Action>
+   <Action Name="&quot;REM Store old NTE settings &amp; set defaults&quot;" Sym="OPUS4B-383864">
+    <Action Name="SavedNTEEnabled = GetProperty(&quot;ui/numeric_text_input_enable&quot;,true)" Sym="OPUS4B-383865">
+     <Action Name="SavedNTEuseUpper = GetProperty(&quot;ui/numeric_text_input_useUpper&quot;,true)" Sym="OPUS4B-383866">
+      <Action Name="SetProperty(&quot;ui/numeric_text_input_enable&quot;,true)" Sym="OPUS4B-383867">
+       <Action Name="SetProperty(&quot;ui/numeric_text_input_useUpper&quot;,true)" Sym="OPUS4B-383868"/>
+      </Action>
+     </Action>
+    </Action>
+   </Action>
+   <Action Name="&quot;REM Set some graphics variables.&quot;" Sym="OPUS4B-383869">
+    <Action Name="AddGlobalContext( &quot;gDialogBG&quot;, &quot;Themes\\Standard SDTV\\DialogBG.png&quot; )" Sym="OPUS4B-383870"/>
+    <Action Name="AddGlobalContext( &quot;gButtonBG&quot;, &quot;Themes\\Standard SDTV\\ButtonBG.png&quot; )" Sym="OPUS4B-383871"/>
+    <Action Name="AddGlobalContext( &quot;gButtonBGSmBorder&quot;, &quot;Themes\\Standard SDTV\\ButtonBGSmBorder.png&quot; )" Sym="OPUS4B-383872"/>
+    <Action Name="AddGlobalContext( &quot;gButtonHighlight&quot;, &quot;Themes\\Standard SDTV\\ButtonHighlight.png&quot; )" Sym="OPUS4B-383873"/>
+    <Action Name="AddGlobalContext( &quot;gMarkerChecked&quot;, &quot;MarkerChecked.png&quot; )" Sym="OPUS4B-384097"/>
+    <Action Name="AddGlobalContext( &quot;gMarkerUnchecked&quot;, &quot;MarkerUnChecked.png&quot; )" Sym="OPUS4B-384098"/>
+   </Action>
+  </Hook>
+  <Hook Name="AfterMenuLoad" Sym="OPUS4B-383874">
+   <Conditional Name="(UserListCount == 0) || (UserEnableCount == 0)" Sym="OPUS4B-383875">
+    <OptionsMenu Name="No Users Available" Sym="OPUS4B-383876">
+     <Action Name="&quot;No Place Shifter users are available. A new user must be created on the server, or an existing user must be enabled, before login is possible.\n \n&quot;" Sym="OPUS4B-383877">
+      <Text Name="Untitled" Sym="OPUS4B-383878"/>
+     </Action>
+     <Item Name="Exit" Sym="OPUS4B-383879">
+      <Action Name="CloseOptionsMenu()" Sym="OPUS4B-383880">
+       <Action Ref="76" Name="&quot;REM Login failed, so ..."/>
+      </Action>
+     </Item>
+     <Theme ID="198" Name="OptionsConfirmThemeNarrow" Sym="OPUS4B-382624">
+      <TileBackgroundImage>false</TileBackgroundImage>
+      <StretchBackgroundImage>false</StretchBackgroundImage>
+      <ForegroundColor>0xF7F7F7</ForegroundColor>
+      <ForegroundSelectedColor>0xF7F7F7</ForegroundSelectedColor>
+      <FontFace>=GetProperty("ui/base_font_face", "Arial")</FontFace>
+      <FontSize>=GetProperty("ui/base_font_size", 18)</FontSize>
+      <FontStyle>=GetProperty("ui/base_font_style", "Bold")</FontStyle>
+      <ForegroundShadowColor>0x1B1715</ForegroundShadowColor>
+      <ForegroundShadowAlpha>110</ForegroundShadowAlpha>
+      <ForegroundShadowSelectedColor>0x1B1715</ForegroundShadowSelectedColor>
+      <ForegroundShadowSelectedAlpha>110</ForegroundShadowSelectedAlpha>
+      <OptionsMenu Name="HalfWidthOptionsTheme" Sym="OPUS4B-384007">
+       <Layout>Vertical</Layout>
+       <AnchorX>0.5</AnchorX>
+       <AnchorY>0.5</AnchorY>
+       <FixedWidth>0.5</FixedWidth>
+       <PadY>0.01</PadY>
+       <Insets>0.03</Insets>
+       <IgnoreThemeProps>false</IgnoreThemeProps>
+       <Shape Name="OptionsBG" Sym="OPUS4B-384008">
+        <ForegroundColor>0x2a67be</ForegroundColor>
+        <ShapeType>Rectangle</ShapeType>
+        <ShapeFill>true</ShapeFill>
+        <GradientAngle>270</GradientAngle>
+        <GradientAmount>0.65</GradientAmount>
+        <CornerArc>30</CornerArc>
+       </Shape>
+       <Shape Name="OptionsBorder" Sym="OPUS4B-384009">
+        <ForegroundColor>0xf0f0f0</ForegroundColor>
+        <FixedWidth>1.0</FixedWidth>
+        <FixedHeight>1.0</FixedHeight>
+        <ShapeType>Rectangle</ShapeType>
+        <ShapeFill>false</ShapeFill>
+        <Thickness>2</Thickness>
+        <CornerArc>30</CornerArc>
+       </Shape>
+      </OptionsMenu>
+      <Item Ref="251" Name="OptionsItem"/>
+      <Text Name="CenteredText" Sym="OPUS4B-384024">
+       <AutosizeText>false</AutosizeText>
+       <WrapText>true</WrapText>
+       <TextAlignment>0.5</TextAlignment>
+       <TextShadow>true</TextShadow>
+       <DisableFontScaling>false</DisableFontScaling>
+       <IgnoreThemeProps>false</IgnoreThemeProps>
+      </Text>
+      <Listener Ref="262" Name="Customize"/>
+      <Listener Ref="263" Name="Power Off"/>
+      <Listener Ref="264" Name="Power"/>
+      <Listener Ref="265" Name=""/>
+      <Listener Ref="266" Name=""/>
+      <Listener Ref="267" Name=""/>
+      <Listener Ref="268" Name="Home"/>
+     </Theme>
+    </OptionsMenu>
+   </Conditional>
+  </Hook>
+  <Hook Name="BeforeMenuUnload" Sym="OPUS4B-383881">
+   <Action ID="337" Name="&quot;REM Restore original NTE settings&quot;" Sym="OPUS4B-383753">
+    <Action Name="SetProperty(&quot;ui/numeric_text_input_enable&quot;,SavedNTEEnabled)" Sym="OPUS4B-383754">
+     <Action Name="SetProperty(&quot;ui/numeric_text_input_useUpper&quot;,SavedNTEuseUpper)" Sym="OPUS4B-383755"/>
+    </Action>
+   </Action>
+  </Hook>
+  <Attribute Name="SavedNTEEnabled" Sym="OPUS4B-383882">
+   <Value>GetProperty("ui/numeric_text_input_enable",true)</Value>
+  </Attribute>
+  <Attribute Name="SavedNTEuseUpper" Sym="OPUS4B-383883">
+   <Value>GetProperty("ui/numeric_text_input_useUpper",true)</Value>
+  </Attribute>
+  <Attribute Name="DialogTitleUsername" Sym="OPUS4B-383884">
+   <Value>"Enter a Username:"</Value>
+  </Attribute>
+  <Attribute Name="DialogTitlePassword" Sym="OPUS4B-383885">
+   <Value>"Enter the Password:"</Value>
+  </Attribute>
+  <Attribute Name="AutoLogin" Sym="OPUS4B-384090">
+   <Value>false</Value>
+  </Attribute>
+ </Menu>
+ <Menu Name="Numeric Text Entry" Sym="OPUS4B-383886">
+  <Attribute Ref="346" Name="LastNumber"/>
+  <Attribute Ref="347" Name="LastNumberTime"/>
+  <Attribute Ref="348" Name="LastChar"/>
+  <Attribute Ref="349" Name="NumericTextPos"/>
+  <Listener Ref="350" Name="Number"/>
+  <Listener Ref="351" Name="Pause - Toggle Numeric..."/>
+  <Listener Ref="352" Name="Play - Accept current ..."/>
+  <Listener Ref="353" Name="Play/Pause - Accept cu..."/>
+  <Listener Name="Skip Fwd/Page Right - Accept current char" Sym="OPUS4B-383917">
+   <ListenerEvent>Skip Fwd/Page Right</ListenerEvent>
+   <Action Ref="355" Name="&quot;REM Accept current ch..."/>
+  </Listener>
+  <Listener Ref="356" Name="Stop - Backspace"/>
+  <Listener Ref="357" Name="RawKeyboard"/>
+  <Listener Name="Skip Bkwd/Page Left - Backspace" Sym="OPUS4B-383928">
+   <ListenerEvent>Stop</ListenerEvent>
+   <Action Ref="359" Name="&quot;REM Cancel current in..."/>
+  </Listener>
+  <Panel Name="EnableNumericText_viaProperty" Sym="OPUS4B-383929">
+   <WrapHNav>false</WrapHNav>
+   <WrapVNav>false</WrapVNav>
+   <IgnoreThemeProps>false</IgnoreThemeProps>
+   <Attribute Ref="361" Name="EnableNumericText"/>
+  </Panel>
+  <Panel Name="EnableNumericText_OFF" Sym="OPUS4B-383931">
+   <Attribute Ref="363" Name="EnableNumericText"/>
+  </Panel>
+  <Panel Name="LinksForEnableFullNumericTextEntry_initON" Sym="OPUS4B-383933">
+   <Attribute Ref="346" Name="LastNumber"/>
+   <Attribute Ref="347" Name="LastNumberTime"/>
+   <Attribute Ref="348" Name="LastChar"/>
+   <Attribute Ref="349" Name="NumericTextPos"/>
+   <Listener Ref="350" Name="Number"/>
+   <Listener Ref="351" Name="Pause - Toggle Numeric..."/>
+   <Listener Ref="352" Name="Play - Accept current ..."/>
+   <Listener Ref="353" Name="Play/Pause - Accept cu..."/>
+   <Listener Ref="356" Name="Stop - Backspace"/>
+   <Listener Ref="357" Name="RawKeyboard"/>
+   <Attribute Ref="361" Name="EnableNumericText"/>
+  </Panel>
+  <Panel Name="LinksForEnableFullNumericTextEntry_initOFF" Sym="OPUS4B-383934">
+   <Attribute Ref="346" Name="LastNumber"/>
+   <Attribute Ref="347" Name="LastNumberTime"/>
+   <Attribute Ref="348" Name="LastChar"/>
+   <Attribute Ref="349" Name="NumericTextPos"/>
+   <Listener Ref="350" Name="Number"/>
+   <Listener Ref="351" Name="Pause - Toggle Numeric..."/>
+   <Listener Ref="352" Name="Play - Accept current ..."/>
+   <Listener Ref="353" Name="Play/Pause - Accept cu..."/>
+   <Listener Ref="356" Name="Stop - Backspace"/>
+   <Listener Ref="357" Name="RawKeyboard"/>
+   <Attribute ID="363" Name="EnableNumericText" Sym="OPUS4B-383932">
+    <Value>false</Value>
+   </Attribute>
+  </Panel>
+  <Panel Name="TextEntryNumberPad" Sym="OPUS4B-383935">
+   <Layout>VerticalGrid</Layout>
+   <FixedWidth>1.0</FixedWidth>
+   <WrapHNav>false</WrapHNav>
+   <WrapVNav>false</WrapVNav>
+   <IgnoreThemeProps>true</IgnoreThemeProps>
+   <Panel Name="123" Sym="OPUS4B-383936">
+    <Layout>HorizontalGrid</Layout>
+    <FixedWidth>1.0</FixedWidth>
+    <PadX>0.00</PadX>
+    <WrapHNav>false</WrapHNav>
+    <WrapVNav>false</WrapVNav>
+    <IgnoreThemeProps>false</IgnoreThemeProps>
+    <BackgroundComponent>false</BackgroundComponent>
+    <Item Name="1" Sym="OPUS4B-383937">
+     <IgnoreThemeProps>false</IgnoreThemeProps>
+     <Action Name="Number=&quot;1&quot;" Sym="OPUS4B-383938">
+      <Conditional Ref="370" Name="EnableNumericText &amp;&amp; (..."/>
+     </Action>
+     <Panel Name="NumberKey" Sym="OPUS4B-383939">
+      <Layout>VerticalGrid</Layout>
+      <AnchorX>0.5</AnchorX>
+      <AnchorY>0.5</AnchorY>
+      <AnchorPointX>0.5</AnchorPointX>
+      <FixedWidth>1.0</FixedWidth>
+      <HorizontalAlignment>0.5</HorizontalAlignment>
+      <VerticalAlignment>0.0</VerticalAlignment>
+      <WrapHNav>false</WrapHNav>
+      <WrapVNav>false</WrapVNav>
+      <IgnoreThemeProps>false</IgnoreThemeProps>
+      <Action ID="372" Name="&quot;REM Show NTE button for 1&quot;" Sym="OPUS4B-382703">
+       <Action Name="NTEOffText = &quot;1&quot;" Sym="OPUS4B-382704">
+        <Action Name="NTEText = GetProperty(&quot;ui/numeric_text_input_&quot;+GetProperty(&quot;ui/translation_language_code&quot;,&quot;en&quot;)+&quot;_1&quot;+If(NTEState==&quot;xUpperCase&quot;,&quot;&quot;,&quot;_lower&quot;),&quot;1*?\&quot;\\/'`.,:;@$&amp;!-_()&quot;)" Sym="OPUS4B-382705">
+         <Action Name="Hint = GetProperty(&quot;ui/numeric_text_hint_&quot;+GetProperty(&quot;ui/translation_language_code&quot;,&quot;en&quot;)+&quot;_1&quot;+If(NTEState==&quot;xUpperCase&quot;,&quot;&quot;,&quot;_lower&quot;), &quot;1\nsym&quot;)" Sym="OPUS4B-382706">
+          <Action Ref="376" Name="&quot;REM Show NTE number p..."/>
+         </Action>
+        </Action>
+       </Action>
+      </Action>
+     </Panel>
+    </Item>
+    <Item Name="2" Sym="OPUS4B-383940">
+     <Action Name="Number=&quot;2&quot;" Sym="OPUS4B-383941">
+      <Conditional Ref="370" Name="EnableNumericText &amp;&amp; (..."/>
+     </Action>
+     <Panel Name="NumberKey" Sym="OPUS4B-383942">
+      <Layout>VerticalGrid</Layout>
+      <AnchorX>0.5</AnchorX>
+      <AnchorY>0.5</AnchorY>
+      <AnchorPointX>0.5</AnchorPointX>
+      <FixedWidth>1.0</FixedWidth>
+      <HorizontalAlignment>0.5</HorizontalAlignment>
+      <VerticalAlignment>0.0</VerticalAlignment>
+      <WrapHNav>false</WrapHNav>
+      <WrapVNav>false</WrapVNav>
+      <IgnoreThemeProps>false</IgnoreThemeProps>
+      <Action ID="380" Name="&quot;REM Show NTE button for 2&quot;" Sym="OPUS4B-383611">
+       <Action Name="NTEOffText = &quot;2&quot;" Sym="OPUS4B-383612">
+        <Action Name="NTEText = GetProperty(&quot;ui/numeric_text_input_&quot;+GetProperty(&quot;ui/translation_language_code&quot;,&quot;en&quot;)+&quot;_2&quot;+If(NTEState==&quot;xUpperCase&quot;,&quot;&quot;,&quot;_lower&quot;), &quot;ABC2&quot;)" Sym="OPUS4B-383613">
+         <Action Name="Hint = GetProperty(&quot;ui/numeric_text_hint_&quot;+GetProperty(&quot;ui/translation_language_code&quot;,&quot;en&quot;)+&quot;_2&quot;+If(NTEState==&quot;xUpperCase&quot;,&quot;&quot;,&quot;_lower&quot;), &quot;2\nABC&quot;)" Sym="OPUS4B-383614">
+          <Action Ref="376" Name="&quot;REM Show NTE number p..."/>
+         </Action>
+        </Action>
+       </Action>
+      </Action>
+     </Panel>
+    </Item>
+    <Item Name="3" Sym="OPUS4B-383943">
+     <Action Name="Number=&quot;3&quot;" Sym="OPUS4B-383944">
+      <Conditional Ref="370" Name="EnableNumericText &amp;&amp; (..."/>
+     </Action>
+     <Panel Name="NumberKey" Sym="OPUS4B-383945">
+      <Layout>VerticalGrid</Layout>
+      <AnchorX>0.5</AnchorX>
+      <AnchorY>0.5</AnchorY>
+      <AnchorPointX>0.5</AnchorPointX>
+      <FixedWidth>1.0</FixedWidth>
+      <HorizontalAlignment>0.5</HorizontalAlignment>
+      <VerticalAlignment>0.0</VerticalAlignment>
+      <WrapHNav>false</WrapHNav>
+      <WrapVNav>false</WrapVNav>
+      <IgnoreThemeProps>false</IgnoreThemeProps>
+      <Action ID="387" Name="&quot;REM Show NTE button for 3&quot;" Sym="OPUS4B-383617">
+       <Action Name="NTEOffText = &quot;3&quot;" Sym="OPUS4B-383618">
+        <Action Name="NTEText = GetProperty(&quot;ui/numeric_text_input_&quot;+GetProperty(&quot;ui/translation_language_code&quot;,&quot;en&quot;)+&quot;_3&quot;+If(NTEState==&quot;xUpperCase&quot;,&quot;&quot;,&quot;_lower&quot;), &quot;DEF3&quot;)" Sym="OPUS4B-383619">
+         <Action Name="Hint = GetProperty(&quot;ui/numeric_text_hint_&quot;+GetProperty(&quot;ui/translation_language_code&quot;,&quot;en&quot;)+&quot;_3&quot;+If(NTEState==&quot;xUpperCase&quot;,&quot;&quot;,&quot;_lower&quot;), &quot;3\nDEF&quot;)" Sym="OPUS4B-383620">
+          <Action Ref="376" Name="&quot;REM Show NTE number p..."/>
+         </Action>
+        </Action>
+       </Action>
+      </Action>
+     </Panel>
+    </Item>
+    <Theme Ref="391" Name="NTE Button Theme"/>
+    <Listener Ref="392" Name=""/>
+    <Listener Ref="393" Name=""/>
+   </Panel>
+   <Panel Name="456" Sym="OPUS4B-383963">
+    <Layout>HorizontalGrid</Layout>
+    <FixedWidth>1.0</FixedWidth>
+    <PadX>0.00</PadX>
+    <WrapHNav>false</WrapHNav>
+    <WrapVNav>false</WrapVNav>
+    <IgnoreThemeProps>false</IgnoreThemeProps>
+    <BackgroundComponent>false</BackgroundComponent>
+    <Item Name="4" Sym="OPUS4B-383964">
+     <Action Name="Number=&quot;4&quot;" Sym="OPUS4B-383965">
+      <Conditional Ref="370" Name="EnableNumericText &amp;&amp; (..."/>
+     </Action>
+     <Panel Name="NumberKey" Sym="OPUS4B-383966">
+      <Layout>VerticalGrid</Layout>
+      <AnchorX>0.5</AnchorX>
+      <AnchorY>0.5</AnchorY>
+      <AnchorPointX>0.5</AnchorPointX>
+      <FixedWidth>1.0</FixedWidth>
+      <HorizontalAlignment>0.5</HorizontalAlignment>
+      <VerticalAlignment>0.0</VerticalAlignment>
+      <WrapHNav>false</WrapHNav>
+      <WrapVNav>false</WrapVNav>
+      <IgnoreThemeProps>false</IgnoreThemeProps>
+      <Action ID="398" Name="&quot;REM Show NTE button for 4&quot;" Sym="OPUS4B-383624">
+       <Action Name="NTEOffText = &quot;4&quot;" Sym="OPUS4B-383625">
+        <Action Name="NTEText = GetProperty(&quot;ui/numeric_text_input_&quot;+GetProperty(&quot;ui/translation_language_code&quot;,&quot;en&quot;)+&quot;_4&quot;+If(NTEState==&quot;xUpperCase&quot;,&quot;&quot;,&quot;_lower&quot;), &quot;GHI4&quot;)" Sym="OPUS4B-383626">
+         <Action Name="Hint = GetProperty(&quot;ui/numeric_text_hint_&quot;+GetProperty(&quot;ui/translation_language_code&quot;,&quot;en&quot;)+&quot;_4&quot;+If(NTEState==&quot;xUpperCase&quot;,&quot;&quot;,&quot;_lower&quot;), &quot;4\nGHI&quot;)" Sym="OPUS4B-383627">
+          <Action Ref="376" Name="&quot;REM Show NTE number p..."/>
+         </Action>
+        </Action>
+       </Action>
+      </Action>
+     </Panel>
+    </Item>
+    <Item Name="5" Sym="OPUS4B-383967">
+     <Action Name="Number=&quot;5&quot;" Sym="OPUS4B-383968">
+      <Conditional Ref="370" Name="EnableNumericText &amp;&amp; (..."/>
+     </Action>
+     <Panel Name="NumberKey" Sym="OPUS4B-383969">
+      <Layout>VerticalGrid</Layout>
+      <AnchorX>0.5</AnchorX>
+      <AnchorY>0.5</AnchorY>
+      <AnchorPointX>0.5</AnchorPointX>
+      <FixedWidth>1.0</FixedWidth>
+      <HorizontalAlignment>0.5</HorizontalAlignment>
+      <VerticalAlignment>0.0</VerticalAlignment>
+      <WrapHNav>false</WrapHNav>
+      <WrapVNav>false</WrapVNav>
+      <IgnoreThemeProps>false</IgnoreThemeProps>
+      <Action ID="405" Name="&quot;REM Show NTE button for 5&quot;" Sym="OPUS4B-383630">
+       <Action Name="NTEOffText = &quot;5&quot;" Sym="OPUS4B-383631">
+        <Action Name="NTEText = GetProperty(&quot;ui/numeric_text_input_&quot;+GetProperty(&quot;ui/translation_language_code&quot;,&quot;en&quot;)+&quot;_5&quot;+If(NTEState==&quot;xUpperCase&quot;,&quot;&quot;,&quot;_lower&quot;), &quot;JKL5&quot;)" Sym="OPUS4B-383632">
+         <Action Name="Hint = GetProperty(&quot;ui/numeric_text_hint_&quot;+GetProperty(&quot;ui/translation_language_code&quot;,&quot;en&quot;)+&quot;_5&quot;+If(NTEState==&quot;xUpperCase&quot;,&quot;&quot;,&quot;_lower&quot;), &quot;5\nJKL&quot;)" Sym="OPUS4B-383633">
+          <Action Ref="376" Name="&quot;REM Show NTE number p..."/>
+         </Action>
+        </Action>
+       </Action>
+      </Action>
+     </Panel>
+    </Item>
+    <Item Name="6" Sym="OPUS4B-383970">
+     <Action Name="Number=&quot;6&quot;" Sym="OPUS4B-383971">
+      <Conditional Ref="370" Name="EnableNumericText &amp;&amp; (..."/>
+     </Action>
+     <Panel Name="NumberKey" Sym="OPUS4B-383972">
+      <Layout>VerticalGrid</Layout>
+      <AnchorX>0.5</AnchorX>
+      <AnchorY>0.5</AnchorY>
+      <AnchorPointX>0.5</AnchorPointX>
+      <FixedWidth>1.0</FixedWidth>
+      <HorizontalAlignment>0.5</HorizontalAlignment>
+      <VerticalAlignment>0.0</VerticalAlignment>
+      <WrapHNav>false</WrapHNav>
+      <WrapVNav>false</WrapVNav>
+      <IgnoreThemeProps>false</IgnoreThemeProps>
+      <Action ID="412" Name="&quot;REM Show NTE button for 6&quot;" Sym="OPUS4B-383636">
+       <Action Name="NTEOffText = &quot;6&quot;" Sym="OPUS4B-383637">
+        <Action Name="NTEText = GetProperty(&quot;ui/numeric_text_input_&quot;+GetProperty(&quot;ui/translation_language_code&quot;,&quot;en&quot;)+&quot;_6&quot;+If(NTEState==&quot;xUpperCase&quot;,&quot;&quot;,&quot;_lower&quot;), &quot;MNO6&quot;)" Sym="OPUS4B-383638">
+         <Action Name="Hint = GetProperty(&quot;ui/numeric_text_hint_&quot;+GetProperty(&quot;ui/translation_language_code&quot;,&quot;en&quot;)+&quot;_6&quot;+If(NTEState==&quot;xUpperCase&quot;,&quot;&quot;,&quot;_lower&quot;), &quot;6\nMNO&quot;)" Sym="OPUS4B-383639">
+          <Action Ref="376" Name="&quot;REM Show NTE number p..."/>
+         </Action>
+        </Action>
+       </Action>
+      </Action>
+     </Panel>
+    </Item>
+    <Theme Ref="391" Name="NTE Button Theme"/>
+    <Listener Ref="392" Name=""/>
+    <Listener Ref="393" Name=""/>
+   </Panel>
+   <Panel Name="789" Sym="OPUS4B-383973">
+    <Layout>HorizontalGrid</Layout>
+    <FixedWidth>1.0</FixedWidth>
+    <PadX>0.00</PadX>
+    <WrapHNav>false</WrapHNav>
+    <WrapVNav>false</WrapVNav>
+    <IgnoreThemeProps>false</IgnoreThemeProps>
+    <BackgroundComponent>false</BackgroundComponent>
+    <Item Name="7" Sym="OPUS4B-383974">
+     <Action Name="Number=&quot;7&quot;" Sym="OPUS4B-383975">
+      <Conditional Ref="370" Name="EnableNumericText &amp;&amp; (..."/>
+     </Action>
+     <Panel Name="NumberKey" Sym="OPUS4B-383976">
+      <Layout>VerticalGrid</Layout>
+      <AnchorX>0.5</AnchorX>
+      <AnchorY>0.5</AnchorY>
+      <AnchorPointX>0.5</AnchorPointX>
+      <FixedWidth>1.0</FixedWidth>
+      <HorizontalAlignment>0.5</HorizontalAlignment>
+      <VerticalAlignment>0.0</VerticalAlignment>
+      <WrapHNav>false</WrapHNav>
+      <WrapVNav>false</WrapVNav>
+      <IgnoreThemeProps>false</IgnoreThemeProps>
+      <Action ID="420" Name="&quot;REM Show NTE button for 7&quot;" Sym="OPUS4B-383643">
+       <Action Name="NTEOffText = &quot;7&quot;" Sym="OPUS4B-383644">
+        <Action Name="NTEText = GetProperty(&quot;ui/numeric_text_input_&quot;+GetProperty(&quot;ui/translation_language_code&quot;,&quot;en&quot;)+&quot;_7&quot;+If(NTEState==&quot;xUpperCase&quot;,&quot;&quot;,&quot;_lower&quot;), &quot;PQRS7&quot;)" Sym="OPUS4B-383645">
+         <Action Name="Hint = GetProperty(&quot;ui/numeric_text_hint_&quot;+GetProperty(&quot;ui/translation_language_code&quot;,&quot;en&quot;)+&quot;_7&quot;+If(NTEState==&quot;xUpperCase&quot;,&quot;&quot;,&quot;_lower&quot;), &quot;7\nPQRS&quot;)" Sym="OPUS4B-383646">
+          <Action Ref="376" Name="&quot;REM Show NTE number p..."/>
+         </Action>
+        </Action>
+       </Action>
+      </Action>
+     </Panel>
+    </Item>
+    <Item Name="8" Sym="OPUS4B-383977">
+     <Action Name="Number=&quot;8&quot;" Sym="OPUS4B-383978">
+      <Conditional Ref="370" Name="EnableNumericText &amp;&amp; (..."/>
+     </Action>
+     <Panel Name="NumberKey" Sym="OPUS4B-383979">
+      <Layout>VerticalGrid</Layout>
+      <AnchorX>0.5</AnchorX>
+      <AnchorY>0.5</AnchorY>
+      <AnchorPointX>0.5</AnchorPointX>
+      <FixedWidth>1.0</FixedWidth>
+      <HorizontalAlignment>0.5</HorizontalAlignment>
+      <VerticalAlignment>0.0</VerticalAlignment>
+      <WrapHNav>false</WrapHNav>
+      <WrapVNav>false</WrapVNav>
+      <IgnoreThemeProps>false</IgnoreThemeProps>
+      <Action ID="427" Name="&quot;REM Show NTE button for 8&quot;" Sym="OPUS4B-383649">
+       <Action Name="NTEOffText = &quot;8&quot;" Sym="OPUS4B-383650">
+        <Action Name="NTEText = GetProperty(&quot;ui/numeric_text_input_&quot;+GetProperty(&quot;ui/translation_language_code&quot;,&quot;en&quot;)+&quot;_8&quot;+If(NTEState==&quot;xUpperCase&quot;,&quot;&quot;,&quot;_lower&quot;), &quot;TUV8&quot;)" Sym="OPUS4B-383651">
+         <Action Name="Hint = GetProperty(&quot;ui/numeric_text_hint_&quot;+GetProperty(&quot;ui/translation_language_code&quot;,&quot;en&quot;)+&quot;_8&quot;+If(NTEState==&quot;xUpperCase&quot;,&quot;&quot;,&quot;_lower&quot;), &quot;8\nTUV&quot;)" Sym="OPUS4B-383652">
+          <Action Ref="376" Name="&quot;REM Show NTE number p..."/>
+         </Action>
+        </Action>
+       </Action>
+      </Action>
+     </Panel>
+    </Item>
+    <Item Name="9" Sym="OPUS4B-383980">
+     <Action Name="Number=&quot;9&quot;" Sym="OPUS4B-383981">
+      <Conditional Ref="370" Name="EnableNumericText &amp;&amp; (..."/>
+     </Action>
+     <Panel Name="NumberKey" Sym="OPUS4B-383982">
+      <Layout>VerticalGrid</Layout>
+      <AnchorX>0.5</AnchorX>
+      <AnchorY>0.5</AnchorY>
+      <AnchorPointX>0.5</AnchorPointX>
+      <FixedWidth>1.0</FixedWidth>
+      <HorizontalAlignment>0.5</HorizontalAlignment>
+      <VerticalAlignment>0.0</VerticalAlignment>
+      <WrapHNav>false</WrapHNav>
+      <WrapVNav>false</WrapVNav>
+      <IgnoreThemeProps>false</IgnoreThemeProps>
+      <Action ID="434" Name="&quot;REM Show NTE button for 9&quot;" Sym="OPUS4B-383655">
+       <Action Name="NTEOffText = &quot;9&quot;" Sym="OPUS4B-383656">
+        <Action Name="NTEText = GetProperty(&quot;ui/numeric_text_input_&quot;+GetProperty(&quot;ui/translation_language_code&quot;,&quot;en&quot;)+&quot;_9&quot;+If(NTEState==&quot;xUpperCase&quot;,&quot;&quot;,&quot;_lower&quot;), &quot;WXYZ9&quot;)" Sym="OPUS4B-383657">
+         <Action Name="Hint = GetProperty(&quot;ui/numeric_text_hint_&quot;+GetProperty(&quot;ui/translation_language_code&quot;,&quot;en&quot;)+&quot;_9&quot;+If(NTEState==&quot;xUpperCase&quot;,&quot;&quot;,&quot;_lower&quot;), &quot;9\nWXYZ&quot;)" Sym="OPUS4B-383658">
+          <Action Ref="376" Name="&quot;REM Show NTE number p..."/>
+         </Action>
+        </Action>
+       </Action>
+      </Action>
+     </Panel>
+    </Item>
+    <Theme Ref="391" Name="NTE Button Theme"/>
+    <Listener Ref="392" Name=""/>
+    <Listener Ref="393" Name=""/>
+   </Panel>
+   <Panel Name="Back0Accept" Sym="OPUS4B-383983">
+    <Layout>HorizontalGrid</Layout>
+    <FixedWidth>1.0</FixedWidth>
+    <PadX>0.00</PadX>
+    <WrapHNav>false</WrapHNav>
+    <WrapVNav>false</WrapVNav>
+    <IgnoreThemeProps>false</IgnoreThemeProps>
+    <BackgroundComponent>false</BackgroundComponent>
+    <Item Name="Backspace" Sym="OPUS4B-383984">
+     <Action ID="359" Name="&quot;REM Cancel current input; delete previous character if no current NTE input&quot;" Sym="OPUS4B-383667">
+      <Conditional Name="LastNumber == null" Sym="OPUS4B-383668">
+       <Action Name="Keystroke(&quot;Backspace&quot;)" Sym="OPUS4B-383669"/>
+      </Conditional>
+      <Action Ref="442" Name="LastNumber = null"/>
+     </Action>
+     <Panel Name="NumberKey" Sym="OPUS4B-383985">
+      <Layout>VerticalGrid</Layout>
+      <AnchorX>0.5</AnchorX>
+      <AnchorY>0.5</AnchorY>
+      <AnchorPointX>0.5</AnchorPointX>
+      <FixedWidth>1.0</FixedWidth>
+      <HorizontalAlignment>0.5</HorizontalAlignment>
+      <VerticalAlignment>0.0</VerticalAlignment>
+      <WrapHNav>false</WrapHNav>
+      <WrapVNav>false</WrapVNav>
+      <IgnoreThemeProps>false</IgnoreThemeProps>
+      <Action ID="444" Name="GetProperty(&quot;ui/numeric_text_hint_&quot;+GetProperty(&quot;ui/translation_language_code&quot;,&quot;en&quot;)+&quot;_back&quot;+If(NTEState==&quot;xUpperCase&quot;,&quot;&quot;,&quot;_lower&quot;), &quot;stop:\n&lt;&quot;)" Sym="OPUS4B-383662">
+       <Text Name="" Sym="OPUS4B-383663">
+        <AutosizeText>false</AutosizeText>
+        <WrapText>false</WrapText>
+        <TextAlignment>0.5</TextAlignment>
+        <TextShadow>false</TextShadow>
+        <DisableFontScaling>false</DisableFontScaling>
+        <IgnoreThemeProps>false</IgnoreThemeProps>
+        <Listener Name="" Sym="OPUS4B-383664">
+         <ListenerEvent>MouseClick</ListenerEvent>
+         <Conditional Name="CanClickFakeButtons &amp;&amp; (MouseClick == 1)" Sym="OPUS4B-383665">
+          <Branch Name="true" Sym="OPUS4B-383666">
+           <Action Ref="359" Name="&quot;REM Cancel current in..."/>
+          </Branch>
+          <Branch Name="else" Sym="OPUS4B-383670">
+           <Action Name="PassiveListen()" Sym="OPUS4B-383671"/>
+          </Branch>
+         </Conditional>
+        </Listener>
+       </Text>
+      </Action>
+     </Panel>
+    </Item>
+    <Item Name="0" Sym="OPUS4B-383986">
+     <Action Name="Number=&quot;0&quot;" Sym="OPUS4B-383987">
+      <Conditional ID="370" Name="EnableNumericText &amp;&amp; (UseSmartSearch!=true)" Sym="OPUS4B-382715">
+       <Branch Name="else" Sym="OPUS4B-382716">
+        <Action Ref="454" Name="Keystroke(Number)"/>
+       </Branch>
+       <Branch Name="true" Sym="OPUS4B-382720">
+        <Conditional Name="(LastNumber == null) || (Time() - LastNumberTime &gt; GetProperty(&quot;ui/numeric_text_input_delay_time&quot;, &quot;1000&quot;)) || (Number != LastNumber)" Sym="OPUS4B-382721">
+         <Action Name="FirstInput = true" Sym="OPUS4B-382722">
+          <Action Name="NumericTextPos = 0" Sym="OPUS4B-382723">
+           <Conditional Ref="459" Name="LastNumber != null"/>
+          </Action>
+         </Action>
+        </Conditional>
+        <Conditional Name="!FirstInput &amp;&amp; false" Sym="OPUS4B-382726">
+         <Action Name="Keystroke(&quot;Backspace&quot;)" Sym="OPUS4B-382727"/>
+        </Conditional>
+        <Conditional Name="Number" Sym="OPUS4B-382728">
+         <Branch Name="0" Sym="OPUS4B-382729">
+          <Action Name="TextList = GetProperty(&quot;ui/numeric_text_input_&quot;+GetProperty(&quot;ui/translation_language_code&quot;,&quot;en&quot;)+&quot;_0&quot;+If(NTEState==&quot;xUpperCase&quot;,&quot;&quot;,&quot;_lower&quot;), &quot; 0&quot;)" Sym="OPUS4B-382730">
+           <Conditional Ref="465" Name="NumericTextPos &gt;= Size..."/>
+          </Action>
+         </Branch>
+         <Branch Name="1" Sym="OPUS4B-383586">
+          <Action Name="TextList = GetProperty(&quot;ui/numeric_text_input_&quot;+GetProperty(&quot;ui/translation_language_code&quot;,&quot;en&quot;)+&quot;_1&quot;+If(NTEState==&quot;xUpperCase&quot;,&quot;&quot;,&quot;_lower&quot;),&quot;1*?\&quot;\\/'`.,:;@$&amp;!-_()&quot;)" Sym="OPUS4B-383587">
+           <Conditional Ref="465" Name="NumericTextPos &gt;= Size..."/>
+          </Action>
+         </Branch>
+         <Branch Name="2" Sym="OPUS4B-383588">
+          <Action Name="TextList = GetProperty(&quot;ui/numeric_text_input_&quot;+GetProperty(&quot;ui/translation_language_code&quot;,&quot;en&quot;)+&quot;_2&quot;+If(NTEState==&quot;xUpperCase&quot;,&quot;&quot;,&quot;_lower&quot;), &quot;ABC2&quot;)" Sym="OPUS4B-383589">
+           <Conditional Ref="465" Name="NumericTextPos &gt;= Size..."/>
+          </Action>
+         </Branch>
+         <Branch Name="3" Sym="OPUS4B-383590">
+          <Action Name="TextList = GetProperty(&quot;ui/numeric_text_input_&quot;+GetProperty(&quot;ui/translation_language_code&quot;,&quot;en&quot;)+&quot;_3&quot;+If(NTEState==&quot;xUpperCase&quot;,&quot;&quot;,&quot;_lower&quot;), &quot;DEF3&quot;)" Sym="OPUS4B-383591">
+           <Conditional Ref="465" Name="NumericTextPos &gt;= Size..."/>
+          </Action>
+         </Branch>
+         <Branch Name="4" Sym="OPUS4B-383592">
+          <Action Name="TextList = GetProperty(&quot;ui/numeric_text_input_&quot;+GetProperty(&quot;ui/translation_language_code&quot;,&quot;en&quot;)+&quot;_4&quot;+If(NTEState==&quot;xUpperCase&quot;,&quot;&quot;,&quot;_lower&quot;), &quot;GHI4&quot;)" Sym="OPUS4B-383593">
+           <Conditional Ref="465" Name="NumericTextPos &gt;= Size..."/>
+          </Action>
+         </Branch>
+         <Branch Name="5" Sym="OPUS4B-383594">
+          <Action Name="TextList = GetProperty(&quot;ui/numeric_text_input_&quot;+GetProperty(&quot;ui/translation_language_code&quot;,&quot;en&quot;)+&quot;_5&quot;+If(NTEState==&quot;xUpperCase&quot;,&quot;&quot;,&quot;_lower&quot;), &quot;JKL5&quot;)" Sym="OPUS4B-383595">
+           <Conditional Ref="465" Name="NumericTextPos &gt;= Size..."/>
+          </Action>
+         </Branch>
+         <Branch Name="6" Sym="OPUS4B-383596">
+          <Action Name="TextList = GetProperty(&quot;ui/numeric_text_input_&quot;+GetProperty(&quot;ui/translation_language_code&quot;,&quot;en&quot;)+&quot;_6&quot;+If(NTEState==&quot;xUpperCase&quot;,&quot;&quot;,&quot;_lower&quot;), &quot;MNO6&quot;)" Sym="OPUS4B-383597">
+           <Conditional Ref="465" Name="NumericTextPos &gt;= Size..."/>
+          </Action>
+         </Branch>
+         <Branch Name="7" Sym="OPUS4B-383598">
+          <Action Name="TextList = GetProperty(&quot;ui/numeric_text_input_&quot;+GetProperty(&quot;ui/translation_language_code&quot;,&quot;en&quot;)+&quot;_7&quot;+If(NTEState==&quot;xUpperCase&quot;,&quot;&quot;,&quot;_lower&quot;), &quot;PQRS7&quot;)" Sym="OPUS4B-383599">
+           <Conditional Ref="465" Name="NumericTextPos &gt;= Size..."/>
+          </Action>
+         </Branch>
+         <Branch Name="8" Sym="OPUS4B-383600">
+          <Action Name="TextList = GetProperty(&quot;ui/numeric_text_input_&quot;+GetProperty(&quot;ui/translation_language_code&quot;,&quot;en&quot;)+&quot;_8&quot;+If(NTEState==&quot;xUpperCase&quot;,&quot;&quot;,&quot;_lower&quot;), &quot;TUV8&quot;)" Sym="OPUS4B-383601">
+           <Conditional Ref="465" Name="NumericTextPos &gt;= Size..."/>
+          </Action>
+         </Branch>
+         <Branch Name="9" Sym="OPUS4B-383602">
+          <Action Name="TextList = GetProperty(&quot;ui/numeric_text_input_&quot;+GetProperty(&quot;ui/translation_language_code&quot;,&quot;en&quot;)+&quot;_9&quot;+If(NTEState==&quot;xUpperCase&quot;,&quot;&quot;,&quot;_lower&quot;), &quot;WXYZ9&quot;)" Sym="OPUS4B-383603">
+           <Conditional ID="465" Name="NumericTextPos &gt;= Size(TextList)" Sym="OPUS4B-382731">
+            <Branch Name="true" Sym="OPUS4B-382732">
+             <Action Name="NumericTextPos = 0" Sym="OPUS4B-382733">
+              <Action Ref="486" Name="LastChar = Substring(T..."/>
+             </Action>
+            </Branch>
+            <Branch Name="else" Sym="OPUS4B-383585">
+             <Action ID="486" Name="LastChar = Substring(TextList,NumericTextPos,NumericTextPos+1)" Sym="OPUS4B-382734">
+              <Action Name="NumericTextPos = NumericTextPos + 1" Sym="OPUS4B-382735">
+               <Action Name="&quot;Keystroke(LastChar)&quot;" Sym="OPUS4B-382736">
+                <Action Name="LastNumberTime = Time()" Sym="OPUS4B-382737">
+                 <Action Name="LastNumber = Number" Sym="OPUS4B-382738">
+                  <Action Name="RefreshArea(&quot;NTECharStatusDisplay&quot;)" Sym="OPUS4B-383584"/>
+                 </Action>
+                </Action>
+               </Action>
+              </Action>
+             </Action>
+            </Branch>
+           </Conditional>
+          </Action>
+         </Branch>
+         <Branch Name="&quot;-&quot;" Sym="OPUS4B-383604">
+          <Action ID="454" Name="Keystroke(Number)" Sym="OPUS4B-382717">
+           <Action Ref="442" Name="LastNumber = null"/>
+          </Action>
+         </Branch>
+        </Conditional>
+       </Branch>
+      </Conditional>
+     </Action>
+     <Panel Name="NumberKey" Sym="OPUS4B-383988">
+      <Layout>VerticalGrid</Layout>
+      <AnchorX>0.5</AnchorX>
+      <AnchorY>0.5</AnchorY>
+      <AnchorPointX>0.5</AnchorPointX>
+      <FixedWidth>1.0</FixedWidth>
+      <HorizontalAlignment>0.5</HorizontalAlignment>
+      <VerticalAlignment>0.0</VerticalAlignment>
+      <WrapHNav>false</WrapHNav>
+      <WrapVNav>false</WrapVNav>
+      <IgnoreThemeProps>false</IgnoreThemeProps>
+      <Action ID="495" Name="&quot;REM Show NTE button for 0&quot;" Sym="OPUS4B-383673">
+       <Action Name="NTEOffText = &quot;0&quot;" Sym="OPUS4B-383674">
+        <Action Name="NTEText = GetProperty(&quot;ui/numeric_text_input_&quot;+GetProperty(&quot;ui/translation_language_code&quot;,&quot;en&quot;)+&quot;_0&quot;+If(NTEState==&quot;xUpperCase&quot;,&quot;&quot;,&quot;_lower&quot;), &quot; 0&quot;)" Sym="OPUS4B-383675">
+         <Action Name="Hint = GetProperty(&quot;ui/numeric_text_hint_&quot;+GetProperty(&quot;ui/translation_language_code&quot;,&quot;en&quot;)+&quot;_0&quot;+If(NTEState==&quot;xUpperCase&quot;,&quot;&quot;,&quot;_lower&quot;), &quot;0\nspace&quot;)" Sym="OPUS4B-383676">
+          <Action ID="376" Name="&quot;REM Show NTE number pad text&quot;" Sym="OPUS4B-382707">
+           <Conditional Name="EnableNumericText" Sym="OPUS4B-382708">
+            <Branch Name="true" Sym="OPUS4B-382709">
+             <Action Name="Hint" Sym="OPUS4B-382710">
+              <Text Ref="502" Name=""/>
+             </Action>
+            </Branch>
+            <Branch Name="else" Sym="OPUS4B-383607">
+             <Action Name="NTEOffText" Sym="OPUS4B-383608">
+              <Text ID="502" Name="" Sym="OPUS4B-382711">
+               <AutosizeText>false</AutosizeText>
+               <WrapText>false</WrapText>
+               <TextAlignment>0.5</TextAlignment>
+               <TextShadow>false</TextShadow>
+               <DisableFontScaling>false</DisableFontScaling>
+               <IgnoreThemeProps>false</IgnoreThemeProps>
+               <Listener Name="" Sym="OPUS4B-382712">
+                <ListenerEvent>MouseClick</ListenerEvent>
+                <Conditional Name="CanClickFakeButtons &amp;&amp; (MouseClick == 1)" Sym="OPUS4B-382713">
+                 <Branch Name="true" Sym="OPUS4B-382714">
+                  <Conditional Ref="370" Name="EnableNumericText &amp;&amp; (..."/>
+                 </Branch>
+                 <Branch Name="else" Sym="OPUS4B-383605">
+                  <Action Name="PassiveListen()" Sym="OPUS4B-383606"/>
+                 </Branch>
+                </Conditional>
+               </Listener>
+              </Text>
+             </Action>
+            </Branch>
+           </Conditional>
+          </Action>
+         </Action>
+        </Action>
+       </Action>
+      </Action>
+     </Panel>
+    </Item>
+    <Item Name="Accept" Sym="OPUS4B-383989">
+     <Action ID="355" Name="&quot;REM Accept current char, if there is one&quot;" Sym="OPUS4B-383684">
+      <Conditional ID="459" Name="LastNumber != null" Sym="OPUS4B-382724">
+       <Action Name="Keystroke(LastChar)" Sym="OPUS4B-382725"/>
+      </Conditional>
+      <Action Ref="442" Name="LastNumber = null"/>
+     </Action>
+     <Panel Name="NumberKey" Sym="OPUS4B-383990">
+      <Layout>VerticalGrid</Layout>
+      <AnchorX>0.5</AnchorX>
+      <AnchorY>0.5</AnchorY>
+      <AnchorPointX>0.5</AnchorPointX>
+      <FixedWidth>1.0</FixedWidth>
+      <HorizontalAlignment>0.5</HorizontalAlignment>
+      <VerticalAlignment>0.0</VerticalAlignment>
+      <WrapHNav>false</WrapHNav>
+      <WrapVNav>false</WrapVNav>
+      <IgnoreThemeProps>false</IgnoreThemeProps>
+      <Action ID="513" Name="GetProperty(&quot;ui/numeric_text_hint_&quot;+GetProperty(&quot;ui/translation_language_code&quot;,&quot;en&quot;)+&quot;_accept&quot;+If(NTEState==&quot;xUpperCase&quot;,&quot;&quot;,&quot;_lower&quot;), &quot;play:\n&gt;&quot;)" Sym="OPUS4B-383679">
+       <Text Name="" Sym="OPUS4B-383680">
+        <AutosizeText>false</AutosizeText>
+        <WrapText>false</WrapText>
+        <TextAlignment>0.5</TextAlignment>
+        <TextShadow>false</TextShadow>
+        <DisableFontScaling>false</DisableFontScaling>
+        <IgnoreThemeProps>false</IgnoreThemeProps>
+        <Listener Name="" Sym="OPUS4B-383681">
+         <ListenerEvent>MouseClick</ListenerEvent>
+         <Conditional Name="CanClickFakeButtons &amp;&amp; (MouseClick == 1)" Sym="OPUS4B-383682">
+          <Branch Name="true" Sym="OPUS4B-383683">
+           <Action Ref="355" Name="&quot;REM Accept current ch..."/>
+          </Branch>
+          <Branch Name="else" Sym="OPUS4B-383685">
+           <Action Name="PassiveListen()" Sym="OPUS4B-383686"/>
+          </Branch>
+         </Conditional>
+        </Listener>
+       </Text>
+      </Action>
+     </Panel>
+    </Item>
+    <Theme ID="391" Name="NTE Button Theme" Sym="OPUS4B-383946">
+     <Item Name="ShapeItemHighlight" Sym="OPUS4B-384080">
+      <Insets>0.01,0.01,0.018,0.01</Insets>
+      <IgnoreThemeProps>false</IgnoreThemeProps>
+      <BackgroundComponent>false</BackgroundComponent>
+      <MouseTransparency>false</MouseTransparency>
+      <Conditional ID="521" Name="Focused" Sym="OPUS4B-384035">
+       <Branch Name="true" Sym="OPUS4B-384036">
+        <Action Name="&quot;REM Draw the normal button highlight image&quot;" Sym="OPUS4B-384037">
+         <Action Name="gButtonHighlight" Sym="OPUS4B-384038">
+          <Image Name="Button Highlight" Sym="OPUS4B-384039">
+           <FixedWidth>1.0</FixedWidth>
+           <FixedHeight>1.0</FixedHeight>
+           <Animation>CacheFocus</Animation>
+           <PreserveAspectRatio>false</PreserveAspectRatio>
+           <ResizeImage>true</ResizeImage>
+           <AutoRepeatAction>false</AutoRepeatAction>
+           <BackgroundComponent>true</BackgroundComponent>
+           <ScalingInsets>8,9,11,9</ScalingInsets>
+          </Image>
+         </Action>
+        </Action>
+       </Branch>
+       <Branch Name="Focused" Sym="OPUS4B-384040">
+        <Action Name="&quot;REM Draw the button BG&quot;" Sym="OPUS4B-384041">
+         <Action Name="gButtonBG" Sym="OPUS4B-384042">
+          <Image Name="Transparent Button BG" Sym="OPUS4B-384043">
+           <FixedWidth>1.0</FixedWidth>
+           <FixedHeight>1.0</FixedHeight>
+           <PreserveAspectRatio>false</PreserveAspectRatio>
+           <ResizeImage>true</ResizeImage>
+           <AutoRepeatAction>false</AutoRepeatAction>
+           <BackgroundComponent>true</BackgroundComponent>
+           <ScalingInsets>8,9,11,9</ScalingInsets>
+          </Image>
+         </Action>
+        </Action>
+       </Branch>
+      </Conditional>
+      <Theme Name="" Sym="OPUS4B-384081">
+       <TileBackgroundImage>false</TileBackgroundImage>
+       <StretchBackgroundImage>false</StretchBackgroundImage>
+       <ForegroundColor>0xF7F7F7</ForegroundColor>
+       <ForegroundSelectedColor>0xF7F7F7</ForegroundSelectedColor>
+       <ForegroundShadowColor>0x1B1715</ForegroundShadowColor>
+       <ForegroundShadowAlpha>110</ForegroundShadowAlpha>
+       <ForegroundShadowSelectedColor>0x1B1715</ForegroundShadowSelectedColor>
+       <ForegroundShadowSelectedAlpha>110</ForegroundShadowSelectedAlpha>
+       <Text Name="" Sym="OPUS4B-384086">
+        <AutosizeText>true</AutosizeText>
+        <WrapText>false</WrapText>
+        <TextAlignment>0.5</TextAlignment>
+        <TextShadow>true</TextShadow>
+        <DisableFontScaling>false</DisableFontScaling>
+        <IgnoreThemeProps>false</IgnoreThemeProps>
+        <BackgroundComponent>false</BackgroundComponent>
+       </Text>
+      </Theme>
+     </Item>
+    </Theme>
+    <Listener ID="392" Name="" Sym="OPUS4B-383947">
+     <ListenerEvent>Skip Fwd/Page Right</ListenerEvent>
+     <Conditional Name="true" Sym="OPUS4B-383948">
+      <Branch Name="InMusicSearch" Sym="OPUS4B-383949">
+       <Action Name="&quot;REM -- Music menu FF&quot;" Sym="OPUS4B-383950">
+        <Conditional Name="IsCurrentMediaFileMusic()" Sym="OPUS4B-383951">
+         <Action Name="SkipForward()" Sym="OPUS4B-383952"/>
+        </Conditional>
+       </Action>
+      </Branch>
+      <Branch Name="else" Sym="OPUS4B-383953">
+       <Action Name="PassiveListen()" Sym="OPUS4B-383954"/>
+      </Branch>
+     </Conditional>
+    </Listener>
+    <Listener ID="393" Name="" Sym="OPUS4B-383955">
+     <ListenerEvent>Skip Bkwd/Page Left</ListenerEvent>
+     <Conditional Name="true" Sym="OPUS4B-383956">
+      <Branch Name="InMusicSearch" Sym="OPUS4B-383957">
+       <Action Name="&quot;REM -- Music menu REW&quot;" Sym="OPUS4B-383958">
+        <Conditional Name="IsCurrentMediaFileMusic()" Sym="OPUS4B-383959">
+         <Action Name="SkipBackwards()" Sym="OPUS4B-383960"/>
+        </Conditional>
+       </Action>
+      </Branch>
+      <Branch Name="else" Sym="OPUS4B-383961">
+       <Action Name="PassiveListen()" Sym="OPUS4B-383962"/>
+      </Branch>
+     </Conditional>
+    </Listener>
+   </Panel>
+   <Panel Name="ContinueCancel" Sym="OPUS4B-383991">
+    <Layout>HorizontalGrid</Layout>
+    <FixedWidth>1.0</FixedWidth>
+    <PadX>0.005</PadX>
+    <WrapHNav>false</WrapHNav>
+    <WrapVNav>false</WrapVNav>
+    <IgnoreThemeProps>false</IgnoreThemeProps>
+    <Item Name="Continue" Sym="OPUS4B-383992">
+     <Panel Name="OptionButton" Sym="OPUS4B-383993">
+      <Layout>VerticalGrid</Layout>
+      <AnchorX>0.5</AnchorX>
+      <AnchorY>0.5</AnchorY>
+      <AnchorPointX>0.5</AnchorPointX>
+      <FixedWidth>1.0</FixedWidth>
+      <HorizontalAlignment>0.5</HorizontalAlignment>
+      <VerticalAlignment>0.0</VerticalAlignment>
+      <WrapHNav>false</WrapHNav>
+      <WrapVNav>false</WrapVNav>
+      <IgnoreThemeProps>false</IgnoreThemeProps>
+      <Text Name="Continue" Sym="OPUS4B-383994">
+       <AutosizeText>false</AutosizeText>
+       <WrapText>false</WrapText>
+       <TextAlignment>0.5</TextAlignment>
+       <TextShadow>false</TextShadow>
+       <DisableFontScaling>false</DisableFontScaling>
+       <IgnoreThemeProps>true</IgnoreThemeProps>
+      </Text>
+     </Panel>
+     <Attribute Name="DefaultFocus" Sym="OPUS4B-383995">
+      <Value>true</Value>
+     </Attribute>
+     <Action Name="Keystroke(&quot;Backspace&quot;)" Sym="OPUS4B-383996"/>
+    </Item>
+    <Item Name="Cancel" Sym="OPUS4B-383997">
+     <Panel Name="OptionButton" Sym="OPUS4B-383998">
+      <Layout>VerticalGrid</Layout>
+      <AnchorX>0.5</AnchorX>
+      <AnchorY>0.5</AnchorY>
+      <AnchorPointX>0.5</AnchorPointX>
+      <FixedWidth>1.0</FixedWidth>
+      <HorizontalAlignment>0.5</HorizontalAlignment>
+      <VerticalAlignment>0.0</VerticalAlignment>
+      <WrapHNav>false</WrapHNav>
+      <WrapVNav>false</WrapVNav>
+      <IgnoreThemeProps>false</IgnoreThemeProps>
+      <Action Name="&quot;Cancel&quot;" Sym="OPUS4B-383999">
+       <Text Name="" Sym="OPUS4B-384000">
+        <AutosizeText>false</AutosizeText>
+        <WrapText>false</WrapText>
+        <TextAlignment>0.5</TextAlignment>
+        <TextShadow>false</TextShadow>
+        <DisableFontScaling>false</DisableFontScaling>
+        <IgnoreThemeProps>true</IgnoreThemeProps>
+       </Text>
+      </Action>
+     </Panel>
+     <Action Name="Number=&quot;0&quot;" Sym="OPUS4B-384001"/>
+    </Item>
+    <Panel Name="OptionButton" Sym="OPUS4B-384002">
+     <Layout>VerticalGrid</Layout>
+     <AnchorX>0.5</AnchorX>
+     <AnchorY>0.5</AnchorY>
+     <AnchorPointX>0.5</AnchorPointX>
+     <FixedWidth>1.0</FixedWidth>
+     <HorizontalAlignment>0.5</HorizontalAlignment>
+     <VerticalAlignment>0.0</VerticalAlignment>
+     <WrapHNav>false</WrapHNav>
+     <WrapVNav>false</WrapVNav>
+     <IgnoreThemeProps>false</IgnoreThemeProps>
+     <Action Name="&quot;Cancel&quot;" Sym="OPUS4B-384003">
+      <Text Name="" Sym="OPUS4B-384004">
+       <AutosizeText>false</AutosizeText>
+       <WrapText>false</WrapText>
+       <TextAlignment>0.5</TextAlignment>
+       <TextShadow>false</TextShadow>
+       <DisableFontScaling>false</DisableFontScaling>
+       <IgnoreThemeProps>true</IgnoreThemeProps>
+      </Text>
+     </Action>
+     <Theme Name="NumberPadKeyTheme" Sym="OPUS4B-384005">
+      <Panel Name="" Sym="OPUS4B-384082">
+       <Layout>VerticalGrid</Layout>
+       <AnchorX>0.5</AnchorX>
+       <AnchorY>0.5</AnchorY>
+       <AnchorPointX>0.5</AnchorPointX>
+       <FixedWidth>1.0</FixedWidth>
+       <Insets>.005</Insets>
+       <HorizontalAlignment>0.5</HorizontalAlignment>
+       <VerticalAlignment>0.0</VerticalAlignment>
+       <WrapHNav>false</WrapHNav>
+       <WrapVNav>false</WrapVNav>
+       <IgnoreThemeProps>false</IgnoreThemeProps>
+       <Shape Name="ButtonBorder" Sym="OPUS4B-384083">
+        <ForegroundColor>0xD4D4D4</ForegroundColor>
+        <ForegroundAlpha>202</ForegroundAlpha>
+        <AnchorX>.5</AnchorX>
+        <AnchorY>.5</AnchorY>
+        <FixedWidth>1.0</FixedWidth>
+        <FixedHeight>0.96</FixedHeight>
+        <ShapeType>Rectangle</ShapeType>
+        <ShapeFill>false</ShapeFill>
+        <Thickness>2</Thickness>
+        <GradientAngle>270</GradientAngle>
+        <GradientAmount>0.5</GradientAmount>
+        <CornerArc>25</CornerArc>
+       </Shape>
+      </Panel>
+     </Theme>
+    </Panel>
+   </Panel>
+  </Panel>
+  <Panel Name="NTE_TextEntryOptionsMenuThemes" Sym="OPUS4B-384006">
+   <Theme ID="101" Name="TextEntryWithNTE_WideTheme" Sym="OPUS4B-382663">
+    <TileBackgroundImage>false</TileBackgroundImage>
+    <StretchBackgroundImage>false</StretchBackgroundImage>
+    <ForegroundColor>0xF7F7F7</ForegroundColor>
+    <ForegroundSelectedColor>0xF7F7F7</ForegroundSelectedColor>
+    <FontFace>=GetProperty("ui/base_font_face", "Arial")</FontFace>
+    <FontSize>=GetProperty("ui/base_font_size", 18)</FontSize>
+    <FontStyle>=GetProperty("ui/base_font_style", "Bold")</FontStyle>
+    <ForegroundShadowColor>0x1B1715</ForegroundShadowColor>
+    <ForegroundShadowAlpha>110</ForegroundShadowAlpha>
+    <ForegroundShadowSelectedColor>0x1B1715</ForegroundShadowSelectedColor>
+    <ForegroundShadowSelectedAlpha>110</ForegroundShadowSelectedAlpha>
+    <Text Name="CenteredText" Sym="OPUS4B-384032">
+     <AutosizeText>false</AutosizeText>
+     <WrapText>true</WrapText>
+     <TextAlignment>0.5</TextAlignment>
+     <TextShadow>true</TextShadow>
+     <DisableFontScaling>false</DisableFontScaling>
+    </Text>
+    <TextInput Name="WideTextInputTheme" Sym="OPUS4B-384033">
+     <FixedWidth>0.9</FixedWidth>
+     <Insets>0.02</Insets>
+     <TextAlignment>0.5</TextAlignment>
+     <HideText>false</HideText>
+     <IgnoreThemeProps>false</IgnoreThemeProps>
+    </TextInput>
+    <Item Name="ShapeItemHighlight" Sym="OPUS4B-384034">
+     <Insets>0.01,0.01,0.018,0.01</Insets>
+     <IgnoreThemeProps>false</IgnoreThemeProps>
+     <BackgroundComponent>false</BackgroundComponent>
+     <MouseTransparency>false</MouseTransparency>
+     <Conditional Ref="521" Name="Focused"/>
+     <Theme Name="" Sym="OPUS4B-384044">
+      <TileBackgroundImage>false</TileBackgroundImage>
+      <StretchBackgroundImage>false</StretchBackgroundImage>
+      <ForegroundColor>0xF7F7F7</ForegroundColor>
+      <ForegroundSelectedColor>0xF7F7F7</ForegroundSelectedColor>
+      <ForegroundShadowColor>0x1B1715</ForegroundShadowColor>
+      <ForegroundShadowAlpha>110</ForegroundShadowAlpha>
+      <ForegroundShadowSelectedColor>0x1B1715</ForegroundShadowSelectedColor>
+      <ForegroundShadowSelectedAlpha>110</ForegroundShadowSelectedAlpha>
+      <Text Name="" Sym="OPUS4B-384085">
+       <AutosizeText>false</AutosizeText>
+       <WrapText>false</WrapText>
+       <TextShadow>true</TextShadow>
+       <DisableFontScaling>false</DisableFontScaling>
+       <IgnoreThemeProps>false</IgnoreThemeProps>
+       <BackgroundComponent>false</BackgroundComponent>
+      </Text>
+     </Theme>
+    </Item>
+    <OptionsMenu Name="WideTextEntryOptionsTheme" Sym="OPUS4B-384045">
+     <Layout>Vertical</Layout>
+     <AnchorX>0.5</AnchorX>
+     <AnchorY>0.5</AnchorY>
+     <FixedWidth>0.8</FixedWidth>
+     <PadY>0.02</PadY>
+     <Insets>0.018,0.012,0.018,0.012</Insets>
+     <Animation>CacheBG</Animation>
+     <IgnoreThemeProps>false</IgnoreThemeProps>
+     <Action Name="&quot;REM Draw the Dialog BG&quot;" Sym="OPUS4B-384046">
+      <Action Name="gDialogBG" Sym="OPUS4B-384047">
+       <Image Name="" Sym="OPUS4B-384048">
+        <FixedWidth>1.0</FixedWidth>
+        <FixedHeight>1.0</FixedHeight>
+        <PreserveAspectRatio>false</PreserveAspectRatio>
+        <ResizeImage>true</ResizeImage>
+        <AutoRepeatAction>false</AutoRepeatAction>
+        <BackgroundComponent>true</BackgroundComponent>
+        <ScalingInsets>12,12,12,12</ScalingInsets>
+       </Image>
+      </Action>
+     </Action>
+     <Attribute ID="346" Name="LastNumber" Sym="OPUS4B-383887">
+      <Value>null</Value>
+     </Attribute>
+     <Attribute ID="347" Name="LastNumberTime" Sym="OPUS4B-383888">
+      <Value>0</Value>
+     </Attribute>
+     <Attribute ID="348" Name="LastChar" Sym="OPUS4B-383889">
+      <Value>null</Value>
+     </Attribute>
+     <Attribute ID="349" Name="NumericTextPos" Sym="OPUS4B-383890">
+      <Value>0</Value>
+     </Attribute>
+     <Listener ID="350" Name="Number" Sym="OPUS4B-383891">
+      <ListenerEvent>Numbers</ListenerEvent>
+      <Conditional Ref="370" Name="EnableNumericText &amp;&amp; (..."/>
+     </Listener>
+     <Listener ID="351" Name="Pause - Toggle Numeric Text" Sym="OPUS4B-383892">
+      <ListenerEvent>Pause</ListenerEvent>
+      <Action Name="&quot;REM toggle to next NTE mode: Upper case -&gt; Lower case -&gt; Off -&gt; Upper...&quot;" Sym="OPUS4B-383893">
+       <Conditional Name="GetProperty(&quot;ui/numeric_text_input_enable&quot;,true)" Sym="OPUS4B-383894">
+        <Branch Name="true" Sym="OPUS4B-383895">
+         <Conditional Name="GetProperty(&quot;ui/numeric_text_input_useUpper&quot;,true)" Sym="OPUS4B-383896">
+          <Branch Name="true" Sym="OPUS4B-383897">
+           <Action Name="SetProperty(&quot;ui/numeric_text_input_useUpper&quot;, false )" Sym="OPUS4B-383898"/>
+          </Branch>
+          <Branch Name="else" Sym="OPUS4B-383899">
+           <Action Name="SetProperty(&quot;ui/numeric_text_input_enable&quot;, false )" Sym="OPUS4B-383900"/>
+          </Branch>
+         </Conditional>
+        </Branch>
+        <Branch Name="else" Sym="OPUS4B-383901">
+         <Action Name="SetProperty(&quot;ui/numeric_text_input_enable&quot;, true )" Sym="OPUS4B-383902">
+          <Action Name="SetProperty(&quot;ui/numeric_text_input_useUpper&quot;, true )" Sym="OPUS4B-383903"/>
+         </Action>
+        </Branch>
+       </Conditional>
+       <Action Ref="584" Name="&quot;REM Set NTE state var..."/>
+       <Action Ref="442" Name="LastNumber = null"/>
+      </Action>
+     </Listener>
+     <Listener ID="352" Name="Play - Accept current char" Sym="OPUS4B-383915">
+      <ListenerEvent>Play</ListenerEvent>
+      <Action Ref="355" Name="&quot;REM Accept current ch..."/>
+     </Listener>
+     <Listener ID="353" Name="Play/Pause - Accept current char" Sym="OPUS4B-383916">
+      <ListenerEvent>Play/Pause</ListenerEvent>
+      <Action Ref="355" Name="&quot;REM Accept current ch..."/>
+     </Listener>
+     <Listener ID="356" Name="Stop - Backspace" Sym="OPUS4B-383918">
+      <ListenerEvent>Stop</ListenerEvent>
+      <Action Ref="359" Name="&quot;REM Cancel current in..."/>
+     </Listener>
+     <Listener ID="357" Name="RawKeyboard" Sym="OPUS4B-383919">
+      <ListenerEvent>RawKeyboard</ListenerEvent>
+      <Action Name="&quot;REM Check to clear NTE input for Backspace&quot;" Sym="OPUS4B-383920">
+       <Conditional Name="RawKeyboard == &quot;Backspace&quot;" Sym="OPUS4B-383921">
+        <Branch Name="true" Sym="OPUS4B-383922">
+         <Conditional Name="LastNumber == null" Sym="OPUS4B-383923">
+          <Branch Name="true" Sym="OPUS4B-383924">
+           <Action Ref="590" Name="PassiveListen()"/>
+          </Branch>
+          <Branch Name="else" Sym="OPUS4B-383926">
+           <Action ID="442" Name="LastNumber = null" Sym="OPUS4B-382718">
+            <Action Name="Refresh()" Sym="OPUS4B-382719"/>
+           </Action>
+          </Branch>
+         </Conditional>
+        </Branch>
+        <Branch Name="else" Sym="OPUS4B-383927">
+         <Action ID="590" Name="PassiveListen()" Sym="OPUS4B-383925"/>
+        </Branch>
+       </Conditional>
+      </Action>
+     </Listener>
+     <Attribute ID="361" Name="EnableNumericText" Sym="OPUS4B-383930">
+      <Value>GetProperty("ui/numeric_text_input_enable",true)</Value>
+     </Attribute>
+     <Attribute Name="UseSmartSearch" Sym="OPUS4B-384049">
+      <Value>false</Value>
+     </Attribute>
+     <Hook Name="BeforeMenuLoad" Sym="OPUS4B-384050">
+      <Action ID="584" Name="&quot;REM Set NTE state variables&quot;" Sym="OPUS4B-383904">
+       <Action Name="EnableNumericText = GetProperty(&quot;ui/numeric_text_input_enable&quot;,true)" Sym="OPUS4B-383905">
+        <Conditional Name="GetProperty(&quot;ui/numeric_text_input_enable&quot;,true)" Sym="OPUS4B-383906">
+         <Branch Name="true" Sym="OPUS4B-383907">
+          <Conditional Name="GetProperty(&quot;ui/numeric_text_input_useUpper&quot;,true)" Sym="OPUS4B-383908">
+           <Branch Name="true" Sym="OPUS4B-383909">
+            <Action Name="AddGlobalContext(&quot;NTEState&quot;, &quot;xUpperCase&quot;)" Sym="OPUS4B-383910"/>
+           </Branch>
+           <Branch Name="else" Sym="OPUS4B-383911">
+            <Action Name="AddGlobalContext(&quot;NTEState&quot;, &quot;xLowerCase&quot;)" Sym="OPUS4B-383912"/>
+           </Branch>
+          </Conditional>
+         </Branch>
+         <Branch Name="else" Sym="OPUS4B-383913">
+          <Action Name="AddGlobalContext(&quot;NTEState&quot;, &quot;xOff&quot;)" Sym="OPUS4B-383914"/>
+         </Branch>
+        </Conditional>
+       </Action>
+      </Action>
+      <Action Name="DialogOpenAnimName = &quot;WideTextEntryOptionsTheme&quot;" Sym="OPUS4B-384051">
+       <Action Name="&quot;REM Animate the dialog opening, if should do so.&quot;" Sym="OPUS4B-384052">
+        <Conditional Name="GetProperty(&quot;ui/animations/dialog_animations_enabled&quot;,true)" Sym="OPUS4B-384053">
+         <Conditional Name="DialogTransitionAnimDest" Sym="OPUS4B-384054">
+          <Branch Name="null" Sym="OPUS4B-384055">
+           <Action Name="Animate(DialogOpenAnimName, &quot;BG&quot;, GetProperty(&quot;ui/animations/dialog_open_animation&quot;,&quot;ZoomInQuadratic&quot;), GetProperty(&quot;ui/animations/dialog_open_duration&quot;,350))" Sym="OPUS4B-384056"/>
+          </Branch>
+          <Branch Name="else" Sym="OPUS4B-384057">
+           <Action Name="AddGlobalContext( &quot;DialogTransitionAnimDest&quot;, null )" Sym="OPUS4B-384058"/>
+          </Branch>
+         </Conditional>
+        </Conditional>
+       </Action>
+      </Action>
+      <Action Name="Refresh()" Sym="OPUS4B-384059"/>
+     </Hook>
+     <Hook Name="BeforeMenuUnload" Sym="OPUS4B-384060">
+      <Action Name="&quot;REM Clear NTE state variables&quot;" Sym="OPUS4B-384061">
+       <Action Name="AddGlobalContext(&quot;NTEState&quot;, null)" Sym="OPUS4B-384062"/>
+      </Action>
+      <Action Name="DialogCloseAnimName = &quot;WideTextEntryOptionsTheme&quot;" Sym="OPUS4B-384063">
+       <Action Name="&quot;REM Animate the dialog closing, if should do so.&quot;" Sym="OPUS4B-384064">
+        <Conditional Name="GetProperty(&quot;ui/animations/dialog_animations_enabled&quot;,true) &amp;&amp; (SkipClosingAnimation != true)" Sym="OPUS4B-384065">
+         <Conditional Name="DialogTransitionAnimSource" Sym="OPUS4B-384066">
+          <Branch Name="null" Sym="OPUS4B-384067">
+           <Action Name="Animate(DialogCloseAnimName, &quot;BG&quot;, GetProperty(&quot;ui/animations/dialog_close_animation&quot;,&quot;ZoomOutQuadratic&quot;), GetProperty(&quot;ui/animations/dialog_close_duration&quot;,350))" Sym="OPUS4B-384068"/>
+          </Branch>
+          <Branch Name="else" Sym="OPUS4B-384069">
+           <Action Name="AnimateTransition(DialogTransitionAnimSource, DialogTransitionAnimDest, &quot;BG&quot;, GetProperty(&quot;ui/animations/dialog_transition_animation&quot;,&quot;MorphQuadratic&quot;), GetProperty(&quot;ui/animations/dialog_transition_duration&quot;,350), 0)" Sym="OPUS4B-384070"/>
+           <Action Name="AddGlobalContext( &quot;DialogTransitionAnimSource&quot;, null )" Sym="OPUS4B-384071"/>
+           <Conditional Name="false" Sym="OPUS4B-384072">
+            <Action Name="AnimateTransition(DialogTransitionAnimSource, DialogTransitionAnimDest, &quot;BG&quot;, GetProperty(&quot;ui/animations/dialog_transition_animation&quot;,&quot;MorphQuadratic&quot;), GetProperty(&quot;ui/animations/dialog_transition_duration&quot;,350), 0)" Sym="OPUS4B-384073"/>
+            <Action Name="AnimateTransition(DialogTransitionAnimSource, DialogTransitionAnimDest, &quot;BG&quot;, GetProperty(&quot;ui/animations/dialog_transition_animation&quot;,&quot;MorphQuadratic&quot;), 3350, 0)" Sym="OPUS4B-384074"/>
+           </Conditional>
+          </Branch>
+         </Conditional>
+        </Conditional>
+       </Action>
+      </Action>
+      <Action Name="Refresh()" Sym="OPUS4B-384075"/>
+     </Hook>
+    </OptionsMenu>
+   </Theme>
+   <Conditional ID="102" Name="EnableNumericText" Sym="OPUS4B-382664">
+    <Panel Name="WideTextEntryNTE_NumberPad" Sym="OPUS4B-382665">
+     <Layout>Vertical</Layout>
+     <AnchorX>0.5</AnchorX>
+     <FixedWidth>0.62</FixedWidth>
+     <PadY>0.005</PadY>
+     <WrapHNav>false</WrapHNav>
+     <WrapVNav>false</WrapVNav>
+     <IgnoreThemeProps>false</IgnoreThemeProps>
+     <BackgroundComponent>false</BackgroundComponent>
+     <Panel Name="NTECharStatusDisplay" Sym="OPUS4B-382666">
+      <FixedWidth>1.0</FixedWidth>
+      <WrapHNav>false</WrapHNav>
+      <WrapVNav>false</WrapVNav>
+      <IgnoreThemeProps>false</IgnoreThemeProps>
+      <Conditional Name="UseSmartSearch" Sym="OPUS4B-382667">
+       <Branch Name="true" Sym="OPUS4B-382668">
+        <Action Name="If ((Size(SearchRegexDisplay)&gt;0) &amp;&amp; (CurrentGroupingCount&gt;0),SearchRegexDisplay, &quot;&quot;)" Sym="OPUS4B-382669">
+         <Text Name="" Sym="OPUS4B-382670">
+          <AutosizeText>false</AutosizeText>
+          <WrapText>false</WrapText>
+          <TextShadow>true</TextShadow>
+          <DisableFontScaling>false</DisableFontScaling>
+          <IgnoreThemeProps>false</IgnoreThemeProps>
+         </Text>
+        </Action>
+       </Branch>
+       <Branch Name="else" Sym="OPUS4B-382671">
+        <Conditional Name="EnableNumericText &amp;&amp; (LastNumber != null)" Sym="OPUS4B-382672">
+         <Branch Name="true" Sym="OPUS4B-382673">
+          <Action Name="NTEText = GetProperty(&quot;ui/numeric_text_input_&quot;+GetProperty(&quot;ui/translation_language_code&quot;,&quot;en&quot;)+&quot;_&quot;+LastNumber+If(NTEState==&quot;xUpperCase&quot;,&quot;&quot;,&quot;_lower&quot;), &quot;&quot;)" Sym="OPUS4B-382674">
+           <Panel Name="NTE_ActivePanel" Sym="OPUS4B-382675">
+            <FixedWidth>1.0</FixedWidth>
+            <Animation>0,250,0</Animation>
+            <WrapHNav>false</WrapHNav>
+            <WrapVNav>false</WrapVNav>
+            <IgnoreThemeProps>false</IgnoreThemeProps>
+            <BackgroundComponent>false</BackgroundComponent>
+            <Conditional Name="(LastNumber != null) &amp;&amp; (Time() - LastNumberTime &lt; TimeoutTime)" Sym="OPUS4B-382676">
+             <Branch Name="true" Sym="OPUS4B-382677">
+              <Action Name="TextList = NTEText" Sym="OPUS4B-382678">
+               <Conditional Name="NumericTextPos&gt;0" Sym="OPUS4B-382679">
+                <Action Name="Substring(TextList, 0, NumericTextPos-1)" Sym="OPUS4B-382680">
+                 <Text Name="" Sym="OPUS4B-382681">
+                  <AnchorX>0.45</AnchorX>
+                  <AnchorY>0.5</AnchorY>
+                  <AnchorPointX>1.0</AnchorPointX>
+                  <FixedWidth>10.0</FixedWidth>
+                  <AutosizeText>true</AutosizeText>
+                  <WrapText>false</WrapText>
+                  <TextAlignment>1.0</TextAlignment>
+                  <TextShadow>true</TextShadow>
+                  <DisableFontScaling>false</DisableFontScaling>
+                  <IgnoreThemeProps>true</IgnoreThemeProps>
+                 </Text>
+                </Action>
+                <Action Name="Substring(TextList, NumericTextPos-1, NumericTextPos)" Sym="OPUS4B-382682">
+                 <Text Name="" Sym="OPUS4B-382683">
+                  <AnchorX>0.45</AnchorX>
+                  <AnchorY>0.5</AnchorY>
+                  <AnchorPointX>0.0</AnchorPointX>
+                  <FixedWidth>0.1</FixedWidth>
+                  <AutosizeText>true</AutosizeText>
+                  <WrapText>false</WrapText>
+                  <TextAlignment>0.5</TextAlignment>
+                  <TextShadow>true</TextShadow>
+                  <DisableFontScaling>false</DisableFontScaling>
+                  <IgnoreThemeProps>true</IgnoreThemeProps>
+                  <Theme Name="" Sym="OPUS4B-382684">
+                   <TileBackgroundImage>false</TileBackgroundImage>
+                   <StretchBackgroundImage>false</StretchBackgroundImage>
+                   <ForegroundColor>0x33FF33</ForegroundColor>
+                  </Theme>
+                 </Text>
+                </Action>
+                <Conditional Name="NumericTextPos&lt;Size(TextList)" Sym="OPUS4B-382685">
+                 <Action Name="Substring(TextList, NumericTextPos, -1)" Sym="OPUS4B-382686">
+                  <Text Name="" Sym="OPUS4B-382687">
+                   <AnchorX>0.55</AnchorX>
+                   <AnchorY>0.5</AnchorY>
+                   <AnchorPointX>0.0</AnchorPointX>
+                   <FixedWidth>10.0</FixedWidth>
+                   <AutosizeText>true</AutosizeText>
+                   <WrapText>false</WrapText>
+                   <TextAlignment>0.0</TextAlignment>
+                   <TextShadow>true</TextShadow>
+                   <DisableFontScaling>false</DisableFontScaling>
+                   <IgnoreThemeProps>true</IgnoreThemeProps>
+                  </Text>
+                 </Action>
+                </Conditional>
+               </Conditional>
+              </Action>
+              <Shape Name="SelLetterBorder" Sym="OPUS4B-382688">
+               <ForegroundColor>0xF7F7F7</ForegroundColor>
+               <AnchorX>0.5</AnchorX>
+               <AnchorY>0.0</AnchorY>
+               <AnchorPointX>0.5</AnchorPointX>
+               <FixedWidth>0.08</FixedWidth>
+               <FixedHeight>1.0</FixedHeight>
+               <ShapeType>Rectangle</ShapeType>
+               <ShapeFill>false</ShapeFill>
+              </Shape>
+             </Branch>
+             <Branch Name="else" Sym="OPUS4B-382689">
+              <Action Name="LastNumber = null" Sym="OPUS4B-382690">
+               <Action Name="Keystroke(LastChar)" Sym="OPUS4B-382691">
+                <Action Name="RefreshArea(&quot;NTECharStatusDisplay&quot;)" Sym="OPUS4B-382692">
+                 <Panel Ref="659" Name="NTE_InactivePanel"/>
+                </Action>
+               </Action>
+              </Action>
+             </Branch>
+            </Conditional>
+           </Panel>
+          </Action>
+         </Branch>
+         <Branch Name="else" Sym="OPUS4B-382696">
+          <Panel ID="659" Name="NTE_InactivePanel" Sym="OPUS4B-382693">
+           <FixedWidth>1.0</FixedWidth>
+           <WrapHNav>false</WrapHNav>
+           <WrapVNav>false</WrapVNav>
+           <IgnoreThemeProps>false</IgnoreThemeProps>
+           <Action Name="&quot; &quot;" Sym="OPUS4B-382694">
+            <Text Name="" Sym="OPUS4B-382695">
+             <AutosizeText>false</AutosizeText>
+             <WrapText>false</WrapText>
+             <TextShadow>true</TextShadow>
+             <DisableFontScaling>false</DisableFontScaling>
+             <IgnoreThemeProps>false</IgnoreThemeProps>
+             <BackgroundComponent>false</BackgroundComponent>
+            </Text>
+           </Action>
+          </Panel>
+         </Branch>
+        </Conditional>
+       </Branch>
+      </Conditional>
+      <Attribute Name="TimeoutTime" Sym="OPUS4B-382697">
+       <Value>GetProperty("ui/numeric_text_input_delay_time", "1000")</Value>
+      </Attribute>
+      <Attribute Name="NTEText" Sym="OPUS4B-382698">
+       <Value>""</Value>
+      </Attribute>
+     </Panel>
+     <Panel Name="TextEntryNumberPad_FakeButtons" Sym="OPUS4B-382699">
+      <Layout>VerticalGrid</Layout>
+      <FixedWidth>1.0</FixedWidth>
+      <PadY>0.005</PadY>
+      <WrapHNav>false</WrapHNav>
+      <WrapVNav>false</WrapVNav>
+      <IgnoreThemeProps>true</IgnoreThemeProps>
+      <BackgroundComponent>false</BackgroundComponent>
+      <MouseTransparency>false</MouseTransparency>
+      <Panel Name="123" Sym="OPUS4B-382700">
+       <Layout>HorizontalGrid</Layout>
+       <FixedWidth>1.0</FixedWidth>
+       <PadX>0.005</PadX>
+       <WrapHNav>false</WrapHNav>
+       <WrapVNav>false</WrapVNav>
+       <IgnoreThemeProps>false</IgnoreThemeProps>
+       <MouseTransparency>false</MouseTransparency>
+       <Panel Name="1" Sym="OPUS4B-382701">
+        <Layout>VerticalGrid</Layout>
+        <AnchorX>0.5</AnchorX>
+        <AnchorY>0.5</AnchorY>
+        <AnchorPointX>0.5</AnchorPointX>
+        <FixedWidth>1.0</FixedWidth>
+        <HorizontalAlignment>0.5</HorizontalAlignment>
+        <VerticalAlignment>0.0</VerticalAlignment>
+        <WrapHNav>false</WrapHNav>
+        <WrapVNav>false</WrapVNav>
+        <IgnoreThemeProps>false</IgnoreThemeProps>
+        <Theme Ref="668" Name="NumberPadKeyTheme"/>
+        <Action Ref="372" Name="&quot;REM Show NTE button f..."/>
+        <Attribute Name="Number" Sym="OPUS4B-383609">
+         <Value>1</Value>
+        </Attribute>
+       </Panel>
+       <Panel Name="2" Sym="OPUS4B-383610">
+        <Layout>VerticalGrid</Layout>
+        <AnchorX>0.5</AnchorX>
+        <AnchorY>0.5</AnchorY>
+        <AnchorPointX>0.5</AnchorPointX>
+        <FixedWidth>1.0</FixedWidth>
+        <HorizontalAlignment>0.5</HorizontalAlignment>
+        <VerticalAlignment>0.0</VerticalAlignment>
+        <WrapHNav>false</WrapHNav>
+        <WrapVNav>false</WrapVNav>
+        <IgnoreThemeProps>false</IgnoreThemeProps>
+        <Theme Ref="668" Name="NumberPadKeyTheme"/>
+        <Action Ref="380" Name="&quot;REM Show NTE button f..."/>
+        <Attribute Name="Number" Sym="OPUS4B-383615">
+         <Value>2</Value>
+        </Attribute>
+       </Panel>
+       <Panel Name="3" Sym="OPUS4B-383616">
+        <Layout>VerticalGrid</Layout>
+        <AnchorX>0.5</AnchorX>
+        <AnchorY>0.5</AnchorY>
+        <AnchorPointX>0.5</AnchorPointX>
+        <FixedWidth>1.0</FixedWidth>
+        <HorizontalAlignment>0.5</HorizontalAlignment>
+        <VerticalAlignment>0.0</VerticalAlignment>
+        <WrapHNav>false</WrapHNav>
+        <WrapVNav>false</WrapVNav>
+        <IgnoreThemeProps>false</IgnoreThemeProps>
+        <Theme Ref="668" Name="NumberPadKeyTheme"/>
+        <Action Ref="387" Name="&quot;REM Show NTE button f..."/>
+        <Attribute Name="Number" Sym="OPUS4B-383621">
+         <Value>3</Value>
+        </Attribute>
+       </Panel>
+      </Panel>
+      <Panel Name="456" Sym="OPUS4B-383622">
+       <Layout>HorizontalGrid</Layout>
+       <FixedWidth>1.0</FixedWidth>
+       <PadX>0.005</PadX>
+       <WrapHNav>false</WrapHNav>
+       <WrapVNav>false</WrapVNav>
+       <IgnoreThemeProps>false</IgnoreThemeProps>
+       <MouseTransparency>false</MouseTransparency>
+       <Panel Name="4" Sym="OPUS4B-383623">
+        <Layout>VerticalGrid</Layout>
+        <AnchorX>0.5</AnchorX>
+        <AnchorY>0.5</AnchorY>
+        <AnchorPointX>0.5</AnchorPointX>
+        <FixedWidth>1.0</FixedWidth>
+        <HorizontalAlignment>0.5</HorizontalAlignment>
+        <VerticalAlignment>0.0</VerticalAlignment>
+        <WrapHNav>false</WrapHNav>
+        <WrapVNav>false</WrapVNav>
+        <IgnoreThemeProps>false</IgnoreThemeProps>
+        <Theme Ref="668" Name="NumberPadKeyTheme"/>
+        <Action Ref="398" Name="&quot;REM Show NTE button f..."/>
+        <Attribute Name="Number" Sym="OPUS4B-383628">
+         <Value>4</Value>
+        </Attribute>
+       </Panel>
+       <Panel Name="5" Sym="OPUS4B-383629">
+        <Layout>VerticalGrid</Layout>
+        <AnchorX>0.5</AnchorX>
+        <AnchorY>0.5</AnchorY>
+        <AnchorPointX>0.5</AnchorPointX>
+        <FixedWidth>1.0</FixedWidth>
+        <HorizontalAlignment>0.5</HorizontalAlignment>
+        <VerticalAlignment>0.0</VerticalAlignment>
+        <WrapHNav>false</WrapHNav>
+        <WrapVNav>false</WrapVNav>
+        <IgnoreThemeProps>false</IgnoreThemeProps>
+        <Theme Ref="668" Name="NumberPadKeyTheme"/>
+        <Action Ref="405" Name="&quot;REM Show NTE button f..."/>
+        <Attribute Name="Number" Sym="OPUS4B-383634">
+         <Value>5</Value>
+        </Attribute>
+       </Panel>
+       <Panel Name="6" Sym="OPUS4B-383635">
+        <Layout>VerticalGrid</Layout>
+        <AnchorX>0.5</AnchorX>
+        <AnchorY>0.5</AnchorY>
+        <AnchorPointX>0.5</AnchorPointX>
+        <FixedWidth>1.0</FixedWidth>
+        <HorizontalAlignment>0.5</HorizontalAlignment>
+        <VerticalAlignment>0.0</VerticalAlignment>
+        <WrapHNav>false</WrapHNav>
+        <WrapVNav>false</WrapVNav>
+        <IgnoreThemeProps>false</IgnoreThemeProps>
+        <Theme Ref="668" Name="NumberPadKeyTheme"/>
+        <Action Ref="412" Name="&quot;REM Show NTE button f..."/>
+        <Attribute Name="Number" Sym="OPUS4B-383640">
+         <Value>6</Value>
+        </Attribute>
+       </Panel>
+      </Panel>
+      <Panel Name="789" Sym="OPUS4B-383641">
+       <Layout>HorizontalGrid</Layout>
+       <FixedWidth>1.0</FixedWidth>
+       <PadX>0.005</PadX>
+       <WrapHNav>false</WrapHNav>
+       <WrapVNav>false</WrapVNav>
+       <IgnoreThemeProps>false</IgnoreThemeProps>
+       <MouseTransparency>false</MouseTransparency>
+       <Panel Name="7" Sym="OPUS4B-383642">
+        <Layout>VerticalGrid</Layout>
+        <AnchorX>0.5</AnchorX>
+        <AnchorY>0.5</AnchorY>
+        <AnchorPointX>0.5</AnchorPointX>
+        <FixedWidth>1.0</FixedWidth>
+        <HorizontalAlignment>0.5</HorizontalAlignment>
+        <VerticalAlignment>0.0</VerticalAlignment>
+        <WrapHNav>false</WrapHNav>
+        <WrapVNav>false</WrapVNav>
+        <IgnoreThemeProps>false</IgnoreThemeProps>
+        <Theme Ref="668" Name="NumberPadKeyTheme"/>
+        <Action Ref="420" Name="&quot;REM Show NTE button f..."/>
+        <Attribute Name="Number" Sym="OPUS4B-383647">
+         <Value>7</Value>
+        </Attribute>
+       </Panel>
+       <Panel Name="8" Sym="OPUS4B-383648">
+        <Layout>VerticalGrid</Layout>
+        <AnchorX>0.5</AnchorX>
+        <AnchorY>0.5</AnchorY>
+        <AnchorPointX>0.5</AnchorPointX>
+        <FixedWidth>1.0</FixedWidth>
+        <HorizontalAlignment>0.5</HorizontalAlignment>
+        <VerticalAlignment>0.0</VerticalAlignment>
+        <WrapHNav>false</WrapHNav>
+        <WrapVNav>false</WrapVNav>
+        <IgnoreThemeProps>false</IgnoreThemeProps>
+        <Theme Ref="668" Name="NumberPadKeyTheme"/>
+        <Action Ref="427" Name="&quot;REM Show NTE button f..."/>
+        <Attribute Name="Number" Sym="OPUS4B-383653">
+         <Value>8</Value>
+        </Attribute>
+       </Panel>
+       <Panel Name="9" Sym="OPUS4B-383654">
+        <Layout>VerticalGrid</Layout>
+        <AnchorX>0.5</AnchorX>
+        <AnchorY>0.5</AnchorY>
+        <AnchorPointX>0.5</AnchorPointX>
+        <FixedWidth>1.0</FixedWidth>
+        <HorizontalAlignment>0.5</HorizontalAlignment>
+        <VerticalAlignment>0.0</VerticalAlignment>
+        <WrapHNav>false</WrapHNav>
+        <WrapVNav>false</WrapVNav>
+        <IgnoreThemeProps>false</IgnoreThemeProps>
+        <Theme Ref="668" Name="NumberPadKeyTheme"/>
+        <Action Ref="434" Name="&quot;REM Show NTE button f..."/>
+        <Attribute Name="Number" Sym="OPUS4B-383659">
+         <Value>9</Value>
+        </Attribute>
+       </Panel>
+      </Panel>
+      <Panel Name="Back0Accept" Sym="OPUS4B-383660">
+       <Layout>HorizontalGrid</Layout>
+       <FixedWidth>1.0</FixedWidth>
+       <PadX>0.005</PadX>
+       <WrapHNav>false</WrapHNav>
+       <WrapVNav>false</WrapVNav>
+       <IgnoreThemeProps>false</IgnoreThemeProps>
+       <BackgroundComponent>false</BackgroundComponent>
+       <MouseTransparency>false</MouseTransparency>
+       <Panel Name="Backspace" Sym="OPUS4B-383661">
+        <Layout>VerticalGrid</Layout>
+        <AnchorX>0.5</AnchorX>
+        <AnchorY>0.5</AnchorY>
+        <AnchorPointX>0.5</AnchorPointX>
+        <FixedWidth>1.0</FixedWidth>
+        <HorizontalAlignment>0.5</HorizontalAlignment>
+        <VerticalAlignment>0.0</VerticalAlignment>
+        <WrapHNav>false</WrapHNav>
+        <WrapVNav>false</WrapVNav>
+        <IgnoreThemeProps>false</IgnoreThemeProps>
+        <Theme Ref="668" Name="NumberPadKeyTheme"/>
+        <Action Ref="444" Name="GetProperty(&quot;ui/numeri..."/>
+       </Panel>
+       <Panel Name="0" Sym="OPUS4B-383672">
+        <Layout>VerticalGrid</Layout>
+        <AnchorX>0.5</AnchorX>
+        <AnchorY>0.5</AnchorY>
+        <AnchorPointX>0.5</AnchorPointX>
+        <FixedWidth>1.0</FixedWidth>
+        <HorizontalAlignment>0.5</HorizontalAlignment>
+        <VerticalAlignment>0.0</VerticalAlignment>
+        <WrapHNav>false</WrapHNav>
+        <WrapVNav>false</WrapVNav>
+        <IgnoreThemeProps>false</IgnoreThemeProps>
+        <Theme Ref="668" Name="NumberPadKeyTheme"/>
+        <Action Ref="495" Name="&quot;REM Show NTE button f..."/>
+        <Attribute Name="Number" Sym="OPUS4B-383677">
+         <Value>0</Value>
+        </Attribute>
+       </Panel>
+       <Panel Name="Accept" Sym="OPUS4B-383678">
+        <Layout>VerticalGrid</Layout>
+        <AnchorX>0.5</AnchorX>
+        <AnchorY>0.5</AnchorY>
+        <AnchorPointX>0.5</AnchorPointX>
+        <FixedWidth>1.0</FixedWidth>
+        <HorizontalAlignment>0.5</HorizontalAlignment>
+        <VerticalAlignment>0.0</VerticalAlignment>
+        <WrapHNav>false</WrapHNav>
+        <WrapVNav>false</WrapVNav>
+        <IgnoreThemeProps>false</IgnoreThemeProps>
+        <Theme Ref="668" Name="NumberPadKeyTheme"/>
+        <Action Ref="513" Name="GetProperty(&quot;ui/numeri..."/>
+       </Panel>
+       <Panel Name="OK" Sym="OPUS4B-383687">
+        <Layout>VerticalGrid</Layout>
+        <AnchorX>0.5</AnchorX>
+        <AnchorY>0.5</AnchorY>
+        <AnchorPointX>0.5</AnchorPointX>
+        <FixedWidth>1.0</FixedWidth>
+        <HorizontalAlignment>0.5</HorizontalAlignment>
+        <VerticalAlignment>0.0</VerticalAlignment>
+        <WrapHNav>false</WrapHNav>
+        <WrapVNav>false</WrapVNav>
+        <IgnoreThemeProps>false</IgnoreThemeProps>
+        <Theme ID="668" Name="NumberPadKeyTheme" Sym="OPUS4B-382702">
+         <Panel Name="" Sym="OPUS4B-384076">
+          <Layout>VerticalGrid</Layout>
+          <AnchorX>0.5</AnchorX>
+          <AnchorY>0.5</AnchorY>
+          <AnchorPointX>0.5</AnchorPointX>
+          <FixedWidth>1.0</FixedWidth>
+          <Insets>0.005,0.004,0.007,0.004</Insets>
+          <HorizontalAlignment>0.5</HorizontalAlignment>
+          <VerticalAlignment>0.0</VerticalAlignment>
+          <WrapHNav>false</WrapHNav>
+          <WrapVNav>false</WrapVNav>
+          <IgnoreThemeProps>false</IgnoreThemeProps>
+          <BackgroundComponent>false</BackgroundComponent>
+          <MouseTransparency>false</MouseTransparency>
+          <Action Name="&quot;REM Draw the button BG image w/a small border&quot;" Sym="OPUS4B-384077">
+           <Action Name="gButtonBGSmBorder" Sym="OPUS4B-384078">
+            <Image Name="Transparent Button BG w/a small border" Sym="OPUS4B-384079">
+             <ForegroundAlpha>1.0</ForegroundAlpha>
+             <FixedWidth>1.0</FixedWidth>
+             <FixedHeight>1.0</FixedHeight>
+             <PreserveAspectRatio>false</PreserveAspectRatio>
+             <ResizeImage>true</ResizeImage>
+             <AutoRepeatAction>false</AutoRepeatAction>
+             <BackgroundComponent>true</BackgroundComponent>
+             <ScalingInsets>5,5,7,5</ScalingInsets>
+            </Image>
+           </Action>
+          </Action>
+         </Panel>
+        </Theme>
+        <Action Name="&quot;OK&quot;" Sym="OPUS4B-383688">
+         <Text Name="" Sym="OPUS4B-383689">
+          <AutosizeText>false</AutosizeText>
+          <WrapText>false</WrapText>
+          <TextAlignment>0.5</TextAlignment>
+          <TextShadow>false</TextShadow>
+          <DisableFontScaling>false</DisableFontScaling>
+          <IgnoreThemeProps>false</IgnoreThemeProps>
+          <Listener Name="" Sym="OPUS4B-383690">
+           <ListenerEvent>MouseClick</ListenerEvent>
+           <Conditional Name="CanClickFakeButtons &amp;&amp; (MouseClick == 1)" Sym="OPUS4B-383691">
+            <Branch Name="true" Sym="OPUS4B-383692">
+             <Action Name="SageCommand(&quot;Select&quot;)" Sym="OPUS4B-383693"/>
+            </Branch>
+            <Branch Name="else" Sym="OPUS4B-383694">
+             <Action Name="PassiveListen()" Sym="OPUS4B-383695"/>
+            </Branch>
+           </Conditional>
+          </Listener>
+         </Text>
+        </Action>
+       </Panel>
+      </Panel>
+      <Attribute Name="CanClickFakeButtons" Sym="OPUS4B-383696">
+       <Value>true</Value>
+      </Attribute>
+     </Panel>
+    </Panel>
+   </Conditional>
+  </Panel>
+ </Menu>
+ <Menu Name="&quot;REM Things to edit for final version&quot;" Sym="OPUS4B-388669">
+  <Action Name="&quot;REM Things to edit for final version&quot;" Sym="OPUS4B-384087">
+   <Panel Name="Rename listener to: Customize" Sym="OPUS4B-384088">
+    <Listener ID="262" Name="Customize" Sym="OPUS4B-384025"/>
+   </Panel>
+   <Panel Name="Rename trueX conditional to true" Sym="OPUS4B-384089">
+    <Action ID="76" Name="&quot;REM Login failed, so do cleanup and then exit.&quot;" Sym="OPUS4B-383751">
+     <Conditional Name="true" Sym="OPUS4B-383752">
+      <Action Ref="337" Name="&quot;REM Restore original ..."/>
+      <Action Name="Exit()" Sym="OPUS4B-383756"/>
+     </Conditional>
+    </Action>
+   </Panel>
+   <Panel Name="Remove '|| true'" Sym="OPUS4B-384096">
+    <Conditional Ref="106" Name="(CanCachePlaceshifterL..."/>
+   </Panel>
+  </Action>
+ </Menu>
+</Module>

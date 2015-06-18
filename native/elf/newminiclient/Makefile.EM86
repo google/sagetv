@@ -1,0 +1,27 @@
+COMPILKIND=debug
+LINUX_KERNEL=/sage/dlink/uClinux-sigma/uClinux-2.4
+
+CC=arm-elf-gcc
+CFLAGS = -D_DEBUG -DEM86 -Os -c -D_FILE_OFFSET_BITS=64 -I/sage/mrua/mrua_EM8620L_2.5.146.0_dev.arm.nodts/MRUA_src/ -DEM86XX_CHIP=EM86XX_CHIPID_TANGOLIGHT -DEM86XX_REVISION=67 -DEM86XX_MODE=EM86XX_MODEID_STANDALONE -DWITH_AES_CBC=1  -DWITHOUT_NERO_SPU=1 -DLLAD_DIRECT -D__arm__ -I/sage/hdextender/apps/openssl-0.9.8d/include/
+BINDIR=/usr/local/bin
+
+OBJFILES=miniclient.o gfxcmd.o  thread_util.o mediacmd.o malloc.o EM86/EM86gfx.o EM86/EM86input.o EM86/EM86media.o  EM86/rmmmimplementation.o EM86/dbgimplementation.o EM86/dvi_hdmi.o EM86/dss_sha.o
+
+miniclient: $(OBJFILES)
+	$(CC) -Wl,-elf2flt="-s32768 -z" -o miniclient $(OBJFILES) -LEM86 -L/sage/mrua/mrua_EM8620L_2.5.146.0_dev.arm.nodts/lib/ \
+    -lm -lpthread -L. -lcrypto \
+    -ldcc \
+    -lrmmonitoring            \
+    -lrmdescriptordecoder     \
+    -lrmsymboltable           \
+    -lrmcpputils              \
+    -lrmcw                    \
+    -lrmcore                  \
+    -lrua                     \
+    -lllad
+
+malloc.o: malloc.c
+	$(CC) -DHAVE_MMAP=0 -DHAVE_MORECORE=0 -DONLY_MSPACES=1 -c malloc.c
+
+clean:
+	rm -f *.o miniclient miniclient.gdb *.c~ *.h~ STB/*.o EM86/*.o

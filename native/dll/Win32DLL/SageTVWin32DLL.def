@@ -1,0 +1,6 @@
+; SageTVWin32.def : Declares the module parameters for the DLL.
+
+LIBRARY      "SageTVWin32"
+
+SECTIONS
+	.shared READ WRITE SHARED

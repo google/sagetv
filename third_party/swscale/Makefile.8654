@@ -1,0 +1,12 @@
+CC=mips-linux-gnu-gcc -EL
+CFLAGS = -D_FILE_OFFSET_BITS=64 -O2 -c -fpic
+BINDIR=/usr/local/bin
+LIBRARY=-lm
+OBJFILES=swscale.o
+
+libswscale.so: $(OBJFILES)
+	$(CC) -W1 -shared -o libswscale.so $(OBJFILES) $(LIBRARY)
+	mips-linux-gnu-strip --strip-unneeded libswscale.so
+
+clean:
+	rm -f *.o libswscale.so *.c~ *.h~

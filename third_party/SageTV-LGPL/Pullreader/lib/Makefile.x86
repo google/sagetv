@@ -1,0 +1,12 @@
+CC=gcc
+CFLAGS = -c -D_FILE_OFFSET_BITS=64 -fpic -I/sage/svn/ffmpeg/libavformat -I/sage/svn/ffmpeg/libavutil -I/sage/svn/ffmpeg/libavcodec -I/sage/svn/ffmpeg -I/sage/em8634/ffmpegpc/
+BINDIR=/usr/local/bin
+
+OBJFILES=pullreader.o flashmpeg4.o
+
+libPullreader.so: $(OBJFILES)
+	$(CC) -W1 -shared -o libPullreader.so $(OBJFILES) /sage/em8634/ffmpegpc/libavformat/libavformat.a /sage/em8634/ffmpegpc/libavcodec/libavcodec.a /sage/em8634/ffmpegpc/libavutil/libavutil.a -lm -lz -lfaac -lfaad /usr/lib/libx264.a -lmp3lame -la52
+	strip --strip-unneeded libPullreader.so
+
+clean:
+	rm -f *.o libPullreader.so *.c~ *.h~

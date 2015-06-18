@@ -1,0 +1,12 @@
+CC=gcc
+CFLAGS = -DGLES2 -DGLX11 -O3 -c -D_FILE_OFFSET_BITS=64 -I/sage/intel/SDKPackage/Builds/OGLES2/Include/
+BINDIR=/usr/local/bin
+
+OBJFILES=miniclient.o gfxcmd.o  thread_util.o mediacmd.o malloc.o OPENGL/GLgfx.o OPENGL/GLinput.o OPENGL/GLmedia.o
+
+miniclient: $(OBJFILES)
+	$(CC) -o miniclient $(OBJFILES) -L/sage/intel/SDKPackage/Builds/OGLES2/LinuxPC/Lib/\
+    -lm -lpthread -lEGL -lGLESv2
+
+clean:
+	rm -f *.o miniclient miniclient.gdb *.c~ *.h~ STB/*.o EM86/*.o OPENGL/*.o

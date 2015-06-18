@@ -1,0 +1,17 @@
+CC=mipsel-linux-gcc
+CFLAGS = -msoft-float -D_FILE_OFFSET_BITS=64 -O2 -c -fpic -I../lib
+BINDIR=/usr/local/bin
+LIBRARY=-L../lib ../lib/libPullreader.so -lm /sage/em8634/tremor/.libs/libvorbisidec.a
+
+OBJFILES=pullreaderclient.o
+
+all: pullreadertest pullreadertest2
+
+pullreadertest: pullreadertest.o $(OBJFILES)
+	$(CC) -o pullreadertest pullreadertest.o $(OBJFILES)
+
+pullreadertest2: pullreadertest.o
+	$(CC) -o pullreadertest2 pullreadertest.o ../lib/libPullreader.so $(LIBRARY) 
+
+clean:
+	rm -f *.o pullreadertest pullreadertest2 *.c~ *.h~ *.gdb 

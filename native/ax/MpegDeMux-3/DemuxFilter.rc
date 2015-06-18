@@ -1,0 +1,165 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_DIALOG1 DIALOGEX 0, 0, 283, 180
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "Change",IDOK,218,0,50,14
+    LTEXT           "",IDC_STATIC,2,1,86,8
+    PUSHBUTTON      "Update",IDC_BTN_UPDATE,217,15,50,14
+    EDITTEXT        IDC_EDIT_PLAY_RATE,53,139,40,14,ES_AUTOHSCROLL
+    LTEXT           "Rate",IDC_STATIC,31,141,16,8
+    EDITTEXT        IDC_EDIT_TS_CHANNEL,159,139,26,14,ES_AUTOHSCROLL
+    LTEXT           "TS channel",IDC_STATIC,113,141,36,8
+    LTEXT           "1,2,3..",IDC_STATIC,189,145,35,8
+    LTEXT           "MPEG DeMux   SageTV, LLC.",IDC_STATIC,26,9,110,8
+    EDITTEXT        IDC_EDIT_BITRATE,173,55,32,14,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT        IDC_EDIT_OVERFLOW,223,55,50,14,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT        IDC_EDIT_DATA1,173,71,43,14,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT        IDC_EDIT_DATA2,223,71,57,14,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT        IDC_EDIT_BUFFER_SIZE,23,84,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_BLOCK_SIZE,105,84,40,14,ES_AUTOHSCROLL
+    LTEXT           "Totoal Buffer Size",IDC_STATIC,23,72,58,8
+    LTEXT           "Block Size",IDC_STATIC,105,72,32,8
+    EDITTEXT        IDC_EDIT_INFOMATION,20,110,209,13,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "K Byte",IDC_STATIC,150,86,23,8
+    LTEXT           "K Byte",IDC_STATIC,65,87,23,8
+    EDITTEXT        IDC_EDIT_DEBUG_MSG,21,34,239,14,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 3,1,0,27
+ PRODUCTVERSION 7,1,7,2
+ FILEFLAGSMASK 0x1fL
+#ifdef _DEBUG
+ FILEFLAGS 0x9L
+#else
+ FILEFLAGS 0x8L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "Comments", "SageTV Demuxlex  2008"
+            VALUE "CompanyName", "SageTV, LLC."
+            VALUE "FileDescription", "MpegDeMux Filter"
+            VALUE "FileVersion", "3, 1, 0, 27"
+            VALUE "InternalName", "MpegDeMux"
+            VALUE "LegalCopyright", "Copyright (C) 2008 SageTV, LLC."
+            VALUE "LegalTrademarks", "SageTV"
+            VALUE "OriginalFilename", "MpegDeMux.ax"
+            VALUE "PrivateBuild", "3, 0, 0, 8"
+            VALUE "ProductName", "SageTV"
+            VALUE "ProductVersion", "7, 1, 7, 2"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_DIALOG1, DIALOG
+    BEGIN
+        RIGHTMARGIN, 280
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE 
+BEGIN
+    IDS_TITLE               "Setup"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

@@ -1,0 +1,21 @@
+Unisys has a patent on the LZW compressor used in gif images.  Use of giflib
+is highly discouraged as it may put you into legal difficulties with UniSys.
+I take no responsibility for any liability you may incur by using this
+software.  If you must access gif files, use libungif (available from
+sunsite.unc.edu/pub/Linux/libs/graphics/), which writes uncompressed gifs
+rather than gifs utilizing LZW compression.
+
+Eric Raymond, the previous maintainer of giflib has this to say:
+
+   Note: due to Unisys's increasingly aggressive interpretation of its
+   patent claims on the LZW compression format, I can no longer recommend
+   the use of the GIFLIB library or utilities.  GIFLIB may be withdrawn
+   in the near future.
+   
+   For extended discussion of the situation, see 
+   http://www.cloanto.com/users/mcb/19950127giflzw.html, The GIF
+   Controversy: A Software Developer's Perspective. Essentially,
+   since 1996 Unisys no longer exempts even `freeware' from its
+   licensing requirements.  If you use this library in any way and Unisys
+   decides it doesn't like you, you could be open to lawsuit.
+

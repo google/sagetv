@@ -1,0 +1,128 @@
+# x86-mingw32-build.sh.help -- vim: filetype=sh
+# $Id: x86-mingw32-build.sh.help,v 1.1 2009-02-11 00:08:33 dave Exp $
+#
+# Help text definitions for x86-mingw32-build.sh script.
+#
+# Copyright (C) 2006, MinGW Project
+# Written by Keith Marshall <keithmarshall@users.sourceforge.net>
+#
+# This file is a component of the x86-mingw32-build script; it is not
+# intended for stand alone use.
+# 
+# x86-mingw32-build is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by the
+# Free Software Foundation; either version 2, or (at your option) any later
+# version.
+# 
+# x86-mingw32-build is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for further details.
+# 
+# You should have received a copy of the GNU General Public License along
+# with x86-mingw32-build; see the file COPYING.  If not, write to the Free
+# Software Foundation, 51 Franklin St - Fifth Floor, Boston, MA 02110-1301,
+# USA.
+
+IDENTIFICATION=${IDENTIFICATION-"
+$script version "${PACKAGE_VERSION="`sh $script.version --echo`"}}
+
+USAGE="sh $script [--options ...] [target-prefix]"
+
+PACKAGE_DESCRIPTION="
+SYNOPSIS
+   $USAGE
+
+DESCRIPTION
+   This script automates the process of building a MinGW cross compiler,
+   which will run on the local host platform, generating code to be run
+   on a Win32 host.
+
+OPTIONS
+   The following options may be specified, to fine tune the compiler
+   build process; each may be abbreviated to its shortest unambiguous
+   initial substring.
+
+   --help      Display this mini-manpage, and exit.
+
+   --version   Display the script version and the copyright notice,
+               then exit.
+
+   --batch, --unattended
+               Use the build configuration choices as specified in the
+               configuration file, without prompting for confirmation;
+               the default is to interactively prompt for confirmation
+               of configuration choices prior to building.
+
+   --dry-run   Show the commands which would be executed to build the
+               cross compiler, without actually building it; (may leave
+               some side effects, such as working directory creation).
+
+   --pre-clean, (--no-pre-clean)
+               Clear, (do not clear), any existing files from the build
+               directory, before commencing a new build; the default is
+               clear the build directory.
+
+   --post-clean, (--no-post-clean)
+               Remove the build directory in its entirety, (leave the
+               build directory as-is), on completion of the build; the
+               default is to remove the build directory.
+
+   --download, (--no-download)
+               Download packages as required, (use only locally
+               available packages), during the build.
+
+   --use-latest-versions
+               Substitute the latest version of any package which
+               is locally available, if it appears to be more recent
+               than the version specified in the configuration file.
+
+PARAMETERS
+   The first non-option argument, designated \`target-prefix', defines
+   the prefix to be added to the name of each cross tool; the default
+   is \`i386-mingw32', resulting in a set of tools which are invoked 
+   as, e.g., \`i386-mingw32-gcc'.
+
+ENVIRONMENT
+   The following environment variables may be defined, and exported, to
+   control the default behaviour of $script.
+
+   XMINGW32_BUILD
+      Set this to a space separated list of any of the OPTIONS defined
+      above, to override the normal default settings.
+
+FILES
+   The $script package comprises a number of sub-scripts, each
+   of which is named \`$script.*', and each should be considered
+   to be an integral component of the primary script; only the following
+   are of particular significance to the user:--
+
+   $script.conf
+      Specifies configuration options for building the cross compiler;
+      may be modified, as required, to suit the user's preferences for
+      build and installation options.
+
+   $script.log
+      Created during the build process, this provides a record of the
+      configuration options specified for the most recent build.
+"
+
+COPYING_NOTICE="
+This script package is free software.  It is provided \`as is', in the
+hope that it may be useful, but WITHOUT WARRANTY OF ANY KIND, not even
+the implied warranty of MERCHANTABILITY, nor of FITNESS FOR PURPOSE.
+
+Permission is granted to copy, modify and redistribute this software,
+under the terms of the GNU General Public License Version 2, or at your
+option, any later version; see the file COPYING for details."
+
+case $match in
+
+  --help) echo "$IDENTIFICATION"; echo "$PACKAGE_DESCRIPTION" ;;
+
+  --version) echo "$IDENTIFICATION"; echo "$COPYING_NOTICE" ;;
+
+esac
+exit 0
+
+# $RCSfile: x86-mingw32-build.sh.help,v $Revision: 1.1 $: end of file

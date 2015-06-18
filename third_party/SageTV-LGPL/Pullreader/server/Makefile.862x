@@ -1,0 +1,19 @@
+CC=arm-linux-uclibc-gcc
+#CC=arm-elf-gcc
+CFLAGS = -msoft-float -D_FILE_OFFSET_BITS=64 -O2 -c -I../lib
+BINDIR=/usr/local/bin
+LIBRARY=-L/sage/em8623/newffmpeg4/libavutil -L/sage/em8623/newffmpeg4/libavformat \
+    -L/sage/em8623/newffmpeg4/libavcodec -L../lib -lPullreader -lavformat -lavcodec -lm -lavutil -lm libvorbisidec.a
+
+OBJFILES=pullreaderserver.o malloc.o math.o
+
+all: pullreader
+
+pullreader: $(OBJFILES) ../lib/libPullreader.a
+	$(CC) -Wl,-elf2flt="-s65536" -o pullreader $(OBJFILES) $(LIBRARY)
+
+malloc.o: malloc.c
+	$(CC) $(CFLAGS) -DHAVE_MMAP=0 -DHAVE_MORECORE=0 -DONLY_MSPACES=1 -c malloc.c
+
+clean:
+	rm -f *.o pullreader *.c~ *.h~ *.gdb

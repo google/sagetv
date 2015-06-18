@@ -1,0 +1,12 @@
+#	$Header: /source/codecs/tiff/TODO,v 1.1 2009-07-27 21:27:43 dave Exp $
+
+o gif2tiff segaulting on selected images
+o tiffcmp read data by strip/tile instead of scanline
+o YCbCr sampling support
+o extracate colorspace conversion support
+o look at isolating all codecs from TIFF library
+o JPEG colormode order dependency problem
+o Write documentation on how do extend tags, and how the custom field
+  stuff all works. 
+
+

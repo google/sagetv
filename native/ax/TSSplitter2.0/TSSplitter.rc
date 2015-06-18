@@ -1,0 +1,195 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource1.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 3,0,0,85
+ PRODUCTVERSION 7,1,3,1
+ FILEFLAGSMASK 0x1fL
+#ifdef _DEBUG
+ FILEFLAGS 0x9L
+#else
+ FILEFLAGS 0x8L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "Comments", "SageTV TSSplitter"
+            VALUE "CompanyName", "SageTV, LLC"
+            VALUE "FileDescription", "TSSplitt Dynamic Link Library"
+            VALUE "FileVersion", "3, 0, 0, 85"
+            VALUE "InternalName", "TSSplitt"
+            VALUE "LegalCopyright", "SageTV, LLC. Copyright (C) 2009"
+            VALUE "LegalTrademarks", "SageTV"
+            VALUE "OriginalFilename", "TSSplitter.dll"
+            VALUE "PrivateBuild", "3. 0. 0. 68"
+            VALUE "ProductName", " TSSplitt Dynamic Link Library"
+            VALUE "ProductVersion", "7, 1, 3, 1"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_DIALOG1 DIALOGEX 0, 0, 274, 145
+STYLE DS_SETFONT | DS_SETFOREGROUND | DS_FIXEDSYS | WS_CHILD | WS_VISIBLE
+EXSTYLE WS_EX_NOPARENTNOTIFY | WS_EX_NOINHERITLAYOUT
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CONTROL         "ATSC",IDC_RADIO_ATSC,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,12,32,33,10
+    EDITTEXT        IDC_EDIT_MAJOR,53,28,31,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_MINOR,94,28,31,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_PROGRAM,135,28,31,14,ES_AUTOHSCROLL
+    CONTROL         "DVB",IDC_RADIO_DVB,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,13,59,33,10
+    EDITTEXT        IDC_EDIT_ONID,53,56,30,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_TSID,93,56,32,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_SID,135,56,32,14,ES_AUTOHSCROLL
+    CONTROL         "UNKWON",IDC_RADIO_UNKOWN,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,13,105,52,10
+    EDITTEXT        IDC_EDIT_CHANNEL,93,104,32,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_CHANNEL_PROGRAM,136,104,34,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,217,7,50,14
+    LTEXT           "Major",IDC_STATIC,54,16,19,8
+    LTEXT           "Minor",IDC_STATIC,96,16,17,8
+    LTEXT           "program",IDC_STATIC,136,15,28,8
+    LTEXT           "ONID",IDC_STATIC,54,46,18,8
+    LTEXT           "TSID",IDC_STATIC,94,46,16,8
+    LTEXT           "SID",IDC_STATIC,136,46,12,8
+    LTEXT           "Channel",IDC_STATIC,94,93,27,8
+    LTEXT           "Program",IDC_STATIC,136,93,28,8
+    EDITTEXT        IDC_EDIT_STREAM_FORMAT,12,7,78,12,ES_AUTOHSCROLL | ES_NOHIDESEL | ES_READONLY | WS_DISABLED | NOT WS_BORDER | NOT WS_TABSTOP
+    PUSHBUTTON      "Scan PSI Channel",IDC_BTN_SCAN_CHANNEL_PSI,187,69,72,14
+    EDITTEXT        IDC_EDIT_CHANNEL_STATE,178,36,89,14,ES_AUTOHSCROLL | ES_NOHIDESEL | ES_READONLY | WS_DISABLED | NOT WS_BORDER | NOT WS_TABSTOP
+    PUSHBUTTON      "Output Channel",IDC_BTN_CHANNEL_LIST,187,97,72,14
+    PUSHBUTTON      "Done Scan",IDC_BTN_SCAN_DONE,187,111,72,14
+    PUSHBUTTON      "Scan RAW Channel",IDC_BTN_SCAN_CHANNEL_RAW,187,83,72,14
+    EDITTEXT        IDC_EDIT_VPID,68,75,30,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_APID,137,75,29,14,ES_AUTOHSCROLL
+    LTEXT           "video pid",IDC_STATIC,35,78,30,8
+    LTEXT           "audio pid",IDC_STATIC,103,78,30,8
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_DIALOG1, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 267
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 138
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE 
+BEGIN
+    IDS_TITLE               "Test"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

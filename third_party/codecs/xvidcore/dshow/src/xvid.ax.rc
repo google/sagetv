@@ -1,0 +1,149 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include <windows.h>
+#ifndef IDC_STATIC
+#define IDC_STATIC (-1)
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Neutral resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEU)
+#ifdef _WIN32
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUT DIALOG DISCARDABLE  0, 0, 216, 296
+STYLE WS_CHILD
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         IDB_LOGO,IDC_STATIC,"Static",SS_BITMAP,36,6,142,29
+    CTEXT           "Xvid MPEG-4 Video Codec",IDC_CORE,36,33,142,16,
+                    SS_CENTERIMAGE | SS_SUNKEN
+    GROUPBOX        "Brightness",IDC_STATIC,7,54,202,39
+    CONTROL         "Slider1",IDC_BRIGHTNESS,"msctls_trackbar32",
+                    TBS_AUTOTICKS | TBS_BOTH | WS_TABSTOP,17,64,181,24
+    GROUPBOX        "Postprocessing",IDC_STATIC,7,96,202,42
+    CONTROL         "Deblocking (Y)",IDC_DEBLOCK_Y,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,23,109,63,10
+    CONTROL         "Deblocking (UV)",IDC_DEBLOCK_UV,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,23,123,68,10
+    CONTROL         "Dering (Y)",IDC_DERINGY,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,98,109,47,10
+    CONTROL         "Film Effect",IDC_FILMEFFECT,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,158,109,47,10
+    GROUPBOX        "Output",IDC_STATIC,7,141,202,43
+    CONTROL         "Flip Video",IDC_FLIPVIDEO,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,23,154,46,10
+    CONTROL         "Compatibility Renderer",IDC_COMPAT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,23,167,88,12
+    COMBOBOX        IDC_COLORSPACE,134,164,69,67,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "DIVX",IDC_DIVX,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,21,
+                    198,47,13
+    CONTROL         "3IVX",IDC_3IVX,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,
+                    198,43,13
+    GROUPBOX        "Other MPEG-4 video support",IDC_STATIC,7,187,202,29
+    CONTROL         "Other",IDC_MP4V,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    160,198,38,13
+    PUSHBUTTON      "Reset",IDC_RESET,79,282,50,12
+    LTEXT           "Output Colourspace",IDC_STATIC,136,151,67,9
+    CONTROL         "Dering (UV)",IDC_DERINGUV,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,98,123,53,10
+    GROUPBOX        "Aspect Ratio",IDC_STATIC,7,221,202,25
+    LTEXT           "After restarting player, use this AR:",IDC_STATIC,14,
+                    233,109,8
+    COMBOBOX        IDC_USE_AR,135,230,68,95,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    CONTROL         "Display Tray-Icon when playing back Xvid video",IDC_TRAYICON,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,21,260,182,13
+    GROUPBOX        "GUI Options",IDC_STATIC,7,250,202,29
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_LOGO                BITMAP  DISCARDABLE     "XviD_logo.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_ICON                ICON    DISCARDABLE     "xvid.ico"
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include <windows.h>\r\n"
+    "#ifndef IDC_STATIC\r\n"
+    "#define IDC_STATIC (-1)\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ABOUT               "About"
+END
+
+#endif    // Neutral resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Encoding=UTF-8
+Type=Application
+Name=SageTV Client 6.5.8
+Comment=Client/Placeshifter for SageTV 6.5.8
+Exec=/opt/sagetv/client/sageclient.sh
+TryExec=/opt/sagetv/client/sageclient.sh
+Terminal=false
+Categories=Applications;AudioVideo
+Icon=SageIcon64.png

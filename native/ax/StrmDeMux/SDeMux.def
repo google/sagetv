@@ -1,0 +1,8 @@
+
+LIBRARY         MpegDeMux-2.ax
+EXPORTS
+                DllGetClassObject PRIVATE
+                DllCanUnloadNow PRIVATE
+                DllUnregisterServer PRIVATE
+                DllRegisterServer PRIVATE
+

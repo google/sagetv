@@ -1,0 +1,44 @@
+This file outlines the overall directory layout for the SageTV codebase,
+ what all the various components in it and what you need to build it on
+ different platforms.
+
+Directory Layout
+
+build - build files/scripts for Linux
+buildwin - misc. files for Windows & Linux installs, and build scripts for
+	 non-MS dev built files on Windows
+i18n - internationalization files
+images - graphics that are included in the Sage.jar file
+install - default config files for installs
+java - java source code
+native - C/C++ source code, top-level MSDEV projects for Windows native code
+native/ax - Windows DirectShow filter C++ source code
+native/common - shared common source/header files
+native/crosslibs - cross platform native code
+native/dll - Windows DLL C++ source code
+native/elf - native executable linux source code
+native/exe - Windows executable C++ source code
+native/include - includes files (both platforms)
+native/so - Linux native library C/C++ code
+stvs - STV XML, resource and image files
+third_party - Third party source code is located here. 
+
+Various components in SageTV rely on code that is in the third_party directory
+and utilize it directly in some cases. Some other third party components stand
+on their own and are just part of the overall distribution.
+
+For building on Linux you should set JDK_HOME to be the directory where the JDK
+is installed (it should have an include and an include/linux folder at that path).
+
+Extra Linux packages required to build (not exhaustive): lib1394raw-dev,
+libavc1394-dev, libiec61883-dev, libfreetype6-dev, yasm
+
+jhead is NOT included in the open source distribution due to it being under the
+ambiguous Public Domain license. It can be acquired separately and is needed for
+fixing the EXIF JPEG header after rotating pictures.
+
+You can use the build/buildall.sh script on Linux to build the entire platform and
+have it packaged into tarballs and debian installers.
+
+The Windows components need to be built with Visual Studio 2005, mingw/msys and javac.
+There is no script for doing this included.

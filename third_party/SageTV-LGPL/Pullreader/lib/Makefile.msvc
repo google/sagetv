@@ -1,0 +1,35 @@
+
+# It's a test pullread build for Windows with MSVC
+
+STAGE=/c/sage/buildwin/stage
+STAGE_LIB=$(STAGE)/lib
+STAGE_INC=$(STAGE)/include
+FFMPEG_DIR=/c/sage/ffmpeg
+
+CC=gcc
+BINDIR=/usr/local/bin
+
+CFLAGS = -shared -D_FILE_OFFSET_BITS=64   -I$(STAGE_INC)/libavformat -I$(FFMPEG_DIR)/libavutil -I$(FFMPEG_DIR)/libavcodec -I$(FFMPEG_DIR) -I$(STAGE_INC) -I$(STAGE_INC) 
+FF_MPEG_LIB = $(STAGE_LIB)/libavformat.a $(STAGE_LIB)/libavcodec.a $(STAGE_LIB)/libavutil.a -L${STAGE_LIB} -lfaac -lfaad -lxvidcore -lx264 
+COMM_LIB = -lm -lws2_32 -lpthread
+
+SRC_FILES=pullreader.c flashmpeg4.c
+
+Pullreader.dll: $(OBJFILES)
+	$(CC) $(CFLAGS) $(SRC_FILES) -o Pullreader.dll  $(FF_MPEG_LIB) $(COMM_LIB) -Wl,--output-def,Pullreader.def,--out-implib,libPullreader.a
+	lib /machine:x86 /def:Pullreader.def
+	install -v pullreader.h $(STAGE)/include
+	install -v Pullreader.dll $(STAGE)/lib
+	install -v Pullreader.lib $(STAGE)/lib
+	install -v Pullreader.dll "$(SAGEDEVREL)"
+	install -v Pullreader.dll "$(SAGEDEVDEBUG)"
+
+
+clean:
+	rm -f *.o *.c~ *.h~ Pullreader.dll Pullreader.def libPullreader.a  Pullreader.lib
+
+#
+#Note: referenc http://www.mingw.org/wiki/MSVC_and_MinGW_DLLs
+#      we have to put vcvars.bat into msys.bat to setup path so that lib.exe can be found on the path, which is 
+#      in "C:\Program Files\Microsoft Visual Studio 8\VC\bin\lib.exe" 
+#

@@ -1,0 +1,115 @@
+directx 9.0 software development kit update (summer 2003)
+gnu c compiler compatibility patch
+===============================================
+
+this patch has been tested with:
+	gcc v3.2.3
+	gcc v3.3.3
+	gcc v3.4.1 (linux->win32 cross compiler)
+	msc v6.0 + sp5 + pp
+
+I) Applying the patch
+------------------
+
+1. Install the directx sdk update to /c/DX90SDK (to match default
+   Makefile variable values) or to any other dir. From now on, the
+   sdk install directory will be called ${SDKDIR}.
+
+	dx90updatesdk.exe
+	size: 190,991,976 bytes
+	md5: ed328da4033e18124801265ee91f690e
+
+2. cd ${SDKDIR}
+3. patch -p0 --dry-run < /path/to/dx90sdk-update-gcc.patch
+   (if all goes well, no rejects... else read the special notes)
+   patch -p0 < /path/to/dx90sdk-update-gcc.patch
+
+
+--
+Special notes for cross compilation on GNU/Linux systems (or any
+supported platform for wine):
+ - You can install the DX SDK using the wine win32 API emulation
+   layer. The unzipping stage of the install will succeed, it's
+   all that is required to continue. So don't panic if the install
+   program breaks/crashes after the self unzip did succeed.
+ - Then depending on your cvs program, you may require to unix'ify
+   the endlines of all sources in the SDK before applying the patch.
+   That can be required CVS uses to expand/replace endlines according
+   to the host platform type, so it's very likely that if you do
+   extract the xvidcore sources from a windows box, this step isn't
+   mandatory, but if you're using a unix box (even cygwin), you may
+   be obliged to proceed with:
+   find ${SDKDIR} -name "*.cpp" -exec dos2unix {} \;
+   find ${SDKDIR} -name "*.h" -exec dos2unix {} \;
+
+II) building strmbase.lib
+-------------------------
+
+1. cd ${SDKDIR}/Samples/C++/Directshow/BaseClasses
+2. make
+   (this should output strmbase.lib)
+
+--
+Special notes for people cross compiling, or people who installed
+the SDK elsewhere than /c/DX90SDK:
+ - you can overide Makefile defaults in the make command line,
+   just use something like this command line (adapt according to
+   your build environment):
+   make \
+       CXX=/opt/mingw32-cross/bin/i386-mingw32-g++ \
+       RANLIB=/opt/mingw32-cross/bin/i386-mingw32-ranlib \
+       DXTREE=${SDKDIR}
+
+
+III) Building your own apps
+---------------------------
+
+These variables should be defined in your Makefiles:
+
+DXTREE=${SDKTREE}
+DXBASECLASSES=$(DXTREE)/Samples/C++/DirectShow/BaseClasses
+CXXFLAGS += -DRELEASE \
+        -I$(DXTREE)/Include \
+        -I$(DXBASECLASSES) \
+        -include $(DXTREE)/mingw_dshow_port.h
+LDFLAGS += -L$(DXTREE)/Lib -lstrmiids \
+        $(DXBASECLASSES)/strmbase.lib \
+	-lole32 -loleaut32 -lstdc++
+
+So it's now time to build the XviD Dshow filter (the xvidcore
+source dir is supposed to be ${xvidcore}):
+
+1. cd ${xvidcore}/dshow
+2. make
+  (should output a xvid.ax file in a =build dir by default)
+
+--
+Notes for people using a cross compiler, or people who did install
+the SDK elsewhere than /c/DX90SDK:
+ - you can overide Makefile variables from the make command line,
+   a fairly complete command could look like this, adapt to your
+   build environment:
+   make \
+        CC=/opt/mingw32-cross/bin/i386-mingw32-gcc  \
+        CXX=/opt/mingw32-cross/bin/i386-mingw32-g++ \
+        WINDRES=/opt/mingw32-cross/bin/i386-mingw32-windres \
+        DXTREE=/mnt/data/windows/dx9sdk
+
+NB: with some win32-api headers from mingw.org, you may suffer
+    multiple QACONTAINERFLAGS definitions. In that case you need
+    to manually edit ${mingw_install}/include/ocidl.h; Search for
+    QACONTAINERFLAGS. It should look like this:
+
+      enum tagQACONTAINERFLAGS
+      {
+       ...
+      } QACONTAINERFLAGS;
+
+    Then change this to that:
+
+      typedef enum tagQACONTAINERFLAGS
+      {
+       ...
+      } QACONTAINERFLAGS;
+
+    Noticed the additional typedef ? that's the point !

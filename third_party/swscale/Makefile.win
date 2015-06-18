@@ -1,0 +1,15 @@
+CC=gcc
+#CFLAGS = -c -D_JNI_IMPLEMENTATION -IC:\\jdk1.4\\include -IC:\\jdk1.4\\include\\win32
+CFLAGS = -c -O2 -s -D_JNI_IMPLEMENTATION -I/mingw/include -IC:\\jdk1.4\\include -IC:\\jdk1.4\\include\\win32 -I/usr/local/include
+
+OBJFILES=swscale.o
+
+all: swscale.dll
+
+swscale.dll: $(OBJFILES)
+	$(CC) -shared -W1 -o swscale.dll $(OBJFILES)
+
+swscale.o: swscale.c swscale_template.c
+
+clean:
+	rm -f *.o swscale.dll *.c~ *.h~

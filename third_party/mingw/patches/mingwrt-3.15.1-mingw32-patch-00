@@ -1,0 +1,46 @@
+diff -Nur mingwrt-3.15.1-mingw32/include/io.h mingwrt-3.15.1-mingw32/include/io.h
+--- mingwrt-3.15.1-mingw32/include/io.h	2007-12-27 15:21:39.000000000 +0100
++++ mingwrt-3.15.1-mingw32/include/io.h	2008-03-29 02:02:40.343750000 +0100
+@@ -333,6 +333,10 @@
+ 
+ #endif	/* Not _NO_OLDNAMES */
+ 
++#if defined _FILE_OFFSET_BITS && _FILE_OFFSET_BITS == 64
++#define lseek _lseeki64
++#endif
++
+ #ifdef	__cplusplus
+ }
+ #endif
+diff -Nur mingwrt-3.15.1-mingw32/include/sys/stat.h mingwrt-3.15.1-mingw32/include/sys/stat.h
+--- mingwrt-3.15.1-mingw32/include/sys/stat.h	2007-12-27 15:21:40.000000000 +0100
++++ mingwrt-3.15.1-mingw32/include/sys/stat.h	2008-03-29 02:02:40.343750000 +0100
+@@ -187,6 +187,13 @@
+ #endif /* _WSTAT_DEFIND */
+ #endif /* __MSVCRT__ */
+ 
++#if defined _FILE_OFFSET_BITS && _FILE_OFFSET_BITS == 64
++#undef stat
++#define stat  _stati64
++#define fstat _fstati64
++#define wstat _wstati64
++#endif
++
+ #ifdef	__cplusplus
+ }
+ #endif
+diff -Nur mingwrt-3.15.1/include/sys/types.h mingwrt-3.15.1-mingw32/include/sys/types.h
+--- mingwrt-3.15.1-mingw32/include/sys/types.h	2007-12-27 15:21:40.000000000 +0100
++++ mingwrt-3.15.1-mingw32/include/sys/types.h	2008-03-29 02:02:40.359375000 +0100
+@@ -35,7 +35,11 @@
+ 
+ #ifndef	_OFF_T_
+ #define	_OFF_T_
++#if defined _FILE_OFFSET_BITS && _FILE_OFFSET_BITS == 64
++typedef long long _off_t;
++#else
+ typedef long _off_t;
++#endif
+ 
+ #ifndef	_NO_OLDNAMES
+ typedef _off_t	off_t;

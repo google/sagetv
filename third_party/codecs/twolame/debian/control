@@ -1,0 +1,55 @@
+Source: twolame
+Section: sound
+Priority: optional
+Maintainer: Nicholas Humfrey <njh@ecs.soton.ac.uk>
+Build-Depends: debhelper (>> 3.0.0), libsndfile1-dev
+Standards-Version: 3.5.2
+
+Package: libtwolame0-dev
+Section: libdevel
+Architecture: any
+Depends: libtwolame0 (= ${Source-Version}), libc6-dev, pkg-config
+Provides: libtwolame-dev
+Description: MPEG Audio Layer 2 encoder (development files)
+ TwoLAME is an optimized MPEG Audio Layer 2 encoder. It is based on tooLAME by 
+ Mike Cheng, which in turn is based upon the ISO dist10 code and portions of 
+ LAME.
+ .
+ Because of patent issues surrounding the MPEG Audio Layer 3 (MP3) encoders, 
+ the ability of most MPEG Audio players to play layer 2 files, and the 
+ similarity in command-line syntax and API, TwoLAME makes a very good 
+ drop-in replacement for LAME or other layer 3 encoders.
+ .
+ This package contains the static library and header files.
+
+Package: libtwolame0
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: MPEG Audio Layer 2 encoding library
+ TwoLAME is an optimized MPEG Audio Layer 2 encoder. It is based on tooLAME by 
+ Mike Cheng, which in turn is based upon the ISO dist10 code and portions of 
+ LAME.
+ .
+ Because of patent issues surrounding the MPEG Audio Layer 3 (MP3) encoders, 
+ the ability of most MPEG Audio players to play layer 2 files, and the 
+ similarity in command-line syntax and API, TwoLAME makes a very good 
+ drop-in replacement for LAME or other layer 3 encoders.
+ .
+ This package contains the shared library.
+
+Package: twolame
+Section: sound
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: MPEG Audio Layer 2 encoder (command line frontend)
+ TwoLAME is an optimized MPEG Audio Layer 2 encoder. It is based on tooLAME by 
+ Mike Cheng, which in turn is based upon the ISO dist10 code and portions of 
+ LAME.
+ .
+ Because of patent issues surrounding the MPEG Audio Layer 3 (MP3) encoders, 
+ the ability of most MPEG Audio players to play layer 2 files, and the 
+ similarity in command-line syntax and API, TwoLAME makes a very good 
+ drop-in replacement for LAME or other layer 3 encoders.
+ .
+ This package contains the command line frontend encoder.

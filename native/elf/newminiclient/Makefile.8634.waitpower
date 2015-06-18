@@ -1,0 +1,16 @@
+COMPILKIND=debug
+LINUX_KERNEL=/sage/dlink/uClinux-sigma/uClinux-2.4
+
+CC=mipsel-linux-gcc
+CFLAGS = -msoft-float -D_DEBUG -DEM8634 -DEM86 -Os -c -D_FILE_OFFSET_BITS=64 -I/sage/mrua/mrua_SMP8634_2.8.5.0_GCC4_dev.mips/MRUA_src/ -DWITH_FACSPROD=1 -DEM86XX_CHIP=EM86XX_CHIPID_TANGO2 -DEM86XX_REVISION=6 -DEM86XX_MODE=EM86XX_MODEID_STANDALONE -DDEMUX_PSF=1 -DWITHOUT_DTS=1 -DWITH_XLOADED_UCODE=1 -Wa,-mips32r2 -Wa,-mfix7000 -I/sage/smp86xx/build_mips/uclibclib/include -DWAITPOWER
+BINDIR=/usr/local/bin
+
+OBJFILES=waitpower.o EM86/EM86input.o thread_util.o
+
+all: waitpower
+
+waitpower: $(OBJFILES)
+	$(CC) -o waitpower $(OBJFILES) -lpthread
+
+clean:
+	rm -f *.o waitpower waitpower.gdb *.c~ *.h~ STB/*.o EM86/*.o

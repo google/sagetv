@@ -1,0 +1,34 @@
+ $Id: LICENSE,v 1.1 2009-02-11 00:08:33 dave Exp $
+
+ LICENSE for x86-mingw32-build script package
+ --------------------------------------------
+
+ The `x86-mingw32-build' script package is free software.  It is licensed
+ under the GNU General Public License (GNU GPL), version 2 or later.
+
+ You should have received a copy of the GNU General Public License  along
+ with  the  `x86-mingw32-build' package; see the file COPYING.  This file
+ is included in the package distribution; it contains a copy of the  GPL,
+ as  it  appeared on the GNU web site on 1st Dec, 2003.  You may obtain a
+ copy of any more recent version from:
+
+     http://www.gnu.org/copyleft/gpl.txt
+
+ or by writing to:
+
+     Free Software Foundation,
+     51 Franklin St - Fifth Floor,
+     Boston,
+     MA 02110-1301,
+     USA.
+
+ The `x86-mingw32-build' script package is distributed in the  hope  that
+ it  will  be  useful, but WITHOUT WARRANTY OF ANY KIND; without even the
+ IMPLIED WARRANTY of MERCHANTABILITY  or  of  FITNESS  FOR  A  PARTICULAR
+ PURPOSE.  Please see the GNU General Public License for further details.
+
+ You  may  copy  and/or  modify  the  `x86-mingw32-build'  package,   and
+ redistribute  it  under the terms of the GNU General Public License; you
+ may, at your option, choose GPL Version 2, or any later version.
+
+ # $RCSfile: LICENSE,v $Revision: 1.1 $: end of file

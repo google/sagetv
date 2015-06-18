@@ -1,0 +1,6 @@
+; Win32ShellHook.def : Declares the module parameters for the DLL.
+
+LIBRARY      "Win32ShellHook"
+
+SECTIONS
+	.shared READ WRITE SHARED

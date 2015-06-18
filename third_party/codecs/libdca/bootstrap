@@ -1,0 +1,70 @@
+#! /bin/sh
+
+##  generic bootstrap file for libraries -- Sam Hocevar <sam@zoy.org>
+##  $Id: bootstrap,v 1.1 2007-04-15 00:43:44 dave Exp $
+
+set -x
+set -e
+
+# Get a sane environment, just in case
+LANG=C
+export LANG
+CYGWIN=binmode
+export CYGWIN
+
+# Check for automake
+amvers="no"
+if automake-1.8 --version >/dev/null 2>&1; then
+  amvers="-1.8"
+elif automake-1.7 --version >/dev/null 2>&1; then
+  amvers="-1.7"
+elif automake-1.6 --version >/dev/null 2>&1; then
+  amvers="-1.6"
+elif automake-1.5 --version >/dev/null 2>&1; then
+  amvers="-1.5"
+elif automake --version > /dev/null 2>&1; then
+  amvers="`automake --version | sed -e '1s/[^0-9]*//' -e q`"
+  if expr "$amvers" "<" "1.5" > /dev/null 2>&1; then
+    amvers="no"
+  else
+    amvers=""
+  fi
+fi
+
+if test "$amvers" = "no"; then
+  set +x
+  echo "$0: you need automake version 1.5 or later"
+  exit 1
+fi
+
+#libtool# # Check for libtool
+#libtool# libtoolize="no"
+#libtool# if glibtoolize --version >/dev/null 2>&1; then
+#libtool#   libtoolize="glibtoolize"
+#libtool# elif libtoolize --version >/dev/null 2>&1; then
+#libtool#   libtoolize="libtoolize"
+#libtool# fi
+#libtool#
+#libtool# if test "$libtoolize" = "no"; then
+#libtool#   set +x
+#libtool#   echo "$0: you need libtool"
+#libtool#   exit 1
+#libtool#  fi
+
+# Remove old cruft
+rm -f aclocal.m4 configure config.guess config.log config.sub config.cache config.h.in config.h compile ltmain.sh libtool ltconfig missing mkinstalldirs depcomp install-sh
+rm -Rf autom4te.cache
+(cd autotools && rm -f config.guess config.sub missing mkinstalldirs compile ltmain.sh depcomp install-sh)
+
+#libtool# ${libtoolize} --copy --force
+#libtool#
+#libtool# if test -f "ltmain.sh"; then
+#libtool#   echo "$0: working around a minor libtool issue"
+#libtool#   mv ltmain.sh autotools/
+#libtool# fi
+
+aclocal${amvers}
+autoconf
+autoheader
+automake${amvers} --add-missing --copy
+

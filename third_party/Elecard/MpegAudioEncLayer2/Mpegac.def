@@ -1,0 +1,6 @@
+LIBRARY		MpegAudioEnc2.ax
+EXPORTS
+                DllGetClassObject		  PRIVATE
+		DllCanUnloadNow			  PRIVATE
+		DllRegisterServer		  PRIVATE
+                DllUnregisterServer		  PRIVATE

@@ -1,0 +1,21 @@
+
+ AUTHORS
+ -------
+
+ Copyright (C) 2006, MinGW Project  <http://www.mingw.org>
+ $Id: AUTHORS,v 1.1 2009-02-11 00:08:33 dave Exp $
+
+ This  `x86-mingw32-build' script package was written for the MinGW Project
+ by Keith Marshall <keithmarshall@users.sourceforge.net>.
+
+ The cross compiler build strategy has been derived from an earlier script,
+ originally  written  by  Paul Millar <paulm@astro.gla.ac.uk>, and based on
+ information provided by Pieter Thysebaert; this was subsequently  modified
+ by  Heiko  Gerdau <hg@technosis.de>, and by Keith Marshall, and maintained
+ by Michael Gerdau <mgd@technosis.de>.
+
+ The modular structure, and the interactive features of the present  script
+ have been adapted from the `portmaker' package, also written for the Mingw
+ Project, by Earnie Boyd <earnie@users.sourceforge.net> and Keith Marshall.
+
+ $RCSfile: AUTHORS,v $Revision: 1.1 $: end of file

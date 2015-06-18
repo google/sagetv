@@ -1,0 +1,41 @@
+COMPILKIND=debug
+LINUX_KERNEL=/sage/dlink/uClinux-sigma/uClinux-2.4
+
+CC=arm-elf-gcc
+CFLAGS = -D_DEBUG -DEM86 -DWITH_RMHDMI -Os -c -D_FILE_OFFSET_BITS=64 -I/sage/mrua/mrua_EM8622L_2.8.3.0_dev.arm.bootirq.nodts_hdmi/MRUA_src/ -DEM86XX_CHIP=EM86XX_CHIPID_TANGO15 -DEM86XX_REVISION=66 -DEM86XX_MODE=EM86XX_MODEID_STANDALONE -DLLAD_DIRECT -D__arm__ -I/sage/em8623/openssl-0.9.8g/include/ -DDEMUX_PSF=1 -DWITHOUT_DTS=1
+BINDIR=/usr/local/bin
+
+OBJFILES=miniclient.o gfxcmd.o thread_util.o mediacmd.o malloc.o EM86/bdsubdecoder.o EM86/EM86gfx.o EM86/EM86input.o EM86/EM86media.o  EM86/rmmmimplementation.o EM86/dbgimplementation.o EM86/EM86output.o EM86/pullreaderclient.o utils/MiniImage.o EM86/SD/outports_options.o
+
+all: miniclient
+
+# ruanocache is a version of rua with the cache flush skipped *JFT
+
+miniclient: $(OBJFILES)
+	$(CC) -Wl,-elf2flt="-s98304" -o miniclient $(OBJFILES) -LEM86 \
+    -L/sage/mrua/mrua_EM8622L_2.8.3.0_dev.arm.bootirq.nodts_hdmi/lib_nonxip/ \
+    -L/sage/em8623/openssl-0.9.8g/ \
+    -lpthread -L. -lcrypto \
+    -lruanocache                     \
+    -ldcc \
+    -lrmhdmi -lrmsha1 -lrmi2c -lruahdmi \
+    -lrmmonitoring            \
+    -lrmdescriptordecoder     \
+    -lrmsymboltable           \
+    -lrmcpputils              \
+    -lrmcw                    \
+    -lrmcore                  \
+    -lllad \
+    -lpng12 \
+    -lz \
+    -lm \
+    -ljpeg \
+    -lrmwmaprodecoder \
+    -lrmwmaprodecodercore \
+    -lgbus
+
+malloc.o: malloc.c
+	$(CC) -DHAVE_MMAP=0 -DHAVE_MORECORE=0 -DONLY_MSPACES=1 -c malloc.c
+
+clean:
+	rm -f *.o miniclient miniclient.gdb *.c~ *.h~ STB/*.o EM86/*.o utils/*.o EM86/SD/*.o

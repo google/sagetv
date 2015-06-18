@@ -1,0 +1,12 @@
+CC=arm-linux-uclibc-gcc
+#CC=arm-elf-gcc
+CFLAGS = -msoft-float -D_FILE_OFFSET_BITS=64 -O2 -g -c -I/sage/svn/ffmpeg/libavformat -I/sage/svn/ffmpeg/libavutil -I/sage/svn/ffmpeg/libavcodec -I/sage/em8623/newffmpeg4/ -I/sage/svn/ffmpeg
+BINDIR=/usr/local/bin
+
+OBJFILES=pullreader.o flashmpeg4.o
+
+libPullreader.a: $(OBJFILES)
+	arm-linux-uclibc-ar rc $@ $^
+
+clean:
+	rm -f *.o libPullreader.so *.c~ *.h~

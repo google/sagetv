@@ -1,0 +1,144 @@
+diff -Narup mingwrt-3.15.1-mingw32/include/stdlib.h mingwrt-3.15.1-mingw32/include/stdlib.h
+--- mingwrt-3.15.1-mingw32/include/stdlib.h	2008-10-04 15:28:50.000000000 -0700
++++ mingwrt-3.15.1-mingw32/include/stdlib.h	2008-12-22 10:51:30.000000000 -0800
+@@ -359,7 +359,20 @@ _CRTIMP void __cdecl __MINGW_NOTHROW	sra
+ _CRTIMP void* __cdecl __MINGW_NOTHROW	calloc	(size_t, size_t) __MINGW_ATTRIB_MALLOC;
+ _CRTIMP void* __cdecl __MINGW_NOTHROW	malloc	(size_t) __MINGW_ATTRIB_MALLOC;
+ _CRTIMP void* __cdecl __MINGW_NOTHROW	realloc	(void*, size_t);
++
++#if !defined(MINGW_MEMALIGN)
+ _CRTIMP void __cdecl __MINGW_NOTHROW	free	(void*);
++#else
++_CRTIMP void* __cdecl __MINGW_NOTHROW	memalign(size_t align, size_t size) __MINGW_ATTRIB_MALLOC;
++
++extern void mingw_memalign_free(void*);
++static inline void free(void *blk)
++{
++	mingw_memalign_free(blk);
++}
++
++#endif
++
+ _CRTIMP void __cdecl __MINGW_NOTHROW	abort	(void) __MINGW_ATTRIB_NORETURN;
+ _CRTIMP void __cdecl __MINGW_NOTHROW	exit	(int) __MINGW_ATTRIB_NORETURN;
+ 
+diff -Narup mingwrt-3.15.1-mingw32/mingwex/mingw-aligned-malloc.c mingwrt-3.15.1-mingw32/mingwex/mingw-aligned-malloc.c
+--- mingwrt-3.15.1-mingw32/mingwex/mingw-aligned-malloc.c	2004-08-24 01:55:42.000000000 -0700
++++ mingwrt-3.15.1-mingw32/mingwex/mingw-aligned-malloc.c	2008-12-22 11:54:08.000000000 -0800
+@@ -7,10 +7,14 @@
+                -- Steven G. Johnson (stevenj@alum.mit.edu)
+ */
+ 
++/* disable the static inline funtions provided to override the default malloc and friends */
++#define DISABLE_MALLOC_OVERRIDE 1
++
+ #include <stdlib.h>
+ #include <errno.h>
+ #include <stddef.h>		/* ptrdiff_t */
+ #include <string.h>		/* memmove */
++#include <stdbool.h>
+ 
+ #ifdef HAVE_STDINT_H
+ #  include <stdint.h>		/* uintptr_t */
+@@ -30,6 +34,101 @@
+ /* Pointer must sometimes be aligned; assume sizeof(void*) is a power of two. */
+ #define ORIG_PTR(p) (*(((void **) (UI(p) & (~UI(sizeof(void*) - 1)))) - 1))
+ 
++/* STV: added memalign and custom free implementation to fall through to msvcrt free on non-aligned pointers, not recommended for production code!!! */
++struct SMemalignedBlock {
++	void *mallocPtr;	// ptr returned by malloc
++	void *alignedPtr;	// ptr returned by memalign
++	struct SMemalignedBlock *next;
++};
++
++struct SMemalignedBlock *gMemalignBlockList = NULL;
++int gMemalignBlockListLock = 0;
++
++void *memalign(size_t align, size_t size)
++{
++	struct SMemalignedBlock *mab = NULL, *walker = NULL;
++	bool locked = false;
++	void *ptr = NULL, *aptr = NULL;
++	
++	if(NOT_POWER_OF_TWO(align)) {
++		errno = EINVAL;
++		return NULL;
++	}
++	
++	if(size == 0)
++		return NULL;
++	/* guarantee minimum alignment */
++	if(align < sizeof(void*))
++		align = sizeof(void*);
++	ptr = malloc(size + align);
++	if(!ptr)
++		return NULL;
++	
++	/* if it's aligned already, then just return, calling free() on this block is valid */
++	if((UI(ptr) & (align-1)) == 0)
++		return ptr;
++	
++	aptr = PTR_ALIGN(ptr, align, 0);
++	
++	/* else add the pointer and the aligned pointer to the memalign block list, then return the aligned ptr */
++	mab = malloc(sizeof(struct SMemalignedBlock));
++	mab->mallocPtr = ptr;
++	mab->alignedPtr = aptr;
++	mab->next = NULL;
++	
++	do {
++		locked = __sync_bool_compare_and_swap(&gMemalignBlockListLock, 0, 1);
++	} while(!locked);
++	
++	if(gMemalignBlockList != NULL) {
++		walker = gMemalignBlockList;
++		while(walker->next != NULL)
++			walker = walker->next;
++		walker->next = mab;
++	} else {
++		gMemalignBlockList = mab;
++	}
++	
++	gMemalignBlockListLock = 0;
++	return aptr;
++}
++
++void mingw_memalign_free(void *blk)
++{
++	struct SMemalignedBlock *mab = NULL;
++	bool locked = false;
++	
++	/* look up the address in the memalign allocation table, if it's there we need to adjust the pointer before we free */
++	do {
++		locked = __sync_bool_compare_and_swap(&gMemalignBlockListLock, 0, 1);
++	} while(!locked);
++	
++	if(gMemalignBlockList != NULL) {
++		struct SMemalignedBlock *walker = gMemalignBlockList, *last = NULL;
++		while(walker) {
++			if(walker->alignedPtr == blk) {
++				mab = walker;
++				if(last)
++					last->next = mab->next;
++				else
++					gMemalignBlockList = mab->next;
++				break;
++			}
++			last = walker;
++			walker = walker->next;
++		}
++	}
++	gMemalignBlockListLock = 0;
++	
++	if(mab) {
++		free(mab->mallocPtr);
++		free(mab);
++	} else {
++		free(blk);
++	}
++}
++
++
+ void *
+ __mingw_aligned_offset_malloc (size_t size, size_t alignment, size_t offset)
+ {

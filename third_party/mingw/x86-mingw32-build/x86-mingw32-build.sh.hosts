@@ -1,0 +1,53 @@
+# x86-mingw32-build.sh.hosts -- vim: filetype=config
+# $Id: x86-mingw32-build.sh.hosts,v 1.1 2009-02-11 00:08:33 dave Exp $
+#
+# List of known SourceForge Mirror Sites, hosting packages for download.
+#
+# Copyright (C) 2006, MinGW Project
+# Written by Keith Marshall <keithmarshall@users.sourceforge.net>
+#
+# This file is a component of the x86-mingw32-build script; it is not
+# intended for stand alone use.
+# 
+# x86-mingw32-build is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by the
+# Free Software Foundation; either version 2, or (at your option) any later
+# version.
+# 
+# x86-mingw32-build is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for further details.
+# 
+# You should have received a copy of the GNU General Public License along
+# with x86-mingw32-build; see the file COPYING.  If not, write to the Free
+# Software Foundation, 51 Franklin St - Fifth Floor, Boston, MA 02110-1301,
+# USA.
+
+# Name         Country  Location                    Continent
+# -----------  -------  --------------------------  -------------
+  jaist          JP     Ishikawa, Japan             Asia
+  puzzle         CH     Bern, Switzerland           Europe
+  nchc           TW     Tainan, Taiwan              Asia
+  easynews       US     Phoenix, Arizona            North America
+  ovh            FR     Paris, France               Europe
+  belnet         BE     Brussels, Belgium           Europe
+  surfnet        NL     Amsterdam, Netherlands      Europe
+  kent           UK     Kent, United Kingdom        Europe
+  heanet         IE     Dublin, Ireland             Europe
+  switch         CH     Lausanne, Switzerland       Europe
+  mesh           DE     Dusseldorf, Germany         Europe
+  optusnet       AU     Sydney, Australia           Australia
+  ufpr           BR     Curitiba, Brazil            South America
+  umn            US     Minneapolis, Minnesota      North America
+  superb-east    US     McLean, Virginia            North America
+  superb-west    US     Seattle, Washington         North America
+
+# The following appeared in Earnie's original `portmaker' configuration;
+# today, they don't seem to work for me (KDM, 24-Oct-2006).
+#
+# citkit      RU                                 Asia?
+# cogent      US                                 North America
+# voxel       US                                 North America
+
+# $RCSfile: x86-mingw32-build.sh.hosts,v $Revision: 1.1 $: end of file

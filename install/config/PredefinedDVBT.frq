@@ -1,0 +1,5742 @@
+#DVB-T predefined frequency table, Ver 2.0
+
+
+"United Kingdom"
+	frq:177500000;band:8;
+	frq:177500000;band:8;
+	frq:184500000;band:8;
+	frq:191500000;band:8;
+	frq:198500000;band:8;
+	frq:205500000;band:8;
+	frq:212500000;band:8;
+	frq:219500000;band:8;
+	frq:226500000;band:8;
+	frq:529500000;band:8;
+	frq:536500000;band:8;
+	frq:543500000;band:8;
+	frq:550500000;band:8;
+	frq:557500000;band:8;
+	frq:564500000;band:8;
+	frq:571500000;band:8;
+	frq:578500000;band:8;
+	frq:585500000;band:8;
+	frq:592500000;band:8;
+	frq:599500000;band:8;
+	frq:606500000;band:8;
+	frq:613500000;band:8;
+	frq:620500000;band:8;
+	frq:627500000;band:8;
+	frq:634500000;band:8;
+	frq:641500000;band:8;
+	frq:648500000;band:8;
+	frq:655500000;band:8;
+	frq:662500000;band:8;
+	frq:669500000;band:8;
+	frq:676500000;band:8;
+	frq:683500000;band:8;
+	frq:690500000;band:8;
+	frq:697500000;band:8;
+	frq:704500000;band:8;
+	frq:711500000;band:8;
+	frq:718500000;band:8;
+	frq:725500000;band:8;
+	frq:732500000;band:8;
+	frq:739500000;band:8;
+	frq:746500000;band:8;
+	frq:753500000;band:8;
+	frq:760500000;band:8;
+	frq:767500000;band:8;
+	frq:774500000;band:8;
+	frq:781500000;band:8;
+	frq:788500000;band:8;
+	frq:795500000;band:8;
+	frq:802500000;band:8;
+	frq:809500000;band:8;
+	frq:816500000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-London and South East@Crystal Palace"
+	frq:506000000;band:8;
+	frq:482000000;band:8;
+	frq:562000000;band:8;
+	frq:530000000;band:8;
+	frq:578000000;band:8;
+	frq:538000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-London and South East@Guildford"
+	frq:698000000;band:8;
+	frq:658000000;band:8;
+	frq:634000000;band:8;
+	frq:714000000;band:8;
+	frq:682000000;band:8;
+	frq:738000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-London and South East@Reigate"
+	frq:554000000;band:8;
+	frq:474000000;band:8;
+	frq:498000000;band:8;
+	frq:522000000;band:8;
+	frq:618000000;band:8;
+	frq:834000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-London and South East@Tunbridge Well"
+	frq:746000000;band:8;
+	frq:794000000;band:8;
+	frq:642000000;band:8;
+	frq:666000000;band:8;
+	frq:618000000;band:8;
+	frq:778000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-London and South East@Hemel Hempstea"
+	frq:690000000;band:8;
+	frq:746000000;band:8;
+	frq:786000000;band:8;
+	frq:778000000;band:8;
+	frq:802000000;band:8;
+	frq:826000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-London and South East@Bluebell Hill"
+	frq:778000000;band:8;
+	frq:498000000;band:8;
+	frq:522000000;band:8;
+	frq:666000000;band:8;
+	frq:642000000;band:8;
+	frq:618000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-London and South East@Dover"
+	frq:850000000;band:8;
+	frq:794000000;band:8;
+	frq:746000000;band:8;
+	frq:770000000;band:8;
+	frq:762000000;band:8;
+	frq:786000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-London and South East@Dover B"
+	frq:666000000;band:8;
+	frq:642000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-South of England@Rowridge"
+	frq:490000000;band:8;
+	frq:530000000;band:8;
+	frq:546000000;band:8;
+	frq:562000000;band:8;
+	frq:514000000;band:8;
+	frq:570000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-South of England@Salisbury"
+	frq:746000000;band:8;
+	frq:754000000;band:8;
+	frq:778000000;band:8;
+	frq:802000000;band:8;
+	frq:826000000;band:8;
+	frq:722000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-South of England@Whitehawk Hill"
+	frq:834000000;band:8;
+	frq:706000000;band:8;
+	frq:746000000;band:8;
+	frq:690000000;band:8;
+	frq:770000000;band:8;
+	frq:794000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-South of England@Hannington"
+	frq:706000000;band:8;
+	frq:650000000;band:8;
+	frq:626000000;band:8;
+	frq:674000000;band:8;
+	frq:658000000;band:8;
+	frq:634000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-South of England@Midhurst"
+	frq:754000000;band:8;
+	frq:826000000;band:8;
+	frq:802000000;band:8;
+	frq:778000000;band:8;
+	frq:818000000;band:8;
+	frq:786000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-South of England@Heathfield North"
+	frq:578000000;band:8;
+	frq:538000000;band:8;
+	frq:690000000;band:8;
+	frq:682000000;band:8;
+	frq:738000000;band:8;
+	frq:714000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-South of England@Hastings"
+	frq:554000000;band:8;
+	frq:522000000;band:8;
+	frq:474000000;band:8;
+	frq:498000000;band:8;
+	frq:810000000;band:8;
+	frq:786000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-South West@Mendip"
+	frq:778000000;band:8;
+	frq:746000000;band:8;
+	frq:802000000;band:8;
+	frq:826000000;band:8;
+	frq:754000000;band:8;
+	frq:842000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-South West@Bristol"
+	frq:482000000;band:8;
+	frq:506000000;band:8;
+	frq:530000000;band:8;
+	frq:562000000;band:8;
+	frq:546000000;band:8;
+	frq:578000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-South West@Bristol IC"
+	frq:698000000;band:8;
+	frq:618000000;band:8;
+	frq:634000000;band:8;
+	frq:658000000;band:8;
+	frq:682000000;band:8;
+	frq:714000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-South West@Stockland Hill"
+	frq:482000000;band:8;
+	frq:530000000;band:8;
+	frq:506000000;band:8;
+	frq:562000000;band:8;
+	frq:546000000;band:8;
+	frq:578000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-South West@Beacon Hill"
+	frq:722000000;band:8;
+	frq:794000000;band:8;
+	frq:770000000;band:8;
+	frq:738000000;band:8;
+	frq:754000000;band:8;
+	frq:818000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-South West@Huntshaw Cross"
+	frq:738000000;band:8;
+	frq:770000000;band:8;
+	frq:794000000;band:8;
+	frq:818000000;band:8;
+	frq:730000000;band:8;
+	frq:762000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-South West@Huntshaw"
+	frq:714000000;band:8;
+	frq:682000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-South West@Caradon Hill"
+	frq:578000000;band:8;
+	frq:554000000;band:8;
+	frq:690000000;band:8;
+	frq:474000000;band:8;
+	frq:498000000;band:8;
+	frq:522000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-South West@Plympton"
+	frq:722000000;band:8;
+	frq:842000000;band:8;
+	frq:834000000;band:8;
+	frq:786000000;band:8;
+	frq:810000000;band:8;
+	frq:754000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-South West@Redruth"
+	frq:618000000;band:8;
+	frq:642000000;band:8;
+	frq:666000000;band:8;
+	frq:698000000;band:8;
+	frq:650000000;band:8;
+	frq:706000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-Wales and Wes@Wenvoe"
+	frq:546000000;band:8;
+	frq:578000000;band:8;
+	frq:626000000;band:8;
+	frq:706000000;band:8;
+	frq:650000000;band:8;
+	frq:674000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-Wales and Wes@Kilvey Hill"
+	frq:506000000;band:8;
+	frq:482000000;band:8;
+	frq:530000000;band:8;
+	frq:562000000;band:8;
+	frq:474000000;band:8;
+	frq:554000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-Wales and Wes@Aberdare"
+	frq:530000000;band:8;
+	frq:562000000;band:8;
+	frq:490000000;band:8;
+	frq:514000000;band:8;
+	frq:538000000;band:8;
+	frq:570000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-Wales and Wes@Pontypool"
+	frq:722000000;band:8;
+	frq:690000000;band:8;
+	frq:642000000;band:8;
+	frq:666000000;band:8;
+	frq:482000000;band:8;
+	frq:530000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-Wales and Wes@Carmel"
+	frq:746000000;band:8;
+	frq:826000000;band:8;
+	frq:778000000;band:8;
+	frq:802000000;band:8;
+	frq:850000000;band:8;
+	frq:834000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-Wales and Wes@Preseli"
+	frq:682000000;band:8;
+	frq:714000000;band:8;
+	frq:618000000;band:8;
+	frq:642000000;band:8;
+	frq:666000000;band:8;
+	frq:698000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-Wales and Wes@Blaenplwyf"
+	frq:530000000;band:8;
+	frq:482000000;band:8;
+	frq:506000000;band:8;
+	frq:562000000;band:8;
+	frq:538000000;band:8;
+	frq:570000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-Wales and Wes@Llanddona"
+	frq:706000000;band:8;
+	frq:738000000;band:8;
+	frq:770000000;band:8;
+	frq:794000000;band:8;
+	frq:818000000;band:8;
+	frq:674000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-Wales and Wes@Moel y Parc"
+	frq:738000000;band:8;
+	frq:770000000;band:8;
+	frq:794000000;band:8;
+	frq:818000000;band:8;
+	frq:546000000;band:8;
+	frq:578000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-Midlands@Sutton Coldfield"
+	frq:634000000;band:8;
+	frq:658000000;band:8;
+	frq:682000000;band:8;
+	frq:714000000;band:8;
+	frq:722000000;band:8;
+	frq:746000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-Midlands@Brierley Hill"
+	frq:850000000;band:8;
+	frq:826000000;band:8;
+	frq:754000000;band:8;
+	frq:778000000;band:8;
+	frq:834000000;band:8;
+	frq:802000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-Midlands@Bromsgrove"
+	frq:578000000;band:8;
+	frq:538000000;band:8;
+	frq:570000000;band:8;
+	frq:490000000;band:8;
+	frq:514000000;band:8;
+	frq:546000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-Midlands@Malvern"
+	frq:722000000;band:8;
+	frq:618000000;band:8;
+	frq:682000000;band:8;
+	frq:658000000;band:8;
+	frq:714000000;band:8;
+	frq:634000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-Midlands@Larkstoke"
+	frq:474000000;band:8;
+	frq:554000000;band:8;
+	frq:498000000;band:8;
+	frq:522000000;band:8;
+	frq:762000000;band:8;
+	frq:786000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-Midlands@Fenton"
+	frq:578000000;band:8;
+	frq:546000000;band:8;
+	frq:482000000;band:8;
+	frq:506000000;band:8;
+	frq:530000000;band:8;
+	frq:562000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-Midlands@The Wrekin"
+	frq:474000000;band:8;
+	frq:554000000;band:8;
+	frq:498000000;band:8;
+	frq:522000000;band:8;
+	frq:730000000;band:8;
+	frq:762000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-Midlands@The Wrekin"
+	frq:618000000;band:8;
+	frq:698000000;band:8;
+	frq:642000000;band:8;
+	frq:666000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-Midlands@Ridge Hill"
+	frq:730000000;band:8;
+	frq:762000000;band:8;
+	frq:786000000;band:8;
+	frq:810000000;band:8;
+	frq:642000000;band:8;
+	frq:666000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-Midlands@Oxford"
+	frq:578000000;band:8;
+	frq:850000000;band:8;
+	frq:714000000;band:8;
+	frq:722000000;band:8;
+	frq:690000000;band:8;
+	frq:538000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-Midlands@Waltham"
+	frq:698000000;band:8;
+	frq:490000000;band:8;
+	frq:514000000;band:8;
+	frq:570000000;band:8;
+	frq:666000000;band:8;
+	frq:642000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-Midlands@Nottingham"
+	frq:618000000;band:8;
+	frq:842000000;band:8;
+	frq:730000000;band:8;
+	frq:810000000;band:8;
+	frq:538000000;band:8;
+	frq:778000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-East Anglia@Tacolneston"
+	frq:810000000;band:8;
+	frq:786000000;band:8;
+	frq:730000000;band:8;
+	frq:770000000;band:8;
+	frq:794000000;band:8;
+	frq:818000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-East Anglia@Sudbury"
+	frq:698000000;band:8;
+	frq:850000000;band:8;
+	frq:690000000;band:8;
+	frq:618000000;band:8;
+	frq:738000000;band:8;
+	frq:706000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-East Anglia@Sudbury"
+	frq:754000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-East Anglia@Sandy Heath"
+	frq:642000000;band:8;
+	frq:666000000;band:8;
+	frq:650000000;band:8;
+	frq:842000000;band:8;
+	frq:626000000;band:8;
+	frq:674000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-North@Winter Hill"
+	frq:754000000;band:8;
+	frq:834000000;band:8;
+	frq:850000000;band:8;
+	frq:842000000;band:8;
+	frq:786000000;band:8;
+	frq:810000000;band:8;
+	frq:650000000;band:8;
+	frq:626000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-North@Winter Hill"
+	frq:650000000;band:8;
+	frq:626000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-North@Pendle Forest"
+	frq:474000000;band:8;
+	frq:498000000;band:8;
+	frq:522000000;band:8;
+	frq:554000000;band:8;
+	frq:546000000;band:8;
+	frq:578000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-North@Saddleworth"
+	frq:682000000;band:8;
+	frq:634000000;band:8;
+	frq:658000000;band:8;
+	frq:714000000;band:8;
+	frq:618000000;band:8;
+	frq:738000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-North@Storeton"
+	frq:546000000;band:8;
+	frq:578000000;band:8;
+	frq:490000000;band:8;
+	frq:514000000;band:8;
+	frq:538000000;band:8;
+	frq:570000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-North@Lancaster"
+	frq:530000000;band:8;
+	frq:482000000;band:8;
+	frq:506000000;band:8;
+	frq:562000000;band:8;
+	frq:578000000;band:8;
+	frq:546000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-North@Emley Moor"
+	frq:722000000;band:8;
+	frq:626000000;band:8;
+	frq:650000000;band:8;
+	frq:674000000;band:8;
+	frq:706000000;band:8;
+	frq:698000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-North@Sheffield"
+	frq:618000000;band:8;
+	frq:730000000;band:8;
+	frq:762000000;band:8;
+	frq:786000000;band:8;
+	frq:666000000;band:8;
+	frq:642000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-North@Chesterfield"
+	frq:578000000;band:8;
+	frq:626000000;band:8;
+	frq:650000000;band:8;
+	frq:674000000;band:8;
+	frq:706000000;band:8;
+	frq:722000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-North@Keighley"
+	frq:690000000;band:8;
+	frq:850000000;band:8;
+	frq:834000000;band:8;
+	frq:730000000;band:8;
+	frq:546000000;band:8;
+	frq:578000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-North@Idle"
+	frq:666000000;band:8;
+	frq:730000000;band:8;
+	frq:578000000;band:8;
+	frq:754000000;band:8;
+	frq:546000000;band:8;
+	frq:642000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-North@North@Belmont"
+	frq:546000000;band:8;
+	frq:690000000;band:8;
+	frq:850000000;band:8;
+	frq:834000000;band:8;
+	frq:786000000;band:8;
+	frq:762000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-North@Olivers Mount"
+	frq:698000000;band:8;
+	frq:842000000;band:8;
+	frq:738000000;band:8;
+	frq:770000000;band:8;
+	frq:794000000;band:8;
+	frq:818000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-North-East and BordersDTT@Bilsdale"
+	frq:578000000;band:8;
+	frq:474000000;band:8;
+	frq:554000000;band:8;
+	frq:498000000;band:8;
+	frq:522000000;band:8;
+	frq:642000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-North-East and BordersDTT@Pontop Pike"
+	frq:690000000;band:8;
+	frq:746000000;band:8;
+	frq:778000000;band:8;
+	frq:802000000;band:8;
+	frq:826000000;band:8;
+	frq:730000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-North-East and BordersDTT@Fenham"
+	frq:546000000;band:8;
+	frq:482000000;band:8;
+	frq:506000000;band:8;
+	frq:530000000;band:8;
+	frq:562000000;band:8;
+	frq:762000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-North-East and BordersDTT@Chatton"
+	frq:626000000;band:8;
+	frq:706000000;band:8;
+	frq:650000000;band:8;
+	frq:674000000;band:8;
+	frq:682000000;band:8;
+	frq:714000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-North-East and BordersDTT@Caldbeck"
+	frq:506000000;band:8;
+	frq:490000000;band:8;
+	frq:514000000;band:8;
+	frq:618000000;band:8;
+	frq:666000000;band:8;
+	frq:642000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-North-East and BordersDTT@Selkirk"
+	frq:730000000;band:8;
+	frq:762000000;band:8;
+	frq:786000000;band:8;
+	frq:810000000;band:8;
+	frq:834000000;band:8;
+	frq:754000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-Central Scotland and Tayside@Black Hill"
+	frq:634000000;band:8;
+	frq:682000000;band:8;
+	frq:658000000;band:8;
+	frq:714000000;band:8;
+	frq:746000000;band:8;
+	frq:826000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-Central Scotland and Tayside@Torosay"
+	frq:490000000;band:8;
+	frq:514000000;band:8;
+	frq:538000000;band:8;
+	frq:570000000;band:8;
+	frq:474000000;band:8;
+	frq:554000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-Central Scotland and Tayside@Darvel"
+	frq:482000000;band:8;
+	frq:506000000;band:8;
+	frq:562000000;band:8;
+	frq:530000000;band:8;
+	frq:546000000;band:8;
+	frq:578000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-Central Scotland and Tayside@Rosneath"
+	frq:842000000;band:8;
+	frq:730000000;band:8;
+	frq:762000000;band:8;
+	frq:786000000;band:8;
+	frq:810000000;band:8;
+	frq:690000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-Central Scotland and Tayside@Craigkelly"
+	frq:570000000;band:8;
+	frq:538000000;band:8;
+	frq:490000000;band:8;
+	frq:514000000;band:8;
+	frq:642000000;band:8;
+	frq:618000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-Central Scotland and Tayside@Angus"
+	frq:850000000;band:8;
+	frq:834000000;band:8;
+	frq:778000000;band:8;
+	frq:802000000;band:8;
+	frq:754000000;band:8;
+	frq:826000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-Grampian and the Highlands@Durris"
+	frq:546000000;band:8;
+	frq:578000000;band:8;
+	frq:722000000;band:8;
+	frq:714000000;band:8;
+	frq:634000000;band:8;
+	frq:658000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-Grampian and the Highlands@Knock More"
+	frq:578000000;band:8;
+	frq:546000000;band:8;
+	frq:730000000;band:8;
+	frq:762000000;band:8;
+	frq:786000000;band:8;
+	frq:754000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-Grampian and the Highlands@Rosemarkie"
+	frq:682000000;band:8;
+	frq:714000000;band:8;
+	frq:634000000;band:8;
+	frq:658000000;band:8;
+	frq:674000000;band:8;
+	frq:706000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-Grampian and the Highlands@Eitshall"
+	frq:578000000;band:8;
+	frq:546000000;band:8;
+	frq:482000000;band:8;
+	frq:506000000;band:8;
+	frq:530000000;band:8;
+	frq:562000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-Grampian and the Highlands@Rumster Forest"
+	frq:530000000;band:8;
+	frq:482000000;band:8;
+	frq:506000000;band:8;
+	frq:562000000;band:8;
+	frq:802000000;band:8;
+	frq:778000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-Grampian and the Highlands@Keelylang Hill"
+	frq:690000000;band:8;
+	frq:722000000;band:8;
+	frq:634000000;band:8;
+	frq:658000000;band:8;
+	frq:682000000;band:8;
+	frq:714000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-Grampian and the Highlands@Bressay"
+	frq:474000000;band:8;
+	frq:498000000;band:8;
+	frq:522000000;band:8;
+	frq:554000000;band:8;
+	frq:834000000;band:8;
+	frq:850000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-Northern Ireland@Divis"
+	frq:538000000;band:8;
+	frq:570000000;band:8;
+	frq:490000000;band:8;
+	frq:514000000;band:8;
+	frq:690000000;band:8;
+	frq:578000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-Northern Ireland@Limavady"
+	frq:842000000;band:8;
+	frq:770000000;band:8;
+	frq:730000000;band:8;
+	frq:762000000;band:8;
+	frq:786000000;band:8;
+	frq:810000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"United Kingdom-Northern Ireland@Broughe  Mountain"
+	frq:546000000;band:8;
+	frq:578000000;band:8;
+	frq:490000000;band:8;
+	frq:514000000;band:8;
+	frq:538000000;band:8;
+	frq:570000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden"
+	frq:474000000;band:8;
+	frq:482000000;band:8;
+	frq:490000000;band:8;
+	frq:498000000;band:8;
+	frq:506000000;band:8;
+	frq:514000000;band:8;
+	frq:522000000;band:8;
+	frq:530000000;band:8;
+	frq:538000000;band:8;
+	frq:546000000;band:8;
+	frq:554000000;band:8;
+	frq:562000000;band:8;
+	frq:570000000;band:8;
+	frq:578000000;band:8;
+	frq:586000000;band:8;
+	frq:594000000;band:8;
+	frq:602000000;band:8;
+	frq:610000000;band:8;
+	frq:618000000;band:8;
+	frq:626000000;band:8;
+	frq:634000000;band:8;
+	frq:642000000;band:8;
+	frq:650000000;band:8;
+	frq:658000000;band:8;
+	frq:666000000;band:8;
+	frq:674000000;band:8;
+	frq:682000000;band:8;
+	frq:690000000;band:8;
+	frq:698000000;band:8;
+	frq:706000000;band:8;
+	frq:714000000;band:8;
+	frq:722000000;band:8;
+	frq:730000000;band:8;
+	frq:738000000;band:8;
+	frq:746000000;band:8;
+	frq:754000000;band:8;
+	frq:762000000;band:8;
+	frq:770000000;band:8;
+	frq:778000000;band:8;
+	frq:786000000;band:8;
+	frq:794000000;band:8;
+	frq:802000000;band:8;
+	frq:810000000;band:8;
+	frq:818000000;band:8;
+	frq:826000000;band:8;
+	frq:834000000;band:8;
+	frq:842000000;band:8;
+	frq:850000000;band:8;
+	frq:858000000;band:8;
+
+"Sweden-Arvidsjaur/Julträsk"
+	frq:474000000;band:8;
+	frq:498000000;band:8;
+	frq:546000000;band:8;
+	frq:578000000;band:8;
+	frq:642000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Adolfström"
+	frq:554000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Arjeplog/Galtispouda"
+	frq:682000000;band:8;
+	frq:746000000;band:8;
+	frq:666000000;band:8;
+	frq:706000000;band:8;
+	frq:618000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Jäkkvik/Fräkenmyren"
+	frq:658000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Järvträsk"
+	frq:658000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Laisvall"
+	frq:538000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Moskosel"
+	frq:658000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Suddesjaur"
+	frq:530000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Sädvaluspen"
+	frq:490000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Bollnäs"
+	frq:538000000;band:8;
+	frq:698000000;band:8;
+	frq:578000000;band:8;
+	frq:618000000;band:8;
+	frq:490000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Bergvik"
+	frq:778000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Edsbyn"
+	frq:754000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Färila"
+	frq:610000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Hennan"
+	frq:754000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Hällbo"
+	frq:746000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Järvsö"
+	frq:738000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Kårböle"
+	frq:570000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Lilltjära/Digerberget"
+	frq:642000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Lörstrand"
+	frq:570000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Rengsjö"
+	frq:634000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Voxna"
+	frq:666000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Växbo"
+	frq:682000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Borlänge/Idkerberget"
+	frq:682000000;band:8;
+	frq:722000000;band:8;
+	frq:650000000;band:8;
+	frq:634000000;band:8;
+	frq:738000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Aspeboda"
+	frq:666000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Avesta/Krylbo"
+	frq:730000000;band:8;
+	frq:594000000;band:8;
+	frq:778000000;band:8;
+	frq:618000000;band:8;
+	frq:642000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Borlänge/Nygårdarna"
+	frq:602000000;band:8;
+	frq:578000000;band:8;
+	frq:554000000;band:8;
+	frq:762000000;band:8;
+	frq:490000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Dalstuga"
+	frq:594000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Djura"
+	frq:594000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Duvnäs"
+	frq:562000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Duvnäs/Bäsna"
+	frq:666000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Enviken"
+	frq:514000000;band:8;
+	frq:626000000;band:8;
+	frq:570000000;band:8;
+	frq:778000000;band:8;
+	frq:754000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Falun/Lövberget"
+	frq:682000000;band:8;
+	frq:722000000;band:8;
+	frq:650000000;band:8;
+	frq:634000000;band:8;
+	frq:738000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Fredriksberg"
+	frq:554000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Garpenberg/Kuppgården"
+	frq:666000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Hedemora"
+	frq:754000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Ingvallsbenning"
+	frq:730000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Leksand/Åsledsberget"
+	frq:514000000;band:8;
+	frq:626000000;band:8;
+	frq:570000000;band:8;
+	frq:778000000;band:8;
+	frq:754000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Ludvika/Björkåsen"
+	frq:498000000;band:8;
+	frq:474000000;band:8;
+	frq:594000000;band:8;
+	frq:674000000;band:8;
+	frq:618000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Långshyttan"
+	frq:746000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Saxdalen"
+	frq:666000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Smedjebacken/Uvberget"
+	frq:562000000;band:8;
+	frq:706000000;band:8;
+	frq:650000000;band:8;
+	frq:634000000;band:8;
+	frq:738000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Stora/Skedvi"
+	frq:578000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Sundborn"
+	frq:610000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Sågmyra"
+	frq:514000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Ulvshyttan/Porjus"
+	frq:514000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Vansbro/Hummelberget"
+	frq:762000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Vikmanshyttan"
+	frq:538000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Yttermalung"
+	frq:698000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Borås/Dalsjöfors"
+	frq:658000000;band:8;
+	frq:738000000;band:8;
+	frq:538000000;band:8;
+	frq:642000000;band:8;
+	frq:746000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Borås/Sjöbo"
+	frq:618000000;band:8;
+	frq:650000000;band:8;
+	frq:698000000;band:8;
+	frq:730000000;band:8;
+	frq:714000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Fritsla"
+	frq:554000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Kinnaström"
+	frq:762000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Skene/Nycklarberget"
+	frq:578000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Tranemo"
+	frq:706000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Töllsjö"
+	frq:722000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Ulricehamn"
+	frq:618000000;band:8;
+	frq:650000000;band:8;
+	frq:698000000;band:8;
+	frq:730000000;band:8;
+	frq:674000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Bäckefors"
+	frq:514000000;band:8;
+	frq:482000000;band:8;
+	frq:586000000;band:8;
+	frq:506000000;band:8;
+	frq:754000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Bengtsfors"
+	frq:570000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Dals/Långed"
+	frq:634000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Edsleskog/Högheden"
+	frq:722000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Fengersfors"
+	frq:658000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Fölsbyn"
+	frq:578000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Grebbestad"
+	frq:514000000;band:8;
+	frq:482000000;band:8;
+	frq:554000000;band:8;
+	frq:506000000;band:8;
+	frq:754000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Hälle"
+	frq:762000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Krokstrand"
+	frq:562000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Stömne/Skasås"
+	frq:658000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Svinesund"
+	frq:778000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Uddevalla/Kapelle"
+	frq:714000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Emmaboda/Bälshult"
+	frq:554000000;band:8;
+	frq:530000000;band:8;
+	frq:674000000;band:8;
+	frq:474000000;band:8;
+	frq:730000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Borgholm/Ramsättra"
+	frq:554000000;band:8;
+	frq:530000000;band:8;
+	frq:674000000;band:8;
+	frq:474000000;band:8;
+	frq:730000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Brömsebro"
+	frq:554000000;band:8;
+	frq:530000000;band:8;
+	frq:674000000;band:8;
+	frq:474000000;band:8;
+	frq:730000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Högsby/Virstad"
+	frq:594000000;band:8;
+	frq:642000000;band:8;
+	frq:610000000;band:8;
+	frq:786000000;band:8;
+	frq:522000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Löttorp"
+	frq:594000000;band:8;
+	frq:642000000;band:8;
+	frq:610000000;band:8;
+	frq:786000000;band:8;
+	frq:522000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Oskarshamn"
+	frq:594000000;band:8;
+	frq:642000000;band:8;
+	frq:610000000;band:8;
+	frq:786000000;band:8;
+	frq:522000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Filipstad/Klockarhöjden"
+	frq:570000000;band:8;
+	frq:490000000;band:8;
+	frq:546000000;band:8;
+	frq:642000000;band:8;
+	frq:626000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Lekvattnet"
+	frq:642000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Lesjöfors"
+	frq:474000000;band:8;
+	frq:602000000;band:8;
+	frq:498000000;band:8;
+	frq:562000000;band:8;
+	frq:674000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Sunnemo"
+	frq:778000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Finnveden"
+	frq:514000000;band:8;
+	frq:754000000;band:8;
+	frq:722000000;band:8;
+	frq:786000000;band:8;
+	frq:690000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Bottnaryd/Ryd"
+	frq:674000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Gnosjö/Marieholm"
+	frq:674000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Hestra/Äspås"
+	frq:610000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Gällivare"
+	frq:570000000;band:8;
+	frq:514000000;band:8;
+	frq:626000000;band:8;
+	frq:530000000;band:8;
+	frq:674000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Jokkmokk/Tjalmejaure"
+	frq:506000000;band:8;
+	frq:634000000;band:8;
+	frq:602000000;band:8;
+	frq:738000000;band:8;
+	frq:690000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Jokkmokk/Nyborg"
+	frq:506000000;band:8;
+	frq:634000000;band:8;
+	frq:602000000;band:8;
+	frq:738000000;band:8;
+	frq:690000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Kvikkjokk/Tavvevare"
+	frq:490000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Kvikkjokk/Årrevare"
+	frq:722000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Porjus"
+	frq:626000000;band:8;
+	frq:514000000;band:8;
+	frq:626000000;band:8;
+	frq:530000000;band:8;
+	frq:674000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Randijaure"
+	frq:730000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Ritsem"
+	frq:586000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Seitevaare"
+	frq:514000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Skaulo/Pyhäkielinen"
+	frq:506000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Skröven"
+	frq:498000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Vietas"
+	frq:610000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Gävle/Skogmur"
+	frq:522000000;band:8;
+	frq:498000000;band:8;
+	frq:562000000;band:8;
+	frq:546000000;band:8;
+	frq:674000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Hofors"
+	frq:506000000;band:8;
+	frq:586000000;band:8;
+	frq:658000000;band:8;
+	frq:690000000;band:8;
+	frq:714000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Kungsberget/Gl"
+	frq:738000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Lumsheden/Trekanten"
+	frq:594000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Långshyttan/Engelsfors"
+	frq:602000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Svartnäs"
+	frq:642000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Åmot"
+	frq:754000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Göteborg/Brudaremossen"
+	frq:546000000;band:8;
+	frq:522000000;band:8;
+	frq:674000000;band:8;
+	frq:626000000;band:8;
+	frq:778000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Alafors"
+	frq:610000000;band:8;
+	frq:666000000;band:8;
+	frq:690000000;band:8;
+	frq:770000000;band:8;
+	frq:714000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Alingsås/Mariedal"
+	frq:610000000;band:8;
+	frq:666000000;band:8;
+	frq:690000000;band:8;
+	frq:770000000;band:8;
+	frq:714000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Bollebygd"
+	frq:610000000;band:8;
+	frq:666000000;band:8;
+	frq:690000000;band:8;
+	frq:770000000;band:8;
+	frq:714000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Floda"
+	frq:722000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Göteborg/Slättadamm"
+	frq:546000000;band:8;
+	frq:522000000;band:8;
+	frq:674000000;band:8;
+	frq:626000000;band:8;
+	frq:778000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Hällesåker/Skåregärde"
+	frq:490000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Hälleviksstrand"
+	frq:610000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Kungsbacka/Öjersbo"
+	frq:706000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Kungälv"
+	frq:610000000;band:8;
+	frq:666000000;band:8;
+	frq:690000000;band:8;
+	frq:770000000;band:8;
+	frq:714000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Kyrkesund"
+	frq:786000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Kållered"
+	frq:786000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Lilla/Edet"
+	frq:546000000;band:8;
+	frq:522000000;band:8;
+	frq:674000000;band:8;
+	frq:626000000;band:8;
+	frq:778000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Mölndal/Västerberget"
+	frq:546000000;band:8;
+	frq:522000000;band:8;
+	frq:674000000;band:8;
+	frq:626000000;band:8;
+	frq:778000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Rönnäng"
+	frq:474000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Sätila"
+	frq:562000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Älvängen"
+	frq:610000000;band:8;
+	frq:666000000;band:8;
+	frq:690000000;band:8;
+	frq:770000000;band:8;
+	frq:714000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Halmstad/Oskarström"
+	frq:474000000;band:8;
+	frq:530000000;band:8;
+	frq:610000000;band:8;
+	frq:666000000;band:8;
+	frq:682000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Grevie"
+	frq:754000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Halmstad/Hamnen"
+	frq:474000000;band:8;
+	frq:530000000;band:8;
+	frq:610000000;band:8;
+	frq:666000000;band:8;
+	frq:682000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Knäred"
+	frq:778000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Mahult"
+	frq:762000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Vessigebro"
+	frq:762000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Helsingborg/Olympia"
+	frq:570000000;band:8;
+	frq:650000000;band:8;
+	frq:634000000;band:8;
+	frq:506000000;band:8;
+	frq:546000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Hudiksvall/Forsa"
+	frq:554000000;band:8;
+	frq:658000000;band:8;
+	frq:578000000;band:8;
+	frq:618000000;band:8;
+	frq:490000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Bergsjö/Bålleberget"
+	frq:690000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Gnarp"
+	frq:602000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Gunnarsbo"
+	frq:714000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Hassela"
+	frq:778000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Hudiksvall/Galgberget"
+	frq:602000000;band:8;
+	frq:642000000;band:8;
+	frq:474000000;band:8;
+	frq:514000000;band:8;
+	frq:626000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Söderhamn"
+	frq:714000000;band:8;
+	frq:762000000;band:8;
+	frq:578000000;band:8;
+	frq:618000000;band:8;
+	frq:490000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Ängebo"
+	frq:514000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Hörby/Sallerup"
+	frq:570000000;band:8;
+	frq:650000000;band:8;
+	frq:634000000;band:8;
+	frq:506000000;band:8;
+	frq:794000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Degeberga"
+	frq:538000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Glimåkra"
+	frq:586000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Kågeröd/Möllarp"
+	frq:586000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Löderups/Strandbad"
+	frq:554000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Norra/Rörum"
+	frq:602000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Stora/Herrestad"
+	frq:610000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Tormestorp"
+	frq:538000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Tyringe"
+	frq:674000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Ystad/Metallgatan"
+	frq:570000000;band:8;
+	frq:650000000;band:8;
+	frq:634000000;band:8;
+	frq:506000000;band:8;
+	frq:794000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Ängelholm/Vegeholm"
+	frq:570000000;band:8;
+	frq:650000000;band:8;
+	frq:634000000;band:8;
+	frq:506000000;band:8;
+	frq:546000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Örkelljunga"
+	frq:570000000;band:8;
+	frq:650000000;band:8;
+	frq:634000000;band:8;
+	frq:506000000;band:8;
+	frq:546000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Jönköping/Bondberget"
+	frq:554000000;band:8;
+	frq:530000000;band:8;
+	frq:586000000;band:8;
+	frq:570000000;band:8;
+	frq:714000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Bankeryd"
+	frq:706000000;band:8;
+	frq:546000000;band:8;
+	frq:690000000;band:8;
+	frq:770000000;band:8;
+	frq:754000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Huskvarna"
+	frq:626000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Kaxholmen/Vistakulle"
+	frq:474000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Mullsjö/Torestorp"
+	frq:554000000;band:8;
+	frq:530000000;band:8;
+	frq:586000000;band:8;
+	frq:570000000;band:8;
+	frq:714000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Norrahammar"
+	frq:738000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Taberg"
+	frq:778000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Visingsö"
+	frq:650000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Kalix"
+	frq:586000000;band:8;
+	frq:538000000;band:8;
+	frq:786000000;band:8;
+	frq:746000000;band:8;
+	frq:706000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Hedenäset"
+	frq:530000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Svanstein"
+	frq:714000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Karlshamn"
+	frq:522000000;band:8;
+	frq:498000000;band:8;
+	frq:642000000;band:8;
+	frq:746000000;band:8;
+	frq:514000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Olofström"
+	frq:690000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Villands/Vånga"
+	frq:538000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Karlskrona/Vämö"
+	frq:522000000;band:8;
+	frq:498000000;band:8;
+	frq:642000000;band:8;
+	frq:746000000;band:8;
+	frq:514000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Kallinge/Kalleberga"
+	frq:522000000;band:8;
+	frq:498000000;band:8;
+	frq:642000000;band:8;
+	frq:746000000;band:8;
+	frq:514000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Karlskrona/Jämjö"
+	frq:522000000;band:8;
+	frq:498000000;band:8;
+	frq:642000000;band:8;
+	frq:746000000;band:8;
+	frq:514000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Karlstad/Sörmon"
+	frq:650000000;band:8;
+	frq:674000000;band:8;
+	frq:546000000;band:8;
+	frq:642000000;band:8;
+	frq:626000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Arvika/Örshultaberget"
+	frq:554000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Degerfors"
+	frq:658000000;band:8;
+	frq:666000000;band:8;
+	frq:714000000;band:8;
+	frq:738000000;band:8;
+	frq:634000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Edane"
+	frq:578000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Grums"
+	frq:610000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Kristinehamn/Utsiktsberget"
+	frq:554000000;band:8;
+	frq:530000000;band:8;
+	frq:546000000;band:8;
+	frq:642000000;band:8;
+	frq:626000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Svaneholm"
+	frq:778000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Älvsbacka"
+	frq:506000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Kiruna/Kirunavaara"
+	frq:618000000;band:8;
+	frq:586000000;band:8;
+	frq:562000000;band:8;
+	frq:698000000;band:8;
+	frq:642000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Björkliden/Tornehamn"
+	frq:778000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Idivuoma"
+	frq:666000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Karesuando"
+	frq:482000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Kurravaara"
+	frq:554000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Puoltsa"
+	frq:490000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Stordalen"
+	frq:658000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Torneträsk"
+	frq:738000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Vassijaure"
+	frq:698000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Årosjokk"
+	frq:610000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Kisa"
+	frq:538000000;band:8;
+	frq:746000000;band:8;
+	frq:706000000;band:8;
+	frq:754000000;band:8;
+	frq:778000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Falerum/Centrum"
+	frq:682000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Lycksele/Knaften"
+	frq:666000000;band:8;
+	frq:730000000;band:8;
+	frq:482000000;band:8;
+	frq:530000000;band:8;
+	frq:690000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Björksele"
+	frq:562000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Borgsjöbyn"
+	frq:578000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Falträsk"
+	frq:602000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Fredrika"
+	frq:562000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Gunnarn/Sörsjöliden"
+	frq:586000000;band:8;
+	frq:514000000;band:8;
+	frq:554000000;band:8;
+	frq:618000000;band:8;
+	frq:778000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Hällaström"
+	frq:746000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Kristineberg"
+	frq:610000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Lillögda"
+	frq:754000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Rusksele"
+	frq:554000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Umgransele/Granselelund"
+	frq:714000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Vindelgransele"
+	frq:618000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Åsele/Åslia"
+	frq:586000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Överrissjö"
+	frq:642000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Malmö/Jägersro"
+	frq:570000000;band:8;
+	frq:650000000;band:8;
+	frq:634000000;band:8;
+	frq:506000000;band:8;
+	frq:522000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Trelleborg/Gylle"
+	frq:570000000;band:8;
+	frq:650000000;band:8;
+	frq:634000000;band:8;
+	frq:506000000;band:8;
+	frq:522000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Mora/Eldris"
+	frq:482000000;band:8;
+	frq:506000000;band:8;
+	frq:586000000;band:8;
+	frq:642000000;band:8;
+	frq:658000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Dalfors"
+	frq:602000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Drevdagen"
+	frq:682000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Dådran"
+	frq:690000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Furudal"
+	frq:762000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Limedsforsen"
+	frq:746000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Malung"
+	frq:562000000;band:8;
+	frq:474000000;band:8;
+	frq:674000000;band:8;
+	frq:770000000;band:8;
+	frq:602000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Oxberg"
+	frq:738000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Rättvik"
+	frq:530000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Rörbäcksnäs"
+	frq:538000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Skattungbyn"
+	frq:746000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Storfjäten"
+	frq:618000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Sälen"
+	frq:666000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Sälfjället"
+	frq:650000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Särna/Mickeltemplet"
+	frq:538000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Sörsjön"
+	frq:546000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Tandådalen"
+	frq:666000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Transtrand/Bolheden"
+	frq:594000000;band:8;
+	frq:618000000;band:8;
+	frq:706000000;band:8;
+	frq:730000000;band:8;
+	frq:626000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Älvdalen/Brunnsberg"
+	frq:530000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Älvdalsåsen"
+	frq:570000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Motala/Ervasteby"
+	frq:522000000;band:8;
+	frq:626000000;band:8;
+	frq:474000000;band:8;
+	frq:642000000;band:8;
+	frq:722000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Linköping/Vattentornet"
+	frq:522000000;band:8;
+	frq:626000000;band:8;
+	frq:474000000;band:8;
+	frq:642000000;band:8;
+	frq:554000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Norrköping/Krokek"
+	frq:594000000;band:8;
+	frq:674000000;band:8;
+	frq:786000000;band:8;
+	frq:530000000;band:8;
+	frq:738000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Gusum"
+	frq:482000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Nyköping"
+	frq:498000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Nävekvarn"
+	frq:570000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Söderköping"
+	frq:506000000;band:8;
+	frq:570000000;band:8;
+	frq:586000000;band:8;
+	frq:490000000;band:8;
+	frq:482000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Tystberga"
+	frq:570000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Valdemarsvik"
+	frq:594000000;band:8;
+	frq:674000000;band:8;
+	frq:786000000;band:8;
+	frq:530000000;band:8;
+	frq:610000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Åtvidaberg"
+	frq:594000000;band:8;
+	frq:674000000;band:8;
+	frq:786000000;band:8;
+	frq:530000000;band:8;
+	frq:482000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Nässjö"
+	frq:482000000;band:8;
+	frq:490000000;band:8;
+	frq:586000000;band:8;
+	frq:570000000;band:8;
+	frq:714000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Bruzaholm"
+	frq:658000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Holsbybrunn/Holsbyholm"
+	frq:658000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Ingatorp"
+	frq:674000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Mariannelund"
+	frq:610000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Pauliström"
+	frq:722000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Skärstad"
+	frq:610000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Tranås/Bredkärr"
+	frq:546000000;band:8;
+	frq:650000000;band:8;
+	frq:690000000;band:8;
+	frq:770000000;band:8;
+	frq:610000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Vetlanda/Nye"
+	frq:602000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Pajala"
+	frq:578000000;band:8;
+	frq:490000000;band:8;
+	frq:554000000;band:8;
+	frq:602000000;band:8;
+	frq:738000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Aareavaara"
+	frq:514000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Muodoslompolo"
+	frq:626000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Olkamangi"
+	frq:642000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Saivomuotka"
+	frq:610000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Suijavaara"
+	frq:658000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Skellefteå"
+	frq:490000000;band:8;
+	frq:514000000;band:8;
+	frq:698000000;band:8;
+	frq:650000000;band:8;
+	frq:778000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Andersvattnet/Ersmyrberget"
+	frq:618000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Bjurträsk"
+	frq:538000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Bygdeträsk"
+	frq:634000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Ljusvattnet"
+	frq:618000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Lövånger"
+	frq:658000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Renström"
+	frq:562000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Skövde"
+	frq:602000000;band:8;
+	frq:498000000;band:8;
+	frq:562000000;band:8;
+	frq:578000000;band:8;
+	frq:762000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Hjo/Grevbäck"
+	frq:514000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Karlsborg/Vaberget"
+	frq:546000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Lerdala"
+	frq:530000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Sollefteå/Multrå"
+	frq:674000000;band:8;
+	frq:498000000;band:8;
+	frq:554000000;band:8;
+	frq:514000000;band:8;
+	frq:658000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Berghamn"
+	frq:762000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Bönhamn"
+	frq:762000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Dal"
+	frq:506000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Edsele"
+	frq:610000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Flyn"
+	frq:538000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Forsed"
+	frq:586000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Forsmo"
+	frq:546000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Forsmo/Yttersel"
+	frq:482000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Forsnäset"
+	frq:666000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Gallsätter"
+	frq:634000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Graninge"
+	frq:594000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Guliksberg"
+	frq:522000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Guliksberg/Rödvattnet"
+	frq:794000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Helgum"
+	frq:754000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Hemsön"
+	frq:578000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Hålaforsen"
+	frq:778000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Jude"
+	frq:738000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Kramfors/Östby"
+	frq:546000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Krångede"
+	frq:506000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Kåsta/Ringkallen"
+	frq:610000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Kälarne"
+	frq:546000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Långsele"
+	frq:738000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Näsåker"
+	frq:594000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Näsänget"
+	frq:746000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Ramsele/Skavåsen"
+	frq:586000000;band:8;
+	frq:474000000;band:8;
+	frq:618000000;band:8;
+	frq:746000000;band:8;
+	frq:786000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Resele"
+	frq:578000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Seltjärn"
+	frq:546000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Skorped"
+	frq:586000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Sollefteå/Hallsta"
+	frq:602000000;band:8;
+	frq:626000000;band:8;
+	frq:714000000;band:8;
+	frq:762000000;band:8;
+	frq:634000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Utansjö"
+	frq:562000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Utanskog"
+	frq:746000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Vålånger"
+	frq:578000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Åsmon/Sörmoflo"
+	frq:538000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Österforse"
+	frq:570000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Östergraninge"
+	frq:762000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Stockholm/Nacka"
+	frq:490000000;band:8;
+	frq:642000000;band:8;
+	frq:754000000;band:8;
+	frq:706000000;band:8;
+	frq:746000000;band:8;
+	frq:730000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Bergshamra/Vaxtuna"
+	frq:490000000;band:8;
+	frq:642000000;band:8;
+	frq:754000000;band:8;
+	frq:706000000;band:8;
+	frq:746000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Mölnbo/Tallstugan"
+	frq:682000000;band:8;
+	frq:666000000;band:8;
+	frq:546000000;band:8;
+	frq:522000000;band:8;
+	frq:506000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Norrtälje/Södra/Bergen"
+	frq:490000000;band:8;
+	frq:642000000;band:8;
+	frq:754000000;band:8;
+	frq:706000000;band:8;
+	frq:746000000;band:8;
+	frq:578000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Nynäshamn/Vattentornet"
+	frq:610000000;band:8;
+	frq:482000000;band:8;
+	frq:554000000;band:8;
+	frq:578000000;band:8;
+	frq:498000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Stockholm/Marieberg"
+	frq:490000000;band:8;
+	frq:642000000;band:8;
+	frq:754000000;band:8;
+	frq:706000000;band:8;
+	frq:746000000;band:8;
+	frq:730000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Svärdsösund/Svärdsö"
+	frq:610000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Södertälje/Ragnhildsborg"
+	frq:682000000;band:8;
+	frq:666000000;band:8;
+	frq:546000000;band:8;
+	frq:522000000;band:8;
+	frq:506000000;band:8;
+	frq:538000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Tullinge/Hamra"
+	frq:570000000;band:8;
+	frq:690000000;band:8;
+	frq:634000000;band:8;
+	frq:514000000;band:8;
+	frq:498000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Ösmo/Björsta"
+	frq:474000000;band:8;
+	frq:570000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Storuman"
+	frq:570000000;band:8;
+	frq:650000000;band:8;
+	frq:594000000;band:8;
+	frq:674000000;band:8;
+	frq:754000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Ammarnäs/Ribovardo"
+	frq:530000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Ammarnäs/Tjulträsk"
+	frq:714000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Borgafjäll"
+	frq:530000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Borkan"
+	frq:538000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Dorotea"
+	frq:738000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Gardikfors"
+	frq:730000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Gargnäs"
+	frq:610000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Hemavan"
+	frq:506000000;band:8;
+	frq:490000000;band:8;
+	frq:554000000;band:8;
+	frq:658000000;band:8;
+	frq:482000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Joeström"
+	frq:746000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Kultsjön"
+	frq:738000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Malå"
+	frq:682000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Matsdal"
+	frq:610000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Norsjövallen"
+	frq:506000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Risbäck"
+	frq:490000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Slussfors"
+	frq:522000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Sorsele/Nalovardo"
+	frq:658000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Sorsele/Vattentornet"
+	frq:506000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Stalon"
+	frq:482000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Tärnaby/Ryfjället"
+	frq:586000000;band:8;
+	frq:562000000;band:8;
+	frq:610000000;band:8;
+	frq:722000000;band:8;
+	frq:514000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Tärnamo"
+	frq:682000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Umfors"
+	frq:730000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Vilhelmina"
+	frq:522000000;band:8;
+	frq:514000000;band:8;
+	frq:554000000;band:8;
+	frq:658000000;band:8;
+	frq:778000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Sundsvall/S/Stadsberget"
+	frq:682000000;band:8;
+	frq:522000000;band:8;
+	frq:546000000;band:8;
+	frq:650000000;band:8;
+	frq:754000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Albacken"
+	frq:762000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Bredsjön"
+	frq:578000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Hornön"
+	frq:746000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Hällsjö"
+	frq:490000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Härnösand/Härnön"
+	frq:602000000;band:8;
+	frq:626000000;band:8;
+	frq:714000000;band:8;
+	frq:762000000;band:8;
+	frq:754000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Järkvissle"
+	frq:498000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Klingsta"
+	frq:666000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Knävland"
+	frq:562000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Kovland"
+	frq:738000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Kvarnsvedjan"
+	frq:498000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Kälen"
+	frq:562000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Lagfors"
+	frq:602000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Laggarberg"
+	frq:658000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Liden"
+	frq:610000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Liden/Österström"
+	frq:594000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Ljustorp"
+	frq:666000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Matfors"
+	frq:682000000;band:8;
+	frq:522000000;band:8;
+	frq:546000000;band:8;
+	frq:650000000;band:8;
+	frq:754000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Norrhassel"
+	frq:530000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Selånger"
+	frq:594000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Skottsund"
+	frq:498000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Stigsjö"
+	frq:786000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Stöde/Hullsjön"
+	frq:482000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Sundsbruk"
+	frq:682000000;band:8;
+	frq:522000000;band:8;
+	frq:546000000;band:8;
+	frq:650000000;band:8;
+	frq:754000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Sörbygden"
+	frq:650000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Söråker"
+	frq:722000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Viksjö"
+	frq:578000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Västansjö"
+	frq:666000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Sunne/Blåbärskullen"
+	frq:594000000;band:8;
+	frq:618000000;band:8;
+	frq:706000000;band:8;
+	frq:730000000;band:8;
+	frq:682000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Bjurberget/Hemtjärn"
+	frq:506000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Bograngen"
+	frq:610000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Bortansbyn/Bortan"
+	frq:586000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Bosebyn"
+	frq:658000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Ekshärad/Ekesberget"
+	frq:754000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Fredros"
+	frq:506000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Gräsmark"
+	frq:474000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Gumhöjden"
+	frq:674000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Gunnarskog"
+	frq:722000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Hagfors/Värmullsåsen"
+	frq:514000000;band:8;
+	frq:578000000;band:8;
+	frq:666000000;band:8;
+	frq:762000000;band:8;
+	frq:626000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Hovfjället"
+	frq:722000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Häljeboda"
+	frq:506000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Höljes"
+	frq:722000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Ivarsbyn"
+	frq:578000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Karlanda"
+	frq:650000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Koppom"
+	frq:538000000;band:8;
+	frq:738000000;band:8;
+	frq:602000000;band:8;
+	frq:762000000;band:8;
+	frq:682000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Loffstrand"
+	frq:514000000;band:8;
+	frq:578000000;band:8;
+	frq:666000000;band:8;
+	frq:714000000;band:8;
+	frq:762000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Munkfors"
+	frq:514000000;band:8;
+	frq:562000000;band:8;
+	frq:666000000;band:8;
+	frq:762000000;band:8;
+	frq:474000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Månserud"
+	frq:658000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Ransäter"
+	frq:658000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Röjdåfors"
+	frq:482000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Skillingsfors"
+	frq:522000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Skymnäs"
+	frq:498000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Sulvik"
+	frq:778000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Sunne/Ås"
+	frq:722000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Sysslebäck"
+	frq:562000000;band:8;
+	frq:474000000;band:8;
+	frq:770000000;band:8;
+	frq:674000000;band:8;
+	frq:658000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Torsby/Bada"
+	frq:514000000;band:8;
+	frq:578000000;band:8;
+	frq:666000000;band:8;
+	frq:762000000;band:8;
+	frq:714000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Töcksfors"
+	frq:538000000;band:8;
+	frq:738000000;band:8;
+	frq:602000000;band:8;
+	frq:762000000;band:8;
+	frq:682000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Uggleheden"
+	frq:778000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Vitsand"
+	frq:586000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Vägsjöfors"
+	frq:690000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Åmotfors/Kroppstad"
+	frq:714000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Årjäng"
+	frq:538000000;band:8;
+	frq:738000000;band:8;
+	frq:602000000;band:8;
+	frq:762000000;band:8;
+	frq:682000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Östmark"
+	frq:610000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Sveg/Brickan"
+	frq:474000000;band:8;
+	frq:498000000;band:8;
+	frq:674000000;band:8;
+	frq:634000000;band:8;
+	frq:594000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Funäsdalen/Funäsdalsberget"
+	frq:706000000;band:8;
+	frq:682000000;band:8;
+	frq:786000000;band:8;
+	frq:714000000;band:8;
+	frq:562000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Funäsdalen/Telestation"
+	frq:762000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Grövelsjön"
+	frq:666000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Gördalen"
+	frq:554000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Hede"
+	frq:570000000;band:8;
+	frq:602000000;band:8;
+	frq:722000000;band:8;
+	frq:746000000;band:8;
+	frq:698000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Högvålen"
+	frq:506000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Idre"
+	frq:714000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Klövsjö"
+	frq:650000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Linsell"
+	frq:562000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Ljungdalen"
+	frq:490000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Lofsdalen"
+	frq:530000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Långå"
+	frq:658000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Mittådalen"
+	frq:554000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Mörkret"
+	frq:754000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Ramundberget"
+	frq:530000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Råndalen"
+	frq:554000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Sveg/Ransjö"
+	frq:546000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Tänndalen"
+	frq:626000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Tännäs/Västra/Kröket"
+	frq:530000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Ängersjö"
+	frq:514000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Överhogdal"
+	frq:562000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Trollhättan"
+	frq:490000000;band:8;
+	frq:650000000;band:8;
+	frq:554000000;band:8;
+	frq:506000000;band:8;
+	frq:754000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Tåsjö"
+	frq:602000000;band:8;
+	frq:626000000;band:8;
+	frq:714000000;band:8;
+	frq:634000000;band:8;
+	frq:706000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Backe"
+	frq:682000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Björkvattnet"
+	frq:674000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Gäddede"
+	frq:482000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Harrsjön"
+	frq:754000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Hoting"
+	frq:538000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Håkafot"
+	frq:514000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Jormvattnet"
+	frq:546000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Junsele/Hamptjärnsberget"
+	frq:546000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Junsele/Vallen"
+	frq:562000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Norråker"
+	frq:730000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Rossön"
+	frq:506000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Strömsund/Grelsgård"
+	frq:578000000;band:8;
+	frq:642000000;band:8;
+	frq:490000000;band:8;
+	frq:594000000;band:8;
+	frq:722000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Uddevalla/Herrestad"
+	frq:490000000;band:8;
+	frq:650000000;band:8;
+	frq:554000000;band:8;
+	frq:506000000;band:8;
+	frq:754000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Ellös"
+	frq:770000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Hamburgsund"
+	frq:674000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Henån"
+	frq:722000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Hunnebostrand"
+	frq:682000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Kungshamn"
+	frq:730000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Kämpersvik"
+	frq:778000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Munkedal"
+	frq:490000000;band:8;
+	frq:650000000;band:8;
+	frq:554000000;band:8;
+	frq:506000000;band:8;
+	frq:754000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Strömstad"
+	frq:514000000;band:8;
+	frq:482000000;band:8;
+	frq:554000000;band:8;
+	frq:506000000;band:8;
+	frq:754000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Vassbotten"
+	frq:722000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Ödsmål"
+	frq:770000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Uppsala/Vedyxa"
+	frq:626000000;band:8;
+	frq:474000000;band:8;
+	frq:650000000;band:8;
+	frq:770000000;band:8;
+	frq:570000000;band:8;
+	frq:722000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Uppsala/Rickomberga"
+	frq:666000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Varberg/Grimeton"
+	frq:474000000;band:8;
+	frq:530000000;band:8;
+	frq:610000000;band:8;
+	frq:666000000;band:8;
+	frq:682000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Gullbrandstorp"
+	frq:602000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Kungsäter"
+	frq:706000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Ullared"
+	frq:570000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Visby/Follingbo"
+	frq:634000000;band:8;
+	frq:658000000;band:8;
+	frq:690000000;band:8;
+	frq:602000000;band:8;
+	frq:770000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Fårö/Ajkesträsk"
+	frq:554000000;band:8;
+	frq:698000000;band:8;
+	frq:666000000;band:8;
+	frq:746000000;band:8;
+	frq:754000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Fårösund/Bunge"
+	frq:634000000;band:8;
+	frq:658000000;band:8;
+	frq:690000000;band:8;
+	frq:602000000;band:8;
+	frq:770000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Irevik/3195"
+	frq:482000000;band:8;
+	frq:522000000;band:8;
+	frq:506000000;band:8;
+	frq:570000000;band:8;
+	frq:754000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Ljugarn/3193"
+	frq:554000000;band:8;
+	frq:698000000;band:8;
+	frq:666000000;band:8;
+	frq:746000000;band:8;
+	frq:754000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Visby/Hamnen"
+	frq:482000000;band:8;
+	frq:522000000;band:8;
+	frq:506000000;band:8;
+	frq:570000000;band:8;
+	frq:586000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Visby/Havdhem"
+	frq:634000000;band:8;
+	frq:658000000;band:8;
+	frq:690000000;band:8;
+	frq:602000000;band:8;
+	frq:770000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Vislanda/Nydala"
+	frq:626000000;band:8;
+	frq:698000000;band:8;
+	frq:578000000;band:8;
+	frq:602000000;band:8;
+	frq:618000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Delary"
+	frq:762000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Hallaryd"
+	frq:490000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Lindshammar/Ramkvilla"
+	frq:642000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Markaryd/Hualtet"
+	frq:674000000;band:8;
+	frq:594000000;band:8;
+	frq:658000000;band:8;
+	frq:538000000;band:8;
+	frq:778000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Traryd/Betås"
+	frq:674000000;band:8;
+	frq:594000000;band:8;
+	frq:658000000;band:8;
+	frq:538000000;band:8;
+	frq:778000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Vännäs/Granlundsberget"
+	frq:682000000;band:8;
+	frq:706000000;band:8;
+	frq:754000000;band:8;
+	frq:594000000;band:8;
+	frq:722000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Agnäs"
+	frq:522000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Botsmark"
+	frq:730000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Bygdsiljum"
+	frq:538000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Flurkmark"
+	frq:554000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Gräsmyr"
+	frq:650000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Hummelholm"
+	frq:738000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Lögdeälv"
+	frq:626000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Nordmaling"
+	frq:586000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Norrfors"
+	frq:546000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Robertsfors"
+	frq:562000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Sävar/Sörbyn"
+	frq:506000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Tavelsjö"
+	frq:562000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Umeå/Mariehem"
+	frq:634000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Varmvattnet"
+	frq:658000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Vindeln/Renfors"
+	frq:506000000;band:8;
+	frq:570000000;band:8;
+	frq:546000000;band:8;
+	frq:634000000;band:8;
+	frq:618000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Överklinten"
+	frq:586000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Västervik/Fårhult"
+	frq:514000000;band:8;
+	frq:578000000;band:8;
+	frq:498000000;band:8;
+	frq:546000000;band:8;
+	frq:626000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Byxelkrok"
+	frq:514000000;band:8;
+	frq:578000000;band:8;
+	frq:498000000;band:8;
+	frq:546000000;band:8;
+	frq:626000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Järnforsen"
+	frq:522000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Lönneberga"
+	frq:514000000;band:8;
+	frq:578000000;band:8;
+	frq:498000000;band:8;
+	frq:546000000;band:8;
+	frq:626000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Virserum"
+	frq:618000000;band:8;
+	frq:690000000;band:8;
+	frq:738000000;band:8;
+	frq:770000000;band:8;
+	frq:562000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Västerås/Lillhärad44/"
+	frq:602000000;band:8;
+	frq:554000000;band:8;
+	frq:482000000;band:8;
+	frq:578000000;band:8;
+	frq:610000000;band:8;
+	frq:762000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Fagersta/Jättåsen"
+	frq:514000000;band:8;
+	frq:554000000;band:8;
+	frq:482000000;band:8;
+	frq:578000000;band:8;
+	frq:610000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Ånge/Snöberg"
+	frq:642000000;band:8;
+	frq:602000000;band:8;
+	frq:762000000;band:8;
+	frq:530000000;band:8;
+	frq:746000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Erikslund/Bergåsen"
+	frq:578000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Fränsta"
+	frq:690000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Ljungaverk"
+	frq:506000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Munkbysjön/Munkbyn"
+	frq:610000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Nordanede"
+	frq:666000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Ramsjö"
+	frq:706000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Stöde/Intaget"
+	frq:506000000;band:8;
+	frq:626000000;band:8;
+	frq:714000000;band:8;
+	frq:570000000;band:8;
+	frq:586000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Torpshammar"
+	frq:506000000;band:8;
+	frq:626000000;band:8;
+	frq:714000000;band:8;
+	frq:570000000;band:8;
+	frq:586000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Vemdalsskalet"
+	frq:578000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Överturingen"
+	frq:514000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Älvsbyn"
+	frq:594000000;band:8;
+	frq:618000000;band:8;
+	frq:682000000;band:8;
+	frq:562000000;band:8;
+	frq:610000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Boden/Skogså"
+	frq:730000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Bredåker"
+	frq:658000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Gunnarsbyn"
+	frq:490000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Harads"
+	frq:778000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Korsträsk"
+	frq:522000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Lillpite/Bastaberget"
+	frq:634000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Niemisel"
+	frq:634000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Sävast"
+	frq:642000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Vidsel"
+	frq:538000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Vitberget"
+	frq:554000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Vuollerim"
+	frq:490000000;band:8;
+	frq:554000000;band:8;
+	frq:658000000;band:8;
+	frq:698000000;band:8;
+	frq:730000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Örebro/Lockhyttan"
+	frq:586000000;band:8;
+	frq:538000000;band:8;
+	frq:506000000;band:8;
+	frq:698000000;band:8;
+	frq:746000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Högfors"
+	frq:730000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Hörken"
+	frq:754000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Kopparberg"
+	frq:586000000;band:8;
+	frq:538000000;band:8;
+	frq:506000000;band:8;
+	frq:698000000;band:8;
+	frq:746000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Örnsköldsvik/Ås"
+	frq:490000000;band:8;
+	frq:474000000;band:8;
+	frq:578000000;band:8;
+	frq:506000000;band:8;
+	frq:642000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Billsjö"
+	frq:762000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Björna"
+	frq:602000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Bredbyn/Västerfannbyn"
+	frq:706000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Bredbyn/Kubbe"
+	frq:634000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Flyggsjö"
+	frq:522000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Flärke"
+	frq:562000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Husum"
+	frq:522000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Hädanberg"
+	frq:530000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Kramfors/Lugnvik"
+	frq:778000000;band:8;
+	frq:498000000;band:8;
+	frq:554000000;band:8;
+	frq:514000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Köpmanholmen"
+	frq:490000000;band:8;
+	frq:474000000;band:8;
+	frq:578000000;band:8;
+	frq:506000000;band:8;
+	frq:642000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Mjällom"
+	frq:666000000;band:8;
+	frq:690000000;band:8;
+	frq:578000000;band:8;
+	frq:506000000;band:8;
+	frq:642000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Moliden"
+	frq:738000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Nyliden"
+	frq:538000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Sidensjö/Åberget"
+	frq:562000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Skalmsjö"
+	frq:538000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Sörflärke"
+	frq:722000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Trehörningsjö"
+	frq:634000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Ullånger/Skidsta"
+	frq:770000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Ulvöhamn"
+	frq:754000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Älgsjö"
+	frq:530000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Östersund/Brattåsen"
+	frq:522000000;band:8;
+	frq:666000000;band:8;
+	frq:770000000;band:8;
+	frq:730000000;band:8;
+	frq:738000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Bispfors"
+	frq:474000000;band:8;
+	frq:618000000;band:8;
+	frq:538000000;band:8;
+	frq:562000000;band:8;
+	frq:786000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Boberg"
+	frq:650000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Bydalen/Hovdehögen"
+	frq:562000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Duved"
+	frq:626000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Enafors"
+	frq:602000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Fjäl"
+	frq:562000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Fjällsta"
+	frq:594000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Frankrikegården/Frankrike"
+	frq:586000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Fullsjön"
+	frq:570000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Gillhov"
+	frq:562000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Hotagen"
+	frq:562000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Hållan"
+	frq:570000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Höglunda"
+	frq:634000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Järpen/Mellangårdsberget"
+	frq:490000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Kallrör"
+	frq:698000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Kaxås"
+	frq:634000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Köttsjön"
+	frq:586000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Laxsjö"
+	frq:570000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Laxviken"
+	frq:714000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Lit"
+	frq:586000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Medstugan"
+	frq:570000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Mjösjö"
+	frq:650000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Mårdsjö"
+	frq:594000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Nyhem"
+	frq:482000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Nälden"
+	frq:786000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Nästeln"
+	frq:490000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Näverede/Öberget"
+	frq:714000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Olden/Telestation"
+	frq:482000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Pilgrimstad"
+	frq:586000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Ragunda"
+	frq:474000000;band:8;
+	frq:618000000;band:8;
+	frq:538000000;band:8;
+	frq:562000000;band:8;
+	frq:786000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Rissna"
+	frq:570000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Skålan"
+	frq:610000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Skärvången"
+	frq:778000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Storlien"
+	frq:730000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Stugun"
+	frq:490000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Svenstavik"
+	frq:546000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Undersåker"
+	frq:650000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Valsjöbyn"
+	frq:594000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Vålådalen"
+	frq:610000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Åkersjön"
+	frq:778000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Ån"
+	frq:546000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Åre"
+	frq:522000000;band:8;
+	frq:666000000;band:8;
+	frq:770000000;band:8;
+	frq:730000000;band:8;
+	frq:738000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Ås"
+	frq:618000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Överammer"
+	frq:594000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Östhammar/Valö"
+	frq:626000000;band:8;
+	frq:474000000;band:8;
+	frq:650000000;band:8;
+	frq:770000000;band:8;
+	frq:690000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Väddö/Elmsta"
+	frq:626000000;band:8;
+	frq:474000000;band:8;
+	frq:650000000;band:8;
+	frq:770000000;band:8;
+	frq:690000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Vätö"
+	frq:666000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Överkalix"
+	frq:666000000;band:8;
+	frq:690000000;band:8;
+	frq:786000000;band:8;
+	frq:746000000;band:8;
+	frq:706000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Soukolojärvi"
+	frq:530000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Sweden-Övertorneå/Särkivaara"
+	frq:634000000;band:8;
+	frq:474000000;band:8;
+	frq:498000000;band:8;
+	frq:570000000;band:8;
+	frq:522000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+
+"Netherlands-Krimpen aan den IJssel"
+	frq:474000000;band:8;
+	frq:698000000;band:8;
+	frq:722000000;band:8;
+	frq:762000000;band:8;
+	frq:818000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Netherlands-Lopik"
+	frq:474000000;band:8;
+	frq:570000000;band:8;
+	frq:578000000;band:8;
+	frq:762000000;band:8;
+	frq:818000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Netherlands-Maarssen"
+	frq:474000000;band:8;
+	frq:570000000;band:8;
+	frq:578000000;band:8;
+	frq:762000000;band:8;
+	frq:818000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Netherlands-Naaldwijk"
+	frq:474000000;band:8;
+	frq:578000000;band:8;
+	frq:722000000;band:8;
+	frq:762000000;band:8;
+	frq:818000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Netherlands-Oegstgeest"
+	frq:474000000;band:8;
+	frq:578000000;band:8;
+	frq:722000000;band:8;
+	frq:762000000;band:8;
+	frq:818000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Netherlands-Rotterdam-Waalhaven"
+	frq:474000000;band:8;
+	frq:698000000;band:8;
+	frq:722000000;band:8;
+	frq:762000000;band:8;
+	frq:818000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Netherlands-Rotterdam"
+	frq:474000000;band:8;
+	frq:698000000;band:8;
+	frq:722000000;band:8;
+	frq:762000000;band:8;
+	frq:818000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Netherlands-Scheveningen (Radio)"
+	frq:474000000;band:8;
+	frq:578000000;band:8;
+	frq:722000000;band:8;
+	frq:762000000;band:8;
+	frq:818000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Netherlands-Sliedrecht"
+	frq:474000000;band:8;
+	frq:698000000;band:8;
+	frq:722000000;band:8;
+	frq:762000000;band:8;
+	frq:818000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Netherlands-Utrecht"
+	frq:474000000;band:8;
+	frq:570000000;band:8;
+	frq:578000000;band:8;
+	frq:762000000;band:8;
+	frq:818000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Netherlands-Vlaardingen"
+	frq:474000000;band:8;
+	frq:698000000;band:8;
+	frq:722000000;band:8;
+	frq:762000000;band:8;
+	frq:818000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Netherlands-Wormer"
+	frq:474000000;band:8;
+	frq:490000000;band:8;
+	frq:578000000;band:8;
+	frq:762000000;band:8;
+	frq:818000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Netherlands-Amsterdam"
+	frq:498000000;band:8;
+	frq:618000000;band:8;
+	frq:762000000;band:8;
+	frq:818000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+
+"Australia"
+	frq:177500000;band:7;
+	frq:184500000;band:7;
+	frq:191500000;band:7;
+	frq:198500000;band:7;
+	frq:205500000;band:7;
+	frq:212500000;band:7;
+	frq:219500000;band:7;
+	frq:226500000;band:7;
+	frq:529500000;band:7;
+	frq:536500000;band:7;
+	frq:543500000;band:7;
+	frq:550500000;band:7;
+	frq:557500000;band:7;
+	frq:564500000;band:7;
+	frq:571500000;band:7;
+	frq:578500000;band:7;
+	frq:585500000;band:7;
+	frq:592500000;band:7;
+	frq:599500000;band:7;
+	frq:606500000;band:7;
+	frq:613500000;band:7;
+	frq:620500000;band:7;
+	frq:627500000;band:7;
+	frq:634500000;band:7;
+	frq:641500000;band:7;
+	frq:648500000;band:7;
+	frq:655500000;band:7;
+	frq:662500000;band:7;
+	frq:669500000;band:7;
+	frq:676500000;band:7;
+	frq:683500000;band:7;
+	frq:690500000;band:7;
+	frq:697500000;band:7;
+	frq:704500000;band:7;
+	frq:711500000;band:7;
+	frq:718500000;band:7;
+	frq:725500000;band:7;
+	frq:732500000;band:7;
+	frq:739500000;band:7;
+	frq:746500000;band:7;
+	frq:753500000;band:7;
+	frq:760500000;band:7;
+	frq:767500000;band:7;
+	frq:774500000;band:7;
+	frq:781500000;band:7;
+	frq:788500000;band:7;
+	frq:795500000;band:7;
+	frq:802500000;band:7;
+	frq:809500000;band:7;
+	frq:816500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Adelaide"
+	frq:191625000;band:7;
+	frq:219500000;band:7;
+	frq:226500000;band:7;
+	frq:564500000;band:7;
+	frq:177500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Ballarat"
+	frq:620500000;band:7;
+	frq:634500000;band:7;
+	frq:613500000;band:7;
+	frq:592500000;band:7;
+	frq:655500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Batchelor"
+	frq:788500000;band:7;
+	frq:767500000;band:7;
+	frq:746500000;band:7;
+	frq:725500000;band:7;
+	frq:704500000;band:7;
+	frq:683500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Brisbane"
+	frq:585500000;band:7;
+	frq:191625000;band:7;
+	frq:177500000;band:7;
+	frq:219500000;band:7;
+	frq:226500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Canberra"
+	frq:205500000;band:7;
+	frq:177500000;band:7;
+	frq:543500000;band:7;
+	frq:226500000;band:7;
+	frq:219500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Como"
+	frq:711500000;band:7;
+	frq:732500000;band:7;
+	frq:774500000;band:7;
+	frq:690500000;band:7;
+	frq:753500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Darwin"
+	frq:543500000;band:7;
+	frq:536500000;band:7;
+	frq:550500000;band:7;
+	frq:557500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+
+"Australia-Gold Coast"
+	frq:177500000;band:7;
+	frq:226500000;band:7;
+	frq:529500000;band:7;
+	frq:613500000;band:7;
+	frq:655500000;band:7;
+	frq:683500000;band:7;
+	frq:697500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+
+"Australia-Hamilton"
+	frq:767500000;band:7;
+	frq:788500000;band:7;
+	frq:758500000;band:7;
+	frq:599500000;band:7;
+	frq:592500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Hobart"
+	frq:219500000;band:7;
+	frq:205500000;band:7;
+	frq:191500000;band:7;
+	frq:184500000;band:7;
+	frq:212500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Hobart NE"
+	frq:781500000;band:7;
+	frq:767500000;band:7;
+	frq:788500000;band:7;
+	frq:795500000;band:7;
+	frq:725500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Melbourne"
+	frq:177500000;band:7;
+	frq:191625000;band:7;
+	frq:219500000;band:7;
+	frq:226500000;band:7;
+	frq:536500000;band:7;
+	frq:557500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Perth"
+	frq:191625000;band:7;
+	frq:536500000;band:7;
+	frq:219500000;band:7;
+	frq:177500000;band:7;
+	frq:226500000;band:7;
+	frq:557500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Wyong"
+	frq:592500000;band:7;
+	frq:746500000;band:7;
+	frq:760500000;band:7;
+	frq:809500000;band:7;
+	frq:767500000;band:7;
+	frq:725500000;band:7;
+	frq:788625000;band:7;
+	frq:599500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Sydney"
+	frq:571500000;band:7;
+	frq:177500000;band:7;
+	frq:191625000;band:7;
+	frq:219500000;band:7;
+	frq:226500000;band:7;
+	frq:578500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Sydney@Eastern Suburbs"
+	frq:543625000;band:7;
+	frq:669500000;band:7;
+	frq:564500000;band:7;
+	frq:648500000;band:7;
+	frq:571500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Sydney@Manly/Mosman"
+	frq:543625000;band:7;
+	frq:669500000;band:7;
+	frq:564500000;band:7;
+	frq:648500000;band:7;
+	frq:571500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Wollongong@Illawarra"
+	frq:592500000;band:7;
+	frq:711625000;band:7;
+	frq:585500000;band:7;
+	frq:599500000;band:7;
+	frq:690500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Wollongong@North"
+	frq:697500000;band:7;
+	frq:655500000;band:7;
+	frq:613500000;band:7;
+	frq:634500000;band:7;
+	frq:711625000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Wollongong@Stanwell Park"
+	frq:697500000;band:7;
+	frq:655500000;band:7;
+	frq:613500000;band:7;
+	frq:634500000;band:7;
+	frq:676500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Central Coast@Bouddi"
+	frq:592500000;band:7;
+	frq:746500000;band:7;
+	frq:760500000;band:7;
+	frq:809500000;band:7;
+	frq:767500000;band:7;
+	frq:788625000;band:7;
+	frq:725500000;band:7;
+	frq:571500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Central Coast@Gosford"
+	frq:592500000;band:7;
+	frq:746500000;band:7;
+	frq:760500000;band:7;
+	frq:809500000;band:7;
+	frq:767500000;band:7;
+	frq:788625000;band:7;
+	frq:725500000;band:7;
+	frq:571500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Mid North Coast@Coffs Harbou"
+	frq:760625;band:7;
+	frq:725500000;band:7;
+	frq:802500000;band:7;
+	frq:781625000;band:7;
+	frq:809500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Mid North Coast@Gloucester"
+	frq:620500000;band:7;
+	frq:529500000;band:7;
+	frq:557500000;band:7;
+	frq:571500000;band:7;
+	frq:550625000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Mid North Coast@Grafton/Kempsey/Coffs Harbour"
+	frq:585500000;band:7;
+	frq:543500000;band:7;
+	frq:564500000;band:7;
+	frq:599500000;band:7;
+	frq:606500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Mid North Coast@Laurieton"
+	frq:753625000;band:7;
+	frq:669500000;band:7;
+	frq:690500000;band:7;
+	frq:711500000;band:7;
+	frq:732625;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Mid North Coast@Manning River"
+	frq:184625000;band:7;
+	frq:198500000;band:7;
+	frq:226500000;band:7;
+	frq:641500000;band:7;
+	frq:205500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-New England@Armidale"
+	frq:557500000;band:7;
+	frq:578500000;band:7;
+	frq:599500000;band:7;
+	frq:620500000;band:7;
+	frq:536500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-New England@Upper Namoi"
+	frq:191625000;band:7;
+	frq:205500000;band:7;
+	frq:592500000;band:7;
+	frq:613500000;band:7;
+	frq:585500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Newcastle Hunter@Dungog"
+	frq:746500000;band:7;
+	frq:767500000;band:7;
+	frq:788500000;band:7;
+	frq:760625000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Newcastle Hunter@Newcastle"
+	frq:704500000;band:7;
+	frq:690500000;band:7;
+	frq:592500000;band:7;
+	frq:599500000;band:7;
+	frq:585500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Newcastle Hunter@Kotara"
+	frq:592500000;band:7;
+	frq:704500000;band:7;
+	frq:585500000;band:7;
+	frq:690500000;band:7;
+	frq:599500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Newcastle Hunter@Merewether"
+	frq:592500000;band:7;
+	frq:704500000;band:7;
+	frq:585500000;band:7;
+	frq:690500000;band:7;
+	frq:599500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Newcastle Hunter@Port Stephens"
+	frq:543500000;band:7;
+	frq:627500000;band:7;
+	frq:529500000;band:7;
+	frq:564500000;band:7;
+	frq:550500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Newcastle Hunter@Upper Hunter"
+	frq:184500000;band:7;
+	frq:760500000;band:7;
+	frq:198500000;band:7;
+	frq:739500000;band:7;
+	frq:781500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-North Coast@Bonalbo"
+	frq:732500000;band:7;
+	frq:774500000;band:7;
+	frq:795500000;band:7;
+	frq:753500000;band:7;
+	frq:711500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-North Coast@Kyogl"
+	frq:718500000;band:7;
+	frq:760500000;band:7;
+	frq:781500000;band:7;
+	frq:739500000;band:7;
+	frq:697500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-North Coast@Murwillumbah"
+	frq:536500000;band:7;
+	frq:578500000;band:7;
+	frq:557500000;band:7;
+	frq:613500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-North Coast@Richmond/Tweed"
+	frq:536500000;band:7;
+	frq:578500000;band:7;
+	frq:592500000;band:7;
+	frq:557500000;band:7;
+	frq:613500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Nowra South Coast@Batemans Bay/Moruy"
+	frq:205625000;band:7;
+	frq:795500000;band:7;
+	frq:212500000;band:7;
+	frq:774500000;band:7;
+	frq:184500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Nowra South Coast@Bega"
+	frq:578625000;band:7;
+	frq:543500000;band:7;
+	frq:536500000;band:7;
+	frq:564500000;band:7;
+	frq:557500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Nowra South Coast@Bombala"
+	frq:767625000;band:7;
+	frq:774500000;band:7;
+	frq:753500000;band:7;
+	frq:746500000;band:7;
+	frq:795500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Nowra South Coast@Eden"
+	frq:718500000;band:7;
+	frq:802500000;band:7;
+	frq:760500000;band:7;
+	frq:781625000;band:7;
+	frq:809500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Nowra South Coast@Narooma"
+	frq:725500000;band:7;
+	frq:788500000;band:7;
+	frq:746500000;band:7;
+	frq:767500000;band:7;
+	frq:704500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Nowra South Coast@Nowra North"
+	frq:795500000;band:7;
+	frq:634500000;band:7;
+	frq:571500000;band:7;
+	frq:613500000;band:7;
+	frq:774500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Nowra South Coast@Ulladulla"
+	frq:529500000;band:7;
+	frq:676500000;band:7;
+	frq:697500000;band:7;
+	frq:655625000;band:7;
+	frq:550625000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Southern Highlands@Bombala"
+	frq:767625000;band:7;
+	frq:774500000;band:7;
+	frq:753500000;band:7;
+	frq:746500000;band:7;
+	frq:795500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Southern Highlands@Bowral/Mittagong"
+	frq:697500000;band:7;
+	frq:655625000;band:7;
+	frq:613500000;band:7;
+	frq:634500000;band:7;
+	frq:676500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Southern Highlands@Braidwood"
+	frq:725500000;band:7;
+	frq:788500000;band:7;
+	frq:767500000;band:7;
+	frq:746500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Southern Highlands@Cooma town"
+	frq:718500000;band:7;
+	frq:781500000;band:7;
+	frq:760500000;band:7;
+	frq:739500000;band:7;
+	frq:802500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Southern Highlands@Cooma/Monaro"
+	frq:536500000;band:7;
+	frq:634500000;band:7;
+	frq:613500000;band:7;
+	frq:557500000;band:7;
+	frq:578500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Southern Highlands@Goulburn"
+	frq:725625000;band:7;
+	frq:788500000;band:7;
+	frq:767500000;band:7;
+	frq:809500000;band:7;
+	frq:746625000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Southern Highlands@Jindabyne"
+	frq:746500000;band:7;
+	frq:767500000;band:7;
+	frq:725500000;band:7;
+	frq:788500000;band:7;
+	frq:704500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Southern Highlands@Khancoban"
+	frq:746500000;band:7;
+	frq:704500000;band:7;
+	frq:767500000;band:7;
+	frq:795500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Southern Highlands@Thredb"
+	frq:564500000;band:7;
+	frq:648500000;band:7;
+	frq:627500000;band:7;
+	frq:606500000;band:7;
+	frq:543500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Southern Highlands@Tumbarumb"
+	frq:746500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Southern Highlands@Tumut"
+	frq:704500000;band:7;
+	frq:746500000;band:7;
+	frq:767500000;band:7;
+	frq:788500000;band:7;
+	frq:725500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Wagga & Riverina@Adelong"
+	frq:767500000;band:7;
+	frq:767500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Wagga & Riverina@Albury Nort"
+	frq:550625000;band:7;
+	frq:739500000;band:7;
+	frq:760500000;band:7;
+	frq:781500000;band:7;
+	frq:536500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Wagga & Riverina@Balranal"
+	frq:676500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Wagga & Riverina@Murrumbidgee Irrigation Area"
+	frq:219500000;band:7;
+	frq:177500000;band:7;
+	frq:177500000;band:7;
+	frq:564500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Wagga & Riverina@SW Slopes/E Riverina"
+	frq:655500000;band:7;
+	frq:662500000;band:7;
+	frq:683500000;band:7;
+	frq:690500000;band:7;
+	frq:669500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Wagga & Riverina@Wagga Wagga"
+	frq:718625000;band:7;
+	frq:739500000;band:7;
+	frq:760500000;band:7;
+	frq:781375000;band:7;
+	frq:711500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Wagga & Riverina@Walwa/Jingellic"
+	frq:739500000;band:7;
+	frq:760500000;band:7;
+	frq:781500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Western Districts@Bathurst"
+	frq:184625000;band:7;
+	frq:212500000;band:7;
+	frq:226500000;band:7;
+	frq:205500000;band:7;
+	frq:198500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Western Districts@Broken Hill"
+	frq:212625000;band:7;
+	frq:198500000;band:7;
+	frq:226500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Western Districts@Central Tablelands"
+	frq:585500000;band:7;
+	frq:592500000;band:7;
+	frq:613500000;band:7;
+	frq:634500000;band:7;
+	frq:627500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Western Districts@Central Western Slopes"
+	frq:226625000;band:7;
+	frq:620500000;band:7;
+	frq:648500000;band:7;
+	frq:655500000;band:7;
+	frq:641500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Western Districts@Cobar"
+	frq:177500000;band:7;
+	frq:205500000;band:7;
+	frq:219500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Western Districts@Condobolin"
+	frq:781500000;band:7;
+	frq:802500000;band:7;
+	frq:760500000;band:7;
+	frq:739500000;band:7;
+	frq:718500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Western Districts@Coolah"
+	frq:718500000;band:7;
+	frq:760500000;band:7;
+	frq:697500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Western Districts@Cowra"
+	frq:767500000;band:7;
+	frq:788500000;band:7;
+	frq:725500000;band:7;
+	frq:704500000;band:7;
+	frq:746500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Western Districts@Dubbo"
+	frq:739625000;band:7;
+	frq:760500000;band:7;
+	frq:781500000;band:7;
+	frq:802625000;band:7;
+	frq:718625000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Western Districts@Kando"
+	frq:725500000;band:7;
+	frq:746500000;band:7;
+	frq:788500000;band:7;
+	frq:767500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Western Districts@Lithgo"
+	frq:550500000;band:7;
+	frq:543500000;band:7;
+	frq:578500000;band:7;
+	frq:571500000;band:7;
+	frq:529500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Western Districts@Lithgow East"
+	frq:725625000;band:7;
+	frq:746500000;band:7;
+	frq:788500000;band:7;
+	frq:760500000;band:7;
+	frq:802500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Western Districts@Nyngan"
+	frq:704500000;band:7;
+	frq:788500000;band:7;
+	frq:746500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Western Districts@Oberon"
+	frq:725500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Australia-Western Districts@Portland/Wallerawang"
+	frq:725500000;band:7;
+	frq:746500000;band:7;
+	frq:788500000;band:7;
+	frq:767500000;band:7;
+	frq:802625000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+
+"Australia-Western Districts@Talbing"
+	frq:753500000;band:7;
+	frq:774500000;band:7;
+	{tune:1;pat:6;sdt:16;}
+
+"Belgium"
+	frq:482000000;band:8;
+	frq:754000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Belgium-Brussels"
+	frq:482000000;band:8;
+	frq:754000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Denmark"
+	frq:482000000;band:8;
+	frq:506000000;band:8;
+	frq:538000000;band:8;
+	frq:554000000;band:8;
+	frq:602000000;band:8;
+	frq:658000000;band:8;
+	frq:682000000;band:8;
+	frq:690000000;band:8;
+	frq:714000000;band:8;
+	frq:738000000;band:8;
+	frq:778000000;band:8;
+	frq:826000000;band:8;
+	frq:834000000;band:8;
+	frq:626000000;band:8;
+	frq:730000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Finland-Ala-Vuokki"
+	frq:698000000;band:8;
+	frq:786000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Anjalankoski"
+	frq:482000000;band:8;
+	frq:522000000;band:8;
+	frq:730000000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Espoo"
+	frq:562000000;band:8;
+	frq:658000000;band:8;
+	frq:674000000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Eurajoki"
+	frq:610000000;band:8;
+	frq:666000000;band:8;
+	frq:722000000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Fiskars"
+	frq:562000000;band:8;
+	frq:658000000;band:8;
+	frq:674000000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Haapavesi"
+	frq:578000000;band:8;
+	frq:642000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Hanko"
+	frq:618000000;band:8;
+	frq:746000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Heinola"
+	frq:554000000;band:8;
+	frq:786000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Hetta"
+	frq:554000000;band:8;
+	frq:610000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Houtskär"
+	frq:626000000;band:8;
+	frq:682000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Hämeenlinna@Painokangas"
+	frq:482000000;band:8;
+	frq:522000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Iisalmi"
+	frq:514000000;band:8;
+	frq:610000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Ikaalinen_Riitiala"
+	frq:650000000;band:8;
+	frq:738000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Inari"
+	frq:690000000;band:8;
+	frq:506000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Jalasjärvi"
+	frq:522000000;band:8;
+	frq:650000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Joensuu_Vestinkallio"
+	frq:666000000;band:8;
+	frq:786000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Joutsa"
+	frq:0000;band:8;
+	frq:0000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Joutseno"
+	frq:682000000;band:8;
+	frq:586000000;band:8;
+	frq:762000000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Juntusranta"
+	frq:642000000;band:8;
+	frq:666000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Jyväskylä"
+	frq:546000000;band:8;
+	frq:786000000;band:8;
+	frq:746000000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Jämsä_Kuorevesi_Halli"
+	frq:674000000;band:8;
+	frq:0000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Jämsä_Matkosvuori"
+	frq:602000000;band:8;
+	frq:658000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Kaihuanvaara"
+	frq:626000000;band:8;
+	frq:706000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Kaipola"
+	frq:602000000;band:8;
+	frq:658000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Kangaslampi"
+	frq:754000000;band:8;
+	frq:786000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Kangasniemi"
+	frq:0000;band:8;
+	frq:0000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Kankaanpää"
+	frq:650000000;band:8;
+	frq:682000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Karigasniemi"
+	frq:706000000;band:8;
+	frq:698000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Karkkila"
+	frq:594000000;band:8;
+	frq:650000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Karstula"
+	frq:722000000;band:8;
+	frq:762000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Kaunispää"
+	frq:690000000;band:8;
+	frq:506000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Kerimäki"
+	frq:546000000;band:8;
+	frq:602000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Keuruu"
+	frq:674000000;band:8;
+	frq:706000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Keuruu_Haapamäki"
+	frq:682000000;band:8;
+	frq:762000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Kiihtelysvaara"
+	frq:514000000;band:8;
+	frq:778000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Kilpisjärvi"
+	frq:666000000;band:8;
+	frq:690000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Koli"
+	frq:506000000;band:8;
+	frq:626000000;band:8;
+	frq:682000000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Korpilahti_Vaarunvuori"
+	frq:546000000;band:8;
+	frq:786000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Korppoo"
+	frq:626000000;band:8;
+	frq:682000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Kruunupyy"
+	frq:522000000;band:8;
+	frq:482000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Kuhmoinen"
+	frq:0000;band:8;
+	frq:0000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Kuhmoinen_Harjunsalmi"
+	frq:482000000;band:8;
+	frq:522000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Kuopio"
+	frq:498000000;band:8;
+	frq:554000000;band:8;
+	frq:618000000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Kustavi"
+	frq:714000000;band:8;
+	frq:698000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Kuttanen"
+	frq:730000000;band:8;
+	frq:770000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Lahti"
+	frq:570000000;band:8;
+	frq:682000000;band:8;
+	frq:762000000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Lapua"
+	frq:610000000;band:8;
+	frq:602000000;band:8;
+	frq:746000000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Laukaa"
+	frq:546000000;band:8;
+	frq:786000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Laukaa_Vihtavuori"
+	frq:0000;band:8;
+	frq:0000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Lohja"
+	frq:706000000;band:8;
+	frq:746000000;band:8;
+	frq:754000000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Loimaa"
+	frq:650000000;band:8;
+	frq:682000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Luhanka"
+	frq:562000000;band:8;
+	frq:674000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Luopioinen"
+	frq:650000000;band:8;
+	frq:674000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Mikkeli"
+	frq:538000000;band:8;
+	frq:650000000;band:8;
+	frq:778000000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Mänttä"
+	frq:658000000;band:8;
+	frq:722000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Mäntyharju"
+	frq:0000;band:8;
+	frq:0000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Nilsiä"
+	frq:578000000;band:8;
+	frq:642000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Nokia"
+	frq:594000000;band:8;
+	frq:746000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Nokia_Siuro_Linnavuori"
+	frq:594000000;band:8;
+	frq:746000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Oulu"
+	frq:634000000;band:8;
+	frq:714000000;band:8;
+	frq:738000000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Padasjoki_Arrakoski"
+	frq:498000000;band:8;
+	frq:530000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Parikkala"
+	frq:554000000;band:8;
+	frq:570000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Parkano"
+	frq:506000000;band:8;
+	frq:546000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Pello"
+	frq:546000000;band:8;
+	frq:594000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Perho"
+	frq:594000000;band:8;
+	frq:674000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Pernaja"
+	frq:490000000;band:8;
+	frq:706000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Pihtipudas"
+	frq:706000000;band:8;
+	frq:666000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Porvoo"
+	frq:0000;band:8;
+	frq:0000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Posio"
+	frq:554000000;band:8;
+	frq:618000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Pudasjärvi"
+	frq:658000000;band:8;
+	frq:690000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Puolanka"
+	frq:642000000;band:8;
+	frq:666000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Pyhätunturi"
+	frq:786000000;band:8;
+	frq:634000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Pyhävuori"
+	frq:530000000;band:8;
+	frq:634000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Pyynikki"
+	frq:626000000;band:8;
+	frq:658000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Raahe"
+	frq:546000000;band:8;
+	frq:618000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Ranua"
+	frq:578000000;band:8;
+	frq:778000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Rautavaara"
+	frq:0000;band:8;
+	frq:0000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Ristijärvi"
+	frq:546000000;band:8;
+	frq:722000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Rovaniemi"
+	frq:650000000;band:8;
+	frq:674000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Ruka"
+	frq:570000000;band:8;
+	frq:690000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Saarijärvi"
+	frq:682000000;band:8;
+	frq:722000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Salla"
+	frq:514000000;band:8;
+	frq:610000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Salo"
+	frq:0000;band:8;
+	frq:0000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Sysmä_Liikola"
+	frq:498000000;band:8;
+	frq:594000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Taivalkoski"
+	frq:562000000;band:8;
+	frq:610000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Tammela"
+	frq:482000000;band:8;
+	frq:522000000;band:8;
+	frq:706000000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Tammisaari"
+	frq:618000000;band:8;
+	frq:650000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Tampere"
+	frq:578000000;band:8;
+	frq:490000000;band:8;
+	frq:770000000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Tervola"
+	frq:626000000;band:8;
+	frq:642000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Turku"
+	frq:714000000;band:8;
+	frq:698000000;band:8;
+	frq:538000000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Utsjoki"
+	frq:658000000;band:8;
+	frq:714000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Vaala"
+	frq:770000000;band:8;
+	frq:786000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Vaasa"
+	frq:610000000;band:8;
+	frq:602000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Vantaa_Hakunila"
+	frq:562000000;band:8;
+	frq:658000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Vuokatti"
+	frq:546000000;band:8;
+	frq:722000000;band:8;
+	frq:746000000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Vuokatti_Lentiira"
+	frq:498000000;band:8;
+	frq:562000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Vuotso"
+	frq:554000000;band:8;
+	frq:706000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Ylläs"
+	frq:546000000;band:8;
+	frq:594000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Ähtäri"
+	frq:722000000;band:8;
+	frq:658000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Ämmänsaari"
+	frq:642000000;band:8;
+	frq:666000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Äänekoski"
+	frq:610000000;band:8;
+	frq:730000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"Finland-Äänekoski_Konginkangas"
+	frq:658000000;band:8;
+	frq:690000000;band:8;
+	frq:0000;band:8;
+	{tune:1;pat:7;sdt:16;}
+
+"France"
+	frq:474000000;band:8;
+	frq:482000000;band:8;
+	frq:490000000;band:8;
+	frq:498000000;band:8;
+	frq:506000000;band:8;
+	frq:514000000;band:8;
+	frq:522000000;band:8;
+	frq:530000000;band:8;
+	frq:538000000;band:8;
+	frq:546000000;band:8;
+	frq:554000000;band:8;
+	frq:562000000;band:8;
+	frq:570000000;band:8;
+	frq:578000000;band:8;
+	frq:586000000;band:8;
+	frq:594000000;band:8;
+	frq:602000000;band:8;
+	frq:610000000;band:8;
+	frq:618000000;band:8;
+	frq:626000000;band:8;
+	frq:634000000;band:8;
+	frq:642000000;band:8;
+	frq:650000000;band:8;
+	frq:658000000;band:8;
+	frq:666000000;band:8;
+	frq:674000000;band:8;
+	frq:682000000;band:8;
+	frq:690000000;band:8;
+	frq:698000000;band:8;
+	frq:706000000;band:8;
+	frq:714000000;band:8;
+	frq:722000000;band:8;
+	frq:730000000;band:8;
+	frq:738000000;band:8;
+	frq:746000000;band:8;
+	frq:754000000;band:8;
+	frq:762000000;band:8;
+	frq:770000000;band:8;
+	frq:778000000;band:8;
+	frq:786000000;band:8;
+	frq:786000000;band:8;
+	frq:794000000;band:8;
+	frq:802000000;band:8;
+	frq:810000000;band:8;
+	frq:826000000;band:8;
+	frq:834000000;band:8;
+	frq:842000000;band:8;
+	frq:850000000;band:8;
+	frq:858000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Germany-Berlin"
+	frq:177500000;band:8
+	frq:191500000;band:8
+	frq:506000000;band:8
+	frq:522000000;band:8
+	frq:570000000;band:8
+	frq:658000000;band:8
+	frq:754000000;band:8
+	frq:778000000;band:8
+	{tune:1;pat:6;sdt:16;}
+
+"Germany-Hamburg"
+	frq:490000000;band:8
+	frq:570000000;band:8
+	frq:546000000;band:8
+	frq:626000000;band:8
+	frq:674000000;band:8
+	{tune:1;pat:6;sdt:16;}
+
+"Germany-Thuringia-Erfurt/Weimar"
+	frq:474000000;band:8;
+	frq:522000000;band:8;
+	frq:706000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+Germany-Duesseldorf/Ruhrgebiet"
+	frq:506000000;band:8;
+	frq:538000000;band:8;
+	frq:586000000;band:8;
+	frq:690000000;band:8;
+	frq:722000000;band:8;
+	frq:746000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Germany-Rhein-Main/Gebiet"
+	frq:198500000;band:8;
+	frq:482000000;band:8;
+	frq:578000000;band:8;
+	frq:738000000;band:8;
+	frq:762000000;band:8;
+	frq:818000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+
+"Norway-Oslo"
+	frq:546000000;band:8;
+	frq:626000000;band:8;
+	frq:674000000;band:8;
+	frq:722000000;band:8;
+	frq:770000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Singapore"
+	frq:598000000;band:8;
+	frq:604000000;band:8;
+	frq:614000000;band:8;
+	{tune:1;pat:8;sdt:18;}
+
+"Spain"
+	frq:810000000;band:8;
+	frq:834000000;band:8;
+	frq:826000000;band:8;
+	frq:842000000;band:8;
+	frq:850000000;band:8;
+	frq:858000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+	
+"Spain-Palma_de_Mallorca"
+	frq:810000000;band:8;
+	frq:834000000;band:8;
+	frq:826000000;band:8;
+	frq:842000000;band:8;
+	frq:850000000;band:8;
+	frq:858000000;band:8;
+	{tune:1;pat:6;sdt:16;}	
+
+"China"
+	frq:658000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+	
+"China-ShenZhen"
+	frq:658000000;band:8;
+	{tune:1;pat:6;sdt:16;}	
+	
+
+
+"New Zealand"
+	frq:522000000;band:8;
+	frq:530000000;band:8;
+	frq:538000000;band:8;
+	frq:546000000;band:8;
+	frq:554000000;band:8;
+	frq:562000000;band:8;
+	frq:570000000;band:8;
+	frq:578000000;band:8;
+	frq:586000000;band:8;
+	frq:594000000;band:8;
+	frq:602000000;band:8;
+	frq:610000000;band:8;
+	frq:618000000;band:8;
+	frq:626000000;band:8;
+	frq:634000000;band:8;
+	frq:642000000;band:8;
+	frq:650000000;band:8;
+	frq:658000000;band:8;
+	frq:666000000;band:8;
+	frq:674000000;band:8;
+	frq:682000000;band:8;
+	frq:690000000;band:8;
+	frq:698000000;band:8;
+	frq:706000000;band:8;
+	frq:714000000;band:8;
+	frq:722000000;band:8;
+	frq:730000000;band:8;
+	frq:738000000;band:8;
+	frq:746000000;band:8;
+	frq:754000000;band:8;
+	frq:762000000;band:8;
+	frq:770000000;band:8;
+	frq:778000000;band:8;
+	frq:786000000;band:8;
+	frq:794000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"New Zealand-Auckland@Waiatarua"
+	frq:538000000;band:8;
+	frq:570000000;band:8;
+	frq:666000000;band:8;
+	frq:698000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"New Zealand-Auckland@Infill"
+	frq:530000000;band:8;
+	frq:562000000;band:8;
+	frq:626000000;band:8;
+	frq:722000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"New Zealand-Waikato@Te Aroha"
+	frq:666000000;band:8;
+	frq:674000000;band:8;
+	frq:690000000;band:8;
+	frq:706000000;band:8;
+	frq:730000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"New Zealand-Waikato@Hamilton"
+	frq:698000000;band:8;
+	frq:714000000;band:8;
+	frq:682000000;band:8;
+	frq:522000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"New Zealand-Tauranga@Kopukairua"
+	frq:698000000;band:8;
+	frq:714000000;band:8;
+	frq:642000000;band:8;
+	frq:522000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"New Zealand-Hawkes Bay@Mt Erin"
+	frq:522000000;band:8;
+	frq:554000000;band:8;
+	frq:650000000;band:8;
+	frq:682000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"New Zealand-Hawkes Bay@Hospital Hill"
+	frq:690000000;band:8;
+	frq:706000000;band:8;
+	frq:778000000;band:8;
+	frq:746000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"New Zealand-Manawatu@Wharite"
+	frq:690000000;band:8;
+	frq:706000000;band:8;
+	frq:778000000;band:8;
+	frq:746000000;band:8;
+	frq:698000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"New Zealand-Kapiti@Ngarara"
+	frq:666000000;band:8;
+	frq:730000000;band:8;
+	frq:762000000;band:8;
+	frq:570000000;band:8;
+	frq:538000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"New Zealand-Wellington@Mt Kaukau"
+	frq:690000000;band:8;
+	frq:706000000;band:8;
+	frq:778000000;band:8;
+	frq:746000000;band:8;
+	frq:698000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"New Zealand-Wellington@Infill"
+	frq:714000000;band:8;
+	frq:714000000;band:8;
+	frq:762000000;band:8;
+	frq:570000000;band:8;
+	frq:538000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"New Zealand-Christchurch@Sugarloaf"
+	frq:682000000;band:8;
+	frq:698000000;band:8;
+	frq:706000000;band:8;
+	frq:778000000;band:8;
+	frq:690000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"New Zealand-Christchurch@Infill"
+	frq:650000000;band:8;
+	frq:666000000;band:8;
+	frq:746000000;band:8;
+	frq:786000000;band:8;
+	frq:554000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"New Zealand-Dunedin@Mt Cargill"
+	frq:650000000;band:8;
+	frq:666000000;band:8;
+	frq:730000000;band:8;
+	frq:746000000;band:8;
+	frq:690000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"New Zealand-Dunedin@Infill"
+	frq:682000000;band:8;
+	frq:738000000;band:8;
+	frq:762000000;band:8;
+	frq:778000000;band:8;
+	frq:674000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"New Zealand-Whangarei@Horokaka"
+	frq:554000000;band:8;
+	frq:666000000;band:8;
+	frq:706000000;band:8;
+	frq:794000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"New Zealand-Whangarei@Parahaki"
+	frq:570000000;band:8;
+	frq:682000000;band:8;
+	frq:690000000;band:8;
+	frq:714000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"New Zealand-Rotorua@Pukepoto"
+	frq:698000000;band:8;
+	frq:746000000;band:8;
+	frq:762000000;band:8;
+	frq:794000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"New Zealand-Taupo@Tuhingamata"
+	frq:530000000;band:8;
+	frq:682000000;band:8;
+	frq:698000000;band:8;
+	frq:722000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"New Zealand-Gisbourne@Whakapunake"
+	frq:690000000;band:8;
+	frq:706000000;band:8;
+	frq:778000000;band:8;
+	frq:746000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"New Zealand-Taranaki@Mt Taranaki"
+	frq:690000000;band:8;
+	frq:706000000;band:8;
+	frq:778000000;band:8;
+	frq:746000000;band:8;
+	frq:698000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"New Zealand-Wanganui@Mt Jowett"
+	frq:666000000;band:8;
+	frq:730000000;band:8;
+	frq:762000000;band:8;
+	frq:794000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"New Zealand-Nelson@Gramians"
+	frq:530000000;band:8;
+	frq:682000000;band:8;
+	frq:698000000;band:8;
+	frq:722000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"New Zealand-Southland@Hedgehope"
+	frq:650000000;band:8;
+	frq:666000000;band:8;
+	frq:730000000;band:8;
+	frq:746000000;band:8;
+	frq:706000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Albania"
+        frq:802000000;band:8;
+        frq:818000000;band:8;
+        frq:842000000;band:8;
+        frq:858000000;band:8;
+
+"Albania-Tirana"
+        frq:802000000;band:8;
+        frq:818000000;band:8;
+        frq:842000000;band:8;
+        frq:858000000;band:8;
+        {tune:1;pat:6;sdt:16;}
+
+"Italy"
+	frq:482000000;band:8;
+	frq:506000000;band:8;
+	frq:602000000;band:8;
+	frq:618000000;band:8;
+	frq:634000000;band:8;
+	frq:706000000;band:8;
+	frq:738000000;band:8;
+	frq:802000000;band:8;
+	frq:818000000;band:8;
+	frq:842000000;band:8;
+	frq:850000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Italy-Genova"
+	frq:498000000;band:8;
+	frq:746000000;band:8;
+	frq:610000000;band:8;
+	frq:586000000;band:8;
+	frq:682000000;band:8;
+	frq:770000000;band:8;
+	frq:850000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+
+"Switzerland"
+	frq:498000000;band:8;
+	frq:522000000;band:8;
+	frq:554000000;band:8;
+	frq:570000000;band:8;
+	frq:578000000;band:8;
+	frq:586000000;band:8;
+	frq:626000000;band:8;
+	frq:658000000;band:8;
+	frq:610000000;band:8;
+	frq:618000000;band:8;
+	frq:730000000;band:8;
+	frq:746000000;band:8;
+	{tune:1;pat:6;sdt:16;}
+
+"Albania"
+        frq:682000000;band:8;
+	frq:730000000;band:8;
+	frq:778000000;band:8;
+	frq:802000000;band:8;
+        frq:818000000;band:8;
+        frq:842000000;band:8;
+        frq:858000000;band:8;    
+
+"Albania-Tirana"
+        frq:682000000;band:8;
+	frq:730000000;band:8;
+	frq:778000000;band:8;
+	frq:802000000;band:8;
+        frq:818000000;band:8;
+        frq:842000000;band:8;
+        frq:858000000;band:8;
+        {tune:1;pat:6;sdt:16;}
+
+"Greece"
+        frq:690000000;band:8;
+        frq:674000000;band:8;
+        frq:682000000;band:8;
+        frq:810000000;band:8;
+        frq:506000000;band:8;
+        frq:538000000;band:8;
+        frq:754000000;band:8;
+        frq:730000000;band:8;
+        frq:602000000;band:8;
+        frq:650000000;band:8;
+        {tune:1;pat:6;sdt:16;}
+
+"Greece-Athens"
+        frq:690000000;band:8;
+        frq:674000000;band:8;
+        frq:682000000;band:8;
+        frq:810000000;band:8;
+        {tune:1;pat:6;sdt:16;}
+
+"Greece-Thesalloniki"
+        frq:506000000;band:8;
+        frq:538000000;band:8;
+        frq:754000000;band:8;
+        {tune:1;pat:6;sdt:16;}
+
+"Greece-Thesallia"
+        frq:730000000;band:8;
+        {tune:1;pat:6;sdt:16;}
+
+"Greece-Xylokastro"
+        frq:602000000;band:8;
+        frq:650000000;band:8;
+        {tune:1;pat:6;sdt:16;}
+
+
+"Hong Kong SAR@Temple Hill"
+	frq:482000000;band:8;
+	frq:586000000;band:8;
+	frq:602000000;band:8;
+	{tune:1;pat:8;sdt:18;}
+
+"Hong Kong SAR@Castle Peak"
+	frq:650000000;band:8;
+	frq:586000000;band:8;
+	frq:602000000;band:8;
+	{tune:1;pat:8;sdt:18;}
+
+"Hong Kong SAR@Kowloon Peak"
+	frq:562000000;band:8;
+	frq:586000000;band:8;
+	frq:602000000;band:8;
+	{tune:1;pat:8;sdt:18;}
+
+"Hong Kong SAR@Golden Hill"
+	frq:626000000;band:8;
+	frq:586000000;band:8;
+	frq:602000000;band:8;
+	{tune:1;pat:8;sdt:18;}
+
+"Hong Kong SAR@Lamma Island"
+	frq:546000000;band:8;
+	frq:586000000;band:8;
+	frq:602000000;band:8;
+	{tune:1;pat:8;sdt:18;}
+
+"Hong Kong SAR@Mt Nicholson""
+	frq:634000000;band:8;
+	frq:586000000;band:8;
+	frq:602000000;band:8;
+	{tune:1;pat:8;sdt:18;}
+
+"Hong Kong SAR@Piper's Hill"
+	frq:778000000;band:8;
+	frq:586000000;band:8;
+	frq:602000000;band:8;
+	{tune:1;pat:8;sdt:18;}
+
+"Hong Kong SAR@Sai Wan Shan (Chai Wan)"
+	frq:530000000;band:8;
+	frq:586000000;band:8;
+	frq:602000000;band:8;
+	{tune:1;pat:8;sdt:18;}
+
+"Hong Kong SAR@Brick Hill"
+	frq:514000000;band:8;
+	frq:586000000;band:8;
+	frq:602000000;band:8;
+	{tune:1;pat:8;sdt:18;}
+
+"Hong Kong SAR@Sheung Yeung Shan"
+	frq:778000000;band:8;
+	frq:586000000;band:8;
+	frq:602000000;band:8;
+	{tune:1;pat:8;sdt:18;}
+
+"Hong Kong SAR@Beacon Hill"
+	frq:770000000;band:8;
+	frq:586000000;band:8;
+	frq:602000000;band:8;
+	{tune:1;pat:8;sdt:18;}
+
+
+	

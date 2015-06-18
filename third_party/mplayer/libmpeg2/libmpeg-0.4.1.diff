@@ -1,0 +1,461 @@
+--- include/attributes.h	2006-06-16 20:12:26.000000000 +0200
++++ libmpeg2/attributes.h	2006-06-16 20:12:50.000000000 +0200
+@@ -25,7 +29,7 @@
+ #ifdef ATTRIBUTE_ALIGNED_MAX
+ #define ATTR_ALIGN(align) __attribute__ ((__aligned__ ((ATTRIBUTE_ALIGNED_MAX < align) ? ATTRIBUTE_ALIGNED_MAX : align)))
+ #else
+-#define ATTR_ALIGN(align)
++#define ATTR_ALIGN(align) __attribute__ ((__aligned__ ((16 < align) ? 16 : align)))
+ #endif
+ 
+ #ifdef HAVE_BUILTIN_EXPECT
+--- libmpeg2/cpu_accel.c	2006-06-16 20:12:26.000000000 +0200
++++ libmpeg2/cpu_accel.c	2006-06-16 20:12:50.000000000 +0200
+@@ -22,6 +26,7 @@
+  */
+ 
+ #include "config.h"
++#include "cpudetect.h"
+ 
+ #include <inttypes.h>
+ 
+@@ -30,9 +35,17 @@
+ #include "mpeg2_internal.h"
+ 
+ #ifdef ACCEL_DETECT
+-#ifdef ARCH_X86
++#if defined(ARCH_X86) || defined(ARCH_X86_64)
++
++/* MPlayer imports libmpeg2 as decoder, which detects MMX / 3DNow! 
++ * instructions via assembly. However, it is regarded as duplicaed work
++ * in MPlayer, so that we enforce to use MPlayer's implementation.
++ */
++#define USE_MPLAYER_CPUDETECT
++
+ static inline uint32_t arch_accel (void)
+ {
++#if !defined(USE_MPLAYER_CPUDETECT)
+     uint32_t eax, ebx, ecx, edx;
+     int AMD;
+     uint32_t caps;
+@@ -105,10 +118,24 @@
+ 	caps |= MPEG2_ACCEL_X86_MMXEXT;
+ 
+     return caps;
++#else /* USE_MPLAYER_CPUDETECT: Use MPlayer's cpu capability property */
++    caps = 0;
++    if (gCpuCaps.hasMMX)
++        caps |= MPEG2_ACCEL_X86_MMX;
++    if (gCpuCaps.hasSSE2)
++	caps |= MPEG2_ACCEL_X86_SSE2;
++    if (gCpuCaps.hasMMX2)
++	caps |= MPEG2_ACCEL_X86_MMXEXT;
++    if (gCpuCaps.has3DNow)
++	caps |= MPEG2_ACCEL_X86_3DNOW;
++
++    return caps;
++
++#endif /* USE_MPLAYER_CPUDETECT */
+ }
+-#endif /* ARCH_X86 */
++#endif /* ARCH_X86 || ARCH_X86_64 */
+ 
+-#if defined(ARCH_PPC) || defined(ARCH_SPARC)
++#if defined(ARCH_PPC) || (defined(ARCH_SPARC) && defined(HAVE_VIS))
+ #include <signal.h>
+ #include <setjmp.h>
+ 
+@@ -166,10 +166,10 @@
+ 
+     canjump = 1;
+ 
+-#ifdef HAVE_ALTIVEC_H	/* gnu */
+-#define VAND(a,b,c) "vand " #a "," #b "," #c "\n\t"
+-#else			/* apple */
++#if defined( __APPLE_CC__ ) && defined( __APPLE_ALTIVEC__ ) /* apple */
+ #define VAND(a,b,c) "vand v" #a ",v" #b ",v" #c "\n\t"
++#else			/* gnu */
++#define VAND(a,b,c) "vand " #a "," #b "," #c "\n\t"
+ #endif
+     asm volatile ("mtspr 256, %0\n\t"
+ 		  VAND (0, 0, 0)
+@@ -195,6 +222,7 @@
+ #ifdef ARCH_ALPHA
+ static inline uint32_t arch_accel (void)
+ {
++#ifdef CAN_COMPILE_ALPHA_MVI
+     uint64_t no_mvi;
+ 
+     asm volatile ("amask %1, %0"
+@@ -202,6 +230,9 @@
+ 		  : "rI" (256));	/* AMASK_MVI */
+     return no_mvi ? MPEG2_ACCEL_ALPHA : (MPEG2_ACCEL_ALPHA |
+ 					 MPEG2_ACCEL_ALPHA_MVI);
++#else
++    return MPEG2_ACCEL_ALPHA;
++#endif
+ }
+ #endif /* ARCH_ALPHA */
+ #endif /* ACCEL_DETECT */
+@@ -212,7 +243,7 @@
+ 
+     accel = 0;
+ #ifdef ACCEL_DETECT
+-#if defined (ARCH_X86) || defined (ARCH_PPC) || defined (ARCH_ALPHA) || defined (ARCH_SPARC)
++#if defined (ARCH_X86) || defined (ARCH_X86_64) || defined (ARCH_PPC) || defined (ARCH_ALPHA) || defined (ARCH_SPARC)
+     accel = arch_accel ();
+ #endif
+ #endif
+--- libmpeg2/cpu_state.c	2006-06-16 20:12:26.000000000 +0200
++++ libmpeg2/cpu_state.c	2006-06-16 20:12:50.000000000 +0200
+@@ -29,14 +33,14 @@
+ #include "mpeg2.h"
+ #include "attributes.h"
+ #include "mpeg2_internal.h"
+-#ifdef ARCH_X86
++#if defined(ARCH_X86) || defined(ARCH_X86_64)
+ #include "mmx.h"
+ #endif
+ 
+ void (* mpeg2_cpu_state_save) (cpu_state_t * state) = NULL;
+ void (* mpeg2_cpu_state_restore) (cpu_state_t * state) = NULL;
+ 
+-#ifdef ARCH_X86
++#if defined(ARCH_X86) || defined(ARCH_X86_64)
+ static void state_restore_mmx (cpu_state_t * state)
+ {
+     emms ();
+@@ -48,18 +48,18 @@
+ #endif
+ 
+-#ifdef ARCH_PPC
++#if defined(ARCH_PPC) && defined(HAVE_ALTIVEC)
+-#ifdef HAVE_ALTIVEC_H	/* gnu */
+-#define LI(a,b) "li " #a "," #b "\n\t"
+-#define STVX0(a,b,c) "stvx " #a ",0," #c "\n\t"
+-#define STVX(a,b,c) "stvx " #a "," #b "," #c "\n\t"
+-#define LVX0(a,b,c) "lvx " #a ",0," #c "\n\t"
+-#define LVX(a,b,c) "lvx " #a "," #b "," #c "\n\t"
+-#else			/* apple */
++#if defined( __APPLE_CC__ ) && defined( __APPLE_ALTIVEC__ )	/* apple */
+ #define LI(a,b) "li r" #a "," #b "\n\t"
+ #define STVX0(a,b,c) "stvx v" #a ",0,r" #c "\n\t"
+ #define STVX(a,b,c) "stvx v" #a ",r" #b ",r" #c "\n\t"
+ #define LVX0(a,b,c) "lvx v" #a ",0,r" #c "\n\t"
+ #define LVX(a,b,c) "lvx v" #a ",r" #b ",r" #c "\n\t"
++#else			/* gnu */
++#define LI(a,b) "li " #a "," #b "\n\t"
++#define STVX0(a,b,c) "stvx " #a ",0," #c "\n\t"
++#define STVX(a,b,c) "stvx " #a "," #b "," #c "\n\t"
++#define LVX0(a,b,c) "lvx " #a ",0," #c "\n\t"
++#define LVX(a,b,c) "lvx " #a "," #b "," #c "\n\t"
+ #endif
+ 
+ static void state_save_altivec (cpu_state_t * state)
+@@ -115,12 +119,12 @@
+ 
+ void mpeg2_cpu_state_init (uint32_t accel)
+ {
+-#ifdef ARCH_X86
++#if defined(ARCH_X86) || defined(ARCH_X86_64)
+     if (accel & MPEG2_ACCEL_X86_MMX) {
+ 	mpeg2_cpu_state_restore = state_restore_mmx;
+     }
+ #endif
+-#ifdef ARCH_PPC
++#if defined(ARCH_PPC) && defined(HAVE_ALTIVEC)
+     if (accel & MPEG2_ACCEL_PPC_ALTIVEC) {
+ 	mpeg2_cpu_state_save = state_save_altivec;
+ 	mpeg2_cpu_state_restore = state_restore_altivec;
+--- libmpeg2/decode.c	2006-06-16 20:12:26.000000000 +0200
++++ libmpeg2/decode.c	2006-06-16 20:12:50.000000000 +0200
+@@ -351,6 +355,15 @@
+     fbuf->buf[1] = buf[1];
+     fbuf->buf[2] = buf[2];
+     fbuf->id = id;
++    // HACK! FIXME! At first I frame, copy pointers to prediction frame too!
++    if (mpeg2dec->custom_fbuf && !mpeg2dec->fbuf[1]->buf[0]){
++	mpeg2dec->fbuf[1]->buf[0]=buf[0];
++	mpeg2dec->fbuf[1]->buf[1]=buf[1];
++	mpeg2dec->fbuf[1]->buf[2]=buf[2];
++	mpeg2dec->fbuf[1]->id=NULL;
++    }
++//        printf("libmpeg2: FBUF 0:%p 1:%p 2:%p\n",
++//	    mpeg2dec->fbuf[0]->buf[0],mpeg2dec->fbuf[1]->buf[0],mpeg2dec->fbuf[2]->buf[0]);
+ }
+ 
+ void mpeg2_custom_fbuf (mpeg2dec_t * mpeg2dec, int custom_fbuf)
+--- libmpeg2/header.c	2006-06-16 20:12:26.000000000 +0200
++++ libmpeg2/header.c	2006-06-16 20:12:50.000000000 +0200
+@@ -100,6 +104,9 @@
+     mpeg2dec->decoder.convert = NULL;
+     mpeg2dec->decoder.convert_id = NULL;
+     mpeg2dec->picture = mpeg2dec->pictures;
++    memset(&mpeg2dec->fbuf_alloc[0].fbuf, 0, sizeof(mpeg2_fbuf_t));
++    memset(&mpeg2dec->fbuf_alloc[1].fbuf, 0, sizeof(mpeg2_fbuf_t));
++    memset(&mpeg2dec->fbuf_alloc[2].fbuf, 0, sizeof(mpeg2_fbuf_t));
+     mpeg2dec->fbuf[0] = &mpeg2dec->fbuf_alloc[0].fbuf;
+     mpeg2dec->fbuf[1] = &mpeg2dec->fbuf_alloc[1].fbuf;
+     mpeg2dec->fbuf[2] = &mpeg2dec->fbuf_alloc[2].fbuf;
+@@ -551,6 +558,7 @@
+ 	if (!(mpeg2dec->sequence.flags & SEQ_FLAG_PROGRESSIVE_SEQUENCE)) {
+ 	    picture->nb_fields = (buffer[3] & 2) ? 3 : 2;
+ 	    flags |= (buffer[3] & 128) ? PIC_FLAG_TOP_FIELD_FIRST : 0;
++	    flags |= (buffer[3] &   2) ? PIC_FLAG_REPEAT_FIRST_FIELD : 0;
+ 	} else
+ 	    picture->nb_fields = (buffer[3]&2) ? ((buffer[3]&128) ? 6 : 4) : 2;
+ 	break;
+@@ -799,6 +807,7 @@
+ 	mpeg2dec->scaled[index] = mpeg2dec->q_scale_type;
+ 	for (i = 0; i < 32; i++) {
+ 	    k = mpeg2dec->q_scale_type ? non_linear_scale[i] : (i << 1);
++	    decoder->quantizer_scales[i] = k;
+ 	    for (j = 0; j < 64; j++)
+ 		decoder->quantizer_prescale[index][i][j] =
+ 		    k * mpeg2dec->quantizer_matrix[index][j];
+--- libmpeg2/idct.c	2006-06-16 20:12:26.000000000 +0200
++++ libmpeg2/idct.c	2006-06-16 20:12:50.000000000 +0200
+@@ -239,12 +239,15 @@
+ 
+ void mpeg2_idct_init (uint32_t accel)
+ {
+-#ifdef ARCH_X86
++#ifdef HAVE_MMX2
+     if (accel & MPEG2_ACCEL_X86_MMXEXT) {
+ 	mpeg2_idct_copy = mpeg2_idct_copy_mmxext;
+ 	mpeg2_idct_add = mpeg2_idct_add_mmxext;
+ 	mpeg2_idct_mmx_init ();
+-    } else if (accel & MPEG2_ACCEL_X86_MMX) {
++    } else
++#endif
++#ifdef HAVE_MMX
++    if (accel & MPEG2_ACCEL_X86_MMX) {
+ 	mpeg2_idct_copy = mpeg2_idct_copy_mmx;
+ 	mpeg2_idct_add = mpeg2_idct_add_mmx;
+ 	mpeg2_idct_mmx_init ();
+@@ -254,11 +261,14 @@
+     } else
+ #endif
+ #ifdef ARCH_ALPHA
++#ifdef CAN_COMPILE_ALPHA_MVI
+     if (accel & MPEG2_ACCEL_ALPHA_MVI) {
+ 	mpeg2_idct_copy = mpeg2_idct_copy_mvi;
+ 	mpeg2_idct_add = mpeg2_idct_add_mvi;
+ 	mpeg2_idct_alpha_init ();
+-    } else if (accel & MPEG2_ACCEL_ALPHA) {
++    } else
++#endif
++    if (accel & MPEG2_ACCEL_ALPHA) {
+ 	int i;
+ 
+ 	mpeg2_idct_copy = mpeg2_idct_copy_alpha;
+--- libmpeg2/idct_alpha.c	2006-06-16 20:12:26.000000000 +0200
++++ libmpeg2/idct_alpha.c	2006-06-16 20:12:50.000000000 +0200
+@@ -157,6 +161,7 @@
+     block[8*7] = (a0 - b0) >> 17;
+ }
+ 
++#ifdef CAN_COMPILE_ALPHA_MVI
+ void mpeg2_idct_copy_mvi (int16_t * block, uint8_t * dest, const int stride)
+ {
+     uint64_t clampmask;
+@@ -289,6 +294,7 @@
+ 	stq (p7, dest + 7 * stride);
+     }
+ }
++#endif
+ 
+ void mpeg2_idct_copy_alpha (int16_t * block, uint8_t * dest, const int stride)
+ {
+--- libmpeg2/idct_mmx.c	2006-06-16 20:12:26.000000000 +0200
++++ libmpeg2/idct_mmx.c	2006-06-16 20:12:50.000000000 +0200
+@@ -23,7 +27,7 @@
+ 
+ #include "config.h"
+ 
+-#ifdef ARCH_X86
++#if defined(ARCH_X86) || defined(ARCH_X86_64)
+ 
+ #include <inttypes.h>
+ 
+--- libmpeg2/motion_comp.c	2006-06-16 20:12:26.000000000 +0200
++++ libmpeg2/motion_comp.c	2006-06-16 20:12:50.000000000 +0200
+@@ -37,16 +37,22 @@
+ 
+ void mpeg2_mc_init (uint32_t accel)
+ {
+-#ifdef ARCH_X86
++#ifdef HAVE_MMX2
+     if (accel & MPEG2_ACCEL_X86_MMXEXT)
+ 	mpeg2_mc = mpeg2_mc_mmxext;
+-    else if (accel & MPEG2_ACCEL_X86_3DNOW)
++    else
++#endif
++#ifdef HAVE_3DNOW
++    if (accel & MPEG2_ACCEL_X86_3DNOW)
+ 	mpeg2_mc = mpeg2_mc_3dnow;
+-    else if (accel & MPEG2_ACCEL_X86_MMX)
++    else
++#endif
++#ifdef HAVE_MMX
++    if (accel & MPEG2_ACCEL_X86_MMX)
+ 	mpeg2_mc = mpeg2_mc_mmx;
+     else
+ #endif
+-#ifdef ARCH_PPC
++#if defined(ARCH_PPC) && defined(HAVE_ALTIVEC)
+     if (accel & MPEG2_ACCEL_PPC_ALTIVEC)
+ 	mpeg2_mc = mpeg2_mc_altivec;
+     else
+@@ -52,7 +62,7 @@
+ 	mpeg2_mc = mpeg2_mc_alpha;
+     else
+ #endif
+-#ifdef ARCH_SPARC
++#if defined(ARCH_SPARC) && defined(HAVE_VIS)
+     if (accel & MPEG2_ACCEL_SPARC_VIS)
+ 	mpeg2_mc = mpeg2_mc_vis;
+     else
+--- libmpeg2/motion_comp_mmx.c	2006-06-16 20:12:26.000000000 +0200
++++ libmpeg2/motion_comp_mmx.c	2006-06-16 20:12:50.000000000 +0200
+@@ -23,7 +27,7 @@
+ 
+ #include "config.h"
+ 
+-#ifdef ARCH_X86
++#if defined(ARCH_X86) || defined(ARCH_X86_64)
+ 
+ #include <inttypes.h>
+ 
+--- include/mpeg2.h	2006-06-16 20:12:26.000000000 +0200
++++ libmpeg2/mpeg2.h	2006-06-16 20:12:50.000000000 +0200
+@@ -82,6 +86,7 @@
+ #define PIC_FLAG_COMPOSITE_DISPLAY 32
+ #define PIC_FLAG_SKIP 64
+ #define PIC_FLAG_TAGS 128
++#define PIC_FLAG_REPEAT_FIRST_FIELD 256
+ #define PIC_MASK_COMPOSITE_DISPLAY 0xfffff000
+ 
+ typedef struct mpeg2_picture_s {
+@@ -154,6 +159,7 @@
+ #define MPEG2_ACCEL_X86_MMX 1
+ #define MPEG2_ACCEL_X86_3DNOW 2
+ #define MPEG2_ACCEL_X86_MMXEXT 4
++#define MPEG2_ACCEL_X86_SSE2 8
+ #define MPEG2_ACCEL_PPC_ALTIVEC 1
+ #define MPEG2_ACCEL_ALPHA 1
+ #define MPEG2_ACCEL_ALPHA_MVI 2
+--- libmpeg2/mpeg2_internal.h	2006-06-16 20:12:26.000000000 +0200
++++ libmpeg2/mpeg2_internal.h	2006-06-16 20:12:50.000000000 +0200
+@@ -144,6 +148,12 @@
+     int second_field;
+ 
+     int mpeg1;
++
++    /* for MPlayer: */
++    int quantizer_scales[32];
++    int quantizer_scale;
++    char* quant_store;
++    int quant_stride;
+ };
+ 
+ typedef struct {
+@@ -214,6 +224,10 @@
+     int8_t q_scale_type, scaled[4];
+     uint8_t quantizer_matrix[4][64];
+     uint8_t new_quantizer_matrix[4][64];
++
++    /* for MPlayer: */
++    unsigned char *pending_buffer;
++    int pending_length;
+ };
+ 
+ typedef struct {
+--- libmpeg2/slice.c	2006-06-16 20:12:26.000000000 +0200
++++ libmpeg2/slice.c	2006-06-16 20:12:50.000000000 +0200
+@@ -142,6 +146,7 @@
+ 
+     quantizer_scale_code = UBITS (bit_buf, 5);
+     DUMPBITS (bit_buf, bits, 5);
++    decoder->quantizer_scale = decoder->quantizer_scales[quantizer_scale_code];
+ 
+     decoder->quantizer_matrix[0] =
+ 	decoder->quantizer_prescale[0][quantizer_scale_code];
+@@ -1568,6 +1569,18 @@
+ 
+ #define NEXT_MACROBLOCK							\
+ do {									\
++    if(decoder->quant_store) {                                          \
++       if (decoder->picture_structure == TOP_FIELD)                     \
++        decoder->quant_store[2*decoder->quant_stride*(decoder->v_offset>>4) \
++                    +(decoder->offset>>4)] = decoder->quantizer_scale;  \
++       else if (decoder->picture_structure == BOTTOM_FIELD)             \
++        decoder->quant_store[2*decoder->quant_stride*(decoder->v_offset>>4) \
++	            + decoder->quant_stride                             \
++                    +(decoder->offset>>4)] = decoder->quantizer_scale;  \
++       else                                                             \
++        decoder->quant_store[decoder->quant_stride*(decoder->v_offset>>4) \
++                    +(decoder->offset>>4)] = decoder->quantizer_scale;  \
++    }                                                                   \
+     decoder->offset += 16;						\
+     if (decoder->offset == decoder->width) {				\
+ 	do { /* just so we can use the break statement */		\
+@@ -1604,6 +1604,12 @@
+     }									\
+ } while (0)
+ 
++static void motion_dummy (mpeg2_decoder_t * const decoder,
++                          motion_t * const motion,
++                          mpeg2_mc_fct * const * const table)
++{
++}
++
+ void mpeg2_init_fbuf (mpeg2_decoder_t * decoder, uint8_t * current_fbuf[3],
+ 		      uint8_t * forward_fbuf[3], uint8_t * backward_fbuf[3])
+ {
+@@ -1661,7 +1667,9 @@
+ 
+     if (decoder->mpeg1) {
+ 	decoder->motion_parser[0] = motion_zero_420;
++        decoder->motion_parser[MC_FIELD] = motion_dummy;
+ 	decoder->motion_parser[MC_FRAME] = motion_mp1;
++        decoder->motion_parser[MC_DMV] = motion_dummy;
+ 	decoder->motion_parser[4] = motion_reuse_420;
+     } else if (decoder->picture_structure == FRAME_PICTURE) {
+ 	if (decoder->chroma_format == 0) {
+--- libmpeg2/idct.c	2006-06-16 20:12:26.000000000 +0200
++++ libmpeg2/idct.c	2006-06-16 20:12:50.000000000 +0200
+@@ -253,7 +253,7 @@
+ 	mpeg2_idct_mmx_init ();
+     } else
+ #endif
+-#ifdef ARCH_PPC
++#if defined(ARCH_PPC) && defined(HAVE_ALTIVEC)
+     if (accel & MPEG2_ACCEL_PPC_ALTIVEC) {
+ 	mpeg2_idct_copy = mpeg2_idct_copy_altivec;
+ 	mpeg2_idct_add = mpeg2_idct_add_altivec;
+--- libmpeg2/idct_altivec.c	2004/08/02 11:26:43	12933
++++ libmpeg2/idct_altivec.c	2005/05/15 20:11:34	15484
+@@ -41,7 +41,7 @@
+ typedef vector signed int vector_s32_t;
+ typedef vector unsigned int vector_u32_t;
+ 
+-#if defined(HAVE_ALTIVEC_H) && (__GNUC__ * 100 + __GNUC_MINOR__ < 303)
++#if defined( HAVE_ALTIVEC_H ) && !defined( __APPLE_ALTIVEC__ ) && (__GNUC__ * 100 + __GNUC_MINOR__ < 303)
+ /* work around gcc <3.3 vec_mergel bug */
+ static inline vector_s16_t my_vec_mergel (vector_s16_t const A,
+ 					  vector_s16_t const B)
+@@ -56,10 +56,10 @@
+ #define vec_mergel my_vec_mergel
+ #endif
+ 
+-#ifdef HAVE_ALTIVEC_H	/* gnu */
+-#define VEC_S16(a,b,c,d,e,f,g,h) {a, b, c, d, e, f, g, h}
+-#else			/* apple */
++#if defined( __APPLE_CC__ ) && defined( __APPLE_ALTIVEC__ ) /* apple */
+ #define VEC_S16(a,b,c,d,e,f,g,h) (vector_s16_t) (a, b, c, d, e, f, g, h)
++#else			/* gnu */
++#define VEC_S16(a,b,c,d,e,f,g,h) {a, b, c, d, e, f, g, h}
+ #endif
+ 
+ static const vector_s16_t constants ATTR_ALIGN(16) =

@@ -1,0 +1,15 @@
+#CC=powerpc-405-linux-gnu-gcc
+CC=powerpc-linux-uclibc-gcc
+CFLAGS = -DSTB -Os -c -fPIC -D_FILE_OFFSET_BITS=64 -I../../ko/stbx25xx/include
+BINDIR=/usr/local/bin
+
+OBJFILES=miniclient.o gfxcmd.o STB/STBgfx.o STB/STBinput.o thread_util.o mediacmd.o STB/STBmedia.o malloc.o subdecoder.o circbuffer.o
+
+miniclient: $(OBJFILES)
+	$(CC) -static -W1 -o miniclient $(OBJFILES) -lm -lpthread
+
+malloc.o: malloc.c
+	$(CC) -DHAVE_MMAP=0 -DHAVE_MORECORE=0 -DONLY_MSPACES=1 -c malloc.c
+
+clean:
+	rm -f miniclient miniclient.gdb *.o *.c~ *.h~ STB/*.o EM86/*.o

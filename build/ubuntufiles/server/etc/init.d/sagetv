@@ -1,0 +1,66 @@
+#! /bin/sh
+### BEGIN INIT INFO
+# Provides:          sagetv
+# Required-Start:    $local_fs $remote_fs $network
+# Required-Stop:     $local_fs $remote_fs $network
+# Default-Start:     2 3 4 5
+# Default-Stop:      S 0 1 6
+# Short-Description: SageTV Server
+# Description:       This is the init script for the SageTV service 
+#                    that handles clients and recordings.
+### END INIT INFO
+#
+# Author:	Jean-Francois Thibert <jeanfrancois@sagetv.com>.
+#
+# Version:	@(#)sagetv  6.5  Jan-2009
+#
+
+set -e
+
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+DESC="SageTV Server"
+NAME=sagetv
+SCRIPTNAME=/etc/init.d/$NAME
+
+# Gracefully exit if the package has been removed.
+test -x /opt/sagetv/server/startsage || exit 0
+
+#
+#	Function that starts the daemon/service.
+#
+d_start() {
+        /opt/sagetv/server/startsage
+}
+
+#
+#	Function that stops the daemon/service.
+#
+d_stop() {
+	/opt/sagetv/server/stopsage	
+}
+
+case "$1" in
+  start)
+	echo -n "Starting $DESC: $NAME"
+	d_start
+	echo "."
+	;;
+  stop)
+	echo -n "Stopping $DESC: $NAME"
+	d_stop || true
+	echo "."
+	;;
+  restart|force-reload)
+	echo -n "Restarting $DESC: $NAME"
+	d_stop || true
+	sleep 3
+	d_start
+	echo "."
+	;;
+  *)
+	echo "Usage: $SCRIPTNAME {start|stop|restart|force-reload}" >&2
+	exit 3
+	;;
+esac
+
+exit 0

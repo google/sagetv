@@ -1,0 +1,698 @@
+#predefined scan frequence table
+"United States of America","Canada"=[
+  (0, 0), 
+  ( 55250000,6),( 61250000,6),( 67250000,6),( 77250000,6),
+  ( 83250000,6),(175250000,6),(181250000,6),(187250000,6),
+  (193250000,6),(199250000,6),(205250000,6),(211250000,6),
+  (471250000,6),(477250000,6),(483250000,6),(489250000,6),
+  (495250000,6),(501250000,6),(507250000,6),(513250000,6),
+  (519250000,6),(525250000,6),(531250000,6),(537250000,6),
+  (543250000,6),(549250000,6),(555250000,6),(561250000,6),
+  (567250000,6),(573250000,6),(579250000,6),(585250000,6),
+  (591250000,6),(597250000,6),(603250000,6),(609250000,6),
+  (615250000,6),(621250000,6),(627250000,6),(633250000,6),
+  (639250000,6),(645250000,6),(651250000,6),(657250000,6),
+  (663250000,6),(669250000,6),(675250000,6),(681250000,6),
+  (687250000,6),(693250000,6),(699250000,6),(705250000,6),
+  (711250000,6),(717250000,6),(723250000,6),(729250000,6),
+  (735250000,6),(741250000,6),(747250000,6),(753250000,6),
+  (759250000,6),(765250000,6),(771250000,6),(777250000,6),
+  (783250000,6),(789250000,6),(795250000,6),(801250000,6),
+  (807250000,6),(813250000,6),(819250000,6),(825250000,6),
+  (831250000,6),(837250000,6),(843250000,6),(849250000,6),
+  (855250000,6),(861250000,6),(867250000,6),(873250000,6),
+  (879250000,6),(885250000,6) ];
+
+		
+"United Kingdom"=[ (177500,8),
+	(177500,8),(184500,8),(191500,8),(198500,8),(205500,8),(212500,8),(219500,8),(226500,8),  
+	(529500,8),(536500,8),(543500,8),(550500,8),(557500,8),(564500,8),(571500,8),(578500,8),(585500,8),
+	(592500,8),(599500,8),(606500,8),(613500,8),(620500,8),(627500,8),(634500,8),(641500,8),(648500,8),
+	(655500,8),(662500,8),(669500,8),(676500,8),(683500,8),(690500,8),(697500,8),(704500,8),(711500,8),
+	(718500,8),(725500,8),(732500,8),(739500,8),(746500,8),(753500,8),(760500,8),(767500,8),(774500,8),
+	(781500,8),(788500,8),(795500,8),(802500,8),(809500,8),(816500,8){tune=1, pat=6, sdt=16} ];
+
+"United Kingdom-London and South East@Crystal Palace" 	=[ (506000,8),(482000,8),(562000,8),(530000,8),(578000,8),(538000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-London and South East@Guildford" 	=[ (698000,8),(658000,8),(634000,8),(714000,8),(682000,8),(738000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-London and South East@Reigate" 	=[ (554000,8),(474000,8),(498000,8),(522000,8),(618000,8),(834000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-London and South East@Tunbridge Well" 	=[ (746000,8),(794000,8),(642000,8),(666000,8),(618000,8),(778000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-London and South East@Hemel Hempstea" 	=[ (690000,8),(746000,8),(786000,8),(778000,8),(802000,8),(826000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-London and South East@Bluebell Hill" 	=[ (778000,8),(498000,8),(522000,8),(666000,8),(642000,8),(618000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-London and South East@Dover" 	=[ (850000,8),(794000,8),(746000,8),(770000,8),(762000,8),(786000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-London and South East@Dover B" 	=[ (666000,8),(642000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-South of England@Rowridge" 	=[ (490000,8),(530000,8),(546000,8),(562000,8),(514000,8),(570000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-South of England@Salisbury" 	=[ (746000,8),(754000,8),(778000,8),(802000,8),(826000,8),(722000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-South of England@Whitehawk Hill" 	=[ (834000,8),(706000,8),(746000,8),(690000,8),(770000,8),(794000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-South of England@Hannington" 	=[ (706000,8),(650000,8),(626000,8),(674000,8),(658000,8),(634000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-South of England@Midhurst" 	=[ (754000,8),(826000,8),(802000,8),(778000,8),(818000,8),(786000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-South of England@Heathfield North" 	=[ (578000,8),(538000,8),(690000,8),(682000,8),(738000,8),(714000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-South of England@Hastings" 	=[ (554000,8),(522000,8),(474000,8),(498000,8),(810000,8),(786000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-South West@Mendip" 	=[ (778000,8),(746000,8),(802000,8),(826000,8),(754000,8),(842000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-South West@Bristol" 	=[ (482000,8),(506000,8),(530000,8),(562000,8),(546000,8),(578000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-South West@Bristol IC" 	=[ (698000,8),(618000,8),(634000,8),(658000,8),(682000,8),(714000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-South West@Stockland Hill" 	=[ (482000,8),(530000,8),(506000,8),(562000,8),(546000,8),(578000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-South West@Beacon Hill" 	=[ (722000,8),(794000,8),(770000,8),(738000,8),(754000,8),(818000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-South West@Huntshaw Cross" 	=[ (738000,8),(770000,8),(794000,8),(818000,8),(730000,8),(762000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-South West@Huntshaw" 	=[ (714000,8),(682000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-South West@Caradon Hill" 	=[ (578000,8),(554000,8),(690000,8),(474000,8),(498000,8),(522000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-South West@Plympton" 	=[ (722000,8),(842000,8),(834000,8),(786000,8),(810000,8),(754000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-South West@Redruth" 	=[ (618000,8),(642000,8),(666000,8),(698000,8),(650000,8),(706000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-Wales and Wes@Wenvoe" 	=[ (546000,8),(578000,8),(626000,8),(706000,8),(650000,8),(674000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-Wales and Wes@Kilvey Hill" 	=[ (506000,8),(482000,8),(530000,8),(562000,8),(474000,8),(554000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-Wales and Wes@Aberdare" 	=[ (530000,8),(562000,8),(490000,8),(514000,8),(538000,8),(570000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-Wales and Wes@Pontypool" 	=[ (722000,8),(690000,8),(642000,8),(666000,8),(482000,8),(530000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-Wales and Wes@Carmel" 	=[ (746000,8),(826000,8),(778000,8),(802000,8),(850000,8),(834000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-Wales and Wes@Preseli" 	=[ (682000,8),(714000,8),(618000,8),(642000,8),(666000,8),(698000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-Wales and Wes@Blaenplwyf" 	=[ (530000,8),(482000,8),(506000,8),(562000,8),(538000,8),(570000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-Wales and Wes@Llanddona" 	=[ (706000,8),(738000,8),(770000,8),(794000,8),(818000,8),(674000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-Wales and Wes@Moel y Parc" 	=[ (738000,8),(770000,8),(794000,8),(818000,8),(546000,8),(578000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-Midlands@Sutton Coldfield" 	=[ (634000,8),(658000,8),(682000,8),(714000,8),(722000,8),(746000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-Midlands@Brierley Hill" 	=[ (850000,8),(826000,8),(754000,8),(778000,8),(834000,8),(802000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-Midlands@Bromsgrove" 	=[ (578000,8),(538000,8),(570000,8),(490000,8),(514000,8),(546000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-Midlands@Malvern" 	=[ (722000,8),(618000,8),(682000,8),(658000,8),(714000,8),(634000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-Midlands@Larkstoke" 	=[ (474000,8),(554000,8),(498000,8),(522000,8),(762000,8),(786000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-Midlands@Fenton" 	=[ (578000,8),(546000,8),(482000,8),(506000,8),(530000,8),(562000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-Midlands@The Wrekin" 	=[ (474000,8),(554000,8),(498000,8),(522000,8),(730000,8),(762000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-Midlands@The Wrekin" 	=[ (618000,8),(698000,8),(642000,8),(666000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-Midlands@Ridge Hill" 	=[ (730000,8),(762000,8),(786000,8),(810000,8),(642000,8),(666000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-Midlands@Oxford" 	=[ (578000,8),(850000,8),(714000,8),(722000,8),(690000,8),(538000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-Midlands@Waltham" 	=[ (698000,8),(490000,8),(514000,8),(570000,8),(666000,8),(642000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-Midlands@Nottingham" 	=[ (618000,8),(842000,8),(730000,8),(810000,8),(538000,8),(778000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-East Anglia@Tacolneston"=[ (810000,8),(786000,8),(730000,8),(770000,8),(794000,8),(818000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-East Anglia@Sudbury" 	=[ (698000,8),(850000,8),(690000,8),(618000,8),(738000,8),(706000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-East Anglia@Sudbury" 	=[ (754000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-East Anglia@Sandy Heath"=[ (642000,8),(666000,8),(650000,8),(842000,8),(626000,8),(674000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-North@Winter Hill" 	=[ (754000,8),(834000,8),(850000,8),(842000,8),(786000,8),(810000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-North@Winter Hill" 	=[ (650000,8),(626000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-North@Pendle Forest" 	=[ (474000,8),(498000,8),(522000,8),(554000,8),(546000,8),(578000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-North@Saddleworth" 	=[ (682000,8),(634000,8),(658000,8),(714000,8),(618000,8),(738000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-North@Storeton" 	=[ (546000,8),(578000,8),(490000,8),(514000,8),(538000,8),(570000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-North@Lancaster" 	=[ (530000,8),(482000,8),(506000,8),(562000,8),(578000,8),(546000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-North@Emley Moor" 	=[ (722000,8),(626000,8),(650000,8),(674000,8),(706000,8),(698000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-North@Sheffield" 	=[ (618000,8),(730000,8),(762000,8),(786000,8),(666000,8),(642000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-North@Chesterfield" 	=[ (578000,8),(626000,8),(650000,8),(674000,8),(706000,8),(722000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-North@Keighley" 	=[ (690000,8),(850000,8),(834000,8),(730000,8),(546000,8),(578000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-North@Idle" 	=[ (666000,8),(730000,8),(578000,8),(754000,8),(546000,8),(642000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-North@North@Belmont" 	=[ (546000,8),(690000,8),(850000,8),(834000,8),(786000,8),(762000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-North@Olivers Mount" 	=[ (698000,8),(842000,8),(738000,8),(770000,8),(794000,8),(818000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-North-East and BordersDTT@Bilsdale" 	=[ (578000,8),(474000,8),(554000,8),(498000,8),(522000,8),(642000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-North-East and BordersDTT@Pontop Pike" 	=[ (690000,8),(746000,8),(778000,8),(802000,8),(826000,8),(730000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-North-East and BordersDTT@Fenham" 	=[ (546000,8),(482000,8),(506000,8),(530000,8),(562000,8),(762000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-North-East and BordersDTT@Chatton" 	=[ (626000,8),(706000,8),(650000,8),(674000,8),(682000,8),(714000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-North-East and BordersDTT@Caldbeck" 	=[ (506000,8),(490000,8),(514000,8),(618000,8),(666000,8),(642000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-North-East and BordersDTT@Selkirk" 	=[ (730000,8),(762000,8),(786000,8),(810000,8),(834000,8),(754000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-Central Scotland and Tayside@Black Hill"=[ (634000,8),(682000,8),(658000,8),(714000,8),(746000,8),(826000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-Central Scotland and Tayside@Torosay" 	=[ (490000,8),(514000,8),(538000,8),(570000,8),(474000,8),(554000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-Central Scotland and Tayside@Darvel" 	=[ (482000,8),(506000,8),(562000,8),(530000,8),(546000,8),(578000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-Central Scotland and Tayside@Rosneath" 	=[ (842000,8),(730000,8),(762000,8),(786000,8),(810000,8),(690000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-Central Scotland and Tayside@Craigkelly"=[ (570000,8),(538000,8),(490000,8),(514000,8),(642000,8),(618000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-Central Scotland and Tayside@Angus" 	=[ (850000,8),(834000,8),(778000,8),(802000,8),(754000,8),(826000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-Grampian and the Highlands@Durris" 	=[ (546000,8),(578000,8),(722000,8),(714000,8),(634000,8),(658000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-Grampian and the Highlands@Knock More" 	=[ (578000,8),(546000,8),(730000,8),(762000,8),(786000,8),(754000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-Grampian and the Highlands@Rosemarkie" 	=[ (682000,8),(714000,8),(634000,8),(658000,8),(674000,8),(706000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-Grampian and the Highlands@Eitshall" 	=[ (578000,8),(546000,8),(482000,8),(506000,8),(530000,8),(562000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-Grampian and the Highlands@Rumster Forest" 	=[ (530000,8),(482000,8),(506000,8),(562000,8),(802000,8),(778000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-Grampian and the Highlands@Keelylang Hill" 	=[ (690000,8),(722000,8),(634000,8),(658000,8),(682000,8),(714000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-Grampian and the Highlands@Bressay" 	=[ (474000,8),(498000,8),(522000,8),(554000,8),(834000,8),(850000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-Northern Ireland@Divis" 	=[ (538000,8),(570000,8),(490000,8),(514000,8),(690000,8),(578000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-Northern Ireland@Limavady" 	=[ (842000,8),(770000,8),(730000,8),(762000,8),(786000,8),(810000,8) {tune=1,pat=6,sdt=16} ];
+"United Kingdom-Northern Ireland@Broughe  Mountain" 	=[ (546000,8),(578000,8),(490000,8),(514000,8),(538000,8),(570000,8) {tune=1,pat=6,sdt=16} ];
+
+
+"Sweden"=[	
+	(474000,8),(482000,8),(490000,8),(498000,8),(506000,8),(514000,8),(522000,8),(530000,8),(538000,8),
+	(546000,8),(554000,8),(562000,8),(570000,8),(578000,8),(586000,8),(594000,8),(602000,8),(610000,8),
+	(618000,8),(626000,8),(634000,8),(642000,8),(650000,8),(658000,8),(666000,8),(674000,8),(682000,8),
+	(690000,8),(698000,8),(706000,8),(714000,8),(722000,8),(730000,8),(738000,8),(746000,8),(754000,8),
+	(762000,8),(770000,8),(778000,8),(786000,8),(794000,8),(802000,8),(810000,8),(818000,8),(826000,8),
+	(834000,8),(842000,8),(850000,8),(858000,8) ];
+
+"Sweden-Arvidsjaur"	=[(578000,8),(642000,8),(546000,8),(762000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Bollnäs"	=[(618000,8),(730000,8),(578000,8),(826000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Borlänge"	=[(738000,8),(722000,8),(650000,8),(634000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Borås"	=[(658000,8),(738000,8),(538000,8),(594000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Bäckefors"	=[(586000,8),(754000,8),(482000,8),(506000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Emmaboda"	=[(730000,8),(530000,8),(674000,8),(474000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Filipstad"	=[(546000,8),(522000,8),(642000,8),(626000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Finnveden"	=[(514000,8),(754000,8),(762000,8),(786000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Gällivare"	=[(674000,8),(514000,8),(626000,8),(530000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Gävle"	=[(674000,8),(522000,8),(498000,8),(562000,8),(706000,8),(546000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Göteborg Brudaremossen"	=[(626000,8),(522000,8),(778000,8),(594000,8),(818000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Halmstad"	=[(474000,8),(530000,8),(610000,8),(802000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Helsingborg"	=[(482000,8),(506000,8),(634000,8),(818000,8),(794000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Hudiksvall"	=[(618000,8),(730000,8),(578000,8),(786000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Hörby"	=[(482000,8),(506000,8),(634000,8),(818000,8),(794000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Jönköping"	=[(586000,8),(490000,8),(714000,8),(570000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Kalix"	=[(706000,8),(770000,8),(786000,8),(746000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Karlshamn"	=[(746000,8),(498000,8),(642000,8),(522000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Karlskrona"	=[(746000,8),(498000,8),(642000,8),(522000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Karlstad"	=[(546000,8),(522000,8),(642000,8),(626000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Kiruna"	=[(618000,8),(586000,8),(562000,8),(698000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Kisa"	=[(778000,8),(746000,8),(706000,8),(538000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Lycksele"	=[(770000,8),(730000,8),(482000,8),(530000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Malmö"	=[(482000,8),(506000,8),(634000,8),(818000,8),(794000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Mora"	=[(586000,8),(714000,8),(658000,8),(642000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Motala"	=[(522000,8),(626000,8),(474000,8),(642000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Norrköping"	=[(594000,8),(674000,8),(786000,8),(530000,8),(802000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Nässjö"	=[(586000,8),(490000,8),(714000,8),(570000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Pajala"	=[(602000,8),(490000,8),(554000,8),(738000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Skellefteå"	=[(490000,8),(514000,8),(778000,8),(650000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Skövde"	=[(762000,8),(786000,8),(562000,8),(578000,8),(498000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Sollefteå"	=[(658000,8),(498000,8),(554000,8),(514000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Stockholm/Nacka" =[(730000,8),(754000,8),(778000,8),(706000,8),(746000,8),(490000,8),(642000,8),{tune=1,pat=6,sdt=16}] 
+"Sweden-Storuman"	=[(674000,8),(754000,8),(594000,8),(786000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Sundsvall"	=[(770000,8),(754000,8),(546000,8),(650000,8),(522000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Sunne"	=[(594000,8),(618000,8),(786000,8),(682000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Sveg"	=[(634000,8),(594000,8),(674000,8),(778000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Trollhättan"	=[(730000,8),(754000,8),(554000,8),(506000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Tåsjö"	=[(706000,8),(762000,8),(714000,8),(634000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Uddevalla"	=[(730000,8),(754000,8),(554000,8),(506000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Uppsala"	=[(626000,8),(474000,8),(650000,8),(770000,8),(570000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Varberg"	=[(474000,8),(530000,8),(610000,8),(802000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Visby"	=[(770000,8),(634000,8),(714000,8),(690000,8),(602000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Vislanda"	=[(626000,8),(698000,8),(578000,8),(602000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Vännäs"	=[(786000,8),(722000,8),(754000,8),(594000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Västervik"	=[(626000,8),(578000,8),(498000,8),(546000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Västerås"	=[(602000,8),(762000,8),(482000,8),(578000,8),(610000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Ånge"	=[(746000,8),(602000,8),(762000,8),(530000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Älvsbyn"	=[(618000,8),(754000,8),(682000,8),(562000,8),(610000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Örebro"	=[(586000,8),(538000,8),(506000,8),(698000,8),(746000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Örnsköldsvik"	=[(490000,8),(474000,8),(578000,8),(506000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Östersund"	=[(690000,8),(754000,8),(770000,8),(730000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Östhammar"	=[(626000,8),(474000,8),(650000,8),(770000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Överkalix"	=[(706000,8),(770000,8),(786000,8),(746000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Bunge"	=[(770000,8),(634000,8),(714000,8),(690000,8),(602000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Degerfors"	=[(658000,8),(610000,8),(722000,8),(738000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Falun"	=[(738000,8),(722000,8),(650000,8),(634000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Göteborg/Slättadamm"	=[(626000,8),(522000,8),(778000,8),(594000,8),(818000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Hagfors"	=[(482000,8),(602000,8),(754000,8),(802000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Havdhem"	=[(770000,8),(634000,8),(714000,8),(690000,8),(602000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Hofors"	=[(506000,8),(586000,8),(658000,8),(690000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Härnösand"	=[(770000,8),(754000,8),(546000,8),(650000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Jokkmokk/Tjalmejaure"	=[(738000,8),(586000,8),(690000,8),(722000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Kramfors"	=[(778000,8),(498000,8),(554000,8),(514000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Kristinehamn/Utsiktsberget"	=[(778000,8),(610000,8),(722000,8),(738000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Kungsberget"	=[(738000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Köpmanholmen"	=[(490000,8),(474000,8),(578000,8),(506000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Linköping/Vattentorn"	=[(522000,8),(554000,8),(474000,8),(642000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Loffstrand"	=[(506000,8),(650000,8),(762000,8),(770000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Lumsheden"	=[(594000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Mölndal/Västerberget"	=[(626000,8),(522000,8),(778000,8),(594000,8),(818000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Norrtälje/Södra Bergen"	=[(730000,8),(754000,8),(778000,8),(706000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Oskarshamn"	=[(610000,8),(762000,8),(786000,8),(802000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Smedjebacken/Uvberget"	=[(562000,8),(706000,8),(730000,8),(802000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Sollefteå/Hallsta"	=[(602000,8),(626000,8),(714000,8),(762000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Stockholm Marieberg"	=[(730000,8),(754000,8),(778000,8),(706000,8),(746000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Strömstad"	=[(586000,8),(754000,8),(482000,8),(506000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Sundsbruk"	=[(770000,8),(754000,8),(546000,8),(650000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Svartnäs"	=[(642000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Södertälje/Ragnhildsborg"	=[(546000,8),(538000,8),(794000,8),(770000,8),(570000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Torsby/Bada"	=[(482000,8),(602000,8),(754000,8),(802000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Virserum"	=[(618000,8),(690000,8),(738000,8),(770000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Visby/Hamnen"	=[(490000,8),(482000,8),(522000,8),(554000,8),(506000,8),(618000,8),(570000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Ystad"	=[(482000,8),(506000,8),(634000,8),(818000,8),(794000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Åmot"	=[(754000,8),{tune=1,pat=6,sdt=16}]
+"Sweden-Ängelholm"	=[(482000,8),(506000,8),(634000,8),(818000,8),(794000,8),{tune=1,pat=6,sdt=16}]
+
+
+"Netherlands-Krimpen aan den IJssel"	=[(474000,8),(698000,8),(722000,8),(762000,8),(818000,8),{tune=1,pat=6,sdt=16}]
+"Netherlands-Lopik"	=[(474000,8),(570000,8),(578000,8),(762000,8),(818000,8),{tune=1,pat=6,sdt=16}]
+"Netherlands-Maarssen"	=[(474000,8),(570000,8),(578000,8),(762000,8),(818000,8),{tune=1,pat=6,sdt=16}]
+"Netherlands-Naaldwijk"	=[(474000,8),(578000,8),(722000,8),(762000,8),(818000,8),{tune=1,pat=6,sdt=16}]
+"Netherlands-Oegstgeest"	=[(474000,8),(578000,8),(722000,8),(762000,8),(818000,8),{tune=1,pat=6,sdt=16}]
+"Netherlands-Rotterdam-Waalhaven"	=[(474000,8),(698000,8),(722000,8),(762000,8),(818000,8),{tune=1,pat=6,sdt=16}]
+"Netherlands-Rotterdam"	=[(474000,8),(698000,8),(722000,8),(762000,8),(818000,8),{tune=1,pat=6,sdt=16}]
+"Netherlands-Scheveningen (Radio)"	=[(474000,8),(578000,8),(722000,8),(762000,8),(818000,8),{tune=1,pat=6,sdt=16}]
+"Netherlands-Sliedrecht"	=[(474000,8),(698000,8),(722000,8),(762000,8),(818000,8),{tune=1,pat=6,sdt=16}]
+"Netherlands-Utrecht"	=[(474000,8),(570000,8),(578000,8),(762000,8),(818000,8),{tune=1,pat=6,sdt=16}]
+"Netherlands-Vlaardingen"	=[(474000,8),(698000,8),(722000,8),(762000,8),(818000,8),{tune=1,pat=6,sdt=16}]
+"Netherlands-Wormer"	=[(474000,8),(490000,8),(578000,8),(762000,8),(818000,8),{tune=1,pat=6,sdt=16}]
+
+"Australia"=[
+	(177500,7),(184500,7),(191500,7),(198500,7),(205500,7),(212500,7),(219500,7),(226500,7),(529500,7),
+	(536500,7),(543500,7),(550500,7),(557500,7),(564500,7),(571500,7),(578500,7),(585500,7),(592500,7),
+	(599500,7),(606500,7),(613500,7),(620500,7),(627500,7),(634500,7),(641500,7),(648500,7),(655500,7),
+	(662500,7),(669500,7),(676500,7),(683500,7),(690500,7),(697500,7),(704500,7),(711500,7),(718500,7),
+	(725500,7),(732500,7),(739500,7),(746500,7),(753500,7),(760500,7),(767500,7),(774500,7),(781500,7),
+	(788500,7),(795500,7),(802500,7),(809500,7),(816500,7),{tune=1, pat=6, sdt=16} 	];
+
+"Australia-Adelaide" 	=[ (191625,7),(219500,7),(226500,7),(564500,7),(177500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Ballarat" 	=[ (620500,7),(634500,7),(613500,7),(592500,7),(655500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Batchelor" 	=[ (788500,7),(767500,7),(746500,7),(725500,7),(704500,7),(683500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Brisbane" 	=[ (585500,7),(191625,7),(177500,7),(219500,7),(226500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Canberra" 	=[ (205500,7),(177500,7),(543500,7),(226500,7),(219500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Como" 	=[ (711500,7),(732500,7),(774500,7),(690500,7),(753500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Darwin" 	=[ (543500,7),(536500,7),(550500,7),(557500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Gold Coast" 	=[ (585500,7),(725500,7),(634500,7),(704500,7),(788500,7),(746500,7),(767500,7),(809500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Hamilton" 	=[ (767500,7),(788500,7),(758500,7),(599500,7),(592500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Hobart" 	=[ (219500,7),(205500,7),(191500,7),(184500,7),(212500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Hobart NE" 	=[ (781500,7),(767500,7),(788500,7),(795500,7),(725500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Melbourne" 	=[ (177500,7),(191625,7),(219500,7),(226500,7),(536500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Perth" 	=[ (191625,7),(536500,7),(219500,7),(177500,7),(226500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Wyong" 	=[ (592500,7),(746500,7),(760500,7),(809500,7),(767500,7),(725500,7),(788625,7),(599500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Sydney" 	=[ (571500,7),(177500,7),(191625,7),(219500,7),(226500,7),(578500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Sydney@Eastern Suburbs" 	=[ (543625,7),(669500,7),(564500,7),(648500,7),(571500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Sydney@Manly/Mosman" 	=[ (543625,7),(669500,7),(564500,7),(648500,7),(571500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Wollongong@Illawarra" 	=[ (592500,7),(711625,7),(585500,7),(599500,7),(690500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Wollongong@North" 	=[ (697500,7),(655500,7),(613500,7),(634500,7),(711625,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Wollongong@Stanwell Park" 	=[ (697500,7),(655500,7),(613500,7),(634500,7),(676500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Central Coast@Bouddi" 	=[ (592500,7),(746500,7),(760500,7),(809500,7),(767500,7),(788625,7),(725500,7),(571500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Central Coast@Gosford" 	=[ (592500,7),(746500,7),(760500,7),(809500,7),(767500,7),(788625,7),(725500,7),(571500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Mid North Coast@Coffs Harbou" 	=[ (760625,7),(725500,7),(802500,7),(781625,7),(809500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Mid North Coast@Gloucester" 	=[ (620500,7),(529500,7),(557500,7),(571500,7),(550625,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Mid North Coast@Grafton/Kempsey/Coffs Harbour" 	=[ (585500,7),(543500,7),(564500,7),(599500,7),(606500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Mid North Coast@Laurieton" 	=[ (753625,7),(669500,7),(690500,7),(711500,7),(732625,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Mid North Coast@Manning River" 	=[ (184625,7),(198500,7),(226500,7),(641500,7),(205500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-New England@Armidale" 	=[ (557500,7),(578500,7),(599500,7),(620500,7),(536500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-New England@Upper Namoi" 	=[ (191625,7),(205500,7),(592500,7),(613500,7),(585500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Newcastle Hunter@Dungog" 	=[ (746500,7),(767500,7),(788500,7),(760625,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Newcastle Hunter@Newcastle" 	=[ (704500,7),(690500,7),(592500,7),(599500,7),(585500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Newcastle Hunter@Kotara" 	=[ (592500,7),(704500,7),(585500,7),(690500,7),(599500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Newcastle Hunter@Merewether" 	=[ (592500,7),(704500,7),(585500,7),(690500,7),(599500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Newcastle Hunter@Port Stephens" 	=[ (543500,7),(627500,7),(529500,7),(564500,7),(550500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Newcastle Hunter@Upper Hunter" 	=[ (184500,7),(760500,7),(198500,7),(739500,7),(781500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-North Coast@Bonalbo" 	=[ (732500,7),(774500,7),(795500,7),(753500,7),(711500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-North Coast@Kyogl" 	=[ (718500,7),(760500,7),(781500,7),(739500,7),(697500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-North Coast@Murwillumbah" 	=[ (536500,7),(578500,7),(557500,7),(613500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-North Coast@Richmond/Tweed" 	=[ (536500,7),(578500,7),(592500,7),(557500,7),(613500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Nowra South Coast@Batemans Bay/Moruy" 	=[ (205625,7),(795500,7),(212500,7),(774500,7),(184500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Nowra South Coast@Bega" 	=[ (578625,7),(543500,7),(536500,7),(564500,7),(557500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Nowra South Coast@Bombala" 	=[ (767625,7),(774500,7),(753500,7),(746500,7),(795500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Nowra South Coast@Eden" 	=[ (718500,7),(802500,7),(760500,7),(781625,7),(809500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Nowra South Coast@Narooma" 	=[ (725500,7),(788500,7),(746500,7),(767500,7),(704500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Nowra South Coast@Nowra North" 	=[ (795500,7),(634500,7),(571500,7),(613500,7),(774500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Nowra South Coast@Ulladulla" 	=[ (529500,7),(676500,7),(697500,7),(655625,7),(550625,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Southern Highlands@Bombala" 	=[ (767625,7),(774500,7),(753500,7),(746500,7),(795500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Southern Highlands@Bowral/Mittagong" 	=[ (697500,7),(655625,7),(613500,7),(634500,7),(676500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Southern Highlands@Braidwood" 	=[ (725500,7),(788500,7),(767500,7),(746500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Southern Highlands@Cooma town" 	=[ (718500,7),(781500,7),(760500,7),(739500,7),(802500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Southern Highlands@Cooma/Monaro" 	=[ (536500,7),(634500,7),(613500,7),(557500,7),(578500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Southern Highlands@Goulburn" 	=[ (725625,7),(788500,7),(767500,7),(809500,7),(746625,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Southern Highlands@Jindabyne" 	=[ (746500,7),(767500,7),(725500,7),(788500,7),(704500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Southern Highlands@Khancoban" 	=[ (746500,7),(704500,7),(767500,7),(795500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Southern Highlands@Thredb" 	=[ (564500,7),(648500,7),(627500,7),(606500,7),(543500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Southern Highlands@Tumbarumb" 	=[ (746500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Southern Highlands@Tumut" 	=[ (704500,7),(746500,7),(767500,7),(788500,7),(725500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Wagga & Riverina@Adelong" 	=[ (767500,7),(767500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Wagga & Riverina@Albury Nort" 	=[ (550625,7),(739500,7),(760500,7),(781500,7),(536500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Wagga & Riverina@Balranal" 	=[ (676500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Wagga & Riverina@Murrumbidgee Irrigation Area" 	=[ (219500,7),(177500,7),(177500,7),(564500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Wagga & Riverina@SW Slopes/E Riverina" 	=[ (655500,7),(662500,7),(683500,7),(690500,7),(669500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Wagga & Riverina@Wagga Wagga" 	=[ (718625,7),(739500,7),(760500,7),(781375,7),(711500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Wagga & Riverina@Walwa/Jingellic" 	=[ (739500,7),(760500,7),(781500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Western Districts@Bathurst" 	=[ (184625,7),(212500,7),(226500,7),(205500,7),(198500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Western Districts@Broken Hill" 	=[ (212625,7),(198500,7),(226500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Western Districts@Central Tablelands" 	=[ (585500,7),(592500,7),(613500,7),(634500,7),(627500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Western Districts@Central Western Slopes" 	=[ (226625,7),(620500,7),(648500,7),(655500,7),(641500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Western Districts@Cobar" 	=[ (177500,7),(205500,7),(219500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Western Districts@Condobolin" 	=[ (781500,7),(802500,7),(760500,7),(739500,7),(718500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Western Districts@Coolah" 	=[ (718500,7),(760500,7),(697500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Western Districts@Cowra" 	=[ (767500,7),(788500,7),(725500,7),(704500,7),(746500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Western Districts@Dubbo" 	=[ (739625,7),(760500,7),(781500,7),(802625,7),(718625,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Western Districts@Kando" 	=[ (725500,7),(746500,7),(788500,7),(767500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Western Districts@Lithgo" 	=[ (550500,7),(543500,7),(578500,7),(571500,7),(529500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Western Districts@Lithgow East" 	=[ (725625,7),(746500,7),(788500,7),(760500,7),(802500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Western Districts@Nyngan" 	=[ (704500,7),(788500,7),(746500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Western Districts@Oberon" 	=[ (725500,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Western Districts@Portland/Wallerawang" 	=[ (725500,7),(746500,7),(788500,7),(767500,7),(802625,7) {tune=1,pat=6,sdt=16} ];
+"Australia-Western Districts@Talbing" 	=[ (753500,7),(774500,7) {tune=1,pat=6,sdt=16} ];
+
+
+"Belgium"=[  (482000,8),  (754000,8) {tune=1, pat=6, sdt=16} ];
+"Belgium-Brussels"=[  (482000,8), (754000,8) {tune=1, pat=6, sdt=16} ];
+
+"Denmark"=[ (482000,8),	(506000,8),(538000,8),(554000,8),(602000,8),(658000,8),(682000,8),(690000,8),(714000,8),
+            (738000,8),(778000,8),(826000,8),(834000,8) {tune=1, pat=6, sdt=16} ];
+
+"Finland-Ala-Vuokki"	=[(698000,8),(786000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Anjalankoski"	=[(482000,8),(522000,8),(730000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Espoo"	=[(562000,8),(658000,8),(674000,8),{tune=1,pat=7,sdt=16}];
+"Finland-Eurajoki"	=[(610000,8),(666000,8),(722000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Fiskars"	=[(562000,8),(658000,8),(674000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Haapavesi"	=[(578000,8),(642000,8),(000,8),{tune=1,pat=7,sdt=16}];
+"Finland-Hanko"	=[(618000,8),(746000,8),(000,8),{tune=1,pat=7,sdt=16}];
+"Finland-Heinola"	=[(554000,8),(786000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Hetta"	=[(554000,8),(610000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Houtskär"	=[(626000,8),(682000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Hämeenlinna@Painokangas"	=[(482000,8),(522000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Iisalmi"	=[(514000,8),(610000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Ikaalinen_Riitiala"	=[(650000,8),(738000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Inari"	=[(690000,8),(506000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Jalasjärvi"	=[(522000,8),(650000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Joensuu_Vestinkallio"	=[(666000,8),(786000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Joutsa"	=[(000,8),(000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Joutseno"	=[(682000,8),(586000,8),(762000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Juntusranta"	=[(642000,8),(666000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Jyväskylä"	=[(546000,8),(786000,8),(746000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Jämsä_Kuorevesi_Halli"	=[(674000,8),(000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Jämsä_Matkosvuori"	=[(602000,8),(658000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Kaihuanvaara"	=[(626000,8),(706000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Kaipola"	=[(602000,8),(658000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Kangaslampi"	=[(754000,8),(786000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Kangasniemi"	=[(000,8),(000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Kankaanpää"	=[(650000,8),(682000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Karigasniemi"	=[(706000,8),(698000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Karkkila"	=[(594000,8),(650000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Karstula"	=[(722000,8),(762000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Kaunispää"	=[(690000,8),(506000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Kerimäki"	=[(546000,8),(602000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Keuruu"	=[(674000,8),(706000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Keuruu_Haapamäki"	=[(682000,8),(762000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Kiihtelysvaara"	=[(514000,8),(778000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Kilpisjärvi"	=[(666000,8),(690000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Koli"	=[(506000,8),(626000,8),(682000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Korpilahti_Vaarunvuori"	=[(546000,8),(786000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Korppoo"	=[(626000,8),(682000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Kruunupyy"	=[(522000,8),(482000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Kuhmoinen"	=[(000,8),(000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Kuhmoinen_Harjunsalmi"	=[(482000,8),(522000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Kuopio"	=[(498000,8),(554000,8),(618000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Kustavi"	=[(714000,8),(698000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Kuttanen"	=[(730000,8),(770000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Lahti"	=[(570000,8),(682000,8),(762000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Lapua"	=[(610000,8),(602000,8),(746000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Laukaa"	=[(546000,8),(786000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Laukaa_Vihtavuori"	=[(000,8),(000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Lohja"	=[(706000,8),(746000,8),(754000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Loimaa"	=[(650000,8),(682000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Luhanka"	=[(562000,8),(674000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Luopioinen"	=[(650000,8),(674000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Mikkeli"	=[(538000,8),(650000,8),(778000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Mänttä"	=[(658000,8),(722000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Mäntyharju"	=[(000,8),(000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Nilsiä"	=[(578000,8),(642000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Nokia"	=[(594000,8),(746000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Nokia_Siuro_Linnavuori"	=[(594000,8),(746000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Oulu"	=[(634000,8),(714000,8),(738000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Padasjoki_Arrakoski"	=[(498000,8),(530000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Parikkala"	=[(554000,8),(570000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Parkano"	=[(506000,8),(546000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Pello"	=[(546000,8),(594000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Perho"	=[(594000,8),(674000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Pernaja"	=[(490000,8),(706000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Pihtipudas"	=[(706000,8),(666000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Porvoo"	=[(000,8),(000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Posio"	=[(554000,8),(618000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Pudasjärvi"	=[(658000,8),(690000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Puolanka"	=[(642000,8),(666000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Pyhätunturi"	=[(786000,8),(634000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Pyhävuori"	=[(530000,8),(634000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Pyynikki"	=[(626000,8),(658000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Raahe"	=[(546000,8),(618000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Ranua"	=[(578000,8),(778000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Rautavaara"	=[(000,8),(000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Ristijärvi"	=[(546000,8),(722000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Rovaniemi"	=[(650000,8),(674000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Ruka"	=[(570000,8),(690000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Saarijärvi"	=[(682000,8),(722000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Salla"	=[(514000,8),(610000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Salo"	=[(000,8),(000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Sysmä_Liikola"	=[(498000,8),(594000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Taivalkoski"	=[(562000,8),(610000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Tammela"	=[(482000,8),(522000,8),(706000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Tammisaari"	=[(618000,8),(650000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Tampere"	=[(578000,8),(490000,8),(770000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Tervola"	=[(626000,8),(642000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Turku"	=[(714000,8),(698000,8),(538000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Utsjoki"	=[(658000,8),(714000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Vaala"	=[(770000,8),(786000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Vaasa"	=[(610000,8),(602000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Vantaa_Hakunila"	=[(562000,8),(658000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Vuokatti"	=[(546000,8),(722000,8),(746000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Vuokatti_Lentiira"	=[(498000,8),(562000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Vuotso"	=[(554000,8),(706000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Ylläs"	=[(546000,8),(594000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Ähtäri"	=[(722000,8),(658000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Ämmänsaari"	=[(642000,8),(666000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Äänekoski"	=[(610000,8),(730000,8),(000,8),{tune=1,pat=7,sdt=16}]
+"Finland-Äänekoski_Konginkangas"	=[(658000,8),(690000,8),(000,8),{tune=1,pat=7,sdt=16}]
+
+
+"France"=[(474000,8),(482000,8),(490000,8),(498000,8),(506000,8),(514000,8),(522000,8),(530000,8),
+          (538000,8),(546000,8),(554000,8),(562000,8),(570000,8),(578000,8),(586000,8),(594000,8),
+          (602000,8),(610000,8),(618000,8),(626000,8),(634000,8),(642000,8),(650000,8),(658000,8),
+          (666000,8),(674000,8),(682000,8),(690000,8),(698000,8),(706000,8),(714000,8),(722000,8),
+          (730000,8),(738000,8),(746000,8),(754000,8),(762000,8),(770000,8),(778000,8),(786000,8),
+          (786000,8),(794000,8),(802000,8),(810000,8),(826000,8),(834000,8),(842000,8),(850000,8),
+          (858000,8) {tune=1, pat=6, sdt=16}];
+
+"Germany-Thuringia-Erfurt/Weimar"= [(474000,8),(522000,8),(706000,8){tune=1, pat=6, sdt=16}];
+"Singapore"=[(598000,8),(606000,8),(614000,8){tune=1, pat=7, sdt=18}];
+             
+#		"Anguilla"=[]
+#		"Antigua"=[]
+#		"Bahamas"=[]
+#		"Barbados"=[]
+#		"Bermuda",
+#		"British Virgin Islands",
+#		"Canada",
+#		"Cayman Islands",
+#		"Dominica",
+#		"Dominican Republic",
+#		"Grenada",
+#		"Jamaica",
+#		"Montserrat",
+#		"Nevis",
+#		"St. Kitts",
+#		"St. Vincent and the Grenadines",
+#		"Trinidad and Tobago",
+#		"Turks and Caicos Islands",
+#		"Barbuda",
+#		"Puerto Rico",
+#		"Saint Lucia",
+#		"United States Virgin Islands",
+#		"Russia",
+#		"Kazakhstan",
+#		"Kyrgyzstan",
+#		"Tajikistan",
+#		"Turkmenistan",
+#		"Uzbekistan",
+#		"Egypt",
+#		"South Africa",
+#		"Greece",
+#		"Netherlands",
+#		"France",
+#		"Spain",
+#		"Hungary",
+#		"Italy",
+#		"Vatican City",
+#		"Romania",
+#		"Switzerland",
+#		"Liechtenstein",
+#		"Austria",
+#		"Denmark",
+#		"Norway",
+#		"Poland",
+#		"Germany",
+#		"Peru",
+#		"Mexico",
+#		"Cuba",
+#		"Guantanamo Bay",
+#		"Argentina",
+#		"Brazil",
+#		"Chile",
+#		"Colombia",
+#		"Bolivarian Republic of Venezuela",
+#		"Malaysia",
+#		"Cocos-Keeling Islands",
+#		"Indonesia",
+#		"Philippines",
+#		"New Zealand",
+#		"Singapore",
+#		"Thailand",
+#		"Japan",
+#		"Korea (South)",
+#		"Vietnam",
+#		"China",
+#		"Turkey",
+#		"India",
+#		"Pakistan",
+#		"Afghanistan",
+#		"Sri Lanka",
+#		"Myanmar",
+#		"Iran",
+#		"Morocco",
+#		"Algeria",
+#		"Tunisia",
+#		"Libya",
+#		"Gambia",
+#		"Senegal Republic",
+#		"Mauritania",
+#		"Mali",
+#		"Guinea",
+#		"Cote D'Ivoire",
+#		"Burkina Faso",
+#		"Niger",
+#		"Togo",
+#		"Benin",
+#		"Mauritius",
+#		"Liberia",
+#		"Sierra Leone",
+#		"Ghana",
+#		"Nigeria",
+#		"Chad",
+#		"Central African Republic",
+#		"Cameroon",
+#		"Cape Verde Islands",
+#		"Sao Tome and Principe",
+#		"Equatorial Guinea",
+#		"Gabon",
+#		"Congo",
+#		"Congo(DRC)",
+#		"Angola",
+#		"Guinea-Bissau",
+#		"Diego Garcia",
+#		"Ascension Island",
+#		"Seychelle Islands",
+#		"Sudan",
+#		"Rwanda",
+#		"Ethiopia",
+#		"Somalia",
+#		"Djibouti",
+#		"Kenya",
+#		"Tanzania",
+#		"Uganda",
+#		"Burundi",
+#		"Mozambique",
+#		"Zambia",
+#		"Madagascar",
+#		"Reunion Island",
+#		"Zimbabwe",
+#		"Namibia",
+#		"Malawi",
+#		"Lesotho",
+#		"Botswana",
+#		"Swaziland",
+#		"Mayotte Island",
+#		"Comoros",
+#		"St. Helena",
+#		"Eritrea",
+#		"Aruba",
+#		"Faroe Islands",
+#		"Greenland",
+#		"Gibraltar",
+#		"Portugal",
+#		"Luxembourg",
+#		"Ireland",
+#		"Iceland",
+#		"Albania",
+#		"Malta",
+#		"Cyprus",
+#		"Finland",
+#		"Bulgaria",
+#		"Lithuania",
+#		"Latvia",
+#		"Estonia",
+#		"Moldova",
+#		"Armenia",
+#		"Belarus",
+#		"Andorra",
+#		"Monaco",
+#		"San Marino",
+#		"Ukraine",
+#		"Serbia and Montenegro",
+#		"Croatia",
+#		"Slovenia",
+#		"Bosnia and Herzegovina",
+#		"F.Y.R.O.M. (Former Yugoslav Republic of Macedonia)",
+#		"Czech Republic",
+#		"Slovak Republic",
+#		"Falkland Islands (Islas Malvinas)",
+#		"Belize",
+#		"Guatemala",
+#		"El Salvador",
+#		"Honduras",
+#		"Nicaragua",
+#		"Costa Rica",
+#		"Panama",
+#		"St. Pierre and Miquelon",
+#		"Haiti",
+#		"Guadeloupe",
+#		"French Antilles",
+#		"Bolivia",
+#		"Guyana",
+#		"Ecuador",
+#		"French Guiana",
+#		"Paraguay",
+#		"Martinique",
+#		"Suriname",
+#		"Uruguay",
+#		"Netherlands Antilles",
+#		"Saipan Island",
+#		"Rota Island",
+#		"Tinian Island",
+#		"Guam",
+#		"Christmas Island",
+#		"Australian Antarctic Territory",
+#		"Norfolk Island",
+#		"Brunei",
+#		"Nauru",
+#		"Papua New Guinea",
+#		"Tonga",
+#		"Solomon Islands",
+#		"Vanuatu",
+#		"Fiji Islands",
+#		"Palau",
+#		"Wallis and Futuna Islands",
+#		"Cook Islands",
+#		"Niue",
+#		"Territory of American Samoa",
+#		"Samoa",
+#		"Kiribati Republic",
+#		"New Caledonia",
+#		"Tuvalu",
+#		"French Polynesia",
+#		"Tokelau",
+#		"Micronesia",
+#		"Marshall Islands",
+#		"Korea (North)",
+#		"Hong Kong SAR",
+#		"Macao SAR",
+#		"Cambodia",
+#		"Laos",
+#		"INMARSAT (Atlantic-East)",
+#		"INMARSAT (Pacific)",
+#		"INMARSAT (Indian)",
+#		"INMARSAT (Atlantic-West)",
+#		"Bangladesh",
+#		"Taiwan",
+#		"Maldives",
+#		"Lebanon",
+#		"Jordan",
+#		"Syria",
+#		"Iraq",
+#		"Kuwait",
+#		"Saudi Arabia",
+#		"Yemen",
+#		"Oman",
+#		"United Arab Emirates",
+#		"Israel",
+#		"Bahrain",
+#		"Qatar",
+#		"Bhutan",
+#		"Mongolia",
+#		"Nepal",
+#		"Azerbaijan",
+#		"Georgia" ]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#
+#
+#
+#
+#
+#

@@ -1,0 +1,38 @@
+RCADTC100 57600 487 0 600 800
+0 133 n 00 ff f6 de db de db b6 b7 ed bd ed bd f7 fe
+ 16 r 00
+ 117 r f6 de db de db b6 b7 ed bd ed bd f7 fe
+1 133 n 00 ff f6 de db de db f6 de b6 f7 b6 f7 de fe
+ 16 r 00
+ 117 r f6 de db de db f6 de b6 f7 b6 f7 de fe
+2 133 n 00 ff f6 de db de db de de b6 f7 b6 f7 f6 fe
+ 16 r 00
+ 117 r f6 de db de db de de b6 f7 b6 f7 f6 fe
+3 133 n 00 ff f6 de db de db de 7b db de db de db fe
+ 16 r 00
+ 117 r f6 de db de db de 7b db de db de db fe
+4 133 n 00 ff f6 de db de db db de b6 f7 b6 b7 f7 fe
+ 16 r 00
+ 117 r f6 de db de db db de b6 f7 b6 b7 f7 fe
+5 133 n 00 ff f6 de db de db db 7b db de db de de fe
+ 16 r 00
+ 117 r f6 de db de db db 7b db de db de de fe
+6 133 n 00 ff f6 de db de db 7b 7b db de db de f6 fe
+ 16 r 00
+ 117 r f6 de db de db 7b 7b db de db de f6 fe
+7 133 n 00 ff f6 de db de db 7b ef 6d 7b 6f 7b db fe
+ 16 r 00
+ 117 r f6 de db de db 7b ef 6d 7b 6f 7b db fe
+8 132 n 00 ff f6 de db de 7b db de b6 f7 b6 bd f7 fe
+ 16 r 00
+ 117 r f6 de db de 7b db de b6 f7 b6 bd f7 fe
+9 133 n 00 ff f6 de db de 7b db 7b db de db f6 de fe
+ 16 r 00
+ 117 r f6 de db de 7b db 7b db de db f6 de fe
+ok 133 n 00 ff f6 de 7b ef bd bd ed 6d db b6 b7 f7 fe
+ 16 r 00
+ 117 r f6 de 7b ef bd bd ed 6d db b6 b7 f7 fe
+power 133 n 00 ff f6 de db de de de de b6 f7 f6 f6 f6 fe
+ 16 r 00
+ 117 r f6 de db de de de de b6 f7 f6 f6 f6 fe
+

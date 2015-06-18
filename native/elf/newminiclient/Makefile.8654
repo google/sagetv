@@ -1,0 +1,69 @@
+COMPILKIND=release
+#LINUX_KERNEL=/sage/dlink/uClinux-sigma/uClinux-2.4
+
+#MRUA=/sage/mrua/mrua_SMP8634_2.8.3.0_GCC4_dev.mips_hdmi
+#MRUA=/sage/mrua/mrua_SMP8654F_3_8_1_dev.mips
+#MRUA=/sage/mrua/mrua_SMP8654F_3_8_2_dev.mips
+#MRUA=/sage/mrua/mrua_SMP8654F_3_9_0_dev.mips
+#MRUA=/sage/mrua/mrua_SMP8654F_3_9_2_dev.mips
+#MRUA=/sage/mrua/mrua_SMP8654F_3_9_3_rc_1_dev.mips
+#MRUA=/sage/mrua/mrua_SMP8654F_3_8_6_dev.mips
+#MRUA=/sage/mrua/mrua_SMP8654F_3_8_7_dev.mips
+MRUA=/sage/mrua/mrua_SMP8654F_3_10_0_dev.mips
+RMCFLAGS=-DEM86XX_CHIP=EM86XX_CHIPID_TANGO3 -DEM86XX_REVISION=3 -DXBOOT2_SMP865X=1 -DEM86XX_MODE=EM86XX_MODEID_STANDALONE -DWITH_XLOADED_UCODE=1 -DWITHOUT_RMOUTPUT=1 -DWITH_REALVIDEO=1
+
+CC=mips-linux-gnu-gcc -EL
+# Linking issue with library needs to use g++...
+CC2=mips-linux-gnu-g++ -EL
+CFLAGS = $(RMCFLAGS) -D_DEBUG -DEM8654 -DEM8634 -DEM86 -DWITH_RMHDMI -Os -c -D_FILE_OFFSET_BITS=64 -I$(MRUA)/MRUA_src/ -DWITH_FACSPROD=1 -DEM86XX_CHIP=EM86XX_CHIPID_TANGO3 -DEM86XX_REVISION=3 -DEM86XX_MODE=EM86XX_MODEID_STANDALONE -DDEMUX_PSF=1 -DWITHOUT_DTS=1 -DWITH_XLOADED_UCODE=1 -Wa,-mips32r2 -Wa,-mfix7000 -I/sage/smp865x/cs_rootfs_1.2.6/cross_rootfs/include
+# Enable for IFE build only...
+#CFLAGS += -DDUALAUDIO -DIFE
+
+BINDIR=/usr/local/bin
+
+OBJFILES=miniclient.o gfxcmd.o thread_util.o mediacmd.o malloc.o EM86/bdsubdecoder.o EM86/dvbsubdecoder.o EM86/EM86gfx.o EM86/EM86input.o EM86/EM86media.o EM86/EM86image.o EM86/rmmmimplementation.o EM86/dbgimplementation.o EM86/EM86output2.o utils/MiniImage.o EM86/EM86audio.o
+
+miniclient: $(OBJFILES)
+	$(CC2) -o miniclient $(OBJFILES) -LEM86 \
+    -L$(MRUA)/lib/ \
+    -L/sage/smp865x/cs_rootfs_1.2.6/cross_rootfs/lib \
+    -L/sage/native/so/Pullreader/lib -L/sage/native/so/tsdirect \
+    -L/sage/native/so/VisEngine \
+    -L/sage/native/so/swscale \
+    -L/sage/native/so/CA \
+    -lm -lpthread \
+    -lCA \
+    -lVisEngine \
+    -lswscale \
+    -lrmdvbsubs \
+    -lrmvdemux \
+    -ldcc \
+    -lrmhdmi -lrmsha1 -lrmi2c -lruahdmi -lrmcec -lruai2c -lrmedid \
+    -lrmoutput -lruaoutput -lrmvideoout -lrmhsi \
+    -lrmmonitoring            \
+    -lrmcw                    \
+    -lrmcore                  \
+    -lrua                     \
+    -lllad                    \
+    -lrmrtk86 \
+    -lPullreader \
+    -ltsdirect \
+    -lpng12 \
+    -ljpeg \
+    -ltiff \
+    -lungif \
+    -lcrypto \
+    -lrmzlib \
+    -lrmwmaprodecoder \
+    -lrmwmaprodecodercore \
+    -lz \
+    -lgbus \
+    -lrt \
+    -ldl
+ 
+
+malloc.o: malloc.c
+	$(CC) -DFOOTERS=1 -DHAVE_MMAP=0 -DHAVE_MORECORE=0 -DONLY_MSPACES=1 -c malloc.c
+
+clean:
+	rm -f *.o miniclient miniclient.gdb *.c~ *.h~ STB/*.o EM86/*.o utils/*.o EM86/SD/*.o 

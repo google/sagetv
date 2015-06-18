@@ -1,0 +1,114 @@
+ $Id: README,v 1.1 2009-02-11 00:08:33 dave Exp $
+
+ Copyright (C) 2006, MinGW Project  <http://www.mingw.org>
+
+ The `x86-mingw32-build' script will build a cross compiler suite, hosted
+ on GNU/Linux or UNIX, and targetting the Win32 platform.
+
+ `x86-mingw32-build' is free software; it is distributed `as is', in  the
+ hope  that  it may be useful, but WITHOUT WARRANTY OF ANY KIND; not even
+ an  IMPLIED  WARRANTY  of  MERCHANTABILITY,  nor  of  FITNESS  FOR   ANY
+ PARTICULAR PURPOSE.
+
+ `x86-mingw32-build'  is  distributed  under the terms of the GNU General
+ Public License, Version 2.  You are free to copy,  and  to  redistribute
+ `x86-mingw32-build'  under the terms of this license, or at your option,
+ any later version thereof; see the files  `LICENSE'  and  `COPYING'  for
+ further information.
+
+ To  build  a  MinGW  cross GCC, using `x86-mingw32-build', you MUST have
+ NATIVE versions of the following tools installed on  the  machine  where
+ you will perform the build:--
+
+ 1) A C compiler.
+
+ 2) A `lex' compatible lexical parser generator, such as `lex' itself, or
+    a free alternative such as `flex'.
+
+ 3) A `yacc' compatible grammar parser generator,  preferrably  a  `yacc'
+    replacement such as `GNU bison' or `byacc'.
+
+ 4) An `m4' macro processor, if it is required by either of the above.
+
+ The cross compiler configuration is defined in the user modifiable file,
+ `x86-mingw32-build.sh.conf'.  You are advised to review  this  file,  to
+ ensure  that  the  default configuration is suited to your requirements;
+ use the `assume' directive to supply initial default settings,  and  the
+ `option' directive to extend specified lists of configuration options.
+
+ To invoke the build script:--
+
+ 1) Unpack the tarball, into a directory of your choice; it will create a
+    subdirectory called `x86-mingw32-build-0.0-20061107-1'.
+
+ 2) `cd' to this `x86-mingw32-build-0.0-20061107-1' directory.
+
+ 3) Start the build, by executing the command:-
+
+     sh x86-mingw32-build.sh [--options ...] [target-spec]
+
+ Your choice of `target-spec' defines the class  of  processor,  and  the
+ operating  system,  for which your cross compiler will generate code; it
+ also determines how your cross  compiler  will  eventually  be  invoked;
+ e.g.  if  you choose a canonical host triplet, such as `i586-pc-mingw32'
+ then you would invoke `gcc', say to compile `foo.c', as:-
+
+     i586-pc-mingw32-gcc -c foo.c
+
+ generating object code suitable for deployment on an Intel Pentium class
+ host, running a 32-bit MS-Windows operating system.
+
+ Do  note  that you cannot make an arbitrary choice for `target-spec'; it
+ MUST represent, either directly or by inference, a valid canonical  host
+ triplet of the form `CPU-MAKER-OSTYPE'.  The minimum requirement is that
+ you specify the `OSTYPE', and, since you are building a  MinGW  compiler
+ tool  chain  for the Win32 platform, this MUST be `mingw32'.  Typically,
+ you would choose a full canonical host triplet, such as in  the  example
+ above,  in  which  the CPU is `i586', the MAKER is `pc', (indicating any
+ generic PC of non-specific manufacture), and the OSTYPE is the mandatory
+ `mingw32';  alternatively,  you may prefer to use an abbreviated couplet
+ such as `i586-mingw32'.  If you  don't  specify  any  `target-spec',  it
+ defaults  to  the  couplet  `i386-mingw32',  resulting  in  a C compiler
+ invoked as:-
+
+     i386-mingw32-gcc -c foo.c
+
+ and similarly for the remainder of the cross tool  chain,  by  prefixing
+ `i386-mingw32-'  to  the regular name of each tool; such a compiler, and
+ its associated tool chain,  will  generate  code  to  run  under  32-bit
+ MS-Windows,  (the  host OS for the `mingw32' OSTYPE), on all generations
+ of the Intel x86 CPU from i386 onwards.
+
+ Additionally, there are a number of options  available,  to  modify  the
+ behaviour of `x86-mingw32-build'; to see a list, try:-
+
+     sh x86-mingw32-build.sh --help
+
+ By default, `x86-mingw32-build.sh' runs interactively; this gives you an
+ opportunity to adjust many of the default parameters,  which  have  been
+ defined  in  `x86-mingw32-build.sh.conf'.   If  you  prefer  to skip the
+ interactive dialogue, and simply accept all  of  the  default  parameter
+ settings, you may invoke:-
+
+     sh x86-mingw32-build.sh --unattended [target-spec]
+
+ `x86-mingw32-build'  will build the cross compiler from source packages,
+ with  versions  as  specified  in  `x86-mingw32-build.sh.conf';  if  the
+ specified versions are not already present in a directory of your choice
+ on the local host,  then  `x86-mingw32-build'  will  invoke  `wget',  to
+ download  those  package  versions.   If  run interactively, you will be
+ given the opportunity to override  the  packace  versions  specified  in
+ `x86-mingw32-build.sh.conf',  substituting  any version which is already
+ present in your local package directory; if run unattended, you may  use
+ the  `--no-download'  option  to  prevent  downloads;  with this option,
+ `x86-mingw32-build' will expect to find the  specified  version  in  the
+ local  download  directory, or, if the `--use-latest-versions' option is
+ specified, it will automatically  substitute  the  most  recent  version
+ which is already present in that directory.
+
+ If  you  discover  any  bug  in `x86-mingw32-build', please report it by
+ following the procedure described at:-
+
+     http://www.mingw.org/MinGWiki/index.php/ReportBugs
+
+ $RCSfile: README,v $Revision: 1.1 $: end of file

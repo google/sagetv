@@ -1,0 +1,16 @@
+CC=mips-linux-gnu-gcc -EL
+CFLAGS = -D_FILE_OFFSET_BITS=64 -O2 -c -fpic -I/sage/svn/ffmpeg/libavformat -I/sage/svn/ffmpeg/libavutil -I/sage/svn/ffmpeg/libavcodec -I /sage/em8654/newffmpeg4/ -I/sage/svn/ffmpeg
+BINDIR=/usr/local/bin
+LIBRARY=-L/nfs/smp8654boot/lib -L/sage/em8654/newffmpeg4/libavutil -L/sage/em8654/newffmpeg4/libavformat \
+ -L/sage/em8654/newffmpeg4/libavcodec -lavformat -lavcodec -lm -lavutil -lz \
+ -lm
+OBJFILES=pullreader.o flashmpeg4.o
+
+libPullreader.so: $(OBJFILES)
+	$(CC) -W1 -shared -o libPullreader.so $(OBJFILES) $(LIBRARY)
+	mips-linux-gnu-strip --strip-unneeded libPullreader.so
+
+#-lz -lfaac -lfaad -lxvidcore /usr/lib/libx264.a -lmp3lame -la52
+
+clean:
+	rm -f *.o libPullreader.so *.c~ *.h~

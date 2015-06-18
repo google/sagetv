@@ -1,0 +1,2 @@
+#Use XevieInput instead of LinuxInput
+input_plugin_classes=sage.XevieInput

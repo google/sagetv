@@ -1,0 +1,8 @@
+SageTV Miniclient/Placeshifter
+
+This package contains the placeshifter. You can start it by executing the
+sageclient.sh script while running X.
+
+You need the Java 1.5 runtime installed and reachable from your path environment 
+and only a few libraries such as libmad, libasound (alsa), freetype, Xorg.
+

@@ -1,0 +1,413 @@
+# x86-mingw32-build.sh.functions -- vim: filetype=sh
+# $Id: x86-mingw32-build.sh.functions,v 1.1 2009-02-11 00:08:33 dave Exp $
+#
+# Define functions used by the mingw32 cross-compiler build script.
+#
+# Copyright (C) 2006, MinGW Project
+# Written by Keith Marshall <keithmarshall@users.sourceforge.net>
+#
+# This file is a component of the x86-mingw32-build script; it is not
+# intended for stand alone use.
+# 
+# x86-mingw32-build is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by the
+# Free Software Foundation; either version 2, or (at your option) any later
+# version.
+# 
+# x86-mingw32-build is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for further details.
+# 
+# You should have received a copy of the GNU General Public License along
+# with x86-mingw32-build; see the file COPYING.  If not, write to the Free
+# Software Foundation, 51 Franklin St - Fifth Floor, Boston, MA 02110-1301,
+# USA.
+
+assume()
+# usage: assume VarName DefaultValue
+#
+# Assign "DefaultValue" to variable `VarName', if it has not been
+# previously defined.
+{
+  eval $1=\$\{$1-\"$2\"\}
+}
+
+option()
+# usage: option VarName AdditionalText [separator]
+#
+# Add `AdditionalText' to the end of the list stored in `VarName',
+# separated from any existing text by `separator', if any is specified,
+# otherwise by a single space.
+{
+  eval $1=\"`echo \$\{$1\}${3-" "}$2`\"
+}
+
+ask()
+# usage: ask "User prompt" "Default response" ResponseVar [QueryMark]
+#
+# Display "User prompt", then wait for user's response, assigning it
+# to `ResponseVar'; if user enters nothing, then substitute the default
+# assignment `ResponseVar="Default response"'.
+#
+# If "Default response" is non-null, it is appended to "User prompt",
+# generating a prompt of the form `User prompt (Default response)';
+# if `QueryMark' is specified, it is appended to the displayed prompt.
+{
+  prompt "$1"; [ -n "$2" ] && prompt " (Default: $2)"; prompt "$4 "
+  read $3; eval '[ -z "$'$3'" ] && '$3'=$2 || '$3'=`eval echo "$'$3'"`'
+}
+
+askindex()
+# usage: askindex "UserPrompt" Default MinIndex MaxIndex ReplyVar [QueryMark]
+#
+# Like `ask', but require a numeric response with a value in the inclusive
+# range from `MinIndex' to `MaxIndex'.
+{
+  ask "$1" "$2" $5 $6
+  until (exec 2>/dev/null; eval 'test "$'$5'" -eq "$'$5\") \
+  && eval 'test "$'$5\" -ge $3 && eval 'test "$'$5\" -le $4
+  do ask "$INVALID_CHOICE `fixrange $3 $4`": "$2" $5 \:
+  done
+}
+
+INVALID_CHOICE="
+ Sorry, your response did not match any choice listed above;
+ please enter"
+
+fixrange()
+# usage: fixrange First Last [NumChoices=Last]
+#
+# Display the appropriate prompt termination, to indicate the valid
+# set of responses for an indexed multiple choice menu.
+{
+  test ${3-$2} -gt 2 && \
+    echo "a number between $1 and $2" || echo "either $1 or $2"
+}
+
+prompt()
+# usage: prompt "Text to be continued on same line"
+#
+# Used by the `ask' function, to display prompts; it simply invokes
+# the `echo' command in the appropriate, platform dependent manner,
+# to display its arguments without any following newline.
+{
+  echo $echo_n "$@$echo_c"
+}
+
+# As a one time initialisation requirement...
+# we must define the platform dependent `echo_c' and `echo_n' hooks,
+# which are required by the `prompt' function...
+
+case `echo -n 'test\c'` in *c*) echo_c='' ;; *) echo_c='\c' ;; esac
+case `echo -n 'test\c'` in *n*) echo_n='' ;; *) echo_n='-n' ;; esac
+
+isyes()
+# usage: isyes $variable
+#
+# Test the value stored in $variable for a case insensitive match to
+# the string "yes", or any abbreviated form thereof.
+{
+  case $1 in
+    [Yy] | [Yy][Ee] | [Yy][Ee][Ss]) true ;;
+    *) false ;;
+  esac
+}
+
+setbuilddir()
+# usage: setbuilddir parent [subdir]
+#
+# Ensure that the directory parent/subdir exists, creating it if
+# necessary, then make it the current directory.
+{
+  mkdir -p $1/${2-build} && cd $1/${2-build}
+}
+
+# Some of the following functions can use the `local' built in command,
+# if it is available; make sure we have a fall back, if it isn't ...
+#
+test -z "`exec 2>/dev/null; try(){ local x; }; try || echo no`" || \
+local()
+# ... by making it a function equivalent to the `null' command.
+{ :; }
+
+prepare()
+# usage: prepare PackageName [SrcTag="-src"] [PatchTag="-patch"]
+#
+# Unpack the `PackageName' tarball, automatically detecting compression
+# formats `tar.bz2', `tar.gz' or `tgz', and apply any associated patches.
+#
+# Tarball packages are assumed to reside in the `$PACKAGE_DIR' directory,
+# and named `PackageName', concatenated with `SrcTag' and a conventional
+# tarball extension.
+#
+# Patchsets are assumed to reside in the `$PATCHES_DIR' directory, and
+# are associated with `PackageName' by adoption of the naming convention
+# of `PackageName' concatenated with `PatchTag', and a serial number.
+# Multiple patches may be provided for any individual `PackageName';
+# they will be applied in increasing serial number order.
+{
+  local PACKAGE
+  for PACKAGE in $PACKAGE_DIR/$1${2-"-src"}.t[ag][rz]*
+  do
+    case $PACKAGE in
+      *.tar.bz2) unpack xjf $PACKAGE ;;
+      *.tar.gz | *.tgz) unpack xzf $PACKAGE ;;
+      *.tar) unpack xf $PACKAGE ;;
+      *) die 2 "${script-$0}: $PACKAGE is not a recognisable archive" ;;
+    esac; break
+  done
+  for PACKAGE in $PATCHES_DIR/$1${3-"-patch"}*
+  do
+    if test -r $PACKAGE
+    then
+      prompt "$script: applying patch $PACKAGE ... "
+      patch $PATCHFLAGS < $PACKAGE
+      echo "done."
+    fi
+  done
+}
+
+unpack()
+# usage: unpack tarflags archive
+#
+# Display a notification message, and unpack `archive', using the tar
+# mode specified by `tarflags'; abort on failure.
+{
+  prompt "${script-$0}: unpacking $2 ... "
+  tar $1 $2 && echo "done." || die 2 "failed."
+}
+
+enumerate()
+# usage: enumerate prefix suffix [prototype]
+#
+# Used to enumerate the available versions of a specified package.
+# Compile a list of files, matching the specified search `prototype',
+# or `prefix*suffix' if `prototype' is unspecified; strip off `prefix'
+# and `suffix', adding only the remaining intervening portion of each
+# matched file name to the enumerated list.
+{
+  local match
+  for match in ${3-$1*$2}
+  do
+    echo $match | sed s'?^'"$1"'\(.*\)'"$2"'$?\1?'
+  done
+}
+
+newest()
+# usage: newest VersionList ...
+#
+# Given a list of package versions, `VersionList ...', select the
+# version number which represents the most recent for the package.
+{
+  local version field proto current selected
+  proto="" current=0
+  for field in 1 2 3 4 5
+  do
+    selected=""
+    for version
+    do
+      case $version in $proto*)
+	current=`IFS=.-; set x $version; test $field -gt $# && exit
+          shift $field; echo $1`
+        test 0$current -gt 0$selected && selected=$current ;;
+      esac
+    done
+    test -n "$proto" && test -n "$selected" && selected="[.-]$selected"
+    proto=$proto$selected
+  done
+  set x `for version
+    do case $version in $proto*) echo $version ;; esac
+    done`
+  echo $2
+}
+
+tabulate()
+# usage: tabulate BaseIndex Columns GutterWidth FormatFunction "ItemList"
+#
+# Display the items specified in "ItemList" in an indexed table, starting
+# with the index number specified by "BaseIndex", and numbering from left
+# to right across each row, then downwards from row to row.
+#
+# Items are distributed across the rows of the table, wrapping to the next
+# row after filling the number of columns specified in "Columns"; adjacent
+# columns are separated by "GutterWidth" space characters.
+#
+# Each item is assigned to a separate table cell, formatted as directed by
+# the user supplied "FormatFunction".  This function is invoked as:--
+#
+#   FormatFunction ItemIndex ItemDescription
+#
+# This may perform any action on "ItemIndex" and "ItemDescription" which
+# the user specifies, subject only to the requirement that it must emit
+# formatted table cell content on its stdout stream, as a text string of
+# the appropriate length, padded as necessary, to fix the column width.
+{
+  local item index wrap list
+  list="" wrap=0 index=$1
+  for item in $5
+  do
+    incr wrap
+    test -n "$list" && list="$list`space $3`"
+    list="$list`$4 $index $item`"
+    if test $wrap -ge $2
+    then
+      echo "$list"
+      wrap=0 list=""
+    fi
+    incr index
+  done
+  test -n "$list" && echo "$list"
+}
+
+incr()
+# usage: incr VarName [increment]
+#
+# Used to implement counters; adds the value of `increment', (with a
+# default value of one), to the value stored in `VarName'; assign the
+# resultant value back to `VarName'.
+{
+  eval $1=`eval 'expr $'$1' + ${2-1}'`
+}
+
+# Shells which support Korn Shell arithmetic expression syntax can
+# use a more efficient definition of `incr()'; we must define it like
+# this, because some Korn shell implementations, (e.g. Solaris-5.2),
+# mishandle function definitions within `if' or `case' blocks.
+#
+test "0`exec 2>/dev/null; x=123; eval echo '$((x+456))'`" -eq 579 && \
+incr()
+{
+  eval $1='$(('$1' + ${2-1}))'
+}
+
+space()
+# usage: space num
+#
+# Emit a string of `num' spaces on stdout; (used when formatting
+# tabulated data).
+{
+  test ${1-1} -gt 0 && echo " `space \`expr $1 - 1\``"
+}
+
+# As with `incr()', a more efficient implementation of `space()' is
+# available for shells supporting Korn Shell arithmetic syntax.
+#
+test "0`exec 2>/dev/null; x=123; eval echo '$((x+456))'`" -eq 579 && \
+space()
+{
+  test ${1-1} -gt 0 && echo " `space $((${1-1}-1))`"
+}
+
+quote()
+# usage: quote Text ...
+#
+# Format `Text ...' for display, enclosed in single typographic quotes.
+{
+  echo "\`$*'"
+}
+
+choose()
+# usage: choose Component TagVar Package [Dir] [Suffix]
+#
+# Choose the source package to use, when building `Component'.
+# Actual package is selected from those in `Dir', (default `.'),
+# with names matching `Package-<version>-Suffix'; (if unspecified,
+# `Suffix' defaults to `src.tar.gz').  Package `<version>' chosen
+# is assigned to `TagVar'.
+#
+# Interactive prompts and diagnostic messages are composed using
+# the following variables:--
+#
+#   `CHOOSE_FROM', `PACKAGE_CHOICES'
+#     Specify the prompt introducing multiple package choices;
+#     format is `$CHOOSE_FROM Package $PACKAGE_CHOICES'
+#
+#   `SELECT_OPTION'
+#     Specify the prompt requesting the user response, after
+#     displaying the multiple choice list.
+#
+#   `SELECTING_PACKAGE', `FROM_SOLE_CHOICE'
+#     Specify the notification message displayed when only one
+#     choice is available, and is automatically selected; format
+#     is `$SELECTING_PACKAGE Package $FROM_SOLE_CHOICE'
+#
+#   `MISSING_PACKAGE', `FAILED_SELECTION'
+#     Specify the diagnostic message displayed, when no available
+#     package matches the required package name prototype; format
+#     is `$MISSING_PACKAGE Package $FAILED_SELECTION'.
+{
+  local index choice choices default
+  choices=`enumerate ${4-"."}/$3- -${5-"src.tar.gz"}`
+  default=`newest $choices` REPLY=""
+  if test `set x $choices; echo $#` -gt 2
+  then
+    index=0
+    echo "$CHOOSE_FROM `quote $3` $PACKAGE_CHOICES"
+    for choice in $choices
+    do
+      incr index
+      echo "  $index)	$3-$choice-"${5-"src.tar.gz"}
+      test "$choice" = "$default" && REPLY=$index
+    done
+    default=$REPLY
+    ask "$SELECT_OPTION" "$default" REPLY
+    until (exec 2>/dev/null; test "$REPLY" -eq "$REPLY") \
+    && test "$REPLY" -ge 1 && test "$REPLY" -le "$index"
+    do ask "$INVALID_CHOICE `fixrange 1 $index`": "$default" REPLY
+    done
+    eval $2=`set x $choices; shift $REPLY; echo $1`
+    echo "$BUILDING_PACKAGE `quote $3` $FROM_SELECTION"
+    eval echo '"  *)	$3-$'$2'-"${5-"src.tar.gz"}'
+
+  elif test -n "$choices"
+  then
+    eval $2='$choices'
+    echo "$SELECTING_PACKAGE `quote $3` $FROM_SOLE_CHOICE"
+    echo "  *)	$3-$choices-"${5-"src.tar.gz"}
+
+  else
+    echo "$MISSING_PACKAGE `quote $3` $FAILED_SELECTION"
+    die 2 "$script: no `quote $3` package available"
+  fi
+}
+
+posn() 
+# usage: posn VarName "Reference Text" "Keywords ..."
+#
+# Locate the position in the space separated list of `Keywords' of the
+# first keyword which appears in `Reference Text'; assign the resultant
+# index to the variable specified by `VarName'.
+#
+# Note that the result is a zero based index, but that a result of zero
+# is ambiguous; it means either that the first keyword was matched, (for
+# confirmation of which a further comparison may be required), or that
+# there was no matching keyword in the list.
+#
+# To obtain a unity based index, a dummy keyword may be added as the
+# first in `Keywords'; in this case, a zero index means that there was
+# no matching keyword, provided the dummy is well chosen, to avoid any
+# liklihood of it being matched.
+{ 
+  eval $1=`set $3; echo $#`
+  incr $1 -`refstring=$2; set $3; argc=$#
+  while test $# -gt 0
+  do case $refstring in *$1*) echo $#; exit ;;
+    *) shift ;;
+    esac
+  done
+  echo $argc`
+  eval echo \$\{$1\}
+}
+
+die()
+# usage: die [status] ["Diagnostic Message"]
+#
+# Display "Diagnostic Message", if specified, then force calling script
+# to exit, setting the exit code as specified by `status', or to 127 if
+# `status' is unspecified.
+{
+  test -n "$2" && echo "$2"; exit ${1-127}
+}
+
+# $RCSfile: x86-mingw32-build.sh.functions,v $Revision: 1.1 $: end of file

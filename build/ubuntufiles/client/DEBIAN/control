@@ -1,0 +1,9 @@
+Package: sagetv-client
+Priority: extra
+Section: base
+Installed-Size: 13840
+Maintainer: jeanfrancois@sagetv.com
+Architecture: i386
+Version: 6.5.8-1
+Depends: libasound2, sun-java6-jre, libfaac0
+Description: SageTV Client 6.5.8
