@@ -202,7 +202,8 @@ public class Wizard implements EPGDBPublic2
   // 82 changed media mask from being bytes to shorts
   // 83 added support for writing out index orders; this is backwards compatible since older versions will skip this section and create their own indices
   // 84 open sourced initial version
-  public static byte VERSION = SageConstants.PVR ? 0x54 : 0x46;
+  // 85 fixed Wizard bug where we were loading using BYTE_CHARSET instead of I18N_CHARSET
+  public static byte VERSION = SageConstants.PVR ? 0x55 : 0x46;
   public static final byte BAD_VERSION = 0x00;
 
   // This flag is to deal with the problem where we used 32-bit ints for Airing durations in compact DB mode. For PVR
@@ -7380,7 +7381,7 @@ public class Wizard implements EPGDBPublic2
         {
           // unencrypted DB file
           in.close();
-          in = new FasterRandomFile(dbFile, "r", Sage.BYTE_CHARSET);
+          in = new FasterRandomFile(dbFile, "r", (version == 0x54) ? Sage.BYTE_CHARSET : Sage.I18N_CHARSET);
           in.readUnencryptedByte();
           in.readUnencryptedByte();
           in.readUnencryptedByte();
@@ -7409,7 +7410,11 @@ public class Wizard implements EPGDBPublic2
           long newFp = in.getFilePointer();
           if (fp + cmdLength != newFp)
           {
-            if (dbErrorsLogged < MAX_DB_ERRORS_TO_LOG)
+            if (!finishedAll) {
+              throw new IOException("ERROR DB RECORD LENGTH VIOLATION was " + (newFp - fp) + " should be " + cmdLength +
+                  " fp=" + fp + " length=" + fileLength + " opcode=" + opcode + " typecode=" + typecode);
+            }
+            else if (dbErrorsLogged < MAX_DB_ERRORS_TO_LOG)
             {
               dbErrorsLogged++;
               if (Sage.DBG) System.out.println("ERROR DB RECORD LENGTH VIOLATION was " + (newFp - fp) + " should be " + cmdLength +
