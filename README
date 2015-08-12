@@ -42,3 +42,39 @@ have it packaged into tarballs and debian installers.
 
 The Windows components need to be built with Visual Studio 2005, mingw/msys and javac.
 There is no script for doing this included.
+
+Release Notes for V9
+
+1. Java compliance level is now 1.5
+2. Read/write locking support in the database (previously, it only had generic rw locks...now their are explicit locks for read and write on each table)
+3. If on a menu w/out full screen video, but video is playing, switch to the full screen video menu when the screen saver timeout expires
+4. Lucene support for search (search API calls are now executed on the server and utilize the Lucene index for performance)
+5. Loads of various bug fixes and performance enhancements :)
+6. New Airing API calls: GetParentalLimitsExceeded, GetPlayableAiring
+7. New Channel API calls: GetChannelLogoURL
+8. New Configuration API calls: SetCurrentlyAiringProgramsStartLive, GetCurrentlyAiringProgramsStartLive
+9. New Database API calls(NTE methods support numeric text input, such as using 228 would match ‘cat’ or ‘bat’, more details in the code): SearchForPeopleNTE, SearchForTitlesNTE, SearchSelectedFieldsNTE, GetMediaMask, HasMediaMask, SearchForChannel
+10. Various filtering, sorting and grouping methods in the Database API are now optimized and don’t go back through the API interpreter for filter/sort/group method execution
+11. Following Database API calls now support extra args to pass to filter/sort/group methods: FilterByBoolMethod, FilterByMethod, GroupByMethod
+12. New Favorite API calls: GetFavoritePresentationName, GetFavoritePresentationPrefix, GetFavoritesForAiring
+13. New Global API calls: SageCommand (with payload), IsTransitioningToMenus, IsTransitioningFromMenus, GetUIComponentPositionXf, GetUIComponentPositionYf, GetUIComponentWidthf, GetUIComponentHeightf, IsClientDisconnected, GetClientServerConnectionProgress, GetEPGUpdateState, SwitchEmbeddedModeTo/AreScreenshotsSupported/SaveScreenshotToFile (these 3 are only useful on embedded)
+14. New MediaPlayer API calls: GetRecentChannels, ClearRecentChannels
+15. New SeriesInfo API calls: GetSeriesImage(bool), GetSeriesImageURL, GetSeriesImageCount, GetSeriesImageAtIndex, GetSeriesImageURLAtIndex, HasSeriesActorImage, GetSeriesActorImage, GetSeriesActorImageURL
+16. New Show API calls: IsMovie, HasMovieImage, GetMovieImage, GetMovieImageURL, GetMovieImageCount, GetMovieImageAtIndex, GetMovieImageURLAtIndex, HasPersonImage, GetPersonImage, GetPersonImageURL, GetPersonDateOfBirth, GetPersonDateOfDeath, GetPersonBirthplace, GetPersonID, GetPersonForID, GetMovieStarRating
+17. New Utility API calls: GetMetaImageAspectRatio, GetMetaImageBytes, GetLocalFileAsString, ConvertNteChars, StringIndexOfNTE, StringStartsWithNTE, DumpServerThreadStates
+18. Person is a new database object (rather than just being Stringer objects as they were previously)
+19. Series/person/character image information now exists in the database (follows TMS naming conventions)
+20. Thread monitoring and regular logging of CPU usage of various threads
+21. Significant performance improvements to overall database system
+22. Licensing/key checking code removed
+23. “Spoiler Protection” when watching live TV, it will not default to a channel which could possibly ‘spoil’ something else you care about. It also tries to avoid selecting anything that needs parental control by default.
+24. Codebase from EMBEDDED (HD300) merged with main SageTV codebase (NOTE: This will no longer run on the HD300 because it’s not Java 1.5 source rather than Java 1.4)
+25. Added new hooks: RecordRequestLiveMultiConflict, WatchRequestLiveMultiConflict (these allow processing all conflicts for watch/record requests at once rather than one at a time; if these hooks are not in the STV then the non-Multi hooks that have always existed will be called instead)
+26. TVTV support removed
+27. Added property “hdmi_always_select_best” which defaults to false, but if set true will auto select the best HDMI resolution for extender clients
+28. Added property “studio/alert_on_syntax_error” which defaults to false, but if true will popup an alert in the Studio if a syntax error is entered (i.e. an expression the parser cannot properly compile)
+29. Support for rendering of CEA-708 closed captions (i.e. Digital TV closed captions)
+30. Added downloader for Weather Underground data (API license key required to use)
+31. CVS integration for SageTV Studio (although not that useful since this is hosted on GIT now; but it’s done in an abstract way so GIT support could be added)
+32. Added RemotePusherClient support. This allows for a separate process that handles the streaming (push & pull mode) for SageTV rather than running this through the Java classes.
+33. On Windows the global environment variable SAGETVUSERKEY should be set to be your license key if you’re using the EXE built from the open source codebase. This will then allow you to communicate with the SageTV EPG server.
