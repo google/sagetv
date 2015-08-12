@@ -184,7 +184,7 @@ public class FileDownloader extends SystemTask
           myURLConn = myURL.openConnection();
           if (httpRangeSupported)
             myURLConn.setRequestProperty("Range", "bytes=0-");
-          if (sage.getBoolean("use_sagetv_user_agent", false))
+          if (Sage.getBoolean("use_sagetv_user_agent", false))
             myURLConn.setRequestProperty("User-Agent", "SageTV/" + sage.Version.MAJOR_VERSION + "." + sage.Version.MINOR_VERSION + "." + sage.Version.MICRO_VERSION);
           if (requestProps != null)
           {
