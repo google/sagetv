@@ -40,23 +40,17 @@ public class Scheduler implements Runnable
   private static final String SCHEDULER_EXPORT_FILE = "scheduler_export_file";
 
   private static final boolean EXPONENTIAL_RED = true;
-
-  private static Scheduler chosenOne;
-  private static final Object chosenOneLock = new Object();
-
   private static final boolean SDBG = Sage.DBG && "true".equals(Sage.get("scheduler_debug", null));
   private static final boolean GLOB_DEBUG = SDBG;
 
-  public static Scheduler getInstance() {
-    if (chosenOne == null) {
-      synchronized (chosenOneLock) {
-        if (chosenOne == null) {
-          chosenOne = new Scheduler();
-        }
-      }
+    private static class SchedulerHolder {
+        public static final Scheduler instance = new Scheduler();
     }
-    return chosenOne;
-  }
+
+    public static Scheduler getInstance() {
+        return SchedulerHolder.instance;
+    }
+  
   private Scheduler()
   {
     wiz = Wizard.getInstance();

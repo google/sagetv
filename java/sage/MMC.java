@@ -45,27 +45,28 @@ public class MMC
   public static final String ALWAYS_TUNE_CHANNEL = "always_tune_channel";
   public static final String LAST_ENCODER_NAME = "last_encoder_name";
 
-  private static MMC chosenOne;
-  private static final Object chosenOneLock=new Object();
-
-  public static MMC prime() {
-    synchronized (chosenOneLock) {
-      getInstance();
-      chosenOne.init();
-      return chosenOne;
-    }
+  private static class MMCHolder
+  {
+      public static final MMC instance = new MMC();
   }
-
-  public static MMC getInstance() {
-    if (chosenOne == null) {
-      synchronized (chosenOneLock) {
-        if (chosenOne == null) {
-          chosenOne = new MMC();
-        }
-      }
-    }
-    return chosenOne;
+   
+  public static MMC getInstance()
+  {
+      return MMCHolder.instance;
   }
+ 
+  private static final Object instanceLock = new Object();
+
+  public static MMC prime() 
+  {       
+       MMC instance = getInstance();
+       synchronized (instanceLock) 
+       {
+            instance.init();
+       } 
+       return instance;
+  }
+ 
   private MMC()
   {
     prefs = MMC_KEY + '/';

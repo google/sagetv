@@ -24,18 +24,28 @@ public class FSManager implements Runnable
   private static final String DELETE_QUEUE_PROP = "linux/delete_queue";
   private static final long PROGRESSIVE_DELETE_INCREMENT = Sage.getLong("linux/progressive_delete_increment", (Sage.EMBEDDED ? 50 :250)*1024*1024);
   private static final long PROGRESSIVE_DELETE_WAIT = Sage.getLong("linux/progressive_delete_wait", 1500);
-  private static FSManager chosenOne;
-  private static final Object chosenOneLock=new Object();
+//  private static FSManager chosenOne;
+//  private static final Object chosenOneLock=new Object();
 
-  public static FSManager getInstance() {
-    if (chosenOne == null) {
+  /**
+   * Threadsafe implementation of Singleton
+   */
+  private static class FSManagerHolder
+  {
+      public static final FSManager instance = new FSManager();
+  }
+  
+  public static FSManager getInstance() 
+  {    
+      return FSManagerHolder.instance;
+      /*    if (chosenOne == null) {
       synchronized (chosenOneLock) {
-        if (chosenOne == null) {
-          chosenOne = new FSManager();
-        }
+      if (chosenOne == null) {
+      chosenOne = new FSManager();
       }
-    }
-    return chosenOne;
+      }
+      }
+      return chosenOne;*/
   }
 
   /** Creates a new instance of FSManager */

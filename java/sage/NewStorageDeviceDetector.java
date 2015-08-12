@@ -17,19 +17,14 @@ package sage;
 
 public class NewStorageDeviceDetector implements Runnable
 {
-  private static NewStorageDeviceDetector chosenOne;
-  private static final Object chosenOneLock=new Object();
-
-  public static NewStorageDeviceDetector getInstance() {
-    if (chosenOne == null) {
-      synchronized (chosenOneLock) {
-        if (chosenOne == null) {
-          chosenOne = new NewStorageDeviceDetector();
-        }
-      }
+    private static class NSDDHolder {
+        public static final NewStorageDeviceDetector instance = new NewStorageDeviceDetector();
     }
-    return chosenOne;
-  }
+
+    public static NewStorageDeviceDetector getInstance() {
+        return NSDDHolder.instance;
+    }
+
   private NewStorageDeviceDetector()
   {
     deviceMap = new java.util.HashMap();

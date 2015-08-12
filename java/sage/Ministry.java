@@ -122,19 +122,16 @@ public class Ministry implements Runnable
     { "DVD-Extra Long Play with AC3", "f=dvd;[bf=vid;f=mpeg2video;br=3000000;fps=25;w=720;h=576;vbr=1;][bf=aud;f=ac3;sr=48000;bsmp=16;br=384000;]" },
   };
 
-  private static Ministry chosenOne;
-  private static final Object chosenOneLock=new Object();
-
-  public static Ministry getInstance() {
-    if (chosenOne == null) {
-      synchronized (chosenOneLock) {
-        if (chosenOne == null) {
-          chosenOne = new Ministry();
-        }
-      }
-    }
-    return chosenOne;
+  private static class MinistryHolder
+  {
+      public static final Ministry instance = new Ministry();
   }
+  
+  public static Ministry getInstance() 
+  {
+      return MinistryHolder.instance;
+  }
+  
   /** Creates a new instance of Ministry */
   public Ministry()
   {
