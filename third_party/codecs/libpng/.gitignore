@@ -1,0 +1,9 @@
+/.deps/
+/.libs/
+/libpng-config
+/libpng.pc
+/libpng.sym
+/libpng.vers
+/libpng12-config
+/libpng12.pc
+/libtool
