@@ -1,5 +1,33 @@
+# Lines that start with '#' are comments.
+*~
+config*.log
+
+# taken from build/clean.sh
+/build/so
+/build/release
+/build/minirelease
+/build/elf
+/build/serverrelease
+/build/ubuntuserver
+/build/ubuntuclient
+/build/clientrelease
+/build/sagetv*.deb
+/build/sagetv*.gz
+
+/native/**/*.o
+/native/**/*.map
+/native/**/*.a
+/native/**/*.so
+
+/third_party/**/*.o
+/third_party/**/*.lo
+/third_party/**/*.la
+/third_party/**/*.pc
+
+# gradle/eclipse stuff
 /bin/
 /.classpath
 /.project
 /.gradle/
 /.settings/
+
