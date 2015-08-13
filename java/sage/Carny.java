@@ -75,14 +75,14 @@ public final class Carny implements Runnable
     return getInstance();
   }
 
-  private static class CarnyHelper
+  private static class CarnyHolder
   {
     public static final Carny instance = new Carny();
   }
 
   public static Carny getInstance()
   {
-    return CarnyHelper.instance;
+    return CarnyHolder.instance;
   }
 
   private Carny()
