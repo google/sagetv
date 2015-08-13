@@ -23,3 +23,11 @@ config*.log
 /third_party/**/*.lo
 /third_party/**/*.la
 /third_party/**/*.pc
+
+# gradle/eclipse stuff
+/bin/
+/.classpath
+/.project
+/.gradle/
+/.settings/
+

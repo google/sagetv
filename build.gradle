@@ -1,0 +1,126 @@
+apply plugin: "java"
+apply plugin: "eclipse"
+apply plugin: "idea"
+
+// Sage Version -- Not used for now
+version = '9.0'
+
+// Globals
+ext {
+    appName = 'SageTV'
+    sageJarName = 'Sage.jar'
+    sageJarDestinationDir = 'build/release/'
+}
+
+repositories {
+    mavenCentral()
+    jcenter()
+}
+
+// Maybe someday we'll target >1.5 (hopefully)
+targetCompatibility = 1.5
+sourceCompatibility = 1.5
+
+compileJava {
+	options.warnings = false
+	//options.incremental = true
+	//options.debugOptions.debugLevel = "source,lines,vars"
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = [
+            	'java',
+            	'third_party/Javolution/java',
+            	'third_party/jcraft/java',
+            	'third_party/jtux/java',
+            	'third_party/MetadataExtractor/java',
+            	'third_party/Ogle/java',
+            	'third_party/RSSLIB4J/java',
+            	'third_party/SingularSys/java'
+            ]
+            // these don't compile?? (need to be on a mac, i think)
+            excludes = [
+            	'sage/QuartzSageRenderer.java',
+            	'sage/miniclient/OpenGLGFXCMD.java',
+            	'sage/miniclient/OpenGLVideoRenderer.java',
+            	'sage/miniclient/QuartzGFXCMD.java',
+            	'sage/JOGLSageRenderer.java'
+            ]
+        }
+    }
+}
+
+dependencies {
+    compile files(
+    	'third_party/UPnPLib/sbbi-upnplib-1.0.3.jar',
+
+		'third_party/JOGL/Windows/gluegen-rt.jar',
+		'third_party/JOGL/Windows/jogl.jar',
+		'third_party/JOGL/Linux/gluegen-rt.jar',
+		'third_party/JOGL/Linux/nativewindow.all.jar',
+		'third_party/JOGL/Linux/jogl.all.jar',
+    	
+    	'third_party/Oracle/vecmath.jar',
+    	'third_party/Lucene/lucene-core-3.6.0.jar',
+    	'third_party/JCIFS/jcifs-1.1.6.jar',
+    )
+  
+    // compile 'org.jogamp.jogl:jogl-all:2.3.1'  
+    compile 'com.apple:AppleJavaExtensions:1.4'
+}
+
+// remove the Sage.jar before updating it
+task cleanSageJar(type: Delete) {
+  delete sageJarDestinationDir+'/'+sageJarName
+}
+
+// build the Sage.jar
+task sageJar(type: Jar) {
+	archiveName = sageJarName
+	destinationDir = file(sageJarDestinationDir)
+    from files(sourceSets.main.output.classesDir) {
+    	// exclude the Mac stuff for now
+		excludes = [
+			'sage/miniclient/**',
+			'sage/MacAboutBox*',
+			'sage/MacApplicationListener.class',
+			'sage/QuartzRendererView.class'
+		]
+	}
+	
+    from files(sourceSets.main.output.resourcesDir)
+    
+    // Add in images and localization files
+    from 'images/SageTV/'
+    from ('i18n') {
+    	include '*.properties'
+    }
+    
+	doLast {
+        println 'Sage jar created in ' + sageJarDestinationDir +'/'+sageJarName
+    }        
+}
+
+sageJar.dependsOn classes, cleanSageJar
+
+eclipse {
+    project {
+        name = appName        
+    }
+}
+
+// This get run when you call ./gradlew without any targets
+defaultTasks 'sageJar'
+
+// not currently used, but I'm keeping it here because shows how to detect Linux/Windows/Mac
+import org.gradle.internal.os.OperatingSystem;
+
+task detect {
+    doLast {
+        println(OperatingSystem.current().isMacOsX())
+        println(OperatingSystem.current().isLinux())
+    }   
+}
+
