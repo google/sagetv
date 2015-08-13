@@ -446,37 +446,46 @@ public class Wizard implements EPGDBPublic2
         SHOW_CODE, AIRING_CODE, MANUAL_CODE, MEDIAFILE_CODE, WATCH_CODE, AGENT_CODE,
         WASTED_CODE, PLAYLIST_CODE, TVEDITORIAL_CODE, SERIESINFO_CODE };
   }
-  private static Wizard chosenOne;
-  private static final Object chosenOneLock = new Object();
+  private static final Object instanceLock = new Object();
 
-  public static Wizard prime() {
-    synchronized (chosenOneLock) {
-      getInstance();
-      chosenOne.init(null, null, false);
-      return chosenOne;
+  private static class WizardHolder
+  {
+    public static final Wizard instance = new Wizard();
+  }
+
+  /**
+   * Initialize the Wizard object
+   *
+   * @return
+   */
+  public static Wizard prime()
+  {
+    Wizard instance = getInstance();
+    synchronized (instanceLock)
+    {
+      instance.initWizInTables();
+      instance.init(null, null, false);
     }
+    return instance;
   }
 
   // For standalone DB operation, ala Warlock
-  public static Wizard prime(String dbFilename, String dbBackupFilename) {
-    synchronized (chosenOneLock) {
-      getInstance();
-      chosenOne.init(dbFilename, dbBackupFilename, true);
-      return chosenOne;
+  public static Wizard prime(String dbFilename, String dbBackupFilename)
+  {
+    Wizard instance = getInstance();
+    synchronized (instanceLock)
+    {
+      instance.initWizInTables();
+      instance.init(dbFilename, dbBackupFilename, true);
     }
+    return instance;
   }
 
-  public static Wizard getInstance() {
-    if (chosenOne == null) {
-      synchronized (chosenOneLock) {
-        if (chosenOne == null) {
-          chosenOne = new Wizard();
-          chosenOne.initWizInTables();
-        }
-      }
-    }
-    return chosenOne;
+  public static Wizard getInstance()
+  {
+    return WizardHolder.instance;
   }
+    
   private Wizard()
   {
     prefsRoot = WIZARD_KEY + '/';

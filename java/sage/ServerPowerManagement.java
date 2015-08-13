@@ -21,18 +21,14 @@ package sage;
  */
 public class ServerPowerManagement extends PowerManagement
 {
-  private static PowerManagement chosenOne;
-  private static final Object chosenOneLock = new Object();
+  private static class SPMHolder
+  {
+    private static final ServerPowerManagement instance = new ServerPowerManagement();
+  }
 
-  public static PowerManagement getInstance() {
-    if (chosenOne == null) {
-      synchronized (chosenOneLock) {
-        if (chosenOne == null) {
-          chosenOne = new ServerPowerManagement();
-        }
-      }
-    }
-    return chosenOne;
+  public static PowerManagement getInstance()
+  {
+    return SPMHolder.instance;
   }
 
   /** Creates a new instance of ServerPowerManagement */

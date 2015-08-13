@@ -31,8 +31,6 @@ public final class Carny implements Runnable
 {
   private static final String GLOBAL_WATCH_COUNT = "global_watch_count";
   static final String CARNY_KEY = "carny";
-  private static Carny chosenOne;
-  private static final Object chosenOneLock=new Object();
 
   private static final long LOOKAHEAD = Sage.EMBEDDED ? 10*24*60*60*1000L : 14*24*60*60*1000L;
   /*
@@ -74,19 +72,19 @@ public final class Carny implements Runnable
 
   public static Carny prime()
   {
-    getInstance();
-    return chosenOne;
+    return getInstance();
   }
-  public static Carny getInstance() {
-    if (chosenOne == null) {
-      synchronized (chosenOneLock) {
-        if (chosenOne == null) {
-          chosenOne = new Carny();
-        }
-      }
-    }
-    return chosenOne;
+
+  private static class CarnyHolder
+  {
+    public static final Carny instance = new Carny();
   }
+
+  public static Carny getInstance()
+  {
+    return CarnyHolder.instance;
+  }
+
   private Carny()
   {
     prefs = CARNY_KEY + '/';

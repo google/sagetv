@@ -62,28 +62,22 @@ public final class EPG implements Runnable
     }
   }
 
-  private EpgState epgState=EpgState.IDLE;
+  private EpgState epgState = EpgState.IDLE;
 
-  private static EPG chosenOne;
-  private static final Object chosenOneLock=new Object();
-
-  public static EPG prime() {
-    getInstance();
-    return chosenOne;
+  public static EPG prime()
+  {
+    return getInstance();
   }
 
-  public static EPG getInstance() {
-    if (chosenOne == null) {
-      synchronized (chosenOneLock) {
-        if (chosenOne == null) {
-          chosenOne = new EPG();
-        }
-      }
-    }
-    return chosenOne;
+  private static class EPGHolder
+  {
+    public static final EPG instance = new EPG();
   }
 
-
+  public static EPG getInstance()
+  {
+    return EPGHolder.instance;
+  }
 
   private EPG()
   {
