@@ -124,14 +124,14 @@ public class Ministry implements Runnable
 
   private static class MinistryHolder
   {
-      public static final Ministry instance = new Ministry();
+    public static final Ministry instance = new Ministry();
   }
-  
-  public static Ministry getInstance() 
+
+  public static Ministry getInstance()
   {
-      return MinistryHolder.instance;
+    return MinistryHolder.instance;
   }
-  
+
   /** Creates a new instance of Ministry */
   public Ministry()
   {

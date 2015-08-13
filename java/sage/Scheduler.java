@@ -43,13 +43,15 @@ public class Scheduler implements Runnable
   private static final boolean SDBG = Sage.DBG && "true".equals(Sage.get("scheduler_debug", null));
   private static final boolean GLOB_DEBUG = SDBG;
 
-    private static class SchedulerHolder {
-        public static final Scheduler instance = new Scheduler();
-    }
+  private static class SchedulerHolder
+  {
+    public static final Scheduler instance = new Scheduler();
+  }
 
-    public static Scheduler getInstance() {
-        return SchedulerHolder.instance;
-    }
+  public static Scheduler getInstance()
+  {
+    return SchedulerHolder.instance;
+  }
   
   private Scheduler()
   {

@@ -448,37 +448,43 @@ public class Wizard implements EPGDBPublic2
   }
   private static final Object instanceLock = new Object();
 
-    private static class WizardHolder {
+  private static class WizardHolder
+  {
+    public static final Wizard instance = new Wizard();
+  }
 
-        public static final Wizard instance = new Wizard();
+  /**
+   * Initialize the Wizard object
+   *
+   * @return
+   */
+  public static Wizard prime()
+  {
+    Wizard instance = getInstance();
+    synchronized (instanceLock)
+    {
+      instance.initWizInTables();
+      instance.init(null, null, false);
     }
+    return instance;
+  }
 
-    /** 
-     * Initialize the Wizard object
-     * @return 
-     */
-    public static Wizard prime() {
-        Wizard instance = getInstance();
-        synchronized (instanceLock) {
-            instance.initWizInTables();
-            instance.init(null, null, false);
-        }
-        return instance;
+  // For standalone DB operation, ala Warlock
+  public static Wizard prime(String dbFilename, String dbBackupFilename)
+  {
+    Wizard instance = getInstance();
+    synchronized (instanceLock)
+    {
+      instance.initWizInTables();
+      instance.init(dbFilename, dbBackupFilename, true);
     }
+    return instance;
+  }
 
-    // For standalone DB operation, ala Warlock
-    public static Wizard prime(String dbFilename, String dbBackupFilename) {
-        Wizard instance = getInstance();
-        synchronized (instanceLock) {
-            instance.initWizInTables();
-            instance.init(dbFilename, dbBackupFilename, true);
-        }
-        return instance;
-    }
-
-    public static Wizard getInstance() {
-        return WizardHolder.instance;
-    }
+  public static Wizard getInstance()
+  {
+    return WizardHolder.instance;
+  }
     
   private Wizard()
   {

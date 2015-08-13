@@ -70,18 +70,20 @@ public final class Carny implements Runnable
     else return "Unknown";
   }
 
-    public static Carny prime() {
-        return getInstance();
-    }
+  public static Carny prime()
+  {
+    return getInstance();
+  }
 
-    private static class CarnyHelper {
+  private static class CarnyHelper
+  {
+    public static final Carny instance = new Carny();
+  }
 
-        public static final Carny instance = new Carny();
-    }
-
-    public static Carny getInstance() {
-        return CarnyHelper.instance;
-    }
+  public static Carny getInstance()
+  {
+    return CarnyHelper.instance;
+  }
 
   private Carny()
   {

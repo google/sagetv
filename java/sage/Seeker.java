@@ -105,23 +105,27 @@ public class Seeker implements Runnable
   private static final long EXTERNAL_PROCESS_CHECK_PERIOD = 10000;
 
   private static Seeker chosenOne;
-    private static final Object instanceLock = new Object();
+  private static final Object instanceLock = new Object();
 
-    private static class SeekerHolder {
-        public static final Seeker instance = new Seeker();
-    }
+  private static class SeekerHolder
+  {
+    public static final Seeker instance = new Seeker();
+  }
 
-    public static Seeker prime() {
-        Seeker instance = getInstance();
-        synchronized (instanceLock) {
-            instance.init();
-        }
-        return instance;
+  public static Seeker prime()
+  {
+    Seeker instance = getInstance();
+    synchronized (instanceLock)
+    {
+      instance.init();
     }
+    return instance;
+  }
 
-    public static Seeker getInstance() {
-        return SeekerHolder.instance;
-    }
+  public static Seeker getInstance()
+  {
+    return SeekerHolder.instance;
+  }
     
   private Seeker()
   {

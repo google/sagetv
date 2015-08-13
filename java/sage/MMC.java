@@ -47,24 +47,24 @@ public class MMC
 
   private static class MMCHolder
   {
-      public static final MMC instance = new MMC();
+    public static final MMC instance = new MMC();
   }
-   
+
   public static MMC getInstance()
   {
-      return MMCHolder.instance;
+    return MMCHolder.instance;
   }
- 
+
   private static final Object instanceLock = new Object();
 
-  public static MMC prime() 
-  {       
-       MMC instance = getInstance();
-       synchronized (instanceLock) 
-       {
-            instance.init();
-       } 
-       return instance;
+  public static MMC prime()
+  {
+    MMC instance = getInstance();
+    synchronized (instanceLock)
+    {
+      instance.init();
+    }
+    return instance;
   }
  
   private MMC()

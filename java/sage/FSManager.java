@@ -30,12 +30,12 @@ public class FSManager implements Runnable
    */
   private static class FSManagerHolder
   {
-      public static final FSManager instance = new FSManager();
+    public static final FSManager instance = new FSManager();
   }
-  
-  public static FSManager getInstance() 
-  {    
-      return FSManagerHolder.instance;
+
+  public static FSManager getInstance()
+  {
+    return FSManagerHolder.instance;
   }
 
   /** Creates a new instance of FSManager */

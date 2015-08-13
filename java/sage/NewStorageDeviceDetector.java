@@ -17,13 +17,15 @@ package sage;
 
 public class NewStorageDeviceDetector implements Runnable
 {
-    private static class NSDDHolder {
-        public static final NewStorageDeviceDetector instance = new NewStorageDeviceDetector();
-    }
+  private static class NSDDHolder
+  {
+    public static final NewStorageDeviceDetector instance = new NewStorageDeviceDetector();
+  }
 
-    public static NewStorageDeviceDetector getInstance() {
-        return NSDDHolder.instance;
-    }
+  public static NewStorageDeviceDetector getInstance()
+  {
+    return NSDDHolder.instance;
+  }
 
   private NewStorageDeviceDetector()
   {
