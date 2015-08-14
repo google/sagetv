@@ -233,10 +233,14 @@ public class WarlockRipper extends EPGDataSource
     }
   }
 
+  public static String getEPGLicenseKey() {
+    return Sage.WINDOWS_OS ? System.getProperty("USERKEY") : IOUtils.getFileAsString(new java.io.File("activkey"));
+  }
+
   public static boolean doesHaveEpgLicense() {
     // NOTE: This of course is not the only way EPG clients are being validated...we're not that
     // dumb, ya know?  This is just to avoid people hitting the server who don't have a license.
-    String key = System.getProperty("USERKEY");
+    String key = getEPGLicenseKey();
     return (key != null && key.length() > 0);
   }
 
@@ -254,7 +258,7 @@ public class WarlockRipper extends EPGDataSource
     // This is where we extract the license key information and submit it to the server
     sb.append(Sage.getFileSystemIdentifier(Sage.WINDOWS_OS ? "C:\\" : "/"));
     sb.append(' ');
-    String key = System.getProperty("USERKEY");
+    String key = getEPGLicenseKey();
     if (key == null || key.length() == 0)
       key = "NOKEY";
     sb.append(key);

@@ -43,10 +43,8 @@ if [ -e $PIDFILE ] ; then
    fi
 fi
 
-
-if [ -e activkey ] || [ -e usbmode ] ; then
-  userkey=`cat activkey`
-fi
+#NOTE: Linux users should put their license key inside of the
+#'activkey' file in the SageTV folder
 
 chmod 777 /var/media/videos
 chmod 777 /var/media/pictures

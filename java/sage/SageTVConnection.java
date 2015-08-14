@@ -436,7 +436,7 @@ public class SageTVConnection implements Runnable, Wizard.XctSyncClient, Carny.P
         throw new java.io.IOException("VERSION_ERR"); // bad version match is why this would happen
       }
       String key;
-      key = System.getProperty("USERKEY");
+      key = WarlockRipper.getEPGLicenseKey();
       if (key == null || key.length() == 0)
         key = "NOKEY";
       // Since we no longer encrypt the connection we should obfuscate the key w/ an MD5SUM
