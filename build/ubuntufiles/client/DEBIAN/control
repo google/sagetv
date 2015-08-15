@@ -5,5 +5,5 @@ Installed-Size: 13840
 Maintainer: jeanfrancois@sagetv.com
 Architecture: DEB_ARCH
 Version: MAJOR_VERSION.MINOR_VERSION.MICRO_VERSION
-Depends: libasound2, sun-java6-jre, libfaac0
+Depends: libasound2, java5-runtime | java5-sdk, libfaac0
 Description: SageTV Client MAJOR_VERSION.MINOR_VERSION.MICRO_VERSION

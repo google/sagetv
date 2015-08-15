@@ -5,6 +5,6 @@ Installed-Size: 33308
 Maintainer: jeanfrancois@sagetv.com
 Architecture: DEB_ARCH
 Version: MAJOR_VERSION.MINOR_VERSION.MICRO_VERSION
-Depends: sun-java6-jre
+Depends: java5-runtime | java5-sdk
 Suggests: ivtv
 Description: SageTV Server MAJOR_VERSION.MINOR_VERSION.MICRO_VERSION
