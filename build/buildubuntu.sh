@@ -19,6 +19,11 @@ MAJOR_VERSION=`grep MAJOR_VERSION ../java/sage/Version.java | grep -o [0-9]*`
 MINOR_VERSION=`grep MINOR_VERSION ../java/sage/Version.java | grep -o [0-9]*`
 MICRO_VERSION=`grep MICRO_VERSION ../java/sage/Version.java | grep -o [0-9]*`
 
+# Get the architecture, if not already set
+if [ -z "$DEB_ARCH" ]; then
+  DEB_ARCH=`dpkg --print-architecture`
+fi
+
 echo Building server package
 rm -rf ubuntuserver
 mkdir ubuntuserver
@@ -29,7 +34,11 @@ mkdir ubuntuserver/opt/sagetv
 mkdir ubuntuserver/opt/sagetv/server
 cp -R serverrelease/* ubuntuserver/opt/sagetv/server/
 chmod -R 755 ubuntuserver
-dpkg -b ubuntuserver sagetv-server_"$MAJOR_VERSION"."$MINOR_VERSION"."$MICRO_VERSION"_i386.deb
+sed -i "s/MAJOR_VERSION/$MAJOR_VERSION/g" ubuntuserver/DEBIAN/control
+sed -i "s/MINOR_VERSION/$MINOR_VERSION/g" ubuntuserver/DEBIAN/control
+sed -i "s/MICRO_VERSION/$MICRO_VERSION/g" ubuntuserver/DEBIAN/control
+sed -i "s/DEB_ARCH/$DEB_ARCH/g" ubuntuserver/DEBIAN/control
+dpkg -b ubuntuserver sagetv-server_"$MAJOR_VERSION"."$MINOR_VERSION"."$MICRO_VERSION"_"$DEB_ARCH".deb
 
 echo Building client package
 rm -rf ubuntuclient
@@ -40,5 +49,11 @@ mkdir ubuntuclient/opt/sagetv
 mkdir ubuntuclient/opt/sagetv/client
 cp -R clientrelease/* ubuntuclient/opt/sagetv/client/
 chmod -R 755 ubuntuclient
-dpkg -b ubuntuclient sagetv-client_"$MAJOR_VERSION"."$MINOR_VERSION"."$MICRO_VERSION"_i386.deb
-
+sed -i "s/MAJOR_VERSION/$MAJOR_VERSION/g" ubuntuclient/DEBIAN/control
+sed -i "s/MINOR_VERSION/$MINOR_VERSION/g" ubuntuclient/DEBIAN/control
+sed -i "s/MICRO_VERSION/$MICRO_VERSION/g" ubuntuclient/DEBIAN/control
+sed -i "s/DEB_ARCH/$DEB_ARCH/g" ubuntuclient/DEBIAN/control
+sed -i "s/MAJOR_VERSION/$MAJOR_VERSION/g" ubuntuclient/usr/share/applications/sagetv.desktop
+sed -i "s/MINOR_VERSION/$MINOR_VERSION/g" ubuntuclient/usr/share/applications/sagetv.desktop
+sed -i "s/MICRO_VERSION/$MICRO_VERSION/g" ubuntuclient/usr/share/applications/sagetv.desktop
+dpkg -b ubuntuclient sagetv-client_"$MAJOR_VERSION"."$MINOR_VERSION"."$MICRO_VERSION"_"$DEB_ARCH".deb
