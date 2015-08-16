@@ -10,4 +10,4 @@ libFreetypeFontJNI.so: $(OBJFILES)
 #	$(CC) -shared -W1 -o FreetypeFontJNI.dll $(OBJFILES) -lfreetype -lz
 
 clean:
-	rm -f *.o FreetypeFontJNI.dll *.c~ *.h~
+	rm -f *.o FreetypeFontJNI.dll libFreetypeFontJNI.so *.c~ *.h~
