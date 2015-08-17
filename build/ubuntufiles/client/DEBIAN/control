@@ -4,6 +4,6 @@ Section: base
 Installed-Size: 13840
 Maintainer: jeanfrancois@sagetv.com
 Architecture: 
-Version: 9.0.0.3
+Version: 
 Depends: libasound2, libfaac0
-Description: SageTV Client 9.0.0.3
+Description: SageTV Client 
