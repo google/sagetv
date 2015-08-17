@@ -286,11 +286,9 @@ eclipse {
 				classpath.entries.each {
 					if (it.path == 'java' && it.includes.size()>0) {
 						item=it
-						println("setting item $item");
 					}
 				}
 				if (item!=null) {
-					println("removing $item")
 					classpath.entries.remove(item)
 				}
 			}
