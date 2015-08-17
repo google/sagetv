@@ -4,7 +4,7 @@ Section: base
 Installed-Size: 33308
 Maintainer: jeanfrancois@sagetv.com
 Architecture: 
-Version: 9.0.0.3
+Version: 
 Depends:
 Suggests: ivtv
-Description: SageTV Server 9.0.0.3
+Description: SageTV Server 
