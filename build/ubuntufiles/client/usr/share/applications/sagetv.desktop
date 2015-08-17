@@ -1,8 +1,8 @@
 [Desktop Entry]
 Encoding=UTF-8
 Type=Application
-Name=SageTV Client 6.5.8
-Comment=Client/Placeshifter for SageTV 6.5.8
+Name=SageTV Client MAJOR_VERSION.MINOR_VERSION.MICRO_VERSION
+Comment=Client/Placeshifter for SageTV MAJOR_VERSION.MINOR_VERSION.MICRO_VERSION
 Exec=/opt/sagetv/client/sageclient.sh
 TryExec=/opt/sagetv/client/sageclient.sh
 Terminal=false

@@ -3,8 +3,8 @@ Priority: extra
 Section: base
 Installed-Size: 33308
 Maintainer: jeanfrancois@sagetv.com
-Architecture: i386
-Version: 6.5.8-1
-Depends: sun-java6-jre
+Architecture: DEB_ARCH
+Version: MAJOR_VERSION.MINOR_VERSION.MICRO_VERSION
+Depends: java5-runtime | java5-sdk
 Suggests: ivtv
-Description: SageTV Server 6.5.8
+Description: SageTV Server MAJOR_VERSION.MINOR_VERSION.MICRO_VERSION
