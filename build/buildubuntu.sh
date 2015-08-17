@@ -18,27 +18,34 @@
 MAJOR_VERSION=`grep MAJOR_VERSION ../java/sage/Version.java | grep -o [0-9]*`
 MINOR_VERSION=`grep MINOR_VERSION ../java/sage/Version.java | grep -o [0-9]*`
 MICRO_VERSION=`grep MICRO_VERSION ../java/sage/Version.java | grep -o [0-9]*`
+BUILD_VERSION=`grep BUILD_VERSION ../java/sage/SageConstants.java | grep -o [0-9]*`
 
 echo Building server package
 rm -rf ubuntuserver
 mkdir ubuntuserver
 # Copies control files
 cp -R ubuntufiles/server/* ubuntuserver/
+sed -i "s/Architecture: /Architecture: $JAVA_ARCH/" ubuntuserver/DEBIAN/control
+sed -i "s/Version: /Version: $MAJOR_VERSION.$MINOR_VERSION.$MICRO_VERSION.$BUILD_VERSION/" ubuntuserver/DEBIAN/control
+sed -i "s/Description: SageTV Server /Description: SageTV Server $MAJOR_VERSION.$MINOR_VERSION.$MICRO_VERSION.$BUILD_VERSION/" ubuntuserver/DEBIAN/control
 mkdir ubuntuserver/opt
 mkdir ubuntuserver/opt/sagetv
 mkdir ubuntuserver/opt/sagetv/server
 cp -R serverrelease/* ubuntuserver/opt/sagetv/server/
 chmod -R 755 ubuntuserver
-dpkg -b ubuntuserver sagetv-server_"$MAJOR_VERSION"."$MINOR_VERSION"."$MICRO_VERSION"_i386.deb
+dpkg -b ubuntuserver sagetv-server_"$MAJOR_VERSION"."$MINOR_VERSION"."$MICRO_VERSION"."$BUILD_VERSION"_"$JAVA_ARCH".deb
 
 echo Building client package
 rm -rf ubuntuclient
 mkdir ubuntuclient
 cp -R ubuntufiles/client/* ubuntuclient/
+sed -i "s/Architecture: /Architecture: $JAVA_ARCH/" ubuntuclient/DEBIAN/control
+sed -i "s/Version: /Version: $MAJOR_VERSION.$MINOR_VERSION.$MICRO_VERSION.$BUILD_VERSION/" ubuntuclient/DEBIAN/control
+sed -i "s/Description: SageTV Client /Description: SageTV Client $MAJOR_VERSION.$MINOR_VERSION.$MICRO_VERSION.$BUILD_VERSION/" ubuntuclient/DEBIAN/control
 mkdir ubuntuclient/opt
 mkdir ubuntuclient/opt/sagetv
 mkdir ubuntuclient/opt/sagetv/client
 cp -R clientrelease/* ubuntuclient/opt/sagetv/client/
 chmod -R 755 ubuntuclient
-dpkg -b ubuntuclient sagetv-client_"$MAJOR_VERSION"."$MINOR_VERSION"."$MICRO_VERSION"_i386.deb
+dpkg -b ubuntuclient sagetv-client_"$MAJOR_VERSION"."$MINOR_VERSION"."$MICRO_VERSION"."$BUILD_VERSION"_"$JAVA_ARCH".deb
 
