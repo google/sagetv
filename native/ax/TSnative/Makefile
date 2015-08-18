@@ -24,8 +24,8 @@ STRIP:=$(CROSS_PREFIX)strip
 # allow the jdk to reside elsewhere, just export JAVA_HOME
 JAVA_HOME ?= /opt/jdk1.5.0_02
 
-#JSDK=-I/usr/local/j2sdk/include/ -I/usr/local/j2sdk/include/linux 
-JSDK=-I$(JAVA_HOME)/include -I$(JAVA_HOME)/include/linux 
+#JSDK=-I/usr/local/j2sdk/include/ -I/usr/local/j2sdk/include/linux
+JSDK=-I$(JAVA_HOME)/include -I$(JAVA_HOME)/include/linux
 CFLAGS=-fPIC -D_FILE_OFFSET_BITS=64 -Wall -Wno-missing-braces $(JSDK) $(DEBUG)
 
 TARGETDIR=../../lib/TSnative
@@ -49,10 +49,12 @@ $(TARGETDIR)/libTSnative.so: $(TARGETDIR) $(OBJS)
 	$(CC) -shared -Wl,-Map=libTSnative.map -o $(TARGETDIR)/libTSnative.so $(OBJS)
 
 $(TARGETDIR)/libTSnatived.so: $(TARGETDIR) $(OBJS)
-	$(CC) -g -O0 -shared -o $(TARGETDIR)/libTSnative.so $(OBJS)
-	
+	$(CC) -g -O0 -shared -o $(TARGETDIR)/libTSnatived.so $(OBJS)
+
 clean:
-	rm -f *.o *.c~ *.h~ $(TARGETDIR)/libTSnative.so
+	rm -f *.o *.map *.c~ *.h~ $(TARGETDIR)/libTSnative.so $(TARGETDIR)/libTSnatived.so
+	rmdir $(TARGETDIR) || true # only remove if empty, don't fail if non-empty
+	rmdir ../../lib || true # only remove if empty, don't fail if non-empty
 
 depend:
 	makedepend -Y -- $(CFLAGS) -- $(SRCS)

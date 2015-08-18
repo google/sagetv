@@ -11,4 +11,4 @@ libDirecTVSerialControl.so: $(OBJFILES)
 	$(CC) -shared -Wall -o libDirecTVSerialControl.so $(OBJFILES)
 
 clean:
-	rm -f *.o libDirecTVSerialControl.so *.c~ *.h~ *.class ../../dll/DirecTVSerialControl/DirecTVSerialControl.o
+	rm -f *.o libDirecTVSerialControl.so *.c~ *.h~ *.class ../../dll/DirecTVSerialControl/DirecTVSerialControl.o ../../common/jni-util.o

@@ -16,8 +16,8 @@
 #
 # Build the external codecs
 cd ../third_party/codecs/faac
-./bootstrap
-./configure CFLAGS=-fno-common --enable-static --disable-shared --without-mp4v2
+./bootstrap || { echo "Build failed, exiting."; exit 1; }
+./configure CFLAGS=-fno-common --enable-static --disable-shared --without-mp4v2 || { echo "Build failed, exiting."; exit 1; }
 make -j32 || { echo "Build failed, exiting."; exit 1; }
 
 cd ../faad2
@@ -54,4 +54,3 @@ cp ../../third_party/ffmpeg/ffmpeg .
 cp ../../third_party/mplayer/mplayer .
 cp ../../third_party/codecs/jpeg-6b/jpegtran .
 cd ..
-
