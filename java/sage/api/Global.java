@@ -2172,7 +2172,7 @@ public class Global {
         String serverName = getString(stack);
         return new FileDownloader(null).downloadFile(serverName, src, dest, false, props);
       }});
-    rft.put(new PredefinedJEPFunction("Global", "StartCircularFileDownload", new String[] { "ServerAddress", "SourceFile", "DestFile" })
+    rft.put(new PredefinedJEPFunction("Global", "StartCircularFileDownload", -1, new String[] { "ServerAddress", "SourceFile", "DestFile" })
     {
       /**
        * Instructs the file transfer engine to download the specified file from the server to the local destination file. You may also
@@ -2190,11 +2190,32 @@ public class Global {
        *
        * @declaration public boolean StartCircularFileDownload(String ServerAddress, String SourceFile, java.io.File DestFile);
        */
+
+      /**
+       * Instructs the file transfer engine to download the specified file from the server to the local destination file. You may also
+       * download from remote http:// or ftp:// addresses; in that case just specify the URL in the ServerAddress argument and leave sourceFile as null.
+       * When downloading from http or ftp addresses, the target will be the server's filesystem for remote clients; otherwise it is the local filesystem.
+       * When smb:// URLs are specified; they will be access from the server's network for remote clients, otherwise the source will be from the local network.
+       * smb:// URLs target download will be the local filesystem.
+       * The 'Circular' version of this API call will write to a temporary circular file; this is designed for systems with limited storage capacity.
+       * This version of the API call may not be used by SageTVClient (if it is; then it will internally switch to the non-circular file method)
+       * @param ServerAddress the address of the SageTV server to download from, or null if you're using SageTVClient and you want to download from the server you're connected to, or a valid smb, http or ftp URL
+       * @param SourceFile the file path on the server you want to download
+       * @param DestFile the destination file for the file download
+       * @param RequestProperties a Properties object that specifies the request properties to use in an HTTP download request, can be null
+       * @return true if the copy process was successfully started, false if the file doesn't exist on the server or it couldn't be contacted
+       * @since 6.4
+       *
+       * @declaration public boolean StartCircularFileDownload(String ServerAddress, String SourceFile, java.io.File DestFile, java.util.Properties RequestProperties);
+       */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
+        java.util.Properties props = null;
+        if (curNumberOfParameters == 4)
+          props = (java.util.Properties) stack.pop();
         java.io.File dest = getFile(stack);
         String src = getString(stack);
         String serverName = getString(stack);
-        return FileDownloader.getFileDownloader(stack.getUIMgrSafe()).downloadCircularFile(serverName, src, dest);
+        return new FileDownloader(null).downloadFile(serverName, src, dest, true, props);
       }});
     rft.put(new PredefinedJEPFunction("Global", "CancelFileDownload")
     {
