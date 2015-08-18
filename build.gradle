@@ -7,14 +7,35 @@ version = '9.0'
 
 // Globals
 ext {
+    sageBuildDir = 'buildoutput'
+    stageBuildDir = 'build'
     appName = 'SageTV'
     sageJarName = 'Sage.jar'
     sageJarDestinationDir = 'build/release/'
+    
+    miniJarName = 'MiniClient.jar'
+    miniJarDestinationDir = 'build/minirelease/'
+
+    jogampVer = '2.0.2'
+	
+	arch=Integer.parseInt(System.getProperty('sun.arch.data.model')); // 32 or 64
 }
+
+// set gradle's buildDir to something other than the default 'build', or
+// we'll end up deleting EVERYTHING in 'build' when we ./gradlew clean
+buildDir = new File(rootProject.projectDir,  sageBuildDir);
 
 repositories {
     mavenCentral()
     jcenter()
+}
+
+configurations {
+	miniclient.extendsFrom compile
+	miniclientRuntime
+	miniclientRuntimeLinux32
+	miniclientRuntimeLinux64
+	miniclientArch
 }
 
 // Maybe someday we'll target >1.5 (hopefully)
@@ -28,6 +49,7 @@ compileJava {
 }
 
 sourceSets {
+	// main configuration for the Sage.jar
     main {
         java {
             srcDirs = [
@@ -40,24 +62,53 @@ sourceSets {
             	'third_party/RSSLIB4J/java',
             	'third_party/SingularSys/java'
             ]
-            // these don't compile?? (need to be on a mac, i think)
             excludes = [
+				// mac files, need to be on a Mac to build these
             	'sage/QuartzSageRenderer.java',
-            	'sage/miniclient/OpenGLGFXCMD.java',
-            	'sage/miniclient/OpenGLVideoRenderer.java',
-            	'sage/miniclient/QuartzGFXCMD.java',
-            	'sage/JOGLSageRenderer.java'
+				'sage/miniclient/QuartzGFXCMD.java',
+				// does not appear to compile, maybe an older file??
+            	'sage/JOGLSageRenderer.java' 
             ]
         }
     }
+	
+	// Miniclient configuration only specifies the Minimal files and
+	// javac will find and compile all the dependencies based on the
+	// main configuration being the sourcepath reference
+	miniclient {
+		java {
+			srcDirs = [
+				'java',
+			]
+            includes = [
+            	'sage/miniclient/MiniClient.java',
+				'sage/PowerManagement.java',
+				'sage/UIUtils.java',
+				'sage/miniclient/OpenGLGFXCMD.java'
+            ]
+		}
+	}
+}
+
+/**
+ * this is sort of a hack... normally we'd never set the -sourcepath on a java compile
+ * but, sagetv usues this hack to selectively compile and include files into each jar
+ * so we'll mimic the behaviour here until we need to do something different
+ */
+tasks.withType(JavaCompile) {
+	//options.fork=true
+	options.compilerArgs << "-sourcepath" << sourceSets.main.java.srcDirs.join(":")
+}
+
+task miniclient(type:JavaCompile){
+	description = "Build miniclient classes"
+	println('MiniClient Build')	
 }
 
 dependencies {
     compile files(
     	'third_party/UPnPLib/sbbi-upnplib-1.0.3.jar',
 
-		'third_party/JOGL/Windows/gluegen-rt.jar',
-		'third_party/JOGL/Windows/jogl.jar',
 		'third_party/JOGL/Linux/gluegen-rt.jar',
 		'third_party/JOGL/Linux/nativewindow.all.jar',
 		'third_party/JOGL/Linux/jogl.all.jar',
@@ -67,17 +118,48 @@ dependencies {
     	'third_party/JCIFS/jcifs-1.1.6.jar',
     )
   
-    // compile 'org.jogamp.jogl:jogl-all:2.3.1'  
     compile 'com.apple:AppleJavaExtensions:1.4'
+
+	
+	// Miniclient dependendencies for compiling
+	miniclientCompile files(
+		'third_party/UPnPLib/sbbi-upnplib-1.0.3.jar',
+
+		'third_party/JOGL/Linux/gluegen-rt.jar',
+		'third_party/JOGL/Linux/nativewindow.all.jar',
+		'third_party/JOGL/Linux/jogl.all.jar',
+		
+		'third_party/Oracle/vecmath.jar',
+		'third_party/Lucene/lucene-core-3.6.0.jar',
+		'third_party/JCIFS/jcifs-1.1.6.jar',
+	)  
+	miniclientCompile 'com.apple:AppleJavaExtensions:1.4'
+
+	// setup the miniclient dependencies for 32/64 bit linux
+	// looks like miniclient is only linux
+	// eventually if we upgrade the JOGL this is how we can do it, dynamically
+//	miniclientRuntime "org.jogamp.jogl:jogl-all:$jogampVer"	
+//	miniclientRuntime ("org.jogamp.gluegen:gluegen:$jogampVer") {
+//		transitive false
+//	}
+//	miniclientRuntime ("org.jogamp.gluegen:gluegen-rt-main:$jogampVer") {
+//		transitive false
+//	}
+//	miniclientRuntimeLinux32 "org.jogamp.jogl:jogl-all:$jogampVer:natives-linux-i586"
+//	miniclientRuntimeLinux32 "org.jogamp.gluegen:gluegen-rt:$jogampVer:natives-linux-i586"
+//	miniclientRuntimeLinux64 "org.jogamp.jogl:jogl-all:$jogampVer:natives-linux-amd64"
+//	miniclientRuntimeLinux64 "org.jogamp.gluegen:gluegen-rt:$jogampVer:natives-linux-amd64"
 }
+
 
 // remove the Sage.jar before updating it
 task cleanSageJar(type: Delete) {
-  delete sageJarDestinationDir+'/'+sageJarName
+    delete sageJarDestinationDir+'/'+sageJarName
 }
 
 // build the Sage.jar
 task sageJar(type: Jar) {
+	description = 'Build the Sage.jar'
 	archiveName = sageJarName
 	destinationDir = file(sageJarDestinationDir)
     from files(sourceSets.main.output.classesDir) {
@@ -99,16 +181,119 @@ task sageJar(type: Jar) {
     }
     
 	doLast {
-        println 'Sage jar created in ' + sageJarDestinationDir +'/'+sageJarName
+        println "$sageJarName created in $sageJarDestinationDir"
     }        
 }
 
+// clean miniclient jar
+task cleanMiniJar(type: Delete) {
+  delete miniJarDestinationDir+'/'+miniJarName
+}
+
+// build miniclient jar
+task miniclientJar(type: Jar) {
+	archiveName = miniJarName
+	destinationDir = file(miniJarDestinationDir)
+    from files(sourceSets.miniclient.output.classesDir) {
+	}
+	
+    // Add in images and localization files
+    from 'images/MiniClient/'
+    
+	doLast {
+        println "$miniJarName created in $miniJarDestinationDir"
+    }        
+}
+
+// LinuxOnly: calls a unix script and ensures that JDK_HOME is set
+def linuxScript(String script) {
+	String jdk="$System.env.JDK_HOME"
+	if (jdk==null || jdk==""||jdk=='null') throw new GradleException('JDK_HOME must be set to the JDK installation directory');
+	File jdkInclude = new File(new File(jdk),"include");
+	if (!jdkInclude) throw new GradleException('JDK_HOME does not point to a valid JDK home: ' + jdk);
+    exec {
+    	workingDir = 'build'
+        executable script
+        environment JDK_HOME: jdk
+    }
+}
+
+// currently Linux Only -- Need to look at supporting Windows 
+task (linuxMiniclientRelease) << {
+	if (!OperatingSystem.current().isLinux()) {
+		throw new GradleException('This target is not supported on Windows, yet.');
+	}
+
+	if (!(new File('build/so/libSage.so')).exists()) {
+		linuxScript('./buildso.sh');
+	}
+	
+	if (!(new File('build/elf/mplayer')).exists()) {
+		linuxScript('./build3rdparty.sh');
+	}
+	
+	delete 'build/clientrelease'
+	
+	copy {
+	 	from('build/minirelease/MiniClient.jar') {
+	    }
+		from ('build/clientfiles/')
+		from 'third_party/swscale/libswscale.so'
+		 	
+		from ('build/so/libSageX11.so') {
+			rename 'libSageX11.so', 'libSage.so' 
+		}
+		from ('build/so/libjtux.so')
+		from ('build/so/libImageLoader.so')	
+	    from ('build/elf/mplayer')
+	
+		//from (configurations.miniclientRuntime)
+		
+		if (arch==32) {
+			from ('third_party/JOGL/Linux/') {
+				include "*"
+			}
+		} else {
+			// no 64 bit JOGL support, yet
+		}
+		
+	    into('build/clientrelease')
+    }	
+
+}
+
+// build RAW javadoc
+task sageJavadoc(type: Javadoc) {
+  source = sourceSets.main.allJava
+}
+
+// task dependencies
 sageJar.dependsOn classes, cleanSageJar
+miniclientJar.dependsOn miniclientClasses, cleanMiniJar
+linuxMiniclientRelease.dependsOn miniclientJar
 
 eclipse {
     project {
         name = appName        
     }
+	
+	classpath {
+		file {
+			// java appears twice in the classpath because it is configured for sage and miniclient, 
+			// need to remove the miniclient one, or else it will cause eclipse to complain
+			whenMerged { classpath ->
+				def item=null;
+				classpath.entries.each {
+					if (it.path == 'java' && it.includes.size()>0) {
+						item=it
+					}
+				}
+				if (item!=null) {
+					classpath.entries.remove(item)
+				}
+			}
+		}
+	}
 }
 
 // This get run when you call ./gradlew without any targets
@@ -119,6 +304,7 @@ import org.gradle.internal.os.OperatingSystem;
 
 task detect {
     doLast {
+		println(OperatingSystem.current().isWindows())
         println(OperatingSystem.current().isMacOsX())
         println(OperatingSystem.current().isLinux())
     }   
