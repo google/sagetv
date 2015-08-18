@@ -31,3 +31,4 @@ config*.log
 /.gradle/
 /.settings/
 
+/OSSageTV/
