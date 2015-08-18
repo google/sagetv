@@ -46,7 +46,7 @@ There is no script for doing this included.
 Release Notes for V9
 
 1. Java compliance level is now 1.5
-2. Read/write locking support in the database (previously, it only had generic rw locks...now their are explicit locks for read and write on each table)
+2. Read/write locking support in the database (previously, it only had generic rw locks... now there are explicit locks for read and write on each table)
 3. If on a menu w/out full screen video, but video is playing, switch to the full screen video menu when the screen saver timeout expires
 4. Lucene support for search (search API calls are now executed on the server and utilize the Lucene index for performance)
 5. Loads of various bug fixes and performance enhancements :)
@@ -77,4 +77,4 @@ Release Notes for V9
 30. Added downloader for Weather Underground data (API license key required to use)
 31. CVS integration for SageTV Studio (although not that useful since this is hosted on GIT now; but it’s done in an abstract way so GIT support could be added)
 32. Added RemotePusherClient support. This allows for a separate process that handles the streaming (push & pull mode) for SageTV rather than running this through the Java classes.
-33. On Windows the global environment variable SAGETVUSERKEY should be set to be your license key if you’re using the EXE built from the open source codebase. This will then allow you to communicate with the SageTV EPG server.
+33. On Windows, the global environment variable SAGETVUSERKEY should be set to be your license key if you’re using the EXE built from the open source codebase. This will then allow you to communicate with the SageTV EPG server.
