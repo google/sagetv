@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <stdint.h>
 #include "TSCRC32.h"
 
 static unsigned long ts_crc32_table[256] =
@@ -86,7 +87,7 @@ static unsigned long ts_crc32_table[256] =
 
 unsigned long CalTSCRC32( const unsigned char *pData, int len )
 {
-    unsigned long  crc = 0xffffffff;
+    uint32_t crc = 0xffffffff;
     unsigned char* p_byte = (unsigned char*)pData;
 
     while( len-- )
