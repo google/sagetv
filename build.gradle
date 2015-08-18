@@ -284,7 +284,7 @@ eclipse {
 			whenMerged { classpath ->
 				def item=null;
 				classpath.entries.each {
-					if (it.path == 'java' && it.includes.size()==0) {
+					if (it.path == 'java' && it.includes.size()>0) {
 						item=it
 					}
 				}
