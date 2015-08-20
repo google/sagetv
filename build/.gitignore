@@ -1,4 +1,15 @@
+# taken from build/clean.sh
+/so/
+/release/
+/minirelease/
+/elf/
+/serverrelease/
+/ubuntuserver/
+/ubuntuclient/
+/clientrelease/
+/sagetv*.deb
+/sagetv*.gz
+
 /classes/
 /libs/
-/release/
 /tmp/
