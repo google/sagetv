@@ -2215,7 +2215,7 @@ public class Global {
         java.io.File dest = getFile(stack);
         String src = getString(stack);
         String serverName = getString(stack);
-        return new FileDownloader(null).downloadFile(serverName, src, dest, true, props);
+        return FileDownloader.getFileDownloader(stack.getUIMgrSafe()).downloadFile(serverName, src, dest, true, props);
       }});
     rft.put(new PredefinedJEPFunction("Global", "CancelFileDownload")
     {
