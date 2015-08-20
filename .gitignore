@@ -2,18 +2,6 @@
 *~
 config*.log
 
-# taken from build/clean.sh
-/build/so
-/build/release
-/build/minirelease
-/build/elf
-/build/serverrelease
-/build/ubuntuserver
-/build/ubuntuclient
-/build/clientrelease
-/build/sagetv*.deb
-/build/sagetv*.gz
-
 /native/**/*.o
 /native/**/*.map
 /native/**/*.a
