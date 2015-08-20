@@ -234,7 +234,7 @@ public class WarlockRipper extends EPGDataSource
   }
 
   public static String getEPGLicenseKey() {
-    return Sage.WINDOWS_OS ? System.getProperty("USERKEY") : IOUtils.getFileAsString(new java.io.File("activkey"));
+    return Sage.WINDOWS_OS ? System.getProperty("USERKEY") : IOUtils.getFileAsString(new java.io.File("activkey")).trim();
   }
 
   public static boolean doesHaveEpgLicense() {
