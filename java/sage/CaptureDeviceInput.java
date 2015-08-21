@@ -20,7 +20,6 @@ public class CaptureDeviceInput
   private static final String CABLE_BASED_RF = "cable_based_rf";
   private static final String ATSC_TUNING = "atsc_tuning";
   private static final String TUNING_MODE = "tuning_mode";
-  public static final String AVAILABLE_CHANNELS = "available_channels";
   public static final String CABLE = "Cable";
   public static final String AIR = "Air";
   public static final String ATSC = "ATSC";
@@ -95,7 +94,6 @@ public class CaptureDeviceInput
     crossbarType = inCrossType;
     crossbarIndex = inCrossIdx;
     prefs = basePrefs + crossbarType + '/' + crossbarIndex + '/';
-    availChanMap = new java.util.HashMap(); // String->String, keys are avail chans, values are alternate names
   }
   public String getCrossName()
   {
@@ -199,18 +197,6 @@ public class CaptureDeviceInput
 
   public void loadPrefs()
   {
-    availChanMap.clear();
-    java.util.StringTokenizer toker = new java.util.StringTokenizer(Sage.get(prefs + AVAILABLE_CHANNELS, ""), ";");
-    while (toker.hasMoreTokens())
-    {
-      String currChan = toker.nextToken();
-      int commaIdx = currChan.indexOf(',');
-      if (commaIdx != -1)
-        availChanMap.put(currChan.substring(0, commaIdx), currChan.substring(commaIdx+1));
-      else
-        availChanMap.put(currChan, currChan);
-    }
-
     crossbarIndex = Sage.getInt(prefs + VIDEO_CROSSBAR_INDEX, 0);
     crossbarType = Sage.getInt(prefs + VIDEO_CROSSBAR_TYPE, 1);
     lastChannel = Sage.get(prefs + LAST_CHANNEL, "");
@@ -256,17 +242,6 @@ public class CaptureDeviceInput
   }
   void writePrefs()
   {
-    StringBuffer availChanStr = new StringBuffer();
-    java.util.Iterator walker = availChanMap.entrySet().iterator();
-    while (walker.hasNext())
-    {
-      java.util.Map.Entry currEnt = (java.util.Map.Entry) walker.next();
-      availChanStr.append(currEnt.getKey());
-      availChanStr.append(',');
-      availChanStr.append(currEnt.getValue());
-      availChanStr.append(';');
-    }
-    Sage.put(prefs + AVAILABLE_CHANNELS, availChanStr.toString());
     Sage.putInt(prefs + VIDEO_CROSSBAR_INDEX, crossbarIndex);
     Sage.putInt(prefs + VIDEO_CROSSBAR_TYPE, crossbarType);
     Sage.put(prefs + LAST_CHANNEL, lastChannel);
@@ -283,61 +258,6 @@ public class CaptureDeviceInput
     Sage.put(prefs + BROADCAST_STANDARD, broadcastStd);
   }
 
-  /*
-   * SAGETV RECORDER API - BEGIN
-   */
-  // this is also add
-  public void autoTunedChannelSet(java.util.Collection allChans)
-  {
-    availChanMap.keySet().retainAll(allChans);
-    java.util.Iterator walker = allChans.iterator();
-    while (walker.hasNext())
-    {
-      String c = (String) walker.next();
-      if (availChanMap.get(c) == null)
-        availChanMap.put(c, c);
-    }
-    writePrefs();
-  }
-  public void setChannelName(String chanNum, String chanName)
-  {
-    availChanMap.put(chanNum, chanName);
-    writePrefs();
-  }
-  public void removeChannel(String chanNum)
-  {
-    availChanMap.remove(chanNum);
-    writePrefs();
-  }
-  public boolean canViewChannelOnSource(String x)
-  {
-    return availChanMap.containsKey(x);
-  }
-  public java.util.Map getAvailChanMap()
-  {
-    return (java.util.Map)availChanMap.clone();
-  }
-  public String getChannelName(String chanNum) { return "".equals(chanNum) ? "" : (String) availChanMap.get(chanNum); }
-  public String getChannelNumForName(String chanName)
-  {
-    java.util.Iterator walker = availChanMap.entrySet().iterator();
-    while (walker.hasNext())
-    {
-      java.util.Map.Entry ent = (java.util.Map.Entry) walker.next();
-      if (chanName.equals(ent.getValue()))
-        return (String) ent.getKey();
-    }
-    return chanName;
-  }
-  public String[] getAvailChans()
-  {
-    String[] rv = (String[]) availChanMap.keySet().toArray(Pooler.EMPTY_STRING_ARRAY);
-    java.util.Arrays.sort(rv, MMC.stringNumComparator);
-    return rv;
-  }
-  /*
-   * SAGETV RECORDER API - END
-   */
   public CaptureDeviceInput getWeirdRFCompanion(int chanNum)
   {
     capDev.ensureInputExists(1, chanNum);
@@ -670,7 +590,6 @@ public class CaptureDeviceInput
         (!Sage.getBoolean("mmc/disable_dvbs_epg_data_scanning", true) || !"DVB-S".equals(getBroadcastStandard()));
   }
 
-  private java.util.HashMap availChanMap;
   private int crossbarIndex = -1; // this is the RF channel if its a tuner and this is > 1
   private int crossbarType; // tuner1, comp2, s3
   private String lastChannel = "";
