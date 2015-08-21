@@ -40,8 +40,8 @@ libDVBCapture.so: $(OBJFILES)
 libDVBCapture.so.debug: $(OBJFILES) 
 	$(CC) -g -O0 -Wl,-Map=libDVBCapture.map -shared -W1 -o libDVBCapture.so libNativeCored.so $(OBJFILES)  $(CHANNELD_LIB)
 
-dvbtest: dep_make libDVBCapture.so dvbtest.o sage_DVBCaptureDevice.c
-	$(CC)   -Wall -o dvbtest dvbtest.o libNativeCore.so  $(CHANNEL_LIB)
+dvbtest: dep_make libDVBCapture.so dvbtest.o
+	$(CC) -pthread -Wall -o dvbtest dvbtest.o libNativeCore.so circbuffer.o thread_util.o $(CHANNEL_LIB)
 
 dvbtest.o: sage_DVBCaptureDevice.c
 	$(CC) $(CFLAGS) -c -o dvbtest.o -DSTANDALONE sage_DVBCaptureDevice.c		
