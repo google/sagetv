@@ -993,7 +993,7 @@ public class Utility {
     rft.put(new PredefinedJEPFunction("Utility", "GetWindowsRegistryNames", 2, new String[]{"Root", "Key"})
     {
       /**
-       * Returns a list of the Windows registry names which exist under the specified root & key (Windows only)
+       * Returns a list of the Windows registry names which exist under the specified root &amp; key (Windows only)
        * Acceptable values for the Root are: "HKCR", "HKEY_CLASSES_ROOT", "HKCC", "HKEY_CURRENT_CONFIG", "HKCU",
        * "HKEY_CURRENT_USER", "HKU", "HKEY_USERS", "HKLM" or "HKEY_LOCAL_MACHINE" (HKLM is the default if nothing matches)
        * @param Root the registry hive to look in
@@ -2637,12 +2637,12 @@ public class Utility {
        * SlideRightIn - slides in from the right of its parent component</li><li>
        * FadeOut - fades out</li><li>
        * FadeIn - fades in</li><li>
-       * Smooth - smoothly transitions from one position & size to another; the destination image is used for the animation</li><li>
-       * Morph - smoothly transitions from one position & size to another; the image fades between the source and the destination</li><li>
+       * Smooth - smoothly transitions from one position &amp; size to another; the destination image is used for the animation</li><li>
+       * Morph - smoothly transitions from one position &amp; size to another; the image fades between the source and the destination</li><li>
        * ZoomOut - shrinks the size down to nothing from its source size</li><li>
-       * ZoomIn - grows the size from nothing to its destination size</li>
+       * ZoomIn - grows the size from nothing to its destination size</li><li>
        * HZoomOut - shrinks the size down to nothing horitonzatlly from its source size</li><li>
-       * HZoomIn - grows the size from nothing horitonzatlly to its destination size</li>
+       * HZoomIn - grows the size from nothing horitonzatlly to its destination size</li><li>
        * VZoomOut - shrinks the size down to nothing vertically from its source size</li><li>
        * VZoomIn - grows the size from nothing vertically to its destination size</li>
        * </ul><p>
@@ -2662,10 +2662,10 @@ public class Utility {
        * North - for Zoom animations will center the zoom around the top of the component (i.e. ZoomInNorth) </li><li>
        * West - for Zoom animations will center the zoom around the left of the component </li><li>
        * South - for Zoom animations will center the zoom around the bottom of the component </li><li>
-       * East - for Zoom animations will center the zoom around the right of the component </li></ul>
-       * Behind - for Out animations will cause it to be rendered behind the other layers instead of on top as Out animations usually are </li></ul>
-       * Unclipped - for Slide animations will cause the same motion to occur but without clipping the area when drawn </li></ul>
-       * Unease - for In or Out animations it will reverse the 'easing' direction so you can slide in & out the same panel w/ out overlap </li></ul>
+       * East - for Zoom animations will center the zoom around the right of the component </li><li>
+       * Behind - for Out animations will cause it to be rendered behind the other layers instead of on top as Out animations usually are </li><li>
+       * Unclipped - for Slide animations will cause the same motion to occur but without clipping the area when drawn </li><li>
+       * Unease - for In or Out animations it will reverse the 'easing' direction so you can slide in &amp; out the same panel w/ out overlap </li></ul>
        *<p>
        * You may combine the directional suffixes to get an additional four directions (i.e. ZoomOutNorthEast). And this
        * can also be combined with the timeline suffixes as well, or even Fade (i.e. ZoomInQuadraticSouthWestFade)
@@ -2888,7 +2888,7 @@ public class Utility {
        *
        * @since 6.4
        *
-       * @declaration public boolean ReleaseUIRefreshLock();
+       * @declaration public void ReleaseUIRefreshLock();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         UIManager uiMgr = stack.getUIMgr();
@@ -3198,11 +3198,11 @@ public class Utility {
       /**
        * converts a string of NTE key characters (and normal characters) into their
        * default character representation - given by the first character in the
-       * NTE chatacter list<br/>
+       * NTE chatacter list<br>
        * The NTE key characters are the Unicode characters u2460-u2468 and u24EA  (Unicode Circled Digits),
-       * representing the numeric Text Keys 1-9 and 0.<br/>
+       * representing the numeric Text Keys 1-9 and 0.<br>
        * The characters represented by the keys are defined by the client properties
-       * <tt>"ui/numeric_text_input_<ui/translation_language_code>_<key>_lower</tt>.
+       * <tt>"ui/numeric_text_input_&lt;ui/translation_language_code&gt;_&lt;key&gt;_lower</tt>.
        *
        * @param NteString the string to convert
        * @return the converted string
@@ -3222,11 +3222,11 @@ public class Utility {
     rft.put(new PredefinedJEPFunction("Utility", "StringIndexOfNTE", 2, new String[]{"FullString","MatchStringNTE"})
     {
       /**
-       * Returns the index of MatchStringNTE string within FullString, -1 if it is not found.<br/>
-       * Search is case-insentive<br/>
+       * Returns the index of MatchStringNTE string within FullString, -1 if it is not found.<br>
+       * Search is case-insentive<br>
        * The MatchStringNTE may contain the Unicode characters u2460-u2468 and u24EA  (Unicode Circled Digits) representing
        * numeric Text Keys 1-9 and 0. The characters represented by the keys are defined by the client properties
-       * <tt>"ui/numeric_text_input_<ui/translation_language_code>_<key>_lower</tt>.
+       * <tt>"ui/numeric_text_input_&lt;ui/translation_language_code&gt;_&lt;key&gt;_lower</tt>.
        * @param FullString the string to search in
        * @param MatchStringNTE the string to search for
        * @return the first 0-based index in FullString that MatchStringNTE occurs at or -1 if it is not found
@@ -3244,11 +3244,11 @@ public class Utility {
     rft.put(new PredefinedJEPFunction("Utility", "StringStartsWithNTE", 2, new String[]{"FullString","MatchStringNTE"})
     {
       /**
-       * Returns true if the Full String starts with characters matching MatchStringNTE<br/>
-       * Search is case-insentive<br/>
+       * Returns true if the Full String starts with characters matching MatchStringNTE<br>
+       * Search is case-insentive<br>
        * The MatchStringNTE may contain the Unicode characters u2460-u2468 and u24EA  (Unicode Circled Digits) representing
        * numeric Text Keys 1-9 and 0. The characters represented by the keys are defined by the client properties
-       * <tt>"ui/numeric_text_input_<ui/translation_language_code>_<key>_lower</tt>.
+       * <tt>"ui/numeric_text_input_&lt;ui/translation_language_code&gt;_&lt;key&gt;_lower</tt>.
        * @param FullString the string to search in
        * @param MatchStringNTE the string to search for
        * @return true if FullString starts with characters matching MatchStringNTE

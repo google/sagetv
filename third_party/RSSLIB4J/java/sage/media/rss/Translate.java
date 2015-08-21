@@ -35,9 +35,9 @@ import java.io.UnsupportedEncodingException;
  * Structure to hold a character and it's equivalent entity reference kernel.
  * For the character reference &amp;copy; the character would be '&copy;' and
  * the kernel would be "copy", for example.<p>
- * Character references are described at <a href="Character references">http://www.w3.org/TR/REC-html40/charset.html#entities</a>
+ * Character references are described at <a href="http://www.w3.org/TR/REC-html40/charset.html#entities">Character references</a>
  * Supports the Ordered interface so it's easy to create a list sorted by
- * kernel, to perform binary searches on.<p>
+ * kernel, to perform binary searches on.
  */
 class CharacterReference
 implements
@@ -134,7 +134,6 @@ Comparable
 
   /**
    * Compare one reference to another.
-   * @see org.htmlparser.util.sort.Ordered
    */
   public int compareTo (Object that)
   {
@@ -205,7 +204,6 @@ class CharacterReferenceEx extends CharacterReference
 
   /**
    * Compare one reference to another.
-   * @see org.htmlparser.util.sort.Ordered
    */
   public int compare (Object that)
   {
@@ -812,7 +810,7 @@ public class Translate
   /**
    * Look up a reference by kernel.
    * Use a binary search on the ordered list of known references.
-   * <em>This is not very efficient, use {@link org.htmlparser.util.Translate#lookup(org.htmlparser.util.CharacterReference) lookup(CharacterReference)}
+   * <em>This is not very efficient, use org.htmlparser.util.Translate.lookup(org.htmlparser.util.CharacterReference)
    * instead.</em>
    * @param kernel The string to lookup, i.e. "amp".
    * @param start The starting point in the string of the kernel.
@@ -838,7 +836,7 @@ public class Translate
    * Convert a reference to a unicode character.
    * Convert a single numeric character reference or character entity reference
    * to a unicode character.
-   * @param string The string to convert. Of the form &xxxx; or &amp;#xxxx; with
+   * @param string The string to convert. Of the form &amp;xxxx; or &amp;#xxxx; with
    * or without the leading ampersand or trailing semi-colon.
    * @param start The starting pooint in the string to look for a character reference.
    * @param end The ending point in the string to stop looking for a character reference.
@@ -855,7 +853,7 @@ public class Translate
    * Convert a reference to a unicode character.
    * Convert a single numeric character reference or character entity reference
    * to a unicode character.
-   * @param string The string to convert. Of the form &xxxx; or &amp;#xxxx; with
+   * @param string The string to convert. Of the form &amp;xxxx; or &amp;#xxxx; with
    * or without the leading ampersand or trailing semi-colon.
    * @return The converted character or ' ' (zero) if the string is an
    * invalid reference.

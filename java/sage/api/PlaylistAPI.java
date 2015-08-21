@@ -411,6 +411,8 @@ public class PlaylistAPI {
       /**
        * Creates a new Playlist object
        * @param Name the name for the new Playlist
+       * @return the newly created Playlist
+       *
        * @declaration public Playlist AddPlaylist(String Name);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{

@@ -58,10 +58,10 @@ public class Database {
       /**
        * Filters data by a boolean method. Each element in the 'Data' has the 'Method' executed on it.
        * If the result is the same as the 'MatchValue' parameter then that element will be in the
-       * returned data. For Maps & Collections this is done in place. For Arrays a new Array is created.
+       * returned data. For Maps &amp; Collections this is done in place. For Arrays a new Array is created.
        * NOTE: If you pass more than 3 arguments to this function then the extra arguments will
        * be passed along to the Method that should be executed.
-       * @param Data the data that is to be filtered; this can be a java.util.Collection, java.util.Map or an Array. For Maps & Collections the filtering is done IN-PLACE.
+       * @param Data the data that is to be filtered; this can be a java.util.Collection, java.util.Map or an Array. For Maps &amp; Collections the filtering is done IN-PLACE.
        * @param Method This is what is evaluated with an element as the only argument. This can be a list of methods to test against separated by the '|' character.
        * @param MatchValue the Method must return this value to be in the returned data
        * @return The elements that passed the filter. The type is the same type as the passed in Data.
@@ -345,11 +345,11 @@ public class Database {
        * Filters data by a method. Each element in the 'Data' has the 'Method' executed on it.
        * If the result is the same as the 'MatchValue' parameter then that element will be in the
        * returned data if MatchedPasses is true. If MatchedPasses is false then non-matching elements will be in the returned data.
-       * For Maps & Collections this is done in place. For Arrays a new Array is created.
+       * For Maps &amp; Collections this is done in place. For Arrays a new Array is created.
        * NOTE: If you pass more than 4 arguments to this function then the extra arguments will
        * be passed along to the Method that should be executed.
-       * @param Data the data that is to be filtered; this can be a java.util.Collection, java.util.Map or an Array. For Maps & Collections the filtering is done IN-PLACE. For Maps the keys are used for the filtering.
-       * @param Method This is what is evaluated with an element as the only argument. This can be a list of methods to test against separated by the '|' character. There is also a special 'UserCategories' option which will check the ManualRecord, Favorite and MediaFile "UserCategory" property as well as the Show Category & SubCategory for any matches against a comma-delimited list in the MatchValue parameter.
+       * @param Data the data that is to be filtered; this can be a java.util.Collection, java.util.Map or an Array. For Maps &amp; Collections the filtering is done IN-PLACE. For Maps the keys are used for the filtering.
+       * @param Method This is what is evaluated with an element as the only argument. This can be a list of methods to test against separated by the '|' character. There is also a special 'UserCategories' option which will check the ManualRecord, Favorite and MediaFile "UserCategory" property as well as the Show Category &amp; SubCategory for any matches against a comma-delimited list in the MatchValue parameter.
        * @param MatchValue the value to test the return value of Method against
        * @param MatchedPasses if true then matches are included in the return data, if false then everything that doesn't match is returned
        * @return The elements that passed the filter. The type is the same type as the passed in Data.
@@ -761,10 +761,10 @@ public class Database {
        * The result is then converted to a String and RegexPattern is applied to it.
        * If the regular expression matches the String value and MatchedPasses is true, then the element
        * will be in the returned data. If MatchedPasses is false then non-matching elements will be in the returned data.
-       * For Maps & Collections this is done in place. For Arrays a new Array is created.
+       * For Maps &amp; Collections this is done in place. For Arrays a new Array is created.
        * NOTE: If you pass more than 5 arguments to this function then the extra arguments will
        * be passed along to the Method that should be executed.
-       * @param Data the data that is to be filtered; this can be a java.util.Collection, java.util.Map or an Array. For Maps & Collections the filtering is done IN-PLACE.
+       * @param Data the data that is to be filtered; this can be a java.util.Collection, java.util.Map or an Array. For Maps &amp; Collections the filtering is done IN-PLACE.
        * @param Method This is what is evaluated with an element as the only argument (and additional arguments if passed in).
        * @param RegexPattern The compiled regular expression used for matching (if it's not compiled, then it will be converted to a compiled regular expression)
        * @param MatchedPasses if true then matches are included in the return data, if false then everything that doesn't match is returned
@@ -865,8 +865,8 @@ public class Database {
        * Filters data by a comparable range. Each element in the 'Data' has the 'Method' executed on it.
        * If KeepWithinBounds is true, then results that are within the specified range are included in the returned data; otherwise
        * if KeepWithinBounds is false then results that are outside of the specified range are included in the returned data.
-       * For Maps & Collections this is done in place. For Arrays a new Array is created.
-       * @param Data the data that is to be filtered; this can be a java.util.Collection, java.util.Map or an Array. For Maps & Collections the filtering is done IN-PLACE.
+       * For Maps &amp; Collections this is done in place. For Arrays a new Array is created.
+       * @param Data the data that is to be filtered; this can be a java.util.Collection, java.util.Map or an Array. For Maps &amp; Collections the filtering is done IN-PLACE.
        * @param Method This is what is evaluated with an element as the only argument
        * @param LowerBoundInclusive a java.lang.Comparable which specifies the INCLUSIVE lower bound for the range
        * @param UpperBoundExclusive a java.lang.Comparable which specified the EXCLUSIVE upper bound for the range
@@ -963,7 +963,7 @@ public class Database {
     {
 
       /**
-       * Grouping method for data lists/maps. This will return a Map that uses a key->value mapping to group the data.
+       * Grouping method for data lists/maps. This will return a Map that uses a key-&gt;value mapping to group the data.
        * The order of the grouping is stable, which means the order of the elements within a subgroup will be the same
        * order as in the pased in data. Use the GetSubgroup method to get the corresponding value for a key.
        * The key for each data element is determined by calling the specified 'Method' with that data element as the sole parameter.
@@ -1185,7 +1185,7 @@ public class Database {
     {
 
       /**
-       * Grouping method for data lists/maps. This will return a Map that uses a key->value mapping to group the data.
+       * Grouping method for data lists/maps. This will return a Map that uses a key-&gt;value mapping to group the data.
        * The order of the grouping is stable, which means the order of the elements within a subgroup will be the same
        * order as in the pased in data. Use the GetSubgroup method to get the corresponding value for a key.
        * The keys for each data element is determined by calling the specified 'Method' with that data element as the sole parameter.
@@ -2128,7 +2128,7 @@ public class Database {
        * in the list of people involved (i.e. actors, directors, producers, etc.). The content must also match
        * one of the media types specified in the MediaMask
        * @param SearchString the name of the person to search for matching content on
-       * @param MediaMask string specifying what content types to search (i.e. "TM" for TV & Music, 'T'=TV, 'M'=Music, 'V'=Video, 'D'=DVD, 'P'=Pictures, 'B'=BluRay)
+       * @param MediaMask string specifying what content types to search (i.e. "TM" for TV &amp; Music, 'T'=TV, 'M'=Music, 'V'=Video, 'D'=DVD, 'P'=Pictures, 'B'=BluRay)
        * @return an array of Airing objects that reference content that includes the specified person and matches the media mask
        * @since 5.1
        *
@@ -2159,7 +2159,7 @@ public class Database {
        * specified search string. This search is case insensitive. The content must also match
        * one of the media types specified in the MediaMask
        * @param SearchString the string to search for
-       * @param MediaMask string specifying what content types to search (i.e. "TM" for TV & Music, 'T'=TV, 'M'=Music, 'V'=Video, 'D'=DVD, 'P'=Pictures, 'B'=BluRay)
+       * @param MediaMask string specifying what content types to search (i.e. "TM" for TV &amp; Music, 'T'=TV, 'M'=Music, 'V'=Video, 'D'=DVD, 'P'=Pictures, 'B'=BluRay)
        * @return an array of Airings who's content has the specified search string in its description or episode name and matches the media mask
        * @since 5.1
        *
@@ -2189,7 +2189,7 @@ public class Database {
        * Returns all Airings in the database that refer to content that has the specified title. The content must also match
        * one of the media types specified in the MediaMask
        * @param SearchString the title of the content must match this exactly
-       * @param MediaMask string specifying what content types to search (i.e. "TM" for TV & Music, 'T'=TV, 'M'=Music, 'V'=Video, 'D'=DVD, 'P'=Pictures, 'B'=BluRay)
+       * @param MediaMask string specifying what content types to search (i.e. "TM" for TV &amp; Music, 'T'=TV, 'M'=Music, 'V'=Video, 'D'=DVD, 'P'=Pictures, 'B'=BluRay)
        * @return an array of Airing objects that reference content with the specified title and matches the media mask
        * @since 5.1
        *
@@ -2219,7 +2219,7 @@ public class Database {
        * Returns a list of all of the people in the database that include the search string in their name.
        * This search is case insensitive. The content it references must also match one of the media types specified in the MediaMask.
        * @param SearchString the string to search on
-       * @param MediaMask string specifying what content types to search (i.e. "TM" for TV & Music, 'T'=TV, 'M'=Music, 'V'=Video, 'D'=DVD, 'P'=Pictures, 'B'=BluRay)
+       * @param MediaMask string specifying what content types to search (i.e. "TM" for TV &amp; Music, 'T'=TV, 'M'=Music, 'V'=Video, 'D'=DVD, 'P'=Pictures, 'B'=BluRay)
        * @return an array of Persons which represent all of the people in the database that matched the search that also have content that matches the MediaMask
        * @since 5.1
        *
@@ -2249,7 +2249,7 @@ public class Database {
        * Returns a list of all of the titles in the database that include the search string in them.
        * This search is case insensitive. The content it references must also match one of the media types specified in the MediaMask.
        * @param SearchString the string to search on
-       * @param MediaMask string specifying what content types to search (i.e. "TM" for TV & Music, 'T'=TV, 'M'=Music, 'V'=Video, 'D'=DVD, 'P'=Pictures, 'B'=BluRay)
+       * @param MediaMask string specifying what content types to search (i.e. "TM" for TV &amp; Music, 'T'=TV, 'M'=Music, 'V'=Video, 'D'=DVD, 'P'=Pictures, 'B'=BluRay)
        * @return an array of Strings which represent all of the titles in the database that matched the search that also have content that matches the MediaMask
        * @since 5.1
        *
@@ -2279,7 +2279,7 @@ public class Database {
        * Returns a list of all of the people in the database that match the passed in regular expression.
        * The content it references must also match one of the media types specified in the MediaMask.
        * @param RegexPattern The compiled regular expression used for matching (if it's not compiled, then it will be converted to a compiled regular expression)
-       * @param MediaMask string specifying what content types to search (i.e. "TM" for TV & Music, 'T'=TV, 'M'=Music, 'V'=Video, 'D'=DVD, 'P'=Pictures, 'B'=BluRay)
+       * @param MediaMask string specifying what content types to search (i.e. "TM" for TV &amp; Music, 'T'=TV, 'M'=Music, 'V'=Video, 'D'=DVD, 'P'=Pictures, 'B'=BluRay)
        * @return an array of Persons which represent all of the people in the database that matched the search that also have content that matches the MediaMask
        * @since 5.1
        *
@@ -2299,9 +2299,9 @@ public class Database {
       /**
        * Returns a list of all of the people in the database that match the passed in text, where
        * the Unicode characters u2460-u2468 and u24EA  (Unicode Circled Digits) in the text represent the
-       * numeric Text Keys 1-9 and 0. This is similar to the predictive text entry input of mobile phones.<br/>
+       * numeric Text Keys 1-9 and 0. This is similar to the predictive text entry input of mobile phones.<br>
        * The characters represented by the keys are defined by the client properties
-       * <tt>"ui/numeric_text_input_<ui/translation_language_code>_<key>_lower</tt>
+       * <tt>"ui/numeric_text_input_&lt;ui/translation_language_code&gt;_&lt;key&gt;_lower</tt>
        *
        * @param NTEString A string containing a mix of normal and NumericTextKey characters (u2460-2468, u24ae)
        * @return an array of Persons which represent all of the people in the database that matched the search
@@ -2313,12 +2313,12 @@ public class Database {
       /**
        * Returns a list of all of the people in the database that match the passed in text, where
        * the Unicode characters u2460-u2468 and u24EA  (Unicode Circled Digits) in the text represent the
-       * numeric Text Keys 1-9 and 0. This is similar to the predictive text entry input of mobile phones.<br/>
+       * numeric Text Keys 1-9 and 0. This is similar to the predictive text entry input of mobile phones.<br>
        * The characters represented by the keys are defined by the client properties
-       * <tt>"ui/numeric_text_input_<ui/translation_language_code>_<key>_lower</tt>
+       * <tt>"ui/numeric_text_input_&lt;ui/translation_language_code&gt;_&lt;key&gt;_lower</tt>
        * The content it references must also match one of the media types specified in the MediaMask.
        * @param NTEString A string containing a mix of normal and NumericTextKey characters (u2460-2468, u24ae)
-       * @param MediaMask string specifying what content types to search (i.e. "TM" for TV & Music, 'T'=TV, 'M'=Music, 'V'=Video, 'D'=DVD, 'P'=Pictures, 'B'=BluRay)
+       * @param MediaMask string specifying what content types to search (i.e. "TM" for TV &amp; Music, 'T'=TV, 'M'=Music, 'V'=Video, 'D'=DVD, 'P'=Pictures, 'B'=BluRay)
        * @return an array of Persons which represent all of the people in the database that matched the search that also have content that matches the MediaMask
        * @since 8.0
        *
@@ -2348,7 +2348,7 @@ public class Database {
        * Returns a list of all of the titles in the database that match the passed in regular expression.
        * The content it references must also match one of the media types specified in the MediaMask.
        * @param RegexPattern The compiled regular expression used for matching (if it's not compiled, then it will be converted to a compiled regular expression)
-       * @param MediaMask string specifying what content types to search (i.e. "TM" for TV & Music, 'T'=TV, 'M'=Music, 'V'=Video, 'D'=DVD, 'P'=Pictures, 'B'=BluRay)
+       * @param MediaMask string specifying what content types to search (i.e. "TM" for TV &amp; Music, 'T'=TV, 'M'=Music, 'V'=Video, 'D'=DVD, 'P'=Pictures, 'B'=BluRay)
        * @return an array of Strings which represent all of the titles in the database that matched the search that also have content that matches the MediaMask
        * @since 5.1
        *
@@ -2368,9 +2368,9 @@ public class Database {
       /**
        * Returns a list of all of the titles in the database that match the passed in text, where
        * the Unicode characters u2460-u2468 and u24EA  (Unicode Circled Digits) in the text represent the
-       * numeric Text Keys 1-9 and 0. This is similar to the predictive text entry input of mobile phones.<br/>
+       * numeric Text Keys 1-9 and 0. This is similar to the predictive text entry input of mobile phones.<br>
        * The characters represented by the keys are defined by the client properties
-       * <tt>"ui/numeric_text_input_<ui/translation_language_code>_<key>_lower</tt>
+       * <tt>"ui/numeric_text_input_&lt;ui/translation_language_code&gt;_&lt;key&gt;_lower</tt>
        * The content it references must also match one of the media types specified in the MediaMask.
        * @param NTEString A string containing a mix of normal and NumericTextKey characters (u2460-2468, u24ae)
        * @return an array of Strings which represent all of the titles in the database that matched the search
@@ -2382,12 +2382,12 @@ public class Database {
       /**
        * Returns a list of all of the titles in the database that match the passed in text, where
        * the Unicode characters u2460-u2468 and u24EA  (Unicode Circled Digits) in the text represent the
-       * numeric Text Keys 1-9 and 0. This is similar to the predictive text entry input of mobile phones.<br/>
+       * numeric Text Keys 1-9 and 0. This is similar to the predictive text entry input of mobile phones.<br>
        * The characters represented by the keys are defined by the client properties
-       * <tt>"ui/numeric_text_input_<ui/translation_language_code>_<key>_lower</tt>
+       * <tt>"ui/numeric_text_input_&lt;ui/translation_language_code&gt;_&lt;key&gt;_lower</tt>
        * The content it references must also match one of the media types specified in the MediaMask.
        * @param NTEString A string containing a mix of normal and NumericTextKey characters (u2460-2468, u24ae)
-       * @param MediaMask string specifying what content types to search (i.e. "TM" for TV & Music, 'T'=TV, 'M'=Music, 'V'=Video, 'D'=DVD, 'P'=Pictures, 'B'=BluRay)
+       * @param MediaMask string specifying what content types to search (i.e. "TM" for TV &amp; Music, 'T'=TV, 'M'=Music, 'V'=Video, 'D'=DVD, 'P'=Pictures, 'B'=BluRay)
        * @return an array of Strings which represent all of the titles in the database that matched the search that also have content that matches the MediaMask
        * @since 8.0
        *
@@ -2563,7 +2563,7 @@ public class Database {
        * @param ExtendedRatings if true then the extended ratings fields will be searched, if false then they will not be
        * @param Year if true then the year fields will be searched, if false then they will not be
        * @param Misc if true then the miscellaneous fields will be searched, if false then they will not be
-       * @param MediaMask string specifying what content types to search (i.e. "TM" for TV & Music, 'T'=TV, 'M'=Music, 'V'=Video, 'D'=DVD, 'P'=Pictures, 'B'=BluRay)
+       * @param MediaMask string specifying what content types to search (i.e. "TM" for TV &amp; Music, 'T'=TV, 'M'=Music, 'V'=Video, 'D'=DVD, 'P'=Pictures, 'B'=BluRay)
        * @return an array of Airings which matches the search criteria
        * @since 5.1
        *
@@ -2631,7 +2631,7 @@ public class Database {
        * @param ExtendedRatings if true then the extended ratings fields will be searched, if false then they will not be
        * @param Year if true then the year fields will be searched, if false then they will not be
        * @param Misc if true then the miscellaneous fields will be searched, if false then they will not be
-       * @param MediaMask string specifying what content types to search (i.e. "TM" for TV & Music, 'T'=TV, 'M'=Music, 'V'=Video, 'D'=DVD, 'P'=Pictures, 'B'=BluRay)
+       * @param MediaMask string specifying what content types to search (i.e. "TM" for TV &amp; Music, 'T'=TV, 'M'=Music, 'V'=Video, 'D'=DVD, 'P'=Pictures, 'B'=BluRay)
        * @return an array of Airings which matches the search criteria
        * @since 5.1
        *
@@ -2694,7 +2694,7 @@ public class Database {
        * @param ExtendedRatings if true then the extended ratings fields will be searched, if false then they will not be
        * @param Year if true then the year fields will be searched, if false then they will not be
        * @param Misc if true then the miscellaneous fields will be searched, if false then they will not be
-       * @param MediaMask string specifying what content types to search (i.e. "TM" for TV & Music, 'T'=TV, 'M'=Music, 'V'=Video, 'D'=DVD, 'P'=Pictures, 'B'=BluRay)
+       * @param MediaMask string specifying what content types to search (i.e. "TM" for TV &amp; Music, 'T'=TV, 'M'=Music, 'V'=Video, 'D'=DVD, 'P'=Pictures, 'B'=BluRay)
        * @return an array of Airings which matches the search criteria
        * @since 5.1
        *
@@ -2725,9 +2725,9 @@ public class Database {
       /**
        * Searches the specified fields of all the Airings in the database and tries to match them against
        * the passed in text, where the Unicode characters u2460-u2468 and u24EA  (Unicode Circled Digits) in the text represent the
-       * numeric Text Keys 1-9 and 0. This is similar to the predictive text entry input of mobile phones.<br/>
+       * numeric Text Keys 1-9 and 0. This is similar to the predictive text entry input of mobile phones.<br>
        * The characters represented by the keys are defined by the client properties
-       * <tt>"ui/numeric_text_input_<ui/translation_language_code>_<key>_lower</tt>.
+       * <tt>"ui/numeric_text_input_&lt;ui/translation_language_code&gt;_&lt;key&gt;_lower</tt>.
        * @param NTEString A string containing a mix of normal and NumericTextKey characters (u2460-2468, u24ae)
        * @param Titles if true then the title fields will be searched, if false then they will not be
        * @param Episode if true then the episode fields will be searched, if false then they will be not be
@@ -2747,9 +2747,9 @@ public class Database {
       /**
        * Searches the specified fields of all the Airings in the database and tries to match them against
        * the passed in text where the Unicode characters u2460-u2468 and u24EA  (Unicode Circled Digits) in the text represent the
-       * numeric Text Keys 1-9 and 0. This is similar to the predictive text entry input of mobile phones.<br/>
+       * numeric Text Keys 1-9 and 0. This is similar to the predictive text entry input of mobile phones.<br>
        * The characters represented by the keys are defined by the client properties
-       * <tt>"ui/numeric_text_input_<ui/translation_language_code>_<key>_lower</tt>.
+       * <tt>"ui/numeric_text_input_&lt;ui/translation_language_code&gt;_&lt;key&gt;_lower</tt>.
        * The content it references must also match one of the media types specified in the MediaMask.
        * @param NTEString A string containing a mix of normal and NumericTextKey characters (u2460-2468, u24ae)
        * @param Titles if true then the title fields will be searched, if false then they will not be
@@ -2761,7 +2761,7 @@ public class Database {
        * @param ExtendedRatings if true then the extended ratings fields will be searched, if false then they will not be
        * @param Year if true then the year fields will be searched, if false then they will not be
        * @param Misc if true then the miscellaneous fields will be searched, if false then they will not be
-       * @param MediaMask string specifying what content types to search (i.e. "TM" for TV & Music, 'T'=TV, 'M'=Music, 'V'=Video, 'D'=DVD, 'P'=Pictures, 'B'=BluRay)
+       * @param MediaMask string specifying what content types to search (i.e. "TM" for TV &amp; Music, 'T'=TV, 'M'=Music, 'V'=Video, 'D'=DVD, 'P'=Pictures, 'B'=BluRay)
        * @return an array of Airings which matches the search criteria
        * @since 8.0
        *
@@ -2817,7 +2817,7 @@ public class Database {
       /**
        * Gets all of the titles that are in the database.
        * The content it references must also match one of the media types specified in the MediaMask.
-       * @param MediaMask string specifying what content types to search (i.e. "TM" for TV & Music, 'T'=TV, 'M'=Music, 'V'=Video, 'D'=DVD, 'P'=Pictures, 'B'=BluRay)
+       * @param MediaMask string specifying what content types to search (i.e. "TM" for TV &amp; Music, 'T'=TV, 'M'=Music, 'V'=Video, 'D'=DVD, 'P'=Pictures, 'B'=BluRay)
        * @return a list of all of the titles that are in the database that also have content that matches the MediaMask
        * @since 5.1
        *
@@ -2843,7 +2843,7 @@ public class Database {
       /**
        * Gets all of the people that are in the database.
        * The content it references must also match one of the media types specified in the MediaMask.
-       * @param MediaMask string specifying what content types to search (i.e. "TM" for TV & Music, 'T'=TV, 'M'=Music, 'V'=Video, 'D'=DVD, 'P'=Pictures, 'B'=BluRay)
+       * @param MediaMask string specifying what content types to search (i.e. "TM" for TV &amp; Music, 'T'=TV, 'M'=Music, 'V'=Video, 'D'=DVD, 'P'=Pictures, 'B'=BluRay)
        * @return a list of all of the names of people in the database that also have content that matches the MediaMask
        * @since 5.1
        *
@@ -2869,7 +2869,7 @@ public class Database {
       /**
        * Gets all of the categories that are in the database.
        * The content it references must also match one of the media types specified in the MediaMask.
-       * @param MediaMask string specifying what content types to search (i.e. "TM" for TV & Music, 'T'=TV, 'M'=Music, 'V'=Video, 'D'=DVD, 'P'=Pictures, 'B'=BluRay)
+       * @param MediaMask string specifying what content types to search (i.e. "TM" for TV &amp; Music, 'T'=TV, 'M'=Music, 'V'=Video, 'D'=DVD, 'P'=Pictures, 'B'=BluRay)
        * @return all of the names of categories that are in the database that also have content that matches the MediaMask
        * @since 5.1
        *
@@ -2900,7 +2900,7 @@ public class Database {
        * This is different than GetAllCategories because this one will break apart
        * any comma or semicolon delimited category lists into multiple different categories. i.e. if you have "Comedy; Horror" as a category
        * this API call will break it up into Comedy and Horror as two separate categories. This call will also coalesce any case-sensitive differences in category names.
-       * @param MediaMask string specifying what content types to search (i.e. "TM" for TV & Music, 'T'=TV, 'M'=Music, 'V'=Video, 'D'=DVD, 'P'=Pictures, 'B'=BluRay)
+       * @param MediaMask string specifying what content types to search (i.e. "TM" for TV &amp; Music, 'T'=TV, 'M'=Music, 'V'=Video, 'D'=DVD, 'P'=Pictures, 'B'=BluRay)
        * @return all of the names of categories that are in the database that also have content that matches the MediaMask with multi-categories broken apart
        * @since 7.0
        *
@@ -2934,7 +2934,7 @@ public class Database {
       /**
        * Returns the last modification time for objects that match anything in the specified MediaMask. This is useful
        * for knowing when to clear caches that are used to optimize UI rendering.
-       * @param MediaMask string specifying what content types  (i.e. "TM" for TV & Music, 'T'=TV, 'M'=Music, 'V'=Video, 'D'=DVD, 'P'=Pictures, 'B'=BluRay)
+       * @param MediaMask string specifying what content types  (i.e. "TM" for TV &amp; Music, 'T'=TV, 'M'=Music, 'V'=Video, 'D'=DVD, 'P'=Pictures, 'B'=BluRay)
        * @return the last modification time of anything in the DB that matches anything in the specified MediaMask
        * @since 5.1
        *
@@ -3241,7 +3241,7 @@ public class Database {
        * @return an array of Channel objects that includes the SearchString
        * @since 8.1
        *
-       * @declaration public Channel[] SearchForChannel(String SearchString, Boolean IncludeDisabled);
+       * @declaration public Channel[] SearchForChannel(String SearchString, Boolean IncludeNonViewable);
        */
 
       public Object runSafely(Catbert.FastStack stack) throws Exception{

@@ -23,7 +23,7 @@ import sage.*;
  * <p>
  * SageTV will automatically convert the following types to Show if used for a parameter that requires the Show type:<p>
  * Airing - every Airing corresponds to a single Show which describes the Airing's content in more detail, so the Airing's Show is used<p>
- * MediaFile - this is resolved to an Airing by the 1:1 relationship between MediaFiles and Airings, and then the Airing is resolved to a Show<p>
+ * MediaFile - this is resolved to an Airing by the 1:1 relationship between MediaFiles and Airings, and then the Airing is resolved to a Show
  */
 public class ShowAPI {
   private ShowAPI() {}

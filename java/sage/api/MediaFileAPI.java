@@ -53,7 +53,7 @@ public class MediaFileAPI {
        * Returns all of the MediaFile objects in the database
        * The content it references must also match one of the media types specified in the MediaMask.
        * There's also an additional supported type of 'L' which indicates files that pass IsLibraryFile()
-       * @param MediaMask string specifying what content types to search (i.e. "TM" for TV & Music, 'T'=TV, 'M'=Music, 'V'=Video, 'D'=DVD, 'P'=Pictures, 'B'=BluRay)
+       * @param MediaMask string specifying what content types to search (i.e. "TM" for TV &amp; Music, 'T'=TV, 'M'=Music, 'V'=Video, 'D'=DVD, 'P'=Pictures, 'B'=BluRay)
        * @return a list of all of the MediaFile objects in the database that match the mask
        * @since 6.4
        *
@@ -393,10 +393,10 @@ public class MediaFileAPI {
     rft.put(new PredefinedJEPFunction("MediaFile", "GenerateThumbnail", new String[] { "MediaFile", "Time", "Width", "Height", "File" })
     {
       /**
-       * Generates a thumbnail for the specified MediaFile at the requested offset time in the file using the desired width & height.
+       * Generates a thumbnail for the specified MediaFile at the requested offset time in the file using the desired width &amp; height.
        * The resulting thumbnail will be saved to the specified file. This call DOES NOT need to be used for GetThumbnail to work properly; this
        * API call is intended as an extra for developers who want additional thumbnails beyond the one that is normally auto-generated for MediaFiles.
-       * This API call will not return until the generation of the thumbnail is complete. If both width & height are zero, then the size will be determined
+       * This API call will not return until the generation of the thumbnail is complete. If both width &amp; height are zero, then the size will be determined
        * automatically to match the aspect ratio of the video (the largest dimension will match what SageTV uses internally for thumbnail sizes). If only one
        * of width or height is zero, then the other dimension will be determined automatically to match the aspect ratio of the video.
        * @param MediaFile the MediaFile object, must be a Video file (no BluRays or DVDs)

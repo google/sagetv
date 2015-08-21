@@ -178,6 +178,7 @@ public class WidgetAPI {
     {
       /**
        * Gets all of the Widgets that are in the currently loaded STV that are of the specified type
+       * @param WidgetType the name of the widget type
        * @return all of the Widgets that are in the currently loaded STV that are of the specified type
        *
        * @declaration public Widget[] GetWidgetsByType(String WidgetType);
@@ -206,6 +207,7 @@ public class WidgetAPI {
        * Creates a new Widget of the specified type and adds it to the STV. This also allows specifying the desired symbol to use for the Widget.
        * If the symbol is already in use; then a new symbol will automatically be assigned to this Widget instead.
        * @param WidgetType the type of the new Widget
+       * @param Symbol the symbol name for the new widget (UID)
        * @return the newly created Widget
        * @since 7.0
        *

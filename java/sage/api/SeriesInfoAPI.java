@@ -470,6 +470,7 @@ public class SeriesInfoAPI
       /**
        * Returns the name of the character that the corresponding actor plays in this series
        * @param SeriesInfo the SeriesInfo object
+       * @param Actor the actor
        * @return the name of the character that the corresponding actor plays in this series, the empty string if there's no correlation
        * @since 7.0
        *

@@ -29,7 +29,7 @@ import sage.*;
  *<p>
  * SageTV will automatically convert the following types to Airing if used for a parameter that requires the Airing type:<p>
  * MediaFile - the Airing that represents the content is used<p>
- * java.io.File - the corresponding MediaFile (if it exists) is resolved and then its Airing is used<p>
+ * java.io.File - the corresponding MediaFile (if it exists) is resolved and then its Airing is used
  */
 public class AiringAPI{
   private AiringAPI() {}
@@ -38,7 +38,7 @@ public class AiringAPI{
     rft.put(new PredefinedJEPFunction("Airing", "SetRecordingName", new String[] { "Airing", "Name" })
     {
       /**
-       * Sets the name for this recording. For Timed Recordings this will effect the title & associated attributes.
+       * Sets the name for this recording. For Timed Recordings this will effect the title &amp; associated attributes.
        * For ManualRecordings this will not have any side effects at all.
        * @param Airing the ManualRecord to set the name for
        * @param Name the name to set
@@ -238,7 +238,7 @@ public class AiringAPI{
     rft.put(new PredefinedJEPFunction("Airing", "PrintAiringLong", 1, new String[] { "Airing" })
     {
       /**
-       * Returns a lengthy string which is suitable for displaying information about this Airing. This contains nearly all the details of the Airing & its Show
+       * Returns a lengthy string which is suitable for displaying information about this Airing. This contains nearly all the details of the Airing &amp; its Show
        * @param Airing the Airing object
        * @return a lengthy string which is suitable for displaying information about this Airing
        *
@@ -250,7 +250,7 @@ public class AiringAPI{
     rft.put(new PredefinedJEPFunction("Airing", "PrintAiringMedium", 1, new String[] { "Airing" })
     {
       /**
-       * Returns a string which is suitable for displaying information about this Airing. This contains the Airing's channel & a short time string as well as the title & episode name or a short description
+       * Returns a string which is suitable for displaying information about this Airing. This contains the Airing's channel &amp; a short time string as well as the title &amp; episode name or a short description
        * @param Airing the Airing object
        * @return a string which is suitable for displaying information about this Airing
        *
@@ -262,7 +262,7 @@ public class AiringAPI{
     rft.put(new PredefinedJEPFunction("Airing", "PrintAiringShort", 1, new String[] { "Airing" })
     {
       /**
-       * Returns a brief string which is suitable for displaying information about this Airing. This contains the Airing's channel & a short time string as well as the title
+       * Returns a brief string which is suitable for displaying information about this Airing. This contains the Airing's channel &amp; a short time string as well as the title
        * @param Airing the Airing object
        * @return a brief string which is suitable for displaying information about this Airing
        *
@@ -464,6 +464,7 @@ public class AiringAPI{
       /**
        * Gets the time that viewing should resume from for this Airing if it is selected to view
        * @param Airing the Airing object
+       * @return the time that viewing should resume from for this Airing if it is selected to view
        *
        * @declaration public long GetLatestWatchedTime(Airing Airing);
        */
@@ -1164,6 +1165,7 @@ public class AiringAPI{
        * Checks the airing for exceeding parental ratings and return a string array filled with each rating.
        * If parental ratings is disabled, or the airing exceeds no parental settings, return empty array.
        * @param Airing the Airing object to check against ratings
+       * @return a String[] of the parental limits exceeded by this Airing
        * @since 8.1
        *
        * @declaration public String[] GetParentalLimitsExceeded(Airing Airing);

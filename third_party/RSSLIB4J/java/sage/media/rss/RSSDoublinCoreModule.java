@@ -35,11 +35,6 @@ import java.util.*;
  * <li><b>&lt;dc:rights&gt;</b> ( #PCDATA )</li>
  * </ul>
  *
- * </p>
- *
- * </blockquote>
- *
- *
  *
  * @since RSSLIB4J 0.1
  * @author Francesco aka 'Stealthp' stealthp[@]stealthp.org

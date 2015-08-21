@@ -30,6 +30,7 @@ import sage.LinuxUtils;
 import sage.MMC;
 import sage.ManualRecord;
 import sage.MediaFile;
+import sage.MetaImage;
 import sage.MiniClientSageRenderer;
 import sage.NetworkClient;
 import sage.NewStorageDeviceDetector;
@@ -153,6 +154,7 @@ public class Global {
        *
        * @param Name the name to use for this 'static context' variable
        * @param Value the value to set this 'static context' variable to
+       * @return the passed in Value
        *
        * @declaration public Object AddStaticContext(String Name, Object Value);
        */
@@ -172,6 +174,7 @@ public class Global {
        * will exist for the lifetime of the SageTV application and is always in scope for all expression evaluation. This is a 'global variable'.
        * @param Name the name to use for this 'global context' variable
        * @param Value the value to set this 'global context' variable to
+       * @return the passed in Value
        *
        * @declaration public Object AddGlobalContext(String Name, Object Value);
        */
@@ -1185,6 +1188,7 @@ public class Global {
        * of transitioning to. This will only be true during the processing of MenuUnloaded effects. If a null argument is given; then this is
        * true in the case that any menu transition is about to occur. The name match is case-insensitive.
        * @param MenuName the name of the menu to test to see if we're transitioning to; null if it matches any menu name
+       * @return true if the specified menu name matches the name of the menu widget that the UI is in the process of transitioning to, false otherwise
        * @since 7.0
        *
        * @declaration public boolean IsTransitioningToMenu(String MenuName);
@@ -1205,6 +1209,7 @@ public class Global {
        * Returns true if the specified menu name matches the name of the menu widget for the previously loaded menu. The name match is case-insensitive.
        * Unlike <b>IsTransitioningToMenu</b>, this is true even after the transition is complete. A null argument always returns false.
        * @param MenuName the name of the menu to test to see if it was the previously loaded menu
+       * @return true if the specified menu name matches the name of the menu widget for the previously loaded menu, false otherwise
        * @since 7.0
        *
        * @declaration public boolean IsTransitioningFromMenu(String MenuName);
@@ -1228,6 +1233,7 @@ public class Global {
        * of transitioning to. This will only be true during the processing of MenuUnloaded effects. If a null argument or empty list is given; then this is
        * true in the case that any menu transition is about to occur. The name match is case-insensitive.
        * @param MenuNames the names of the menu to test to see if we're transitioning to; null or empty list if it matches any menu name
+       * @return true if one of the specified menu name matches the name of the menu widget that the UI is in the process of transitioning to, false otherwise
        * @since 8.0
        *
        * @declaration public boolean IsTransitioningToMenus(String[] MenuNames);
@@ -1254,6 +1260,7 @@ public class Global {
        * Returns true if one of the specified menu names matches the name of the menu widget for the previously loaded menu. The name match is case-insensitive.
        * Unlike <b>IsTransitioningToMenus</b>, this is true even after the transition is complete. A null argument or empty list always returns false.
        * @param MenuNames the names of the menus to test to see if it was the previously loaded menu
+       * @return true if one of the specified menu names matches the name of the menu widget for the previously loaded menu, false otherwise
        * @since 8.0
        *
        * @declaration public boolean IsTransitioningFromMenus(String[] MenuNames);
@@ -2278,7 +2285,7 @@ public class Global {
     {
       /**
        * Returns whether or not the current file being downloaded can be played back while being downloaded. This is only valid
-       * for when the file being downloaded is an FLV, MP3, MP4 or Quicktime file. It will always be true for MP3 & FLV files;
+       * for when the file being downloaded is an FLV, MP3, MP4 or Quicktime file. It will always be true for MP3 &amp; FLV files;
        * and for MP4/Quicktime files it'll be true if the sample section is before the movie data in the file. If this is true
        * and the download stream time is greater than zero; then it's OK to start progressive playback of downloaded media.
        * @return true if the current file being downloaded can potentially be played back while being downloaded, false if it definitely cannot be
@@ -2312,7 +2319,7 @@ public class Global {
     {
       /**
        * Returns whether or not the current file being downloaded can be played back while being downloaded. This is only valid
-       * for when the file being downloaded is an FLV, MP3, MP4 or Quicktime file. It will always be true for MP3 & FLV files;
+       * for when the file being downloaded is an FLV, MP3, MP4 or Quicktime file. It will always be true for MP3 &amp; FLV files;
        * and for MP4/Quicktime files it'll be true if the sample section is before the movie data in the file. If this is true
        * and the download stream time is greater than zero; then it's OK to start progressive playback of downloaded media.
        * @param DestFile the destination file specified in the original download request
@@ -2563,6 +2570,7 @@ public class Global {
       /**
        * Returns the detailed format description for the specific resolution returned from GetDisplayResolutionOptions()
        * NOTE: This API call is only valid on embedded platforms.
+       * @param Resolution the resolution to get the details for
        * @return a the detailed format description for a specific Resolution
        *
        * @since 6.4
@@ -2787,10 +2795,10 @@ public class Global {
     rft.put(new PredefinedJEPFunction("Global", "GetHotplugStorageMap")
     {
       /**
-       * Returns a map of name->file for any hotplug storage devies on the system. The
+       * Returns a map of name-&gt;file for any hotplug storage devies on the system. The
        * names are user-presentable and the path is the java.io.File root which corresponds to the root of that device.
        * NOTE: This is only valid on embedded platforms.
-       * @return a Map of name->file for hotplugged storage devices
+       * @return a Map of name-&gt;file for hotplugged storage devices
        *
        * @since 6.4
        *
@@ -2865,7 +2873,7 @@ public class Global {
     rft.put(new PredefinedJEPFunction("Global", "PrepareForFirmwareLoad", true)
     {
       /**
-       * Prepares the device for a firmware download & flash. This internally will stop the library importing process,
+       * Prepares the device for a firmware download &amp; flash. This internally will stop the library importing process,
        * empty all of the database tables, clear the UI caches, and then force a complete garbage collection.
        * NOTE: This is only valid on embedded platforms.
        *

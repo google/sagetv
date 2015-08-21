@@ -25,7 +25,7 @@ import sage.*;
  * <p>
  * SageTV will automatically convert the following types to Channel if used for a parameter that requires the Channel type:<p>
  * Airing - every Airing has an associated Channel, that Channel is used<p>
- * MediaFile - due to the 1:1 mapping between MediaFiles and Airings, the MediaFile is resolved to an Airing and then to a Channel<p>
+ * MediaFile - due to the 1:1 mapping between MediaFiles and Airings, the MediaFile is resolved to an Airing and then to a Channel
  */
 public class ChannelAPI{
   private ChannelAPI() {}
