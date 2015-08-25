@@ -2135,6 +2135,7 @@ public class Global {
        * @param DestFile the destination file for the file download
        * @param RequestProperties a Properties object that specifies the request properties to use in an HTTP download request, can be null
        * @return true if the copy process was successfully started, false if the file doesn't exist on the server or it couldn't be contacted
+       * @since 9.0
        *
        * @declaration public boolean StartFileDownload(String ServerAddress, String SourceFile, java.io.File DestFile, java.util.Properties RequestProperties);
        */
@@ -2204,7 +2205,7 @@ public class Global {
        * @param DestFile the destination file for the file download
        * @param RequestProperties a Properties object that specifies the request properties to use in an HTTP download request, can be null
        * @return true if the copy process was successfully started, false if the file doesn't exist on the server or it couldn't be contacted
-       * @since 6.4
+       * @since 9.0
        *
        * @declaration public boolean StartCircularFileDownload(String ServerAddress, String SourceFile, java.io.File DestFile, java.util.Properties RequestProperties);
        */
