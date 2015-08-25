@@ -244,7 +244,9 @@ static void DiscoverNewDevices(JNIEnv *env)
 			// we won't handle upgrades in this app, they'll need to do that externally
 			struct hdhomerun_device_t *hd = hdhomerun_device_create(list[ii].device_id, list[ii].ip_addr, 0, NULL);
 			if(hd) {
-				int result = hdhomerun_device_firmware_version_check(hd, 0);
+				// update due to libhdhomerun 20150614 upgrade - changed to get_version
+				uint32_t versionint;
+				int result = hdhomerun_device_get_version(hd, NULL, &versionint);
 				if(result < 0) {
 					sysOutPrint(env, "HDHomeRun: Error checking device firmware version (%08lx, %d)\n", list[ii].device_id, result);
 					hdhomerun_device_destroy(hd);

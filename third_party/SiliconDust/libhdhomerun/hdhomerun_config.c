@@ -3,10 +3,10 @@
  *
  * Copyright © 2006-2008 Silicondust USA Inc. <www.silicondust.com>.
  *
- * This library is free software; you can redistribute it and/or 
+ * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 3 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -14,20 +14,8 @@
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library.  If not, see <http://www.gnu.org/licenses/>.
- * 
- * As a special exception to the GNU Lesser General Public License,
- * you may link, statically or dynamically, an application with a
- * publicly distributed version of the Library to produce an
- * executable file containing portions of the Library, and
- * distribute that executable file under terms of your choice,
- * without any of the additional requirements listed in clause 4 of
- * the GNU Lesser General Public License.
- * 
- * By "a publicly distributed version of the Library", we mean
- * either the unmodified Library as distributed by Silicondust, or a
- * modified version of the Library that is distributed under the
- * conditions defined in the GNU Lesser General Public License.
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include "hdhomerun.h"
@@ -93,8 +81,8 @@ static bool_t contains(const char *arg, const char *cmpstr)
 
 static uint32_t parse_ip_addr(const char *str)
 {
-	unsigned long a[4];
-	if (sscanf(str, "%lu.%lu.%lu.%lu", &a[0], &a[1], &a[2], &a[3]) != 4) {
+	unsigned int a[4];
+	if (sscanf(str, "%u.%u.%u.%u", &a[0], &a[1], &a[2], &a[3]) != 4) {
 		return 0;
 	}
 
@@ -126,8 +114,8 @@ static int discover_print(char *target_ip_str)
 	int index;
 	for (index = 0; index < count; index++) {
 		struct hdhomerun_discover_device_t *result = &result_list[index];
-		printf("hdhomerun device %08lX found at %u.%u.%u.%u\n",
-			(unsigned long)result->device_id,
+		printf("hdhomerun device %08X found at %u.%u.%u.%u\n",
+			(unsigned int)result->device_id,
 			(unsigned int)(result->ip_addr >> 24) & 0x0FF, (unsigned int)(result->ip_addr >> 16) & 0x0FF,
 			(unsigned int)(result->ip_addr >> 8) & 0x0FF, (unsigned int)(result->ip_addr >> 0) & 0x0FF
 		);
@@ -202,11 +190,30 @@ static int cmd_set(const char *item, const char *value)
 	return cmd_set_internal(item, value);
 }
 
-static bool_t sigabort = FALSE;
-
-static void signal_abort(int arg)
+static volatile sig_atomic_t sigabort_flag = FALSE;
+static volatile sig_atomic_t siginfo_flag = FALSE;
+ 
+static void sigabort_handler(int arg)
 {
-	sigabort = TRUE;
+	sigabort_flag = TRUE;
+}
+
+static void siginfo_handler(int arg)
+{
+	siginfo_flag = TRUE;
+}
+
+static void register_signal_handlers(sig_t sigpipe_handler, sig_t sigint_handler, sig_t siginfo_handler)
+{
+#if defined(SIGPIPE)
+	signal(SIGPIPE, sigpipe_handler);
+#endif
+#if defined(SIGINT)
+	signal(SIGINT, sigint_handler);
+#endif
+#if defined(SIGINFO)
+	signal(SIGINFO, siginfo_handler);
+#endif
 }
 
 static void cmd_scan_printf(FILE *fp, const char *fmt, ...)
@@ -274,24 +281,26 @@ static int cmd_scan(const char *tuner_str, const char *filename)
 		}
 	}
 
-	signal(SIGINT, signal_abort);
-	signal(SIGPIPE, signal_abort);
+	register_signal_handlers(sigabort_handler, sigabort_handler, siginfo_handler);
 
 	int ret = 0;
-	while (!sigabort) {
+	while (!sigabort_flag) {
 		struct hdhomerun_channelscan_result_t result;
 		ret = hdhomerun_device_channelscan_advance(hd, &result);
 		if (ret <= 0) {
 			break;
 		}
 
-		cmd_scan_printf(fp, "SCANNING: %lu (%s)\n",
-			result.frequency, result.channel_str
+		cmd_scan_printf(fp, "SCANNING: %u (%s)\n",
+			(unsigned int)result.frequency, result.channel_str
 		);
 
 		ret = hdhomerun_device_channelscan_detect(hd, &result);
-		if (ret <= 0) {
+		if (ret < 0) {
 			break;
+		}
+		if (ret == 0) {
+			continue;
 		}
 
 		cmd_scan_printf(fp, "LOCK: %s (ss=%u snq=%u seq=%u)\n",
@@ -301,6 +310,9 @@ static int cmd_scan(const char *tuner_str, const char *filename)
 
 		if (result.transport_stream_id_detected) {
 			cmd_scan_printf(fp, "TSID: 0x%04X\n", result.transport_stream_id);
+		}
+		if (result.original_network_id_detected) {
+			cmd_scan_printf(fp, "ONID: 0x%04X\n", result.original_network_id);
 		}
 
 		int i;
@@ -319,6 +331,20 @@ static int cmd_scan(const char *tuner_str, const char *filename)
 		fprintf(stderr, "communication error sending request to hdhomerun device\n");
 	}
 	return ret;
+}
+
+static void cmd_save_print_stats(void)
+{
+	struct hdhomerun_video_stats_t stats;
+	hdhomerun_device_get_video_stats(hd, &stats);
+
+	fprintf(stderr, "%u packets received, %u overflow errors, %u network errors, %u transport errors, %u sequence errors\n",
+		(unsigned int)stats.packet_count, 
+		(unsigned int)stats.overflow_error_count,
+		(unsigned int)stats.network_error_count, 
+		(unsigned int)stats.transport_error_count, 
+		(unsigned int)stats.sequence_error_count
+	);
 }
 
 static int cmd_save(const char *tuner_str, const char *filename)
@@ -350,21 +376,26 @@ static int cmd_save(const char *tuner_str, const char *filename)
 		return ret;
 	}
 
-	signal(SIGINT, signal_abort);
-	signal(SIGPIPE, signal_abort);
+	register_signal_handlers(sigabort_handler, sigabort_handler, siginfo_handler);
 
 	struct hdhomerun_video_stats_t stats_old, stats_cur;
 	hdhomerun_device_get_video_stats(hd, &stats_old);
 
 	uint64_t next_progress = getcurrenttime() + 1000;
 
-	while (!sigabort) {
+	while (!sigabort_flag) {
 		uint64_t loop_start_time = getcurrenttime();
+
+		if (siginfo_flag) {
+			fprintf(stderr, "\n");
+			cmd_save_print_stats();
+			siginfo_flag = FALSE;
+		}
 
 		size_t actual_size;
 		uint8_t *ptr = hdhomerun_device_stream_recv(hd, VIDEO_DATA_BUFFER_SIZE_1S, &actual_size);
 		if (!ptr) {
-			msleep(64);
+			msleep_approx(64);
 			continue;
 		}
 
@@ -381,6 +412,12 @@ static int cmd_save(const char *tuner_str, const char *filename)
 				next_progress = loop_start_time + 1000;
 			}
 
+			/* Windows - indicate activity to suppress auto sleep mode. */
+			#if defined(__WINDOWS__)
+			SetThreadExecutionState(ES_SYSTEM_REQUIRED);
+			#endif
+
+			/* Video stats. */
 			hdhomerun_device_get_video_stats(hd, &stats_cur);
 
 			if (stats_cur.overflow_error_count > stats_old.overflow_error_count) {
@@ -404,7 +441,7 @@ static int cmd_save(const char *tuner_str, const char *filename)
 			continue;
 		}
 
-		msleep(delay);
+		msleep_approx(delay);
 	}
 
 	if (fp) {
@@ -412,16 +449,10 @@ static int cmd_save(const char *tuner_str, const char *filename)
 	}
 
 	hdhomerun_device_stream_stop(hd);
-	hdhomerun_device_get_video_stats(hd, &stats_cur);
 
 	fprintf(stderr, "\n");
 	fprintf(stderr, "-- Video statistics --\n");
-	fprintf(stderr, "%u packets received, %u overflow errors, %u network errors, %u transport errors, %u sequence errors\n",
-		(unsigned int)stats_cur.packet_count, 
-		(unsigned int)stats_cur.overflow_error_count,
-		(unsigned int)stats_cur.network_error_count, 
-		(unsigned int)stats_cur.transport_error_count, 
-		(unsigned int)stats_cur.sequence_error_count);
+	cmd_save_print_stats();
 
 	return 0;
 }
@@ -440,10 +471,12 @@ static int cmd_upgrade(const char *filename)
 		fclose(fp);
 		return -1;
 	}
-	sleep(2);
+
+	fclose(fp);
+	msleep_minimum(2000);
 
 	printf("upgrading firmware...\n");
-	sleep(8);
+	msleep_minimum(8000);
 
 	printf("rebooting...\n");
 	int count = 0;
@@ -456,11 +489,10 @@ static int cmd_upgrade(const char *filename)
 		count++;
 		if (count > 30) {
 			fprintf(stderr, "error finding device after firmware upgrade\n");
-			fclose(fp);
 			return -1;
 		}
 
-		sleep(1);
+		msleep_minimum(1000);
 	}
 
 	printf("upgrade complete - now running firmware %s\n", version_str);
@@ -630,7 +662,7 @@ static int main_internal(int argc, char *argv[])
 	/* Device ID check. */
 	uint32_t device_id_requested = hdhomerun_device_get_device_id_requested(hd);
 	if (!hdhomerun_discover_validate_device_id(device_id_requested)) {
-		fprintf(stderr, "invalid device id: %08lX\n", (unsigned long)device_id_requested);
+		fprintf(stderr, "invalid device id: %08X\n", (unsigned int)device_id_requested);
 	}
 
 	/* Connect to device and check model. */

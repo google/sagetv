@@ -1,12 +1,12 @@
 /*
  * hdhomerun_os_posix.h
  *
- * Copyright © 2006-2008 Silicondust USA Inc. <www.silicondust.com>.
+ * Copyright © 2006-2010 Silicondust USA Inc. <www.silicondust.com>.
  *
- * This library is free software; you can redistribute it and/or 
+ * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 3 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -14,20 +14,8 @@
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library.  If not, see <http://www.gnu.org/licenses/>.
- * 
- * As a special exception to the GNU Lesser General Public License,
- * you may link, statically or dynamically, an application with a
- * publicly distributed version of the Library to produce an
- * executable file containing portions of the Library, and
- * distribute that executable file under terms of your choice,
- * without any of the additional requirements listed in clause 4 of
- * the GNU Lesser General Public License.
- * 
- * By "a publicly distributed version of the Library", we mean
- * either the unmodified Library as distributed by Silicondust, or a
- * modified version of the Library that is distributed under the
- * conditions defined in the GNU Lesser General Public License.
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #define _FILE_OFFSET_BITS 64
@@ -38,58 +26,38 @@
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <signal.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <sys/timeb.h>
 #include <sys/wait.h>
-#include <sys/signal.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <poll.h>
 #include <netdb.h>
 #include <pthread.h>
 
 typedef int bool_t;
+typedef void (*sig_t)(int);
 
 #define LIBTYPE
-#define sock_getlasterror errno
-#define sock_getlasterror_socktimeout (errno == EAGAIN)
 #define console_vprintf vprintf
 #define console_printf printf
 #define THREAD_FUNC_PREFIX void *
 
-static inline uint64_t getcurrenttime(void)
-{
-	struct timeval t;
-	gettimeofday(&t, NULL);
-	return ((uint64_t)t.tv_sec * 1000) + (t.tv_usec / 1000);
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+extern LIBTYPE uint32_t random_get32(void);
+extern LIBTYPE uint64_t getcurrenttime(void);
+extern LIBTYPE void msleep_approx(uint64_t ms);
+extern LIBTYPE void msleep_minimum(uint64_t ms);
+
+extern LIBTYPE bool_t hdhomerun_vsprintf(char *buffer, char *end, const char *fmt, va_list ap);
+extern LIBTYPE bool_t hdhomerun_sprintf(char *buffer, char *end, const char *fmt, ...);
+
+#ifdef __cplusplus
 }
-
-static inline int msleep(unsigned int ms)
-{
-	uint64_t stop_time = getcurrenttime() + ms;
-
-	while (1) {
-		uint64_t current_time = getcurrenttime();
-		if (current_time >= stop_time) {
-			return 0;
-		}
-
-		uint64_t delay_s = (stop_time - current_time) / 1000;
-		if (delay_s > 0) {
-			sleep((unsigned int)delay_s);
-			continue;
-		}
-
-		uint64_t delay_us = (stop_time - current_time) * 1000;
-		usleep((unsigned int)delay_us);
-	}
-}
-
-static inline int setsocktimeout(int s, int level, int optname, uint64_t timeout)
-{
-	struct timeval t;
-	t.tv_sec = timeout / 1000;
-	t.tv_usec = (timeout % 1000) * 1000;
-	return setsockopt(s, level, optname, (char *)&t, sizeof(t));
-}
+#endif
