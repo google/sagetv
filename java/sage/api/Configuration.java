@@ -476,7 +476,7 @@ public class Configuration{
        * @param RemoteName the name of the 'Remote Control'
        * @param MsecDelay the minimum delay in milliseconds between finishing one channel change sequence and starting another when using the specified 'Remote Control'
        *
-       * @declaration public int SetSequenceDelayForInfraredTuningPlugin(String PluginName, int PluginPortNumber, String RemoteName, int MsecDelay);
+       * @declaration public void SetSequenceDelayForInfraredTuningPlugin(String PluginName, int PluginPortNumber, String RemoteName, int MsecDelay);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         int num = getInt(stack);
@@ -1293,6 +1293,7 @@ public class Configuration{
     {
       /**
        * Returns true if the specified rating is in the list that is under parental control
+       * @param Rating the rating to check
        * @return true if the specified rating is in the list that is under parental control, false otherwise
        *
        * @declaration public boolean IsRatingUnderParentalLock(String Rating);
@@ -1565,7 +1566,7 @@ public class Configuration{
     rft.put(new PredefinedJEPFunction("Configuration", "AddVideoDirectory", 3, new String[] {"Directory", "Rule", "Size"}, true)
     {
       /**
-       * Adds a new directory to SageTV's list of directories that it can record video to. Also specifies what rule & size to use
+       * Adds a new directory to SageTV's list of directories that it can record video to. Also specifies what rule &amp; size to use
        * when managing the diskspace for this directory.
        * @param Directory the directory to add as a video directory
        * @param Rule the diskspace rule to use for this directory see {@link #GetVideoDiskspaceRules GetVideoDiskspaceRules()}
@@ -1649,6 +1650,8 @@ public class Configuration{
       /**
        * Gets the name that is associated with an IR code. This has no functional purpose and is purely for display purposes.
        * @param IRCode the IRCode to get the associated name for, see {@link #SetNameForIRCode SetNameForIRCode()}
+       * @return the name for the specified IRCode
+       *
        * @declaration public String GetNameForIRCode(long IRCode);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
@@ -1794,6 +1797,7 @@ public class Configuration{
       /**
        * Sets the name of the port that the infrared receiver is connected to.
        * @param Port the name of the port that the infrared receiver is connected to; should be a value like: "COM1", "COM2" or "USB"
+       * @return true on success, false otherwise
        *
        * @declaration public boolean SetInfraredReceiverPort(String Port);
        */
@@ -1894,6 +1898,8 @@ public class Configuration{
        * Specifies whether or not 3D acceleration should be enabled for the rendering engine. This uses DirectX9 on Windows and OpenGL on Linux.
        * This call takes effect immediately.
        * @param Enabled true if 3D acceleration should be enabled, false otherwise.
+       * @return true if the change succeeded, false otherwise
+       *
        * @declaration public boolean SetAcceleratedDrawingEnabled(boolean Enabled);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
@@ -2712,7 +2718,7 @@ public class Configuration{
     rft.put(new PredefinedJEPFunction("Configuration", "RunFilterAutoconfiguration")
     {
       /**
-			 * Sets the DirectShow audio & video decoders on windows to acceptable values
+			 * Sets the DirectShow audio &amp; video decoders on windows to acceptable values
        * @deprecated
        *
        * @declaration public void RunFilterAutoconfiguration();

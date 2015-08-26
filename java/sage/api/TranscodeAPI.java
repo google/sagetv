@@ -59,7 +59,7 @@ public class TranscodeAPI
        * @param FormatDetails the detailed property string for the new format
        * @since 5.1
        *
-       * @declaration public String AddTranscodeFormat(String FormatName, String FormatDetails);
+       * @declaration public void AddTranscodeFormat(String FormatName, String FormatDetails);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         String details = getString(stack);
@@ -75,7 +75,7 @@ public class TranscodeAPI
        * @param FormatName the name of the transcode format to remove
        * @since 5.1
        *
-       * @declaration public String RemoveTranscodeFormat(String FormatName);
+       * @declaration public void RemoveTranscodeFormat(String FormatName);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         String name = getString(stack);

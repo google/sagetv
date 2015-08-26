@@ -270,7 +270,7 @@ public class SystemMessageAPI
        * @param MessageCode the integer code that specifies the type of message
        * @param MessageLevel the integer code specifying the level of the message; 0=Status(does not raise global level),1=Info, 2=Warning, 3=Error
        * @param MessageString a localized message string that explains what the message is in detail
-       * @param MessageVariables a java.util.Properties object which has name->value pairs that represent variables corresponding to the details of this message
+       * @param MessageVariables a java.util.Properties object which has name-&gt;value pairs that represent variables corresponding to the details of this message
        * @since 6.6
        *
        * @declaration public void PostSystemMessage(int MessageCode, int MessageLevel, String MessageString, java.util.Properties MessageVariables);

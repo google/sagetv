@@ -175,7 +175,7 @@ public class UserRecordAPI {
     rft.put(new PredefinedJEPFunction("UserRecord", "GetUserRecordNames", new String[] { "UserRecord" })
     {
       /**
-       * Gets a list of all the 'Name' values used in name->value pairs in this UserRecord object
+       * Gets a list of all the 'Name' values used in name-&gt;value pairs in this UserRecord object
        * @param UserRecord the UserRecord object to get the list of Names stored in
        * @return an array of all the names used to store data within this UserRecord object
        * @since 7.0
