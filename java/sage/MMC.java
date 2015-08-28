@@ -127,7 +127,7 @@ public class MMC
  // one CaptureDeviceManager.  For instance discover NetworkEncoder devices
  public void redetectCaptureDevices(CaptureDeviceManager mgr)
  {
-	 if (Sage.DBG) System.out.println("MMC is re-doing the capture device detection on " + mgr);
+     if (Sage.DBG) System.out.println("MMC is re-doing the capture device detection on " + mgr);
      mgr.detectCaptureDevices((CaptureDevice[]) globalEncoderMap.values().toArray(new CaptureDevice[0]));
      CaptureDevice[] newDevs = mgr.getCaptureDevices();
      
