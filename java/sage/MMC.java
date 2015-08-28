@@ -103,8 +103,6 @@ public class MMC
   }
 
   // This can be used to load any new capture devices that were hotplugged after SageTV has started
-  // If you just want to load new devices for a single capture device manager you can just do
-  // updateCaptureDeviceObjects, the property sync and then the kicks
   public void redetectCaptureDevices()
   {
     if (Sage.DBG) System.out.println("MMC is re-doing the capture device detection!");
@@ -125,8 +123,8 @@ public class MMC
     Scheduler.getInstance().kick(true);
   }
   
- // This is an overload of redetectCaptureDevices.  It is meant to only redetect devices of
- // a certain type.  For instance discover NetworkEncoder devices
+ // This is an overload of redetectCaptureDevices.  It is meant to only redetect devices for
+ // one CaptureDeviceManager.  For instance discover NetworkEncoder devices
  public void redetectCaptureDevices(CaptureDeviceManager mgr)
  {
 	 if (Sage.DBG) System.out.println("MMC is re-doing the capture device detection on " + mgr);
