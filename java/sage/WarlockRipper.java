@@ -245,7 +245,7 @@ public class WarlockRipper extends EPGDataSource
   }
 
   // This may take some time due to the diskspace calculation so do it before we connect to the server
-  public static String getSubmitInfo(Wizard wiz, String providerID)
+  private static String getSubmitInfo(Wizard wiz, String providerID)
   {
     StringBuffer sb = new StringBuffer();
     sb.append("SUBMIT_INFO ");
@@ -311,7 +311,11 @@ public class WarlockRipper extends EPGDataSource
   protected boolean extractGuide(long inGuideTime)
   {
     if (!doesHaveEpgLicense()) {
-      System.out.println("You do not have a SageTV license, you cannot download EPG data.");
+      if (usesPlugin())
+      {
+        return EPG.getInstance().pluginExtractGuide(Long.toString(providerID));
+      }
+      System.out.println("You do not have a SageTV license or an EPG plugin installed, you cannot download EPG data.");
       return false;
     }
     guideTime = Sage.time(); //inGuideTime;
