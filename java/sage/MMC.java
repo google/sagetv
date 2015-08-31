@@ -103,8 +103,6 @@ public class MMC
   }
 
   // This can be used to load any new capture devices that were hotplugged after SageTV has started
-  // If you just want to load new devices for a single capture device manager you can just do
-  // updateCaptureDeviceObjects, the property sync and then the kicks
   public void redetectCaptureDevices()
   {
     if (Sage.DBG) System.out.println("MMC is re-doing the capture device detection!");
@@ -115,8 +113,8 @@ public class MMC
       mgr.detectCaptureDevices((CaptureDevice[]) globalEncoderMap.values().toArray(new CaptureDevice[0]));
       CaptureDevice[] newDevs = mgr.getCaptureDevices();
       if (Sage.DBG) System.out.println("devices detected=" + java.util.Arrays.asList(newDevs));
-      for (int j = 0; j < newDevs.length; j++)
-        globalEncoderMap.put(newDevs[j].getName(), newDevs[j]);
+     
+      updateCaptureDeviceObjects(newDevs);
 
       if (Sage.DBG) System.out.println("EncoderMap=" + globalEncoderMap);
     }
@@ -124,6 +122,23 @@ public class MMC
     Seeker.getInstance().kick();
     Scheduler.getInstance().kick(true);
   }
+  
+ // This is an overload of redetectCaptureDevices.  It is meant to only redetect devices for
+ // one CaptureDeviceManager.  For instance discover NetworkEncoder devices
+ public void redetectCaptureDevices(CaptureDeviceManager mgr)
+ {
+     if (Sage.DBG) System.out.println("MMC is re-doing the capture device detection on " + mgr);
+     mgr.detectCaptureDevices((CaptureDevice[]) globalEncoderMap.values().toArray(new CaptureDevice[0]));
+     CaptureDevice[] newDevs = mgr.getCaptureDevices();
+     
+     if (Sage.DBG) System.out.println("devices detected=" + java.util.Arrays.asList(newDevs));
+     updateCaptureDeviceObjects(newDevs);
+
+     if (Sage.DBG) System.out.println("EncoderMap=" + globalEncoderMap);
+     NetworkClient.distributeRecursivePropertyChange("mmc/encoders");
+     Seeker.getInstance().kick();
+     Scheduler.getInstance().kick(true);
+ }
 
   // If we're changing the actual CapDev object than we need to rebuild this map. This occurs
   // on client resync of properties
