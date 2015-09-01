@@ -199,9 +199,8 @@ static inline HDHRDevice *findDeviceByName(char *name)
 
 static void DiscoverNewDevices(JNIEnv *env)
 {
-	int count, ii, jj;
+	int count, ii, jj, kk;
 	struct hdhomerun_discover_device_t list[kHDHRDeviceListSize];
-
 
 	if ( _flog_local_check() )
 	{
@@ -244,7 +243,9 @@ static void DiscoverNewDevices(JNIEnv *env)
 			// we won't handle upgrades in this app, they'll need to do that externally
 			struct hdhomerun_device_t *hd = hdhomerun_device_create(list[ii].device_id, list[ii].ip_addr, 0, NULL);
 			if(hd) {
-				int result = hdhomerun_device_firmware_version_check(hd, 0);
+				// update due to libhdhomerun 20150614 upgrade - changed to get_version
+				uint32_t versionint;
+				int result = hdhomerun_device_get_version(hd, NULL, &versionint);
 				if(result < 0) {
 					sysOutPrint(env, "HDHomeRun: Error checking device firmware version (%08lx, %d)\n", list[ii].device_id, result);
 					hdhomerun_device_destroy(hd);
@@ -255,22 +256,23 @@ static void DiscoverNewDevices(JNIEnv *env)
 					hdhomerun_device_destroy(hd);
 					continue;
 				}
+				DebugLog(env, "New HDHomeRun device discovered with firmware version &d\n", versionint);
 				hdhomerun_device_destroy(hd);
 			} else {
 				sysOutPrint(env, "HDHomeRun: Error connecting to device %08lx\n", list[ii].device_id);
 				continue;
 			}
 			
-			DebugLog(env, "New HDHomeRun device discovered (id = %08lx, ip = %08lx)\n", list[ii].device_id, list[ii].ip_addr);
+			DebugLog(env, "New HDHomeRun device discovered (id = %08lx, ip = %08lx, tuners = %d)\n", list[ii].device_id, list[ii].ip_addr, list[ii].tuner_count);
 			memcpy(&gDeviceList[gDeviceListCount], &list[ii], sizeof(struct hdhomerun_discover_device_t));
 			gDeviceListCount++;
-			
-			// and create input entries for the device
-				// TODO: get actual number and types of tuners, types needed for DVB-T support
+
+			// get actual number of tuners and create entries - was hardcoded to two tuners previously
 			pthread_mutex_lock(&gInputListLock);
-			gInputList->push_back(new HDHRDevice(list[ii], 0));
-			gInputList->push_back(new HDHRDevice(list[ii], 1));
-			gInputListCount += 2;
+			for (kk=0; kk<list[ii].tuner_count; kk++) {
+				gInputList->push_back(new HDHRDevice(list[ii], kk));
+				gInputListCount += 1;
+			}
 			pthread_mutex_unlock(&gInputListLock);
 		}
 	}

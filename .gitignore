@@ -16,6 +16,7 @@ config*.log
 /bin/
 /.classpath
 /.project
+/.cproject
 /.gradle/
 /.settings/
 

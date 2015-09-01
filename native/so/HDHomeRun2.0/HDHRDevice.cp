@@ -475,9 +475,11 @@ void HDHRDevice::stopCapture()
 	mLastMealSize = 0;
 }
 
+// Identifies the tuner type
 const char* HDHRDevice::getTunerType( )
 {
 	if ( strstr( mDeviceModel, "atsc" ) ) return "ATSC";
+	if ( strstr( mDeviceModel, "dvbtc" ) ) return "DVB-TC"; // HD HomeRun 3 DUAL EU edition, can be either DVB-C or DVB-T
 	if ( strstr( mDeviceModel, "dvbt" ) ) return "DVB-T";
 	if ( strstr( mDeviceModel, "dvbc" ) ) return "DVB-C";
 	if ( strstr( mDeviceModel, "dvbs" ) ) return "DVB-S";

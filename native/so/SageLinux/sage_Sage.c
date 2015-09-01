@@ -16,9 +16,16 @@
 #include <jni.h>
 #include <stdio.h>
 #include "sage_Sage.h"
+#ifdef __APPLE__
+#include <sys/param.h>
+#include <sys/mount.h>
+#include <machine/types.h>
+#else
 #include <sys/vfs.h>
-#include <sys/time.h>
 #include <linux/types.h>
+#endif
+
+#include <sys/time.h>
 #include <time.h>
 #include <sys/timeb.h>
 #include <sys/types.h>
@@ -260,8 +267,11 @@ JNIEXPORT jint JNICALL Java_sage_Sage_getFileSystemIdentifier(JNIEnv *env, jclas
   
   (*env)->ReleaseStringUTFChars(env, volRoot, str);
 
+#ifdef __APPLE__
+  return (fs.f_fsid.val[0]);
+#else
   return (fs.f_fsid.__val[0]);
-
+#endif
 }
 
 // ***************************************************************************
