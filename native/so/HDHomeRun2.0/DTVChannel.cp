@@ -491,14 +491,16 @@ int DTVChannel::setTuning(SageTuningParams *params)
 			bool isDVBT = (strcmp("DVB-T", mTuningParams.tunerMode)==0);
 			bool isDVBC = (strcmp("DVB-C", mTuningParams.tunerMode)==0);
 			bool isDVBS = (strcmp("DVB-S", mTuningParams.tunerMode)==0);
+			bool isDVBTC = (strcmp("DVB-TC", mTuningParams.tunerMode)==0);
 
-
+			// TODO make tunerType dependent on isCable for HD HomeRun 3 DUAL EU edition (dvbtc)
 			if ( !isATSC && !isDVBT && !isDVBC && !isDVBS && tunerType != NULL )
 			{
 				if ( !(isATSC = (strcmp("ATSC",  tunerType)==0)) )
 					if (!( isDVBT = (strcmp("DVB-T", tunerType)==0) ))
-						if ( !(isDVBC = (strcmp("DVB-C", tunerType)==0) ) )
-							isDVBS = (strcmp("DVB-S", tunerType)==0);
+						if (!( isDVBTC = (strcmp("DVB-TC", tunerType)==0) ))
+							if ( !(isDVBC = (strcmp("DVB-C", tunerType)==0) ) )
+								isDVBS = (strcmp("DVB-S", tunerType)==0);
 			}
 			
 			setTunerMode(&mChannel, mTuningParams.tunerMode);
@@ -524,6 +526,19 @@ int DTVChannel::setTuning(SageTuningParams *params)
 			{
 				setFreqType(&mChannel, 1);
 				setSourceType(&mChannel, "DVB-C");
+			} else
+			if( isDVBTC )
+			{
+				// special tuner type handling for HDHR3-EU HDHomeRun DUAL which has DVB-T and DVB-C
+				// use the cable or OTA setting to determine what to use
+				// the HDHR3-US version with ATSC and QAM is already properly handled below
+				setFreqType(&mChannel, 1);
+				if ( isCable ) {
+					setSourceType(&mChannel, "DVB-C");
+				}
+				else {
+					setSourceType(&mChannel, "DVB-T");
+				}
 			} else
 			if( isDVBS )
 			{
