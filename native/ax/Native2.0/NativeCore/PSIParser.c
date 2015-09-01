@@ -436,11 +436,13 @@ int TransJWideString( char* pBufOut, int nBufOutSize, unsigned short* pBufIn )
 	while ( *p && len + MB_CUR_MAX < nBufOutSize ) 
 	{
 		unsigned short wch;
+
+		// TODO validate the APPLE and BIGENDIAN behavior, instead of "len" it was using "i" but "i" was not defined anymore, so assume it would be "len"
 #if defined(__APPLE__)
-		wch = (wchar_t)OSReadBigInt16(p, i * 2);
+		wch = (wchar_t)OSReadBigInt16(p, len * 2);
 #else
 #if defined( BIGENDIAN )
-		wch = p[i];
+		wch = p[len];
 #else
 		wch =  ( ((*p<<8)&0xff00) | *p >> 8 ); 
 #endif

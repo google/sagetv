@@ -1,4 +1,21 @@
+# Copyright 2015 The SageTV Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# native/so/HDHomeRun2.0 Makefile - builds a shared library - interface of libhdhomerun to Java part of SageTV
 
+# set system name (will be Linux or Darwin)
+UNAME_S := $(shell uname -s)
 
 #TSNATIVE_LIB=../../lib/TSnative/libTSnative.so
 #TSNATIVED_LIB=../../lib/TSnative/libTSnatived.so
@@ -59,11 +76,17 @@ STRIP:=$(CROSS_PREFIX)strip
 CFLAGS = -fPIC -Wall -Wno-unknown-pragmas -Wno-write-strings $(NATIVECORE_INC) $(CHANNEL_INC) $(DEBUG_OPTION) -I$(HDHR_DIR) -I../../include -Istage/include -Istage/include/hdhomerun -c -fPIC -I$(JDK_HOME)/include/ -I$(JDK_HOME)/include/linux -DSAGE_DTV_ONLY=1 -D_FILE_OFFSET_BITS=64 -DLinux
 LDFLAGS =-Lstage/lib -L.
 BINDIR=/usr/local/bin
+# Apple OS/X overwrite CFLAGS and LDFLAGS which are only working on Linux
+ifeq ($(UNAME_S),Darwin)
+CFLAGS = -fPIC -Wall -Wno-unknown-pragmas -Wno-write-strings $(NATIVECORE_INC) $(CHANNEL_INC) $(DEBUG_OPTION) -I$(HDHR_DIR) -I../../include -Istage/include -Istage/include/hdhomerun -c -fPIC -I$(JDK_HOME)/include/ -I$(JDK_HOME)/include/darwin -DSAGE_DTV_ONLY=1 -D_FILE_OFFSET_BITS=64 -DDarwin
+LDFLAGS =-Lstage/lib -L. -L$(JDK_HOME)/lib -framework JavaVM
+endif
 
 STAGE_DIR=$(abspath ./stage)
 
 LIBS = -lhdhomerun $(HDHR_LIBS) -lstdc++ -lNativeCore -lchannel
 
+#TODO verfiy this setting of optimzed versus debug
 #NOTE: not optiomized until stable
 #OPT_FLAGS = -O3
 OPT_FLAGS = -g -O0

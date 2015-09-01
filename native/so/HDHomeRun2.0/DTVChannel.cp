@@ -44,6 +44,16 @@
 #include <sys/un.h>
 #endif
 
+// Apple OS/X added specific includes
+#ifdef __APPLE__
+#include <machine/types.h>
+#include <sys/time.h>
+#include <time.h>
+#include <sys/timeb.h>
+#include <sys/types.h>
+#include <sys/un.h>
+#endif
+
 #define EPG_MSG_TYPE	10
 #define AV_INF_TYPE		11
 
@@ -183,7 +193,7 @@ static void DTVChannel_PostMessage(char* pSrc, char* pData, int MsgType, int Pri
 	
 	if(!vmBuf) {
 		jint res = 0;
-		
+
 		pthread_mutex_lock(&init_lock);
 		if (!vmBuf)
 			res = JNI_GetCreatedJavaVMs(&vmBuf, 1, &numVMs);
@@ -307,13 +317,13 @@ static int DTVChannel_OutputDump(void *context, void* pDataBlk, int lBytes )
 
 DTVChannel::DTVChannel(SageTuner *tuner, const char *tunerName, FILE *encodeFile, size_t fileSize) :
 	mTuner(tuner),
-	mTunerName(NULL),
+	mTunerName((char *)NULL),
 	mOutputFile(encodeFile),
-	mNextOutputFile(NULL),
+	mNextOutputFile((FILE *)NULL),
 	mOutputFileSize((off_t)fileSize),
 	mOutputFileOffset(0),
 	mOutputBufferSize(0),
-	dbg(NULL),
+	dbg((DTVChannelDebugInfo *)NULL),
 	havePIDTbl(false),
 	mProgramID(0),
 	mPIDFilterDelay(0),
@@ -336,7 +346,7 @@ DTVChannel::DTVChannel(SageTuner *tuner, const char *tunerName, FILE *encodeFile
 	
 
 	if ( (remuxer = (REMUXER*)OpenRemuxStream( REMUX_STREAM , &tune,
-                       	            MPEG_TS, MPEG_PS, NULL, NULL, DTVChannel_OutputDump, this )  ) == NULL )
+                       	            MPEG_TS, MPEG_PS, (MEM_ALLOC_HOOK)NULL, NULL, DTVChannel_OutputDump, this )  ) == NULL )
 	{
 		free(mTunerName);
 		flog("Native.log", "DTVChannel: failed creating a Remuxer.\r\n" );
@@ -356,7 +366,7 @@ DTVChannel::DTVChannel(SageTuner *tuner, const char *tunerName, FILE *encodeFile
 	scanChannelEnabled = 0;
 	alignBytes = 0;
 	expectedBytes = 0;
-	scanFilter = NULL;
+	scanFilter = (SCAN_FILTER *)NULL;
 	if(dbg->audio_ctrl & 0x01) {
 		DisableMultipleAudio( remuxer );
 		flog( "Native.log", "DTVChannel: multiple audio is disabled\r\n" );
@@ -389,12 +399,12 @@ DTVChannel::~DTVChannel()
 	if(dbg) {
 		if(dbg->dump_fd != NULL) {
 			fclose(dbg->dump_fd);
-			dbg->dump_fd = NULL;
+			dbg->dump_fd = (FILE *)NULL;
 		}
 		
 		if(dbg->source_fd != NULL) {
 			fclose(dbg->source_fd);
-			dbg->source_fd = NULL;
+			dbg->source_fd = (FILE *)NULL;
 		}
 		
 		if(dbg->debug_source_buffer) {
@@ -403,7 +413,7 @@ DTVChannel::~DTVChannel()
 		}
 		
 		delete dbg;
-		dbg = NULL;
+		dbg = (DTVChannelDebugInfo *)NULL;
 	}
 	flog( "Native.log", "DTVChannel: destroyed.\r\n" );
 }
@@ -918,7 +928,7 @@ int DTVChannel::OutputDump(unsigned char *buffer, unsigned long size)
             if(mOutputFile!=NULL)
                 fclose(mOutputFile);
             mOutputFile=mNextOutputFile;
-            mNextOutputFile = NULL;
+            mNextOutputFile = (FILE *)NULL;
         }
         else
         {
@@ -930,7 +940,7 @@ int DTVChannel::OutputDump(unsigned char *buffer, unsigned long size)
                 if(mOutputFile!=NULL)
                     fclose(mOutputFile);
                 mOutputFile=mNextOutputFile;
-                mNextOutputFile = NULL;
+                mNextOutputFile = (FILE *)NULL;
             }
 			bufSkip = 0;
         }
@@ -1045,7 +1055,7 @@ int DTVChannel::tuneATSCChannel(ATSC_FREQ *atsc, int dryTune)
 	
 	// always disable filter on tune, especially dry tune
 	if( hasPIDFilter()) {
-		setupPIDFilter( NULL, 0 );
+		setupPIDFilter( (PID_ENTRY *)NULL, 0 );
 		havePIDTbl = false;
 		//mPIDFilterDelay = 30;
 		mPIDFilterDelay = 2; //ZQ we always have EPG data for ATSC channels, don't need EPG data in a stream
@@ -1054,7 +1064,7 @@ int DTVChannel::tuneATSCChannel(ATSC_FREQ *atsc, int dryTune)
 	flog("Native.log", "tuneATSCChannel (ch:%d, fq:%ld, dryTune:%s)\r\n", atsc->physical_ch, atsc->frequency, dryTune ? "true" : "false");
 	if(mTuner && !dryTune) {
 		int ii;
-		bcast *freq = NULL;
+		bcast *freq = (bcast *)NULL;
 		
 		for(ii=0; ATSC_BRCAST[ii].fq != 0; ii++) {
 			if(ATSC_BRCAST[ii].ch == physical_ch) {
@@ -1092,7 +1102,7 @@ int DTVChannel::tuneQAMFrequency(QAM_FREQ *qam, int dryTune)
 	
 	// always disable filter on tune, especially dry tune
 	if(hasPIDFilter()) {
-		setupPIDFilter( NULL, 0 );
+		setupPIDFilter( (PID_ENTRY *)NULL, 0 );
 		havePIDTbl = false;
 		mPIDFilterDelay = 0;	// no EPG data pulled on QAM, so filter right away
 	}
@@ -1137,7 +1147,7 @@ int DTVChannel::tuneDVBTFrequency(DVB_T_FREQ *dvbt, int dryTune)
 
 	// always disable filter on tune, especially dry tune
 	if(hasPIDFilter()) {
-		setupPIDFilter( NULL, 0 );
+		setupPIDFilter( (PID_ENTRY *)NULL, 0 );
 		havePIDTbl = false;
 		mPIDFilterDelay = 0;	// we extract EPG always on specfied EPG pids
 	}
@@ -1176,7 +1186,7 @@ int DTVChannel::tuneDVBCFrequency(DVB_C_FREQ *dvbc, int dryTune)
 
 	// always disable filter on tune, especially dry tune
 	if(hasPIDFilter()) {
-		setupPIDFilter( NULL, 0 );
+		setupPIDFilter( (PID_ENTRY *)NULL, 0 );
 		havePIDTbl = false;
 		mPIDFilterDelay = 0;	// we extract EPG always on specfied EPG pids
 	}
@@ -1216,7 +1226,7 @@ int DTVChannel::tuneDVBSFrequency(DVB_S_FREQ *dvbs, int dryTune)
 
 	// always disable filter on tune, especially dry tune
 	if(hasPIDFilter()) {
-		setupPIDFilter( NULL, 0 );
+		setupPIDFilter( (PID_ENTRY *)NULL, 0 );
 		havePIDTbl = false;
 		mPIDFilterDelay = 0;	// we extract EPG always on specfied EPG pids
 	}
@@ -1271,7 +1281,7 @@ int DTVChannel::setupPIDFilter( PID_ENTRY *pids, int pidNum )
 		havePIDTbl = false;
 		mPIDFilterDelay = 0;
 		unlockupParser();
-		return mTuner->setPIDFilter(0, 0, NULL);
+		return mTuner->setPIDFilter(0, 0, (unsigned short *)NULL);
 	}
 	
 	program = (unsigned short)mProgramID;
@@ -1382,7 +1392,7 @@ int DTVChannel::releaseScanChannel( )
 	scanChannelEnabled = 0;
 	StopChannelScan( scanFilter );
 	ReleaseScanFilter( scanFilter );
-	scanFilter = NULL;
+	scanFilter = (SCAN_FILTER *)NULL;
 	pthread_mutex_unlock( &mutex1_scan_data );
 	return 1;
 }
