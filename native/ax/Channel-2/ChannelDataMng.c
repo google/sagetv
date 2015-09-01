@@ -44,9 +44,33 @@
 
 //*********************** WINDOWS section *********************
 #else
-#ifdef MAC
+#ifdef __APPLE__
 //*********************** MAC section *************************
+#include <sys/ioctl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <sys/errno.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
+#include <inttypes.h>
+#include <getopt.h>
+#include <errno.h>
+#include <sys/time.h>
+#include <math.h>
+#include <time.h>
+#include <sys/timeb.h>
+#include <sys/types.h>
+#include <sys/un.h>
+#include <stdarg.h>
+int TranslateJWideString2( char* buf_out, int buf_out_size, unsigned short* buf_in );
+int TranslateJWideString( char* buf_out, int buf_out_size, unsigned short* buf_in );
 
+// Apple OS/X has no features.h
+// Apple OS/X handles types via machine/types.h
+#include <machine/types.h>
 #include <libkern/OSByteOrder.h>
 
 //*********************** MAC section *************************

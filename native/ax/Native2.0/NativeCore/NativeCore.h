@@ -31,6 +31,7 @@ extern "C" {
 
 #define _USE_32BIT_TIME_T
 
+// TODO why this check, above is already a WIN32 check?
 #ifdef WIN32
 typedef			 _int64  LONGLONG;
 typedef unsigned _int64  ULONGLONG;
@@ -43,6 +44,7 @@ typedef LONGLONG REFERENCE_TIME;
 #define inline __inline__
 #endif
 
+// TODO why linux here within WIN32 - is about MINGW / Cygwin support?
 #ifdef Linux
 #define _MAX_PATH       512
 #endif
@@ -73,8 +75,8 @@ typedef LONGLONG REFERENCE_TIME;
 #define FCLOSE	close
 #define FSEEK	_lseeki64
 #define FTELL	_telli64
-
 #endif
+
 #ifdef Linux   //
 
 #include <stdio.h>
@@ -114,6 +116,49 @@ typedef ULONGLONG REFERENCE_TIME;
 #define ASSERT   assert
 #endif
 
+// added define for Apple OS/X, added OSByteOrder in comparison to Linux
+#ifdef __APPLE__
+#include <stdio.h>
+#include <sys/ioctl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/errno.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <unistd.h>
+#include <memory.h>
+#include <stdlib.h>
+#include <libkern/OSByteOrder.h>
+
+#define lseek64 lseek
+#define open64 open
+
+#define TEXT( x )	x
+#define snprintf snprintf
+#define vnprintf vnprintf
+#define lstrlen	strlen
+#define lstrcat	strcat
+
+#define STRNICMP   strncasecmp
+#define STRICMP    strcasecmp
+
+//#define FOPEN	open64
+#define FCLOSE	close
+#define FSEEK	lseek64
+#define FTELL(x)	lseek64(x, 0, SEEK_END)
+
+#ifndef __USE_FILE_OFFSET64
+typedef long long off64_t;
+extern off64_t lseek64( int filedes, off64_t offset, int whence );
+extern off64_t tell64( int filedes );
+#endif
+
+typedef			 long long  LONGLONG;
+typedef unsigned long long ULONGLONG;
+typedef ULONGLONG REFERENCE_TIME;
+#define ASSERT   assert
+
+#endif
 
 #define _MIN(x,y) ((x)>(y)? (y):(x))
 #define _MAX(x,y) ((x)>(y)? (x):(y))

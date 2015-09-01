@@ -52,7 +52,7 @@ inline static const unsigned char* SearchMPEGStartCode( const unsigned char* pDa
 	unsigned long code;
 
 	if ( nBytes < 4 )
-		return NULL;
+		return (unsigned char *)NULL;
 
 	code = 0xffffff00 |*pData++;
 	while ( --nBytes )
@@ -62,7 +62,7 @@ inline static const unsigned char* SearchMPEGStartCode( const unsigned char* pDa
 		code = (( code << 8 )| *pData++ );
 	}
 
-	return NULL;
+	return (unsigned char *)NULL;
 }
 
 
