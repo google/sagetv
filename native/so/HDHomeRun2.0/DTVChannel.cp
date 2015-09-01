@@ -493,7 +493,7 @@ int DTVChannel::setTuning(SageTuningParams *params)
 			bool isDVBS = (strcmp("DVB-S", mTuningParams.tunerMode)==0);
 			bool isDVBTC = (strcmp("DVB-TC", mTuningParams.tunerMode)==0);
 
-			// TODO make tunerType dependent on isCable for HD HomeRun 3 DUAL EU edition (dvbtc)
+			// added DVB-TC type used by HD HomeRun 3 DUAL EU edition (dvbtc)
 			if ( !isATSC && !isDVBT && !isDVBC && !isDVBS && tunerType != NULL )
 			{
 				if ( !(isATSC = (strcmp("ATSC",  tunerType)==0)) )
