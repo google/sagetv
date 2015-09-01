@@ -146,12 +146,12 @@ static int AVInfMEssageDumper( void* pContext, void* pData, int nSize )
 				ULONGLONG pos = DemuxUsedBytes( pDemuxer );
 				tracks = GetTracks( pDemuxer, slot_index );
 
-				CheckTracksAttr( tracks , (unsigned long)LanguageCode((unsigned char*)"eng") );
+				CheckTracksAttr( tracks , (uint32_t)LanguageCode((uint8_t*)"eng") );
 				TracksIndexing( tracks );
 				_display_av_inf( tracks );
 
 				if ( pAVInf->state < 2 )
-					SageLog(( _LOG_ERROR, 3, TEXT("**** Find AVINF(pos:%d) ****" ), (unsigned long)pos ));
+					SageLog(( _LOG_ERROR, 3, TEXT("**** Find AVINF(pos:%d) ****" ), (uint32_t)pos ));
 
 				pAVInf->state = 2;
 			}
@@ -265,13 +265,13 @@ static int PTSInfProgressCallback( void* pContext, void* pData, int nSize )
 
 #define REWIND_BLOCK_SIZE 1024*128
 
-int _GetAVFormat( void* pFileName, int bWcharFileName, unsigned long nCheckMaxiumSize, int bStreamData, 
+int _GetAVFormat( void* pFileName, int bWcharFileName, uint32_t nCheckMaxiumSize, int bStreamData, 
 			   int nRequestedTSChannel,   char* pFormatBuf, int nFormatSize, char* pDurationBuf, 
 			   int nDurationBufSize, int* nTotalChannel )
 {
 	AVINF avinf={0};
 	TUNE tune={0};
-	unsigned long av_packets, check_size;
+	uint32_t av_packets, check_size;
 	int sagepvr_type, pvr_recording_type, file_type, av_present=0, encrypted_data=0;
 	ULONGLONG last_pts;
 	int ret, channel=0, i, track_num;
@@ -398,10 +398,10 @@ int _GetAVFormat( void* pFileName, int bWcharFileName, unsigned long nCheckMaxiu
 		ULONGLONG pos = DemuxUsedBytes( avinf.demuxer );
 
 		SageLog(( _LOG_ERROR, 3, TEXT("***********  STREAM IS NOT READY (at bytes:%d, pos:%d), CHECK AVAILABLE STREAMS ***********" ), 
-			   avinf.max_check_bytes, (unsigned long)pos ));
+			   avinf.max_check_bytes, (uint32_t)pos ));
 		tracks = GetTracks( avinf.demuxer, 0 );
 
-		CheckTracksAttr( tracks , (unsigned long)LanguageCode((unsigned char*)"eng") );
+		CheckTracksAttr( tracks , (uint32_t)LanguageCode((uint8_t*)"eng") );
 		TracksIndexing( tracks );
 		_display_av_inf( tracks );
 
@@ -446,7 +446,7 @@ int _GetAVFormat( void* pFileName, int bWcharFileName, unsigned long nCheckMaxiu
 	{
 		int ret;
 		ULONGLONG end_pos = DemuxSourceLength( avinf.demuxer );
-		unsigned long bytes_for_pts = REWIND_BLOCK_SIZE * i;
+		uint32_t bytes_for_pts = REWIND_BLOCK_SIZE * i;
 		if ( end_pos > bytes_for_pts )
 				end_pos -= bytes_for_pts;
 		else 
@@ -526,7 +526,7 @@ int _GetAVFormat( void* pFileName, int bWcharFileName, unsigned long nCheckMaxiu
 
 }
 
-int GetAVFormat(  char* pFileName, unsigned long nCheckMaxiumSize, int bStreamData, 
+int GetAVFormat(  char* pFileName, uint32_t nCheckMaxiumSize, int bStreamData, 
 			   int nRequestedTSChannel,   char* pFormatBuf, int nFormatSize, char* pDurationBuf, 
 			   int nDurationBufSize, int* nTotalChannel )
 {
@@ -535,7 +535,7 @@ int GetAVFormat(  char* pFileName, unsigned long nCheckMaxiumSize, int bStreamDa
 				  nDurationBufSize, nTotalChannel );
 }
 
-int GetAVFormatW(  wchar_t* pFileName, unsigned long nCheckMaxiumSize, int bStreamData, 
+int GetAVFormatW(  wchar_t* pFileName, uint32_t nCheckMaxiumSize, int bStreamData, 
 			   int nRequestedTSChannel,   char* pFormatBuf, int nFormatSize, char* pDurationBuf, 
 			   int nDurationBufSize, int* nTotalChannel )
 {
@@ -561,7 +561,7 @@ int AVPtsPCRDumper( void* pContext, void* pData, int nSize )
 		pAVPts->ill_pcr_count++;
 	pAVPts->current_pcr = pcr;
 
-	pos  += snprintf( buf+pos, buf_size-pos, "%04ld\t", pAVPts->count );
+	pos  += snprintf( buf+pos, buf_size-pos, "%04d\t", pAVPts->count );
 	pos  += long_long( pAVPts->current_pcr, buf+pos, buf_size-pos );
 	pos  += snprintf(  buf+pos, buf_size-pos, "\t SCR" );
 	pos  += snprintf(  buf+pos, buf_size-pos, "\t\t\t" ); 
@@ -586,7 +586,7 @@ int ATSPCRDumper( void* pContext, void* pData, int nSize )
 	ULONGLONG ats = (ULONGLONG)MT2PTS((ULONGLONG)10000*ats_time->t.ats);
 
 
-	pos  += snprintf( buf+pos, buf_size-pos, "%04ld\t", pAVPts->count );
+	pos  += snprintf( buf+pos, buf_size-pos, "%04d\t", pAVPts->count );
 	pos  += long_long( ats, buf+pos, buf_size-pos );
 	pos  += snprintf(  buf+pos, buf_size-pos, "\t ATS" );
 	pos  += snprintf(  buf+pos, buf_size-pos, "\t\t\t" ); 
@@ -671,7 +671,7 @@ int AVPtsDataDumper( void* pContext, void* pData, int nSize )
 
 		if ( pos1+pos2 )
 		{
-			pos  += snprintf(  buf+pos, buf_size-pos, "%04ld\t%s\t%s",   pAVPts->count, buf1, buf2 );
+			pos  += snprintf(  buf+pos, buf_size-pos, "%04d\t%s\t%s",   pAVPts->count, buf1, buf2 );
 			
 			if ( pos2 )
 				pos  += snprintf(  buf+pos, buf_size-pos, "\t" ); 
@@ -764,12 +764,12 @@ int AVPtsMEssageDumper( void* pContext, void* pData, int nSize )
 				ULONGLONG pos = DemuxUsedBytes( pDemuxer );
 				tracks = GetTracks( pDemuxer, slot_index );
 
-				CheckTracksAttr( tracks , (unsigned long)LanguageCode((unsigned char*)"eng") );
+				CheckTracksAttr( tracks , (uint32_t)LanguageCode((uint8_t*)"eng") );
 				TracksIndexing( tracks );
 				_display_av_inf( tracks );
 
 				if ( pAVPts->state < 2 )
-					SageLog(( _LOG_ERROR, 3, TEXT("**** Found AVPTS(pos:%d) ****" ), (unsigned long)pos ));
+					SageLog(( _LOG_ERROR, 3, TEXT("**** Found AVPTS(pos:%d) ****" ), (uint32_t)pos ));
 
 				pAVPts->state = 2;
 			}
@@ -810,11 +810,11 @@ int AVPtsProgressCallback( void* pContext, void* pData, int nSize )
 }
 
 
-int GetAVPts( char* pFileName, char* pPTSFile, int nOption, unsigned long nCheckMaxiumSize, int nRequestedTSChannel, int* nTotalChannel )
+int GetAVPts( char* pFileName, char* pPTSFile, int nOption, uint32_t nCheckMaxiumSize, int nRequestedTSChannel, int* nTotalChannel )
 {
 	AVPTS avpts={0};
 	TUNE tune={0};
-	unsigned long av_packets;
+	uint32_t av_packets;
 	int file_type;
 	int ret;
 
@@ -911,7 +911,7 @@ int GetAVPts( char* pFileName, char* pPTSFile, int nOption, unsigned long nCheck
 		pos += time_stamp( avpts.bigest_pts, buf+pos, buf_size-pos );
 		pos += snprintf( buf+pos, buf_size-pos, ")\n" );
 
-		pos += snprintf( buf+pos, buf_size-pos, "pcr changes:%ld  pts changes:%ld\n", avpts.ill_pcr_count, avpts.ill_pts_count );
+		pos += snprintf( buf+pos, buf_size-pos, "pcr changes:%d  pts changes:%d\n", avpts.ill_pcr_count, avpts.ill_pts_count );
 		write( avpts.pts_file, buf, pos );
 
 	}
@@ -932,7 +932,7 @@ int long_long( ULONGLONG llVal, char* pBuffer, int nSize )
 	return snprintf( pBuffer, nSize, "%9I64u", llVal );
 #endif 
 #ifdef Linux
-	return snprintf( pBuffer, nSize, "%9llu", llVal );
+	return snprintf( pBuffer, nSize, "%9"PRId64"", llVal );
 #endif 
 	return 0;
 }
@@ -943,7 +943,7 @@ int long_long_hex( ULONGLONG llVal, char* pBuffer, int nSize )
 	return snprintf( pBuffer, nSize, "%I64x", llVal );
 #endif 
 #ifdef Linux
-	return snprintf( pBuffer, nSize, "%llx", llVal );
+	return snprintf( pBuffer, nSize, "%"PRIx64"", llVal );
 #endif 
 	return 0;
 }
@@ -1036,7 +1036,7 @@ int time_stamp( LONGLONG llTime, char* pBuffer, int nSize )
 		llTime = (llTime * PTS_UNITS);  //convert to standar time seconds;
 		div = (ULONGLONG)(3600) * 10000000;
 		if ( llTime >= div && nSize > pos ) {
-			pos += snprintf( p+pos, nSize-pos,  TEXT("%ld"), (unsigned long)(llTime / div) );
+			pos += snprintf( p+pos, nSize-pos,  TEXT("%d"), (uint32_t)(llTime / div) );
 			llTime = llTime % div;
 		} else
 			p[pos++]='0';
@@ -1044,17 +1044,17 @@ int time_stamp( LONGLONG llTime, char* pBuffer, int nSize )
 		p[pos++]=':';
 		div = (ULONGLONG)60 * 10000000;
 		if (llTime >= div) {
-			pos +=  snprintf( p+pos, nSize-pos,  TEXT("%02ld"), (unsigned long)(llTime / div) );
+			pos +=  snprintf( p+pos, nSize-pos,  TEXT("%02d"), (uint32_t)(llTime / div) );
 			llTime = llTime % div;
 		} else
 			p[pos++]='0';
 		p[pos++]=':';
 
-		pos += snprintf( p+pos, nSize-pos, TEXT("%02ld."), (unsigned long)llTime/10000000 );
+		pos += snprintf( p+pos, nSize-pos, TEXT("%02d."), (uint32_t)llTime/10000000 );
 		llTime = llTime % 10000000;
-		pos += snprintf( p+pos, nSize-pos, TEXT("%3.3ld'"), (unsigned long)(llTime/10000) );
+		pos += snprintf( p+pos, nSize-pos, TEXT("%3.3d'"), (uint32_t)(llTime/10000) );
 		llTime = llTime % 10000;
-		pos += snprintf( p+pos, nSize-pos, TEXT("%3.3ld.%ld"), (unsigned long)(llTime/10), (unsigned long)llTime%10 );
+		pos += snprintf( p+pos, nSize-pos, TEXT("%3.3d.%d"), (uint32_t)(llTime/10), (uint32_t)llTime%10 );
 
 		return pos;
 }
@@ -1084,7 +1084,7 @@ int ms_time_stamp( ULONGLONG llTime, char* pBuffer, int nSize )
 		//llTime = (llTime * PTS_UNITS);  //convert to standar time seconds;
 		div = (ULONGLONG)(3600) * 10000000;
 		if ( llTime >= div && nSize > pos ) {
-			pos += snprintf( p+pos, nSize-pos,  TEXT("%ld"), (unsigned long)(llTime / div) );
+			pos += snprintf( p+pos, nSize-pos,  TEXT("%d"), (uint32_t)(llTime / div) );
 			llTime = llTime % div;
 		} else
 			p[pos++]='0';
@@ -1092,17 +1092,17 @@ int ms_time_stamp( ULONGLONG llTime, char* pBuffer, int nSize )
 		p[pos++]=':';
 		div = (ULONGLONG)60 * 10000000;
 		if (llTime >= div) {
-			pos +=  snprintf( p+pos, nSize-pos,  TEXT("%02ld"), (unsigned long)(llTime / div) );
+			pos +=  snprintf( p+pos, nSize-pos,  TEXT("%02d"), (uint32_t)(llTime / div) );
 			llTime = llTime % div;
 		} else
 			p[pos++]='0';
 		p[pos++]=':';
 
-		pos += snprintf( p+pos, nSize-pos, TEXT("%02ld."), (unsigned long)llTime/10000000 );
+		pos += snprintf( p+pos, nSize-pos, TEXT("%02d."), (uint32_t)llTime/10000000 );
 		llTime = llTime % 10000000;
-		pos += snprintf( p+pos, nSize-pos, TEXT("%3.3ld'"), (unsigned long)(llTime/10000) );
+		pos += snprintf( p+pos, nSize-pos, TEXT("%3.3d'"), (uint32_t)(llTime/10000) );
 		llTime = llTime % 10000;
-		pos += snprintf( p+pos, nSize-pos, TEXT("%3.3ld.%ld"), (unsigned long)(llTime/10), (unsigned long)llTime%10 );
+		pos += snprintf( p+pos, nSize-pos, TEXT("%3.3d.%d"), (uint32_t)(llTime/10), (uint32_t)llTime%10 );
 
 		return pos;
 }
@@ -1123,7 +1123,7 @@ void _pts_log0( int type, ULONGLONG pts, ULONGLONG dts, ULONGLONG position, int 
 	pos += snprintf( buf+pos, buf_size-pos, "%9I64u", position );
 #endif
 #ifdef Linux
-	pos += snprintf( buf+pos, buf_size-pos, "%9llu", position );
+	pos += snprintf( buf+pos, buf_size-pos, "%9"PRIu64"", position );
 #endif
 
 	//buf[pos++] = '\t';
@@ -1198,7 +1198,7 @@ void _pts_log1( int type, ULONGLONG pts, ULONGLONG dts, ULONGLONG position, int 
 	pos += snprintf( buf+pos, buf_size-pos, "%I64u ", pts );
 #endif
 #ifdef Linux
-	pos += snprintf( buf+pos, buf_size-pos, "%llu ", pts );
+	pos += snprintf( buf+pos, buf_size-pos, "%"PRIu64" ", pts );
 #endif
 	if ( type == 1 || type == 2 )
 	{
@@ -1218,7 +1218,7 @@ void _pts_log1( int type, ULONGLONG pts, ULONGLONG dts, ULONGLONG position, int 
 		pos += snprintf( buf+pos, buf_size- pos, "DTS:%I64u  ", dts );
 #endif
 #ifdef Linux
-		pos += snprintf( buf+pos, buf_size- pos, "DTS:%llu  ", dts );
+		pos += snprintf( buf+pos, buf_size- pos, "DTS:%"PRIu64"  ", dts );
 #endif
 	}
 
@@ -1240,7 +1240,7 @@ void _scr_log( ULONGLONG scr )
 	pos += snprintf( buf+pos, buf_size-pos, "%10I64u \n", scr );
 #endif
 #ifdef Linux
-	pos += snprintf( buf+pos, buf_size-pos, "%10llu \n", scr );
+	pos += snprintf( buf+pos, buf_size-pos, "%10"PRIu64" \n", scr );
 #endif
 
 	fwrite( buf, 1, pos, fp );
@@ -1277,10 +1277,10 @@ int DetectSagePVRFile( char* pFileName, PVR_META_INF* pMetaInf )
 		bytes = (int)read( fp, buf, sizeof(buf) );
 		if ( bytes <= 0 )
 			break;
-		file_type = CheckSagePVRData( (unsigned char*)buf, bytes );
+		file_type = CheckSagePVRData( (uint8_t*)buf, bytes );
 		if ( file_type != 0 )
 		{
-			start_offset = SearchPVRMetaInf( &next_block, (unsigned char*)buf, bytes );
+			start_offset = SearchPVRMetaInf( &next_block, (uint8_t*)buf, bytes );
 			break;
 		}
 		pos += bytes;
@@ -1294,10 +1294,10 @@ int DetectSagePVRFile( char* pFileName, PVR_META_INF* pMetaInf )
 		bytes = (int)read( fp, buf, 188 );
 		if ( bytes <= 0 )
 			break;
-		start_offset = SearchPVRMetaInf( &next_block, (unsigned char*)buf, bytes );
+		start_offset = SearchPVRMetaInf( &next_block, (uint8_t*)buf, bytes );
 		if ( start_offset >= 0 )
 		{
-			int ret = GetPVRMetaInf( pMetaInf, (unsigned char*)buf );
+			int ret = GetPVRMetaInf( pMetaInf, (uint8_t*)buf );
 			if ( ret > 0 )
 				break;
 		}
@@ -1343,10 +1343,10 @@ int DetectSagePVRFileW( wchar_t* pFileName, PVR_META_INF* pMetaInf )
 		bytes = (int)read( fp, buf, sizeof(buf) );
 		if ( bytes <= 0 )
 			break;
-		file_type = CheckSagePVRData( (unsigned char*)buf, bytes );
+		file_type = CheckSagePVRData( (uint8_t*)buf, bytes );
 		if ( file_type != 0 )
 		{
-			start_offset = SearchPVRMetaInf( &next_block, (unsigned char*)buf, bytes );
+			start_offset = SearchPVRMetaInf( &next_block, (uint8_t*)buf, bytes );
 			break;
 		}
 		pos += bytes;
@@ -1361,10 +1361,10 @@ int DetectSagePVRFileW( wchar_t* pFileName, PVR_META_INF* pMetaInf )
 		bytes = (int)read( fp, buf, 188 );
 		if ( bytes <= 0 )
 			break;
-		start_offset = SearchPVRMetaInf( &next_block, (unsigned char*)buf, bytes );
+		start_offset = SearchPVRMetaInf( &next_block, (uint8_t*)buf, bytes );
 		if ( start_offset >= 0 )
 		{
-			int ret = GetPVRMetaInf( pMetaInf, (unsigned char*)buf );
+			int ret = GetPVRMetaInf( pMetaInf, (uint8_t*)buf );
 			if ( ret > 0 )
 				break;
 		}
@@ -1382,7 +1382,7 @@ int DetectSagePVRFileW( wchar_t* pFileName, PVR_META_INF* pMetaInf )
 }
 
 //null packets carry ATS
-static int CheckPVRTag( const unsigned char* pData, int nBytes )
+static int CheckPVRTag( const uint8_t* pData, int nBytes )
 {
 	int i; 
 	if ( nBytes < 14 ) return 0;
@@ -1419,7 +1419,7 @@ int DetectPVRRecordingFile( char* pFileName )
 	if ( bytes <= 0 )
 		return 0;
 	FCLOSE( fp );
-	file_type = CheckPVRTag( (const unsigned char*)buf, 188 );
+	file_type = CheckPVRTag( (const uint8_t*)buf, 188 );
 	return file_type;
 }
 
@@ -1446,7 +1446,7 @@ int DetectPVRRecordingFileW( wchar_t* pFileName )
 	if ( bytes <= 0 )
 		return 0;
 	FCLOSE( fp );
-	file_type = CheckPVRTag( (const unsigned char*)buf, 188 );
+	file_type = CheckPVRTag( (const uint8_t*)buf, 188 );
 	return file_type;
 }
 

@@ -159,27 +159,27 @@ void ResetTSFilter( TS_FILTER* pTSFilter )
 }
 
 
-static ULONGLONG GetPCR( const unsigned char* pkt )
+static ULONGLONG GetPCR( const uint8_t* pkt )
 {
 	ULONGLONG PCR;
 	ULONGLONG PCR_base;
-	unsigned short PCR_ext;
+	uint16_t PCR_ext;
 	PCR_base =  ((ULONGLONG)( pkt[0]) << 25);
 	PCR_base |= ((ULONGLONG)( pkt[1]) << 17);
 	PCR_base |= ((ULONGLONG)( pkt[2]) << 9 );
 	PCR_base |= ((ULONGLONG)( pkt[3]) << 1 );
 	PCR_base |= ((ULONGLONG)(0x80 & pkt[4]) >> 7);     //33 bits
-	PCR_ext = ((unsigned short)(pkt[4] & 0x01) << 8);   
-	PCR_ext |= ((unsigned short)(pkt[5]));			   //9 bits
+	PCR_ext = ((uint16_t)(pkt[4] & 0x01) << 8);   
+	PCR_ext |= ((uint16_t)(pkt[5]));			   //9 bits
 	PCR = (ULONGLONG)300* PCR_base + PCR_ext;
 
 	return PCR;
 }
 
 
-static int UnpackTSPacket( TS_PACKET *pTSPacket, const unsigned char* pData )	
+static int UnpackTSPacket( TS_PACKET *pTSPacket, const uint8_t* pData )	
 {
-	pTSPacket->data   = (unsigned char*)pData;
+	pTSPacket->data   = (uint8_t*)pData;
 	pTSPacket->sync	  =	pData[0];			
 	pTSPacket->error  =	pData[1]&0x80	? 1 : 0;	
 	if ( pTSPacket->error ) return 0;
@@ -241,7 +241,7 @@ static int UnpackTSPacket( TS_PACKET *pTSPacket, const unsigned char* pData )
 	return 1;
 }
 
-int CheckPacketContinuity( TS_PACKET *pTSPacket, unsigned char* pContinuity )
+int CheckPacketContinuity( TS_PACKET *pTSPacket, uint8_t* pContinuity )
 {
 	if ( pTSPacket->start )
 	{
@@ -255,7 +255,7 @@ int CheckPacketContinuity( TS_PACKET *pTSPacket, unsigned char* pContinuity )
 
 }
 
-static inline int LookupPMT( TS_FILTER* pTSFilter, unsigned short uPid )
+static inline int LookupPMT( TS_FILTER* pTSFilter, uint16_t uPid )
 {
 	int i, j; 
 	for ( i = 0; i<pTSFilter->pmt_num; i++ )
@@ -292,7 +292,7 @@ static void SortPidHistTable( TS_FILTER* pTSFilter )
 static void HistogramPid( TS_FILTER* pTSFilter, TS_PACKET *pTSPacket )
 {
 	int i;
-	unsigned short max_num, min_num, min_index;
+	uint16_t max_num, min_num, min_index = 0;
 	if ( pTSFilter->disable_pid_hist == 1 || pTSPacket->pid == 0 )
 		return;
 
@@ -364,9 +364,9 @@ static void HistogramPid( TS_FILTER* pTSFilter, TS_PACKET *pTSPacket )
 
 static int UnpackPAT( TS_FILTER* pTSFilter, TS_PACKET *pTSPacket )
 {
-	const unsigned char* payload_data; int payload_size;
-	unsigned char* data;
-	unsigned short tsid;
+	const uint8_t* payload_data; int payload_size;
+	uint8_t* data;
+	uint16_t tsid;
 	int	packet_offset, i;
 	SECTION_HEADER section_header;
 	TS_PAT *pPat;
@@ -434,13 +434,13 @@ static int UnpackPAT( TS_FILTER* pTSFilter, TS_PACKET *pTSPacket )
 }
 
 static void ParseCADesc( TS_PMT *pPmt, DESC_DATA *pDesc );
-static int GetPmtIndex2( TS_FILTER* pTSFilter, unsigned short uPid, unsigned short uProgram );
+static int GetPmtIndex2( TS_FILTER* pTSFilter, uint16_t uPid, uint16_t uProgram );
 int UnpackPMT( TS_FILTER *pTSFilter, int nPmtIndex, TS_PACKET *pTSPacket )	
 {
-	const unsigned char* payload_data; 
+	const uint8_t* payload_data; 
 	int payload_size;
-	unsigned char* data;
-	unsigned short packet_offset, data_length;
+	uint8_t* data;
+	uint16_t packet_offset, data_length;
 	int stream_num, section_bytes, section_start, update_pmt = 0;
 	SECTION_HEADER section_header;
 	TS_PMT *pPmt;
@@ -462,7 +462,7 @@ int UnpackPMT( TS_FILTER *pTSFilter, int nPmtIndex, TS_PACKET *pTSPacket )
 		//check if it's a vaild PMT table
 		if ( section_start )
 		{
-			const unsigned char* section_p = (section_start==1)? payload_data+payload_data[0]+1 : payload_data ;
+			const uint8_t* section_p = (section_start==1)? payload_data+payload_data[0]+1 : payload_data ;
 			if ( section_p[0] != 0x02 || (section_p[1]& 0x80) != 0x80 ) //PMT table id is 2; a valid indicator 
 				break;
 		}
@@ -489,7 +489,7 @@ int UnpackPMT( TS_FILTER *pTSFilter, int nPmtIndex, TS_PACKET *pTSPacket )
 		{
 			int uNewIndex;
 			TS_SECTION *pSection;
-			unsigned long crc32_tmp;
+			uint32_t crc32_tmp;
 			uNewIndex = GetPmtIndex2( pTSFilter, pTSPacket->pid, section_header.tsid );
 			if ( uNewIndex == -1 ||  pTSFilter->pmt_num <= uNewIndex )
 			{
@@ -535,8 +535,8 @@ int UnpackPMT( TS_FILTER *pTSFilter, int nPmtIndex, TS_PACKET *pTSPacket )
 		stream_num = 0;
 		while ( packet_offset + 6 <= section_header.table_bytes )
 		{
-			unsigned short pid;
-			unsigned char  type;
+			uint16_t pid;
+			uint8_t  type;
 			type =  data[packet_offset];	
 			pid = ((data[packet_offset+1] & 0x1F) << 8) | data[packet_offset+2];
 
@@ -596,7 +596,7 @@ int UnpackPMT( TS_FILTER *pTSFilter, int nPmtIndex, TS_PACKET *pTSPacket )
 
 //return 0: PAT table unchange; 1:PAT is a new PAT.
 
-static inline int AddPMRMapEntry( TS_FILTER* pTSFilter, int nPatIndex, unsigned short nPid, unsigned short nProgram )
+static inline int AddPMRMapEntry( TS_FILTER* pTSFilter, int nPatIndex, uint16_t nPid, uint16_t nProgram )
 {
 	int i;
 	for ( i = 0; i<pTSFilter->map_num; i++ )
@@ -617,7 +617,7 @@ static inline int AddPMRMapEntry( TS_FILTER* pTSFilter, int nPatIndex, unsigned 
 int UpdatePMTMap( TS_FILTER* pTSFilter, int nPatIndex )
 {
 	int update_flag = 0;
-	unsigned short pat_index[MAX_PMT_NUM]={0};
+	uint16_t pat_index[MAX_PMT_NUM]={0};
 	int i, j, num;
 	TS_PAT *pPat;
 
@@ -745,7 +745,7 @@ int UpdatePMTMap( TS_FILTER* pTSFilter, int nPatIndex )
 			if ( pTSFilter->pmt_map[ i ].program && pTSFilter->pmt_map[ j ].program > pTSFilter->pmt_map[ i ].program )
 			{
 				//swap data
-				unsigned short prog, pid;
+				uint16_t prog, pid;
 				prog = pTSFilter->pmt_map[ j ].program;
 				pid  = pTSFilter->pmt_map[ j ].pid;
 				pTSFilter->pmt_map[ j ].program = pTSFilter->pmt_map[ i ].program;
@@ -762,10 +762,10 @@ int UpdatePMTMap( TS_FILTER* pTSFilter, int nPatIndex )
 }
 
 
-static int GetPatIndex( TS_FILTER* pTSFilter, unsigned short uPid, unsigned short uProgram )
+static int GetPatIndex( TS_FILTER* pTSFilter, uint16_t uPid, uint16_t uProgram )
 {
 	int i, pat_index = -1;
-	unsigned long stamp=0;
+	uint32_t stamp=0;
 	for ( i = 0; i<pTSFilter->mapped_num && pTSFilter->pmt_map[i].pid ; i++ )
 	{
 		if ( pTSFilter->pmt_map[i].pid == uPid )
@@ -793,7 +793,7 @@ static int GetPatIndex( TS_FILTER* pTSFilter, unsigned short uPid, unsigned shor
 	return pat_index;
 }
 
-static int GetPmtIndex( TS_FILTER* pTSFilter, unsigned short uPid )
+static int GetPmtIndex( TS_FILTER* pTSFilter, uint16_t uPid )
 {
 	int i;
 	for ( i = 0; i<pTSFilter->mapped_num ; i++ )
@@ -804,7 +804,7 @@ static int GetPmtIndex( TS_FILTER* pTSFilter, unsigned short uPid )
 	return -1;
 }
 
-static int GetPmtIndex2( TS_FILTER* pTSFilter, unsigned short uPid, unsigned short uProgram )
+static int GetPmtIndex2( TS_FILTER* pTSFilter, uint16_t uPid, uint16_t uProgram )
 {
 	int i;
 	for ( i = 0; i<pTSFilter->mapped_num ; i++ )
@@ -1039,7 +1039,7 @@ static inline int FilterSageNullPacket( TS_FILTER* pTSFilter, TS_PACKET *pTSPack
 	return 0;
 }
 
-int TSProcess( TS_FILTER* pTSFilter, unsigned char* pData )
+int TSProcess( TS_FILTER* pTSFilter, uint8_t* pData )
 {
 	TS_PACKET TSPacket;
 
@@ -1095,7 +1095,7 @@ int TSProcess( TS_FILTER* pTSFilter, unsigned char* pData )
 }
 
 //it called by TSInfoParser only
-int TSProcessInfo( TS_FILTER* pTSFilter, unsigned char* pData )
+int TSProcessInfo( TS_FILTER* pTSFilter, uint8_t* pData )
 {
 	TS_PACKET TSPacket;
 
@@ -1228,9 +1228,9 @@ int BlastPmtTable( TS_FILTER* pTSFilter, int nProgram, int nTsid )
 }
 
 
-unsigned long GetLanguageCode( unsigned char* pData, int nBytes )
+uint32_t GetLanguageCode( uint8_t* pData, int nBytes )
 {
-	unsigned char* desc_ptr;
+	uint8_t* desc_ptr;
 	int desc_len;
 	if ( ( desc_ptr = GetDescriptor( pData, nBytes, ISO639_LANGUAGE_DESC, &desc_len ) )!= NULL && desc_len >= 3 )
 	{
@@ -1238,9 +1238,9 @@ unsigned long GetLanguageCode( unsigned char* pData, int nBytes )
 	}
 	return 0;
 }
-unsigned char GetAudioType( unsigned char* pData, int nBytes )
+uint8_t GetAudioType( uint8_t* pData, int nBytes )
 {
-	unsigned char* desc_ptr;
+	uint8_t* desc_ptr;
 	int desc_len;
 	if ( ( desc_ptr = GetDescriptor( pData, nBytes, ISO639_LANGUAGE_DESC, &desc_len ) )!= NULL && desc_len >= 3 )
 	{
@@ -1250,36 +1250,36 @@ unsigned char GetAudioType( unsigned char* pData, int nBytes )
 	return 0;
 }
 
-static int HasTeletextDesc( unsigned char *pData, int nBytes )
+static int HasTeletextDesc( uint8_t *pData, int nBytes )
 {
-	unsigned char* desc_ptr;
+	uint8_t* desc_ptr;
 	int desc_len;
 	if ( ( desc_ptr = GetDescriptor( pData, nBytes, TELTEXT_DESC, &desc_len ) )!= NULL  )
 		return 1;
 	return 0;
 }
 
-static int HasVbiDesc( unsigned char *pData, int nBytes )
+static int HasVbiDesc( uint8_t *pData, int nBytes )
 {
-	unsigned char* desc_ptr;
+	uint8_t* desc_ptr;
 	int desc_len;
 	if ( ( desc_ptr = GetDescriptor( pData, nBytes, VBI_DATA_DESC, &desc_len ) )!= NULL && desc_len > 0 )
 		return 1;
 	return 0;
 }
 
-static int HasSubtitleDesc( unsigned char *pData, int nBytes )
+static int HasSubtitleDesc( uint8_t *pData, int nBytes )
 {
-	unsigned char* desc_ptr;
+	uint8_t* desc_ptr;
 	int desc_len;
 	if ( ( desc_ptr = GetDescriptor( pData, nBytes, SUBTITLE_DESC, &desc_len ) )!= NULL && desc_len > 0 )
 		return 1;
 	return 0;
 }
 
-unsigned long GetSubtitleLanuage( unsigned char *pData, int nBytes )
+uint32_t GetSubtitleLanuage( uint8_t *pData, int nBytes )
 {
-	unsigned char* desc_ptr;
+	uint8_t* desc_ptr;
 	int desc_len;
 	if ( ( desc_ptr = GetDescriptor( pData, nBytes, SUBTITLE_DESC, &desc_len ) )!= NULL && desc_len > 0 )
 	{
@@ -1288,11 +1288,11 @@ unsigned long GetSubtitleLanuage( unsigned char *pData, int nBytes )
 	return 0;
 }
 
-static unsigned char REG_H264[8]={ 0x48, 0x44, 0x4d, 0x56, 0xff, 0x1b, 0x61, 0x3f };
-static unsigned char REG_LPCM[8]={ 0x48, 0x44, 0x4d, 0x56, 0xff, 0x80, 0x61, 0xff };
-static int HasVideoDesc( unsigned char *pData, int nBytes )
+static uint8_t REG_H264[8]={ 0x48, 0x44, 0x4d, 0x56, 0xff, 0x1b, 0x61, 0x3f };
+static uint8_t REG_LPCM[8]={ 0x48, 0x44, 0x4d, 0x56, 0xff, 0x80, 0x61, 0xff };
+static int HasVideoDesc( uint8_t *pData, int nBytes )
 {
-	unsigned char* desc_ptr;
+	uint8_t* desc_ptr;
 	int desc_len;
 	if ( ( desc_ptr = GetDescriptor( pData, nBytes, VIDEO_DESC, &desc_len ) )!= NULL && desc_len > 0 )
 		return 1;
@@ -1306,17 +1306,17 @@ static int HasVideoDesc( unsigned char *pData, int nBytes )
 	return 0;
 }
 
-static int HasDCIIVideoDesc( unsigned char *pData, int nBytes )
+static int HasDCIIVideoDesc( uint8_t *pData, int nBytes )
 {
-	unsigned char* desc_ptr;
+	uint8_t* desc_ptr;
 	int desc_len;
 	if ( ( desc_ptr = GetDescriptor( pData, nBytes, VIDEO_DESC, &desc_len ) )!= NULL && desc_len > 0 )
 		return 1;
 	return 0;
 }
-unsigned long HasAudioDesc( unsigned char *pData, int nBytes )
+uint32_t HasAudioDesc( uint8_t *pData, int nBytes )
 {
-	unsigned char* desc_ptr;
+	uint8_t* desc_ptr;
 	int desc_len;
 	if ( ( desc_ptr = GetDescriptor( pData, nBytes, DVB_AC3_DESC, &desc_len ) )!= NULL && desc_len > 0 )
 		return SAGE_FOURCC("AC3 ");
@@ -1343,7 +1343,7 @@ unsigned long HasAudioDesc( unsigned char *pData, int nBytes )
 	return 0;
 }
 
-unsigned long VideoFormat( unsigned char StreamType, unsigned char* pDesc, int nBytes )
+uint32_t VideoFormat( uint8_t StreamType, uint8_t* pDesc, int nBytes )
 {
 	if ( StreamType == H264_STREAM_TYPE )
 	{
@@ -1363,7 +1363,7 @@ unsigned long VideoFormat( unsigned char StreamType, unsigned char* pDesc, int n
 	return 0;
 }
 
-unsigned long TVVideoFormat( unsigned char StreamType, unsigned char* pDesc, int nBytes )
+uint32_t TVVideoFormat( uint8_t StreamType, uint8_t* pDesc, int nBytes )
 {
 	if ( StreamType == H264_STREAM_TYPE )
 	{
@@ -1388,7 +1388,7 @@ unsigned long TVVideoFormat( unsigned char StreamType, unsigned char* pDesc, int
 	return 0;
 }
 
-unsigned long AudioFormatByStreamType( unsigned char StreamType )
+uint32_t AudioFormatByStreamType( uint8_t StreamType )
 {
 	if ( StreamType == AC3_STREAM_TYPE )
 	{
@@ -1446,7 +1446,7 @@ unsigned long AudioFormatByStreamType( unsigned char StreamType )
 static void ParseCADesc( TS_PMT *pPmt, DESC_DATA *pDesc )
 {
 	int desc_len;
-	unsigned char *desc_ptr;
+	uint8_t *desc_ptr;
 	if ( ( desc_ptr = GetDescriptor( pDesc->desc_ptr, pDesc->desc_bytes, CA_DESC, &desc_len ) )!= NULL && desc_len >= 4 )
 	{
 		pPmt->ca_id  = ( desc_ptr[2]<<8 )|desc_ptr[3];
@@ -1454,9 +1454,9 @@ static void ParseCADesc( TS_PMT *pPmt, DESC_DATA *pDesc )
 	}
 }
 
-static char* _print_es_descriptor_( unsigned short pid, unsigned char* p, int bytes );
+static char* _print_es_descriptor_( uint16_t pid, uint8_t* p, int bytes );
 static void  _prints_ts_elmnt( TS_ELEMENT* elmnt );
-int SelectTSFilterChannel( TS_FILTER* pTSFilter, TS_STREAMS* pTsStreams, unsigned short nTsid, unsigned short nProgram, unsigned short nMediaType )
+int SelectTSFilterChannel( TS_FILTER* pTSFilter, TS_STREAMS* pTsStreams, uint16_t nTsid, uint16_t nProgram, uint16_t nMediaType )
 {
 	int i, j;
 	int pmt_stream_index[MAX_ES]={0};
@@ -1508,10 +1508,10 @@ int SelectTSFilterChannel( TS_FILTER* pTSFilter, TS_STREAMS* pTsStreams, unsigne
 					pmt_stream_index[j] = k;
 				} else
 				if (  (( pTSFilter->pmt[i].stream_type[j] == PRIVATE_STREAM_TYPE || pTSFilter->pmt[i].stream_type[j] == PRIVATE_0x80_STREAM_TYPE ) && 
-                         HasVideoDesc( (unsigned char*)pTSFilter->pmt[i].stream_desc[j].desc_ptr, pTSFilter->pmt[i].stream_desc[j].desc_bytes  ))  || 
+                         HasVideoDesc( (uint8_t*)pTSFilter->pmt[i].stream_desc[j].desc_ptr, pTSFilter->pmt[i].stream_desc[j].desc_bytes  ))  || 
                       ( pTSFilter->pmt[i].stream_type[j] == PRIVATE_0x80_STREAM_TYPE && IsTVMedia( nMediaType ) ) ||
 					  ( pTSFilter->pmt[i].stream_type[j] == PRIVATE_0x80_STREAM_TYPE && 
-					     HasDCIIVideoDesc((unsigned char*)pTSFilter->pmt[i].stream_desc[j].desc_ptr, pTSFilter->pmt[i].stream_desc[j].desc_bytes )) )
+					     HasDCIIVideoDesc((uint8_t*)pTSFilter->pmt[i].stream_desc[j].desc_ptr, pTSFilter->pmt[i].stream_desc[j].desc_bytes )) )
 				{
 					pTsStreams->ts_element[k].content_type = VIDEO_DATA; 
 					pTsStreams->ts_element[k].channel_index = k;
@@ -1560,7 +1560,7 @@ int SelectTSFilterChannel( TS_FILTER* pTSFilter, TS_STREAMS* pTsStreams, unsigne
 
 					if ( pTsStreams->ts_element[k].format_fourcc == 0 )
 						pTsStreams->ts_element[k].format_fourcc = 
-						       HasAudioDesc( (unsigned char*)pTSFilter->pmt[i].stream_desc[j].desc_ptr,  pTSFilter->pmt[i].stream_desc[j].desc_bytes  );
+						       HasAudioDesc( (uint8_t*)pTSFilter->pmt[i].stream_desc[j].desc_ptr,  pTSFilter->pmt[i].stream_desc[j].desc_bytes  );
 
 					pTsStreams->ts_element[k].desc_len = pTSFilter->pmt[i].stream_desc[j].desc_bytes;
 					if ( pTsStreams->ts_element[k].desc_len > sizeof(pTsStreams->ts_element[k].desc) )
@@ -1609,7 +1609,7 @@ int SelectTSFilterChannel( TS_FILTER* pTSFilter, TS_STREAMS* pTsStreams, unsigne
 			for ( j = 0; j < n && k < pTsStreams->total_streams ; j++  )
 			{
 				if ( pTSFilter->pmt[i].stream_type[j] == 0 ) continue; 
-				if ( HasSubtitleDesc( (unsigned char*)pTSFilter->pmt[i].stream_desc[j].desc_ptr, pTSFilter->pmt[i].stream_desc[j].desc_bytes  ) )
+				if ( HasSubtitleDesc( (uint8_t*)pTSFilter->pmt[i].stream_desc[j].desc_ptr, pTSFilter->pmt[i].stream_desc[j].desc_bytes  ) )
 				{
 					pTsStreams->ts_element[k].content_type = SUBTITLE_DATA; 
 					pTsStreams->ts_element[k].channel_index = k;
@@ -1623,7 +1623,7 @@ int SelectTSFilterChannel( TS_FILTER* pTSFilter, TS_STREAMS* pTsStreams, unsigne
 					//pTsStreams->ts_element[k].language_code = GetLanguageCode( pTSFilter->pmt[i].stream_desc[j].desc_ptr, 
 					//	                                                                 pTSFilter->pmt[i].stream_desc[j].desc_bytes  );
 					pTsStreams->ts_element[k].language_code =
-							GetSubtitleLanuage( (unsigned char*)pTSFilter->pmt[i].stream_desc[j].desc_ptr, pTSFilter->pmt[i].stream_desc[j].desc_bytes );
+							GetSubtitleLanuage( (uint8_t*)pTSFilter->pmt[i].stream_desc[j].desc_ptr, pTSFilter->pmt[i].stream_desc[j].desc_bytes );
 
 					_print_es_descriptor_(   pTSFilter->pmt[i].stream_pid[j], 
 											 pTSFilter->pmt[i].stream_desc[j].desc_ptr, 
@@ -1649,7 +1649,7 @@ int SelectTSFilterChannel( TS_FILTER* pTSFilter, TS_STREAMS* pTsStreams, unsigne
 					//pTsStreams->ts_element[k].language_code = GetLanguageCode( pTSFilter->pmt[i].stream_desc[j].desc_ptr, 
 					//	                                                                 pTSFilter->pmt[i].stream_desc[j].desc_bytes  );
 					pTsStreams->ts_element[k].language_code =
-							GetSubtitleLanuage( (unsigned char*)pTSFilter->pmt[i].stream_desc[j].desc_ptr, pTSFilter->pmt[i].stream_desc[j].desc_bytes );
+							GetSubtitleLanuage( (uint8_t*)pTSFilter->pmt[i].stream_desc[j].desc_ptr, pTSFilter->pmt[i].stream_desc[j].desc_bytes );
 
 					_print_es_descriptor_(   pTSFilter->pmt[i].stream_pid[j], 
 											 pTSFilter->pmt[i].stream_desc[j].desc_ptr, 
@@ -1663,7 +1663,7 @@ int SelectTSFilterChannel( TS_FILTER* pTSFilter, TS_STREAMS* pTsStreams, unsigne
 			for ( j = 0; j < n && k < pTsStreams->total_streams ; j++ )
 			{
 				if ( pTSFilter->pmt[i].stream_type[j] == 0 ) continue; 
-				if ( HasTeletextDesc( (unsigned char*)pTSFilter->pmt[i].stream_desc[j].desc_ptr, pTSFilter->pmt[i].stream_desc[j].desc_bytes  ) )
+				if ( HasTeletextDesc( (uint8_t*)pTSFilter->pmt[i].stream_desc[j].desc_ptr, pTSFilter->pmt[i].stream_desc[j].desc_bytes  ) )
 				{
 					pTsStreams->ts_element[k].content_type = TELETEXT_DATA; 
 					pTsStreams->ts_element[k].channel_index = k;
@@ -1690,7 +1690,7 @@ int SelectTSFilterChannel( TS_FILTER* pTSFilter, TS_STREAMS* pTsStreams, unsigne
 			for ( j = 0; j < n && k < pTsStreams->total_streams ; j++ )
 			{
 				if ( pTSFilter->pmt[i].stream_type[j] == 0 ) continue; 
-				if ( HasVbiDesc( (unsigned char*)pTSFilter->pmt[i].stream_desc[j].desc_ptr, pTSFilter->pmt[i].stream_desc[j].desc_bytes  ) )
+				if ( HasVbiDesc( (uint8_t*)pTSFilter->pmt[i].stream_desc[j].desc_ptr, pTSFilter->pmt[i].stream_desc[j].desc_bytes  ) )
 				{
 					pTsStreams->ts_element[k].content_type = VBI_DATA; 
 					pTsStreams->ts_element[k].channel_index = k;
@@ -1790,7 +1790,7 @@ int SelectTSFilterChannel( TS_FILTER* pTSFilter, TS_STREAMS* pTsStreams, unsigne
 }
 
 
-static int LookUpTSElemnt( TS_FILTER* pTSFilter, unsigned uPid, TS_ELEMENT *pTSElemnt, int nMediaType )
+static int LookUpTSElemnt( TS_FILTER* pTSFilter, uint16_t uPid, TS_ELEMENT *pTSElemnt, int nMediaType )
 {
 	int i, j;
 	//int pmt_stream_index[MAX_ES]={0};
@@ -1825,7 +1825,7 @@ static int LookUpTSElemnt( TS_FILTER* pTSFilter, unsigned uPid, TS_ELEMENT *pTSE
 					pTSElemnt->format_fourcc = AudioFormatByStreamType( pTSElemnt->type );
 
 					if ( pTSElemnt->format_fourcc == 0 )
-						pTSElemnt->format_fourcc = HasAudioDesc( (unsigned char*)pTSFilter->pmt[i].stream_desc[j].desc_ptr,  
+						pTSElemnt->format_fourcc = HasAudioDesc( (uint8_t*)pTSFilter->pmt[i].stream_desc[j].desc_ptr,  
 																 pTSFilter->pmt[i].stream_desc[j].desc_bytes  );
 				} else
 				if ( ( pTSFilter->pmt[i].stream_type[j] == PRIVATE_STREAM_TYPE ||
@@ -1974,27 +1974,27 @@ void EraseDescData( DESC_DATA *pDesc )
 }
 
 #ifdef DEBUG_DESC
-unsigned char* NewDescData( DESC_DATA* pDesc, int nBytes )
+uint8_t* NewDescData( DESC_DATA* pDesc, int nBytes )
 {
 	assert( pDesc && nBytes > 0 );
 	if ( pDesc->buffer_size < nBytes )
 	{
 		if (  pDesc->buffer_size > 0 )	
 			SAGETV_FREE( pDesc->desc_ptr-4 );
-		pDesc->desc_ptr = (unsigned char*)SAGETV_MALLOC( nBytes+4 )+4;
+		pDesc->desc_ptr = (uint8_t*)SAGETV_MALLOC( nBytes+4 )+4;
 		pDesc->buffer_size = nBytes;
 	}
 	return pDesc->desc_ptr;
 }
 
-unsigned char* FillDescData( DESC_DATA *pDesc, unsigned char* pData, int nBytes )
+uint8_t* FillDescData( DESC_DATA *pDesc, uint8_t* pData, int nBytes )
 {
 	assert( pDesc && nBytes > 0 );
 	if ( pDesc->buffer_size < nBytes )
 	{
 		if (  pDesc->buffer_size > 0 )	
 			SAGETV_FREE( pDesc->desc_ptr-4 );
-		pDesc->desc_ptr = (unsigned char*)SAGETV_MALLOC( nBytes+4 )+4;
+		pDesc->desc_ptr = (uint8_t*)SAGETV_MALLOC( nBytes+4 )+4;
 		pDesc->buffer_size = nBytes;
 	}
 	memcpy( pDesc->desc_ptr, pData, nBytes );
@@ -2015,27 +2015,27 @@ void ReleaseDescData( DESC_DATA *pDesc )
 
 }
 #else
-unsigned char* NewDescData( DESC_DATA* pDesc, int nBytes )
+uint8_t* NewDescData( DESC_DATA* pDesc, int nBytes )
 {
 	assert( pDesc && nBytes > 0 );
 	if ( pDesc->buffer_size < nBytes )
 	{
 		if (  pDesc->buffer_size > 0 )	
 			SAGETV_FREE( pDesc->desc_ptr );
-		pDesc->desc_ptr = (unsigned char*)SAGETV_MALLOC( nBytes);
+		pDesc->desc_ptr = (uint8_t*)SAGETV_MALLOC( nBytes);
 		pDesc->buffer_size = nBytes;
 	}
 	return pDesc->desc_ptr;
 }
 
-unsigned char* FillDescData( DESC_DATA *pDesc, unsigned char* pData, int nBytes )
+uint8_t* FillDescData( DESC_DATA *pDesc, uint8_t* pData, int nBytes )
 {
 	assert( pDesc && nBytes > 0 && nBytes <= 4096 );
 	if ( pDesc->buffer_size < nBytes )
 	{
 		if (  pDesc->buffer_size > 0 )	
 			SAGETV_FREE( pDesc->desc_ptr );
-		pDesc->desc_ptr = (unsigned char*)SAGETV_MALLOC( nBytes );
+		pDesc->desc_ptr = (uint8_t*)SAGETV_MALLOC( nBytes );
 		pDesc->buffer_size = nBytes;
 	}
 	memcpy( pDesc->desc_ptr, pData, nBytes );
@@ -2043,12 +2043,12 @@ unsigned char* FillDescData( DESC_DATA *pDesc, unsigned char* pData, int nBytes 
 	return pDesc->desc_ptr;
 }
 
-unsigned char* AppendDescData( DESC_DATA *pDesc, unsigned char* pData, int nBytes )
+uint8_t* AppendDescData( DESC_DATA *pDesc, uint8_t* pData, int nBytes )
 {
 	assert( pDesc && nBytes > 0 );
 	if ( pDesc->buffer_size < pDesc->desc_bytes + nBytes )
 	{
-		unsigned char* new_buf = (unsigned char*)SAGETV_MALLOC( pDesc->desc_bytes + nBytes );
+		uint8_t* new_buf = (uint8_t*)SAGETV_MALLOC( pDesc->desc_bytes + nBytes );
 		memcpy( new_buf, pDesc->desc_ptr, pDesc->desc_bytes );
 		if (  pDesc->buffer_size > 0 )	
 			SAGETV_FREE( pDesc->desc_ptr );
@@ -2079,7 +2079,7 @@ void ReleaseDescData( DESC_DATA *pDesc )
 #include <stdio.h>
 #include <stdlib.h>
 typedef struct {
-	unsigned char tag;
+	uint8_t tag;
 	char* name;
 } DESC_TAG_NAME;
 static DESC_TAG_NAME _tag_name[21]={ 
@@ -2094,7 +2094,7 @@ static DESC_TAG_NAME _tag_name[21]={
 	{DVB_PRIVATE_SPEC, "PRIVATE_SPEC"}, {DVB_REFERENCE_ID, "REF ID"},
 	{REGISTRATION_DESC, "REG"}, {SCTE_EXTENDED_VIDEO, "DCII Ext Video"}, {0,""} };
 
-static char* _look_up_tag_name_( unsigned char tag )
+static char* _look_up_tag_name_( uint8_t tag )
 {
 	static char tmp[8];
 	int i=0;
@@ -2106,7 +2106,7 @@ static char* _look_up_tag_name_( unsigned char tag )
 	return tmp;
 }
 
-static char* _audio_type_( unsigned char type )
+static char* _audio_type_( uint8_t type )
 {
 	if ( type == 1 )
 		return "\"clean effects\"";
@@ -2117,10 +2117,10 @@ static char* _audio_type_( unsigned char type )
 	return "";
 }
 
-static char* _print_es_descriptor_( unsigned short pid, unsigned char* p, int bytes )
+static char* _print_es_descriptor_( uint16_t pid, uint8_t* p, int bytes )
 {
 	static char buf[1024]={0}; 
-	unsigned char tag; 
+	uint8_t tag; 
 	int len;
 	int i=0, pos;
 	if ( bytes == 0 ) return "";
@@ -2144,7 +2144,7 @@ static char* _print_es_descriptor_( unsigned short pid, unsigned char* p, int by
 	return buf;
 }
 
-char*  _dvb_service_type_( unsigned short type )
+char*  _dvb_service_type_( uint16_t type )
 {
 	if ( type == 0 ) return "ERROR";
 	if ( type == 1 ) return "Digital TV";
@@ -2152,7 +2152,7 @@ char*  _dvb_service_type_( unsigned short type )
 	return "other";
 }
 
-char*  _atsc_service_type_( unsigned short type )
+char*  _atsc_service_type_( uint16_t type )
 {
 	if ( type == 0 ) return "ERROR";
 	if ( type == 2 ) return "Digital TV";
@@ -2162,7 +2162,7 @@ char*  _atsc_service_type_( unsigned short type )
 	return "other";
 }
 
-char*  _data_content_( unsigned char content_type )
+char*  _data_content_( uint8_t content_type )
 {
 	if ( content_type == VIDEO_DATA )	 return "video   ";
 	if ( content_type == AUDIO_DATA )	 return "audio   ";

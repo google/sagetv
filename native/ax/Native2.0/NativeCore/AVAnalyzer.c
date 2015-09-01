@@ -43,7 +43,7 @@
  SAGE_FOURCC( "SUB " ); //sub title
  SAGE_FOURCC( "TTX " ); //teletext
 ***/
-static int GuessVideoFormat( AV_ELEMENT *pAVElmnt, const unsigned char* pData, int nBytes  );
+static int GuessVideoFormat( AV_ELEMENT *pAVElmnt, const uint8_t* pData, int nBytes  );
 void ReleaseAVElementData( AV_ELEMENT *pAVEelement )
 {
 	if ( pAVEelement->private_data != NULL )
@@ -52,7 +52,7 @@ void ReleaseAVElementData( AV_ELEMENT *pAVEelement )
 }
 
 
-static int AnylyzeVideoFormat( AV_ELEMENT *pAVElmnt, unsigned long FormatFourCC, const unsigned char* pData, int nBytes  )
+static int AnylyzeVideoFormat( AV_ELEMENT *pAVElmnt, uint32_t FormatFourCC, const uint8_t* pData, int nBytes  )
 {
 	if ( FormatFourCC == SAGE_FOURCC( "H264" ) )
 	{
@@ -102,7 +102,7 @@ static int AnylyzeVideoFormat( AV_ELEMENT *pAVElmnt, unsigned long FormatFourCC,
 
 }
 
-static int GuessVideoFormat( AV_ELEMENT *pAVElmnt, const unsigned char* pData, int nBytes  )
+static int GuessVideoFormat( AV_ELEMENT *pAVElmnt, const uint8_t* pData, int nBytes  )
 {
 	//guess H264
 	{
@@ -144,7 +144,7 @@ static int GuessVideoFormat( AV_ELEMENT *pAVElmnt, const unsigned char* pData, i
 }
 
 
-static int AnylyzeAudioFormat( AV_ELEMENT *pAVElmnt, unsigned long FormatFourCC, const unsigned char* pData, int nBytes, int nMediaType  )
+static int AnylyzeAudioFormat( AV_ELEMENT *pAVElmnt, uint32_t FormatFourCC, const uint8_t* pData, int nBytes, int nMediaType  )
 {
 	if ( FormatFourCC  == SAGE_FOURCC( "AAC " ) )
 	{
@@ -307,7 +307,7 @@ static int AnylyzeAudioFormat( AV_ELEMENT *pAVElmnt, unsigned long FormatFourCC,
 	return 0;
 }
 
-static int GuessAudioFormat( AV_ELEMENT *pAVElmnt, int nContentType, const unsigned char* pData, int nBytes  )
+static int GuessAudioFormat( AV_ELEMENT *pAVElmnt, int nContentType, const uint8_t* pData, int nBytes  )
 {
 	{
 		AAC_AUDIO AACAudio=pAVElmnt->d.a.aac;
@@ -400,7 +400,7 @@ static int GuessAudioFormat( AV_ELEMENT *pAVElmnt, int nContentType, const unsig
 
 
 int AnylyzeAVElement( AV_ELEMENT *pAVElmnt, ES_ELEMENT *pESElmnt, TS_ELEMENT *pTSElmnt, 
-					  const unsigned char* pData, int nBytes, int nMediaType ) 
+					  const uint8_t* pData, int nBytes, int nMediaType ) 
 {
 	ASSERT( pESElmnt );
 	if ( nBytes <= 0 )
@@ -696,8 +696,8 @@ int GetAudioSoundBitRate( AV_ELEMENT *pAVElmnt )
 
 
 //debug utility
-char*  _data_content_( unsigned char content_type );
-char* _sagetv_fourcc_( unsigned long lFourCC, char* pFourCC );
+char*  _data_content_( uint8_t content_type );
+char* _sagetv_fourcc_( uint32_t lFourCC, char* pFourCC );
 void _prints_av_elmnt( AV_ELEMENT* elmnt, int slot_index, int process_bytes )
 {
 	char tmp[16];

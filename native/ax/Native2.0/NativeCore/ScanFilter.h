@@ -26,29 +26,29 @@ extern "C" {
 
 typedef struct _SCAN_FILTER
 {
-	int			  nStreamFormat;
-	int			  nStreamSubFormat;
-	int			  nScanState;
-	struct SCAN*  pScan;
-	unsigned char cAlignScanBuffer[ TS_PACKET_MAX_LENGTH ];
-	int		      nExpectedScanBytes;
-	int		      nAlignScanBytes;
+	int32_t			nStreamFormat;
+	int32_t			nStreamSubFormat;
+	int32_t			nScanState;
+	struct SCAN* pScan;
+	uint8_t     cAlignScanBuffer[ TS_PACKET_MAX_LENGTH ];
+	int32_t     nExpectedScanBytes;
+	int32_t     nAlignScanBytes;
 
-	int			  bScanFileCache;
-	TUNE		  Tune;
+	int32_t     bScanFileCache;
+	TUNE		    Tune;
 
-	unsigned long dwScanTunerData;
-	unsigned long dwScanFileData;
+	uint32_t dwScanTunerData;
+	uint32_t dwScanFileData;
 } SCAN_FILTER;
 
 SCAN_FILTER* CreateScanFilter();
 void ReleaseScanFilter( SCAN_FILTER* pScanFilter );
 void StartChannelScan( SCAN_FILTER* pScanFilter, struct TUNE* pTune );
 void StopChannelScan( SCAN_FILTER* pScanFilter );
-void ProcessScan( SCAN_FILTER* pScanFilter, unsigned char* pData, long lDataLen );
+void ProcessScan( SCAN_FILTER* pScanFilter, unsigned char* pData, int32_t lDataLen );
 int	 ScanChannelState( SCAN_FILTER* pScanFilter );
 int	 ScanChannelNum( SCAN_FILTER* pScanFilter );
-int	 ScanChannelTimeClock( SCAN_FILTER* pScanFilter, unsigned long lMillionSecond );
+int	 ScanChannelTimeClock( SCAN_FILTER* pScanFilter, uint32_t lMillionSecond );
 struct CHANNEL_LIST *GetScanChannelList( SCAN_FILTER* pScanFilter );
 struct TUNE_LIST    *GetScanTuneList( SCAN_FILTER* pScanFilter );
 

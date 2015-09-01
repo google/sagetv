@@ -27,18 +27,18 @@
 //#include "Bits.h"
 
 
-unsigned char LookupStreamType( unsigned long lFourCC );
-unsigned int  PutDescriptor( unsigned char *pData, unsigned char Tag, unsigned char *pDesc, int nDescLength );
-unsigned char *AppendDescriptor( unsigned char *pData, int nBytes, unsigned char Tag, unsigned char *pDesc, int nDescLength );
-static   int  PutSubtitleCodeDesc( SUBTITLE *pSubtitle, unsigned char *pData, int nLen );
+uint8_t LookupStreamType( uint32_t lFourCC );
+int32_t  PutDescriptor( uint8_t *pData, uint8_t Tag, uint8_t *pDesc, int nDescLength );
+uint8_t *AppendDescriptor( uint8_t *pData, int nBytes, uint8_t Tag, uint8_t *pDesc, int nDescLength );
+static   int  PutSubtitleCodeDesc( SUBTITLE *pSubtitle, uint8_t *pData, int nLen );
 
 static TS_PROGRAM* CreateTSProgram( TRACKS* pTracks, int nTSFormat);
 static void ReleaseTSPorogram( TS_PROGRAM *pTSProgram );
 static void UpdatePAT( TS_BUILDER *pTSBuilder );
 static int PushPatData( TS_BUILDER *pTSBuilder );
 static int PushPmtData( TS_BUILDER *pTSBuilder, int nProgramIndex );
-static int PushContentData( TS_BUILDER *pTSBuilder, TS_PACKET* pTSPacket, unsigned char* pESHead, int nESHeadSize, 
-						            int nGroupFlag, unsigned long FourCC, unsigned char* pData, int nBytes );
+static int PushContentData( TS_BUILDER *pTSBuilder, TS_PACKET* pTSPacket, uint8_t* pESHead, int nESHeadSize, 
+						            int nGroupFlag, uint32_t FourCC, uint8_t* pData, int nBytes );
 /////////////////////////////////  Memory  //////////////////////////////////////////
 inline void RequestAllocBuffer( TS_BUILDER *pTSBuilder, DATA_BUFFER *pDataBuffer )
 {
@@ -114,7 +114,7 @@ int BlockBufferTSDump( void* pContext, void* pData, int nSize )
 }
 
 int PushTSBlockData( TS_BUILDER *pTSBuilder, int nProgramIndex, int nTrackIndex,
-						    int nGroupFlag, unsigned char* pData, int nBytes )
+						    int nGroupFlag, uint8_t* pData, int nBytes )
 {
 	int used_bytes = 0;
 	TS_PROGRAM *program;
@@ -143,9 +143,9 @@ int PushTSBlockData( TS_BUILDER *pTSBuilder, int nProgramIndex, int nTrackIndex,
 	}
 
 	{
-		unsigned char es_header[256];
+		uint8_t es_header[256];
 		int bytes; 
-		unsigned long packets_start = pTSBuilder->output_packets;
+		uint32_t packets_start = pTSBuilder->output_packets;
 		track->es_elmnt->pes.packet_length = PES2HeaderBytes( track->es_elmnt->pes.has_pts, track->es_elmnt->pes.has_dts ) + nBytes - 6;
 		bytes = CreatePES2Header( es_header, sizeof(es_header), &track->es_elmnt->pes );
 
@@ -315,7 +315,7 @@ void SetupBlockDataSize( TS_BUILDER *pTSBuilder, int nSize )
 static void BuildPATSection( TS_SECTION* pSection, TS_PAT* pPat )
 {
 	int i;
-	unsigned char* data;
+	uint8_t* data;
 	int	 offset;
 	int  section_length;
 	SECTION_HEADER section_header={0};
@@ -370,7 +370,7 @@ static void UpdatePAT( TS_BUILDER *pTSBuilder )
 static void BuildPMTSection( TS_SECTION* pSection, TS_PMT* pPmt )
 {
 	int i;
-	unsigned char* data;
+	uint8_t* data;
 	int	 offset, desc_len = 0;
 	int  section_length;
 	SECTION_HEADER section_header={0};
@@ -390,17 +390,17 @@ static void BuildPMTSection( TS_SECTION* pSection, TS_PMT* pPmt )
 
 	//fill pcr pid
 	data[offset] = 0xe0;
-	data[offset]   |= (unsigned char)(( pPmt->pcr_pid ) >> 8 )&0x1f;
-	data[offset+1] = (unsigned char)( pPmt->pcr_pid );
+	data[offset]   |= (uint8_t)(( pPmt->pcr_pid ) >> 8 )&0x1f;
+	data[offset+1] = (uint8_t)( pPmt->pcr_pid );
 
 	//fill PMT descriptor
 	data[offset+2] = 0xf0;
 	if ( pPmt->program_desc.desc_bytes )
 	{
-		unsigned short desc_len = pPmt->program_desc.desc_bytes;
+		uint16_t desc_len = pPmt->program_desc.desc_bytes;
 		data[offset+2] = 0xf0;
-		data[offset+2] = (unsigned char)(( desc_len ) >> 8)&0x03;
-		data[offset+3] = (unsigned char)( desc_len );
+		data[offset+2] = (uint8_t)(( desc_len ) >> 8)&0x03;
+		data[offset+3] = (uint8_t)( desc_len );
 	}
 	offset += 4 + desc_len;
 
@@ -409,15 +409,15 @@ static void BuildPMTSection( TS_SECTION* pSection, TS_PMT* pPmt )
 	{
 		data[offset] = pPmt->stream_type[i];
 		data[offset + 1] = 0xe0;
-		data[offset + 1] |= (unsigned char)(pPmt->stream_pid[i]>>8 )&0x1f;
-		data[offset + 2] = (unsigned char)(pPmt->stream_pid[i]); 
+		data[offset + 1] |= (uint8_t)(pPmt->stream_pid[i]>>8 )&0x1f;
+		data[offset + 2] = (uint8_t)(pPmt->stream_pid[i]); 
 
 		data[offset+3] = 0xf0;
 		desc_len = pPmt->stream_desc[i].desc_bytes;
 		if ( desc_len )
 		{
-			data[offset + 3] |= (unsigned char)( desc_len >>8 )&0x03; 
-			data[offset + 4] = (unsigned char)( desc_len  );
+			data[offset + 3] |= (uint8_t)( desc_len >>8 )&0x03; 
+			data[offset + 4] = (uint8_t)( desc_len  );
 			memcpy( data+offset+5, pPmt->stream_desc[i].desc_ptr, desc_len );
 		} else
 		{
@@ -457,13 +457,13 @@ void UpdatePMT( TS_BUILDER *pTSBuilder, int nProgramIndex )
 	int i, j, k;
 	char buf[32];
 	int len;
-	unsigned char  type;
-	unsigned short pid;
-	unsigned long  language_code;
-	unsigned char  audio_type;
+	uint8_t  type;
+	uint16_t pid;
+	uint32_t  language_code;
+	uint8_t  audio_type;
 	TS_PROGRAM *program = pTSBuilder->progams[nProgramIndex];
 	TS_PMT pmt={0};
-	unsigned char  index_order[128]={0};
+	uint8_t  index_order[128]={0};
 
 	ASSERT( 128 >= program->tracks->total_track );
 	for ( i = 0; i<program->tracks->total_track; i++ )
@@ -511,7 +511,7 @@ void UpdatePMT( TS_BUILDER *pTSBuilder, int nProgramIndex )
 		len = 0;
 		NewDescData( &pmt.stream_desc[j], 16 );
 		buf[0] = 0;
-		len += PutDescriptor( pmt.stream_desc[j].desc_ptr, VIDEO_DESC, (unsigned char*)buf, 1 );
+		len += PutDescriptor( pmt.stream_desc[j].desc_ptr, VIDEO_DESC, (uint8_t*)buf, 1 );
 		pmt.stream_desc[j].desc_bytes = len;
 		ASSERT( len <= pmt.stream_desc[j].buffer_size );
 		j++;
@@ -546,17 +546,17 @@ void UpdatePMT( TS_BUILDER *pTSBuilder, int nProgramIndex )
 		len = 0;
 		buf[0] = 0;
 		
-		len += PutDescriptor( pmt.stream_desc[j].desc_ptr+len, AUDIO_DESC, (unsigned char*)buf, 1 );
+		len += PutDescriptor( pmt.stream_desc[j].desc_ptr+len, AUDIO_DESC, (uint8_t*)buf, 1 );
 
 		if ( program->tracks->track[i].ts_elmnt->format_fourcc == SAGE_FOURCC( "AC3 " ) )
 		{
 			buf[0] = 0x0;
-			len += PutDescriptor( pmt.stream_desc[j].desc_ptr+len, ATSC_AC3_DESC, (unsigned char*)buf, 1 );
+			len += PutDescriptor( pmt.stream_desc[j].desc_ptr+len, ATSC_AC3_DESC, (uint8_t*)buf, 1 );
 		} else
 		if ( program->tracks->track[i].ts_elmnt->format_fourcc == SAGE_FOURCC( "DTS " ) )
 		{
 			buf[0] = 0x0;
-			len += PutDescriptor( pmt.stream_desc[j].desc_ptr+len, DTS_DESC, (unsigned char*)buf, 1 );
+			len += PutDescriptor( pmt.stream_desc[j].desc_ptr+len, DTS_DESC, (uint8_t*)buf, 1 );
 		} 
 
 		language_code = 0;
@@ -575,7 +575,7 @@ void UpdatePMT( TS_BUILDER *pTSBuilder, int nProgramIndex )
 		{
 			Language( language_code, buf );
 			buf[3] = audio_type;
-			len += PutDescriptor( pmt.stream_desc[j].desc_ptr+len, ISO639_LANGUAGE_DESC, (unsigned char*)buf, 4 );
+			len += PutDescriptor( pmt.stream_desc[j].desc_ptr+len, ISO639_LANGUAGE_DESC, (uint8_t*)buf, 4 );
 		}
 	
 		pmt.stream_desc[j].desc_bytes = len;
@@ -615,7 +615,7 @@ void UpdatePMT( TS_BUILDER *pTSBuilder, int nProgramIndex )
 			len += PutSubtitleCodeDesc( &program->tracks->track[i].av_elmnt->d.s.sub, pmt.stream_desc[j].desc_ptr+len, 32-len );
 		//else
 		//if ( program->tracks->track[i].av_elmnt->content_type == SAGE_FOURCC( "TTX " ))
-		//	len += PutDescriptor( pmt.stream_desc[j].desc_ptr+len, TELTEXT_DESC, (unsigned char*)buf, 1 );
+		//	len += PutDescriptor( pmt.stream_desc[j].desc_ptr+len, TELTEXT_DESC, (uint8_t*)buf, 1 );
 
 		language_code = 0;
 		audio_type = 0;
@@ -633,7 +633,7 @@ void UpdatePMT( TS_BUILDER *pTSBuilder, int nProgramIndex )
 		{
 			Language( language_code, buf );
 			buf[3] = audio_type;
-			len += PutDescriptor( pmt.stream_desc[j].desc_ptr+len, ISO639_LANGUAGE_DESC, (unsigned char*)buf, 4 );
+			len += PutDescriptor( pmt.stream_desc[j].desc_ptr+len, ISO639_LANGUAGE_DESC, (uint8_t*)buf, 4 );
 		}
 		pmt.stream_desc[j].desc_bytes = len;
 		ASSERT( len <= pmt.stream_desc[j].buffer_size );
@@ -652,26 +652,26 @@ void UpdatePMT( TS_BUILDER *pTSBuilder, int nProgramIndex )
 
 
 ///////////////////////////////////////////////////////////////////////////////////////
-static void FillPCR( unsigned char* pkt, ULONGLONG PCR )
+static void FillPCR( uint8_t* pkt, ULONGLONG PCR )
 {
 	ULONGLONG PCR_base, PCR_ext;
 	PCR_base = PCR/300; 
 	PCR_ext =  PCR-PCR_base*300;
-	pkt[0] = (unsigned char)(( PCR_base >> 25 ));
-	pkt[1] = (unsigned char)(( PCR_base >> 17 ));
-	pkt[2] = (unsigned char)(( PCR_base >> 9 ));
-	pkt[3] = (unsigned char)(( PCR_base >> 1 ));
+	pkt[0] = (uint8_t)(( PCR_base >> 25 ));
+	pkt[1] = (uint8_t)(( PCR_base >> 17 ));
+	pkt[2] = (uint8_t)(( PCR_base >> 9 ));
+	pkt[3] = (uint8_t)(( PCR_base >> 1 ));
 	pkt[4] = ( PCR_base && 0x1 )? 0x80 : 0;
 	pkt[4] |=  0x7e; //6 1's
-	pkt[4] |= (unsigned char)(( PCR_ext >> 8 ) & 0x01 );
-	pkt[5] =  (unsigned char)(( PCR_ext ));
+	pkt[4] |= (uint8_t)(( PCR_ext >> 8 ) & 0x01 );
+	pkt[5] =  (uint8_t)(( PCR_ext ));
 }
 
-static int FillTSPack( TS_PACKET *pTSPacket, unsigned char* pData, int nBytes, unsigned char *pPacket )
+static int FillTSPack( TS_PACKET *pTSPacket, uint8_t* pData, int nBytes, uint8_t *pPacket )
 {
 	int used_bytes = 0;
 	int i;
-	unsigned char *p=pPacket;
+	uint8_t *p=pPacket;
 
     pTSPacket->adaption_ctr = 0;
 	pTSPacket->adaption.apapt_len = 0;
@@ -781,12 +781,12 @@ static int FillTSPack( TS_PACKET *pTSPacket, unsigned char* pData, int nBytes, u
 	return used_bytes;
 }
 
-static int FillTSPack2( TS_PACKET *pTSPacket, unsigned char* pData1, int nBytes1, unsigned char* pData2, int nBytes2, unsigned char *pPacket )
+static int FillTSPack2( TS_PACKET *pTSPacket, uint8_t* pData1, int nBytes1, uint8_t* pData2, int nBytes2, uint8_t *pPacket )
 {
 	int used_bytes = 0;
 	int i;
 	int nBytes = nBytes1+nBytes2;
-	unsigned char *p=pPacket;
+	uint8_t *p=pPacket;
 
     pTSPacket->adaption_ctr = 0;
 	pTSPacket->adaption.apapt_len = 0;
@@ -907,9 +907,9 @@ static int FillTSPack2( TS_PACKET *pTSPacket, unsigned char* pData1, int nBytes1
 	return used_bytes-nBytes1;
 }
 
-unsigned char* RequsetTSPacket( TS_BUILDER *pTSBuilder )
+uint8_t* RequsetTSPacket( TS_BUILDER *pTSBuilder )
 {
-	unsigned char *p;
+	uint8_t *p;
 	if ( pTSBuilder->output_buffer->buffer_size == 0 )
 	{
 		if ( pTSBuilder->pfn_mem_alloc_hook == NULL ) 
@@ -957,22 +957,22 @@ unsigned char* RequsetTSPacket( TS_BUILDER *pTSBuilder )
 	return p;
 }
 
-static void MarkGroupStart( TS_BUILDER *pTSBuilder, int nGroupFlag, unsigned long FourCC, unsigned char* ptr )
+static void MarkGroupStart( TS_BUILDER *pTSBuilder, int nGroupFlag, uint32_t FourCC, uint8_t* ptr )
 {
 	pTSBuilder->output_data.group_flag   = nGroupFlag;
 	pTSBuilder->output_data.fourcc = FourCC;
-	pTSBuilder->output_data.start_offset = (unsigned short)(ptr-pTSBuilder->output_buffer->buffer);	
+	pTSBuilder->output_data.start_offset = (uint16_t)(ptr-pTSBuilder->output_buffer->buffer);	
 }
 ///////////////////////////////// PUSH SECTION  //////////////////////////////////////////
-static int PushContentData( TS_BUILDER *pTSBuilder, TS_PACKET* pTSPacket, unsigned char* pESHead, int nESHeadSize, 
-						    int nGroupFlag, unsigned long FourCC, unsigned char* pData, int nBytes )
+static int PushContentData( TS_BUILDER *pTSBuilder, TS_PACKET* pTSPacket, uint8_t* pESHead, int nESHeadSize, 
+						    int nGroupFlag, uint32_t FourCC, uint8_t* pData, int nBytes )
 {
 	int bytes, used_bytes = 0;
 
 	pTSPacket->start = 1;
 	while ( used_bytes < nBytes )
 	{
-		unsigned char *packet_p = RequsetTSPacket( pTSBuilder );
+		uint8_t *packet_p = RequsetTSPacket( pTSBuilder );
 		//insert a PES header into first packet of a block.
 		if ( pTSPacket->start )
 		{
@@ -998,7 +998,7 @@ static int PushContentData( TS_BUILDER *pTSBuilder, TS_PACKET* pTSPacket, unsign
 static int PushSectionData( TS_BUILDER *pTSBuilder, TS_SECTION *pSection, TS_PACKET* pTSPacket )
 {
 	int bytes, used_bytes = 0;
-	unsigned char *p;
+	uint8_t *p;
 	//DATA_BUFFER *data_buffer = pTSBuilder->output_buffer;
 	
 	p = pSection->data;
@@ -1007,7 +1007,7 @@ static int PushSectionData( TS_BUILDER *pTSBuilder, TS_SECTION *pSection, TS_PAC
 
 	while ( used_bytes < pSection->total_bytes )
 	{
-		unsigned char *packet_p = RequsetTSPacket( pTSBuilder );
+		uint8_t *packet_p = RequsetTSPacket( pTSBuilder );
 		bytes = FillTSPack( pTSPacket, p+used_bytes, pSection->total_bytes-used_bytes, packet_p );
 
 		used_bytes += bytes;
@@ -1042,7 +1042,7 @@ void FlushOutData( TS_BUILDER *pTSBuilder )
 	pTSBuilder->dumper.stream_dumper( pTSBuilder->dumper.stream_dumper_context, &pTSBuilder->output_data, sizeof( OUTPUT_DATA ) );
 }
 
-unsigned char LookupStreamType( unsigned long lFourCC )
+uint8_t LookupStreamType( uint32_t lFourCC )
 {
 	if ( lFourCC == SAGE_FOURCC( "MPGV" ) )
 		return VIDEO_STREAM_TYPE;
@@ -1079,17 +1079,17 @@ unsigned char LookupStreamType( unsigned long lFourCC )
 	return 0;
 }
 
-unsigned int PutDescriptor( unsigned char *pData, unsigned char Tag, unsigned char *pDesc, int nDescLength )
+int PutDescriptor( uint8_t *pData, uint8_t Tag, uint8_t *pDesc, int nDescLength )
 {
-	pData[0]   = Tag;
+	pData[0] = Tag;
 	pData[1] = nDescLength;
 	memcpy( pData+2, pDesc, nDescLength );
 	return 2+nDescLength;
 }
 
-unsigned char* AppendDescriptor( unsigned char *pData, int nBytes, unsigned char Tag, unsigned char *pDesc, int nDescLength )
+uint8_t* AppendDescriptor( uint8_t *pData, int nBytes, uint8_t Tag, uint8_t *pDesc, int nDescLength )
 {
-	unsigned char tag; 
+	uint8_t tag; 
 	int len;
 	int i=0;
 	//skip to the end of desciptor buffer
@@ -1111,17 +1111,17 @@ unsigned char* AppendDescriptor( unsigned char *pData, int nBytes, unsigned char
 	return pData+i;
 }
 
-static int PutSubtitleCodeDesc( SUBTITLE *pSubtitle, unsigned char *pData, int nLen )
+static int PutSubtitleCodeDesc( SUBTITLE *pSubtitle, uint8_t *pData, int nLen )
 {
-	unsigned char buf[8];
-	buf[0] = (unsigned char)(pSubtitle->lanugaue & 0xff);
-	buf[1] = (unsigned char)((pSubtitle->lanugaue >>8) & 0xff);
-	buf[2] = (unsigned char)((pSubtitle->lanugaue >>16) & 0xff);
+	uint8_t buf[8];
+	buf[0] = (uint8_t)(pSubtitle->lanugaue & 0xff);
+	buf[1] = (uint8_t)((pSubtitle->lanugaue >>8) & 0xff);
+	buf[2] = (uint8_t)((pSubtitle->lanugaue >>16) & 0xff);
 	buf[3] = pSubtitle->comp_type;
-	buf[4] = (unsigned char)(pSubtitle->cpgid >> 8);
-	buf[5] = (unsigned char)(pSubtitle->cpgid & 0xff);
-	buf[6] = (unsigned char)(pSubtitle->apgid >> 8);;
-	buf[7] = (unsigned char)(pSubtitle->apgid & 0xff);
+	buf[4] = (uint8_t)(pSubtitle->cpgid >> 8);
+	buf[5] = (uint8_t)(pSubtitle->cpgid & 0xff);
+	buf[6] = (uint8_t)(pSubtitle->apgid >> 8);;
+	buf[7] = (uint8_t)(pSubtitle->apgid & 0xff);
 	PutDescriptor( pData, SUBTITLE_DESC,  buf, 8  );
 	return 8+2; //6 bytes;
 }

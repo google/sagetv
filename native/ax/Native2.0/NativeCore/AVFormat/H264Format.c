@@ -36,7 +36,7 @@
 #define NAL_SPS_EXT             13
 #define NAL_AUXILIARY_SLICE     19
 
-float H264AspectRatioF( unsigned short nomi, unsigned short deno, long width, long height )
+float H264AspectRatioF( uint16_t nomi, uint16_t deno, int32_t width, int32_t height )
 {
 	if ( height == 0 || width == 0 ) return 0;
 	if ( nomi == 0 || deno == 0 ) return 0;
@@ -68,7 +68,7 @@ static int LCMDenoCalculator( int n, int m )
 	return m/gcd;
 }
 
-int H264AspectRatioNomiValue( unsigned short nomi, unsigned short deno, long width, long height )
+int H264AspectRatioNomiValue( uint16_t nomi, uint16_t deno, int32_t width, int32_t height )
 {
 	int n, d;
 	if ( height == 0 || width == 0 ) return 0;
@@ -83,7 +83,7 @@ int H264AspectRatioNomiValue( unsigned short nomi, unsigned short deno, long wid
 	return LCMNomiCalculator( n, d );
 }
 
-int H264AspectRatioDenoValue( unsigned short nomi, unsigned short deno, long width, long height )
+int H264AspectRatioDenoValue( uint16_t nomi, uint16_t deno, int32_t width, int32_t height )
 {
 	int n, d;
 	if ( height == 0 || width == 0 ) return 0;
@@ -103,7 +103,7 @@ int H264AspectRatioDenoValue( unsigned short nomi, unsigned short deno, long wid
 static int NAL2RBSP( unsigned char* src, unsigned char* dst, int size )
 {
 	int si=0, di=0;
-    while(si<size)
+  while(si<size)
 	{    
         if(si+2<size && src[si]==0 && src[si+1]==0 && src[si+2]<=3){
             if(src[si+2]==3){ //escape
@@ -136,7 +136,7 @@ static void skip_scaling_List(  int sizeOfScalingList, BITS_I *pBits )
 
 	int scalingList[64];
 
-	int j, scanj;                                                                                                                                                                           
+	int j,     scanj;                                                                                                                                                                           
 	int delta_scale, lastScale, nextScale;  
 	lastScale = 8;                                                                                                                                                                     
 	nextScale = 8;                                                                                                                                                                     
@@ -273,8 +273,8 @@ static int InterpretProfileLevel( H264_VIDEO *pH264Video )
 }
 
 typedef struct  {
-	unsigned short nom;
-	unsigned short den;
+	uint16_t nom;
+	uint16_t den;
 } ASPECT_RATIO;
 static const ASPECT_RATIO pixel_aspect[17]={ {0, 1}, {1, 1}, {12, 11}, {10, 11}, {16, 11}, {40, 33},
  {24, 11}, {20, 11}, {32, 11}, {80, 33}, {18, 11}, {15, 11}, {64, 33}, {160,99}, {4, 3}, {3, 2}, {2, 1} };
@@ -517,8 +517,8 @@ int ReadH264VideoHeader( H264_VIDEO *pH264Video, const unsigned char* pData, int
 
 					if( ReadBitsU( &bits, 1 ) )
 					{
-						unsigned long num_units_in_tick = ReadBitsU( &bits, 32 );
-						unsigned long time_scale        = ReadBitsU( &bits, 32 );
+						uint32_t num_units_in_tick = ReadBitsU( &bits, 32 );
+						uint32_t time_scale        = ReadBitsU( &bits, 32 );
 						int fixed_frame_rate_flag       = ReadBitsU( &bits, 1 );
 						if ( fixed_frame_rate_flag )
 						{
@@ -529,7 +529,7 @@ int ReadH264VideoHeader( H264_VIDEO *pH264Video, const unsigned char* pData, int
 							pH264Video->frame_rate_deno = LCMDenoCalculator( nomi, deno );
 						}
 					}
-					pH264Video->sps_length=_MIN((unsigned short)bytes, sizeof(pH264Video->sps)-5) ;
+					pH264Video->sps_length=_MIN((uint16_t)bytes, sizeof(pH264Video->sps)-5) ;
 					memcpy( pH264Video->sps+5, rbsp, pH264Video->sps_length);
 					pH264Video->sps[0]=pH264Video->sps[1]=pH264Video->sps[2]=0;
 					pH264Video->sps[3]=1; pH264Video->sps[4]=0x27;

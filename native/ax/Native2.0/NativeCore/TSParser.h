@@ -93,18 +93,18 @@ typedef struct TIME_STAMP
 
 typedef struct SLOT
 {
-	unsigned short tracks_id;
-	unsigned short state;
-	unsigned short ctrl;       //0: nono;   1: lock channel (CTRL_LOCK_PMT)
+	uint16_t tracks_id;
+	uint16_t state;
+	uint16_t ctrl;       //0: nono;   1: lock channel (CTRL_LOCK_PMT)
 
 	TUNE tune;
 	struct TRACKS* tracks;
-	unsigned short num_of_channels;
+	uint16_t num_of_channels;
 
 	LONGLONG pcr;
 	LONGLONG pcr_start;
 	ULONGLONG pcr_cue; //for interpolating scr
-	unsigned long pcr_rate;
+	uint32_t pcr_rate;
 	LONGLONG pts_adjust;
 
 	TIME_STAMP time_stamp; //for PTS-FIX obsolute
@@ -117,64 +117,64 @@ typedef struct SLOT
 
 typedef struct TSID_TBL
 {
-	unsigned short locked;
-	unsigned short tsid;
-	unsigned short total_program;
+	uint16_t locked;
+	uint16_t tsid;
+	uint16_t total_program;
 } TSID_TBL;
 
 
 typedef struct TS_PARSER 
 {
-	unsigned  long status;    //PARSER_RUNNING PARSER_STOP
-	unsigned  long state;     //TS_FILTER_READY, PARSING_INFO...
-	unsigned  long command;   //stop, reset  (used in pushdata)
+	uint32_t status;    //PARSER_RUNNING PARSER_STOP
+	uint32_t state;     //TS_FILTER_READY, PARSING_INFO...
+	uint32_t command;   //stop, reset  (used in pushdata)
 
-	unsigned  short stream_format;    //ATSC_STREAM, DVB_STREAM
-	unsigned  short stream_subformat; //TERRESTRIAL, CABLE, SATELLITE
-	unsigned  short media_type;		  //MEDIA_TYPE_TV, MEDIA_TYPE_DVD, MEDIA_TYPE_BLUERAY
-	unsigned  short packet_length;    //188 bytes TS, 192 bytes M2TS, 208 bytes ASI
-	unsigned  long  psi_time;
-	unsigned  long  clock_time;       //1 msec, feeding in form api
+	uint16_t stream_format;    //ATSC_STREAM, DVB_STREAM
+	uint16_t stream_subformat; //TERRESTRIAL, CABLE, SATELLITE
+	uint16_t media_type;		  //MEDIA_TYPE_TV, MEDIA_TYPE_DVD, MEDIA_TYPE_BLUERAY
+	uint16_t packet_length;    //188 bytes TS, 192 bytes M2TS, 208 bytes ASI
+	uint32_t  psi_time;
+	uint32_t  clock_time;       //1 msec, feeding in form api
 
 
-	unsigned long default_language;
-	unsigned long epg_ctrl;          //0:disable; 1:channel epg; 3:group epg; 7:all epg 
+	uint32_t default_language;
+	uint32_t epg_ctrl;          //0:disable; 1:channel epg; 3:group epg; 7:all epg 
 
 	struct TS_FILTER *ts_filter;
 
-	unsigned short tsid_num;
-	unsigned short current_service_tsid;
+	uint16_t tsid_num;
+	uint16_t current_service_tsid;
 
 	TS_PARSER_DUMPER dumper;
 
-	unsigned short slot_num;
+	uint16_t slot_num;
 	SLOT  slot[MAX_SLOT_NUM];
 
 	ULONGLONG  used_bytes;
-	unsigned long input_packets;
-	unsigned long valid_pcakets;
-	unsigned long bad_packets;
-	unsigned long bad_blocks;
-	unsigned long block_count;
-	unsigned long pmt_count;
-	unsigned long psi_count;
-	unsigned long psi_time_start;
-	unsigned long clock_time_start;
+	uint32_t input_packets;
+	uint32_t valid_pcakets;
+	uint32_t bad_packets;
+	uint32_t bad_blocks;
+	uint32_t block_count;
+	uint32_t pmt_count;
+	uint32_t psi_count;
+	uint32_t psi_time_start;
+	uint32_t clock_time_start;
 
-	unsigned short first_channel;   //used for picking up the first valid channel has active packets(ripping recording)
+	uint16_t first_channel;   //used for picking up the first valid channel has active packets(ripping recording)
 
-	unsigned short subtitle_ctrl;
-	unsigned short pts_fix_ctrl;
+	uint16_t subtitle_ctrl;
+	uint16_t pts_fix_ctrl;
 	LONGLONG  pts_fix_threshold;
 	LONGLONG  pts_offset;
-	unsigned short rebuild_stream_ctrl;
-	unsigned long  naked_stream_threshold;
-	unsigned long  empty_sub_stream_threshold;
-	unsigned long  failed_channel_threshold;
-	unsigned long  max_stream_check_time;
+	uint16_t rebuild_stream_ctrl;
+	uint32_t  naked_stream_threshold;
+	uint32_t  empty_sub_stream_threshold;
+	uint32_t  failed_channel_threshold;
+	uint32_t  max_stream_check_time;
 
-	unsigned short audio_ts_priority_hack; //use for TrueHD,DTS-HD, AC3ext, DTS hack
-	unsigned short wait_clean_stream;      //waiting clean stream (a encrypted stream is clean)
+	uint16_t audio_ts_priority_hack; //use for TrueHD,DTS-HD, AC3ext, DTS hack
+	uint16_t wait_clean_stream;      //waiting clean stream (a encrypted stream is clean)
 
 } TS_PARSER;
 
@@ -183,7 +183,7 @@ TS_PARSER* CreateTSParser( int nStreamType );
 void ReleaseTSParser( TS_PARSER *pTSParser );
 void ResetTSParser( TS_PARSER *pTSParser );
 void ResetTSParserState( TS_PARSER *pTSParser );
-int  PushDataTSParser( TS_PARSER *pTSParser, unsigned char* pData, int nSize );
+int  PushDataTSParser( TS_PARSER *pTSParser, uint8_t* pData, int nSize );
 void ConsolidateTuneParam( TUNE *pTune, int nStreamFormat, int nSubFormat );
 
 int  OpenTSChannel( TS_PARSER *pTSParser, int nSlot, TRACKS* pTracks, TUNE *pTune  );
@@ -197,14 +197,14 @@ void QueueTSParserReset( TS_PARSER *pTSParser );
 void ResetTSParserCommand( TS_PARSER *pTSParser );
 void TSParserZero( TS_PARSER *pTSParser );
 void SetupTSStreamType( TS_PARSER *pTSParser, int nStreamType );
-void UpdateTSParserClock( TS_PARSER *pTSParser, unsigned long lClock );
+void UpdateTSParserClock( TS_PARSER *pTSParser, uint32_t lClock );
 
-int CheckTSFormat( const unsigned char* pData, int nBytes );
-int CheckM2TFormat( const unsigned char* pData, int nBytes );
-int CheckASIFormat( const unsigned char* pData, int nBytes );
+int CheckTSFormat( const uint8_t* pData, int nBytes );
+int CheckM2TFormat( const uint8_t* pData, int nBytes );
+int CheckASIFormat( const uint8_t* pData, int nBytes );
 
 //range (100-inf)
-unsigned long PacketsSNRatio( TS_PARSER *pTSParser );
+uint32_t PacketsSNRatio( TS_PARSER *pTSParser );
 
 void DisablePSI( TS_PARSER *pTSParser );
 void EnablePSI( TS_PARSER *pTSParser );
@@ -216,12 +216,12 @@ void DisableRebuildStream( TS_PARSER *pTSParser );
 void SetupStreamFormat( TS_PARSER *pTSParser, int nFormat, int nSubFormat );
 void SetupTune( TS_PARSER *pTSParser, int nSlot, TUNE* pTune );
 void SetupTSEPGDump( TS_PARSER *pTSParser, DUMP pfnEPGDump, void* pEPGDumpContext );
-void SetupTSEPGDumpLanguage( TS_PARSER *pTSParser, unsigned long lLauguageCode );
+void SetupTSEPGDumpLanguage( TS_PARSER *pTSParser, uint32_t lLauguageCode );
 ULONGLONG TSDataUsedBytes( TS_PARSER *pTSParser );
 
 void AudioTSPriorityHackEnable( TS_PARSER *pTSParser );
 void WaitCleanStream( TS_PARSER *pTSParser );
-unsigned long GetTSParserState( TS_PARSER *pTSParser );
+uint32_t GetTSParserState( TS_PARSER *pTSParser );
 
 void SetupATSDump( TS_PARSER *pTSParser, DUMP pfnATSDump, void* pATSDumpContext );
 

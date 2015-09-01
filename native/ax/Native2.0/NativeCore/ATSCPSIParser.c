@@ -33,13 +33,13 @@
 #define ATSC_CHANNEL_NAME		0xa0
 #define ATSC_GENRE				0xab
 
-unsigned char* _FillDescData_( DESC_DATA *pDesc, unsigned char* pData, int nBytes, int Line );
+uint8_t* _FillDescData_( DESC_DATA *pDesc, uint8_t* pData, int nBytes, int Line );
 
-int UnpackMultipleString( unsigned char* p, int Bytes, int nCol, int nRow, STRING* pString  );
-int UnpackMultipleString256( unsigned char* p, int Bytes, int nCol, int nRow, STRING256* pString  );
-static unsigned char* GetStringFromMutilString( unsigned char* p, int Bytes, int nCol, int nRow, int *pStringLen );
-static int UncompressHuffman( int Type, unsigned char* pOut, int MaxSize, unsigned char* pData, int Length );
-static int GetUncompressBytes( int Type, unsigned char* pData, int Length );
+int UnpackMultipleString( uint8_t* p, int Bytes, int nCol, int nRow, STRING* pString  );
+int UnpackMultipleString256( uint8_t* p, int Bytes, int nCol, int nRow, STRING256* pString  );
+static uint8_t* GetStringFromMutilString( uint8_t* p, int Bytes, int nCol, int nRow, int *pStringLen );
+static int UncompressHuffman( int Type, uint8_t* pOut, int MaxSize, uint8_t* pData, int Length );
+static int GetUncompressBytes( int Type, uint8_t* pData, int Length );
 
 //DESC_DATA* CreateDesc( );
 //void ReleaseDesc( DESC_DATA* pDsec );
@@ -101,8 +101,8 @@ void ResetATSCPSI( ATSC_PSI* pATSCPSI )
 
 static void UnpackSTT( ATSC_PSI* pATSCPSI, TS_SECTION* pSection )
 {
-	unsigned char *p;
-	unsigned long gps_sec, gps_sec_offset;
+	uint8_t *p;
+	uint32_t gps_sec, gps_sec_offset;
 	int  daylight_saving, day_of_month_transition, hour_of_day_transition;
 	SECTION_HEADER section_header;
 
@@ -139,7 +139,7 @@ static void UnpackSTT( ATSC_PSI* pATSCPSI, TS_SECTION* pSection )
 static void UnpackMGT( ATSC_PSI* pATSCPSI, TS_SECTION* pSection )
 {
 	int i;
-	unsigned char *p;
+	uint8_t *p;
 	int  desc_bytes;
 	SECTION_HEADER section_header;
 
@@ -179,11 +179,11 @@ static void UnpackMGT( ATSC_PSI* pATSCPSI, TS_SECTION* pSection )
 static void UnpackVCT( ATSC_PSI* pATSCPSI, TS_SECTION* pSection )
 {
 	int i;
-	unsigned char *p;
+	uint8_t *p;
 	int hidden;
 	VCT* pVCT;
-	unsigned int  desc_bytes;
-	unsigned char* desc_ptr; 
+	int32_t  desc_bytes;
+	uint8_t* desc_ptr; 
 	int            desc_len;
 	SECTION_HEADER section_header;
 	int update_flag = 0;
@@ -204,13 +204,13 @@ static void UnpackVCT( ATSC_PSI* pATSCPSI, TS_SECTION* pSection )
 		if ( pATSCPSI->psi_parser->dumper.message_dumper != NULL )
 		{
 			MESSAGE_DATA message_data;
-			unsigned char buf[32];
+			uint8_t buf[32];
 			snprintf( (char*)buf, sizeof(buf), "%s", StreamFormatString( pATSCPSI->psi_parser->stream_format, pATSCPSI->psi_parser->sub_format ) );
 			memcpy( message_data.title, "FORMAT", 7 );
 			message_data.message = buf;
-			message_data.message_length = (unsigned short)strlen((char*)buf);
+			message_data.message_length = (uint16_t)strlen((char*)buf);
 			message_data.buffer = buf;
-			message_data.buffer_length = (unsigned short)sizeof(buf);
+			message_data.buffer_length = (uint16_t)sizeof(buf);
 			pATSCPSI->psi_parser->dumper.message_dumper( pATSCPSI->psi_parser->dumper.message_context, &message_data, sizeof(message_data) );
 		}
 	}
@@ -325,11 +325,11 @@ static void UnpackVCT( ATSC_PSI* pATSCPSI, TS_SECTION* pSection )
 			channel_data.u.atsc[i].service_type      = pATSCPSI->vct[i].service_type;
 			//memcpy( channel_data.u.atsc[i].name, pATSCPSI->vct[i].name, sizeof(channel_data.u.atsc[i].name) );
 			TransJWideString( channel_data.u.atsc[i].name, sizeof(channel_data.u.atsc[i].name), 
-				              (unsigned short*)pATSCPSI->vct[i].name );
+				              (uint16_t*)pATSCPSI->vct[i].name );
 			channel_data.streams = &pATSCPSI->streams;
 		}
 		ret = pATSCPSI->psi_parser->dumper.channel_info_dumper( pATSCPSI->psi_parser->dumper.channel_info_context, 
-			                                              (unsigned char*)&channel_data, sizeof(channel_data) );
+			                                              (uint8_t*)&channel_data, sizeof(channel_data) );
 		//re resend next vct;
 		if (  channel_data.command != 1  )
 			pATSCPSI->vct_section_crc32 = 0; 
@@ -351,8 +351,8 @@ static int GetChannelNum( ATSC_PSI* pATSCPSI, int nSourceId )
 static int UnpackRTT( ATSC_PSI* pATSCPSI, TS_SECTION* pSection )
 {
 	int i, len;
-	unsigned char *p, *s, *p_last;
-	unsigned short rating_region;
+	uint8_t *p, *s, *p_last;
+	uint16_t rating_region;
 	RTT* pRTT;
 	SECTION_HEADER section_header;
 	int  length, num;
@@ -453,12 +453,12 @@ static int UnpackRTT( ATSC_PSI* pATSCPSI, TS_SECTION* pSection )
 	return 1;
 }
 
-static int UnpackContentAdvisory( CAD *cad, unsigned char* pData, int Bytes )
+static int UnpackContentAdvisory( CAD *cad, uint8_t* pData, int Bytes )
 {
 	int i,j;
-	unsigned char* p;
+	uint8_t* p;
 
-	p = (unsigned char*)pData;
+	p = (uint8_t*)pData;
 	cad->region_num = *p & 0x3f;
 
 	p++;
@@ -527,7 +527,7 @@ static int ConvertAdvisoryInfo( ATSC_PSI* pATSCPSI, CAD *cad, char* buf, int max
 
 				if ( cad_name[0] && cad_value[0] )
 				{
-					if ( strlen( p ) + strlen( cad_name) + strlen( cad_value ) + 2 < (unsigned int)max_bytes )
+					if ( strlen( p ) + strlen( cad_name) + strlen( cad_value ) + 2 < (int32_t)max_bytes )
 					{
 						strcat( p, cad_name ); p += (int)strlen(cad_name);
 						strcat( p, ":" );	   p++;
@@ -538,7 +538,7 @@ static int ConvertAdvisoryInfo( ATSC_PSI* pATSCPSI, CAD *cad, char* buf, int max
 				}
 			}
 
-			if ( cad->description[i].bytes && strlen( p )+ cad->description[i].bytes+3< (unsigned int)max_bytes  )
+			if ( cad->description[i].bytes && strlen( p )+ cad->description[i].bytes+3< (int32_t)max_bytes  )
 			{
 				strcat(p,"(");   p++;
 				memcpy( p,  (char*)cad->description[i].data, cad->description[i].bytes );
@@ -600,7 +600,7 @@ static int ConvertAdvisoryInfoBytes( ATSC_PSI* pATSCPSI, CAD *cad )
 }
 
 char* GenreCode( int code );
-char* GenreString( unsigned char code )
+char* GenreString( uint8_t code )
 {
 	if ( code < 0x20 ) //reserved
 		return "";
@@ -750,7 +750,7 @@ static void UpdateEitCell( ATSC_PSI* pATSCPSI, int source_id )
 void DumpEPG( ATSC_PSI* pATSCPSI )
 {
 	int i, j, ch;
-	unsigned int source_id;
+	int32_t source_id;
 	STRING256 title={0};
 	STRING program={0};
 	CAD cad={0};
@@ -809,13 +809,13 @@ void DumpEPG( ATSC_PSI* pATSCPSI )
 				//print EPG cell
 				{
 					int pos;
-					unsigned char* p;
+					uint8_t* p;
 					DESC_DATA *desc= CreateDesc( );
 
 					len += 64;
 					p = NewDescData( desc, len );
 
-					pos = snprintf( (char*)p, len,  "%d|EPG-0|%d-%d %s|GPS:%ld|%ld|", pEit->event_id,
+					pos = snprintf( (char*)p, len,  "%d|EPG-0|%d-%d %s|GPS:%d|%d|", pEit->event_id,
 								major_num, minor_num, pVct==NULL ? "": pVct->minor_num == 0 ? "AN" :"DT", 
 								pEit->start_time, pEit->during_length );
 
@@ -879,7 +879,7 @@ static int ATSCFormatEPG( ATSC_PSI* pATSCPSI, EIT *pEit, DESC_DATA *pProgram,  D
 	CAD cad={0};
 	VCT *pVct;
 	int pos;
-	unsigned char* p;
+	uint8_t* p;
 	int len, bytes, k;
 	int major_num, minor_num, ch;
 	len = 0;
@@ -933,7 +933,7 @@ static int ATSCFormatEPG( ATSC_PSI* pATSCPSI, EIT *pEit, DESC_DATA *pProgram,  D
 		len += 64;
 		p = NewDescData( desc, len );
 
-		pos = snprintf( (char*)p, len,  "EPG-0|%d-%d %s|GPS:%ld|%ld|", 
+		pos = snprintf( (char*)p, len,  "EPG-0|%d-%d %s|GPS:%d|%d|", 
 					major_num, minor_num, minor_num == 0 ? "AN" :"DT", 
 					pEit->start_time, pEit->during_length );
 
@@ -986,7 +986,7 @@ static int ATSCFormatEPG( ATSC_PSI* pATSCPSI, EIT *pEit, DESC_DATA *pProgram,  D
 static void FlushEPG( ATSC_PSI* pATSCPSI )
 {
 	int i, j, ch;
-	unsigned int source_id;
+	int32_t source_id;
 	STRING program={0};
 	EIT *pEit;
 	int major_num, minor_num;
@@ -1037,14 +1037,14 @@ static void FlushEPG( ATSC_PSI* pATSCPSI )
 
 static int UnpackEIT( ATSC_PSI* pATSCPSI, TS_SECTION* pSection, int nType  )
 {
-	unsigned char *p;
+	uint8_t *p;
 	SECTION_HEADER section_header;
-	unsigned short source_id;
+	uint16_t source_id;
 	int  num_event;
 	int  bytes, len, j, update_flag = 0;
-	unsigned char* desc_ptr; 
+	uint8_t* desc_ptr; 
 	int            desc_len;
-	unsigned short desc_length;
+	uint16_t desc_length;
 	EIT  eit_tmp={0};
 	EIT *pEit;
 
@@ -1072,7 +1072,7 @@ static int UnpackEIT( ATSC_PSI* pATSCPSI, TS_SECTION* pSection, int nType  )
 	len = 0;
 	for ( j = 0; j<num_event; j++ )
 	{
-		unsigned short event_id = ( (p[0] & 0x3f) << 8 ) | p[1];
+		uint16_t event_id = ( (p[0] & 0x3f) << 8 ) | p[1];
 		pEit = FindEitCell( pATSCPSI, source_id, event_id );
 		if ( pEit == NULL )
 		{
@@ -1152,7 +1152,7 @@ static int UnpackEIT( ATSC_PSI* pATSCPSI, TS_SECTION* pSection, int nType  )
 
 static int UnpackETT( ATSC_PSI* pATSCPSI, TS_SECTION* pSection, int nType )
 {
-	unsigned char *p;
+	uint8_t *p;
 	SECTION_HEADER section_header;
 	int  bytes;
 	EIT *pEit;
@@ -1201,7 +1201,7 @@ static int UnpackETT( ATSC_PSI* pATSCPSI, TS_SECTION* pSection, int nType )
 				}
 			} else
 			{
-				unsigned crc32 = CalTSCRC32( p+4, bytes-5 );
+				uint32_t crc32 = CalTSCRC32( p+4, bytes-5 );
 				if ( pEit->program_crc32 != crc32 )	  
 				{
 					pEit->program_crc32	 = crc32;
@@ -1228,8 +1228,8 @@ static int UnpackETT( ATSC_PSI* pATSCPSI, TS_SECTION* pSection, int nType )
 
 int ProcessATSCPSI( ATSC_PSI* pATSCPSI, TS_PACKET *pTSPacket )
 {
-	unsigned short pid = pTSPacket->pid;
-	const unsigned char* payload_data; int payload_size;
+	uint16_t pid = pTSPacket->pid;
+	const uint8_t* payload_data; int payload_size;
 
 	payload_data = pTSPacket->data + pTSPacket->payload_offset;
 	payload_size = pTSPacket->payload_bytes;
@@ -1334,19 +1334,19 @@ int ProcessATSCPSI( ATSC_PSI* pATSCPSI, TS_PACKET *pTSPacket )
 }
 
 
-static unsigned char* GetStringFromMutilString( unsigned char* p, int Bytes, int nCol, int nRow, int *pStringLen )
+static uint8_t* GetStringFromMutilString( uint8_t* p, int Bytes, int nCol, int nRow, int *pStringLen )
 {
-	unsigned int i, j, num_strings, num_segments, offset, len;
-	//unsigned long language_code;
+	int32_t i, j, num_strings, num_segments, offset, len;
+	//uint32_t language_code;
 	offset = 0;
 	num_strings = p[offset];
 	offset++;
-	for ( i = 0; i<num_strings && offset+4 <= (unsigned int)Bytes; i++ )
+	for ( i = 0; i<num_strings && offset+4 <= (int32_t)Bytes; i++ )
 	{
 		//language_code = (p[offset]<<16)|(p[offset+1]<<8)|p[offset+2];
 		num_segments  = p[offset+3];
 		offset += 4;
-		for ( j = 0; j<num_segments && offset+3<=(unsigned int)Bytes ; j++ )
+		for ( j = 0; j<num_segments && offset+3<=(int32_t)Bytes ; j++ )
 		{
 			//skip compression, mode 2 bytes;
 			len = p[offset+2];
@@ -1354,9 +1354,9 @@ static unsigned char* GetStringFromMutilString( unsigned char* p, int Bytes, int
 			if ( i == nCol && j == nRow )
 			{
 				//lLanguage = language_code;
-				if ( offset+len <= (unsigned int)Bytes ) 
+				if ( offset+len <= (int32_t)Bytes ) 
 				{
-					*pStringLen = (unsigned int)len;
+					*pStringLen = (int32_t)len;
 					return p+offset;
 				} else
 				{
@@ -1371,33 +1371,33 @@ static unsigned char* GetStringFromMutilString( unsigned char* p, int Bytes, int
 	return NULL;
 }
 
-int UnpackMultipleString( unsigned char* p, int Bytes, int nCol, int nRow, STRING* pString  )
+int UnpackMultipleString( uint8_t* p, int Bytes, int nCol, int nRow, STRING* pString  )
 {
-	unsigned int i, j, num_strings, num_segments, offset;
-	unsigned long language_code;
+	int32_t i, j, num_strings, num_segments, offset;
+	uint32_t language_code;
 	offset = 0;
 	num_strings = p[offset];
 	offset++;
-	for ( i = 0; i<num_strings && offset+4 <= (unsigned int)Bytes; i++ )
+	for ( i = 0; i<num_strings && offset+4 <= (int32_t)Bytes; i++ )
 	{
 		language_code = (p[offset+2]<<16)|(p[offset+1]<<8)|p[offset];
 		num_segments  = p[offset+3];
 		offset += 4;
-		for ( j = 0; j<num_segments && offset+3<=(unsigned int)Bytes ; j++ )
+		for ( j = 0; j<num_segments && offset+3<=(int32_t)Bytes ; j++ )
 		{
-			unsigned char compression, mode;
+			uint8_t compression, mode;
 			int len;
 			compression = p[offset+0];
 			mode = p[offset+1];
 			len  = p[offset+2];
 			offset += 3;
-			if ( offset+len > (unsigned int)Bytes ) return 0;
+			if ( offset+len > (int32_t)Bytes ) return 0;
 			if ( i == nCol && j == nRow && len )
 			{
-				unsigned char* data_p;
+				uint8_t* data_p;
 				int size, num;
 				pString->language_code = language_code;
-				pString->charset_code =  (unsigned char*)"[set=UTF-8]";
+				pString->charset_code =  (uint8_t*)"[set=UTF-8]";
 
 				size = GetUncompressBytes( compression, p+offset,len );
 				data_p = NewDescData( &pString->data, size+1 );
@@ -1413,32 +1413,32 @@ int UnpackMultipleString( unsigned char* p, int Bytes, int nCol, int nRow, STRIN
 
 }
 
-int UnpackMultipleString256( unsigned char* p, int Bytes, int nCol, int nRow, STRING256* pString  )
+int UnpackMultipleString256( uint8_t* p, int Bytes, int nCol, int nRow, STRING256* pString  )
 {
-	unsigned int i, j, num_strings, num_segments, offset;
-	unsigned long language_code;
+	int32_t i, j, num_strings, num_segments, offset;
+	uint32_t language_code;
 	offset = 0;
 	num_strings = p[offset];
 	offset++;
-	for ( i = 0; i<num_strings && offset+4 <= (unsigned int)Bytes; i++ )
+	for ( i = 0; i<num_strings && offset+4 <= (int32_t)Bytes; i++ )
 	{
 		language_code = (p[offset+2]<<16)|(p[offset+1]<<8)|p[offset];
 		num_segments  = p[offset+3];
 		offset += 4;
-		for ( j = 0; j<num_segments && offset+3<=(unsigned int)Bytes ; j++ )
+		for ( j = 0; j<num_segments && offset+3<=(int32_t)Bytes ; j++ )
 		{
-			unsigned char compression, mode;
+			uint8_t compression, mode;
 			int len;
 			compression = p[offset+0];
 			mode = p[offset+1];
 			len  = p[offset+2];
 			offset += 3;
-			if ( offset+len > (unsigned int)Bytes ) return 0;
+			if ( offset+len > (int32_t)Bytes ) return 0;
 			if ( i == nCol && j == nRow )
 			{
 				int num;
 				pString->language_code = language_code;
-				pString->charset_code = (unsigned char*)"[set=UTF-8]";
+				pString->charset_code = (uint8_t*)"[set=UTF-8]";
 
 				num = UncompressHuffman( compression, pString->data, sizeof(pString->data), p+offset,len );
 				if ( sizeof(pString->data) > num ) 
@@ -1453,12 +1453,12 @@ int UnpackMultipleString256( unsigned char* p, int Bytes, int nCol, int nRow, ST
 
 }
 
-extern unsigned char program_huffman_tbl[];
-extern unsigned char title_huffman_tbl[];
-static unsigned char GetNext8Bits( unsigned char* pData, int pos, unsigned char bit )
+extern uint8_t program_huffman_tbl[];
+extern uint8_t title_huffman_tbl[];
+static uint8_t GetNext8Bits( uint8_t* pData, int pos, uint8_t bit )
 {
 	int i;
-	unsigned char ch;
+	uint8_t ch;
 	ch = 0;
 	for ( i = 0; i<8; i++ )
 	{
@@ -1472,12 +1472,12 @@ static unsigned char GetNext8Bits( unsigned char* pData, int pos, unsigned char 
 	}
 	return ch;
 }
-static int UncompressHuffman( int Type, unsigned char* pOut, int MaxSize, unsigned char* pData, int Length )
+static int UncompressHuffman( int Type, uint8_t* pOut, int MaxSize, uint8_t* pData, int Length )
 {
 	int i, bytes;
-	unsigned char *huffman, *tree_root;
-	unsigned char lch, cch, ch;
-	unsigned char bit;
+	uint8_t *huffman, *tree_root;
+	uint8_t lch, cch, ch;
+	uint8_t bit;
 	int offset, index;
 
 	if ( Length <= 0 || pData == NULL  || MaxSize <= 1 )
@@ -1504,7 +1504,7 @@ static int UncompressHuffman( int Type, unsigned char* pOut, int MaxSize, unsign
 	offset = 0;
 	while ( bytes < MaxSize  )
 	{
-		unsigned char node;
+		uint8_t node;
 
 		if ( i >= Length && bit == 0 )
 			break;
@@ -1565,12 +1565,12 @@ static int UncompressHuffman( int Type, unsigned char* pOut, int MaxSize, unsign
 	return bytes;
 }
 	
-static int GetUncompressBytes( int Type, unsigned char* pData, int Length )
+static int GetUncompressBytes( int Type, uint8_t* pData, int Length )
 {
 	int i, bytes;
-	unsigned char *huffman, *tree_root;
-	unsigned char lch, cch, ch;
-	unsigned char bit;
+	uint8_t *huffman, *tree_root;
+	uint8_t lch, cch, ch;
+	uint8_t bit;
 	int offset, index;
 
 	if ( Type == 1  ) 
@@ -1592,7 +1592,7 @@ static int GetUncompressBytes( int Type, unsigned char* pData, int Length )
 	offset = 0;
 	while ( 1  )
 	{
-		unsigned char node;
+		uint8_t node;
 		if ( i >= Length && bit == 0 )
 			break;
 

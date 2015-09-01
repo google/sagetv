@@ -54,13 +54,13 @@ void ReturnBlockBuffer( DEMUXER *pDemuxer, BLOCK_BUFFER* pBlockBuffer );
 
 /////////////////////////////////// File Dumper///////////////////////////////////////////
 //Dump data into a file
-static int PSOutputDataFileDumper( void* pContext, unsigned char* pData, int nSize )
+static int PSOutputDataFileDumper( void* pContext, uint8_t* pData, int nSize )
 {
 	REMUXER *pRemuxer = (REMUXER*)pContext;
 	OUTPUT_DATA *pOutputData = (OUTPUT_DATA *)pData;
 	//TRACK   *pTrack = (TRACK*)pOutputData->track;
-	unsigned char* data_ptr = pOutputData->data_ptr;
-	unsigned short bytes = pOutputData->bytes;
+	uint8_t* data_ptr = pOutputData->data_ptr;
+	uint16_t bytes = pOutputData->bytes;
 
 	if ( pRemuxer->output_file > 0 ) 
 	{
@@ -71,13 +71,13 @@ static int PSOutputDataFileDumper( void* pContext, unsigned char* pData, int nSi
 }
 
 #define TS_BLOCK_BUFFER_SIZE   (2*1024)
-static int TSOutputDataFileDumper( void* pContext, unsigned char* pData, int nSize )
+static int TSOutputDataFileDumper( void* pContext, uint8_t* pData, int nSize )
 {
 	REMUXER *pRemuxer = (REMUXER*)pContext;
 	OUTPUT_DATA *pOutputData = (OUTPUT_DATA *)pData;
 	//TRACK   *pTrack = (TRACK*)pOutputData->track;
-	unsigned char* data_ptr = pOutputData->data_ptr;
-	unsigned short bytes = pOutputData->bytes;
+	uint8_t* data_ptr = pOutputData->data_ptr;
+	uint16_t bytes = pOutputData->bytes;
 
 	if ( pRemuxer->output_file > 0 ) 
  	{
@@ -94,9 +94,9 @@ static void PostStatusMessage( REMUXER *pRemuxer, char* pMessageText )
 {
 	MESSAGE_DATA message={0};
 	strncpy( message.title, "STATUS", sizeof(message.title) );
-	message.message = (unsigned char*)pMessageText;
-	message.message_length = (unsigned short)strlen(pMessageText)+1 ;
-	message.buffer = (unsigned char*)pMessageText;
+	message.message = (uint8_t*)pMessageText;
+	message.message_length = (uint16_t)strlen(pMessageText)+1 ;
+	message.buffer = (uint8_t*)pMessageText;
 	message.buffer_length = message.message_length ;
 	PostDemuxMessage( pRemuxer->demuxer, &message );
 }
@@ -346,7 +346,7 @@ void SetupRemuxOutput( TRACKS *pTrackIn, TRACKS *pTrackOut )
 			*pTrackOut->track[i].av_elmnt = *pTrackIn->track[i].av_elmnt;
 			*pTrackOut->track[i].es_elmnt = *pTrackIn->track[i].es_elmnt;
 			pTrackOut->track[i].es_elmnt->es_id = MakeESId( pTrackIn->track[i].es_elmnt->pes.stream_id, 
-													(unsigned char)(pTrackIn->track[i].es_elmnt->es_id & 0x00ff) );
+													(uint8_t)(pTrackIn->track[i].es_elmnt->es_id & 0x00ff) );
 			SetupTracks( &pTrackOut->track[i] );
 		} 
 	}
@@ -365,7 +365,7 @@ void SetupRemuxOutput( TRACKS *pTrackIn, TRACKS *pTrackOut )
 			pTrackOut->track[i].es_elmnt->es_id = MakeESId( 0xBD, 0x20+(pTrackIn->track[i].es_elmnt->es_id & 0x00ff) );
 			SetupTracks( &pTrackOut->track[i] );
 			if ( pTrackOut->track[i].av_elmnt->format_fourcc == SAGE_FOURCC( "SUB " ) )
-				pTrackOut->track[i].es_elmnt->private_data[1] = (unsigned char)pTrackOut->track[i].av_elmnt->d.s.sub.type; //ZQ subtitle new way
+				pTrackOut->track[i].es_elmnt->private_data[1] = (uint8_t)pTrackOut->track[i].av_elmnt->d.s.sub.type; //ZQ subtitle new way
 			
 			SageLog(( _LOG_TRACE, 3, "Subtitle stream is added, es id:0x%04x at %d", 
 				                          pTrackOut->track[i].es_elmnt->es_id, i ));
@@ -378,13 +378,13 @@ void SetupRemuxOutput( TRACKS *pTrackIn, TRACKS *pTrackOut )
 
 }
 
-static int RemuxMessageDumper( void* pContext, unsigned char* pData, int nSize )
+static int RemuxMessageDumper( void* pContext, uint8_t* pData, int nSize )
 {
 	REMUXER *pRemuxer = (REMUXER*)pContext;
 	MESSAGE_DATA *message = (MESSAGE_DATA*)pData;
 	if ( strstr( message->title, "LANGUAGE" ) )
 	{
-		unsigned long language_code = LanguageCode( message->message );
+		uint32_t language_code = LanguageCode( message->message );
 		SetupEPGDumpLanguage( pRemuxer, language_code );
 		//SetupEPGDumpLanguage( pRemuxer,  LanguageCode( "eng" ) );
 	} else
@@ -496,7 +496,7 @@ static int RemuxMessageDumper( void* pContext, unsigned char* pData, int nSize )
 				
 				DemuxSourceSeekPos( pRemuxer->demuxer, 0, SEEK_SET );
 				SageLog(( _LOG_ERROR, 3, TEXT("**** File seek to begin of file to process data. (pos:%d) ****" ), 
-																							 (unsigned long)pos ));
+																							 (uint32_t)pos ));
 				PTSLog(( 0, 0, 0, 0, 0 ) ); 
 
 				pRemuxer->state = 3; //rewinded  
@@ -538,7 +538,7 @@ static int RemuxMessageDumper( void* pContext, unsigned char* pData, int nSize )
 			if ( pRemuxer->state == 2 )
 			{
 				ULONGLONG pos = DemuxUsedBytes( pRemuxer->demuxer );
-				SageLog(( _LOG_ERROR, 3, TEXT("****** Find AVINF (pos:%d) ******" ), (unsigned long)pos ));
+				SageLog(( _LOG_ERROR, 3, TEXT("****** Find AVINF (pos:%d) ******" ), (uint32_t)pos ));
 			}
 
 			//debug_dump_content = 1;  //ZQ
@@ -556,7 +556,7 @@ static int RemuxMessageDumper( void* pContext, unsigned char* pData, int nSize )
 				QueueZeroDemux( pRemuxer->demuxer );
 				DemuxSourceSeekPos( pRemuxer->demuxer, 0, SEEK_SET );
 				SageLog(( _LOG_ERROR, 3, TEXT("**** File seek to begin of file to process data. (pos:%d) ****" ), 
-																							(unsigned long)pos ));
+																							(uint32_t)pos ));
 			}
 
 
@@ -623,7 +623,7 @@ static int RemuxMessageDumper( void* pContext, unsigned char* pData, int nSize )
 
 						DemuxSourceSeekPos( pRemuxer->demuxer, 0, SEEK_SET );
 						SageLog(( _LOG_ERROR, 3, TEXT("**** File seek to begin of file to process data. (pos:%d) ****" ), 
-																									 (unsigned long)pos ));
+																									 (uint32_t)pos ));
 						PTSLog(( 0, 0, 0, 0, 0 ) ); 
 					}
 
@@ -643,7 +643,7 @@ static int RemuxMessageDumper( void* pContext, unsigned char* pData, int nSize )
 ////////////////////////////////////// Main //////////////////////////////////////
 //** MAIN  ENTRY ***
 
-int EPGDumper( void* pContext, unsigned char* pData, int nSize )
+int EPGDumper( void* pContext, uint8_t* pData, int nSize )
 {
 	SageLog(( _LOG_ERROR, 3, (char*)pData ));
 	return 1;
@@ -657,7 +657,7 @@ int RemuxFileProgressCallback( void* pContext, void* pData, int nSize )
 	return 1;
 }
 
-int RemuxFile( unsigned short nTask, char* pInputFile, TUNE* pTune, int nInputFormat, 
+int RemuxFile( uint16_t nTask, char* pInputFile, TUNE* pTune, int nInputFormat, 
 			   char* pOutFile, int nOutputFormat, int nOption )
 {
 	REMUXER *pRemuxer;
@@ -696,7 +696,7 @@ int RemuxFile( unsigned short nTask, char* pInputFile, TUNE* pTune, int nInputFo
 		DisableSubtitle( pRemuxer );
 
 
-	SetupEPGDumpLanguage( pRemuxer, LanguageCode((unsigned char*)"eng") );
+	SetupEPGDumpLanguage( pRemuxer, LanguageCode((uint8_t*)"eng") );
 
 	if ( pOutFile != NULL && pOutFile[0] != 0x0 )
 		CreateFileOutput( pRemuxer, pOutFile, nOutputFormat, max_track_num );
@@ -721,7 +721,7 @@ int RemuxFile( unsigned short nTask, char* pInputFile, TUNE* pTune, int nInputFo
 	return 1;
 }
 
-int RemuxFileW( unsigned short nTask, wchar_t* pInputFile, TUNE* pTune, int nInputFormat, 
+int RemuxFileW( uint16_t nTask, wchar_t* pInputFile, TUNE* pTune, int nInputFormat, 
 			   wchar_t* pOutFile, int nOutputFormat, int nOption )
 {
 	REMUXER *pRemuxer;
@@ -756,7 +756,7 @@ int RemuxFileW( unsigned short nTask, wchar_t* pInputFile, TUNE* pTune, int nInp
 	if ( nOption & 0x02 ) 
 		SetupEPGDump( pRemuxer, (DUMP)EPGDumper, pRemuxer );
 
-	SetupEPGDumpLanguage( pRemuxer, LanguageCode((unsigned char*)"eng") );
+	SetupEPGDumpLanguage( pRemuxer, LanguageCode((uint8_t*)"eng") );
 
 	if ( pOutFile != NULL && pOutFile[0] != 0x0 )
 		CreateFileOutputW( pRemuxer, pOutFile, nOutputFormat, max_track_num );
@@ -784,7 +784,7 @@ int RemuxFileW( unsigned short nTask, wchar_t* pInputFile, TUNE* pTune, int nInp
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-void* OpenRemuxStream( unsigned short nTask, TUNE* pTune, 
+void* OpenRemuxStream( uint16_t nTask, TUNE* pTune, 
 					   int nInputFormat, int nOutputFormat, 
 					   MEM_ALLOC_HOOK pfnMemAlloc, void* pMemAllocContext,
 					   DUMP pfnOutputDump, void* pOutputDumpContext )
@@ -907,7 +907,7 @@ void EnableMultipleAudio( void* Handle )
 	pRemuxer->remuxer_ctrl &= ~MAIN_TRACK_ONLY;
 }
 
-int	PushRemuxStreamData( void* Handle, unsigned char *pData, int nBytes, int *nExpectedBytes )
+int	PushRemuxStreamData( void* Handle, uint8_t *pData, int nBytes, int *nExpectedBytes )
 {
 	REMUXER *pRemuxer = (REMUXER *)Handle;
 	return PushDemuxStreamData( pRemuxer->demuxer, pData, nBytes, nExpectedBytes );
@@ -1045,7 +1045,7 @@ void SetupEPGDump( void* Handle, DUMP pfnEPGDump, void* pEPGDumpContext )
 		SetupTSEPGDump( pRemuxer->demuxer->ts_parser, pfnEPGDump, pEPGDumpContext );
 }
 
-void SetupEPGDumpLanguage( void* Handle, unsigned long lLanguageCode )
+void SetupEPGDumpLanguage( void* Handle, uint32_t lLanguageCode )
 {
 	REMUXER *pRemuxer = (REMUXER *)Handle;
 	if ( pRemuxer->demuxer->ts_parser )
@@ -1053,7 +1053,7 @@ void SetupEPGDumpLanguage( void* Handle, unsigned long lLanguageCode )
 	SageLog(( _LOG_ERROR, 3, TEXT("Set default EPG language \"%s\"."), Language(lLanguageCode, NULL )  ));
 }
 
-void SetDefaultAudioLanguage( void* Handle, unsigned long lLanguageCode )
+void SetDefaultAudioLanguage( void* Handle, uint32_t lLanguageCode )
 {
 	REMUXER *pRemuxer = (REMUXER *)Handle;
 	pRemuxer->language_code = lLanguageCode;
@@ -1072,7 +1072,7 @@ void SetupFastPESDump( void * Handle, DUMP pfnPESDumper, void* pPESDumperContext
 	SetupPESDump( pRemuxer->demuxer, pfnPESDumper, pPESDumperContext );
 }
 
-void UpdateClock( void* Handle, unsigned long lClock )
+void UpdateClock( void* Handle, uint32_t lClock )
 {
 	REMUXER *pRemuxer = (REMUXER *)Handle;
 	UpdateDemuxerClock( pRemuxer->demuxer, lClock );
@@ -1135,7 +1135,7 @@ static void _output_statistic( REMUXER *pRemuxer )
 
 }
 
-unsigned char* _search_data_( unsigned char* match, int len, unsigned char* data, int data_size )
+uint8_t* _search_data_( uint8_t* match, int len, uint8_t* data, int data_size )
 {
 	int i;
 	for ( i = 0; i<data_size-len; i++ )
@@ -1146,9 +1146,9 @@ unsigned char* _search_data_( unsigned char* match, int len, unsigned char* data
 	return NULL;
 }
 /*
-static void _s_(unsigned char*data, int size)
+static void _s_(uint8_t*data, int size)
 {
-	unsigned char pat1[]={0x00, 0x00, 0x01, 0xfd, 0x01, 0x98, 0x88, 0x00, 0x00, 0x81};
+	uint8_t pat1[]={0x00, 0x00, 0x01, 0xfd, 0x01, 0x98, 0x88, 0x00, 0x00, 0x81};
 	if ( _search_data_( pat1, sizeof(pat1), data, size ) )
 	{
 		printf( "STOP" );

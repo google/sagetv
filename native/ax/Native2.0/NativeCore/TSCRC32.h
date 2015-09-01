@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-unsigned long CalTSCRC32( const unsigned char *pData, int len );
+uint32_t CalTSCRC32( const unsigned char *pData, int len );
 
 #ifdef __cplusplus
 }

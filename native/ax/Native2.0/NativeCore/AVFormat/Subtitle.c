@@ -22,21 +22,21 @@
 #include "Subtitle.h"
 #define SUBTITLE_DESC				0x59
 
-extern unsigned char* GetDescriptor( const unsigned char *pData, int Bytes, unsigned char Tag, int *pLength );
-extern unsigned long  LanguageCode( unsigned char* pLanguage );
+extern uint8_t* GetDescriptor( const uint8_t *pData, int Bytes, uint8_t Tag, int *pLength );
+extern uint32_t LanguageCode( uint8_t* pLanguage );
 
 
-int ParseDVBSubtitleDesc( SUBTITLE *pSubtitle, unsigned char* pDescDate, int nDescLenghth )
+int ParseDVBSubtitleDesc( SUBTITLE *pSubtitle, uint8_t* pDescDate, int nDescLenghth )
 {
-	unsigned char* desc_ptr;
+	uint8_t* desc_ptr;
 	int desc_len;
 
 	if ( ( desc_ptr = GetDescriptor( pDescDate, nDescLenghth, SUBTITLE_DESC, &desc_len ) )!= NULL && desc_len >= 8 )
 	{
 		pSubtitle->lanugaue = LanguageCode( desc_ptr+2 );
 		pSubtitle->comp_type = desc_ptr[2+3];
-		pSubtitle->cpgid = (desc_ptr[2+3+1]<<8)|desc_ptr[2+3+2];
-		pSubtitle->apgid = (desc_ptr[2+3+2+1]<<8)|desc_ptr[2+3+2+1+1];
+		pSubtitle->cpgid = ((uint16_t)desc_ptr[2+3+1]<<8)|desc_ptr[2+3+2];
+		pSubtitle->apgid = ((uint16_t)desc_ptr[2+3+2+1]<<8)|desc_ptr[2+3+2+1+1];
 		return 1;
 	} else
 	{	
@@ -44,12 +44,12 @@ int ParseDVBSubtitleDesc( SUBTITLE *pSubtitle, unsigned char* pDescDate, int nDe
 	}
 }
 
-int ReadDVBSubtitleHeader( DVB_SUB *pDVBSub, const unsigned char* pStart, int Size )
+int ReadDVBSubtitleHeader( DVB_SUB *pDVBSub, const uint8_t* pStart, int Size )
 {
-	unsigned char	subtitle_id;
-	unsigned short  segmnt_type;	
-	unsigned short  page_id;
-	unsigned short  segmnt_length;
+	uint8_t	subtitle_id;
+	uint16_t  segmnt_type;	
+	uint16_t  page_id;
+	uint16_t  segmnt_length;
 
 	//ZQ we may search sync header 0x0f
 	if ( pStart[1] != 0x0f )
@@ -57,8 +57,8 @@ int ReadDVBSubtitleHeader( DVB_SUB *pDVBSub, const unsigned char* pStart, int Si
 
 	subtitle_id = pStart[0];
 	segmnt_type = pStart[2];
-	page_id = (pStart[3]<<8)|pStart[4];
-	segmnt_length = (pStart[5]<<8)|pStart[6];
+	page_id = ((uint16_t)pStart[3]<<8)|pStart[4];
+	segmnt_length = ((uint16_t)pStart[5]<<8)|pStart[6];
 	if ( segmnt_length+7+1 <= Size && pStart[7+segmnt_length] == 0x0f )
 	{
 		pDVBSub->subtitle_id = subtitle_id;

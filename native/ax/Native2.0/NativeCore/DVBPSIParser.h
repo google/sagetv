@@ -33,20 +33,20 @@ extern "C" {
 
 
 typedef struct {
-	unsigned short sevice_id;
-	unsigned char  type;
-	unsigned char  padding;
+	uint16_t sevice_id;
+	int32_t  type;
+	int32_t  padding;
 } NIT_SERVICE;
 
 typedef struct {
 
-	unsigned short network_id;
-	unsigned short tsid;
-	unsigned short onid;
-	unsigned short service_num;
+	uint16_t network_id;
+	uint16_t tsid;
+	uint16_t onid;
+	uint16_t service_num;
 	NIT_SERVICE   *service_list;
 	char           network_name[NETWORK_NAME_LEN];
-	unsigned char  type; //1:TERRESTRIAL; 2:CABLE; 3:SATELLITE_TUNE
+	int32_t  type; //1:TERRESTRIAL; 2:CABLE; 3:SATELLITE_TUNE
 	union {
 		TERRESTRIAL_TUNE	t;
 		CABLE_TUNE			c;
@@ -55,58 +55,58 @@ typedef struct {
 } NIT;
 
 typedef struct {
-	unsigned short nit_num;
-	unsigned short nit_total_num;
+	uint16_t nit_num;
+	uint16_t nit_total_num;
 	NIT      **nit_list;
 } NIT_LIST;
 
 typedef struct {
-	unsigned char  linkage_type;
-	unsigned char  hand_over_type;
-	unsigned short tsid;
-	unsigned short onid;
-	unsigned short sid;
-	unsigned short nit;
-	unsigned short inital_service_id;
+	int32_t  linkage_type;
+	int32_t  hand_over_type;
+	uint16_t tsid;
+	uint16_t onid;
+	uint16_t sid;
+	uint16_t nit;
+	uint16_t inital_service_id;
 } LINKAGE;
 
 typedef struct {
-	unsigned short running_status;
-	unsigned short service_id;
-	unsigned char  EIT_flag;
-	unsigned char  CA_flag;
-	unsigned char  type;
-	unsigned char  padding;
+	uint16_t running_status;
+	uint16_t service_id;
+	int32_t  EIT_flag;
+	int32_t  CA_flag;
+	int32_t  type;
+	int32_t  padding;
 	STRING128      service_name;
 	STRING128      provider_name; //we don't need it, skip ZQ.
 } SERVICE;
 
 typedef struct {
-	unsigned short tsid;
-	unsigned short onid;
-	unsigned short service_num;
+	uint16_t tsid;
+	uint16_t onid;
+	uint16_t service_num;
 	SERVICE  *service;
 	LINKAGE  *linkage;
 } SDT;
 
 typedef struct {
-	unsigned short sdt_num;
-	unsigned short sdt_total_num;
+	uint16_t sdt_num;
+	uint16_t sdt_total_num;
 	SDT      **sdt_list;
 } SDT_LIST;
 
 
 typedef struct 
 {
-	unsigned short flag;
+	uint16_t flag;
 	char Name[40];
 	char Provider[40];
-	unsigned short ONID;
-	unsigned short TSID;
-	unsigned short service_id;
-	unsigned short service_type;
-	unsigned char  delivery_type; //1:DVB-T, 2:DVB-C, 3:DVB-S
-	unsigned char  padding; //alignment
+	uint16_t ONID;
+	uint16_t TSID;
+	uint16_t service_id;
+	uint16_t service_type;
+	int32_t  delivery_type; //1:DVB-T, 2:DVB-C, 3:DVB-S
+	int32_t  padding; //alignment
 	union {
 		TERRESTRIAL_TUNE	t;
 		CABLE_TUNE			c;
@@ -117,74 +117,74 @@ typedef struct
 
 typedef struct 
 {
-	unsigned short event_id;
-	unsigned long  start_time;
-	unsigned long  duration_length;
+	uint16_t event_id;
+	uint32_t  start_time;
+	uint32_t  duration_length;
 	DESC_DATA	   title;
 	DESC_DATA	   message;
 	DESC_DATA      rating;
 	DESC_DATA	   content_desc;
-	unsigned long  title_crc32;
-	unsigned long  message_crc32;
-	unsigned long  rating_crc32;
-	unsigned long  content_desc_crc32;
+	uint32_t  title_crc32;
+	uint32_t  message_crc32;
+	uint32_t  rating_crc32;
+	uint32_t  content_desc_crc32;
 } EVNT;
 
 typedef struct EVNT_COL
 {
-	unsigned short onid;
-	unsigned short tsid;
-	unsigned short sid;
-	unsigned short row_num;
-	unsigned short total_row_num;
+	uint16_t onid;
+	uint16_t tsid;
+	uint16_t sid;
+	uint16_t row_num;
+	uint16_t total_row_num;
 	EVNT *evnt;
 } EVNT_COL;
 
 typedef struct EVNT_LIST
 {
-	unsigned short col_num;
-	unsigned short total_col_num;
-	unsigned long  total_even_num;
+	uint16_t col_num;
+	uint16_t total_col_num;
+	uint32_t  total_even_num;
 	EVNT_COL *evnt_col;
 } EVNT_LIST;
 
 typedef struct DVB_FILTER
 {
-	unsigned short nid;
-	unsigned short onid;
-	unsigned short tsid;
-	unsigned short sid;
+	uint16_t nid;
+	uint16_t onid;
+	uint16_t tsid;
+	uint16_t sid;
 }DVB_PSI_FILTER;
 
 /////////////////////////////////////////////////////////////////
 
 typedef struct DVB_PSI
 {
-	unsigned long   system_time;
+	uint32_t   system_time;
 
 	TS_SECTION     *nit_section;
-	//unsigned char	nit_update_flag;
+	//int32_t	nit_update_flag;
 	NIT_LIST		nit_list;
 
 	TS_SECTION     *sdt_section;
-	//unsigned char	sdt_update_flag;
+	//int32_t	sdt_update_flag;
 	SDT_LIST		sdt_list;
 
 	TS_SECTION     *eit_section;
-	//unsigned char	eit_update_flag;
+	//int32_t	eit_update_flag;
 
-	unsigned short  total_evnt_cell;
+	uint16_t  total_evnt_cell;
 	EVNT_LIST		evnt_list;
 	DVB_PSI_FILTER	evnt_filter;
 
 	struct PSI_PARSER*	psi_parser;
 
-	unsigned long   language_code;
-	unsigned char	not_save_epg_message; //don't save epg message into a cell to save space
+	uint32_t   language_code;
+	int32_t	not_save_epg_message; //don't save epg message into a cell to save space
 
-	unsigned char disable_channel_inf;
-	unsigned char disable_tune_inf;
-	unsigned char padding;                //alignment
+	int32_t disable_channel_inf;
+	int32_t disable_tune_inf;
+	int32_t padding;                //alignment
 
 } DVB_PSI;
 

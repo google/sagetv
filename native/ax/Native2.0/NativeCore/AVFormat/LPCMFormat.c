@@ -41,11 +41,11 @@
 #define SPEAKER_RESERVED               0x80000000
 
 
-static int UnpackVobLPCMHeader( LPCM_AUDIO *pLPCMAudio, const unsigned char* pbData, int nSize );
-static int UnpackDVDLPCMHeader( LPCM_AUDIO *pLPCMAudio, const unsigned char* pbData, int nSize );
-static int UnpackBRLPCMHeader( LPCM_AUDIO *pLPCMAudio, const unsigned char* pbData, int nSize );
+static int UnpackVobLPCMHeader( LPCM_AUDIO *pLPCMAudio, const uint8_t* pbData, int nSize );
+static int UnpackDVDLPCMHeader( LPCM_AUDIO *pLPCMAudio, const uint8_t* pbData, int nSize );
+static int UnpackBRLPCMHeader( LPCM_AUDIO *pLPCMAudio, const uint8_t* pbData, int nSize );
 
-int ReadLPCM_AudioHeader( LPCM_AUDIO *pLPCMAudio, const unsigned char* pbData, int nSize )
+int ReadLPCM_AudioHeader( LPCM_AUDIO *pLPCMAudio, const uint8_t* pbData, int nSize )
 {
 	if ( pLPCMAudio->lpcm_source == 0 ) 
 		return 0;
@@ -62,9 +62,9 @@ int ReadLPCM_AudioHeader( LPCM_AUDIO *pLPCMAudio, const unsigned char* pbData, i
 	return 0;
 }
 
-static int UnpackVobLPCMHeader( LPCM_AUDIO *pLPCMAudio, const unsigned char* pbData, int nSize )
+static int UnpackVobLPCMHeader( LPCM_AUDIO *pLPCMAudio, const uint8_t* pbData, int nSize )
 {
-	unsigned char header;
+	uint8_t header;
 	if ( nSize < 6 ) 
 		return 0;
 
@@ -154,7 +154,7 @@ static int UnpackVobLPCMHeader( LPCM_AUDIO *pLPCMAudio, const unsigned char* pbD
 
 static const unsigned int dvd_group1[21] = { 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4 };
 static const unsigned int dvd_group2[21] = { 0, 0, 1, 2, 1, 2, 3, 1, 2, 3, 2, 3, 4, 1, 2, 1, 2, 3, 1, 1, 2 };
-static const unsigned long dvd_ch_group1[21] = {
+static const uint32_t dvd_ch_group1[21] = {
      SPEAKER_FRONT_CENTER,
      SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT, 
      SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT, 
@@ -200,51 +200,51 @@ static const unsigned dvd_ch_group2[21] = {
      SPEAKER_FRONT_CENTER,     
      SPEAKER_FRONT_CENTER|SPEAKER_LOW_FREQUENCY,          
 };
-static int UnpackDVDLPCMHeader( LPCM_AUDIO *pLPCMAudio, const unsigned char* pbData, int nSize )
+static int UnpackDVDLPCMHeader( LPCM_AUDIO *pLPCMAudio, const uint8_t* pbData, int nSize )
 {
 	int channels1 = 0, channels2 = 0, channels1_cfg=0 , channels2_cfg=0;
 	int index_size_g1, index_size_g2, index_rate_g1, index_rate_g2, assignment;
 	int group2_used;
-    const unsigned header_size = (pbData[1]<<8)|pbData[2];
-    if( header_size + 3 < 11 )
+  const unsigned header_size = (pbData[1]<<8)|pbData[2];
+  if( header_size + 3 < 11 )
         return 0;
 
-    //*pi_padding = 3+i_header_size - LPCM_AOB_HEADER_LEN;
-    index_size_g1 = (pbData[6] >> 4) & 0x0f;
-    index_size_g2 = (pbData[6]     ) & 0x0f;
-    index_rate_g1 = (pbData[7] >> 4) & 0x0f;
-    index_rate_g2 = (pbData[7]     ) & 0x0f;
-    assignment     = pbData[9];
+  //*pi_padding = 3+i_header_size - LPCM_AOB_HEADER_LEN;
+  index_size_g1 = (pbData[6] >> 4) & 0x0f;
+  index_size_g2 = (pbData[6]     ) & 0x0f;
+  index_rate_g1 = (pbData[7] >> 4) & 0x0f;
+  index_rate_g2 = (pbData[7]     ) & 0x0f;
+  assignment     = pbData[9];
 
-    /* Validate */
-    if( index_size_g1 > 0x02 || ( index_size_g2 != 0x0f && index_size_g2 > 0x02 ) )
-        return 0;
-    if( (index_rate_g1 & 0x07) > 0x02 || ( index_rate_g2 != 0x0f && (index_rate_g1 & 0x07) > 0x02 ) )
-        return 0;
-    if( assignment > 20 )
-        return 0;
+  /* Validate */
+  if( index_size_g1 > 0x02 || ( index_size_g2 != 0x0f && index_size_g2 > 0x02 ) )
+      return 0;
+  if( (index_rate_g1 & 0x07) > 0x02 || ( index_rate_g2 != 0x0f && (index_rate_g1 & 0x07) > 0x02 ) )
+      return 0;
+  if( assignment > 20 )
+      return 0;
 
     
-    pLPCMAudio->bits_per_sample = 16 + 4 * index_size_g1;
-    if( index_rate_g1 & 0x08 )
-        pLPCMAudio->samples_per_sec = 44100 << (index_rate_g1 & 0x07);
-    else
-        pLPCMAudio->samples_per_sec = 48000 << (index_rate_g1 & 0x07);
+  pLPCMAudio->bits_per_sample = 16 + 4 * index_size_g1;
+  if( index_rate_g1 & 0x08 )
+      pLPCMAudio->samples_per_sec = 44100 << (index_rate_g1 & 0x07);
+  else
+      pLPCMAudio->samples_per_sec = 48000 << (index_rate_g1 & 0x07);
 
 
-    /* Group1 */
+  /* Group1 */
 	channels1 = dvd_group1[assignment];
 	channels1_cfg = dvd_ch_group1[assignment];
 
-    /* Group2 */
-    if( index_size_g2 != 0x0f && index_rate_g2 != 0x0f )
+  /* Group2 */
+  if( index_size_g2 != 0x0f && index_rate_g2 != 0x0f )
 	{
 		channels2 = dvd_group2[assignment];
 		channels2_cfg = dvd_ch_group2[assignment];
 	}
 
 	/* It is enabled only when presents and compatible wih group1 */
-    group2_used = index_size_g1 == index_size_g2 && index_rate_g1 == index_rate_g2;
+  group2_used = index_size_g1 == index_size_g2 && index_rate_g1 == index_rate_g2;
 
 	pLPCMAudio->channels = channels1 + ( group2_used ? channels2 : 0 );
 	pLPCMAudio->channel_cfg = channels1_cfg | ( group2_used ? channels2_cfg : 0 );
@@ -256,9 +256,9 @@ static int UnpackDVDLPCMHeader( LPCM_AUDIO *pLPCMAudio, const unsigned char* pbD
     return 1;
 }
 
-static int UnpackBRLPCMHeader( LPCM_AUDIO *pLPCMAudio, const unsigned char* pbData, int nSize )
+static int UnpackBRLPCMHeader( LPCM_AUDIO *pLPCMAudio, const uint8_t* pbData, int nSize )
 {
-    unsigned long h;
+  uint32_t h;
 	h = pbData[0];	h <<= 8; 
 	h |= pbData[1];	h <<= 8;
 	h |= pbData[2];	h <<= 8;
@@ -377,15 +377,15 @@ static int UnpackBRLPCMHeader( LPCM_AUDIO *pLPCMAudio, const unsigned char* pbDa
 	return 1;
 }
 
-static int ConvertVobLPCM(  void* pConverter, int bGroupStart, const unsigned char* pbData, int nSize, unsigned char* pOutData, int nBufSize );
-//static int ConvertDVDLPCM(  void* pConverter, int bGroupStart, const unsigned char* pbData, int nSize, unsigned char* pOutData, int nBufSize );
-static int ConvertBRLPCM(  void* pConverter, int bGroupStart, const unsigned char* pbData, int nSize, unsigned char* pOutData, int nBufSize );
+static int ConvertVobLPCM(  void* pConverter, int bGroupStart, const uint8_t* pbData, int nSize, uint8_t* pOutData, int nBufSize );
+//static int ConvertDVDLPCM(  void* pConverter, int bGroupStart, const uint8_t* pbData, int nSize, uint8_t* pOutData, int nBufSize );
+static int ConvertBRLPCM(  void* pConverter, int bGroupStart, const uint8_t* pbData, int nSize, uint8_t* pOutData, int nBufSize );
 
 typedef struct 
 {
-	unsigned char* buffer;
-	unsigned short buffer_size;
-	unsigned short data_bytes;
+	uint8_t* buffer;
+	uint16_t buffer_size;
+	uint16_t data_bytes;
 } CVT_BUF;
 
 
@@ -393,7 +393,7 @@ typedef struct LPCM_CVT
 {
 	LPCM_AUDIO lpcm_audio;
 	CVT_BUF    cvt_buf;
-	unsigned short start_flag;
+	uint16_t   start_flag;
 } LPCM_CVT;
 
 void *OpenLPCMConvert( LPCM_AUDIO *pLPCMAudio )
@@ -403,7 +403,7 @@ void *OpenLPCMConvert( LPCM_AUDIO *pLPCMAudio )
 	if ( pLCPMCvt->lpcm_audio.lpcm_source == 3 ) //BlueRay DVD (assume)
 	{
 		pLCPMCvt->cvt_buf.buffer_size = 4*1024;
-		pLCPMCvt->cvt_buf.buffer = (unsigned char*)SAGETV_MALLOC( pLCPMCvt->cvt_buf.buffer_size );
+		pLCPMCvt->cvt_buf.buffer = (uint8_t*)SAGETV_MALLOC( pLCPMCvt->cvt_buf.buffer_size );
 	}
 	return pLCPMCvt;
 }
@@ -425,7 +425,7 @@ void ResetLPCMConvert( void* pConverter )
 	pLCPMCvt->start_flag = 0;
 }
 
-int LPCMConvert( void* pConverter, int bGroupStart, const unsigned char* pInData, int nSize, unsigned char* pOutData, int nBufSize )
+int LPCMConvert( void* pConverter, int bGroupStart, const uint8_t* pInData, int nSize, uint8_t* pOutData, int nBufSize )
 {
 	LPCM_CVT *pLCPMCvt = (LPCM_CVT *)pConverter;
 	if ( pLCPMCvt->lpcm_audio.lpcm_source == 0 ) 
@@ -444,13 +444,13 @@ int LPCMConvert( void* pConverter, int bGroupStart, const unsigned char* pInData
 	
 }
 
-static int ConvertVobLPCM( void* pConverter, int bGroupStart, const unsigned char* pbData, int nSize, unsigned char* pOutData, int nBufSize  )
+static int ConvertVobLPCM( void* pConverter, int bGroupStart, const uint8_t* pbData, int nSize, uint8_t* pOutData, int nBufSize  )
 {
 	LPCM_CVT *pLCPMCvt = (LPCM_CVT *)pConverter;
 	LPCM_AUDIO *pLPCMAudio = &pLCPMCvt->lpcm_audio;
-	unsigned char *p_out, *p_in;
+	uint8_t *p_out, *p_in;
 	int bytes_in, bytes_out;
-	p_in = (unsigned char *)pbData;
+	p_in = (uint8_t *)pbData;
 	p_out = pOutData;
 	bytes_in = nSize;
 
@@ -529,21 +529,12 @@ static int ConvertVobLPCM( void* pConverter, int bGroupStart, const unsigned cha
 	return bytes_out;
 }
 
-/*
-static int ConvertDVDLPCM( void* pConverter, int bGroupStart, const unsigned char* pbData, int nSize, unsigned char* pOutData, int nBufSize )
-{
-	LPCM_CVT *pLCPMCvt = (LPCM_CVT *)pConverter;
-	//http://dvd-audio.sourceforge.net/spec/aob.shtml
-	//VLC: lpcm.c
-	//unsupport
-	return 0;
-}
-*/
-static int ConvertBRLPCM( void* pConverter, int bGroupStart, const unsigned char* pbData, int nSize, unsigned char* pOutData, int nBufSize )
+
+static int ConvertBRLPCM( void* pConverter, int bGroupStart, const uint8_t* pbData, int nSize, uint8_t* pOutData, int nBufSize )
 {
 	LPCM_CVT *pLCPMCvt = (LPCM_CVT *)pConverter;
 
-	unsigned char *p_out, *p_in;
+	uint8_t *p_out, *p_in;
 	int used_bytes;
 	int convert_bytes, leftover_bytes;
 	LPCM_AUDIO lpcm_audio;
@@ -573,7 +564,7 @@ static int ConvertBRLPCM( void* pConverter, int bGroupStart, const unsigned char
 	if ( pLCPMCvt->cvt_buf.buffer_size + pLCPMCvt->cvt_buf.data_bytes < nSize )
 	{
 		int buffer_size = nSize+512;
-		unsigned char* p = SAGETV_MALLOC( buffer_size );
+		uint8_t* p = SAGETV_MALLOC( buffer_size );
 		if ( pLCPMCvt->cvt_buf.data_bytes )
 			memcpy( p, pLCPMCvt->cvt_buf.buffer, pLCPMCvt->cvt_buf.data_bytes );
 		if ( pLCPMCvt->cvt_buf.buffer )

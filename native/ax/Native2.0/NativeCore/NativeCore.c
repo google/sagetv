@@ -150,7 +150,7 @@ char* CodeConfig( )
 // static  memory buffer
 //unsigned char es_buffer[MAX_SLOT_NUM][MAX_TRACK_NUM][ES_BUFFER_SIZE];
 
-char* _sagetv_fourcc_( unsigned long lFourCC, char* pFourCC )
+char* _sagetv_fourcc_( uint32_t lFourCC, char* pFourCC )
 {
 	static unsigned char _tmp_[5], *p;
 	if ( lFourCC == 0 )
@@ -207,16 +207,16 @@ char* _data_alignment_check_( char* buf, int buf_len )
 char* _access_alignment_check_( char* buf, int buf_len )
 {
 	typedef struct {
-		char  a;
-		char  b;
-		short c;
-		short d;
-		long  e;
+		char     a;
+		char     b;
+		int16_t  c;
+		int16_t  d;
+		int32_t  e;
 	} A;
 	typedef struct {
-		char  a;
-		short b;
-		long  c;
+		char    a;
+		int16_t b;
+		int32_t c;
 	} B;
 
 	A a;
@@ -231,9 +231,9 @@ char* _access_alignment_check_( char* buf, int buf_len )
 	char* b_b_p  = (char*)&b.b;
 	char* b_c_p  = (char*)&b.c;
 	//char* b_d_p  = (char*)&b.d;
-	snprintf( buf, buf_len, "a: %d %d %d %d; b:%d %d", 
+	snprintf( buf, buf_len, "a: %ld %ld %ld %ld; b:%ld %ld", 
 		      a_b_p-base_a, a_c_p-base_a, a_d_p-base_a, a_e_p-base_a, 
-			  b_b_p-base_b, b_c_p-base_b );
+			    b_b_p-base_b, b_c_p-base_b );
 
 	return buf;
 

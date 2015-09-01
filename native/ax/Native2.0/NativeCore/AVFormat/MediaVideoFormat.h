@@ -19,48 +19,48 @@
 
 typedef struct
 {
-  unsigned long  biSize; 
-  long    biWidth; 
-  long    biHeight; 
-  short   biPlanes; 
-  short   biBitCount; 
-  unsigned long  biCompression; 
-  unsigned long  biSizeImage; 
-  long   biXPelsPerMeter; 
-  long   biYPelsPerMeter; 
-  unsigned long  biClrUsed; 
-  unsigned long  biClrImportant; 
+  uint32_t  biSize; 
+  int32_t   biWidth; 
+  int32_t   biHeight; 
+  int16_t   biPlanes; 
+  int16_t   biBitCount; 
+  uint32_t  biCompression; 
+  uint32_t  biSizeImage; 
+  int32_t   biXPelsPerMeter; 
+  int32_t   biYPelsPerMeter; 
+  uint32_t  biClrUsed; 
+  uint32_t  biClrImportant; 
 } _BITMAPINFOHEADER;
 
 typedef struct 
 { 
-  long left; 
-  long top; 
-  long right; 
-  long bottom; 
+  int32_t   left; 
+  int32_t   top; 
+  int32_t   right; 
+  int32_t   bottom; 
 } _RECT;
 
 typedef struct   {
-    char      majortype[16];  //GUID
-    char      subtype[16];    //GUID
-    char      bFixedSizeSamples;
-    char      bTemporalCompression;
-    unsigned long  lSampleSize;
-    char      formattype[16];   //GUID
-	void*	  *pUnk;
-    unsigned long  cbFormat;
-	void*	  *pBFoarmt;
+  char      majortype[16];  //GUID
+  char      subtype[16];    //GUID
+  char      bFixedSizeSamples;
+  char      bTemporalCompression;
+  uint32_t  lSampleSize;
+  char      formattype[16];   //GUID
+	void*	    *pUnk;
+  uint32_t  cbFormat;
+	void*	    *pBFoarmt;
 } _MEDIA_DATA;
 
 typedef struct  {
-    _RECT               rcSource;
-    _RECT               rcTarget;
-    unsigned long       dwBitRate;
-    unsigned long       dwBitErrorRate;
-    LONGLONG		    AvgTimePerFrame;
-    _BITMAPINFOHEADER   bmiHeader;
-	unsigned char		bmiExt[4096];
-}  _VIDEOINFOHEADER;
+  _RECT     rcSource;
+  _RECT     rcTarget;
+  uint32_t  dwBitRate;
+  uint32_t  dwBitErrorRate;
+  int64_t		AvgTimePerFrame;
+  _BITMAPINFOHEADER   bmiHeader;
+	uint8_t   bmiExt[4096];
+} _VIDEOINFOHEADER;
 
 typedef struct {
 	_MEDIA_DATA		 Media;

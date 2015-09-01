@@ -33,7 +33,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
 
 typedef struct PS_PARSER_DUMPER
 {
@@ -53,31 +54,31 @@ typedef struct PS_PARSER_DUMPER
 
 typedef struct SAGETV_PRIVATE_DATA
 {
-	int	video_track_num;
-	int audio_track_num;
-	int video_main_track;
-	int audio_main_track;
-	unsigned char main_video_stream_type;
-	unsigned char main_audio_stream_type;
-	unsigned char h264_frame_rate;
-	unsigned char padding;
-	int info_version;
-	int sage_info_embedded;
+	int32_t	video_track_num;
+	int32_t audio_track_num;
+	int32_t video_main_track;
+	int32_t audio_main_track;
+	uint8_t main_video_stream_type;
+	uint8_t main_audio_stream_type;
+	uint8_t h264_frame_rate;
+	uint8_t padding;
+	int32_t info_version;
+	int32_t sage_info_embedded;
 } SAGETV_PRIVATE_DATA;
 
 typedef struct PSM
 {
-	unsigned char  stream_id;
-	unsigned char  padding;
-	unsigned short stream_type;
-	unsigned char  stream_info[32];
+	uint8_t  stream_id;
+	uint8_t  padding;
+	uint16_t stream_type;
+	uint8_t  stream_info[32];
 } PSM;
 
 typedef struct PSM_LIST
 {
-	unsigned char  psm_info[32];
-	unsigned short psm_num;
-	unsigned short psm_total_num;
+	uint8_t  psm_info[32];
+	uint16_t psm_num;
+	uint16_t psm_total_num;
 	PSM *psm;
 } PSM_LIST;
 
@@ -86,20 +87,20 @@ typedef struct PSM_LIST
 typedef struct PS_PARSER 
 {
 	//unsigned  short status;
-	unsigned short state;
-	unsigned short command;
+	uint16_t state;
+	uint16_t command;
 
 	PS_PARSER_DUMPER dumper;
 
-	unsigned char video_stream_id;
-	unsigned char audio_stream_id;
-	unsigned char video_stream_type;
-	unsigned char audio_stream_type;
-	unsigned long video_demux_rate;
-	unsigned long audio_demux_rate;
-	unsigned long video_block_size;
-	unsigned long audio_block_size;
-	unsigned long demux_bound;
+	uint8_t video_stream_id;
+	uint8_t audio_stream_id;
+	uint8_t video_stream_type;
+	uint8_t audio_stream_type;
+	uint32_t video_demux_rate;
+	uint32_t audio_demux_rate;
+	uint32_t video_block_size;
+	uint32_t audio_block_size;
+	uint32_t demux_bound;
 	
 	struct TRACKS *tracks;
 	ULONGLONG scr;
@@ -110,14 +111,14 @@ typedef struct PS_PARSER
 	AV_STREAMS av_streams;
 	
 	PSM_LIST psm_list;
-	unsigned long empty_sub_stream_threshold;
+	uint32_t empty_sub_stream_threshold;
 	ULONGLONG  used_bytes;
-	unsigned long input_blocks;
-	unsigned long bad_blocks;
-	unsigned long block_count;
+	uint32_t input_blocks;
+	uint32_t bad_blocks;
+	uint32_t block_count;
 	LONGLONG  pts_offset;
 
-	unsigned short pack_type;  //curent pack_type;
+	uint16_t pack_type;  //curent pack_type;
 	SAGETV_PRIVATE_DATA sagetv_private_data;
 
 } PS_PARSER;
@@ -126,11 +127,11 @@ typedef struct PS_PARSER
 PS_PARSER* CreatePSParser( TRACKS* pTracks );
 void ReleasePSParser( PS_PARSER *pTSParser );
 void ResetPSParser( PS_PARSER *pTSParser );
-int  PushDataPSParser( PS_PARSER *pPSParser, const unsigned char* pData, int nSize, int *pExpectedBytes );
+int  PushDataPSParser( PS_PARSER *pPSParser, const uint8_t* pData, int nSize, int *pExpectedBytes );
 
-int CheckPSFormat( const unsigned char* pData, int nSize);
+int CheckPSFormat( const uint8_t* pData, int nSize);
 ULONGLONG PSDataUsedBytes( PS_PARSER *pPSParser );
-unsigned long PSStreamBoundRate( PS_PARSER* pParser );
+uint32_t PSStreamBoundRate( PS_PARSER* pParser );
 
 void QueuePSParserReset( PS_PARSER *pPSParser );
 void QueuePSParserAbort( PS_PARSER *pPSParser );
@@ -140,7 +141,7 @@ void PSParserZero( PS_PARSER *pPSParser );
 
 int PickupMainTrack( PS_PARSER *pPSParser, TRACKS* pTracks );
 
-char* _pes_header_( unsigned char* p );
+char* _pes_header_( uint8_t* p );
 
 
 #ifdef __cplusplus

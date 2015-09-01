@@ -24,7 +24,7 @@
 #include "ESAnalyzer.h"
 #include "TSFilterDump.h"
 
-static int TSPacketDumper( void* pContext, unsigned char* pData, int nSize )
+static int TSPacketDumper( void* pContext, uint8_t* pData, int nSize )
 {
 	TS_FILTER_DUMP *pTSFilterDump = (TS_FILTER_DUMP*)pContext;
 	PACKET_DATA*   packet_data    = (PACKET_DATA*)pData;
@@ -32,12 +32,12 @@ static int TSPacketDumper( void* pContext, unsigned char* pData, int nSize )
 	output_data.bytes = pTSFilterDump->packet_length;
 	output_data.data_ptr = packet_data->packet->data;
 	output_data.group_flag = packet_data->packet->start;
-	//unsigned short pid = packet_data->packet->pid;
+	//uint16_t pid = packet_data->packet->pid;
 	pTSFilterDump->dumper.stream_dumper( pTSFilterDump->dumper.stream_dumper_context, &output_data, sizeof(output_data) );
 	return 1;
 }
 
-static int PCRDumper( void* pContext, unsigned char* pData, int nSize )
+static int PCRDumper( void* pContext, uint8_t* pData, int nSize )
 {
 	TS_FILTER_DUMP *pTSFilterDump = (TS_FILTER_DUMP*)pContext;
 	PCR_DATA  *pcr_data = (PCR_DATA *)pData;

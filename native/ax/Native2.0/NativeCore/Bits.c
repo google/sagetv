@@ -20,11 +20,11 @@
 //INPUT BITS
 ////////////////////////////////////////////////////////////////////////////////////////
 
-unsigned short U( BITS_I* pBits, int nCodeBits ) 
+uint16_t U( BITS_I* pBits, int nCodeBits ) 
 {
-	register unsigned short val, i;      // control bit for current bit posision                                       
+	register uint16_t val, i;      // control bit for current bit posision                                       
 	int  totbitoffset;
-	long byteoffset;        // byte from start of buffer                                                
+	int32_t byteoffset;        // byte from start of buffer                                                
 	int  bitoffset ;        // bit from start of byte
 	    
 	if ( nCodeBits > pBits->total_bits || pBits->error_flag )
@@ -36,7 +36,7 @@ unsigned short U( BITS_I* pBits, int nCodeBits )
 	totbitoffset = pBits->bits_offset;
 	val = 0;
 
-	for ( i = 0; i<(short)nCodeBits; i++ )
+	for ( i = 0; i<(int16_t)nCodeBits; i++ )
 	{
 		val <<= 1;
 		byteoffset= totbitoffset>>3;                                                                      
@@ -51,12 +51,12 @@ unsigned short U( BITS_I* pBits, int nCodeBits )
 	 
 }
 
-unsigned long UL( BITS_I* pBits, int nCodeBits ) 
+uint32_t UL( BITS_I* pBits, int nCodeBits ) 
 {
-	register unsigned long val;
-	register unsigned short i;      // control bit for current bit posision                                       
+	register uint32_t val;
+	register uint16_t i;      // control bit for current bit posision                                       
 	int  totbitoffset;
-	long byteoffset;        // byte from start of buffer                                                
+	int32_t byteoffset;        // byte from start of buffer                                                
 	int  bitoffset ;        // bit from start of byte
 	    
 	if ( nCodeBits > pBits->total_bits || pBits->error_flag )
@@ -68,7 +68,7 @@ unsigned long UL( BITS_I* pBits, int nCodeBits )
 	totbitoffset = pBits->bits_offset;
 	val = 0;
 
-	for ( i = 0; i<(short)nCodeBits; i++ )
+	for ( i = 0; i<(int16_t)nCodeBits; i++ )
 	{
 		val <<= 1;
 		byteoffset= totbitoffset>>3;                                                                      
@@ -91,9 +91,9 @@ void SkipBits( BITS_I* pBits, int nCodeBits  )
 	pBits->bits_offset += nCodeBits;
 }
 
-int ReadBitsU( BITS_I* pBits, int nCodeBits  )
+int32_t ReadBitsU( BITS_I* pBits, int nCodeBits  )
 {
-	unsigned int val;
+	int32_t val;
 	if ( nCodeBits >= 16 )
 		val = UL( pBits, nCodeBits );
 	else
@@ -105,10 +105,10 @@ int ReadBitsU( BITS_I* pBits, int nCodeBits  )
 	return val;
 }
 
-static int GolombCode (const unsigned char buffer[], int totbitoffset, int *info, int bytecount )                           
+static int32_t GolombCode (const uint8_t buffer[], int totbitoffset, int *info, int bytecount )                           
  {                                                                                                   
 	register int inf;                                                                                 
-	long byteoffset;      // byte from start of buffer                                                
+	int32_t byteoffset;      // byte from start of buffer                                                
 	int bitoffset;        // bit from start of byte                                                     
 	int ctr_bit=0;        // control bit for current bit posision                                       
 	int bitcounter=1;                                                                                 
@@ -158,7 +158,7 @@ static int GolombCode (const unsigned char buffer[], int totbitoffset, int *info
  }                                                                                                   
 
 
-unsigned long UE( BITS_I *pBits, int *pCodeBits )
+uint32_t UE( BITS_I *pBits, int *pCodeBits )
 {
 	int info;
 	*pCodeBits = GolombCode( pBits->buffer, pBits->bits_offset, 
@@ -171,7 +171,7 @@ unsigned long UE( BITS_I *pBits, int *pCodeBits )
 	return (1<<(*pCodeBits>>1))+info-1;
 }
 
-int SE( BITS_I *pBits, int *pCodeBits ) 
+int32_t SE( BITS_I *pBits, int *pCodeBits ) 
 {
 	int info;
 	int n, val;
@@ -193,7 +193,7 @@ int SE( BITS_I *pBits, int *pCodeBits )
 }
 
 
-unsigned int ReadUE( BITS_I *pBits )
+uint32_t ReadUE( BITS_I *pBits )
 {
 	int val, bits;
 	val = UE( pBits, &bits );
@@ -205,7 +205,7 @@ unsigned int ReadUE( BITS_I *pBits )
 }
 
 
-int ReadSE( BITS_I *pBits )
+int32_t ReadSE( BITS_I *pBits )
 {
 	int val, bits;
 	val = SE( pBits, &bits );
@@ -220,7 +220,7 @@ int ReadSE( BITS_I *pBits )
 ////////////////////////////////////////////////////////////////////////////////////////
 //OUTPUT BITS
 ////////////////////////////////////////////////////////////////////////////////////////
-void InitOutBITS( BITS_T *bits, unsigned char* buf, int size )
+void InitOutBITS( BITS_T *bits, uint8_t* buf, int size )
 {
 	bits->outbfr =0;
 	bits->outcnt = 32;
@@ -231,9 +231,9 @@ void InitOutBITS( BITS_T *bits, unsigned char* buf, int size )
 }
 
 
-void PutOutBITS( BITS_T *bits, unsigned long val, int n )  
+void PutOutBITS( BITS_T *bits, uint32_t val, int n )  
 {
-	unsigned long mask;
+	uint32_t mask;
 	if ( n == 0 ) return;
 	if ( bits->bytecnt >= bits->buf_size )
 		return;
@@ -256,10 +256,10 @@ void PutOutBITS( BITS_T *bits, unsigned long val, int n )
 			bits->outbfr = ( bits->outbfr << bits->outcnt );
 		bits->outbfr |=  val >> (n - bits->outcnt)  ;
 		
-    	*(bits->buf++) = ( (unsigned char)(bits->outbfr>>24) ); /* write to stream */
-	    *(bits->buf++) = ( (unsigned char)(bits->outbfr>>16) ); /* write to stream */
-		*(bits->buf++) = ( (unsigned char)(bits->outbfr>>8 ) ); /* write to stream */
-    	*(bits->buf++) = ( (unsigned char)(bits->outbfr )	 ); /* write to stream */
+    	*(bits->buf++) = ( (uint8_t)(bits->outbfr>>24) ); /* write to stream */
+	    *(bits->buf++) = ( (uint8_t)(bits->outbfr>>16) ); /* write to stream */
+		*(bits->buf++) = ( (uint8_t)(bits->outbfr>>8 ) ); /* write to stream */
+    	*(bits->buf++) = ( (uint8_t)(bits->outbfr )	 ); /* write to stream */
 
 		bits->outcnt += 32 - n;
 		bits->bytecnt+=4;
@@ -267,7 +267,7 @@ void PutOutBITS( BITS_T *bits, unsigned long val, int n )
 	}
 }
 
-int CloseOutBITS( BITS_T *bits )
+int32_t CloseOutBITS( BITS_T *bits )
 {
 	bits->bytecnt += (32-bits->outcnt)/8;
 	bits->bytecnt += ((32-bits->outcnt) & 7 ) != 0 ? 1 : 0 ;
@@ -277,25 +277,25 @@ int CloseOutBITS( BITS_T *bits )
 		bits->outcnt = 32-bits->outcnt; //Jeff found this bug!!! (twice...it used to be above the prior line, then commented out, and now it's here!)
 		if ( bits->outcnt >=24 )
 		{
-			*(bits->buf++) = ( (unsigned char)(bits->outbfr>>24) ); /* write to stream */
-			*(bits->buf++) = ( (unsigned char)(bits->outbfr>>16) ); /* write to stream */
-			*(bits->buf++) = ( (unsigned char)(bits->outbfr>>8) ); /* write to stream */
-			*(bits->buf) |= (unsigned char)(bits->outbfr);
+			*(bits->buf++) = ( (uint8_t)(bits->outbfr>>24) ); /* write to stream */
+			*(bits->buf++) = ( (uint8_t)(bits->outbfr>>16) ); /* write to stream */
+			*(bits->buf++) = ( (uint8_t)(bits->outbfr>>8) ); /* write to stream */
+			*(bits->buf) |= (uint8_t)(bits->outbfr);
 		} else
 		if ( bits->outcnt >=16 )
 		{
-			*(bits->buf++) = ( (unsigned char)(bits->outbfr>>24) ); /* write to stream */
-			*(bits->buf++) = ( (unsigned char)(bits->outbfr>>16) ); /* write to stream */
-			*(bits->buf) |= (unsigned char)(bits->outbfr>>8);
+			*(bits->buf++) = ( (uint8_t)(bits->outbfr>>24) ); /* write to stream */
+			*(bits->buf++) = ( (uint8_t)(bits->outbfr>>16) ); /* write to stream */
+			*(bits->buf) |= (uint8_t)(bits->outbfr>>8);
 		} else
 		if ( bits->outcnt >=8 )
 		{
-			*(bits->buf++) = ( (unsigned char)(bits->outbfr>>24) ); /* write to stream */
-			*(bits->buf) |= (unsigned char)(bits->outbfr>>16);
+			*(bits->buf++) = ( (uint8_t)(bits->outbfr>>24) ); /* write to stream */
+			*(bits->buf) |= (uint8_t)(bits->outbfr>>16);
 		} else
 		if ( bits->outcnt > 0 )
 		{
-		    *(bits->buf) |= (unsigned char)(bits->outbfr>>24);
+		    *(bits->buf) |= (uint8_t)(bits->outbfr>>24);
 		}
 	}
 
@@ -310,17 +310,17 @@ void AlignOutBITS( BITS_T *bits )
 	PutOutBITS( bits, 0, bits->outcnt & 7  );
 }
 
-long BitCountBITS( BITS_T *bits )                 
+int32_t BitCountBITS( BITS_T *bits )                 
 {
 	return 8 * bits->bytecnt + (32 - bits->outcnt);
 }
 
-long ByteCountBITS( BITS_T *bits )                  
+int32_t ByteCountBITS( BITS_T *bits )                  
 {
 	return bits->bytecnt;
 }
 
-int CopyOutBits( BITS_T *bits, char* out_buf, int size )                 
+int32_t CopyOutBits( BITS_T *bits, char* out_buf, int size )                 
 {
 	int bytes;
 	if ( bits->outcnt < 32 )
