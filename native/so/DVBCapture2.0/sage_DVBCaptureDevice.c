@@ -3030,7 +3030,7 @@ int  SageGetSatelliteTble( void* Capture, SAT_NAME *sat_name, int max_sat )
 	return 0;
 }
 
-void SageDelay( void* Capture, unsigned long ms )
+void SageDelay( void* Capture, uint32_t ms )
 {
  	usleep( ms );
 }
