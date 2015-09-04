@@ -731,7 +731,7 @@ public class OpenGLVideoRenderer
 
     if (javax.media.opengl.Threading.isSingleThreaded() && !javax.media.opengl.Threading.isOpenGLThread())
     {
-      javax.media.opengl.Threading.invokeOnOpenGLThread(new Runnable() {
+      javax.media.opengl.Threading.invokeOnOpenGLThread(true, new Runnable() {
         public void run() {
           createVideo();
         }
@@ -751,7 +751,7 @@ public class OpenGLVideoRenderer
     pureNativeMode=false;
     if (javax.media.opengl.Threading.isSingleThreaded() && !javax.media.opengl.Threading.isOpenGLThread())
     {
-      javax.media.opengl.Threading.invokeOnOpenGLThread(new Runnable()
+      javax.media.opengl.Threading.invokeOnOpenGLThread(true, new Runnable()
       {
         public void run()
         {
@@ -778,7 +778,7 @@ public class OpenGLVideoRenderer
     }
     if (javax.media.opengl.Threading.isSingleThreaded() && !javax.media.opengl.Threading.isOpenGLThread())
     {
-      javax.media.opengl.Threading.invokeOnOpenGLThread(new Runnable()
+      javax.media.opengl.Threading.invokeOnOpenGLThread(true, new Runnable()
       {
         public void run()
         {
@@ -802,7 +802,7 @@ public class OpenGLVideoRenderer
     if(MiniClient.MAC_OS_X) {
       if (javax.media.opengl.Threading.isSingleThreaded() && !javax.media.opengl.Threading.isOpenGLThread())
       {
-        javax.media.opengl.Threading.invokeOnOpenGLThread(new Runnable()
+        javax.media.opengl.Threading.invokeOnOpenGLThread(true,new Runnable()
         {
           public void run()
           {

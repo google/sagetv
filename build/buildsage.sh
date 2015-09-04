@@ -15,40 +15,9 @@
 # limitations under the License.
 #
 echo "Bulding Sage.jar..."
-rm -rf TempClassFiles
-mkdir TempClassFiles
-rm -rf TempBuildImages
-mkdir TempBuildImages
-cd TempBuildImages
-rm -rf images
-mkdir images
-cd images
-cp ../../../images/SageTV/images/*.gif .
-cp ../../../images/SageTV/images/*.png .
-mkdir studio
-cd studio
-cp ../../../../images/SageTV/images/studio/*.gif .
+
+# now uses gradle because there a dynamic dependencies for JOGL
 cd ..
-cd ..
-cd ..
-rm -rf release
-mkdir release
-SAGETV_JARS=../third_party/UPnPLib/sbbi-upnplib-1.0.3.jar:../third_party/JOGL/Linux/jogl.all.jar:../third_party/Oracle/vecmath.jar:../third_party/Lucene/lucene-core-3.6.0.jar:../third_party/JCIFS/jcifs-1.1.6.jar
-javac -cp $SAGETV_JARS -source 1.5 -target 1.5 -deprecation -O -sourcepath ../java:../third_party/Javolution/java:../third_party/jcraft/java:../third_party/jtux/java:../third_party/MetadataExtractor/java:../third_party/Ogle/java:../third_party/RSSLIB4J/java:../third_party/SingularSys/java -d TempClassFiles ../java/sage/SageTV.java ../java/sage/Sage.java ../java/sage/PVR350OSDRenderingPlugin.java ../java/sage/MiniPlayer.java ../java/sage/WindowsServiceControl.java ../java/tv/sage/weather/WeatherDotCom.java ../third_party/Ogle/java/sage/dvd/*.java ../third_party/RSSLIB4J/java/sage/media/rss/*.java ../java/sage/StudioFrame.java ../third_party/jcraft/java/com/jcraft/jzlib/*.java ../third_party/jtux/java/jtux/*.java ../java/tv/sage/weather/WeatherUnderground.java ../java/sage/upnp/PlaceshifterNATManager.java
-if [[ $? -gt 0 ]]
-then
-   echo "Error compiling source code"
-   exit 1
-fi
-jar -cf0 release/Sage.jar -C TempClassFiles sage
-jar -uf0 release/Sage.jar -C TempClassFiles tv
-jar -uf0 release/Sage.jar -C TempClassFiles jtux
-jar -uf0 release/Sage.jar -C TempClassFiles com
-jar -uf0 release/Sage.jar -C TempBuildImages images
-cd ../i18n
-jar -uf0 ../build/release/Sage.jar *.properties
-cd ../build
-rm -rf TempClassFiles
-rm -rf TempBuildImages
-echo "Done building Sage.jar, file is in release/Sage.jar"
+./gradlew --daemon sageJar
+cd -
 exit 0

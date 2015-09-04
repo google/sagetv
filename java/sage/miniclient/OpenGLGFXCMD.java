@@ -142,7 +142,7 @@ public class OpenGLGFXCMD extends GFXCMD2 implements GLEventListener, sage.minic
     caps.setBlueBits(8);
     caps.setDepthBits(0);
     System.out.println("initpbuffer2");
-    if (!GLDrawableFactory.getFactory(caps.getGLProfile()).canCreateGLPbuffer(null))
+    if (!GLDrawableFactory.getFactory(caps.getGLProfile()).canCreateGLPbuffer(null, caps.getGLProfile()))
     {
       throw new GLException("pbuffers unsupported");
     }
@@ -467,7 +467,7 @@ public class OpenGLGFXCMD extends GFXCMD2 implements GLEventListener, sage.minic
     if (pbuffer != null && !pbuffer.getContext().isCurrent() && javax.media.opengl.Threading.isSingleThreaded() && !javax.media.opengl.Threading.isOpenGLThread())
     {
       final int[] retholder = new int[1];
-      javax.media.opengl.Threading.invokeOnOpenGLThread(new Runnable()
+      javax.media.opengl.Threading.invokeOnOpenGLThread(true, new Runnable()
       {
         public void run()
         {

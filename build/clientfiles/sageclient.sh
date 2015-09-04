@@ -29,6 +29,6 @@ echo Changing to SageTV directory $sagepath
 cd $sagepath
 
 export LD_LIBRARY_PATH=.
-java -cp MiniClient.jar:gluegen-rt.jar:jogl.all.jar:nativewindow.all.jar:. sage.miniclient.MiniClient $1 $2 > /dev/null 2>&1
-#java -cp MiniClient.jar:gluegen-rt.jar:jogl.all.jar:nativewindow.all.jar:. sage.miniclient.MiniClient $1 $2 > miniclient.log 2>&1
+#java -cp `ls -1 *.jar | tr '\n' ':'`:. sage.miniclient.MiniClient $1 $2 > /dev/null 2>&1
+java -cp `ls -1 *.jar | tr '\n' ':'`:. sage.miniclient.MiniClient $1 $2 > miniclient.log 2>&1
 

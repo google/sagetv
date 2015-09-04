@@ -67,6 +67,12 @@ public class MiniMPlayerPlugin implements Runnable
   public static final int COLORKEY_VALUE = 0x080010;
   public static final boolean USE_STDIN = false;
   private static Boolean sixteenBitDesktop = null;
+  
+  /**
+   * Using the New MPLAYER build
+   */
+  static boolean newmplayer=true;
+  
   public MiniMPlayerPlugin(GFXCMD2 inTarget, MiniClientConnection myConn)
   {
     this.myConn = myConn;
@@ -374,6 +380,12 @@ public class MiniMPlayerPlugin implements Runnable
           streamBufferSize = 8192;
           disableCache = true;
         }
+        
+        if (newmplayer) {
+        	// cache doesn't work with new mplayer
+        	disableCache=true;
+        }
+        
         cmdOpts1 += " -stream-buffer-size " + streamBufferSize;
 
         if (MiniClient.WINDOWS_OS)
@@ -498,7 +510,10 @@ public class MiniMPlayerPlugin implements Runnable
         else if (file.toLowerCase().indexOf(".mpg") != -1 || file.toLowerCase().indexOf(".ts") != -1)
         {
           // Add CC parsing
-          cmdOpt2 += " -subcc -printcc";
+          if (!newmplayer) 
+          {
+             cmdOpt2 += " -subcc -printcc";
+          }
           if ( MiniClient.myProperties.getProperty("disable_deinterlacing", "false").equalsIgnoreCase("false") )
           {
             // Don't deinterlace for opengl mode and xvmc on Linux
@@ -545,6 +560,16 @@ public class MiniMPlayerPlugin implements Runnable
           cmds.add(new java.io.File(file).getPath());
 
         if ("TRUE".equals(MiniClient.myProperties.getProperty("player_cmdline_debug", null))) System.out.println("Executing mplayer cmd: " + cmds);
+        System.out.println("== BEGIN MPLAYER ==");
+        System.out.println("Executing mplayer cmd: " + cmds);
+        System.out.println("== BEGIN MPLAYER CMD STRING == " + cmds.size());
+        String args[] = (String[])cmds.toArray(new String[0]);
+        StringBuilder sb = new StringBuilder();
+        for (String s: args) {
+        	sb.append(s).append(" ");
+        }
+        System.out.println("CMD: " + sb.toString());
+        System.out.println("\n== END MPLAYER ==: " + args.length);
         mpProc = Runtime.getRuntime().exec((String[])cmds.toArray(new String[0]));
       }
       catch (java.io.IOException e)

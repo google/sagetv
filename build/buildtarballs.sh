@@ -19,9 +19,16 @@ MAJOR_VERSION=`grep MAJOR_VERSION ../java/sage/Version.java | grep -o [0-9]*`
 MINOR_VERSION=`grep MINOR_VERSION ../java/sage/Version.java | grep -o [0-9]*`
 MICRO_VERSION=`grep MICRO_VERSION ../java/sage/Version.java | grep -o [0-9]*`
 
+ARCH=
+if uname -m | grep 64 ; then
+	ARCH=amd64
+else
+	ARCH=i386
+fi
+
 cd serverrelease
-tar czf ../sagetv-server_"$MAJOR_VERSION"."$MINOR_VERSION"."$MICRO_VERSION".tar.gz *
+tar czf ../sagetv-server_"$MAJOR_VERSION"."$MINOR_VERSION"."$MICRO_VERSION"_"$ARCH".tar.gz *
 
 cd ../clientrelease
-tar czf ../sagetv-client_"$MAJOR_VERSION"."$MINOR_VERSION"."$MICRO_VERSION".tar.gz *
+tar czf ../sagetv-client_"$MAJOR_VERSION"."$MINOR_VERSION"."$MICRO_VERSION"_"$ARCH".tar.gz *
 
