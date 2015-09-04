@@ -229,8 +229,18 @@ JNIEXPORT void JNICALL Java_jtux_UUtil_check_1type_1sizes(JNIEnv *env, jclass ob
 		ok = false;
 		fprintf(stderr, "Type size error: sizeof(int) < sizeof(ino_t)\n");
 	}
-	if (!ok)
-		setup_throw_errno(env, ENOSYS);
+	if (!ok) {
+		if (sizeof(void*) == 4) {
+			// 32bit env
+			setup_throw_errno(env, ENOSYS);
+		} else {
+			// 64bit env - Disable the hard error and allow JTUX to continue for testing purposes.
+			// ie, currently on 64bit JTUX will fail and prevent any further testing, and in order
+			// to determine the extent to which JTux would actually fail in a 64bit environment
+			// we need to allow it to continue.
+			fprintf(stderr, "JTUX: We are running in 64bit mode, and JTUX is untested in 64bit mode.  There may be side effects.\n");
+		}
+	}
 }
 
 /*
