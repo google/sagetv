@@ -23,7 +23,7 @@ ext {
 	miniclientReleaseDestinationDir = 'build/clientrelease/'
 
 	// This the version of JOGL we are using
-    jogampVer = '2.0.2'
+    jogampVer = '2.3.1'
 	
 	arch=Integer.parseInt(System.getProperty('sun.arch.data.model')); // 32 or 64
 	releaseBuild = (System.getProperty("SAGETV_RELEASE", System.getenv("SAGETV_RELEASE")) != null)	

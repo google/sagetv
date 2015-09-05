@@ -15,10 +15,18 @@
  */
 package sage.miniclient;
 
-import javax.media.opengl.*;
-import javax.media.opengl.awt.*;
-import com.jogamp.opengl.util.*;
-import javax.media.opengl.fixedfunc.GLMatrixFunc;
+
+import com.jogamp.opengl.GL2;
+import com.jogamp.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GLCapabilities;
+import com.jogamp.opengl.GLContext;
+import com.jogamp.opengl.GLDrawableFactory;
+import com.jogamp.opengl.GLEventListener;
+import com.jogamp.opengl.GLException;
+import com.jogamp.opengl.GLOffscreenAutoDrawable;
+import com.jogamp.opengl.Threading;
+import com.jogamp.opengl.awt.GLCanvas;
+import com.jogamp.opengl.fixedfunc.GLMatrixFunc;
 
 public class OpenGLGFXCMD extends GFXCMD2 implements GLEventListener, sage.miniclient.JOGLVideoUI
 {
@@ -65,7 +73,7 @@ public class OpenGLGFXCMD extends GFXCMD2 implements GLEventListener, sage.minic
 
   public sage.miniclient.OpenGLVideoRenderer videorenderer;
   public boolean inframe=false;
-  public GLPbuffer pbuffer; // Used for rendering the UI
+  public GLOffscreenAutoDrawable pbuffer; // Used for rendering the UI
   public GLCanvas c;
 
   private boolean bigendian = false;
@@ -141,6 +149,7 @@ public class OpenGLGFXCMD extends GFXCMD2 implements GLEventListener, sage.minic
     caps.setGreenBits(8);
     caps.setBlueBits(8);
     caps.setDepthBits(0);
+    caps.setFBO(false);
     System.out.println("initpbuffer2");
     if (!GLDrawableFactory.getFactory(caps.getGLProfile()).canCreateGLPbuffer(null, caps.getGLProfile()))
     {
@@ -148,13 +157,15 @@ public class OpenGLGFXCMD extends GFXCMD2 implements GLEventListener, sage.minic
     }
     if(pbuffer!=null) pbuffer.destroy();
     System.out.println("initpbuffer3");
-    pbuffer = GLDrawableFactory.getFactory(caps.getGLProfile()).createGLPbuffer(null,
+    pbuffer = GLDrawableFactory.getFactory(caps.getGLProfile()).createOffscreenAutoDrawable(null,
         caps,
         null,
         osdwidth,
-        osdheight,
-        c.getContext()); // Do we really need to specify which to share with
-    System.out.println("initpbuffer4");
+        osdheight
+        );
+    pbuffer.setContext(pbuffer.createContext(c.getContext()), true);
+    //pbuffer.setContext(c.getContext(), false);
+    System.out.println("initpbuffer4: pbuffers is null? " + (pbuffer==null));
     if(pbuffer.getContext().makeCurrent()==GLContext.CONTEXT_NOT_CURRENT)
     {
       System.out.println("Couldn't make pbuffer current?");
@@ -464,10 +475,10 @@ public class OpenGLGFXCMD extends GFXCMD2 implements GLEventListener, sage.minic
 
   public int ExecuteGFXCommand(final int cmd, final int len, final byte[] cmddata, final int[] hasret)
   {
-    if (pbuffer != null && !pbuffer.getContext().isCurrent() && javax.media.opengl.Threading.isSingleThreaded() && !javax.media.opengl.Threading.isOpenGLThread())
+    if (pbuffer != null && !pbuffer.getContext().isCurrent() && Threading.isSingleThreaded() && !Threading.isOpenGLThread())
     {
       final int[] retholder = new int[1];
-      javax.media.opengl.Threading.invokeOnOpenGLThread(true, new Runnable()
+      Threading.invokeOnOpenGLThread(true, new Runnable()
       {
         public void run()
         {
@@ -2037,7 +2048,7 @@ public class OpenGLGFXCMD extends GFXCMD2 implements GLEventListener, sage.minic
   {
     return inframe;
   }
-  public GLPbuffer getPbuffer()
+  public GLOffscreenAutoDrawable getPbuffer()
   {
     return pbuffer;
   }
