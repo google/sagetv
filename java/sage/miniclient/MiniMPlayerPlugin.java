@@ -79,6 +79,7 @@ public class MiniMPlayerPlugin implements Runnable
     alive = true;
     currState = NO_STATE;
     gfxEngine = inTarget;
+    
     if (!"true".equals(MiniClient.myProperties.getProperty("opengl", "true")))
     {
       if (MiniClient.WINDOWS_OS)
@@ -512,6 +513,7 @@ public class MiniMPlayerPlugin implements Runnable
           // Add CC parsing
           if (!newmplayer) 
           {
+        	 // -subcc and -printcc doesn't work with the new mplayer
              cmdOpt2 += " -subcc -printcc";
           }
           if ( MiniClient.myProperties.getProperty("disable_deinterlacing", "false").equalsIgnoreCase("false") )
@@ -559,17 +561,16 @@ public class MiniMPlayerPlugin implements Runnable
         else
           cmds.add(new java.io.File(file).getPath());
 
-        if ("TRUE".equals(MiniClient.myProperties.getProperty("player_cmdline_debug", null))) System.out.println("Executing mplayer cmd: " + cmds);
-        System.out.println("== BEGIN MPLAYER ==");
-        System.out.println("Executing mplayer cmd: " + cmds);
-        System.out.println("== BEGIN MPLAYER CMD STRING == " + cmds.size());
         String args[] = (String[])cmds.toArray(new String[0]);
-        StringBuilder sb = new StringBuilder();
-        for (String s: args) {
-        	sb.append(s).append(" ");
+        if ("TRUE".equals(MiniClient.myProperties.getProperty("player_cmdline_debug", null)))
+        {
+            StringBuilder sb = new StringBuilder();
+            for (String s: args) {
+            	sb.append(s).append(" ");
+            }
+            // format the COMMAND so that we can actually copy/paste it easily for debugging
+            System.out.println("MPLAYER COMMAND: " + sb.toString());
         }
-        System.out.println("CMD: " + sb.toString());
-        System.out.println("\n== END MPLAYER ==: " + args.length);
         mpProc = Runtime.getRuntime().exec((String[])cmds.toArray(new String[0]));
       }
       catch (java.io.IOException e)

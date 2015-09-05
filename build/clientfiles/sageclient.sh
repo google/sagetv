@@ -30,5 +30,5 @@ cd $sagepath
 
 export LD_LIBRARY_PATH=.
 #java -cp `ls -1 *.jar | tr '\n' ':'`:. sage.miniclient.MiniClient $1 $2 > /dev/null 2>&1
-java -cp `ls -1 *.jar | tr '\n' ':'`:. sage.miniclient.MiniClient $1 $2 > miniclient.log 2>&1
+java -cp `ls -1 *.jar | tr '\n' ':'`:. sage.miniclient.MiniClient $1 $2 > /tmp/miniclient.log 2>&1
 

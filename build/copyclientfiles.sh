@@ -20,4 +20,6 @@ mkdir clientrelease
 # this now relies on gradle to pull down the jogl dependencies automatically
 cd ..
 ./gradlew --daemon linuxMiniclientRelease
+rc=$?
 cd -
+exit $rc

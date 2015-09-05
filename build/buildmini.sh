@@ -18,4 +18,6 @@
 # Now uses gradle to dynamically pull in dependencies
 cd ..
 ./gradlew --daemon miniclientJar
+rc=$?
 cd -
+exit $rc

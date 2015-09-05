@@ -19,5 +19,6 @@ echo "Bulding Sage.jar..."
 # now uses gradle because there a dynamic dependencies for JOGL
 cd ..
 ./gradlew --daemon sageJar
+rc=$?
 cd -
-exit 0
+exit $rc
