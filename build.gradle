@@ -1,4 +1,4 @@
-import org.gradle.internal.os.OperatingSystem;
+import org.gradle.internal.os.OperatingSystem
 
 plugins {
 	id "com.jfrog.bintray" version "1.3.1"
@@ -26,8 +26,7 @@ ext {
     jogampVer = '2.0.2'
 	
 	arch=Integer.parseInt(System.getProperty('sun.arch.data.model')); // 32 or 64
-	releaseBuild = (System.getProperty("SAGETV_RELEASE", System.getenv("SAGETV_RELEASE")) != null)
-	
+	releaseBuild = (System.getProperty("SAGETV_RELEASE", System.getenv("SAGETV_RELEASE")) != null)	
 	snapshotId = (releaseBuild?"":("SNAPSHOT-"+ new java.text.SimpleDateFormat("yyyyMMdd_hhmm").format(new java.util.Date() )))
 	
 	// SageTV version info as per Version.java
@@ -37,14 +36,17 @@ ext {
 	majorVersion = (versionText =~ /MAJOR_VERSION = ([0-9]+)/)[0][1]
 	minorVersion = (versionText =~ /MINOR_VERSION = ([0-9]+)/)[0][1]
 	microVersion = (versionText =~ /MICRO_VERSION = ([0-9]+)/)[0][1]
-	baseVersion = "${majorVersion}.${minorVersion}.${microVersion}"
+	buildVersionText = new File('java/sage/SageConstants.java').text
+	buildVersion = (buildVersionText =~ /BUILD_VERSION = ([0-9]+)/)[0][1]
+
+	baseVersion = "${majorVersion}.${minorVersion}.${microVersion}.${buildVersion}"
 	versionArch = "${baseVersion}_" + (arch==64 ? 'amd64' : 'i386')
 }
 
-version = "${majorVersion}.${minorVersion}.${microVersion}"
+version = baseVersion
 
 // Just printing out the SAGETV build version for informational purposes
-System.out.println("SAGETV VERSION ${versionArch} ${snapshotId} (${version})");
+System.out.println("SAGETV VERSION ${versionArch}");
 
 // set gradle's buildDir to something other than the default 'build', or
 // we'll end up deleting EVERYTHING in 'build' when we ./gradlew clean
@@ -330,20 +332,18 @@ linuxRunServer.doFirst {
 }
 
 // Upload tasks
-task(publishLinuxRelease) << {
-	System.out.println("Publishing Linux Release Files");
-	
-}
-
+// use ./gradlew bintrayUpload
+// make sure your BINTRAY_API is set in the environment
+// 
 bintray {
-	user = 'stuckless'
+	user = System.getenv("BINTRAY_USER")
 	key = System.getenv("BINTRAY_API");
 	filesSpec {
 		from 'build/release'
 		from ('build') {
 			include '*.tar.gz', '*.deb'
 		}
-		into "sagetv/${snapshotId}"
+		into "sagetv/${baseVersion}"
 	}
 	dryRun = false //Whether to run this as dry-run, without deploying
 	publish = true //If version should be auto published after an upload
@@ -351,15 +351,15 @@ bintray {
 		repo = 'sagetv'
 		name = 'SageTV'
 		userOrg = 'opensagetv'
-		desc = "SageTV Release ${snapshotId}"
+		desc = "SageTV Release"
 		licenses = ['Apache-2.0']
 		vcsUrl = 'https://github.com/google/sagetv'
 		labels = ['sagetv']
 		publicDownloadNumbers = true
 		version {
-			name = "${baseVersion}-Beta"
+			name = "$baseVersion"
 			released  = new Date()
-			//desc = "SageTV ${version}"
+			desc = "SageTV ${baseVersion}"
 			//vcsTag = "V${version}"
 			//attributes = ['gradle-plugin': 'com.use.less:com.use.less.gradle:gradle-useless-plugin']
 		}
