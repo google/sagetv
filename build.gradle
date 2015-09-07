@@ -297,7 +297,7 @@ task linuxRunMiniClient(type:JavaExec) {
 	}
 	classpath += sourceSets.miniclient.runtimeClasspath
 	classpath += files('images/MiniClient/')
-	environment 'LD_LIBRARY_PATH', file('.')
+	environment 'LD_LIBRARY_PATH', file(miniclientReleaseDestinationDir).getAbsolutePath()
 	workingDir file(miniclientReleaseDestinationDir)
 }
 
