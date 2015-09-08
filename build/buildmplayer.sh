@@ -15,6 +15,14 @@
 # limitations under the License.
 #
 
+# Setting MPLAYER_NEW=0 when calling this script 
+# will cause the OLDER mplayer to be built
+# By default the newer player is built
+MPLAYER_NEW="${MPLAYER_NEW:=1}"
+
+# ensure the elf directory is created so that we can copy mplayer
+mkdir elf
+
 # checkout the latest fork of the mplayer
 if [ "$MPLAYER_NEW" = "1" ] ; then
 	mkdir tmp/
@@ -23,7 +31,7 @@ if [ "$MPLAYER_NEW" = "1" ] ; then
 	git clone -b sagetv https://github.com/OpenSageTV/mplayer.git
 	cd mplayer
 	echo | ./configure-sagetv
-	make -j32
+	make -j32 || { echo "Build failed, exiting."; exit 1; }
 	echo "Built NEW mplayer"
 	cp -v mplayer ../../elf/mplayer
 	cd ../../
@@ -32,6 +40,7 @@ else
 	cd ../third_party/mplayer/
 	EXTRA_CFLAGS="-fno-common -DMINGW_MEMALIGN=1" ./configure --host-cc=gcc --enable-runtime-cpudetection --disable-mencoder --disable-gl --enable-directx --enable-largefiles --disable-langinfo --disable-tv --disable-dvdread --disable-dvdread-internal --disable-menu --disable-libdvdcss-internal --enable-pthreads --disable-debug --disable-liba52 --disable-freetype --disable-fontconfig --enable-stv --enable-stream-sagetv --disable-ivtv --disable-x264 --extra-libs=-lpthread || { echo "Build failed, exiting."; exit 1; }
 	make -j32 || { echo "Build failed, exiting."; exit 1; }
+  echo "Built OLD mplayer"
 	cp -v mplayer ../../build/elf
 	cd ../../build
 fi

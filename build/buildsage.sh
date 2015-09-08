@@ -16,7 +16,7 @@
 #
 echo "Bulding Sage.jar..."
 
-# now uses gradle because there a dynamic dependencies for JOGL
+# now uses gradle to allow for dynamic dependencies and consistent compiles across Windows/Mac/Linux
 cd ..
 ./gradlew --daemon sageJar
 rc=$?

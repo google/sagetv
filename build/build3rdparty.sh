@@ -43,7 +43,7 @@ make -j32 || { echo "Build failed, exiting."; exit 1; }
 cd ../../build
 
 # Build mplayer (if MPLAYER_NEW=1 is set, then the newer mplayer will be build)
-./buildmplayer.sh
+./buildmplayer.sh || { echo "Build MPLAYER failed, exiting."; exit 1; }
 
 # Copy the files to the release folder
 mkdir elf

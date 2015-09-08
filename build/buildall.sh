@@ -15,10 +15,6 @@
 # limitations under the License.
 #
 
-# NOTE Passing MPLAYER_NEW=1 when calling this script 
-# will cause the newer mplayer to be built
-export MPLAYER_NEW=1
-
 echo Build the Sage.jar file
 ./buildsage.sh || { echo "Build failed, exiting."; exit 1; }
 echo  Build the Miniclient jar file

@@ -571,7 +571,7 @@ public class MiniMPlayerPlugin implements Runnable
             // format the COMMAND so that we can actually copy/paste it easily for debugging
             System.out.println("MPLAYER COMMAND: " + sb.toString());
         }
-        mpProc = Runtime.getRuntime().exec((String[])cmds.toArray(new String[0]));
+        mpProc = Runtime.getRuntime().exec(args);
       }
       catch (java.io.IOException e)
       {
