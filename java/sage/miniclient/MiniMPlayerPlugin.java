@@ -71,7 +71,7 @@ public class MiniMPlayerPlugin implements Runnable
   /**
    * Using the New MPLAYER build
    */
-  static boolean newmplayer=true;
+  static boolean newmplayer=false;
   
   public MiniMPlayerPlugin(GFXCMD2 inTarget, MiniClientConnection myConn)
   {
@@ -510,12 +510,6 @@ public class MiniMPlayerPlugin implements Runnable
         }
         else if (file.toLowerCase().indexOf(".mpg") != -1 || file.toLowerCase().indexOf(".ts") != -1)
         {
-          // Add CC parsing
-          if (!newmplayer) 
-          {
-        	 // -subcc and -printcc doesn't work with the new mplayer
-             cmdOpt2 += " -subcc -printcc";
-          }
           if ( MiniClient.myProperties.getProperty("disable_deinterlacing", "false").equalsIgnoreCase("false") )
           {
             // Don't deinterlace for opengl mode and xvmc on Linux

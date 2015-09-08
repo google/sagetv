@@ -15,10 +15,10 @@
 # limitations under the License.
 #
 
-# Setting MPLAYER_NEW=0 when calling this script 
-# will cause the OLDER mplayer to be built
-# By default the newer player is built
-MPLAYER_NEW="${MPLAYER_NEW:=1}"
+# Setting MPLAYER_NEW=1 when calling this script 
+# will cause the NEWER mplayer to be built
+# By default the older player is built
+MPLAYER_NEW="${MPLAYER_NEW:=0}"
 
 # ensure the elf directory is created so that we can copy mplayer
 mkdir elf
