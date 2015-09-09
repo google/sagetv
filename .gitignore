@@ -11,7 +11,6 @@ config*.log
 /third_party/**/*.lo
 /third_party/**/*.la
 /third_party/**/*.pc
-/third_party/**/*.a
 
 # gradle/eclipse stuff
 /bin/
@@ -21,10 +20,10 @@ config*.log
 /.gradle/
 /.settings/
 
-/buildoutput/
-
 # IDEA stuff
 *.iws
+
+/buildoutput/
 
 # remove specific files that are created after a build
 build/miniTempBuildImages/
@@ -295,6 +294,7 @@ third_party/mplayer/libpostproc/libpostproc.a
 third_party/mplayer/libswscale/libswscale.a
 third_party/mplayer/libvo/libosd.a
 third_party/mplayer/libvo/libvo.a
+third_party/mplayer/loader/libloader.a
 third_party/mplayer/mp3lib/libmp3.a
 third_party/mplayer/mplayer
 third_party/mplayer/osdep/libosdep.a
@@ -303,5 +303,3 @@ third_party/mplayer/tremor/libvorbisidec.a
 third_party/mplayer/version.h
 third_party/mplayer/vidix/libvidix.a
 third_party/swscale/libswscale.so
-
-/bin/
