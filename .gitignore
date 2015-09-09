@@ -20,6 +20,9 @@ config*.log
 /.gradle/
 /.settings/
 
+# IDEA stuff
+*.iws
+
 /buildoutput/
 
 # remove specific files that are created after a build
@@ -100,6 +103,7 @@ third_party/codecs/faad2/plugins/xmms/src/Makefile
 third_party/codecs/faad2/plugins/xmms/src/Makefile.in
 third_party/codecs/faad2/stamp-h1
 third_party/codecs/giflib/Makefile
+third_party/codecs/giflib/autom4te.cache/
 third_party/codecs/giflib/config.h
 third_party/codecs/giflib/config.status
 third_party/codecs/giflib/doc/Makefile
@@ -290,6 +294,7 @@ third_party/mplayer/libpostproc/libpostproc.a
 third_party/mplayer/libswscale/libswscale.a
 third_party/mplayer/libvo/libosd.a
 third_party/mplayer/libvo/libvo.a
+third_party/mplayer/loader/libloader.a
 third_party/mplayer/mp3lib/libmp3.a
 third_party/mplayer/mplayer
 third_party/mplayer/osdep/libosdep.a
