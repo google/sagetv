@@ -90,7 +90,7 @@ public class CCSubtitleHandler extends SubtitleHandler
     translation708G2table[0x11] = '\u2018'; // ‘ LEFT SINGLE QUOTATION MARK (U+2018)
     translation708G2table[0x12] = '\u2019'; // ’ RIGHT SINGLE QUOTATION MARK (U+2019)
     translation708G2table[0x13] = '\u201C'; // “ LEFT DOUBLE QUOTATION MARK (U+201C)
-    translation708G2table[0x14] = '\u201D'; // ” RIGHT DOUBLE QUOTATION MARK (U+201D)
+    translation708G2table[0x14] = '\u201D'; // � RIGHT DOUBLE QUOTATION MARK (U+201D)
     translation708G2table[0x15] = '\u2022'; // • BULLET (U+2022)
     translation708G2table[0x19] = '\u2122'; // ™ TRADE MARK SIGN (U+2122)
     translation708G2table[0x1a] = '\u0161'; // š LATIN SMALL LETTER S WITH CARON (U+0161)
@@ -99,10 +99,10 @@ public class CCSubtitleHandler extends SubtitleHandler
     translation708G2table[0x1f] = '\u0178'; // Ÿ LATIN CAPITAL LETTER Y WITH DIAERESIS (U+0178)
     translation708G2table[0x56] = '\u215B'; // ⅛ VULGAR FRACTION ONE EIGHTH (U+215B)
     translation708G2table[0x57] = '\u212C'; // ⅜ VULGAR FRACTION THREE EIGHTHS (U+212C)
-    translation708G2table[0x58] = '\u212D'; // ⅝ VULGAR FRACTION FIVE EIGHTHS (U+212D)
+    translation708G2table[0x58] = '\u212D'; // � VULGAR FRACTION FIVE EIGHTHS (U+212D)
     translation708G2table[0x59] = '\u212E'; // ⅞ VULGAR FRACTION SEVEN EIGHTHS (U+212E)
     translation708G2table[0x5a] = '\u2502'; // │ BOX DRAWINGS LIGHT VERTICLE (U+2502)
-    translation708G2table[0x5b] = '\u2510'; // ┐ BOX DRAWINGS LIGHT DOWN AND LEFT (U+2510)
+    translation708G2table[0x5b] = '\u2510'; // � BOX DRAWINGS LIGHT DOWN AND LEFT (U+2510)
     translation708G2table[0x5c] = '\u2514'; // └ BOX DRAWINGS LIGHT UP AND RIGHT (U+2514)
     translation708G2table[0x5d] = '\u2500'; // ─ BOX DRAWINGS LIGHT HORIZONTAL (U+2500)
     translation708G2table[0x5e] = '\u2518'; // ┘ BOX DRAWINGS LIGHT UP AND LEFT (U+2518)
@@ -1522,7 +1522,7 @@ public class CCSubtitleHandler extends SubtitleHandler
           // All unsupported G3 characters replaced with "_"
           if(currentWindow > -1 && windows[currentWindow] != null) {
             if (value == 0xa0) {
-              // ㏄: Squared CC.  NOTE: Our fonts have this "squared" with a box around it.
+              // �: Squared CC.  NOTE: Our fonts have this "squared" with a box around it.
               windows[currentWindow].writeCharacter('\u33C4');
             } else {
              windows[currentWindow].writeCharacter('_');
