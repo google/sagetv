@@ -48,8 +48,8 @@ typedef struct REMUXER
 
 	REMUXER_DUMPER dumper;
 
-	unsigned long language_code;
-	unsigned long remuxer_ctrl; 
+	uint32_t language_code;
+	uint32_t remuxer_ctrl; 
 
 } REMUXER;
 
@@ -87,11 +87,11 @@ void EnableTSRebuildStream( void* Handle );
 void ChangeDemuxerTSStreamType( void* Handle, int nStreamType ); //MPEG_TS, MPEG_M2TS, MPEG_ASI
 void SetupAVInfDump( void* Handle, DUMP pfnAVInfDump, void* pfnAVInfDumpContext );
 void SetupEPGDump( void* Handle, DUMP pfnEPGDump, void* pEPGDumpContext );
-void SetupEPGDumpLanguage( void* Handle, unsigned long lLanguageCode );
+void SetupEPGDumpLanguage( void* Handle, uint32_t lLanguageCode );
 void SetupFastPESDump( void* Handle, DUMP pfnPESDumper, void* pPESDumperContext );
-void SetDefaultAudioLanguage( void* Handle, unsigned long lLanguageCode );
-unsigned long LanguageCode( unsigned char* pLanguage );
-void UpdateClock( void* Handle, unsigned long lClock ); //units 1ms
+void SetDefaultAudioLanguage( void* Handle, uint32_t lLanguageCode );
+uint32_t LanguageCode( unsigned char* pLanguage );
+void UpdateClock( void* Handle, uint32_t lClock ); //units 1ms
 void DisablePSBuildPading( void* Handle );
 int  DemuxBlockSize( void* Handle  );
 struct DEMUXER* GetDemuxer( void* Handle );

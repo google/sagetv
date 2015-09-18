@@ -21,7 +21,7 @@
 #include "MpegVideoFormat.h"
 
 #define MPEG_TIME_DIVISOR (90000)
-#define MPEG_MAX_TIME ((LONGLONG)0x200000000)
+#define MPEG_MAX_TIME ((int64_t)0x200000000)
 
 #define PICTURE_START_CODE       0x00000100
 #define USER_DATA_START_CODE     0x000001B2
@@ -31,16 +31,16 @@
 #define SEQUENCE_END_CODE        0x000001B7
 #define GROUP_START_CODE         0x000001B8
 
-static const long PictureTimes[16]	= {	
+static const int32_t PictureTimes[16]	= {	
 	0,
-	(long)((double)10000000	/ 23.976),
-	(long)((double)10000000	/ 24),
-	(long)((double)10000000	/ 25),
-	(long)((double)10000000	/ 29.97),
-	(long)((double)10000000	/ 30),
-	(long)((double)10000000	/ 50),
-	(long)((double)10000000	/ 59.94),
-	(long)((double)10000000	/ 60)
+	(int32_t)((double)10000000	/ 23.976),
+	(int32_t)((double)10000000	/ 24),
+	(int32_t)((double)10000000	/ 25),
+	(int32_t)((double)10000000	/ 29.97),
+	(int32_t)((double)10000000	/ 30),
+	(int32_t)((double)10000000	/ 50),
+	(int32_t)((double)10000000	/ 59.94),
+	(int32_t)((double)10000000	/ 60)
 };
 
 static const float	PictureRates[] =   {
@@ -57,13 +57,13 @@ static const float	PictureRates[] =   {
 
 
 /*	Bit	rate tables	*/
-static const unsigned short BitRates[3][16] ={
+static const uint16_t BitRates[3][16] ={
 	{ 	0, 32,	64,	 96,  128, 160,	192, 224, 256, 288,	320, 352, 384, 416,	448, 0 },
 	{	0, 32,	48,	 56,   64,	80,	 96, 112, 128, 160,	192, 224, 256, 320,	384, 0 },
 	{	0, 32,	40,	 48,   56,	64,	 80,  96, 112, 128,	160, 192, 224, 256,	320, 0 }
 };
 
-//float Mepg2FrameRate( unsigned char code )
+//float Mepg2FrameRate( int8_t code )
 //{
 //	switch (code &0x0f ) {
 //	case 1: return (float)24000.0/1001;
@@ -80,7 +80,7 @@ static const unsigned short BitRates[3][16] ={
 //}
 
 
-float Mepg2AspectRatioF( unsigned char code, long width, long height )
+float Mepg2AspectRatioF( uint8_t code, int32_t width, int32_t height )
 {
 	if ( height == 0 || width == 0 ) return 0;
 
@@ -176,7 +176,7 @@ static int LCMDenoCalculator( int n, int m )
 	return m/gcd;
 }
 
-int Mepg2AspectRatioNomiValue( unsigned char code, long width, long height )
+int Mepg2AspectRatioNomiValue( uint8_t code, int32_t width, int32_t height )
 {
 	if ( height == 0 || width == 0 ) return 0;
 	switch ( code & 0x0f ) {
@@ -207,7 +207,7 @@ int Mepg2AspectRatioNomiValue( unsigned char code, long width, long height )
 	return 0;
 }
 
-int Mepg2AspectRatioDenoValue( unsigned char code, long width, long height )
+int Mepg2AspectRatioDenoValue( uint8_t code, int32_t width, int32_t height )
 {
 	if ( height == 0 || width == 0 ) return 0;
 	switch ( code & 0x0f ) {
@@ -238,7 +238,7 @@ int Mepg2AspectRatioDenoValue( unsigned char code, long width, long height )
 	return 1;
 }
 
-float Mepg1AspectRatioF( unsigned char code, long width, long height )
+float Mepg1AspectRatioF( uint8_t code, int32_t width, int32_t height )
 {
 	switch ( code & 0x0f ) {
 	case 1:
@@ -276,7 +276,7 @@ float Mepg1AspectRatioF( unsigned char code, long width, long height )
 	return 0;
 }
 
-int Mepg2FrameRateNomiValue( unsigned char code )
+int Mepg2FrameRateNomiValue( uint8_t code )
 {
 	switch (code & 0x0f) {
 	case 1: return 24000;
@@ -292,7 +292,7 @@ int Mepg2FrameRateNomiValue( unsigned char code )
 	return 0;
 }
 
-int Mepg2FrameRateDenoValue( unsigned char code )
+int Mepg2FrameRateDenoValue( uint8_t code )
 {
 	switch (code & 0x0f) {
 	case 1: return 1001;
@@ -308,7 +308,7 @@ int Mepg2FrameRateDenoValue( unsigned char code )
 	return 1;
 }
 
-static short MPEG2SequenceHeaderSize( const unsigned char *pb )	
+static short MPEG2SequenceHeaderSize( const uint8_t *pb )	
 {
 	/*	No quantization	matrices ? */
 	if ((pb[11]	& 0x03)	== 0x00) {
@@ -329,10 +329,10 @@ static short MPEG2SequenceHeaderSize( const unsigned char *pb )
 
 
 
-static int UnpackMPEGSeqHdr( MPEG_VIDEO *pMpegVideo, const unsigned char *pbData )
+static int UnpackMPEGSeqHdr( MPEG_VIDEO *pMpegVideo, const uint8_t *pbData )
 {
-	unsigned long width_and_height;
-	unsigned char pel_aspect_ratio_and_pictureRate;
+	uint32_t width_and_height;
+	uint8_t pel_aspect_ratio_and_pictureRate;
 
 	/*	Check random marker	bit	*/
 	if ( !(	pbData[10] & 0x20 )	) 
@@ -340,9 +340,9 @@ static int UnpackMPEGSeqHdr( MPEG_VIDEO *pMpegVideo, const unsigned char *pbData
 
 	//memset(	&av->Mpeg2Hdr, 0, sizeof( av->Mpeg2Hdr ) );	
 	
-	width_and_height = ((unsigned	long)pbData[4] << 16) +	
-				  	    ((unsigned	long)pbData[5] << 8) +
-						     ((unsigned	long)pbData[6]);
+	width_and_height = ((uint32_t)pbData[4] << 16) +	
+				  	    ((uint32_t)pbData[5] << 8) +
+						    ((uint32_t)pbData[6]);
 
 	
 	pMpegVideo->width  = width_and_height >> 12;
@@ -353,7 +353,7 @@ static int UnpackMPEGSeqHdr( MPEG_VIDEO *pMpegVideo, const unsigned char *pbData
 	if ((pel_aspect_ratio_and_pictureRate &	0x0F) >	8)	
 		pel_aspect_ratio_and_pictureRate &=	0xF7;
 
-	pMpegVideo->ar_info = pel_aspect_ratio_and_pictureRate >> 4;	
+	pMpegVideo->ar_info = (uint32_t)pel_aspect_ratio_and_pictureRate >> 4;	
 
 	if ( (pel_aspect_ratio_and_pictureRate & 0xF0) == 0	||
 		 (pel_aspect_ratio_and_pictureRate & 0x0F) == 0) 
@@ -365,15 +365,15 @@ static int UnpackMPEGSeqHdr( MPEG_VIDEO *pMpegVideo, const unsigned char *pbData
 	pMpegVideo->frame_rate_nomi = Mepg2FrameRateNomiValue(pel_aspect_ratio_and_pictureRate);
 	pMpegVideo->frame_rate_deno = Mepg2FrameRateDenoValue(pel_aspect_ratio_and_pictureRate);
 
-	pMpegVideo->picture_time = (LONGLONG)PictureTimes[pel_aspect_ratio_and_pictureRate & 0x0F];	
+	pMpegVideo->picture_time = (int64_t)PictureTimes[pel_aspect_ratio_and_pictureRate & 0x0F];
 	pMpegVideo->picture_rate	= PictureRates[pel_aspect_ratio_and_pictureRate	& 0x0F];
 
-	pMpegVideo->time_per_frame = (long)pMpegVideo->picture_time * 9/1000;	
+	pMpegVideo->time_per_frame = (int32_t)pMpegVideo->picture_time * 9/1000;	
 
 	/*	Pull out the bit rate and aspect ratio for the type	*/
-	pMpegVideo->bit_rate	= ((((unsigned long)pbData[8]	<< 16) +
-							 ((unsigned	long)pbData[9]	<<	8) +
-							 (unsigned long)pbData[10])	>> 6 );		
+	pMpegVideo->bit_rate	= ((((uint32_t)pbData[8]	<< 16) +
+							 ((uint32_t)pbData[9]	<<	8) +
+							 (uint32_t)pbData[10])	>> 6 );		
 	if (pMpegVideo->bit_rate	== 0x3FFFF)	{
 		pMpegVideo->bit_rate	 = 0;
 	} else {
@@ -381,19 +381,21 @@ static int UnpackMPEGSeqHdr( MPEG_VIDEO *pMpegVideo, const unsigned char *pbData
 	}
 
 	/*	Pull out the vbv */	
-	pMpegVideo->vbv	= ((((long)pbData[10] &	0x1F) << 5)	| ((long)pbData[11]	>> 3)) * 16	* 1024;	
+	pMpegVideo->vbv	= ((((int32_t)pbData[10] &	0x1F) << 5)	| ((int32_t)pbData[11]	>> 3)) * 16	* 1024;	
 
 	pMpegVideo->actual_header_length	= MPEG2SequenceHeaderSize(pbData);
 	if ( (unsigned int)pMpegVideo->actual_header_length > sizeof(pMpegVideo->raw_header) )
 		return 0;
 
 	memcpy((void*)pMpegVideo->raw_header, (void*)pbData,	pMpegVideo->actual_header_length	);
-
+  SageLog(( _LOG_ERROR, 3, TEXT("TRACE--- %d %d %d %d %d |%d %d %d %d %x\n"), width_and_height, 
+         pMpegVideo->width, pMpegVideo->height, pMpegVideo->ar_info, pMpegVideo->ar_info,
+         pMpegVideo->frame_rate_nomi, pMpegVideo->frame_rate_deno,   pMpegVideo->picture_rate, pMpegVideo->bit_rate, pMpegVideo->bit_rate  ));
 	return 1;
 }
 
 
-static int UnpackMPEG2SeqExtHdr( MPEG_VIDEO *pMpegVideo, const unsigned char *pbData )
+static int UnpackMPEG2SeqExtHdr( MPEG_VIDEO *pMpegVideo, const uint8_t *pbData )
 {
 	 //	 check the extension id	
 	if ( (pbData[4]	>> 4) != 0x01 )	/* 0x02, 0x08 skipped*/
@@ -410,11 +412,11 @@ static int UnpackMPEG2SeqExtHdr( MPEG_VIDEO *pMpegVideo, const unsigned char *pb
 	return 1;
 }
 
-int ReadMpegVideoHeader( MPEG_VIDEO *pMpegVideo, const unsigned char* pStart, int Size )
+int ReadMpegVideoHeader( MPEG_VIDEO *pMpegVideo, const uint8_t* pStart, int Size )
 {
 	//Video information always is in header of PES, start indictates start of a PES 	
-	const unsigned char* data;
-	const unsigned char* p;
+	const uint8_t* data;
+	const uint8_t* p;
 	int size;
 
 	data = pStart;
@@ -430,7 +432,7 @@ int ReadMpegVideoHeader( MPEG_VIDEO *pMpegVideo, const unsigned char* pStart, in
 	//search and parse mpeg2 extension header
 	if ( Size > (p - pStart) + pMpegVideo->actual_header_length-10 )
 	{
-		data = (const unsigned	char*)p + (pMpegVideo->actual_header_length-10);
+		data = (const uint8_t*)p + (pMpegVideo->actual_header_length-10);
 		size = Size - (int)(p - pStart) - (pMpegVideo->actual_header_length-10);
 
 		if ( size >= 7 )

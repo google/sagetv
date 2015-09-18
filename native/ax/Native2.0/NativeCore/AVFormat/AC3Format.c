@@ -22,12 +22,12 @@
 
 #define A52_DOLBY 10
 #define A52_LFE   16
-static int AC3SyncInfo ( unsigned char* buf, int * sample_rate, int * bit_rate, int *channels )
+static int AC3SyncInfo ( uint8_t* buf, int * sample_rate, int * bit_rate, int *channels )
 {
     static int rate_tab[] = { 32,  40,  48,  56,  64,  80,  96, 112,
 			 128, 160, 192, 224, 256, 320, 384, 448, 512, 576, 640};
-    static unsigned char lfeon[8] = {0x10, 0x10, 0x04, 0x04, 0x04, 0x01, 0x04, 0x01};
-    static unsigned char halfrate[12] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3};
+    static uint8_t lfeon[8] = {0x10, 0x10, 0x04, 0x04, 0x04, 0x01, 0x04, 0x01};
+    static uint8_t halfrate[12] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3};
     static int channels_num[8] = { 2, 1, 2, 3, 3, 4, 4, 5 };
 
     int flags;
@@ -83,9 +83,9 @@ static int AC3SyncInfo ( unsigned char* buf, int * sample_rate, int * bit_rate, 
 }
 
 
-int ReadAC3AudioHeader( AC3_AUDIO *pAC3Audio, const unsigned char* pStart, int nSize )
+int ReadAC3AudioHeader( AC3_AUDIO *pAC3Audio, const uint8_t* pStart, int nSize )
 {
-	const unsigned char *p;
+	const uint8_t *p;
 	int i;
 	int sample_rate, bit_rate, channels;
 	p = pStart;
@@ -101,13 +101,13 @@ int ReadAC3AudioHeader( AC3_AUDIO *pAC3Audio, const unsigned char* pStart, int n
 	if ( i >= nSize -6 )
 		return 0;
 
-	if ( !AC3SyncInfo ( (unsigned char*)p+i, &sample_rate, &bit_rate, &channels ) )
+	if ( !AC3SyncInfo ( (uint8_t*)p+i, &sample_rate, &bit_rate, &channels ) )
 		return 0;
 
 	pAC3Audio->samples_per_sec = sample_rate;
 	pAC3Audio->avgbytes_per_sec =  bit_rate;
 	pAC3Audio->channels = channels;
-	pAC3Audio->block_align = (unsigned short)((pAC3Audio->avgbytes_per_sec * 1536) / pAC3Audio->samples_per_sec);
+	pAC3Audio->block_align = (uint16_t)((pAC3Audio->avgbytes_per_sec * 1536) / pAC3Audio->samples_per_sec);
 
 	return 1;
 

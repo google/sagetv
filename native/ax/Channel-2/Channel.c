@@ -91,7 +91,6 @@
 #include <features.h> 
 #include <stdlib.h>
 #include <string.h>
-#include <inttypes.h>
 #include <getopt.h>
 #include <errno.h>
 #include <sys/time.h>
@@ -131,7 +130,7 @@ static struct tm* localtime_r( time_t* t, struct tm *ltm )
 	return ltm;
 }
 
-void usleep( unsigned long usecond )
+void usleep( uint32_t usecond )
 {
 	Sleep( usecond/1000 );
 }
@@ -271,8 +270,8 @@ static void _QAMClearCheck_Disable_check()
 	}
 }
 
-int TranslateJWideString2( char* buf_out, int buf_out_size, unsigned short* buf_in );
-int TranslateJWideString( char* buf_out, int buf_out_size, unsigned short* buf_in );
+int TranslateJWideString2( char* buf_out, int buf_out_size, uint16_t* buf_in );
+int TranslateJWideString( char* buf_out, int buf_out_size, uint16_t* buf_in );
 int GrowFreqTable( CHANNEL_DATA *Channel );
 int GrowPredefineFreqTable( CHANNEL_DATA *Channel );
 int saveScanTuningTable( CHANNEL_DATA *Channel, char* file_ext );
@@ -651,7 +650,7 @@ struct bcast_qam user_defined_qam_tbl[MAX_USER_DEFINED_QAM]={0};
 
 static void initUseDefinedQAMFrq(  int freqTableType, int shiftFrq );
 static int WaiteScanDone( CHANNEL_DATA *Channel );
-static int IsInDVBPreDefinedFreqTable( FREQTBL* pPreDefinedFreqTable, unsigned long lFreq );
+static int IsInDVBPreDefinedFreqTable( FREQTBL* pPreDefinedFreqTable, uint32_t lFreq );
 static struct bcast_qam * getUseDefinedQAMFrq( int channel );
 
 int openChannel( CHANNEL_DATA *Channel, void* Dev )
@@ -810,7 +809,7 @@ char* getTunerMode( CHANNEL_DATA *Channel )
 	return Channel->tunerMode;
 }
 
-void  parserDelayTime( CHANNEL_DATA *Channel, unsigned long ms )
+void  parserDelayTime( CHANNEL_DATA *Channel, uint32_t ms )
 {
 	Channel->delayParse = ms;
 }
@@ -878,7 +877,7 @@ static void initUseDefinedQAMFrq(  int freqTableType, int shift )
 	}
 }
 
-static void updateUseDefinedQAMFrq( int channel, unsigned long frequency, int mod, int inv )
+static void updateUseDefinedQAMFrq( int channel, uint32_t frequency, int mod, int inv )
 {
 	struct bcast_qam *freqTbl;
 	int i = 0;
@@ -917,10 +916,10 @@ static struct bcast_qam * getUseDefinedQAMFrq( int channel )
 }
 
 
-unsigned long getChannelFreq( int physical_ch, int freqTableType, int shift )
+uint32_t getChannelFreq( int physical_ch, int freqTableType, int shift )
 {
 	struct bcast *freqTbl;
-	unsigned long freq=0;
+	uint32_t freq=0;
 	int i = 0;
 	
 	switch ( freqTableType )
@@ -1090,7 +1089,7 @@ void* getTuningEntry(  CHANNEL_DATA *Channel, int tune_type, int major, int mino
 	} else
 	if ( !strncmp( Channel->sourceType, "DVB-T", 5 ) )
 	{
-		unsigned short onid, tsid, sid;
+		uint16_t onid, tsid, sid;
 		onid = physical; tsid = major; sid = minor;
 		switch ( tune_type ) {
 		case 1:
@@ -1141,7 +1140,7 @@ void* getTuningEntry(  CHANNEL_DATA *Channel, int tune_type, int major, int mino
 	} else
 	if ( !strncmp( Channel->sourceType, "DVB-C", 5 ) )
 	{
-		unsigned short onid, tsid, sid;
+		uint16_t onid, tsid, sid;
 		onid = physical; tsid = major; sid = minor;
 		switch ( tune_type ) {
 		case 1:
@@ -1190,7 +1189,7 @@ void* getTuningEntry(  CHANNEL_DATA *Channel, int tune_type, int major, int mino
 	} else
 	if ( !strncmp( Channel->sourceType, "DVB-S", 5) )
 	{
-		unsigned short onid, tsid, sid;
+		uint16_t onid, tsid, sid;
 		onid = physical; tsid = major; sid = minor;
 		switch ( tune_type ) {
 		case 1:
@@ -1241,7 +1240,7 @@ void* getTuningEntry(  CHANNEL_DATA *Channel, int tune_type, int major, int mino
 	return NULL;
 	
 }
-unsigned long fileTimeStamp( char* szFileName );
+uint32_t fileTimeStamp( char* szFileName );
 bool tuneChannel( CHANNEL_DATA *channel, const char* tune_string )
 {
 	//int status;
@@ -1446,7 +1445,7 @@ bool tuneChannel( CHANNEL_DATA *channel, const char* tune_string )
 		else
 		{
 			int ch;
-			unsigned long freq; 
+			uint32_t freq; 
 
 			//skip_tune = channel->lastTune == QAMFreq->physical_ch;
 			skip_tune = false;
@@ -1547,7 +1546,7 @@ bool tuneChannel( CHANNEL_DATA *channel, const char* tune_string )
 		else
 		{
 			int ch;
-			unsigned long freq;
+			uint32_t freq;
 			skip_tune = false;
 			SageLog(( _LOG_TRACE, 3, "DVB-T Freq entry: index:%d onid:%d tsid:%d sid:%d frq:%d ctr:%d (skip:%d) name:%s.\r\n", DVBTFreq->index,
 			        DVBTFreq->onid, DVBTFreq->tsid, DVBTFreq->sid, DVBTFreq->frequency, DVBTFreq->ctrl, skip_tune, DVBTFreq->name ));
@@ -1629,7 +1628,7 @@ bool tuneChannel( CHANNEL_DATA *channel, const char* tune_string )
 		else
 		{
 			int ch;
-			unsigned long freq;
+			uint32_t freq;
 			skip_tune = false;
 			SageLog(( _LOG_TRACE, 3, "DVB-C Freq entry: index:%d onid:%d tsid:%d sid:%d frq:%d ctr:%d (skip:%d) name:%s.\r\n", DVBCFreq->index,
 			        DVBCFreq->onid, DVBCFreq->tsid, DVBCFreq->sid, DVBCFreq->frequency, DVBCFreq->ctrl, skip_tune, DVBCFreq->name ));
@@ -1712,7 +1711,7 @@ bool tuneChannel( CHANNEL_DATA *channel, const char* tune_string )
 		else
 		{
 			int ch;
-			unsigned long freq;
+			uint32_t freq;
 			skip_tune = false;
 			ch = DVBSFreq->physical_ch;
 			freq = DVBSFreq->frequency;
@@ -1760,7 +1759,7 @@ bool tuneChannel( CHANNEL_DATA *channel, const char* tune_string )
 	return true;
 }
 
-unsigned short getProgramNum( void* pTune )
+uint16_t getProgramNum( void* pTune )
 {
 	if ( ((TUNE*)pTune)->stream_format == DVB_STREAM )
 	{
@@ -1779,7 +1778,7 @@ unsigned short getProgramNum( void* pTune )
 	return 0;
 }
 
-unsigned short getCtrlFlag( void* pTune )
+uint16_t getCtrlFlag( void* pTune )
 {
 	if ( ((TUNE*)pTune)->stream_format == DVB_STREAM )
 	{
@@ -2732,7 +2731,7 @@ int scanDVBTChannel( CHANNEL_DATA *Channel, char* tuningString, char** scanResul
 
 		//shift frequency to lock
 		{
-			unsigned long shift = 125000;
+			uint32_t shift = 125000;
 			if ( DVBTFreq->shift > 0 ) shift = DVBTFreq->shift;
 
 			if ( i == 0 )
@@ -3269,7 +3268,7 @@ int scanDVBSChannel( CHANNEL_DATA *Channel, char* tuningString, char** scanResul
 	if ( channel_list->stream_format == ATSC_STREAM )
 	{
 		int k;
-		unsigned short major, minor, phy;
+		uint16_t major, minor, phy;
 		char name[32];
 		SageLog(( _LOG_TRACE, 3, "found ATSC channels in DVB-S stream\r\n" ));
 		//do conversion from ATSC to DVB 
@@ -3466,7 +3465,7 @@ static int WaiteScanDone( CHANNEL_DATA *Channel )	//wait scan data ready
 	return 1;
 }
 
-static int IsInDVBPreDefinedFreqTable( FREQTBL* pPreDefinedFreqTable, unsigned long lFreq )
+static int IsInDVBPreDefinedFreqTable( FREQTBL* pPreDefinedFreqTable, uint32_t lFreq )
 {
 	int i;
 	if ( !strcmp( pPreDefinedFreqTable->sourceType, "DVB-S" ) )

@@ -41,10 +41,10 @@ typedef struct MEMORY_ALLOC
 
 	unsigned short block_size;
 	unsigned short local_mem_block_num; //total memery block number
-	unsigned char  *local_mem_block_state;
-	unsigned char **local_mem_block_addr;
-	unsigned char  *local_buffer_data;
-	unsigned long  local_buffer_size;
+	int8_t  *local_mem_block_state;
+	int8_t **local_mem_block_addr;
+	int8_t  *local_buffer_data;
+	uint32_t  local_buffer_size;
 
 	unsigned short inuse_num;
 
@@ -72,13 +72,13 @@ typedef struct DEMUXER
 	int output_file;
 
 	//used for a file source, contain reading data from a file.
-	unsigned long size;
-	unsigned long input_buffer_size;
-	unsigned char *data;
-	unsigned char *input_buffer;       
+	uint32_t size;
+	uint32_t input_buffer_size;
+	uint8_t *data;
+	uint8_t *input_buffer;       
 
-	unsigned long language_code;
-	unsigned long remuxer_ctrl; 
+	uint32_t language_code;
+	uint32_t remuxer_ctrl; 
 
 	DEMUXER_DUMPER dumper;
 
@@ -110,7 +110,7 @@ void ResetDemuxStream( void* Handle );
 void FlushDemuxStream( void* Handle );
 void SetupDemuxStreamTune( void* Handle, TUNE *pTune );
 void SetupDemuxTSStreamFormat( void* Handle, int nFormat, int nSubFormat );
-int	 PushDemuxStreamData( void* Handle, unsigned char *pData, int nBytes, int *nExpectedBytes );
+int	 PushDemuxStreamData( void* Handle, uint8_t *pData, int nBytes, int *nExpectedBytes );
 
 void ResetBlockBuffer( DEMUXER* pDemuxer, int nSlot );
 int  DetectFileType( char* pFileName );
@@ -167,14 +167,14 @@ void      SetupPESDump( DEMUXER *pDemuxer, DUMP pfnPESDumper, void* pPESDumperCo
 
 int GetTSStreamFormat( DEMUXER *pDemuxer );
 int GetTSStreamSubFormat( DEMUXER *pDemuxer );
-unsigned long GetInputVideoPacketCount( DEMUXER *pDemuxer, int nSlot );
-unsigned long GetInputAudioPacketCount( DEMUXER *pDemuxer, int nSlot );
+uint32_t GetInputVideoPacketCount( DEMUXER *pDemuxer, int nSlot );
+uint32_t GetInputAudioPacketCount( DEMUXER *pDemuxer, int nSlot );
 int IsEncryptedTSChannel( DEMUXER *pDemuxer, int nSlot );
 int IsAVDataPresent( DEMUXER *pDemuxer, int nSlot );
 int IsVideoDataPresent( DEMUXER *pDemuxer, int nSlot );
 int IsAudioDataPresent( DEMUXER *pDemuxer, int nSlot );
 int IsEncryptedData( DEMUXER *pDemuxer, int nSlot );
-void UpdateDemuxerClock( DEMUXER *pDemuxer, unsigned long lClock ); //units 1ms
+void UpdateDemuxerClock( DEMUXER *pDemuxer, uint32_t lClock ); //units 1ms
 LONGLONG SetDemuxPTSOffset( DEMUXER *pDemuxer, LONGLONG llPTSOffset );
 
 void SetupTSATSDump( DEMUXER *pDemuxer, DUMP pfnATSDumper, void* pATSDumperContext );
@@ -191,9 +191,9 @@ char* time_stamp_s( LONGLONG llTime, char* pBuffer, int nSize );
 char* long_long_s( ULONGLONG llVal, char* pBuffer, int nSize );
 char* long_long_ss( ULONGLONG llVal );
 char* time_stamp_ss( LONGLONG llTime );
-int   CheckFormat( const unsigned char* pData, int nBytes );
+int   CheckFormat( const uint8_t* pData, int nBytes );
 void _scr_log( ULONGLONG scr );
-unsigned char* _search_data_( unsigned char* match, int len, unsigned char* data, int data_size );
+uint8_t* _search_data_( uint8_t* match, int len, uint8_t* data, int data_size );
 
 #ifdef __cplusplus
 }

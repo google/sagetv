@@ -32,35 +32,35 @@ enum BLOCK_BUFFER_STATE {
 
 typedef struct BLOCK_BUFFER
 {
-	unsigned char  state;
-	unsigned char  group_start;
+	uint8_t  state;
+	uint8_t  group_start;
 	
-	unsigned short index;
-	unsigned short fifo_index;
+	uint16_t index;
+	uint16_t fifo_index;
 
-	unsigned short slot_index;
-	unsigned short track_index;
+	uint16_t slot_index;
+	uint16_t track_index;
 
 	PES	pes;
 	ULONGLONG start_cue;
 	ULONGLONG end_cue;
-	unsigned char  *buffer_start;
-	unsigned short  buffer_size;
-	unsigned char  *data_start;
-	unsigned short  data_size;
+	uint8_t  *buffer_start;
+	uint16_t  buffer_size;
+	uint8_t  *data_start;
+	uint16_t  data_size;
 } BLOCK_BUFFER;
 
 typedef struct FIFO_BUFFER
 {
-	unsigned short total_queue_num;
-	unsigned short block_buffer_size;
+	uint16_t total_queue_num;
+	uint16_t block_buffer_size;
 	BLOCK_BUFFER  **fifo_queue;
-	unsigned short num_of_in_queue;
-	unsigned short num_of_out_queue;
-	unsigned short block_buffer_inuse;
+	uint16_t num_of_in_queue;
+	uint16_t num_of_out_queue;
+	uint16_t block_buffer_inuse;
 	BLOCK_BUFFER  *block_buffer_pool;
-	//unsigned char *all_buffer_data;
-	//unsigned long  all_buffer_size;
+	//uint8_t *all_buffer_data;
+	//uint32_t  all_buffer_size;
 } FIFO_BUFFER;
 
 FIFO_BUFFER* CreateFIFOBuffer( int nQueueNum, int nBlockSize );

@@ -21,7 +21,7 @@ extern "C" {
 #endif
 
 
-int ReadVC1VideoHeader( MPEG_VIDEO *pMpegVideo, const unsigned char* pStart, int Size );
+int ReadVC1VideoHeader( MPEG_VIDEO *pMpegVideo, const uint8_t* pStart, int Size );
 #ifdef __cplusplus
 }
 #endif

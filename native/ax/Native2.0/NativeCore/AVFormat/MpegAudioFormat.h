@@ -37,24 +37,24 @@ extern "C" {
 
 typedef struct MPEG_AUDIO
 {
- 	unsigned short  channels;
-	unsigned short   block_align;
-	unsigned long   samples_per_sec;
-	unsigned long   avgbytes_per_sec;
-	unsigned long	head_bitrate;
+ 	uint16_t  channels;
+	uint16_t  block_align;
+	uint32_t  samples_per_sec;
+	uint32_t  avgbytes_per_sec;
+	uint32_t	head_bitrate;
 
-	unsigned short	head_layer;
-	unsigned short	head_mode;	
-	unsigned short	head_mode_ext;
-	unsigned short	head_emphasis;
-	unsigned short	head_flags;
-	unsigned short  padding1;
-	unsigned short  padding2;
-	unsigned short  padding3;
+	uint16_t	head_layer;
+	uint16_t	head_mode;	
+	uint16_t	head_mode_ext;
+	uint16_t	head_emphasis;
+	uint16_t	head_flags;
+	uint16_t  padding1;
+	uint16_t  padding2;
+	uint16_t  padding3;
 
 } MPEG_AUDIO;
 
-int ReadMpegAudioHeader( MPEG_AUDIO *pMpegAudio, const unsigned char* pStart, int Size );
+int ReadMpegAudioHeader( MPEG_AUDIO *pMpegAudio, const uint8_t* pStart, int Size );
 
 #ifdef __cplusplus
 }

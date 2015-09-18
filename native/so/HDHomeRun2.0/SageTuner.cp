@@ -65,7 +65,7 @@ int SageTuner_SetChannelInfo(SageTuningParams *params, const char *channelName, 
 	
 	ctIndex = GetTuningTableIndex((long)params->countryCode, params->tunerMode);
 	if(ctIndex > 0) {
-		unsigned long freq = GetTuningFrequency(ctIndex, channelName);
+		uint32_t freq = GetTuningFrequency(ctIndex, channelName);
 		if(freq) {
 			params->tuningFrequency = freq;
 			strncpy(params->channel, channelName, 15);
@@ -84,7 +84,7 @@ int SageTuner_SetChannelInfo(SageTuningParams *params, const char *channelName, 
 int SageTuner_DoAFTScan(void * /* (SageTuner *) */ inTuner, SageTuningParams *params)
 {
 	SageTuner *tuner = static_cast<SageTuner*> (inTuner);
-	unsigned long lowFreq, highFreq, baseFreq;
+	uint32_t lowFreq, highFreq, baseFreq;
 	bool done = false, hilo = false;
 	int result = 0;
 	

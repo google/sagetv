@@ -24,6 +24,14 @@ extern "C" {
 #define NULL    ((void *)0)
 #endif
 
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
+
+typedef	int64_t  LONGLONG;
+typedef uint64_t ULONGLONG;
+typedef LONGLONG REFERENCE_TIME;
+
+
 #ifdef WIN32   //windows defined
 #pragma warning(disable : 4996)
 #pragma warning(disable : 4995)
@@ -31,28 +39,9 @@ extern "C" {
 
 #define _USE_32BIT_TIME_T
 
-// TODO why this check, above is already a WIN32 check?
-#ifdef WIN32
-typedef			 _int64  LONGLONG;
-typedef unsigned _int64  ULONGLONG;
-#define inline _inline
-#else
-typedef long long LONGLONG;
-typedef unsigned long long ULONGLONG;
-typedef LONGLONG REFERENCE_TIME;
-
-#define inline __inline__
-#endif
-
-// TODO why linux here within WIN32 - is about MINGW / Cygwin support?
-#ifdef Linux
-#define _MAX_PATH       512
-#endif
-
 #ifndef ASSERT	
 #define ASSERT	assert
 #endif
-//#define ASSERT	_ASSERT
 
 #ifndef TEXT
 #define TEXT( x ) x
@@ -75,10 +64,12 @@ typedef LONGLONG REFERENCE_TIME;
 #define FCLOSE	close
 #define FSEEK	_lseeki64
 #define FTELL	_telli64
+
+#else
+#define inline __inline__
 #endif
 
 #ifdef Linux   //
-
 #include <stdio.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
@@ -89,6 +80,8 @@ typedef LONGLONG REFERENCE_TIME;
 #include <unistd.h>
 #include <memory.h>	
 #include <stdlib.h>
+
+#define _MAX_PATH       512
 
 #define TEXT( x )	x
 #define snprintf snprintf
@@ -110,9 +103,6 @@ extern off64_t lseek64( int filedes, off64_t offset, int whence );
 extern off64_t tell64( int filedes );
 #endif
 
-typedef			 long long  LONGLONG;
-typedef unsigned long long ULONGLONG;
-typedef ULONGLONG REFERENCE_TIME;
 #define ASSERT   assert
 #endif
 
@@ -229,9 +219,9 @@ typedef int (*DUMP)( void* pContext, void* pData, int nSize );
 typedef void* (*MEM_ALLOC_HOOK)( void* pContext, void* pMemory, int nSize, int nCmd );
 ///////////////////////////////////////////////////////////////////////
 
-#define SAGE_FOURCC( a ) (*((unsigned long*)( a )))
+#define SAGE_FOURCC( a ) (*((uint32_t*)( a )))
 //#define SAGE_FOURCC(a)      ((a[0]<<24)|(a[1]<<16)|(a[2]<<8)|a[3])
-char* _sagetv_fourcc_( unsigned long lFourCC, char* pFourCC );
+char* _sagetv_fourcc_( uint32_t lFourCC, char* pFourCC );
 
 
 ///////////////////////////////////////////////////////////////////////
@@ -297,44 +287,44 @@ enum STATUS {
 /////////////////////////////////////////////////////////////
 
 typedef struct {
-	unsigned long  freq;
-	unsigned short band;
-	unsigned short modulation;
-	unsigned char  trans_mode;
-	unsigned char  padding[3]; //padding
+	uint32_t  freq;
+	uint16_t band;
+	uint16_t modulation;
+	uint8_t  trans_mode;
+	uint8_t  padding[3]; //padding
 } TERRESTRIAL_TUNE;
 
 typedef struct {
-	unsigned long  freq;
-	unsigned long  symbol_rate;
-	unsigned char  modulation;
-	unsigned char  reserve; //padding
-	unsigned char  fec_out;
-	unsigned char  fec_out_rate;
-	unsigned char  fec_in;
-	unsigned char  fec_in_rate;
-	unsigned char  padding[2]; //padding
+	uint32_t  freq;
+	uint32_t  symbol_rate;
+	uint8_t  modulation;
+	uint8_t  reserve; //padding
+	uint8_t  fec_out;
+	uint8_t  fec_out_rate;
+	uint8_t  fec_in;
+	uint8_t  fec_in_rate;
+	uint8_t  padding[2]; //padding
 } CABLE_TUNE;
 
 typedef struct {
-	unsigned long  freq;
-	unsigned long  symbol_rate;
-	unsigned char  fec;
-	unsigned char  fec_rate;
-	unsigned char  pol;
-	unsigned char  modulation;
+	uint32_t  freq;
+	uint32_t  symbol_rate;
+	uint8_t  fec;
+	uint8_t  fec_rate;
+	uint8_t  pol;
+	uint8_t  modulation;
 	short orbit;  //positive Esat; negative West
-	unsigned short padding; //padding for aligment of 4 bytes
+	uint16_t padding; //padding for aligment of 4 bytes
 } SATELLITE_TUNE;
 
 typedef struct ATSC_CHANNEL
 {
-	unsigned short major_num;
-	unsigned short minor_num;
-	unsigned short physical_ch;
-	unsigned short program_id;
-	unsigned short tsid;
-	unsigned short service_type;
+	uint16_t major_num;
+	uint16_t minor_num;
+	uint16_t physical_ch;
+	uint16_t program_id;
+	uint16_t tsid;
+	uint16_t service_type;
 	union {
 		TERRESTRIAL_TUNE atsc;
 		CABLE_TUNE		 qam;
@@ -345,56 +335,56 @@ typedef struct ATSC_CHANNEL
 
 typedef struct DVB_CHANNEL
 {
-	unsigned short onid;
-	unsigned short tsid;
-	unsigned short sid;
-	unsigned short service_type;
-	unsigned short ca;
-	unsigned short dvb_type; //1:terrestrial, 2:cable, 3:satellite
+	uint16_t onid;
+	uint16_t tsid;
+	uint16_t sid;
+	uint16_t service_type;
+	uint16_t ca;
+	uint16_t dvb_type; //1:terrestrial, 2:cable, 3:satellite
 	union {
 		TERRESTRIAL_TUNE t;
 		CABLE_TUNE		 c;
 		SATELLITE_TUNE   s;
 	} dvb;
-	unsigned short  running_status; //0: undefined, 1:stop, 2 pause, 4 running, 3, will start
+	uint16_t  running_status; //0: undefined, 1:stop, 2 pause, 4 running, 3, will start
 	char name[10*2];
 } DVB_CHANNEL;
 
 typedef struct UNKNOWN_CHANNEL
 {
-	unsigned short data1;
-	unsigned short data2;
-	unsigned short data3;
-	unsigned short tsid;
+	uint16_t data1;
+	uint16_t data2;
+	uint16_t data3;
+	uint16_t tsid;
 } UNKNOWN_CHANNEL;
 
 typedef struct PID_ENTRY
 {
-	unsigned short pid;
-	unsigned char  type;
-	unsigned char  index;
+	uint16_t pid;
+	uint8_t  type;
+	uint8_t  index;
 	char desc[16];
 } PID_ENTRY;
 
 typedef struct PIDS_TABLE
 {
-	unsigned short tune_id;
-	unsigned short tsid;
-	unsigned short sid;
-	unsigned short pcr_pid;
-	unsigned short ca_pid;
-	unsigned short pid_num;
+	uint16_t tune_id;
+	uint16_t tsid;
+	uint16_t sid;
+	uint16_t pcr_pid;
+	uint16_t ca_pid;
+	uint16_t pid_num;
 	PID_ENTRY pid_tbl[MAX_USER_PID_NUM];
 } PIDS_TABLE;
 
 typedef struct TUNE
 {
-	unsigned char  state;					 //1:locked a channel; 0:not locked
-	unsigned char  stream_format;            //ATSC,DVB
-	unsigned char  sub_format;               //T,C,S,QAM 
-	unsigned char  tune_string_type;         //3:xx-xx-xx; 2:xx-xx; 1: program; 0:channel
-	unsigned short channel;                  //if tune_string_type = 0, pick up by channel
-	unsigned short tune_id;					 //uniqe id of caller
+	uint8_t  state;					 //1:locked a channel; 0:not locked
+	uint8_t  stream_format;            //ATSC,DVB
+	uint8_t  sub_format;               //T,C,S,QAM 
+	uint8_t  tune_string_type;         //3:xx-xx-xx; 2:xx-xx; 1: program; 0:channel
+	uint16_t channel;                  //if tune_string_type = 0, pick up by channel
+	uint16_t tune_id;					 //uniqe id of caller
 	union {
 		ATSC_CHANNEL   atsc;
 		DVB_CHANNEL	   dvb;
@@ -408,9 +398,9 @@ typedef struct TUNE
 typedef struct PROGRAM_DATA
 {
 	PIDS_TABLE pids_table;
-	unsigned char* pmt_section_data;
-	unsigned short pmt_section_bytes;
-	unsigned short padding;
+	uint8_t* pmt_section_data;
+	uint16_t pmt_section_bytes;
+	uint16_t padding;
 } PROGRAM_DATA;
 
 //check if aligment correct
@@ -420,10 +410,10 @@ typedef struct PROGRAM_DATA
 typedef struct MESSAGE_DATA
 {
 	char title[32];
-	unsigned char  *message;
-	unsigned char  *buffer;
-	unsigned short message_length;
-	unsigned short buffer_length;
+	uint8_t  *message;
+	uint8_t  *buffer;
+	uint16_t message_length;
+	uint16_t buffer_length;
 } MESSAGE_DATA;
 
 
@@ -439,57 +429,57 @@ enum ES_BLOCK_CMD {
 
 typedef struct PES
 {
-	unsigned char  stream_id;
-	unsigned char  pes_sub_id;   //unique id of PES; 0xe0, 0xe1 (video); 0xc0, 0xc1 (audio); 0x80, 0x81 (AC3)...
-	unsigned char  has_pts;
-	unsigned char  has_dts;
-	unsigned short header_length;
-	unsigned short packet_length;
+	uint8_t  stream_id;
+	uint8_t  pes_sub_id;   //unique id of PES; 0xe0, 0xe1 (video); 0xc0, 0xc1 (audio); 0x80, 0x81 (AC3)...
+	uint8_t  has_pts;
+	uint8_t  has_dts;
+	uint16_t header_length;
+	uint16_t packet_length;
 	LONGLONG       pts;
 	LONGLONG       dts;
-	unsigned char  es_type; //mpeg1=1, mpeg2=2, extended mpge2=3
-	unsigned char  padding[3];
+	uint8_t  es_type; //mpeg1=1, mpeg2=2, extended mpge2=3
+	uint8_t  padding[3];
 } PES;
 
 typedef struct TS_ELEMENT
 {
-	unsigned short pid;
-	unsigned short padding1;
-	unsigned char  type;
-	unsigned char  channel_index;
-	unsigned char  audio_type; //1:sillence; 2:impaired hearing; 3:commontary
-	unsigned char  content_type;
-	unsigned long  format_fourcc;
-	unsigned long  language_code;
-	unsigned char  desc[64];
-	unsigned short desc_len;
+	uint16_t pid;
+	uint16_t padding1;
+	uint8_t  type;
+	uint8_t  channel_index;
+	uint8_t  audio_type; //1:sillence; 2:impaired hearing; 3:commontary
+	uint8_t  content_type;
+	uint32_t  format_fourcc;
+	uint32_t  language_code;
+	uint8_t  desc[64];
+	uint16_t desc_len;
 } TS_ELEMENT;
 
 typedef struct  ES_ELEMENT
 {
-	unsigned short channel_index;  //index of ES_ELEMENT
-	unsigned short es_id;          //stream_id (8bits)+ stream_index(8bits)
-	unsigned char  stream_id;
-	unsigned char  es_type;        //mpeg1, mpeg2, vc1
-	unsigned char  content_type;   //1:video; 2:audio; 
-	unsigned char  padding1;
-	unsigned long  format_fourcc;
-	unsigned long  language_code;
-	unsigned char  audio_type;     //1:sillence; 2:impaired hearing; 3:commontary
-	unsigned char  padding2[3];        //padding
+	uint16_t channel_index;  //index of ES_ELEMENT
+	uint16_t es_id;          //stream_id (8bits)+ stream_index(8bits)
+	uint8_t  stream_id;
+	uint8_t  es_type;        //mpeg1, mpeg2, vc1
+	uint8_t  content_type;   //1:video; 2:audio; 
+	uint8_t  padding1;
+	uint32_t  format_fourcc;
+	uint32_t  language_code;
+	uint8_t  audio_type;     //1:sillence; 2:impaired hearing; 3:commontary
+	uint8_t  padding2[3];        //padding
 	ULONGLONG	   scr;
-	unsigned short private_bytes;  //4 byte for private stream in PS stream
-	unsigned short padding3;
-	unsigned char  private_data[4];
+	uint16_t private_bytes;  //4 byte for private stream in PS stream
+	uint16_t padding3;
+	uint8_t  private_data[4];
 	PES  pes;
 } ES_ELEMENT;
 
 typedef struct  AV_ELEMENT
 {
-	unsigned short channel_index;	//index of ES_ELEMENT
-	unsigned char  content_type;	//1:video; 2:audio; 
-	unsigned char  stream_index;	//keep stream in an order [main-video, sub-video1 sub-video2...][main-audio, sub-audio1, sub-audio2...][]
-	unsigned long  format_fourcc;
+	uint16_t channel_index;	//index of ES_ELEMENT
+	uint8_t  content_type;	//1:video; 2:audio; 
+	uint8_t  stream_index;	//keep stream in an order [main-video, sub-video1 sub-video2...][main-audio, sub-audio1, sub-audio2...][]
+	uint32_t  format_fourcc;
 	union 
 	{
 		union 
@@ -512,75 +502,75 @@ typedef struct  AV_ELEMENT
 		} s;
 
 	} d;
-	unsigned char* private_data;
+	uint8_t* private_data;
 } AV_ELEMENT;
 
 typedef struct TS_STREAMS
 {
-	unsigned short num_stream;
-	unsigned short total_streams;
-	unsigned short pcr_pid;
-	unsigned short ca_pid;
-	unsigned short pmt_pid;
-	unsigned short padding;
+	uint16_t num_stream;
+	uint16_t total_streams;
+	uint16_t pcr_pid;
+	uint16_t ca_pid;
+	uint16_t pmt_pid;
+	uint16_t padding;
 	TS_ELEMENT    *ts_element;
 	void		  *container;
 } TS_STREAMS;
 
 typedef struct ES_STREAMS
 {
-	unsigned short num_stream;
-	unsigned short total_streams;
+	uint16_t num_stream;
+	uint16_t total_streams;
 	ULONGLONG	   scr;
 	ES_ELEMENT     *es_element;
 } ES_STREAMS;
 
 typedef struct AV_STREAMS
 {
-	unsigned short num_stream;
-	unsigned short total_streams;
+	uint16_t num_stream;
+	uint16_t total_streams;
 	AV_ELEMENT     *av_element;
 } AV_STREAMS;
 
 
 typedef struct OUTPUT_DATA
 {
-	unsigned char *data_ptr;
-	unsigned short bytes;
-	unsigned short group_flag;
-	unsigned short start_offset;
-	unsigned short dummy; //reserver
-	unsigned long  fourcc;
+	uint8_t *data_ptr;
+	uint16_t bytes;
+	uint16_t group_flag;
+	uint16_t start_offset;
+	uint16_t dummy; //reserver
+	uint32_t  fourcc;
 } OUTPUT_DATA;
 
 typedef struct DATA_BUFFER
 {
-	unsigned short  data_bytes;
-	unsigned short  buffer_size;
-	unsigned short  padding1;
-	unsigned short  padding2;
-	unsigned char*  buffer;
+	uint16_t  data_bytes;
+	uint16_t  buffer_size;
+	uint16_t  padding1;
+	uint16_t  padding2;
+	uint8_t*  buffer;
 } DATA_BUFFER;
 
 typedef struct ATS_TIME
 {
-	unsigned short type;
+	uint16_t type;
 	union 
 	{
-		unsigned long ats;
+		uint32_t ats;
 		ULONGLONG pts;
 	} t;
-	unsigned long packets;
+	uint32_t packets;
 } ATS_TIME;
 
 char* CodeConfig( );
-int  RemuxFile(  unsigned short task, char* pInputFile, TUNE* pTune, int nInputFormat, 
+int  RemuxFile(  uint16_t task, char* pInputFile, TUNE* pTune, int nInputFormat, 
 			     char* pOutFile, int nOutputFormat, int nOption );
-void* OpenRemuxStream( unsigned short nTask, TUNE* pTune, 
+void* OpenRemuxStream( uint16_t nTask, TUNE* pTune, 
 					   int nInputFormat, int nOutputFormat, 
 					   MEM_ALLOC_HOOK pfnMemAlloc, void* pMemAllocContext,
 					   DUMP pfnOutputDump, void* pOutputDumpContext );
-int	 PushRemuxStreamData( void* Handle , unsigned char *pData, int nBytes, int *nExpectedBytes );
+int	 PushRemuxStreamData( void* Handle , uint8_t *pData, int nBytes, int *nExpectedBytes );
 void CloseRemuxStream( void* Handle );
 void ResetRemuxStream( void* Handle );
 void FlushRemuxStream( void* Handle );
@@ -597,13 +587,13 @@ void SetupAVInfDump( void* Handle, DUMP pfnAVInfDump, void* pfnAVInfDumpContext 
 void SetupProgramDataDump( void* Handle, DUMP pfnProgramDataDump, void* pfnProgramDataContext );
 
 struct DEMUXER* GetDemuxer( void* Handle );
-int GetAVFormat(  char* pFileName, unsigned long nCheckMaxiumSize, int bStreamData, 
+int GetAVFormat(  char* pFileName, uint32_t nCheckMaxiumSize, int bStreamData, 
 			   int nRequestedTSChannel,   char* pFormatBuf, int nFormatSize, char* pDurationBuf, 
 			   int DurationSize, int* nTotalChannel );
 char* _data_alignment_check_( char* buf, int buf_size );
 char* _access_alignment_check_( char* buf, int buf_len );
 
-int CheckSagePVRData( const unsigned char* pData, int nBytes );
+int CheckSagePVRData( const uint8_t* pData, int nBytes );
 
 #ifdef __cplusplus
  }

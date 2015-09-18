@@ -20,37 +20,38 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
 typedef struct AAC_AUDIO
 {
-	unsigned short channels;
-	unsigned short block_align;
-	unsigned long  samples_per_sec;
-	unsigned long  avgbytes_per_sec;
-	unsigned short bits_per_sample;
-	unsigned short padding1;
+	uint16_t channels;
+	uint16_t block_align;
+	uint32_t samples_per_sec;
+	uint32_t avgbytes_per_sec;
+	uint16_t bits_per_sample;
+	uint16_t padding1;
 
-	long  state;   //0: unknow; 1:start, 2:need more data, 3:done;
-	long  format;  //1: ADTS, 2:LOAS (DVB)
-	short version; //2:mpeg2; 4:mepg4
-	short padding2;
+	int32_t  state;   //0: unknow; 1:start, 2:need more data, 3:done;
+	int32_t  format;  //1: ADTS, 2:LOAS (DVB)
+	int16_t  version; //2:mpeg2; 4:mepg4
+	int16_t  padding2;
 	union  {
-		unsigned char  atds_header[70];
-		unsigned char  latm_header[69];
-		unsigned char  padding[80];
+		uint8_t  atds_header[70];
+		uint8_t  latm_header[69];
+		uint8_t  padding[80];
 	} u;
-	unsigned short profile;
-	unsigned short object_type;
-	long  bitrate;
-	unsigned long total_frame_bytes;
-	long  frames;
-	long  expect_bytes;
-	short frame_length;
-	short padding3;
+	uint16_t profile;
+	uint16_t object_type;
+	int32_t  bitrate;
+	uint32_t total_frame_bytes;
+	int32_t  frames;
+	int32_t  expect_bytes;
+	int16_t  frame_length;
+	int16_t  padding3;
 } AAC_AUDIO;
 
-int ReadAAC_AudioHeader( AAC_AUDIO *pAACAudio, const unsigned char* pStart, int nSize );
-int ReadAACHE_AudioHeader( AAC_AUDIO *pAACAudio, const unsigned char* pStart, int nSize );
+int ReadAAC_AudioHeader( AAC_AUDIO *pAACAudio, const uint8_t* pStart, int nSize );
+int ReadAACHE_AudioHeader( AAC_AUDIO *pAACAudio, const uint8_t* pStart, int nSize );
 
 #ifdef __cplusplus
 }

@@ -49,18 +49,18 @@ typedef struct TS_CHANNEL_PARSER_DUMPER
 #define TMP_ES_BUFFER_SIZE (4*1024)
 typedef struct ES_BUFFER_
 {
-	unsigned short stream_id;
+	uint16_t stream_id;
 	PES pes;
-	int buffer_size;
-	unsigned char* buffer;
-	int bytes;
-	int main_track;
-	int input_bytes;
+	int32_t buffer_size;
+	uint8_t* buffer;
+	int32_t bytes;
+	int32_t main_track;
+	int32_t input_bytes;
 } ES_BUFFER_;
 
 typedef struct TS_CHANNEL_PARSER
 {
-	unsigned long state;
+	uint32_t state;
 	TS_FILTER* ts_filter;
 	TS_CHANNEL_PARSER_DUMPER dumper;
 	TUNE tune;
@@ -74,19 +74,19 @@ typedef struct TS_CHANNEL_PARSER
 	char avinf[1024];
 	char avinf_size;
 
-	int stream_format;
-	int sub_format;
+	int32_t stream_format;
+	int32_t sub_format;
 	CHANNEL_LIST   channel_list;
 	TUNE_LIST      tune_list;
 	PROGRAM_LIST   program_list;
 
-	unsigned long total_bytes;
-	unsigned long max_check_limit;
-	short total_video_num;
-	short total_audio_num;
-	short found_video_num;
-	short found_audio_num;
-	unsigned long bit_rate;
+	uint32_t total_bytes;
+	uint32_t max_check_limit;
+	int16_t total_video_num;
+	int16_t total_audio_num;
+	int16_t found_video_num;
+	int16_t found_audio_num;
+	uint32_t bit_rate;
 	
 } TS_CHANNEL_PARSER;
 
@@ -100,7 +100,7 @@ void SetupTSChannelDump( TS_CHANNEL_PARSER *pTSChannelParser,
 int  StartTSChannelParser( TS_CHANNEL_PARSER *pTSChannelParser, TUNE* pTune );
 void StopTSChannelParser( TS_CHANNEL_PARSER *pTSChannelParser );
 void SetupTSChannelTune( TS_CHANNEL_PARSER *pTSChannelParser, TUNE *pTune );
-int PushTSChannelPacketParser( TS_CHANNEL_PARSER *pTSChannelParser, unsigned char* pData, int nSize );
+int PushTSChannelPacketParser( TS_CHANNEL_PARSER *pTSChannelParser, uint8_t* pData, int nSize );
 int CheckChannelTrackAVInfRead( TS_CHANNEL_PARSER *pTSChannelParser );
 int GetChannelAVInf( TS_CHANNEL_PARSER *pTSChannelParser, char* pBuffer, int nSize );
 int IsTSChannelInfoReady( TS_CHANNEL_PARSER *pTSChannelParser );

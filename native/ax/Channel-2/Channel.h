@@ -17,6 +17,9 @@
 #ifndef  _CHANNEL_C_
 #define  _CHANNEL_C_
 
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
+
 #if defined(__APPLE__) || defined(__linux__)
 #include <stdbool.h> // clear up bool type confusion in the extern "C" block
 #endif
@@ -86,114 +89,114 @@ extern "C" {
 
 struct bcast 
 {
-	int ch;
-	unsigned long fq;
+	int32_t ch;
+	uint32_t fq;
 };
 
 struct bcast_qam 
 {
-	int ch;
-	unsigned long fq;
+	int32_t ch;
+	uint32_t fq;
 	char mod;
 	char inv;
 };
 
 typedef struct {
-	unsigned short index;
-	unsigned short major;
-	unsigned short minor;
-	unsigned short program;
-	unsigned short physical_ch;
-	unsigned long  frequency;
-	unsigned short video_pid;
-	unsigned short audio_pid;
-	unsigned long ctrl;
+	uint16_t index;
+	uint16_t major;
+	uint16_t minor;
+	uint16_t program;
+	uint16_t physical_ch;
+	uint32_t  frequency;
+	uint16_t video_pid;
+	uint16_t audio_pid;
+	uint32_t ctrl;
 	char name[32];
 } ATSC_FREQ;
 
 typedef struct {
-	unsigned short index;
-	unsigned short major;
-	unsigned short minor;
-	unsigned short tsid;
-	unsigned short program;
-	unsigned short physical_ch;
-	unsigned long  frequency;
-	unsigned char  modulation;
-	unsigned char  inversal;
-	unsigned short video_pid;
-	unsigned short audio_pid;
-	unsigned long  ctrl;
+	uint16_t index;
+	uint16_t major;
+	uint16_t minor;
+	uint16_t tsid;
+	uint16_t program;
+	uint16_t physical_ch;
+	uint32_t  frequency;
+	uint8_t  modulation;
+	uint8_t  inversal;
+	uint16_t video_pid;
+	uint16_t audio_pid;
+	uint32_t  ctrl;
 	char name[32];
 } QAM_FREQ;
 
 typedef struct {
-	unsigned short index;
-	unsigned short onid;
-	unsigned short tsid;
-	unsigned short sid;
-	unsigned short physical_ch;
-	unsigned long  frequency;
-	unsigned long  bandwidth;
-	unsigned char  code_rate_hp;
-	unsigned char  code_rate_lp;
-	unsigned char  trans_mode;
-	unsigned char  guard_interval;
-	unsigned char  hierarchy;
-	unsigned char  constellation;
-	unsigned short video_pid;
-	unsigned short audio_pid;
-	unsigned long  ctrl;
+	uint16_t index;
+	uint16_t onid;
+	uint16_t tsid;
+	uint16_t sid;
+	uint16_t physical_ch;
+	uint32_t frequency;
+	uint32_t bandwidth;
+	uint8_t  code_rate_hp;
+	uint8_t  code_rate_lp;
+	uint8_t  trans_mode;
+	uint8_t  guard_interval;
+	uint8_t  hierarchy;
+	uint8_t  constellation;
+	uint16_t video_pid;
+	uint16_t audio_pid;
+	uint32_t  ctrl;
 	char name[32];
-	unsigned long  shift;
+	uint32_t  shift;
 } DVB_T_FREQ;
 
 typedef struct {
-	unsigned short index;
-	unsigned short onid;
-	unsigned short tsid;
-	unsigned short sid;
-	unsigned short physical_ch;
-	unsigned long  frequency;
-	unsigned long  symbol_rate;
-	unsigned char  fec_inner;
-	unsigned char  fec_inner_rate;
-	unsigned char  fec_outer;
-	unsigned char  fec_outer_rate;
-	unsigned char  modulation;
-	unsigned short video_pid;
-	unsigned short audio_pid;
-	unsigned long  ctrl;
+	uint16_t index;
+	uint16_t onid;
+	uint16_t tsid;
+	uint16_t sid;
+	uint16_t physical_ch;
+	uint32_t frequency;
+	uint32_t symbol_rate;
+	uint8_t  fec_inner;
+	uint8_t  fec_inner_rate;
+	uint8_t  fec_outer;
+	uint8_t  fec_outer_rate;
+	uint8_t  modulation;
+	uint16_t video_pid;
+	uint16_t audio_pid;
+	uint32_t  ctrl;
 	char name[32];
 } DVB_C_FREQ;
 
 typedef struct {
-	unsigned short index;
-	unsigned short onid;
-	unsigned short tsid;
-	unsigned short sid;
-	unsigned short physical_ch;
-	unsigned long  frequency;
-	unsigned long  symbol_rate;
-	unsigned char  polarisation;
-	unsigned char  fec_inner;
-	unsigned char  fec_inner_rate;
-	unsigned char  fec_outer;
-	unsigned char  fec_outer_rate;
-	unsigned char  modulation;
-	unsigned char  roll;
-	unsigned char  pilot;
-	short          orbit;
-	unsigned short video_pid;
-	unsigned short audio_pid;
-	unsigned long  ctrl;
-	char name[32];
-	unsigned short sat_no;
+	uint16_t index;
+	uint16_t onid;
+	uint16_t tsid;
+	uint16_t sid;
+	uint16_t physical_ch;
+	uint32_t frequency;
+	uint32_t symbol_rate;
+	uint8_t  polarisation;
+	uint8_t  fec_inner;
+	uint8_t  fec_inner_rate;
+	uint8_t  fec_outer;
+	uint8_t  fec_outer_rate;
+	uint8_t  modulation;
+	uint8_t  roll;
+	uint8_t  pilot;
+	int16_t  orbit;
+	uint16_t video_pid;
+	uint16_t audio_pid;
+	uint32_t ctrl;
+	char     name[32];
+	uint16_t sat_no;
 } DVB_S_FREQ;
 
 typedef struct {
-	int  totalNum;
-	int  entryNum;
+	int32_t  totalNum;
+	int32_t  entryNum;
 	char sourceType[16];
 	union {
 		ATSC_FREQ*  atsc;
@@ -206,33 +209,33 @@ typedef struct {
 
 
 typedef struct sat_name {
-	char	        name[64];
-	unsigned short  sat_no;
+	char	    name[64];
+	uint16_t  sat_no;
 } SAT_NAME;
 
 typedef struct Channel
 {
-	void* Dev;          //hold device data
-	int   scanType;		//0: normal scan, 1: load scan table and bypassing real scan
-	unsigned long lastTune;
-	int  outputFormat;
-	int  freqTableType;	       //1:ATSC, 2:NTSC-CABLE, 3:NTSC-HRC, 4:user defined
-	int  guessFreqTableType;
-	char sourceType[8];        //ATSC, QAM, DVB-T, DVB-C, DVB-S, DVB-S2
-	char countryRegion[COUNTRY_REGION_LEN];
-	int  countryCode;
+	void*    Dev;             //hold device data
+	int32_t  scanType;		    //0: normal scan, 1: load scan table and bypassing real scan
+	uint32_t lastTune;
+	int32_t  outputFormat;
+	int32_t  freqTableType;	       //1:ATSC, 2:NTSC-CABLE, 3:NTSC-HRC, 4:user defined
+	int32_t  guessFreqTableType;
+	char     sourceType[8];        //ATSC, QAM, DVB-T, DVB-C, DVB-S, DVB-S2
+	char     countryRegion[COUNTRY_REGION_LEN];
+	int32_t  countryCode;
 	char tunerMode[16];         //obsolete
-	int  lockTimeout;
-	int      freqScheme;        //freqTable's freq type: 1:ATSC, 2:NTSC-CABLE, 3:NTSC-HRC, 4:user defined
+	int32_t  lockTimeout;
+	int32_t  freqScheme;        //freqTable's freq type: 1:ATSC, 2:NTSC-CABLE, 3:NTSC-HRC, 4:user defined
 	FREQTBL  FreqTable;
 	FREQTBL* PreDefinedFreqTable;
-	int  delayParse;     //postponde to start parser im million seconds
-	unsigned long  freqShift;
-	int	 frqTableUpdateCheck;
-	unsigned long frqTableTimeStamp;
-	char frqTableFileName[256];
-	char frqTableFilePath[128];
-	int  tuneCtrl;             //1: naked qam tune.
+	int32_t  delayParse;        //postponde to start parser im million seconds
+	uint32_t freqShift;
+	int32_t	 frqTableUpdateCheck;
+	uint32_t frqTableTimeStamp;
+	char     frqTableFileName[256];
+	char     frqTableFilePath[128];
+	int32_t  tuneCtrl;             //1: naked qam tune.
 } CHANNEL_DATA;
 
 extern struct bcast ATSC_BRCAST[256];
@@ -246,7 +249,7 @@ int SageTuneDVBTFrequency( void* Capture, DVB_T_FREQ* dvbt, int dryTune);
 int SageTuneDVBCFrequency( void* Capture, DVB_C_FREQ* dvbc, int dryTune);
 int SageTuneDVBSFrequency( void* Capture, DVB_S_FREQ* dvbs, int dryTune);
 int SageCheckLocked( void* Capture );
-void SageDelay( void* Capture, unsigned long ms );
+void SageDelay( void* Capture, uint32_t ms );
 
 int SageTVLockTSChannel( void* Capture, void* pTune, int nFlag );
 int SageTVScanChannel( void* Capture,   void* pTune );
@@ -263,11 +266,11 @@ void SageDisableCAM( void* Capture );
 
 void SageStartParser( void* Capture );
 void SageStopParser( void* Capture  );
-//int  SagePacketInputNum( void* Capture );
 
-//int  SagePickupTSChannel( void* Capture, unsigned short channel, unsigned short program, char *channel_name, bool reset );
-//int  SagePickupATSCChannel( void* Capture, unsigned short major, unsigned short minor, unsigned short program, char *channel_name, bool reset );
-//void SageSetNetworkType( void* Capture,  unsigned short networkType );//network type 1:ATSC; 2:DVB
+//int  SagePacketInputNum( void* Capture );
+//int  SagePickupTSChannel( void* Capture, uint16_t channel, uint16_t program, char *channel_name, bool reset );
+//int  SagePickupATSCChannel( void* Capture, uint16_t major, uint16_t minor, uint16_t program, char *channel_name, bool reset );
+//void SageSetNetworkType( void* Capture,  uint16_t networkType );//network type 1:ATSC; 2:DVB
 //int  SageChangeCAMChannel( void* Capture, int program );
 //int  SageGetNetworkList(  void* Capture, char* Buf, int MaxBufSize );
 //int  SageGetNetworkNum(  void* Capture );
@@ -290,11 +293,11 @@ void  setCountryRegion( CHANNEL_DATA *Channel,  char* Region );
 char* getCountryRegion( CHANNEL_DATA *Channel );
 void  setTunerMode( CHANNEL_DATA *Channel,  char* tunerMode );
 char* getTunerMode( CHANNEL_DATA *Channel );
-void  parserDelayTime( CHANNEL_DATA *Channel, unsigned long ms );
+void  parserDelayTime( CHANNEL_DATA *Channel, uint32_t ms );
 void  setQAMScheme(  CHANNEL_DATA *Channel, int QAMScheme );
-unsigned short getProgramNum( void* pTune );
+uint16_t getProgramNum( void* pTune );
 
-int   TranslateJWideString( char* buf_out, int buf_out_size, unsigned short* buf_in );
+int   TranslateJWideString( char* buf_out, int buf_out_size, uint16_t* buf_in );
 void* getTuningEntry(  CHANNEL_DATA *Channel, int tune_type, int major, int minor, int physical, int index );
 int scanATSCChannel( CHANNEL_DATA* ch, char* tuningString, char** scanResult );
 int scanQAMChannel(  CHANNEL_DATA* ch, char* tuningString, char** scanResult );
@@ -304,11 +307,11 @@ int scanDVBSChannel( CHANNEL_DATA* ch, char* tuningString, char** scanResult );
 int loadScanTuningTable( CHANNEL_DATA *Channel );
 int saveScanTuningTable( CHANNEL_DATA *Channel, char* file_ext );
 bool tuneChannel( CHANNEL_DATA *channel, const char* tune_string );
-unsigned long getChannelFreq( int physical_ch, int freqTableType, int shift );
+uint32_t getChannelFreq( int physical_ch, int freqTableType, int shift );
 
 char* makeDVBTFreqString( char*Buf, int Size,  DVB_T_FREQ * Freq  );
-int TranslateJWideString( char* buf_out, int buf_out_size, unsigned short* buf_in );
-int TranslateJWideString2( char* buf_out, int buf_out_size, unsigned short* buf_in );
+int TranslateJWideString( char* buf_out, int buf_out_size, uint16_t* buf_in );
+int TranslateJWideString2( char* buf_out, int buf_out_size, uint16_t* buf_in );
 int ConvertIllegalChar( char* filename );
 int ConvertIllegalChar2( char* filename );
 
@@ -319,7 +322,7 @@ char* scanChannel( CHANNEL_DATA* channel, char* deviceName, char* tuningString, 
 
 void SageTunerStart( void* Capture );
 void SageTunerStop( void* Capture );
-void SageLockATSCChannel( void* Capture, unsigned short major, unsigned short minor  );
+void SageLockATSCChannel( void* Capture, uint16_t major, uint16_t minor  );
 
 int loadPredefinedQAMFreq( CHANNEL_DATA *Channel, struct bcast_qam *freqTbl, int max, int* freqScheme );
 int loadCacheQAMFreq(  CHANNEL_DATA *Channel,  struct bcast_qam *freqTbl, int max );

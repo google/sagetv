@@ -41,14 +41,14 @@ void enable_dtvchannel_native_log();
 
 struct DTVChannelDebugInfo {
 	char  raw_dump_path[256];
-	unsigned long dump_size;
-	unsigned long dumped_bytes;
+	uint32_t dump_size;
+	uint32_t dumped_bytes;
 	char  debug_source[256];
 	void *debug_source_buffer; // BUFFERSIZE bytes (defined in Channel.h)
 	int   debug_source_mode;
 	FILE* dump_fd;
 	FILE* source_fd;
-	unsigned long audio_ctrl;
+	uint32_t audio_ctrl;
 };
 
 #define MAX_PID_NUM 8
@@ -80,11 +80,11 @@ class DTVChannel {
 		off_t getProcessedByteCount() {return mBytesProcessed;}
 		
 			// Dump methods
-		long EPGDump(short bytes, void *msg);
-		long AVInfoDump(short bytes, void *msg);
-		int  OutputDump(unsigned char *buffer, unsigned long size);
-		long PMTDump(unsigned short programID, unsigned char *pmtData, int pmtDataSize);
-		long pidFilterDump( PID_ENTRY* pids, int pidNum );
+		int32_t EPGDump(short bytes, void *msg);
+		int32_t AVInfoDump(short bytes, void *msg);
+		int  OutputDump(unsigned char *buffer, uint32_t size);
+		int32_t PMTDump(unsigned short programID, unsigned char *pmtData, int pmtDataSize);
+		int32_t pidFilterDump( PID_ENTRY* pids, int pidNum );
 		
 			// tuning calls
 		char *getTunerDeviceName();
@@ -122,7 +122,7 @@ class DTVChannel {
 		SageTuner *mTuner;
 		char *mTunerName;
 		CHANNEL_DATA mChannel;
-		unsigned long mCaptureStartTime;
+		uint32_t mCaptureStartTime;
 		FILE *mOutputFile;
 		int outputFormat;
 

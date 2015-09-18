@@ -34,11 +34,11 @@
 #define  HD_STREAM_RATE	((LONGLONG)2401587)			// Original HD stream rate 19.2 Mbps
 #define  DEMUX(x)			(((int)(x)*8)/50)		// Demux value for HD content STREAMRATE / 50
 
-static int  BuildBlockHeader( PS_BUILDER* pPSBuilder, ES_ELEMENT *pESElmnt, unsigned char* pData, int nSize );
+static int  BuildBlockHeader( PS_BUILDER* pPSBuilder, ES_ELEMENT *pESElmnt, uint8_t* pData, int nSize );
 static int  AppedEndOFCode( char* pOutBuf, int len );
 static int  PadingBuffer( char* pOutBuf, int nLen );
 static void BuildPadBufferHeader( char* pOutBuf, int nLen );
-int PSBulderPushDataInSafe( PS_BUILDER *pPSBuilder, int nTrackIndex, int bGroup, unsigned char* pData, int nSize );
+int PSBulderPushDataInSafe( PS_BUILDER *pPSBuilder, int nTrackIndex, int bGroup, uint8_t* pData, int nSize );
 ///////////////////////////////// PUSH SECTION  //////////////////////////////////////////
 int BlockBufferPSDump( void* pContext, void* pData, int nSize )
 {
@@ -104,12 +104,12 @@ int BlockBufferPSDump( void* pContext, void* pData, int nSize )
 #ifdef WIN32
 			printf( "%d(%d): %10I64u-%10I64u %5ld\t[%10I64u %10I64u] \n", channel_index, group_start,
 					   block_buffer_out->start_cue/300, block_buffer_out->end_cue/300, 
-					   (unsigned long)(block_buffer_out->end_cue-block_buffer_out->start_cue)/300, pts, dts );
+					   (uint32_t)(block_buffer_out->end_cue-block_buffer_out->start_cue)/300, pts, dts );
 #endif
 #ifdef LINUX
 			printf( "%d(%d): %10llu-%10llu %5ld\t[%10llu %10llu] \n", channel_index, group_start,
 					   block_buffer_out->start_cue/300, block_buffer_out->end_cue/300,
-					   (unsigned long)(block_buffer_out->end_cue-block_buffer_out->start_cue)/300, pts, dts );
+					   (uint32_t)(block_buffer_out->end_cue-block_buffer_out->start_cue)/300, pts, dts );
 #endif
 		}
 
@@ -118,12 +118,12 @@ int BlockBufferPSDump( void* pContext, void* pData, int nSize )
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-int PSBulderPushDataInSafe( PS_BUILDER *pPSBuilder, int nTrackIndex, int bGroup, unsigned char* pData, int nSize )
+int PSBulderPushDataInSafe( PS_BUILDER *pPSBuilder, int nTrackIndex, int bGroup, uint8_t* pData, int nSize )
 {
 	OUTPUT_DATA output_data={0};
 	TRACK* track;
 	int used_bytes= 0;
-	unsigned char buf[256];
+	uint8_t buf[256];
 	int pes_header_bytes, header_bytes=0, content_bytes=0, bytes;
 	ES_ELEMENT es_elmnt;
 
@@ -198,7 +198,7 @@ int PSBulderPushDataInBuffer( PS_BUILDER *pPSBuilder, int nTrackIndex, int bGrou
 	TRACK* track;
 	int pes_header_bytes, header_bytes, content_bytes, bytes;
 	ES_ELEMENT es_elmnt;
-	unsigned char *p;
+	uint8_t *p;
 	int used_bytes= 0;
 	int header_space, pading_bytes;
 
@@ -352,7 +352,7 @@ void ResetPSBuilder( PS_BUILDER *pPSBuilder )
 int FlushEndOfCode( PS_BUILDER *pPSBuilder )
 {
 	OUTPUT_DATA output_data={0};
-	unsigned char buf[16];
+	uint8_t buf[16];
 	if ( pPSBuilder->dumper.stream_dumper != NULL && pPSBuilder->output_bytes ) 
 	{
 		AppedEndOFCode( (char*)buf, 4 );
@@ -382,13 +382,13 @@ static int BuildPackHeader( PS_BUILDER* pPSBuilder, long nMuxRate, ULONGLONG scr
 
 	PutOutBITS( &pPSBuilder->bits, 0x000001ba, 32);		// pack id						32
 	PutOutBITS( &pPSBuilder->bits, 1, 2);				// 0x01							2
-	PutOutBITS( &pPSBuilder->bits, (unsigned int)(time >> 30)& 0x07, 3);	// system_clock_reference_base				3
+	PutOutBITS( &pPSBuilder->bits, (uint32_t)(time >> 30)& 0x07, 3);	// system_clock_reference_base				3
 	PutOutBITS( &pPSBuilder->bits, 1, 1);				// marker_bit					1
-	PutOutBITS( &pPSBuilder->bits, (unsigned int)(time >> 15)& 0x7fff, 15);	// system_clock_reference_base			15
+	PutOutBITS( &pPSBuilder->bits, (uint32_t)(time >> 15)& 0x7fff, 15);	// system_clock_reference_base			15
 	PutOutBITS( &pPSBuilder->bits, 1, 1);				// marker_bit					1
-	PutOutBITS( &pPSBuilder->bits, (unsigned int)(time & 0x7fff), 15);		// system_clock_reference_base1			15
+	PutOutBITS( &pPSBuilder->bits, (uint32_t)(time & 0x7fff), 15);		// system_clock_reference_base1			15
 	PutOutBITS( &pPSBuilder->bits, 1, 1);				// marker_bit					1
-	PutOutBITS( &pPSBuilder->bits, (unsigned int)ext_time, 9);		// system_clock_reference_extension				9
+	PutOutBITS( &pPSBuilder->bits, (uint32_t)ext_time, 9);		// system_clock_reference_extension				9
 	PutOutBITS( &pPSBuilder->bits, 1, 1);				// marker_bit					1
 	PutOutBITS( &pPSBuilder->bits, nMuxRate, 22);		// program_mux_rate			22
 	//PutOutBITS( &pPSBuilder->bits, 1, 1);				// marker_bit					1
@@ -499,40 +499,40 @@ static int BuildSystemHeader( PS_BUILDER* pPSBuilder, int videostream, int vidbs
 #define DVB_STREAM_ID			0x52
 #define DVB_USER_DESC			0xfe
 
-unsigned long CalTSCRC32( const unsigned char *pData, int nLen );
+uint32_t CalTSCRC32( const uint8_t *pData, int nLen );
 
-static int PutLanguageCodeDesc( unsigned long LanguageCode, unsigned char AudioType, unsigned char *pData, int nLen )
+static int PutLanguageCodeDesc( uint32_t LanguageCode, uint8_t AudioType, uint8_t *pData, int nLen )
 {
-	unsigned char buf[4];
-	buf[0] = (unsigned char)(LanguageCode & 0xff);
-	buf[1] = (unsigned char)((LanguageCode >>8) & 0xff);
-	buf[2] = (unsigned char)((LanguageCode >>16) & 0xff);
+	uint8_t buf[4];
+	buf[0] = (uint8_t)(LanguageCode & 0xff);
+	buf[1] = (uint8_t)((LanguageCode >>8) & 0xff);
+	buf[2] = (uint8_t)((LanguageCode >>16) & 0xff);
 	buf[3] = AudioType;
 	PutDescriptor( pData, ISO639_LANGUAGE_DESC,  buf, 4  );
 	return 4+2; //6 bytes;
 }
 
-static int PutSubtitleCodeDesc( SUBTITLE *pSubtitle, unsigned char *pData, int nLen )
+static int PutSubtitleCodeDesc( SUBTITLE *pSubtitle, uint8_t *pData, int nLen )
 {
-	unsigned char buf[8];
-	buf[0] = (unsigned char)(pSubtitle->lanugaue & 0xff);
-	buf[1] = (unsigned char)((pSubtitle->lanugaue >>8) & 0xff);
-	buf[2] = (unsigned char)((pSubtitle->lanugaue >>16) & 0xff);
+	uint8_t buf[8];
+	buf[0] = (uint8_t)(pSubtitle->lanugaue & 0xff);
+	buf[1] = (uint8_t)((pSubtitle->lanugaue >>8) & 0xff);
+	buf[2] = (uint8_t)((pSubtitle->lanugaue >>16) & 0xff);
 	buf[3] = pSubtitle->comp_type;
-	buf[4] = (unsigned char)(pSubtitle->cpgid >> 8);
-	buf[5] = (unsigned char)(pSubtitle->cpgid & 0xff);
-	buf[6] = (unsigned char)(pSubtitle->apgid >> 8);;
-	buf[7] = (unsigned char)(pSubtitle->apgid & 0xff);
+	buf[4] = (uint8_t)(pSubtitle->cpgid >> 8);
+	buf[5] = (uint8_t)(pSubtitle->cpgid & 0xff);
+	buf[6] = (uint8_t)(pSubtitle->apgid >> 8);;
+	buf[7] = (uint8_t)(pSubtitle->apgid & 0xff);
 	PutDescriptor( pData, SUBTITLE_DESC,  buf, 8  );
 	return 8+2; //6 bytes;
 }
 
 
-int BuildPsmPacket( PS_BUILDER* pPSBuilder, unsigned char* pData, int nSize )
+int BuildPsmPacket( PS_BUILDER* pPSBuilder, uint8_t* pData, int nSize )
 {
 	int i, bytes, packet_len, used_bytes=0;
-	unsigned char *p;
-	unsigned long crc;
+	uint8_t *p;
+	uint32_t crc;
 	ES_ELEMENT *es_elmnt;
 	TS_ELEMENT *ts_elmnt;
 	AV_ELEMENT *av_elmnt;
@@ -559,7 +559,7 @@ int BuildPsmPacket( PS_BUILDER* pPSBuilder, unsigned char* pData, int nSize )
 	p = pData+12;
 	for ( i = 0; i<tracks->total_track && used_bytes + 4 < nSize; i++ )
 	{
-		unsigned char stream_id, stream_type;
+		uint8_t stream_id, stream_type;
 		int desc_len =0;
 		es_elmnt = pPSBuilder->tracks->track[i].es_elmnt;
 		ts_elmnt = pPSBuilder->tracks->track[i].ts_elmnt;
@@ -589,8 +589,8 @@ int BuildPsmPacket( PS_BUILDER* pPSBuilder, unsigned char* pData, int nSize )
 			p[bytes+4] = 0xff; //terminator of descriptor
 			if ( av_elmnt->content_type == AUDIO_DATA )
 			{
-				unsigned long language_code;
-				unsigned char audio_type;
+				uint32_t language_code;
+				uint8_t audio_type;
 				if ( ts_elmnt != NULL && ts_elmnt->language_code )
 				{
 					language_code = ts_elmnt->language_code;
@@ -630,12 +630,12 @@ int BuildPsmPacket( PS_BUILDER* pPSBuilder, unsigned char* pData, int nSize )
 	if ( used_bytes + 4 > nSize )
 		return 0;
 
-	crc = CalTSCRC32( (const unsigned char*)pData+6, packet_len-4 );
+	crc = CalTSCRC32( (const uint8_t*)pData+6, packet_len-4 );
 
-	p[bytes++] = (unsigned char)((crc >> 24) & 0xff);
-	p[bytes++] = (unsigned char)(crc >> 16) & 0xff;
-	p[bytes++] = (unsigned char)(crc >> 8) & 0xff;
-	p[bytes++] = (unsigned char)(crc) &  0xff;
+	p[bytes++] = (uint8_t)((crc >> 24) & 0xff);
+	p[bytes++] = (uint8_t)(crc >> 16) & 0xff;
+	p[bytes++] = (uint8_t)(crc >> 8) & 0xff;
+	p[bytes++] = (uint8_t)(crc) &  0xff;
 
 	return packet_len+6;
 }
@@ -726,7 +726,7 @@ static int BuildPES2Header( BITS_T* pBits, PES *pPES )
 	}
 
 	PutOutBITS( pBits, 0x000001, 24);						// packet_start_code_prefix		24
-	PutOutBITS( pBits, (unsigned int)pPES->stream_id, 8);			// directory_stream_id		8
+	PutOutBITS( pBits, (uint32_t)pPES->stream_id, 8);			// directory_stream_id		8
 	PutOutBITS( pBits, len, 16);								// PES_packet_length		16
 	//PutOutBITS( pBits, 0x2, 2);								// '10'						2
 	//PutOutBITS( pBits, 0, 2);								// PES_scrambling_control	2
@@ -749,47 +749,47 @@ static int BuildPES2Header( BITS_T* pBits, PES *pPES )
 	if (PTS_DTS_flags == 2)
 	{
 		PutOutBITS( pBits, 2, 4);							// '0010'			4
-		PutOutBITS( pBits, (unsigned int)(pPES->pts >> 30), 3);	// PTS [32..30]		3
+		PutOutBITS( pBits, (uint32_t)(pPES->pts >> 30), 3);	// PTS [32..30]		3
 		PutOutBITS( pBits, 1, 1);							// marker bit		1
-		PutOutBITS( pBits, (unsigned int)(pPES->pts >> 15), 15);	// PTS [29..15]		15
+		PutOutBITS( pBits, (uint32_t)(pPES->pts >> 15), 15);	// PTS [29..15]		15
 		PutOutBITS( pBits, 1, 1);							// marker bit		1
-		PutOutBITS( pBits, (unsigned int)pPES->pts, 15);			// PTS [14..0]		15
+		PutOutBITS( pBits, (uint32_t)pPES->pts, 15);			// PTS [14..0]		15
 		PutOutBITS( pBits, 1, 1);							// marker bit		1
 	}
 	else if (PTS_DTS_flags == 3)
 	{
 		PutOutBITS( pBits, 3, 4);							// '0011'			4
-		PutOutBITS( pBits, (unsigned int)(pPES->pts >> 30), 3);	// PTS [32..30]		3
+		PutOutBITS( pBits, (uint32_t)(pPES->pts >> 30), 3);	// PTS [32..30]		3
 		PutOutBITS( pBits, 1, 1);							// marker bit		1
-		PutOutBITS( pBits, (unsigned int)(pPES->pts >> 15), 15);	// PTS [29..15]		15
+		PutOutBITS( pBits, (uint32_t)(pPES->pts >> 15), 15);	// PTS [29..15]		15
 		PutOutBITS( pBits, 1, 1);							// marker bit		1
-		PutOutBITS( pBits, (unsigned int)pPES->pts, 15);			// PTS [14..0]		15
+		PutOutBITS( pBits, (uint32_t)pPES->pts, 15);			// PTS [14..0]		15
 		//PutOutBITS( pBits, 1, 1);							// marker bit		1
 		//PutOutBITS( pBits, 1, 4);							// '0001'			4
 		PutOutBITS( pBits, 0x11, 5); //OP
 
-		PutOutBITS( pBits, (unsigned int)(pPES->dts >> 30), 3);	// DTS [32..30]		3
+		PutOutBITS( pBits, (uint32_t)(pPES->dts >> 30), 3);	// DTS [32..30]		3
 		PutOutBITS( pBits, 1, 1);							// marker bit		1
-		PutOutBITS( pBits, (unsigned int)(pPES->dts >> 15), 15);	// DTS [29..15]		15
+		PutOutBITS( pBits, (uint32_t)(pPES->dts >> 15), 15);	// DTS [29..15]		15
 		PutOutBITS( pBits, 1, 1);							// marker bit		1
-		PutOutBITS( pBits, (unsigned int)pPES->dts, 15);			// DTS [14..0]		15
+		PutOutBITS( pBits, (uint32_t)pPES->dts, 15);			// DTS [14..0]		15
 		PutOutBITS( pBits, 1, 1);							// marker bit		1
 	}
 	bytes = CloseOutBITS( pBits );
 	return bytes;
 }
 
-int CreatePES2Header( unsigned char*pBuffer, int nMaxBufferSize, PES *pPES )
+int CreatePES2Header( uint8_t*pBuffer, int nMaxBufferSize, PES *pPES )
 {
 	BITS_T bits;
 	InitOutBITS( &bits, pBuffer, nMaxBufferSize );
 	return BuildPES2Header( &bits, pPES );
 }
 
-static int CreateSystemHeader( PS_BUILDER* pPSBuilder, unsigned char* pData, int nSize  )
+static int CreateSystemHeader( PS_BUILDER* pPSBuilder, uint8_t* pData, int nSize  )
 {
 	int bytes;
-	unsigned char vidstream_id = 0, audstream_id = 0;
+	uint8_t vidstream_id = 0, audstream_id = 0;
 
 	if ( pPSBuilder->tracks->main_video_index == 0xffff && 
 		 pPSBuilder->tracks->main_audio_index == 0xffff )
@@ -811,7 +811,7 @@ static int CreateSystemHeader( PS_BUILDER* pPSBuilder, unsigned char* pData, int
 }
 
 
-static int BuildBlockHeader( PS_BUILDER* pPSBuilder, ES_ELEMENT *pESElmnt, unsigned char* pData, int nSize )
+static int BuildBlockHeader( PS_BUILDER* pPSBuilder, ES_ELEMENT *pESElmnt, uint8_t* pData, int nSize )
 {	int bytes=0;
 	//ES_ELEMENT* es_elmnt = &pPSBuilder->es_streams.es_element[nTrackIndex];
 	InitOutBITS( &pPSBuilder->bits, pData, nSize );
@@ -962,7 +962,7 @@ int SetupTracks( TRACK *pTrack )
 }
 
 #define SAGETV_H264_INFO     0x40
-static int FillSageInfo( PS_BUILDER* pPSBuilder, unsigned char* ptr, int bytes, unsigned char CtrlBits )
+static int FillSageInfo( PS_BUILDER* pPSBuilder, uint8_t* ptr, int bytes, uint8_t CtrlBits )
 {
 	int used_bytes = 0;
 	if ( bytes < 12 ) return 0;
@@ -980,7 +980,7 @@ static int FillSageInfo( PS_BUILDER* pPSBuilder, unsigned char* ptr, int bytes, 
 	
 	if ( pPSBuilder->sagetv_private_data.main_video_stream_type == H264_STREAM_TYPE  )
 	{
-		unsigned char frame_rate = (unsigned char)pPSBuilder->h264_frame_rate;
+		uint8_t frame_rate = (uint8_t)pPSBuilder->h264_frame_rate;
 		AppendDescriptor( ptr, bytes-used_bytes, SAGETV_H264_INFO, &frame_rate, 1 );
 		bytes += 2+1;
 	}
@@ -991,9 +991,9 @@ static int FillSageInfo( PS_BUILDER* pPSBuilder, unsigned char* ptr, int bytes, 
 int CreatSageStreamHeader( PS_BUILDER* pPSBuilder )
 {
 	int bytes;
-	unsigned char *buf_ptr=pPSBuilder->block_buffer;
+	uint8_t *buf_ptr=pPSBuilder->block_buffer;
 	int buf_size = 16*6;
-	unsigned char video_track_num = 0, audio_track_num = 0;
+	uint8_t video_track_num = 0, audio_track_num = 0;
 
 	//int buf_size = pPSBuilder->block_buffer
 
@@ -1013,13 +1013,13 @@ int CreatSageStreamHeader( PS_BUILDER* pPSBuilder )
 
 	{   //embed sagetv information into padding packet
 		int i;
-		unsigned char video_main_track = 0xff, audio_main_track = 0xff;
-		unsigned char main_video_stream_type = 0, main_audio_stream_type = 0;
+		uint8_t video_main_track = 0xff, audio_main_track = 0xff;
+		uint8_t main_video_stream_type = 0, main_audio_stream_type = 0;
 		ES_ELEMENT *es_elmnt;
 		TS_ELEMENT *ts_elmnt;
 		AV_ELEMENT *av_elmnt;
 		int len;
-		unsigned char *ptr;
+		uint8_t *ptr;
 		TRACKS *tracks;
 
 		ptr = buf_ptr + bytes+6;
@@ -1097,12 +1097,12 @@ void DisablePadingPacket( PS_BUILDER *pPSBuilder )
 //I embedded Sage information in pad packets
 //format: SAGE (4byte mark), version(1byte), ctrl bits ( 1byt), video tracks num( 1 byte ), audio track num( 1 bytes )
 //  main video track( 1 bytes ); main audi track ( 1 bytes )
-int CreatSageStreamHeader( PS_BUILDER* pPSBuilder, unsigned char VidstreamId, unsigned char AudstreamId,
-            unsigned char VidstreamType, unsigned char AudstreamType, unsigned char VidsNum, unsigned char AudsNum, 
-			unsigned char VidsMain, unsigned char AudsMain, unsigned char CtrlBits )
+int CreatSageStreamHeader( PS_BUILDER* pPSBuilder, uint8_t VidstreamId, uint8_t AudstreamId,
+            uint8_t VidstreamType, uint8_t AudstreamType, uint8_t VidsNum, uint8_t AudsNum, 
+			uint8_t VidsMain, uint8_t AudsMain, uint8_t CtrlBits )
 {
 	int bytes; 
-	unsigned char *ptr;
+	uint8_t *ptr;
 	InitOutBITS( &pPSBuilder->bits, pPSBuilder->bits_buf, sizeof(pPSBuilder->bits_buf) );
 
 	if ( pPSBuilder->remapping_stream && IsAudioStreamId(AudstreamId) )
@@ -1122,7 +1122,7 @@ int CreatSageStreamHeader( PS_BUILDER* pPSBuilder, unsigned char VidstreamId, un
 	PadingBuffer( pPSBuilder, pPSBuilder->video_buffer[0]+bytes, PACKETSIZE-bytes );
 
 	//embedding Sage Information
-	ptr = (unsigned char*)pPSBuilder->video_buffer[0]+bytes+6;
+	ptr = (uint8_t*)pPSBuilder->video_buffer[0]+bytes+6;
 	FillSageInfo( pPSBuilder, ptr, PACKETSIZE-bytes-6, 0 );PadingBuffer
 
 	PushPESPacket( pPSBuilder, AllocPESPacket( pPSBuilder ), 0,  pPSBuilder->video_buffer[0], PACKETSIZE );
@@ -1131,7 +1131,7 @@ int CreatSageStreamHeader( PS_BUILDER* pPSBuilder, unsigned char VidstreamId, un
 
 	bytes = 0;
 	if ( pPSBuilder->PSM_packet_enable ) {
-		unsigned char stream_id[2]; unsigned char stream_type[2];
+		uint8_t stream_id[2]; uint8_t stream_type[2];
 		int stream_num;
 		stream_num = 2;
 		stream_id[0]  = VidstreamId;
@@ -1145,7 +1145,7 @@ int CreatSageStreamHeader( PS_BUILDER* pPSBuilder, unsigned char VidstreamId, un
 	} else
 	if ( VidstreamType ==  H264_STREAM_TYPE ) //I insert PSM packet for H264 stream
 	{
-		unsigned char stream_id[2]; unsigned char stream_type[2];
+		uint8_t stream_id[2]; uint8_t stream_type[2];
 		int stream_num;
 		stream_num = 2;
 		stream_id[0]  = VidstreamId;

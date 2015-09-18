@@ -22,24 +22,24 @@ extern "C" {
 
 typedef struct LPCM_AUDIO
 {
-	unsigned short lpcm_source; //1: vob file; 2:dvd; 3:blueray;
-	unsigned short channels;
-	unsigned short block_align;
-	unsigned short bits_per_sample;
-	unsigned long  samples_per_sec;
-	unsigned long  avgbytes_per_sec;
-	unsigned long  channel_cfg;
-	unsigned short header_size;
-	unsigned short padding1;
-	unsigned short padding2;
-	unsigned short padding3;
+	uint16_t lpcm_source; //1: vob file; 2:dvd; 3:blueray;
+	uint16_t channels;
+	uint16_t block_align;
+	uint16_t bits_per_sample;
+	uint32_t samples_per_sec;
+	uint32_t avgbytes_per_sec;
+	uint32_t channel_cfg;
+	uint16_t header_size;
+	uint16_t padding1;
+	uint16_t padding2;
+	uint16_t padding3;
 } LPCM_AUDIO;
 
-int ReadLPCM_AudioHeader( LPCM_AUDIO *pLPCMAudio, const unsigned char* pStart, int nSize );
+int ReadLPCM_AudioHeader( LPCM_AUDIO *pLPCMAudio, const uint8_t* pStart, int nSize );
 void *OpenLPCMConvert( LPCM_AUDIO *pLPCMAudio );
 void CloseLPCMConvert( void* pConverter );
 void ResetLPCMConvert( void* pConverter );
-int LPCMConvert( void* pConverter, int bGroupStart, const unsigned char* pInData, int nSize, unsigned char* pOutData, int nBufSize );
+int LPCMConvert( void* pConverter, int bGroupStart, const uint8_t* pInData, int nSize, uint8_t* pOutData, int nBufSize );
 #ifdef __cplusplus
 }
 #endif

@@ -46,32 +46,32 @@ enum TRACK_TYPE {
 
 typedef struct TRACK
 {
-	unsigned short channel_index;
-	unsigned char  slot_index;
-	unsigned char  group_start;   //ES_GROUP_START, TS_GROUP_START
-	unsigned char  scrambling_flag;
-	unsigned char  state;         //0: unknown; 1:ready; >129: unkonw format
-	unsigned char  command;       //used by ES  block
-	unsigned char  reserve;
+	uint16_t channel_index;
+	uint8_t  slot_index;
+	uint8_t  group_start;   //ES_GROUP_START, TS_GROUP_START
+	uint8_t  scrambling_flag;
+	uint8_t  state;         //0: unknown; 1:ready; >129: unkonw format
+	uint8_t  command;       //used by ES  block
+	uint8_t  reserve;
 
 	struct TS_ELEMENT  *ts_elmnt;
 	struct ES_ELEMENT  *es_elmnt;
 	struct AV_ELEMENT  *av_elmnt;
 
-	unsigned char* es_data_start;
-	unsigned short es_block_size;
-	unsigned short es_data_bytes;
-	unsigned char* buffer_start;
-	unsigned short buffer_size;
-	unsigned short buffer_index;
+	uint8_t* es_data_start;
+	uint16_t es_block_size;
+	uint16_t es_data_bytes;
+	uint8_t* buffer_start;
+	uint16_t buffer_size;
+	uint16_t buffer_index;
 	LONGLONG	start_cue;
 	LONGLONG	cue;
 
-	unsigned long  es_pes_bytes;
+	uint32_t  es_pes_bytes;
 
-	unsigned long  ts_packets_counter;
-	unsigned long  es_blocks_counter;
-	unsigned long  processed_bytes; 
+	uint32_t  ts_packets_counter;
+	uint32_t  es_blocks_counter;
+	uint32_t  processed_bytes; 
 
 } TRACK;
 
@@ -85,21 +85,21 @@ enum TRACK_ATTR {
 
 typedef struct TRACKS
 {
-	unsigned short slot_index;
-	unsigned short track_type; //1: MPEG-TS; 2:MPEG-PS
-	unsigned short track_attr; //
-	unsigned short number_track;
-	unsigned short total_track;
-	unsigned short main_video_index;
-	unsigned short main_audio_index;
-	unsigned short padding;
+	uint16_t slot_index;
+	uint16_t track_type; //1: MPEG-TS; 2:MPEG-PS
+	uint16_t track_attr; //
+	uint16_t number_track;
+	uint16_t total_track;
+	uint16_t main_video_index;
+	uint16_t main_audio_index;
+	uint16_t padding;
 	TRACK* track;
 } TRACKS;
 
 TRACKS *CreateTracks( int nTrackNum );
 void ResetTracks( TRACKS* pTracks );
 void ReleaseTracks( TRACKS* pTracks );
-void CheckTracksAttr( TRACKS* pTracks, unsigned long LanguageCode );
+void CheckTracksAttr( TRACKS* pTracks, uint32_t LanguageCode );
 int  TracksInfo( TRACKS* pTracks, char* pBuffer, int nSize );
 static inline int FindMainVideoAudio( TRACKS* pTracks )
 {

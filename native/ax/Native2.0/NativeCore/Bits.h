@@ -21,45 +21,48 @@
 extern "C" {
 #endif
 
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
+
 //input bits
 typedef struct BITS_I
 {
-	const unsigned char *buffer;
-	int bits_offset;
-	int total_bits;
-	int error_flag;
+	const uint8_t *buffer;
+	int32_t bits_offset;
+	int32_t total_bits;
+	int32_t error_flag;
 } BITS_I;
 
 //output bits
 typedef struct BITS_T
 {
-	unsigned long outbfr;  //save uncommited to buffer bits
-	int outcnt;			   //bits in outbfr
-	int	bytecnt;	       //in byte buffer 	
-	unsigned char* buf;
-	unsigned char* buf_start;
-	int	buf_size;
+	uint32_t outbfr;  //save uncommited to buffer bits
+	int32_t  outcnt;			   //bits in outbfr
+	int32_t  bytecnt;	       //in byte buffer 	
+	uint8_t* buf;
+	uint8_t* buf_start;
+	int32_t  buf_size;
 } BITS_T;
 
 //input bits
-void  SkipBits( BITS_I* pBits, int nCodeBits  );
-unsigned short U( BITS_I* pBits, int nCodeBits );
-int   ReadBitsU( BITS_I* pBits, int nCodeBits  );
+void     SkipBits( BITS_I* pBits, int nCodeBits  );
+uint16_t U( BITS_I* pBits, int nCodeBits );
+int32_t  ReadBitsU( BITS_I* pBits, int nCodeBits  );
 
 //golomb code bits
-unsigned long UE( BITS_I *pBits, int *pCodeBits );
-int SE( BITS_I *pBits, int *pCodeBits ) ;
-unsigned int ReadUE( BITS_I *pBits );
-int ReadSE( BITS_I *pBits );
+uint32_t UE( BITS_I *pBits, int *pCodeBits );
+int32_t  SE( BITS_I *pBits, int *pCodeBits ) ;
+uint32_t ReadUE( BITS_I *pBits );
+int32_t  ReadSE( BITS_I *pBits );
 
 //output bits
-void InitOutBITS( BITS_T *bits, unsigned char* buf, int size );
-void PutOutBITS( BITS_T *bits, unsigned long val, int n );
-int  CloseOutBITS( BITS_T *bits );
+void InitOutBITS( BITS_T *bits, uint8_t* buf, int size );
+void PutOutBITS( BITS_T *bits, uint32_t val, int n );
+int32_t  CloseOutBITS( BITS_T *bits );
 void AlignOutBITS( BITS_T *bits );
-long BitCountBITS( BITS_T *bits );
-long ByteCountBITS( BITS_T *bits );
-int  FlushOutBITS( BITS_T *bits, char* out_buf, int size );
+int32_t BitCountBITS( BITS_T *bits );
+int32_t ByteCountBITS( BITS_T *bits );
+int32_t FlushOutBITS( BITS_T *bits, char* out_buf, int size );
 
 #ifdef __cplusplus
 }

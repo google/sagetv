@@ -99,8 +99,8 @@ int TranslateJWideString( char* buf_out, int buf_out_size, unsigned short* buf_i
 #include <stdarg.h>
 
 #include <linux/dvb/frontend.h>
-int TranslateJWideString2( char* buf_out, int buf_out_size, unsigned short* buf_in );
-int TranslateJWideString( char* buf_out, int buf_out_size, unsigned short* buf_in );
+int TranslateJWideString2( char* buf_out, int buf_out_size, uint16_t* buf_in );
+int TranslateJWideString( char* buf_out, int buf_out_size, uint16_t* buf_in );
 
 
 //*********************** LINUX section ***********************
@@ -205,7 +205,7 @@ void _set_ChannelDataMng_log( bool enable )
 */
 static int  getNextTextField( char* p_in, char **p_out, char* text, int max_len );
 static bool getNextIntField( char* p_in, char **p_out, int* int_val );
-static bool getNextShortField( char* p_in, char **p_out, unsigned short* short_val );
+static bool getNextShortField( char* p_in, char **p_out, uint16_t* short_val );
 static bool parseATSCFreqEntry( char* p_in, ATSC_FREQ* atsc_freq ) ;
 static bool parseQAMFreqEntry( char* p_in, QAM_FREQ* qam_freq );
 static bool parseUserQAMFreqData( char* p_in, struct bcast_qam *Freq, char **error );
@@ -220,7 +220,7 @@ char* makeDVBCFreqString( char*Buf, int Size,  DVB_C_FREQ * Freq  );
 static bool  parseDVBSFreqEntry( char* p_in, DVB_S_FREQ * Freq, char** error  );
 char* makeDVBSFreqString( char*Buf, int Size,  DVB_S_FREQ * Freq  );
 bool GetString( char*p, const char* Name, char* Str, int MaxLen );
-unsigned long fileTimeStamp( char* szFileName );
+uint32_t fileTimeStamp( char* szFileName );
 static char version_string[] ="VERSION 3.0, country:%s\r\n";
 static char type_string[] ="TYPE %s\r\n";
  
@@ -613,7 +613,7 @@ int saveScanTuningTable( CHANNEL_DATA *Channel, char* file_ext )
 				fprintf( fp, "%s\r\n", makeATSCFreqString( buf, sizeof(buf),  (ATSC_FREQ *)&ATSCFreq[i]  ) );
 			} 
 			/*else
-				fprintf( fp, "ch:%d %d %d %d %d %ld %ld #%s\r\n",
+				fprintf( fp, "ch:%d %d %d %d %d %d %d #%s\r\n",
 			          ATSCFreq[i].index,   ATSCFreq[i].major,       ATSCFreq[i].minor,
 				      ATSCFreq[i].program, ATSCFreq[i].physical_ch, ATSCFreq[i].frequency, 
 				      ATSCFreq[i].ctrl,    ATSCFreq[i].name );	
@@ -647,7 +647,7 @@ int saveScanTuningTable( CHANNEL_DATA *Channel, char* file_ext )
 			}
 			/*
 			else
-				fprintf( fp, "ch:%d %d %d %d %d %ld %d %d %ld #%s\r\n",
+				fprintf( fp, "ch:%d %d %d %d %d %d %d %d %d #%s\r\n",
 			          QAMFreq[i].index,   QAMFreq[i].major,       QAMFreq[i].minor,
 				      QAMFreq[i].program, QAMFreq[i].physical_ch, QAMFreq[i].frequency,
 				      QAMFreq[i].modulation, QAMFreq[i].inversal, 
@@ -1184,7 +1184,7 @@ int saveCacheQAMFreq(  CHANNEL_DATA *Channel, int freqTableType, struct bcast_qa
 	i = 0;
 	while ( freqTbl[i].fq != 0 && i<256 ) 
 	{
-		fprintf( fp, "CH:%d frq:%ld \r\n", freqTbl[i].ch, freqTbl[i].fq );
+		fprintf( fp, "CH:%d frq:%d \r\n", freqTbl[i].ch, freqTbl[i].fq );
 		i++;
 	}
 	fprintf( fp, "CH:%d frq:0000 \r\n", 999 );
@@ -1355,13 +1355,13 @@ static bool getNextIntField( char* p_in, char **p_out, int* int_val )
 	return true;
 }
 
-static bool getNextShortField( char* p_in, char **p_out, unsigned short* short_val )
+static bool getNextShortField( char* p_in, char **p_out, uint16_t* short_val )
 {
 	char *token, *p;
 	token = (char*)strtok_r( p_in, delima, &p );
 	if ( token == NULL ) 
 		return false;
-	*short_val = (unsigned short)atoi( token );
+	*short_val = (uint16_t)atoi( token );
 	*p_out = p;
 	return true;
 }
@@ -1705,7 +1705,7 @@ static bool GetExtParameter( char* p, char* Parameter, int MaxLen  )
 }
 
 
-bool GetIntVal( char*p, const char* Name, unsigned long* pVal )
+bool GetIntVal( char*p, const char* Name, uint32_t* pVal )
 {
 	char *s, *e;
 	e = p;
@@ -1734,7 +1734,7 @@ bool GetIntVal( char*p, const char* Name, unsigned long* pVal )
 	return false;
 }
 
-bool GetWordVal( char*p, const char* Name, unsigned short* pVal )
+bool GetWordVal( char*p, const char* Name, uint16_t* pVal )
 {
 	char *s, *e;
 	e = p;
@@ -1753,7 +1753,7 @@ bool GetWordVal( char*p, const char* Name, unsigned short* pVal )
 				while( *s && ( *s == ' ' || *s == '\t' ) ) s++; //skip white space
 				if ( *s )
 				{
-					*pVal = (unsigned short)atoi( s );
+					*pVal = (uint16_t)atoi( s );
 					return true;
 				}
 			}
@@ -1843,7 +1843,7 @@ bool GetQuoteString( char*p, const char* Name, char* Str, int MaxLen )
 static bool parseDVBTFreqEntry( char* p, DVB_T_FREQ * Freq, char** error  )
 {
 	bool found = true;
-	unsigned long val;
+	uint32_t val;
 	if ( Freq == NULL )
 		return false;
 
@@ -1918,7 +1918,7 @@ static bool parseDVBTFreqEntry( char* p, DVB_T_FREQ * Freq, char** error  )
 static bool parseDVBCFreqEntry( char* p, DVB_C_FREQ * Freq, char** error  )
 {
 	bool found = true;
-	unsigned long val;
+	uint32_t val;
 	if ( Freq == NULL )
 		return false;
 
@@ -1980,7 +1980,7 @@ static bool parseDVBCFreqEntry( char* p, DVB_C_FREQ * Freq, char** error  )
 static bool parseDVBSFreqEntry( char* p, DVB_S_FREQ * Freq, char** error  )
 {
 	bool found = true;
-	unsigned long val;
+	uint32_t val;
 	if ( Freq == NULL )
 		return false;
 
@@ -2070,9 +2070,9 @@ static bool parseDVBSFreqEntry( char* p, DVB_S_FREQ * Freq, char** error  )
 static bool parseUserQAMFreqData( char* p, struct bcast_qam *Freq, char **error )
 {
 	bool found = true;
-	unsigned long val;
+	uint32_t val;
 	int frq;
-	unsigned short ch;
+	uint16_t ch;
 	if ( Freq == NULL )
 		return false;
 
@@ -2080,13 +2080,13 @@ static bool parseUserQAMFreqData( char* p, struct bcast_qam *Freq, char **error 
 	
 	Freq->fq = 0; 	Freq->ch = 0;  Freq->inv = 0;  Freq->mod = 0; 
 	if ( !GetWordVal( p, "CH",   &ch) && !GetWordVal( p, "ch",   &ch ) )  { found = false; if ( error && *error == 0x0 ) *error = "index not found 'CH:xx'"; }
-	if ( !GetIntVal( p, "frq",   (unsigned long*)&frq) ) { found = false; if ( error && *error == 0x0 ) *error = "frequency not found"; }
+	if ( !GetIntVal( p, "frq",   (uint32_t*)&frq) ) { found = false; if ( error && *error == 0x0 ) *error = "frequency not found"; }
 
 	if ( !found )
 		return found;
 
 	Freq->ch = (int)ch;
-	Freq->fq = (unsigned long)frq;
+	Freq->fq = (uint32_t)frq;
 	if ( GetIntVal( p, "mod", &val ) )
 		Freq->mod = (char)val;
 
@@ -2099,8 +2099,8 @@ static bool parseUserQAMFreqData( char* p, struct bcast_qam *Freq, char **error 
 static bool parseScanATSCFreqData( char* p, ATSC_FREQ *Freq, char **error )
 {
 	bool found = false;
-	unsigned long val;
-	unsigned short n;
+	uint32_t val;
+	uint16_t n;
 	if ( Freq == NULL )
 		return false;
 
@@ -2126,10 +2126,10 @@ static bool parseScanATSCFreqData( char* p, ATSC_FREQ *Freq, char **error )
 	}
 
 	if ( GetIntVal( p, "frq", &val) ) 
-		Freq->frequency = (unsigned long)val;
+		Freq->frequency = (uint32_t)val;
 
 	if ( GetIntVal( p, "frq", &val) ) 
-		Freq->frequency = (unsigned long)val;
+		Freq->frequency = (uint32_t)val;
 
 	if ( GetIntVal( p, "v_pid", &val ) )
 		Freq->video_pid = (char)val;
@@ -2150,8 +2150,8 @@ static bool parseScanATSCFreqData( char* p, ATSC_FREQ *Freq, char **error )
 static bool parseScanQAMFreqData( char* p, QAM_FREQ *Freq, char **error )
 {
 	bool found = false;
-	unsigned long val;
-	unsigned short n;
+	uint32_t val;
+	uint16_t n;
 	if ( Freq == NULL )
 		return false;
 
@@ -2177,7 +2177,7 @@ static bool parseScanQAMFreqData( char* p, QAM_FREQ *Freq, char **error )
 	}
 
 	if ( GetIntVal( p, "frq", &val) ) 
-		Freq->frequency = (unsigned long)val;
+		Freq->frequency = (uint32_t)val;
 
 	if ( GetIntVal( p, "mod", &val ) )
 		Freq->modulation = (char)val;
@@ -2218,7 +2218,7 @@ char* makeATSCFreqString( char*Buf, int Size,  ATSC_FREQ * Freq  )
 	if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
 	SPRINTF( tmp, sizeof(tmp), "phy:%d ", Freq->physical_ch );
 	if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
-	SPRINTF( tmp, sizeof(tmp), "frq:%ld ", Freq->frequency );
+	SPRINTF( tmp, sizeof(tmp), "frq:%d ", Freq->frequency );
 	if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
 
 	if ( Freq->name[0] )
@@ -2251,7 +2251,7 @@ char* makeQAMFreqString( char*Buf, int Size,  QAM_FREQ * Freq  )
 	if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
 	SPRINTF( tmp, sizeof(tmp), "phy:%d ", Freq->physical_ch );
 	if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
-	SPRINTF( tmp, sizeof(tmp), "frq:%ld ", Freq->frequency );
+	SPRINTF( tmp, sizeof(tmp), "frq:%d ", Freq->frequency );
 	if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
 	SPRINTF( tmp, sizeof(tmp), "mod:%d ", Freq->modulation );
 	if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
@@ -2284,9 +2284,9 @@ char* makeDVBTFreqString( char*Buf, int Size,  DVB_T_FREQ * Freq  )
 	if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
 	SPRINTF( tmp, sizeof(tmp), "sid:%d ", Freq->sid );
 	if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
-	SPRINTF( tmp, sizeof(tmp), "frq:%ld ", Freq->frequency );
+	SPRINTF( tmp, sizeof(tmp), "frq:%d ", Freq->frequency );
 	if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
-	SPRINTF( tmp, sizeof(tmp), "band:%ld ", Freq->bandwidth );
+	SPRINTF( tmp, sizeof(tmp), "band:%d ", Freq->bandwidth );
 	if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
 	
 	if ( Freq->trans_mode != 0xff ) 
@@ -2327,7 +2327,7 @@ char* makeDVBTFreqString( char*Buf, int Size,  DVB_T_FREQ * Freq  )
 	}
 
 
-	SPRINTF( tmp, sizeof(tmp), "ctrl:%ld ", Freq->ctrl );
+	SPRINTF( tmp, sizeof(tmp), "ctrl:%d ", Freq->ctrl );
 	if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
 	
 	if ( Freq->name[0] )
@@ -2356,9 +2356,9 @@ char* makeDVBCFreqString( char*Buf, int Size,  DVB_C_FREQ * Freq  )
 	if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
 	SPRINTF( tmp, sizeof(tmp), "sid:%d ", Freq->sid );
 	if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
-	SPRINTF( tmp, sizeof(tmp), "frq:%ld ", Freq->frequency );
+	SPRINTF( tmp, sizeof(tmp), "frq:%d ", Freq->frequency );
 	if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
-	SPRINTF( tmp, sizeof(tmp), "rate:%ld ", Freq->symbol_rate );
+	SPRINTF( tmp, sizeof(tmp), "rate:%d ", Freq->symbol_rate );
 	if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
 	
 	if ( Freq->modulation != 0xff ) 
@@ -2400,7 +2400,7 @@ char* makeDVBCFreqString( char*Buf, int Size,  DVB_C_FREQ * Freq  )
 		if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
 	}
 
-	SPRINTF( tmp, sizeof(tmp), "ctrl:%ld ", Freq->ctrl );
+	SPRINTF( tmp, sizeof(tmp), "ctrl:%d ", Freq->ctrl );
 	if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
 	
 	if ( Freq->name[0] )
@@ -2429,9 +2429,9 @@ char* makeDVBSFreqString( char*Buf, int Size,  DVB_S_FREQ * Freq  )
 	if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
 	SPRINTF( tmp, sizeof(tmp), "sid:%d ", Freq->sid );
 	if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
-	SPRINTF( tmp, sizeof(tmp), "frq:%ld ", Freq->frequency );
+	SPRINTF( tmp, sizeof(tmp), "frq:%d ", Freq->frequency );
 	if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
-	SPRINTF( tmp, sizeof(tmp), "rate:%ld ", Freq->symbol_rate );
+	SPRINTF( tmp, sizeof(tmp), "rate:%d ", Freq->symbol_rate );
 	if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
 	
 	if ( Freq->modulation != 0xff ) 
@@ -2503,7 +2503,7 @@ char* makeDVBSFreqString( char*Buf, int Size,  DVB_S_FREQ * Freq  )
 	}
 
 
-	SPRINTF( tmp, sizeof(tmp), "ctrl:%ld ", Freq->ctrl );
+	SPRINTF( tmp, sizeof(tmp), "ctrl:%d ", Freq->ctrl );
 	if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
 	
 	if ( Freq->name[0] )
@@ -2679,10 +2679,10 @@ int SaveDVBSPreDefinedFreqTable( CHANNEL_DATA *Channel )
 	return 0;	
 }
 
-int TranslateJWideString( char* buf_out, int buf_out_size, unsigned short* buf_in )
+int TranslateJWideString( char* buf_out, int buf_out_size, uint16_t* buf_in )
 {
 	int len=0, i=0;
-	unsigned short* p = (unsigned short*)buf_in;
+	uint16_t* p = (uint16_t*)buf_in;
 	wchar_t* v;
 	int ret;
 	if ( buf_out == NULL ) return 0;
@@ -2690,7 +2690,7 @@ int TranslateJWideString( char* buf_out, int buf_out_size, unsigned short* buf_i
 
 	len = min( buf_out_size-1, len+1 );
 	v= (wchar_t*)malloc( len*sizeof(wchar_t) );
-	p = (unsigned short*)buf_in;
+	p = (uint16_t*)buf_in;
 	
 #if defined(__APPLE__)
 	for ( i = 0; i<len; i++ ) v[i] = OSReadLittleInt16(p, i * 2);
@@ -2702,7 +2702,7 @@ int TranslateJWideString( char* buf_out, int buf_out_size, unsigned short* buf_i
 	
 	if ( ret == (size_t)-1 )
 	{
-		p = (unsigned short*)buf_in;
+		p = (uint16_t*)buf_in;
 		for ( i = 0; i<len; i++ ) 
 		     buf_out[i]= (char)( 0xff & p[i] ); 
 		buf_out[len] = 0x0;
@@ -2713,10 +2713,10 @@ int TranslateJWideString( char* buf_out, int buf_out_size, unsigned short* buf_i
 
 #if !defined(__APPLE__)
 //translate big endian charactter
-int TranslateJWideString2( char* buf_out, int buf_out_size, unsigned short* buf_in )
+int TranslateJWideString2( char* buf_out, int buf_out_size, uint16_t* buf_in )
 {
 	int len=0, i=0;
-	unsigned short* p = (unsigned short*)buf_in;
+	uint16_t* p = (uint16_t*)buf_in;
 	wchar_t* v;
 	int ret;
 	if ( buf_out == NULL ) return 0;
@@ -2724,7 +2724,7 @@ int TranslateJWideString2( char* buf_out, int buf_out_size, unsigned short* buf_
 
 	len = min( buf_out_size-1, len+1 );
 	v= (wchar_t*)malloc( len*sizeof(wchar_t) );
-	p = (unsigned short*)buf_in;
+	p = (uint16_t*)buf_in;
 	
 	for ( i = 0; i<len; i++ ) v[i] = ( ((p[i]<<8)&0xff00) | p[i] >> 8 ); 
 	
@@ -2733,7 +2733,7 @@ int TranslateJWideString2( char* buf_out, int buf_out_size, unsigned short* buf_
 	
 	if ( ret == (size_t)-1 )
 	{
-		p = (unsigned short*)buf_in;
+		p = (uint16_t*)buf_in;
 		for ( i = 0; i<len; i++ ) 
 		     buf_out[i]= (char)( 0xff & p[i] ); 
 		buf_out[len] = 0x0;
@@ -2776,7 +2776,7 @@ int ConvertIllegalChar2( char* filename )
 }
 
 #include <sys/stat.h>
-unsigned long fileTimeStamp( char* szFileName )
+uint32_t fileTimeStamp( char* szFileName )
 {
 	struct stat st;
 	if ( szFileName == NULL || szFileName[0] == 0 )

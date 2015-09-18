@@ -78,7 +78,7 @@ void ResetPSIParser( PSI_PARSER* pPSIParser )
 	return;
 }
 
-void SetLanguage( PSI_PARSER* pPSIParser, unsigned long nLanguageCode )
+void SetLanguage( PSI_PARSER* pPSIParser, uint32_t nLanguageCode )
 {
 	pPSIParser->language_code = nLanguageCode;
 	if ( pPSIParser->dvb_psi != NULL )
@@ -118,10 +118,10 @@ void SetStreamFormat( PSI_PARSER* pPSIParser, int nFormat, int nSubFormat )
 			char buf[64];
 			snprintf( buf, sizeof(buf), "%s", StreamFormatString( nFormat, nSubFormat) );
 			memcpy( message_data.title, "FORMAT", 7 );
-			message_data.message = (unsigned char*)buf;
-			message_data.message_length = (unsigned short)strlen(buf);
-			message_data.buffer = (unsigned char*)buf;
-			message_data.buffer_length = (unsigned short)sizeof(buf);
+			message_data.message = (uint8_t*)buf;
+			message_data.message_length = (uint16_t)strlen(buf);
+			message_data.buffer = (uint8_t*)buf;
+			message_data.buffer_length = (uint16_t)sizeof(buf);
 			pPSIParser->dumper.message_dumper( pPSIParser->dumper.message_context, &message_data, sizeof(message_data) );
 		}
 	}
@@ -139,10 +139,10 @@ void SetStreamFormat( PSI_PARSER* pPSIParser, int nFormat, int nSubFormat )
 			char buf[64];
 			snprintf( buf, sizeof(buf), "%s", StreamFormatString( nFormat, nSubFormat) );
 			memcpy( message_data.title, "FORMAT", 7 );
-			message_data.message = (unsigned char*)buf;
-			message_data.message_length = (unsigned short)strlen(buf);
-			message_data.buffer = (unsigned char*)buf;
-			message_data.buffer_length = (unsigned short)sizeof(buf);
+			message_data.message = (uint8_t*)buf;
+			message_data.message_length = (uint16_t)strlen(buf);
+			message_data.buffer = (uint8_t*)buf;
+			message_data.buffer_length = (uint16_t)sizeof(buf);
 			pPSIParser->dumper.message_dumper( pPSIParser->dumper.message_context, &message_data, sizeof(message_data) );
 		}
 	}
@@ -195,8 +195,8 @@ static void ReleaseStreamDetect( STREAM_DETECT * pStreamDetect )
 
 static int IsDVBPSIPacket( STREAM_DETECT * pStreamDetect, TS_PACKET *pTSPacket  )
 {
-	unsigned short pid = pTSPacket->pid;
-	const unsigned char* payload_data; int payload_size;
+	uint16_t pid = pTSPacket->pid;
+	const uint8_t* payload_data; int payload_size;
 	SECTION_HEADER section_header;
 
 	payload_data = pTSPacket->data + pTSPacket->payload_offset;
@@ -296,8 +296,8 @@ static int IsDVBPSIPacket( STREAM_DETECT * pStreamDetect, TS_PACKET *pTSPacket  
 
 static int IsATSPSICPacket( STREAM_DETECT * pStreamDetect, TS_PACKET *pTSPacket  )
 {
-	unsigned short pid = pTSPacket->pid;
-	const unsigned char* payload_data; int payload_size;
+	uint16_t pid = pTSPacket->pid;
+	const uint8_t* payload_data; int payload_size;
 	
 	payload_data = pTSPacket->data + pTSPacket->payload_offset;
 	payload_size = pTSPacket->payload_bytes;
@@ -382,9 +382,9 @@ int ParseTSPSI( TS_FILTER* pTSFilter, TS_PACKET *pTSPacket )
 	return 0;
 }
 
-unsigned char* GetDescriptor( const unsigned char *pData, int Bytes, unsigned char Tag, int *pLength )
+uint8_t* GetDescriptor( const uint8_t *pData, int Bytes, uint8_t Tag, int *pLength )
 {
-	unsigned char tag; 
+	uint8_t tag; 
 	int len;
 	int i=0;
 	*pLength = 0;
@@ -395,7 +395,7 @@ unsigned char* GetDescriptor( const unsigned char *pData, int Bytes, unsigned ch
 		if ( tag == Tag )
 		{
 			*pLength = len;
-			return (unsigned char*)pData+i;
+			return (uint8_t*)pData+i;
 		}
 		i += 2+len;
 	}
@@ -425,19 +425,18 @@ char* StreamFormatString( int format, int sub_format )
 }
 
 
-int TransJWideString( char* pBufOut, int nBufOutSize, unsigned short* pBufIn )
+int TransJWideString( char* pBufOut, int nBufOutSize, uint16_t* pBufIn )
 {
 	
-	unsigned short*  p = (unsigned short*)pBufIn;
+	uint16_t*  p = (uint16_t*)pBufIn;
 	int len, ret;
 	if ( p == NULL ) return 0;
 
 	len = 0;
 	while ( *p && len + MB_CUR_MAX < nBufOutSize ) 
 	{
-		unsigned short wch;
-
 		// TODO validate the APPLE and BIGENDIAN behavior, instead of "len" it was using "i" but "i" was not defined anymore, so assume it would be "len"
+		uint16_t wch;
 #if defined(__APPLE__)
 		wch = (wchar_t)OSReadBigInt16(p, len * 2);
 #else
@@ -470,25 +469,25 @@ void ReleaseMesg( MESG* pMesg )
 	ReleaseDescData( &pMesg->body );
 }
 
-char* Language( unsigned long lLanguageCode, char* pLanguage )
+char* Language( uint32_t lLanguageCode, char* pLanguage )
 {
-	static  unsigned char _language[4];
+	static  uint8_t _language[4];
 	if ( pLanguage == NULL )
 		pLanguage = (char*)_language;
 
-	pLanguage[0] = (unsigned char)(lLanguageCode & 0x0ff);
-	pLanguage[1] = (unsigned char)(( lLanguageCode >> 8 )  & 0x0ff);
-	pLanguage[2] = (unsigned char)(( lLanguageCode >> 16 ) & 0x0ff);
+	pLanguage[0] = (uint8_t)(lLanguageCode & 0x0ff);
+	pLanguage[1] = (uint8_t)(( lLanguageCode >> 8 )  & 0x0ff);
+	pLanguage[2] = (uint8_t)(( lLanguageCode >> 16 ) & 0x0ff);
 	pLanguage[3] = 0x0;
 	return pLanguage;
 }
 
-unsigned long LanguageCode( unsigned char* pLanguage )
+uint32_t LanguageCode( uint8_t* pLanguage )
 {
 	return ( pLanguage[2] <<16 )|(pLanguage[1]<<8)|(pLanguage[0]);
 }
 
-char* UTCFormat( unsigned long t, char* p, int len )
+char* UTCFormat( uint32_t t, char* p, int len )
 {
 	static char utc_time[30];
 	struct tm *utc;
@@ -518,10 +517,10 @@ char* UTCFormat( unsigned long t, char* p, int len )
 #include <stdio.h>
 //#pragma warning(disable : 4172)
 //debug utility
-char* _descriptor_check( unsigned char* p, int bytes )
+char* _descriptor_check( uint8_t* p, int bytes )
 {
 	static char buf[512]={0}, tmp[16];
-	unsigned char tag; 
+	uint8_t tag; 
 	int len;
 	int i=0;
 	sprintf( buf, "len:%d ", bytes );

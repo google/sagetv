@@ -98,9 +98,9 @@ static void flog( const char* logname, const char* cstr, ... )
 }
 #endif
 
-unsigned long msElapsed( unsigned long start_time )
+uint32_t msElapsed( uint32_t start_time )
 {
-	unsigned long ms;
+	uint32_t ms;
 	struct timeval tv;
 	gettimeofday(&tv, NULL);
 	ms = tv.tv_sec * 1000 + tv.tv_usec/1000;
@@ -152,8 +152,8 @@ int LoadDebugCfg( DTVChannelDebugInfo* dbg )
 			{ 
 				flog( "Native.log", "DTVChannel: dump raw data %d Mbyte into %s\r\n", val, ext );
 				strncpy( dbg->raw_dump_path, ext, sizeof(dbg->raw_dump_path) );
-				if ( val == -1 ) dbg->dump_size = (unsigned long)val;
-				else dbg->dump_size = (unsigned long)val*1024*1024;  //Mbytes
+				if ( val == -1 ) dbg->dump_size = (uint32_t)val;
+				else dbg->dump_size = (uint32_t)val*1024*1024;  //Mbytes
 				
 			} else
 				if ( !strcmp( name, "debugsource" ) && val != 0 )
@@ -164,7 +164,7 @@ int LoadDebugCfg( DTVChannelDebugInfo* dbg )
 				}
 			if ( !strcmp( name, "audio_ctrl" ) && val != 0 )
 			{
-				dbg->audio_ctrl = (unsigned long)val;
+				dbg->audio_ctrl = (uint32_t)val;
 				flog( "Native.log",  "DTVChannel: debug audio ctrl: %d. %s\r\n", val,
 					   (dbg->audio_ctrl&0x01) ? "multiple audio disabled" : "" );
 				
@@ -187,7 +187,7 @@ static void DTVChannel_PostMessage(char* pSrc, char* pData, int MsgType, int Pri
 	static jmethodID postMsgMeth = 0;
 	static jclass msgClass = 0;
 	static jmethodID msgConstructor = 0;
-	static unsigned long msg_id = 0;
+	static uint32_t msg_id = 0;
 	static pthread_mutex_t init_lock = PTHREAD_MUTEX_INITIALIZER;
 	JNIEnv* env;
 	
@@ -235,8 +235,8 @@ static void DTVChannel_PostMessage(char* pSrc, char* pData, int MsgType, int Pri
 
 // Embedded EPG data
 // return: 1 on success, 0 on error
-// typedef long (*EPG_DUMP)( void* context, short bytes, void* mesg );
-static long DTVChannel_EPGDump(void *context, void *msg, short bytes )
+// typedef int32_t (*EPG_DUMP)( void* context, short bytes, void* mesg );
+static int32_t DTVChannel_EPGDump(void *context, void *msg, short bytes )
 {
 	DTVChannel *chan = (DTVChannel*)context;
 //	flog("Native.log", "DTVChannel_EPGDump(%p, %d, %s)\r\n", context, bytes, (char*)msg);
@@ -249,8 +249,8 @@ static long DTVChannel_EPGDump(void *context, void *msg, short bytes )
 
 // A/V info data from stream, e.g., aspect ratio
 // return: 1 on success, 0 on error
-// typedef long (*AV_INF_DUMP)( void* context, short bytes, void* mesg );
-static long DTVChannel_AVInfoDump(void *context, void *msg, short bytes )
+// typedef int32_t (*AV_INF_DUMP)( void* context, short bytes, void* mesg );
+static int32_t DTVChannel_AVInfoDump(void *context, void *msg, short bytes )
 {
 	DTVChannel *chan = (DTVChannel*)context;
 	flog("Native.log", "DTVChannel_AVInfoDump(%p, %d, %s)\r\n", context, bytes, (char*)msg);
@@ -259,7 +259,7 @@ static long DTVChannel_AVInfoDump(void *context, void *msg, short bytes )
 	return 0;
 }
 
-static long DTVChannel_PMTDump(void *context, void *mesg, short bytes )
+static int32_t DTVChannel_PMTDump(void *context, void *mesg, short bytes )
 {
 	PROGRAM_DATA* programData = (PROGRAM_DATA*)mesg;
 	unsigned char* pmtData;
@@ -295,21 +295,21 @@ static long DTVChannel_PMTDump(void *context, void *mesg, short bytes )
 
 // Data callback from splitter, called from PushData and "FlashData" (FlushData???)
 // return: 1 on success, 0 on error
-// typedef int  (*OUTPUT_DUMP)( void* context, unsigned char* pData, unsigned long lBytes );
+// typedef int  (*OUTPUT_DUMP)( void* context, unsigned char* pData, uint32_t lBytes );
 static int DTVChannel_OutputDump(void *context, void* pDataBlk, int lBytes )
 {
 	DTVChannel *chan = (DTVChannel*)context;
 	OUTPUT_DATA   *pDataBuffer = (OUTPUT_DATA*)pDataBlk;
 	unsigned char* pData = pDataBuffer->data_ptr;
-	unsigned long  numBytes = pDataBuffer->bytes;
+	uint32_t  numBytes = pDataBuffer->bytes;
 
-	//flog("Native.log", "DTVChannel_OutputDump(%p, %p, %ld) sizeof OUTPUT_DATA %d\r\n", context, pData, numBytes, sizeof(OUTPUT_DATA) );
+	//flog("Native.log", "DTVChannel_OutputDump(%p, %p, %d) sizeof OUTPUT_DATA %d\r\n", context, pData, numBytes, sizeof(OUTPUT_DATA) );
 	
 	if(chan) return chan->OutputDump( pData, numBytes );
 	return 0;
 }
 
-// UNUSED (CAM): typedef long (*DATA_DUMP)( void* context, short bytes, void* mesg );
+// UNUSED (CAM): typedef int32_t (*DATA_DUMP)( void* context, short bytes, void* mesg );
 // UNUSED: typedef int  (*ALLOC_BUFFER)( void* conext, unsigned char** ppData, int cmd ); // cmd 0:alloc, 1:release, return size
 
 #pragma mark -
@@ -372,8 +372,8 @@ DTVChannel::DTVChannel(SageTuner *tuner, const char *tunerName, FILE *encodeFile
 		flog( "Native.log", "DTVChannel: multiple audio is disabled\r\n" );
 	}
 
-	flog("Native.log", "DTVChannel 2.0.1 is created 0x%lx, remuxer:0x%lx tuner:'%s' outFile:0x%x \r\n",
-			  (unsigned long)this, (unsigned long)remuxer,  mTunerName, encodeFile  );
+	flog("Native.log", "DTVChannel 2.0.1 is created 0x%p, remuxer:0x%p tuner:'%s' outFile:0x%x \r\n",
+			  this, remuxer,  mTunerName, encodeFile  );
 }
 
 DTVChannel::~DTVChannel()
@@ -593,7 +593,7 @@ int DTVChannel::setTuning(SageTuningParams *params)
 		// verify the standard was set (in one of the SageTuneXXX calls)
 		if(mTuningParams.tuningStandard == kSageTunerStandard_Unknown)
 		{
-			flog("Native.log", "Bogus tune! (std = %08lx, freq = %ld)\r\n", mTuningParams.tuningStandard, mTuningParams.tuningFrequency);
+			flog("Native.log", "Bogus tune! (std = %08lx, freq = %d)\r\n", mTuningParams.tuningStandard, mTuningParams.tuningFrequency);
 			result = false;
 		}
 		
@@ -657,7 +657,7 @@ void DTVChannel::idle()
 	if(dbg->source_fd == NULL) return;
 	
 	if(dbg->debug_source_mode != 2) {
-		unsigned long ep, ep_expect;
+		uint32_t ep, ep_expect;
 		
 		numbytes = fread(dbg->debug_source_buffer, 1, BUFFERSIZE, dbg->source_fd);
 		if(numbytes == 0) {
@@ -678,7 +678,7 @@ void DTVChannel::idle()
 
 void DTVChannel::pushData(void *buffer, size_t size)
 {
-	//flog("Native.log", "DTVChannel::pushData(%p, %ld)\r\n", buffer, size);
+	//flog("Native.log", "DTVChannel::pushData(%p, %d)\r\n", buffer, size);
 	if(buffer && size && remuxer) {
 		if(dbg) {
 			if(dbg->dump_fd && (dbg->dump_size > dbg->dumped_bytes)) {
@@ -707,9 +707,9 @@ void DTVChannel::pushData(void *buffer, size_t size)
 void DTVChannel::splitStream(void *buffer, size_t size)
 {
 	unsigned char* pData = (unsigned char*)buffer;
-	long lDataLen = (int)size;
+	int32_t lDataLen = (int)size;
 	if( remuxer == NULL || !size) return;
-	//flog("Native.log", "DTVChannel::splitStream(%p, %ld this:0x%lx 0x%x 0x%x)\r\n", buffer, size,  (unsigned long)this,
+	//flog("Native.log", "DTVChannel::splitStream(%p, %d this:0x%x 0x%x 0x%x)\r\n", buffer, size,  (uint32_t)this,
 	//         parserEnabled, scanChannelEnabled  );
 	mBytesIn += (off_t)size;
 	if ( 0 && dbg->dump_fd > 0 && dbg->dump_size > dbg->dumped_bytes )
@@ -765,13 +765,13 @@ void DTVChannel::splitStream(void *buffer, size_t size)
 	
 }
 
-long DTVChannel::EPGDump(short bytes, void *msg)
+int32_t DTVChannel::EPGDump(short bytes, void *msg)
 {
 	DTVChannel_PostMessage(mTunerName, (char*)msg, EPG_MSG_TYPE, 100);
 	return 1;
 }
 
-long DTVChannel::AVInfoDump(short bytes, void *msg)
+int32_t DTVChannel::AVInfoDump(short bytes, void *msg)
 {
 	DTVChannel_PostMessage(mTunerName, (char*)msg, AV_INF_TYPE, 100);
 	return 1;
@@ -913,10 +913,10 @@ static int findTransitionPoint(unsigned char* data, int length, int flags, int v
 }
 #endif
 
-int DTVChannel::OutputDump(unsigned char *buffer, unsigned long size)
+int DTVChannel::OutputDump(unsigned char *buffer, uint32_t size)
 {
 	int outBytes = 0;
-	//flog("Native.log", "DTVChannel(%p)::OutputDump(%p, %ld) - out file %p\r\n", this, buffer, size, mOutputFile);
+	//flog("Native.log", "DTVChannel(%p)::OutputDump(%p, %d) - out file %p\r\n", this, buffer, size, mOutputFile);
 	
 	if( mOutputFile == NULL || !buffer) return 0;
 	
@@ -997,13 +997,13 @@ int DTVChannel::OutputDump(unsigned char *buffer, unsigned long size)
 	return 1;
 }
 
-long DTVChannel::PMTDump(unsigned short programID, unsigned char *pmtData, int pmtDataSize)
+int32_t DTVChannel::PMTDump(unsigned short programID, unsigned char *pmtData, int pmtDataSize)
 {
 	mProgramID = programID;
 	return 1;
 }
 
-long DTVChannel::pidFilterDump( PID_ENTRY* pids, int pidNum )
+int32_t DTVChannel::pidFilterDump( PID_ENTRY* pids, int pidNum )
 {
 	int result = 0, i;
    // shouldn't be here if either of these fails
@@ -1026,7 +1026,7 @@ long DTVChannel::pidFilterDump( PID_ENTRY* pids, int pidNum )
 		  mPIDFilterDelay ? "(delayed)" : "", mProgramID,
 		  pidTbl[0].pid, pidTbl[1].pid ,pidTbl[2].pid ,pidTbl[3].pid ,pidTbl[4].pid ,pidTbl[5].pid ,pidTbl[6].pid ,pidTbl[7].pid ,  result);
 	
-	return (long)(result != 1);
+	return (int32_t)(result != 1);
 }
 
 #pragma mark -
@@ -1076,7 +1076,7 @@ int DTVChannel::tuneATSCChannel(ATSC_FREQ *atsc, int dryTune)
 		mPIDFilterDelay = 2; //ZQ we always have EPG data for ATSC channels, don't need EPG data in a stream
 	}
 	
-	flog("Native.log", "tuneATSCChannel (ch:%d, fq:%ld, dryTune:%s)\r\n", atsc->physical_ch, atsc->frequency, dryTune ? "true" : "false");
+	flog("Native.log", "tuneATSCChannel (ch:%d, fq:%d, dryTune:%s)\r\n", atsc->physical_ch, atsc->frequency, dryTune ? "true" : "false");
 	if(mTuner && !dryTune) {
 		int ii;
 		bcast *freq = (bcast *)NULL;
@@ -1094,7 +1094,7 @@ int DTVChannel::tuneATSCChannel(ATSC_FREQ *atsc, int dryTune)
 			// PID filter will kick in later if we want it
 			mTuningParams.dtvParams.atsc.physical_ch = freq->ch;
 			mTuningParams.dtvParams.atsc.frequency = freq->fq;
-			flog("Native.log", "tuning ATSC channel %d, frequency %ld\r\n", physical_ch, mTuningParams.tuningFrequency);
+			flog("Native.log", "tuning ATSC channel %d, frequency %d\r\n", physical_ch, mTuningParams.tuningFrequency);
 			err = mTuner->setTuning(&mTuningParams);
 			if(err != -1) err = 0;
 		} else {
@@ -1129,7 +1129,7 @@ int DTVChannel::tuneQAMFrequency(QAM_FREQ *qam, int dryTune)
 		mTuningParams.medium = getFreqType(&mChannel);
 		memcpy(&mTuningParams.dtvParams.qam, qam, sizeof(QAM_FREQ));
 		
-		flog("Native.log", "tuneQAMFrequency std:%08lx freq:%ld QAM{index:%d major:%d minor:%d prog: %d channel:%d freq:%ld mod:%d inversal:%d ctrl:%ld, name \"%s\"}\r\n",
+		flog("Native.log", "tuneQAMFrequency std:%08lx freq:%d QAM{index:%d major:%d minor:%d prog: %d channel:%d freq:%d mod:%d inversal:%d ctrl:%d, name \"%s\"}\r\n",
 			  mTuningParams.tuningStandard,
 			  mTuningParams.tuningFrequency,
 			  mTuningParams.dtvParams.qam.index,
@@ -1171,7 +1171,7 @@ int DTVChannel::tuneDVBTFrequency(DVB_T_FREQ *dvbt, int dryTune)
 	mTuningParams.tuningFrequency = dvbt->frequency;
 	memcpy(&mTuningParams.dtvParams.dvbt, dvbt, sizeof(DVB_T_FREQ));
 	
-	flog("Native.log", "tuneDVBTFrequency (std:%08lx freq = %ld onid:%d tsid:%d sid:%d channel:%d bandwidth:%d rateHP:%d rateLP:%d trans:%d guard:%d heirarchy:%d shift:%ld)\r\n",
+	flog("Native.log", "tuneDVBTFrequency (std:%08lx freq = %d onid:%d tsid:%d sid:%d channel:%d bandwidth:%d rateHP:%d rateLP:%d trans:%d guard:%d heirarchy:%d shift:%d)\r\n",
 		  mTuningParams.tuningStandard,
 		  mTuningParams.tuningFrequency,
 		  mTuningParams.dtvParams.dvbt.onid,
@@ -1211,7 +1211,7 @@ int DTVChannel::tuneDVBCFrequency(DVB_C_FREQ *dvbc, int dryTune)
 	mTuningParams.tuningFrequency = dvbc->frequency;
 	memcpy(&mTuningParams.dtvParams.dvbc, dvbc, sizeof(DVB_C_FREQ));
 	
-	flog("Native.log", "tuneDVBCFrequency (std:%08lx freq:%ld onid:%d tsid:%d sid:%d channel:%d sym rate:%d fec_in:%d, fec_inn_rate:%d fec_out:%d: fec_out_rate:%d mod:%d)\r\n",
+	flog("Native.log", "tuneDVBCFrequency (std:%08lx freq:%d onid:%d tsid:%d sid:%d channel:%d sym rate:%d fec_in:%d, fec_inn_rate:%d fec_out:%d: fec_out_rate:%d mod:%d)\r\n",
 		  mTuningParams.tuningStandard,
 		  mTuningParams.tuningFrequency,
 		  mTuningParams.dtvParams.dvbt.onid,
@@ -1250,7 +1250,7 @@ int DTVChannel::tuneDVBSFrequency(DVB_S_FREQ *dvbs, int dryTune)
 	mTuningParams.tuningFrequency = dvbs->frequency;
 	memcpy(&mTuningParams.dtvParams.dvbs, dvbs, sizeof(DVB_S_FREQ));
 	
-	flog("Native.log", "tuneDVBCFrequency (std:%08lx freq:%ld onid:%d tsid:%d sid:%d channel:%d sym rate:%d pol:%d fec_in:%d fec_in_rate:%d fec_ou:%d fec_out_rate:%d mod:%d orbit:%d)\r\n",
+	flog("Native.log", "tuneDVBCFrequency (std:%08lx freq:%d onid:%d tsid:%d sid:%d channel:%d sym rate:%d pol:%d fec_in:%d fec_in_rate:%d fec_ou:%d fec_out_rate:%d mod:%d orbit:%d)\r\n",
 		  mTuningParams.tuningStandard,
 		  mTuningParams.tuningFrequency,
 		  mTuningParams.dtvParams.dvbt.onid,
@@ -1612,7 +1612,7 @@ int  SageGetSatelliteTble( void* Capture, SAT_NAME *sat_name, int max_sat )
 	return 0;
 }
 
-void SageDelay( void* Capture, unsigned long ms )
+void SageDelay( void* Capture, uint32_t ms )
 {
 	sleep(ms);
 }

@@ -42,12 +42,12 @@ static const int SamplingRateTbl[2][3] =
 	{22050, 24000, 16000, }		// MPEG 2
 };
 
-int ReadMpegAudioHeader( MPEG_AUDIO *pMpegAudio, const unsigned char* pStart, int Size )
+int ReadMpegAudioHeader( MPEG_AUDIO *pMpegAudio, const uint8_t* pStart, int Size )
 {
 	int Layer,i,MPGVersion, CRC_protected, BiteRateIndex, SampleRateIndex;
-	unsigned char LayerCode;
-	const unsigned char *pData;
-	unsigned long Bitrate;
+	int8_t LayerCode;
+	const int8_t *pData;
+	uint32_t Bitrate;
 
 	pData = pStart;
 
@@ -103,16 +103,16 @@ int ReadMpegAudioHeader( MPEG_AUDIO *pMpegAudio, const unsigned char* pStart, in
 	
 	BiteRateIndex = ((*(pData+2)	>> 4 ) & 0x0f);
 	if ( BiteRateIndex == 0x0f ) return 0;
-	Bitrate = (unsigned long )MpegBitRateTbl[MPGVersion-1][Layer - 1][BiteRateIndex] * 1000;
+	Bitrate = (uint32_t )MpegBitRateTbl[MPGVersion-1][Layer - 1][BiteRateIndex] * 1000;
 	if ( pMpegAudio->samples_per_sec	!= 44100 &&	
 		/*	Layer 3	can	sometimes switch bitrates */
 		!(Layer	== 3 &&	/* !m_pStreamList->AudioLock() && */
 			(*(pData+2) >> 4) ==	0))	{
 
 		if (Layer == 1)	{
-			pMpegAudio->block_align	= (unsigned short)(4 * ((Bitrate * 12) / pMpegAudio->samples_per_sec));
+			pMpegAudio->block_align	= (uint16_t)(4 * ((Bitrate * 12) / pMpegAudio->samples_per_sec));
 		} else {
-			pMpegAudio->block_align	= (unsigned short)((144 * Bitrate) / pMpegAudio->samples_per_sec);
+			pMpegAudio->block_align	= (uint16_t)((144 * Bitrate) / pMpegAudio->samples_per_sec);
 		}
 	} else {
 		pMpegAudio->block_align	= 1;
@@ -135,10 +135,10 @@ int ReadMpegAudioHeader( MPEG_AUDIO *pMpegAudio, const unsigned char* pStart, in
 		break;
 	}
 	pMpegAudio->channels =	
-		(unsigned short)(pMpegAudio->head_mode == ACM_MPEG_SINGLECHANNEL	? 1	: 2);
-	pMpegAudio->head_mode_ext =	(unsigned short)(1 <<	(*(pData+3) >> 4));
-	pMpegAudio->head_emphasis =	(unsigned short)((*(pData+3) &	0x03) +	1);	
-	pMpegAudio->head_flags	  =	(unsigned short)(((*(pData+2) & 1)	? ACM_MPEG_PRIVATEBIT :	0) +
+		(uint16_t)(pMpegAudio->head_mode == ACM_MPEG_SINGLECHANNEL	? 1	: 2);
+	pMpegAudio->head_mode_ext =	(uint16_t)(1 <<	(*(pData+3) >> 4));
+	pMpegAudio->head_emphasis =	(uint16_t)((*(pData+3) &	0x03) +	1);	
+	pMpegAudio->head_flags	  =	(uint16_t)(((*(pData+2) & 1)	? ACM_MPEG_PRIVATEBIT :	0) +
 						   ((*(pData+3) & 8)	? ACM_MPEG_COPYRIGHT : 0) +	
 						   ((*(pData+3) & 4)	? ACM_MPEG_ORIGINALHOME	: 0) +
 						   ((*(pData+1) & 1)	? ACM_MPEG_PROTECTIONBIT : 0) +	

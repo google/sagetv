@@ -21,7 +21,7 @@
 #include "EAC3Format.h"
 
 
-static int EAC3SyncInfo ( unsigned char* buf, int * sample_rate, int * bit_rate, int *channels )
+static int EAC3SyncInfo ( uint8_t* buf, int * sample_rate, int * bit_rate, int *channels )
 {
 	static int blocks[4] = { 1, 2, 3, 6 };
 	static int samplerate[3] = { 48000, 44100, 32000 };
@@ -82,9 +82,9 @@ static int EAC3SyncInfo ( unsigned char* buf, int * sample_rate, int * bit_rate,
 }
 
 
-int ReadEAC3AudioHeader( EAC3_AUDIO *pEAC3Audio, const unsigned char* pStart, int nSize )
+int ReadEAC3AudioHeader( EAC3_AUDIO *pEAC3Audio, const uint8_t* pStart, int nSize )
 {
-	const unsigned char *p;
+	const uint8_t *p;
 	int i;
 	int sample_rate, bit_rate, channels;
 	p = pStart;
@@ -100,13 +100,13 @@ int ReadEAC3AudioHeader( EAC3_AUDIO *pEAC3Audio, const unsigned char* pStart, in
 	if ( i >= nSize -6 )
 		return 0;
 
-	if ( !EAC3SyncInfo ( (unsigned char*)p+i, &sample_rate, &bit_rate, &channels ) )
+	if ( !EAC3SyncInfo ( (uint8_t*)p+i, &sample_rate, &bit_rate, &channels ) )
 		return 0;
 
 	pEAC3Audio->samples_per_sec = sample_rate;
 	pEAC3Audio->avgbytes_per_sec =  bit_rate >> 3;
 	pEAC3Audio->channels = channels;
-	pEAC3Audio->block_align = (unsigned short)((pEAC3Audio->avgbytes_per_sec * 1536) / pEAC3Audio->samples_per_sec);
+	pEAC3Audio->block_align = (uint16_t)((pEAC3Audio->avgbytes_per_sec * 1536) / pEAC3Audio->samples_per_sec);
 
 	return 1;
 

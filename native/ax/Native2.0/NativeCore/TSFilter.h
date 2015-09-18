@@ -190,16 +190,16 @@ typedef struct TS_FILTER_DUMPER
 } TS_FILTER_DUMPER;
 
 typedef struct {
-	unsigned char* desc_ptr;
-	unsigned short desc_bytes;
-	unsigned short buffer_size;
+	uint8_t* desc_ptr;
+	uint16_t desc_bytes;
+	uint16_t buffer_size;
 } DESC_DATA;
 
 
 //typedef struct DESC
 //{
 //	int length;
-//	unsigned char* desc[MAX_DESC_INFO_LEN];
+//	uint8_t* desc[MAX_DESC_INFO_LEN];
 //} DESC;
 
 typedef	struct	
@@ -213,8 +213,8 @@ typedef	struct
 
 typedef	struct TS_PACKET
 {
-	unsigned short pid;	
-	unsigned char* data;
+	uint16_t pid;	
+	uint8_t* data;
 	int		      payload_offset;
 	int		      payload_bytes;
 	int			  error;
@@ -234,77 +234,77 @@ typedef	struct TS_PACKET
 //PAT table
 typedef	struct	TS_PAT
 {
-	unsigned short tsid;
-	unsigned short total_program_number;	
-	unsigned short program_number[MAX_PMT_NUM];
-	unsigned short program_pid[MAX_PMT_NUM];	
+	uint16_t tsid;
+	uint16_t total_program_number;	
+	uint16_t program_number[MAX_PMT_NUM];
+	uint16_t program_pid[MAX_PMT_NUM];	
 
-	unsigned char  update_flag;
-	unsigned char  locked;
-	unsigned long  section_crc32; //used to check pmt updating to set update_flag
-	unsigned long  stamp;         //use it to drop expired/aged pat
+	uint8_t  update_flag;
+	uint8_t  locked;
+	uint32_t  section_crc32; //used to check pmt updating to set update_flag
+	uint32_t  stamp;         //use it to drop expired/aged pat
 } TS_PAT;
 
 typedef struct
 {
 	TS_PAT     *pat_table;
 	TS_SECTION *pat_section;
-	short	   pat_index;
-	short	   update_flag; //flag of undated PAT
+	int16_t	   pat_index;
+	int16_t	   update_flag; //flag of undated PAT
 } PAT_DATA;
 
 
 /* Program Map data*/
 typedef	struct	_TS_PMT
 {
-	unsigned short program_number;
-	unsigned short pcr_pid;
-	unsigned short ca_pid;
-	unsigned short ca_id;
+	uint16_t program_number;
+	uint16_t pcr_pid;
+	uint16_t ca_pid;
+	uint16_t ca_id;
 	DESC_DATA	   program_desc;
 
-	unsigned short total_stream_number;
-	unsigned short stream_pid[MAX_ES];
-	unsigned char  stream_type[MAX_ES];	
+	uint16_t total_stream_number;
+	uint16_t stream_pid[MAX_ES];
+	uint8_t  stream_type[MAX_ES];	
 	DESC_DATA      stream_desc[MAX_ES];
 
-	unsigned long  section_crc32; //used to check pmt updating to set update_flag
-	unsigned long  active_count;  //data packet counter, used to check an empty pmt
-	unsigned char  update_flag;
-	unsigned char  padding;
+	uint32_t  section_crc32; //used to check pmt updating to set update_flag
+	uint32_t  active_count;  //data packet counter, used to check an empty pmt
+	uint8_t  update_flag;
+	uint8_t  padding;
 } TS_PMT;
 
 typedef struct
 {
 	TS_PMT		*pmt_table;
 	TS_SECTION	*pmt_section;
-	unsigned short	pid;
-	unsigned short	tsid;
-	unsigned short	channel;
-	unsigned short	total_channel_num; //total channels (programs) go with this channel
-	short			update_flag; //flag upadted PMT
+	uint16_t	pid;
+	uint16_t	tsid;
+	uint16_t	channel;
+	uint16_t	total_channel_num; //total channels (programs) go with this channel
+	int16_t			update_flag; //flag upadted PMT
 } PMT_DATA;
 
 //mapping pid to program of PMT and PAT
 typedef struct TS_PMT_MAP
 {
-	unsigned short pid;
-	unsigned short pat_index;
-	unsigned short program;
-	unsigned short channel;
-	unsigned short group_flag;  //multiple program share one pid
-	unsigned char  hit_flag;
-	unsigned char  padding;
+	uint16_t pid;
+	uint16_t pat_index;
+	uint16_t program;
+	uint16_t channel;
+	uint16_t group_flag;  //multiple program share one pid
+	uint8_t  hit_flag;
+	uint8_t  padding;
 } TS_PMT_MAP;
 
 typedef struct STREAM_DATA
 {
-	unsigned char *data_ptr;
-	unsigned short bytes;
-	unsigned char  scrambling;
-	unsigned char  group_start;
-	unsigned char  priority;
-	unsigned char  padding;
+	uint8_t *data_ptr;
+	uint16_t bytes;
+	uint8_t  scrambling;
+	uint8_t  group_start;
+	uint8_t  priority;
+	uint8_t  padding;
 	TS_ELEMENT    *ts_elment;
 	void          *container;
 } STREAM_DATA;
@@ -313,18 +313,18 @@ typedef struct STREAM_DATA
 typedef struct
 {
 	LONGLONG pcr;
-	unsigned short pid;
-	unsigned long  ts_packet_counter;
-	void		   *container;
+	uint16_t pid;
+	uint32_t ts_packet_counter;
+	void		 *container;
 } PCR_DATA;
 
 
 typedef struct
 {
-	unsigned short pid;
-	unsigned short ca_id;
-	unsigned short bytes;
-	unsigned char *data_ptr;
+	uint16_t pid;
+	uint16_t ca_id;
+	uint16_t bytes;
+	uint8_t *data_ptr;
 	void		   *container;
 } CA_DATA;
 
@@ -334,19 +334,19 @@ typedef struct
 
 typedef struct
 {
-	unsigned short pid;
-	unsigned short count;
-	unsigned short flag;  //first bit for PCR flag, 2'd for scrambimg flg
+	uint16_t pid;
+	uint16_t count;
+	uint16_t flag;  //first bit for PCR flag, 2'd for scrambimg flg
 } PID_HIST;
 
 #define MAX_PID_TBL_NUM 6
 
 typedef struct PID_ITEM
 {
-	unsigned short pid;
-	unsigned short type;
-	unsigned short service;
-	unsigned short data;
+	uint16_t pid;
+	uint16_t type;
+	uint16_t service;
+	uint16_t data;
 } PID_ITEM;
 
 typedef struct FAST_FILTER
@@ -357,7 +357,7 @@ typedef struct FAST_FILTER
 	DUMP  packet_dumper;
 	void* packet_dumper_context;
 
-	unsigned short pid_tbl_num;
+	uint16_t pid_tbl_num;
 	PID_ITEM pid_tbl[MAX_PID_TBL_NUM];
 } FAST_FILTER;
 
@@ -371,7 +371,7 @@ typedef struct PACKET_DATA
 typedef struct TS_FILTER
 {
 	//stream packet filter
-	int ts_streams_num;
+	int32_t ts_streams_num;
 	struct TS_STREAMS *ts_streams[MAX_SLOT_NUM]; 
 
 	//stream dumper
@@ -381,30 +381,30 @@ typedef struct TS_FILTER
 	struct PSI_PARSER* psi_parser;
 
 	//parser control
-	short disable_ts_table_parse;
-	short disable_psi_parse;
-	short disable_stream_filter;
+	int16_t disable_ts_table_parse;
+	int16_t disable_psi_parse;
+	int16_t disable_stream_filter;
 
 	//PAT
-	int pat_num;
+	int32_t pat_num;
 	TS_PAT  *pat;
 	TS_SECTION* pat_section;
 
 	//PMT
-	int pmt_num;
+	int32_t pmt_num;
 	TS_PMT *pmt;
 	TS_SECTION **pmt_section;
 
 	//PAT-PMT map
-	int map_num;
-	int mapped_num;
+	int32_t map_num;
+	int32_t mapped_num;
 	TS_PMT_MAP *pmt_map;
 
 	PID_HIST  pid_hist[MAX_PID_HIST_NUM]; //catch most active 10 pids
-	short     disable_pid_hist;
-	unsigned  short pid_hist_num;
-	unsigned  short pid_hist_ctrl;
-	unsigned  long ts_packet_counter;
+	int16_t  disable_pid_hist;
+	uint16_t pid_hist_num;
+	uint16_t pid_hist_ctrl;
+	uint32_t ts_packet_counter;
 	
 	FAST_FILTER fast_filter;
 
@@ -415,34 +415,34 @@ typedef struct TS_FILTER
 TS_FILTER* CreateTSFilter( int nPatNum, int nPmtNum, int nStreamFormat, int nSubFormat  );
 void ReleaseTSFilter( TS_FILTER* pTSFilter );
 void ResetTSFilter( TS_FILTER* pTSFilter );
-int  TSProcess( TS_FILTER* pTSFilter, unsigned char* pData ); //must to be 188 bytes data
-int  SelectTSFilterChannel( TS_FILTER* pTSFilter, struct TS_STREAMS* pTsStreams, unsigned short nTsid, unsigned short nProgram, unsigned short nMediaType );
+int  TSProcess( TS_FILTER* pTSFilter, uint8_t* pData ); //must to be 188 bytes data
+int  SelectTSFilterChannel( TS_FILTER* pTSFilter, struct TS_STREAMS* pTsStreams, uint16_t nTsid, uint16_t nProgram, uint16_t nMediaType );
 int  SetupChannelFilter( TS_FILTER* pTSFilter, struct  TS_STREAMS* pTsStreams  );
 int  BuildChannelTSFilter( TS_FILTER* pTSFilter, struct TS_STREAMS* pTsStreams );
-int  CheckPacketContinuity( TS_PACKET *pTSPacket, unsigned char* pContinuity );
+int  CheckPacketContinuity( TS_PACKET *pTSPacket, uint8_t* pContinuity );
 int  SetupChannelFilterByPids( TS_FILTER* pTSFilter, struct TS_STREAMS* pTsStreams, PIDS_TABLE *pPidTbl, int nMediaType  );
 //DESC data
 DESC_DATA* CreateDesc( );
 void ReleaseDesc( DESC_DATA* pDesc );
 void EraseDescData( DESC_DATA *pDesc );
-unsigned char* FillDescData( DESC_DATA *pDesc, unsigned char* pData, int nBytes );
-unsigned char* AppendDescData( DESC_DATA *pDesc, unsigned char* pData, int nBytes );
+uint8_t* FillDescData( DESC_DATA *pDesc, uint8_t* pData, int nBytes );
+uint8_t* AppendDescData( DESC_DATA *pDesc, uint8_t* pData, int nBytes );
 void ReleaseDescData( DESC_DATA *pDesc );
-unsigned char* NewDescData( DESC_DATA* pDesc, int nBytes );
+uint8_t* NewDescData( DESC_DATA* pDesc, int nBytes );
 
-unsigned long AudioFormatByStreamType( unsigned char StreamType );
-unsigned char* GetDescriptor( const unsigned char *pData, int Bytes, unsigned char Tag, int *pLength );
-unsigned long  GetLanguageCode( unsigned char* pData, int nBytes );
-unsigned char GetAudioType( unsigned char* pData, int nBytes );
-char* Language( unsigned long lLanguageCode, char* pLanguage );
-unsigned long LanguageCode( unsigned char* pLanguage );
-unsigned long GetSubtitleLanuage( unsigned char *pData, int nBytes );
+uint32_t AudioFormatByStreamType( uint8_t StreamType );
+uint8_t* GetDescriptor( const uint8_t *pData, int Bytes, uint8_t Tag, int *pLength );
+uint32_t  GetLanguageCode( uint8_t* pData, int nBytes );
+uint8_t GetAudioType( uint8_t* pData, int nBytes );
+char* Language( uint32_t lLanguageCode, char* pLanguage );
+uint32_t LanguageCode( uint8_t* pLanguage );
+uint32_t GetSubtitleLanuage( uint8_t *pData, int nBytes );
 
 int BlastPatTable( TS_FILTER* pTSFilter, int nProgram, int nTsid );
 int BlastPmtTable( TS_FILTER* pTSFilter, int nProgram, int nTsid );
-unsigned long HasAudioDesc( unsigned char *pData, int nBytes );
-char*  _dvb_service_type_( unsigned short type );
-char*  _atsc_service_type_( unsigned short type );
+uint32_t HasAudioDesc( uint8_t *pData, int nBytes );
+char*  _dvb_service_type_( uint16_t type );
+char*  _atsc_service_type_( uint16_t type );
 
 #ifdef __cplusplus
 }
