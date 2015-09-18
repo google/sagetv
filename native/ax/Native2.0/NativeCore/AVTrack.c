@@ -275,10 +275,6 @@ static int MpegVideoInf( MPEG_VIDEO *pMpegVideo, char* pBuffer, int nSize )
 		if ( pMpegVideo->chrome == 2  ) chrome_format = "cs=yuv422p;"; else
 		if ( pMpegVideo->chrome == 3  ) chrome_format = "cs=yuv444p;"; 
 
-
-SageLog(( _LOG_ERROR, 3, TEXT("TRACE--- %d %d %d %d \n"),
-         pMpegVideo->width, pMpegVideo->height, pMpegVideo->ar_info, pMpegVideo->ar_info));
-
 		pos += snprintf( p+pos, nSize-pos, "fps=%f;fpsn=%d;fpsd=%d;ar=%f;arn=%d;ard=%d;w=%d;h=%d;lace=%d;%s",
 			              (float)pMpegVideo->frame_rate_nomi/pMpegVideo->frame_rate_deno,
 						  pMpegVideo->frame_rate_nomi, 
