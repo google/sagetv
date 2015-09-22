@@ -113,7 +113,7 @@ public class FavoriteAPI {
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         return Boolean.valueOf(((Agent) stack.pop()).testAgentFlag(Agent.DELETE_AFTER_CONVERT_FLAG));
       }});
-    rft.put(new PredefinedJEPFunction("Favorite", "IsEnabled", 1, new String[] { "Favorite" })
+    rft.put(new PredefinedJEPFunction("Favorite", "IsFavoriteEnabled", 1, new String[] { "Favorite" })
     {
       /**
        * Returns true if SageTV considers this favorite when performing scheduling.
@@ -121,7 +121,7 @@ public class FavoriteAPI {
        * @return true if this Favorite is enabled, false otherwise
        * @since 9.0
        *
-       * @declaration   public boolean IsEnabled(Favorite Favorite);
+       * @declaration   public boolean IsFavoriteEnabled(Favorite Favorite);
        */
         @Override
         public Object runSafely(Catbert.FastStack stack) throws Exception{
@@ -964,7 +964,7 @@ public class FavoriteAPI {
         else
           return Boolean.FALSE;
       }});
-    rft.put(new PredefinedJEPFunction("Favorite", "SetEnabled", 2, new String[] { "Favorite", "Enabled" }, true)
+    rft.put(new PredefinedJEPFunction("Favorite", "SetFavoriteEnabled", 2, new String[] { "Favorite", "Enabled" }, true)
     {
       /**
        * Sets whether or not SageTV will use this favorite when scheduling recordings
@@ -972,7 +972,7 @@ public class FavoriteAPI {
        * @param Enabled true if this Favorite is to be used for scheduling, false otherwise
        * @since 9.0
        *
-       * @declaration   public void SetEnabled(Favorite Favorite, boolean Enabled);
+       * @declaration   public void SetFavoriteEnabled(Favorite Favorite, boolean Enabled);
        */
       @Override
       public Object runSafely(Catbert.FastStack stack) throws Exception{
