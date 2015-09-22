@@ -113,6 +113,21 @@ public class FavoriteAPI {
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         return Boolean.valueOf(((Agent) stack.pop()).testAgentFlag(Agent.DELETE_AFTER_CONVERT_FLAG));
       }});
+    rft.put(new PredefinedJEPFunction("Favorite", "IsEnabled", 1, new String[] { "Favorite" })
+    {
+      /**
+       * Returns true if SageTV considers this favorite when performing scheduling.
+       * @param Favorite the Favorite object
+       * @return true if this Favorite is enabled, false otherwise
+       * @since 9.0
+       *
+       * @declaration   public boolean IsEnabled(Favorite Favorite);
+       */
+        @Override
+        public Object runSafely(Catbert.FastStack stack) throws Exception{
+            //Note here that the value of the test is negated
+            return Boolean.valueOf(!((Agent) stack.pop()).testAgentFlag(Agent.DISABLED_FLAG));
+        }});
     rft.put(new PredefinedJEPFunction("Favorite", "GetKeepAtMost", 1, new String[] { "Favorite" })
     {
       /**
@@ -948,6 +963,27 @@ public class FavoriteAPI {
         }
         else
           return Boolean.FALSE;
+      }});
+    rft.put(new PredefinedJEPFunction("Favorite", "SetEnabled", 2, new String[] { "Favorite", "Enabled" }, true)
+    {
+      /**
+       * Sets whether or not SageTV will use this favorite when scheduling recordings
+       * @param Favorite the Favorite object
+       * @param Enabled true if this Favorite is to be used for scheduling, false otherwise
+       * @since 9.0
+       *
+       * @declaration   public void SetEnabled(Favorite Favorite, boolean Enabled);
+       */
+      @Override
+      public Object runSafely(Catbert.FastStack stack) throws Exception{
+          boolean b = evalBool(stack.pop());
+          Agent a = (Agent) stack.pop();
+          if (Permissions.hasPermission(Permissions.PERMISSION_RECORDINGSCHEDULE, stack.getUIMgr()))
+          {
+              Carny.getInstance().setAgentFlags(a, Agent.DISABLED_FLAG, b?0:Agent.DISABLED_FLAG);
+              Carny.getInstance().kick();
+          }
+          return null;
       }});
     rft.put(new PredefinedJEPFunction("Favorite", "GetFavoriteForAiring", 1, new String[] { "Airing" })
     {

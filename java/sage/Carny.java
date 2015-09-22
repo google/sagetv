@@ -956,7 +956,7 @@ public final class Carny implements Runnable
         }
       }
       Agent currAgent = (Agent) allAgents[i];
-      if (currAgent == null)
+      if (currAgent == null || currAgent.testAgentFlag(Agent.DISABLED_FLAG))
         continue;
 
       if ((!doneInit && Sage.getBoolean("limited_carny_init", Sage.EMBEDDED)) ||

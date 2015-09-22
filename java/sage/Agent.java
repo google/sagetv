@@ -64,6 +64,7 @@ public class Agent extends DBObject implements Favorite
   public static final int DONT_AUTODELETE_FLAG = 0x01;
   public static final int KEEP_AT_MOST_MASK = 0x7E; // 6 bits
   public static final int DELETE_AFTER_CONVERT_FLAG = 0x80;
+  public static final int DISABLED_FLAG = 0x100;
 
   String getNameForType()
   {
@@ -325,6 +326,7 @@ public class Agent extends DBObject implements Favorite
     int keepAtMost = getAgentFlag(KEEP_AT_MOST_MASK);
     if (keepAtMost > 0)
       sb.append(" keep=").append(keepAtMost);
+    sb.append(" enabled=").append(!testAgentFlag(DISABLED_FLAG));
     sb.append(']');
     return sb.toString();
   }
@@ -1210,10 +1212,12 @@ public class Agent extends DBObject implements Favorite
       return agentFlags & DONT_AUTODELETE_FLAG;
     else if (whichFlag == KEEP_AT_MOST_MASK)
       return (agentFlags & KEEP_AT_MOST_MASK) >> 1;
-        else if (whichFlag == DELETE_AFTER_CONVERT_FLAG)
-          return agentFlags & DELETE_AFTER_CONVERT_FLAG;
-        else
-          return 0;
+    else if (whichFlag == DELETE_AFTER_CONVERT_FLAG)
+      return agentFlags & DELETE_AFTER_CONVERT_FLAG;
+    else if (whichFlag == DISABLED_FLAG)
+      return agentFlags & DISABLED_FLAG;
+    else
+      return 0;
   }
   void setAgentFlags(int maskBits, int values)
   {
