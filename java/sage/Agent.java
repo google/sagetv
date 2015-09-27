@@ -560,6 +560,20 @@ public class Agent extends DBObject implements Favorite
   {
     return followsTrend(air, mustBeViewable, sbCache, false);
   }
+
+  /**
+   * Determine if the given airing meets the criteria for this Agent. (i.e. could the given Airing be scheduled because
+   * of this Agent)
+   *
+   * @param air The Airing to be tested
+   * @param mustBeViewable If true, the Airing must be viewable for this method to return true.  Viewable means a 
+   * recording that can be watched, or a channel that can be viewed.
+   * @param sbCache A StringBuffer to be used by this method.  If null a new StringBuffer will be created.  If non-null
+   * the buffer will be cleared and use.  When calling this method in a loop, the same StringBuffer can be used for each
+   * call to limit object creation and memory use.
+   * @param skipKeyword If true, keyword matching is not considered
+   * @return true if the given Airing matches this Agent (given the parameter criteria) , false otherwise.
+   */
   /*
    * TODO(codefu): skipKeyword is a hack before showcase. It works since the other flags are AND
    * tested; but we can have Lucene do this for us
@@ -570,6 +584,9 @@ public class Agent extends DBObject implements Favorite
     Show s = air.getShow();
     if (s == null) return false;
 
+    //A disabled agent doesn't match any airings
+    if(testAgentFlag(DISABLED_FLAG))
+        return false;
     // Do not be case sensitive when checking titles!! We got a bunch of complaints about this on our forums.
     // Don't let null titles match all the Favorites!
     if (title != null && (s.title == null || (s.title != null && title != s.title && !title.toString().equalsIgnoreCase(s.title.toString()))))
