@@ -1,8 +1,8 @@
 Microsoft Visual Studio Solution File, Format Version 9.00
 # Visual Studio 2005
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MpegMux", "ax\MpegMux\MpegMux.vcproj", "{337F9989-2D99-4FC9-A62D-0F3C82CABD9C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MpegMux", "..\third_party\Microsoft\MpegMux\MpegMux.vcproj", "{337F9989-2D99-4FC9-A62D-0F3C82CABD9C}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MusicVisFilter", "ax\AudioSampling\MusicVisFilter.vcproj", "{22EEB25A-DC24-4E92-8FBC-F7A257E1C423}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MusicVisFilter", "..\third_party\Microsoft\AudioSampling\MusicVisFilter.vcproj", "{22EEB25A-DC24-4E92-8FBC-F7A257E1C423}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PVR350OSDPlugin", "dll\PVR350OSDPlugin\PVR350OSDPlugin.vcproj", "{877FD7FD-055F-4D19-BF71-69BFF733B158}"
 EndProject
@@ -49,7 +49,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TunerStubDLL", "dll\TunerSt
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Win32ShellHook", "dll\Win32ShellHook\Win32ShellHook.vcproj", "{444FDF3B-831C-4015-BD92-765AC317A685}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MpegAudioEncLayer2", "ax\MpegAudioEncLayer2\dshow.vcproj", "{C64EBBF8-79E8-4E1C-9D43-FFA62D14820D}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MpegAudioEncLayer2", "..\third_party\Elecard\MpegAudioEncLayer2\dshow.vcproj", "{C64EBBF8-79E8-4E1C-9D43-FFA62D14820D}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TSnative", "ax\TSnative\TSnative.vcproj", "{0790F567-FC54-443E-B207-FC0681F0A134}"
 EndProject
@@ -71,9 +71,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DirecTVSerialControl", "dll
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DShowTranscode", "dll\DShowTranscode\DShowTranscode.vcproj", "{BA59BE43-7986-4E88-A786-21EC68814002}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MPEG2Dump", "ax\Dump\MPEG2Dump.vcproj", "{A2D656C0-0327-47E3-9F88-141E7A12CAF2}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MPEG2Dump", "..\third_party\Microsoft\Dump\MPEG2Dump.vcproj", "{A2D656C0-0327-47E3-9F88-141E7A12CAF2}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EVRPresenter", "dll\EVRPresenter\EVRPresenter.vcproj", "{456FE190-511C-428E-88FC-E432C87D29FF}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EVRPresenter", "..\third_party\Microsoft\EVRPresenter\EVRPresenter.vcproj", "{456FE190-511C-428E-88FC-E432C87D29FF}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DShowCapture", "dll\DShowCapture-2\DShowCapture-2.vcproj", "{5CA60F60-D352-4843-B606-60F9125ACB0E}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -116,101 +116,6 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "StrmDeMux", "ax\StrmDeMux\StrmDeMux.vcproj", "{BDF9AB92-FA05-4468-8A4D-B2104439146A}"
 EndProject
 Global
-	GlobalSection(SourceCodeControl) = preSolution
-		SccNumberOfProjects = 17
-		SccProjectUniqueName0 = ax\\MpegMux\\MpegMux.vcproj
-		SccProjectName0 = MpegMux
-		SccLocalPath0 = ax\\MpegMux
-		SccProvider0 = MSSCCI:Jalindi\u0020Igloo
-		CanCheckoutShared = true
-		SccProjectUniqueName1 = ax\\AudioSampling\\MusicVisFilter.vcproj
-		SccProjectName1 = MusicVisFilter
-		SccLocalPath1 = ax\\AudioSampling
-		SccProvider1 = MSSCCI:Jalindi\u0020Igloo
-		CanCheckoutShared = true
-		SccProjectUniqueName2 = dll\\PVR350OSDPlugin\\PVR350OSDPlugin.vcproj
-		SccProjectName2 = PVR350OSDPlugin
-		SccLocalPath2 = .
-		SccProvider2 = MSSCCI:Jalindi\u0020Igloo
-		CanCheckoutShared = true
-		SccProjectFilePathRelativizedFromConnection2 = dll\\PVR350OSDPlugin\\
-		SccProjectUniqueName3 = exe\\SageLauncher\\SageLauncher.vcproj
-		SccProjectName3 = SageLauncher
-		SccLocalPath3 = .
-		SccProvider3 = MSSCCI:Jalindi\u0020Igloo
-		CanCheckoutShared = true
-		SccProjectFilePathRelativizedFromConnection3 = exe\\SageLauncher\\
-		SccProjectUniqueName4 = dll\\DX93D\\SageTVDX93D.vcproj
-		SccProjectName4 = SageTVDX93D
-		SccLocalPath4 = .
-		SccProvider4 = MSSCCI:Jalindi\u0020Igloo
-		CanCheckoutShared = true
-		SccProjectFilePathRelativizedFromConnection4 = dll\\DX93D\\
-		SccProjectUniqueName5 = dll\\InfraredReceive\\SageTVInfraredReceive.vcproj
-		SccProjectName5 = SageTVInfraredReceive
-		SccLocalPath5 = .
-		SccProvider5 = MSSCCI:Jalindi\u0020Igloo
-		CanCheckoutShared = true
-		SccProjectFilePathRelativizedFromConnection5 = dll\\InfraredReceive\\
-		SccProjectUniqueName6 = dll\\Win32DLL\\SageTVWin32DLL.vcproj
-		SccProjectName6 = SageTVWin32DLL
-		SccLocalPath6 = .
-		SccProvider6 = MSSCCI:Jalindi\u0020Igloo
-		CanCheckoutShared = true
-		SccProjectFilePathRelativizedFromConnection6 = dll\\Win32DLL\\
-		SccProjectUniqueName7 = exe\\ServiceControlLaunch\\ServiceControlLaunch.vcproj
-		SccProjectName7 = native/exe/ServiceControlLaunch
-		SccLocalPath7 = exe\\ServiceControlLaunch
-		SccProvider7 = MSSCCI:Jalindi\u0020Igloo
-		CanCheckoutShared = true
-		SccProjectUniqueName8 = dll\\TunerStub\\TunerStubDLL.vcproj
-		SccProjectName8 = TunerStubDLL
-		SccLocalPath8 = dll\\TunerStub
-		SccProvider8 = MSSCCI:Jalindi\u0020Igloo
-		CanCheckoutShared = true
-		SccProjectUniqueName9 = dll\\Win32ShellHook\\Win32ShellHook.vcproj
-		SccProjectName9 = native/dll/Win32ShellHook
-		SccLocalPath9 = DLL\\Win32ShellHook
-		SccProvider9 = MSSCCI:Jalindi\u0020Igloo
-		CanCheckoutShared = true
-		SccProjectUniqueName10 = ax\\MpegAudioEncLayer2\\dshow.vcproj
-		SccProjectName10 = native/ax
-		SccLocalPath10 = ax
-		SccProvider10 = MSSCCI:Jalindi\u0020Igloo
-		CanCheckoutShared = true
-		SccProjectFilePathRelativizedFromConnection10 = MpegAudioEncLayer2\\
-		SccProjectUniqueName11 = ax\\TSnative\\TSnative.vcproj
-		SccProjectName11 = native
-		SccLocalPath11 = .
-		SccProvider11 = MSSCCI:Jalindi\u0020Igloo
-		CanCheckoutShared = true
-		SccProjectFilePathRelativizedFromConnection11 = ax\\TSnative\\
-		SccProjectUniqueName12 = exe\\MiniClientLauncher\\MiniClientLauncher.vcproj
-		SccProjectName12 = native/exe/MiniClientLauncher
-		SccLocalPath12 = exe\\MiniClientLauncher
-		SccProvider12 = MSSCCI:Jalindi\u0020Igloo
-		CanCheckoutShared = true
-		SccProjectUniqueName13 = dll\\WinRawInput\\WinRawINput.vcproj
-		SccProjectName13 = native/dll/WinRawInput
-		SccLocalPath13 = dll\\WinRawInput
-		SccProvider13 = MSSCCI:Jalindi\u0020Igloo
-		CanCheckoutShared = true
-		SccProjectUniqueName14 = dll\\WinKeyboardHook\\WinKeyboardHook.vcproj
-		SccProjectName14 = native/dll/WinKeyboardHook
-		SccLocalPath14 = dll\\WinKeyboardHook
-		SccProvider14 = MSSCCI:Jalindi\u0020Igloo
-		CanCheckoutShared = true
-		SccProjectUniqueName15 = dll\\DShowTranscode\\DShowTranscode.vcproj
-		SccProjectName15 = native/dll/DShowTranscode
-		SccLocalPath15 = dll\\DShowTranscode
-		SccProvider15 = MSSCCI:Jalindi\u0020Igloo
-		CanCheckoutShared = true
-		SccProjectUniqueName16 = ax\\Dump\\MPEG2Dump.vcproj
-		SccProjectName16 = MPEG2Dump
-		SccLocalPath16 = ax\\Dump
-		SccProvider16 = MSSCCI:Jalindi\u0020Igloo
-		CanCheckoutShared = true
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Client Debug|Win32 = Client Debug|Win32
 		Client Release|Win32 = Client Release|Win32
