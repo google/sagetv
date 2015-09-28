@@ -1662,7 +1662,8 @@ public class FFMPEGTranscoder implements TranscodeEngine
     // Remove the MP3 encoder if it's being used because that's what the input file is
     if ("mp3".equalsIgnoreCase(s) && Sage.getBoolean("xcode_disable_mp3_encoder", true)) return "mp2";
     for (int i = 0; i < sage.media.format.FormatParser.FORMAT_SUBSTITUTIONS.length; i++)
-      if (sage.media.format.FormatParser.FORMAT_SUBSTITUTIONS[i][1].equalsIgnoreCase(s))
+      if (sage.media.format.FormatParser.FORMAT_SUBSTITUTIONS[i][1].equalsIgnoreCase(s) &&
+          sage.media.format.FormatParser.FORMAT_SUBSTITUTIONS[i][0].indexOf('/') == -1)
         return sage.media.format.FormatParser.FORMAT_SUBSTITUTIONS[i][0];
     return s.toLowerCase();
   }
