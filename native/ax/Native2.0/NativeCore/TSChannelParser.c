@@ -27,19 +27,19 @@
 
 
 static int CheckTsId( TS_CHANNEL_PARSER *pTSChannelParser, int nTsid );
-static char* CAInfo( unsigned short CAPid, unsigned short CAID );
-unsigned long VideoFormat( unsigned char StreamType, unsigned char* pDesc, int nBytes );
+static char* CAInfo( uint16_t CAPid, uint16_t CAID );
+uint32_t VideoFormat( uint8_t StreamType, uint8_t* pDesc, int nBytes );
 static int GetTrackAVInf( TS_CHANNEL_PARSER *pTSChannelParser, int nIndex, char* pBuffer, int nSize );
 static int InitScanData(  TS_CHANNEL_PARSER *pTSChannelParser, int nStreamType, int nSubType );
-static int AddProgrmToList( PROGRAM_LIST *pProgramList, unsigned short nTsid, unsigned short nProgramId, unsigned short nChannel, int service );
-int HasCADesc( unsigned char *pData, int nBytes );
-static int PATDumper( void* pContext, unsigned char* pData, int nSize )
+static int AddProgrmToList( PROGRAM_LIST *pProgramList, uint16_t nTsid, uint16_t nProgramId, uint16_t nChannel, int service );
+int HasCADesc( uint8_t *pData, int nBytes );
+static int PATDumper( void* pContext, uint8_t* pData, int nSize )
 {
 	TS_CHANNEL_PARSER *pTSChannelParser = (TS_CHANNEL_PARSER*)pContext;
 	PAT_DATA  *pPatData  = (PAT_DATA*)pData;
 	TS_PAT    *pPat      = (TS_PAT*)pPatData->pat_table;
-	short pat_index = pPatData->pat_index;
-	unsigned short tsid  = pPat->tsid;
+	int16_t pat_index = pPatData->pat_index;
+	uint16_t tsid  = pPat->tsid;
 	int program_num = pPat->total_program_number;
 	int i, tsid_locked=0;
 
@@ -79,7 +79,7 @@ static int PATDumper( void* pContext, unsigned char* pData, int nSize )
 	return 0;
 }
 
-static int PMTDumper( void* pContext, unsigned char* pData, int nSize )
+static int PMTDumper( void* pContext, uint8_t* pData, int nSize )
 {
 	TS_CHANNEL_PARSER *pTSChannelParser = (TS_CHANNEL_PARSER*)pContext;
 	PMT_DATA  *pPmtData  = (PMT_DATA*)pData;
@@ -127,7 +127,7 @@ static int PMTDumper( void* pContext, unsigned char* pData, int nSize )
 	return 1;
 }
 
-static int PSIPidDumper( void* pContext, unsigned char* pData, int nSize )
+static int PSIPidDumper( void* pContext, uint8_t* pData, int nSize )
 {
 	TS_CHANNEL_PARSER *pTSChannelParser = (TS_CHANNEL_PARSER*)pContext;
 	if ( (pTSChannelParser->state & CHANNEL_FOUND )  )
@@ -217,7 +217,7 @@ static int AddChannelList( CHANNEL_LIST *pChannelList, CHANNEL_DATA *pChannelDat
 	return updated;
 }
 
-static int AddProgrmToList( PROGRAM_LIST *pProgramList, unsigned short nTsid, unsigned short nProgramId, unsigned short nChannel, int service )
+static int AddProgrmToList( PROGRAM_LIST *pProgramList, uint16_t nTsid, uint16_t nProgramId, uint16_t nChannel, int service )
 {
 	int i;
 	if ( nProgramId == 0xffff ) 
@@ -235,7 +235,7 @@ static int AddProgrmToList( PROGRAM_LIST *pProgramList, unsigned short nTsid, un
 			return -1;
 	}
 
-	pProgramList->program[i].channel = (unsigned char)nChannel;
+	pProgramList->program[i].channel = (uint8_t)nChannel;
 	pProgramList->program[i].program_id = nProgramId;
 	pProgramList->program[i].tsid = nTsid;
 	pProgramList->program[i].service = service;
@@ -336,7 +336,7 @@ int MergeTSChannelListProgramList( TS_CHANNEL_PARSER *pTSChannelParser )
 }
 
 
-static int ChannelInfoDumper( void* pContext, unsigned char* pData, int nSize )
+static int ChannelInfoDumper( void* pContext, uint8_t* pData, int nSize )
 {
 	TS_CHANNEL_PARSER *pTSChannelParser = (TS_CHANNEL_PARSER*)pContext;
 	CHANNEL_DATA *channel_data = (CHANNEL_DATA*)pData;
@@ -375,13 +375,13 @@ static int ChannelInfoDumper( void* pContext, unsigned char* pData, int nSize )
 		{
 			char tune_param[64];
 			if ( channel_data->u.dvb[i].dvb_type == 1 )
-				snprintf( tune_param, sizeof(tune_param), "(T) frq:%ld band:%d", channel_data->u.dvb[i].dvb.t.freq, channel_data->u.dvb[i].dvb.t.band );
+				snprintf( tune_param, sizeof(tune_param), "(T) frq:%d band:%d", channel_data->u.dvb[i].dvb.t.freq, channel_data->u.dvb[i].dvb.t.band );
 			else
 			if ( channel_data->u.dvb[i].dvb_type == 2 )
-				snprintf( tune_param, sizeof(tune_param), "(C) frq:%ld mod:%d", channel_data->u.dvb[i].dvb.c.freq, channel_data->u.dvb[i].dvb.c.modulation );
+				snprintf( tune_param, sizeof(tune_param), "(C) frq:%d mod:%d", channel_data->u.dvb[i].dvb.c.freq, channel_data->u.dvb[i].dvb.c.modulation );
 			else
 			if ( channel_data->u.dvb[i].dvb_type == 3 )
-				snprintf( tune_param, sizeof(tune_param), "(S) frq:%ld mod:%d", channel_data->u.dvb[i].dvb.s.freq, channel_data->u.dvb[i].dvb.s.modulation );
+				snprintf( tune_param, sizeof(tune_param), "(S) frq:%d mod:%d", channel_data->u.dvb[i].dvb.s.freq, channel_data->u.dvb[i].dvb.s.modulation );
 			else 
 				snprintf( tune_param, sizeof(tune_param), "--" );
 
@@ -409,7 +409,7 @@ static int ChannelInfoDumper( void* pContext, unsigned char* pData, int nSize )
 
 
 //ZQ 1.
-static int StreamDumper( void* pContext, unsigned char* pData, int nSize )
+static int StreamDumper( void* pContext, uint8_t* pData, int nSize )
 {
 	TS_CHANNEL_PARSER *pTSChannelParser = (TS_CHANNEL_PARSER*)pContext;
 	STREAM_DATA   *stream_data   = (STREAM_DATA *)pData;
@@ -417,7 +417,7 @@ static int StreamDumper( void* pContext, unsigned char* pData, int nSize )
 	int index = stream_data->ts_elment->channel_index;
 	ES_BUFFER_ *pESBuffer = &pTSChannelParser->es_buffer[index];
 	int			  in_bytes;
-	unsigned char *in_ptr;
+	uint8_t *in_ptr;
 
 	//fill data to send into dumper
 	in_bytes = stream_data->bytes;
@@ -432,7 +432,7 @@ static int StreamDumper( void* pContext, unsigned char* pData, int nSize )
 	if (  stream_data->group_start )
 	{   
 		PES pes={0};
-		if ( IsPESHeaderOfTS( (unsigned char)pESBuffer->stream_id, in_ptr, in_bytes ) && //start a new es block
+		if ( IsPESHeaderOfTS( (uint8_t)pESBuffer->stream_id, in_ptr, in_bytes ) && //start a new es block
 			 ReadPESHeader( in_ptr, in_bytes, &pes ) > 0 )
 		{
 			if ( pESBuffer->bytes > 0 )
@@ -688,11 +688,11 @@ TUNE_LIST *GetTSTuneScanList( TS_CHANNEL_PARSER *pTSChannelParser )
 
 }
 
-int TSProcessInfo( TS_FILTER* pTSFilter, unsigned char* pData );
-int PushTSChannelPacketParser( TS_CHANNEL_PARSER *pTSChannelParser, unsigned char* pData, int nSize )
+int TSProcessInfo( TS_FILTER* pTSFilter, uint8_t* pData );
+int PushTSChannelPacketParser( TS_CHANNEL_PARSER *pTSChannelParser, uint8_t* pData, int nSize )
 {
 	int used_bytes = 0, size = nSize;
-	unsigned char* data = pData;
+	uint8_t* data = pData;
 
 	while ( size >= TS_PACKET_LENGTH )
 	{
@@ -799,10 +799,10 @@ static int CheckTsId( TS_CHANNEL_PARSER *pTSChannelParser, int nTsid )
 }
 
 #define CA_DESCRIPTOR	0x09
-unsigned char* GetDescriptor( const unsigned char *pData, int Bytes, unsigned char Tag, int *pLength );
-int HasCADesc( unsigned char *pData, int nBytes )
+uint8_t* GetDescriptor( const uint8_t *pData, int Bytes, uint8_t Tag, int *pLength );
+int HasCADesc( uint8_t *pData, int nBytes )
 {
-	unsigned char* desc_ptr;
+	uint8_t* desc_ptr;
 	int desc_len;
 	if ( ( desc_ptr = GetDescriptor( pData, nBytes, CA_DESCRIPTOR, &desc_len ) )!= NULL && desc_len > 0 )
 		return 1;
@@ -810,7 +810,7 @@ int HasCADesc( unsigned char *pData, int nBytes )
 
 }
 
-static char* CAInfo( unsigned short CAPid, unsigned short CAID )
+static char* CAInfo( uint16_t CAPid, uint16_t CAID )
 {
 	static char _buf[16];
 	snprintf( _buf, sizeof(_buf), "CA pid:0x%04x", CAPid );
@@ -850,13 +850,13 @@ int CheckChannelTrackAVInfRead( TS_CHANNEL_PARSER *pTSChannelParser )
 }
 
 int AVElmntInfo( AV_ELEMENT *pAVElmnt, char* pBuffer, int nSize );
-unsigned long GetAudioRate( AV_ELEMENT *pAVElmnt );
+uint32_t GetAudioRate( AV_ELEMENT *pAVElmnt );
 int TagInfo( int nOutputFormat, TS_ELEMENT *pTSElmnt, ES_ELEMENT *pESElmnt, char* pBuffer, int nSize );
 
 static void TagMainTrack( TS_CHANNEL_PARSER *pTSChannelParser )
 {
 	int i, video_main = -1, audio_main = -1;
-	unsigned long bit_rate = 0;
+	uint32_t bit_rate = 0;
 	for ( i = 0; i<pTSChannelParser->ts_streams.num_stream; i++ )
 	{
 		if ( pTSChannelParser->av_streams.av_element[i].content_type == VIDEO_DATA )
@@ -924,7 +924,7 @@ int GetChannelAVInf( TS_CHANNEL_PARSER *pTSChannelParser, char* pBuffer, int nSi
 		int i;
 		pos += snprintf( p+pos, nSize-pos, "MPEG2-TS;" );
 		if ( nSize > pos && pTSChannelParser->bit_rate > 0 )
-			pos += snprintf( p+pos, nSize-pos, "br=%ld;", pTSChannelParser->bit_rate );
+			pos += snprintf( p+pos, nSize-pos, "br=%d;", pTSChannelParser->bit_rate );
 		if ( pTSChannelParser->total_video_num == 0 )
 			pos += snprintf( p+pos, nSize-pos, "audioonly=1;" );
 		else

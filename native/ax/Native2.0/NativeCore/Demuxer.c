@@ -66,7 +66,7 @@ static void ResetMemoryAlloc( MEMORY_ALLOC *pMemAlloc );
 static void SetupMemoryAlloc( MEMORY_ALLOC *pMemAlloc, MEM_ALLOC_HOOK pfnMemAllocHook, void* pMemAllocHookContext, int nNodeNum, int nBlockSize );
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-static int ESBlockDataDumper( void* pContext, unsigned char* pData, int nSize )
+static int ESBlockDataDumper( void* pContext, uint8_t* pData, int nSize )
 {
 	DEMUXER *pDemuxer = (DEMUXER*)pContext;
 	TRACK   *pTrack = (TRACK*)pData;
@@ -243,8 +243,8 @@ void TracksIndexing( TRACKS *pTracks )
 	if ( IS_PS_TYPE( pTracks->track_type ) )
 	{
 		int j;
-		unsigned char  sort_index[128], si;
-		unsigned short sort_val[128], sv;
+		uint8_t  sort_index[128]={0}, si;
+		uint16_t sort_val[128], sv;
 		for ( i = 0; i<pTracks->total_track; i++ )
 		{
 			 sort_index[i]=i;
@@ -462,7 +462,7 @@ static void ReleaseMemoryAlloc( MEMORY_ALLOC *pMemAlloc )
 			{
 				if ( pMemAlloc->local_mem_block_state[i] )
 				{
-					unsigned char* p = pMemAlloc->local_mem_block_addr[i];
+					uint8_t* p = (uint8_t*)pMemAlloc->local_mem_block_addr[i];
 					pMemAlloc->memory_alloc_hook( pMemAlloc->memory_alloc_hook_context, p, 0, 0 );
 					pMemAlloc->local_mem_block_state[i] = 0;
 					pMemAlloc->local_mem_block_addr[i] = 0;
@@ -493,7 +493,7 @@ static void ResetMemoryAlloc( MEMORY_ALLOC *pMemAlloc )
 			{
 				if ( pMemAlloc->local_mem_block_state[i] )
 				{
-					unsigned char* p = pMemAlloc->local_mem_block_addr[i];
+					uint8_t* p = (uint8_t*)pMemAlloc->local_mem_block_addr[i];
 					pMemAlloc->memory_alloc_hook( pMemAlloc->memory_alloc_hook_context, p, 0, 0 );
 					pMemAlloc->local_mem_block_state[i] = 0;
 					pMemAlloc->local_mem_block_addr[i] = 0;
@@ -522,7 +522,7 @@ static void SetupMemoryAlloc( MEMORY_ALLOC *pMemAlloc, MEM_ALLOC_HOOK pfnMemAllo
 
 static void* RequestBlockMemory( MEMORY_ALLOC *pMemAlloc, int nSize )
 {
-	unsigned char* memory_start;
+	uint8_t* memory_start;
 	int i;
 	if ( pMemAlloc->memory_alloc_hook != NULL )
 	{
@@ -533,7 +533,7 @@ static void* RequestBlockMemory( MEMORY_ALLOC *pMemAlloc, int nSize )
 		memory_start = pMemAlloc->memory_alloc_hook( pMemAlloc->memory_alloc_hook_context, NULL, nSize, 1 );
 		if ( memory_start )
 		{
-			pMemAlloc->local_mem_block_addr[i] = memory_start;
+			pMemAlloc->local_mem_block_addr[i] = (int8_t*)memory_start;
 			pMemAlloc->local_mem_block_state[i] = 1;
 			pMemAlloc->inuse_num++;
 		}
@@ -550,7 +550,7 @@ static void* RequestBlockMemory( MEMORY_ALLOC *pMemAlloc, int nSize )
 			SageLog(( _LOG_TRACE, 3, TEXT("ERROR: out of local memeory, (total:%d)"), pMemAlloc->local_mem_block_num  ));
 			return 0;
 		}
-		memory_start = pMemAlloc->local_mem_block_addr[i];
+		memory_start = (uint8_t*)pMemAlloc->local_mem_block_addr[i];
 		pMemAlloc->local_mem_block_state[i] = 1;
 		pMemAlloc->inuse_num++;
 		return memory_start;
@@ -593,7 +593,7 @@ static void ReleaseBlockMemory( MEMORY_ALLOC *pMemAlloc, void* pBuffer )
 static int RequestESBuffer( DEMUXER* pDemuxer, TRACK* pTrack )
 {
 	BLOCK_BUFFER *block_buffer = NULL;
-	unsigned char* buffer_start;
+	uint8_t* buffer_start;
 
 	if ( pTrack->channel_index >= pDemuxer->tracks[pTrack->slot_index]->total_track )
 		return 0;
@@ -642,10 +642,10 @@ static void ReleaseESBuffer( DEMUXER* pDemuxer,  BLOCK_BUFFER *pBlockBuffer )
 	ASSERT( pDemuxer->fifo_buffer[pBlockBuffer->slot_index]->block_buffer_inuse == pDemuxer->memory_alloc[pBlockBuffer->slot_index].inuse_num );
 }
 
-void raw_es_data_dump_file( DEMUXER *pDemuxer, TRACK *pTrack, int bGroupStart, unsigned char*p, int bytes  );
+void raw_es_data_dump_file( DEMUXER *pDemuxer, TRACK *pTrack, int bGroupStart, uint8_t*p, int bytes  );
 static int ProcessESBuffer( DEMUXER* pDemuxer, TRACK* pTrack )
 {
-	unsigned char *p;
+	uint8_t *p;
 	int bytes;
 	BLOCK_BUFFER *block_buffer;
 	BLOCK_BUFFER *block_buffer_out=NULL;
@@ -658,7 +658,7 @@ static int ProcessESBuffer( DEMUXER* pDemuxer, TRACK* pTrack )
 	{
 		if ( pTrack->es_elmnt->pes.packet_length == 0 )
 		{
-			unsigned short packet_length = pTrack->es_data_bytes - 6;
+			uint16_t packet_length = pTrack->es_data_bytes - 6;
 			pTrack->es_data_start[4] = (packet_length >> 8 ) & 0xff;
 			pTrack->es_data_start[5] = (packet_length ) & 0xff;
 		}
@@ -819,7 +819,7 @@ void FlushFIFOBuffer( DEMUXER* pDemuxer, TRACK* pTrack )
 //			MESSAGE_DATA message={0};
 //			strncpy( message.title, "STATUS", sizeof(message.title) );
 //			message.message = pMessageText;
-//			message.message_length = (unsigned short)strlen(pMessageText)+1 ;
+//			message.message_length = (uint16_t)strlen(pMessageText)+1 ;
 //			message.buffer = pMessageText;
 //			message.buffer_length = message.message_length ;
 //		
@@ -834,7 +834,7 @@ void FlushFIFOBuffer( DEMUXER* pDemuxer, TRACK* pTrack )
 //			MESSAGE_DATA message={0};
 //			strncpy( message.title, "STATUS", sizeof(message.title) );
 //			message.message = pMessageText;
-//			message.message_length = (unsigned short)strlen(pMessageText)+1 ;
+//			message.message_length = (uint16_t)strlen(pMessageText)+1 ;
 //			message.buffer = pMessageText;
 //			message.buffer_length = message.message_length ;
 //		
@@ -864,7 +864,7 @@ void FlushFIFOBuffer( DEMUXER* pDemuxer, TRACK* pTrack )
 //	return i;
 //}
 
-int CheckFormat( const unsigned char* pData, int nBytes )
+int CheckFormat( const uint8_t* pData, int nBytes )
 {
 	int ts_score = 0, m2t_score = 0, asi_score, ps_score = 0;
 	ts_score = CheckTSFormat( pData, nBytes );
@@ -1035,7 +1035,7 @@ int DetectFileType( char* pFileName )
 		bytes = (int)read( fp, buf, sizeof(buf) );
 		if ( bytes <= 0 )
 			break;
-		file_type = CheckFormat( (unsigned char*)buf, bytes );
+		file_type = CheckFormat( (uint8_t*)buf, bytes );
 		if ( file_type != 0 )
 			break;
 	}
@@ -1075,7 +1075,7 @@ int DetectFileTypeW( wchar_t* pFileName )
 		bytes = (int)read( fp, buf, sizeof(buf) );
 		if ( bytes <= 0 )
 			break;
-		file_type = CheckFormat( (unsigned char*)buf, bytes );
+		file_type = CheckFormat( (uint8_t*)buf, bytes );
 		if ( file_type != 0 )
 			break;
 	}
@@ -1188,7 +1188,7 @@ int OpenFileSource( DEMUXER *pDemuxer, char* pFileName, int nFileFormat,  TUNE* 
 		pDemuxer->size = BUFFER_SIZE;
 	}
 
-	pDemuxer->language_code = LanguageCode((unsigned char*)"eng");
+	pDemuxer->language_code = LanguageCode((uint8_t*)"eng");
 
 	return 1;
 
@@ -1229,7 +1229,7 @@ int OpenFileSourceW( DEMUXER *pDemuxer, wchar_t* pFileName, int nFileFormat,  TU
 		pDemuxer->size = BUFFER_SIZE;
 	}
 
-	pDemuxer->language_code = LanguageCode((unsigned char*)"eng");
+	pDemuxer->language_code = LanguageCode((uint8_t*)"eng");
 
 	return 1;
 
@@ -1272,7 +1272,7 @@ int OpenStreamSource( DEMUXER *pDemuxer, int nFileFormat, TUNE* pTune )
 
 	}
 
-	pDemuxer->language_code = LanguageCode((unsigned char*)"eng");
+	pDemuxer->language_code = LanguageCode((uint8_t*)"eng");
 
 	return 1;
 }
@@ -1436,7 +1436,7 @@ int PumpFileData( DEMUXER *pDemuxer, ULONGLONG lMaxLimitBytes, DUMP pfnProgressC
 				read_bytes  = expected_bytes;
 				if ( read_offset + read_bytes > (int)pDemuxer->size ) //a pading es may have a big size
 				{
-					unsigned char *p = pDemuxer->data+push_offset;
+					uint8_t *p = pDemuxer->data+push_offset;
 					if (!( p[0] == 0x0 &&  p[1] == 0x0 && p[2] == 0x01 && p[3] == 0xbe ) ) //if not a long padding ES, 
 					{
 						SageLog(( _LOG_TRACE, 3, TEXT("WARNING:Drop a excessive size (%d, max:%d) ES block. %s"), 
@@ -1469,7 +1469,7 @@ int PumpFileData( DEMUXER *pDemuxer, ULONGLONG lMaxLimitBytes, DUMP pfnProgressC
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////// Push File Data //////////////////////////////////////
-int	PushDemuxStreamData( void* Handle, unsigned char *pData, int nBytes, int *nExpectedBytes )
+int	PushDemuxStreamData( void* Handle, uint8_t *pData, int nBytes, int *nExpectedBytes )
 {
 	DEMUXER *pDemuxer = (DEMUXER *)Handle;
 	int used_bytes = 0;
@@ -1700,9 +1700,9 @@ int GetTSStreamSubFormat( DEMUXER *pDemuxer )
 	return 0;
 }
 
-unsigned long GetInputVideoPacketCount( DEMUXER *pDemuxer, int nSlot )
+uint32_t GetInputVideoPacketCount( DEMUXER *pDemuxer, int nSlot )
 {
-	unsigned long i, sum=0;
+	uint32_t i, sum=0;
 	if ( IS_PS_TYPE( pDemuxer->source_format )  )
 	{
 		for ( i = 0; i<MAX_TRACK_NUM; i++ )
@@ -1725,9 +1725,9 @@ unsigned long GetInputVideoPacketCount( DEMUXER *pDemuxer, int nSlot )
 	return sum;
 }
 
-unsigned long GetInputAudioPacketCount( DEMUXER *pDemuxer, int nSlot )
+uint32_t GetInputAudioPacketCount( DEMUXER *pDemuxer, int nSlot )
 {
-	unsigned long i, sum=0;
+	uint32_t i, sum=0;
 	if ( IS_PS_TYPE( pDemuxer->source_format )  )
 	{
 		for ( i = 0; i<MAX_TRACK_NUM; i++ )
@@ -1845,7 +1845,7 @@ void SetupTSATSDump( DEMUXER *pDemuxer, DUMP pfnATSDumper, void* pATSDumperConte
 	} 
 }
 
-void UpdateDemuxerClock( DEMUXER *pDemuxer, unsigned long lClock ) //units 1ms
+void UpdateDemuxerClock( DEMUXER *pDemuxer, uint32_t lClock ) //units 1ms
 {
 	UpdateTSParserClock( pDemuxer->ts_parser, lClock );
 }
@@ -1893,7 +1893,7 @@ LONGLONG SetDemuxPTSOffset( DEMUXER *pDemuxer, LONGLONG llPTSOffset )
 //
 
 /////////////////////////////////////// Utility ////////////////////////////////////////////////////////////
-void raw_es_data_dump_file( DEMUXER *pDemuxer, TRACK *pTrack, int bGroupStart, unsigned char*p, int bytes  )
+void raw_es_data_dump_file( DEMUXER *pDemuxer, TRACK *pTrack, int bGroupStart, uint8_t*p, int bytes  )
 {
 	if ( bGroupStart &&
 		 pDemuxer->track_debug[pTrack->slot_index]->track_dump_file[pTrack->channel_index] == NULL )

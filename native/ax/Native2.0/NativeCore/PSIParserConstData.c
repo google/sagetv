@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
+
 int title_huffman_tbl_size = 1940;
-unsigned char title_huffman_tbl[]={
+uint8_t title_huffman_tbl[]={
 /* index data ZQ*/
 0x01 /*000*/, 0x00 /*001*/, 0x01 /*002*/, 0x3a /*003*/, 0x01 /*004*/, 
 0x3c /*005*/, 0x01 /*006*/, 0x3e /*007*/, 0x01 /*008*/, 0x40 /*009*/, 
@@ -409,7 +412,7 @@ unsigned char title_huffman_tbl[]={
 };
 
 int program_huffman_tbl_size = 1652;
-unsigned char program_huffman_tbl[]={
+uint8_t program_huffman_tbl[]={
 /* index ZQ */
 0x01 /*000*/, 0x00 /*001*/, 0x01 /*002*/, 0x2c /*003*/, 0x01 /*004*/, 
 0x2e /*005*/, 0x01 /*006*/, 0x30 /*007*/, 0x01 /*008*/, 0x32 /*009*/, 
@@ -830,7 +833,7 @@ char* GenreCode( int code )
 }
 
 
-char* DVBGenreCode( unsigned char code ) 
+char* DVBGenreCode( uint8_t code ) 
 {
 	char *p="";
 	switch ( code ) {

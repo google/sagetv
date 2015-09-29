@@ -22,51 +22,51 @@ extern "C" {
 #endif
 
 
-inline int STR_FREQ( char *p, int n, unsigned long frq )
+inline int STR_FREQ( char *p, int n, uint32_t frq )
 {
-	return snprintf( p, n, "frq:%ld ", frq );
+	return snprintf( p, n, "frq:%d ", frq );
 }
-inline int STR_BAND( char *p, int n, unsigned short band )
+inline int STR_BAND( char *p, int n, uint16_t band )
 {
 	if ( band == 0 ) return 0;
 	return snprintf( p, n, "band:%d ", band );
 }
-inline int STR_MODE( char *p, int n, unsigned char mode )
+inline int STR_MODE( char *p, int n, uint8_t mode )
 {
 	if ( mode == 0 ) return 0;
 	return snprintf( p, n, "mode:%d ", mode );
 }
-inline int STR_SYMBOL_RATE( char *p, int n, unsigned long rate )
+inline int STR_SYMBOL_RATE( char *p, int n, uint32_t rate )
 {
 	if ( rate == 0 ) return 0;
-	return snprintf( p, n, "rate:%ld ", rate );
+	return snprintf( p, n, "rate:%d ", rate );
 }
-inline int STR_MODULATION( char *p, int n, unsigned char mod )
+inline int STR_MODULATION( char *p, int n, uint8_t mod )
 {
 	if ( mod == 0 ) return 0;
 	return snprintf( p, n, "mod:%d ", mod );
 }
-inline int STR_POL( char *p, int n, unsigned char pol )
+inline int STR_POL( char *p, int n, uint8_t pol )
 {
 	if ( pol == 0 ) return 0;
 	return snprintf( p, n, "pol:%d ", pol );
 }
-inline int STR_FEC_IN( char *p, int n, unsigned char fec_in )
+inline int STR_FEC_IN( char *p, int n, uint8_t fec_in )
 {
 	if ( fec_in == 0 ) return 0;
 	return snprintf( p, n, "fect_in:%d ", fec_in );
 }
-inline int STR_FEC_RATE_IN( char *p, int n, unsigned char fec_in_rate )
+inline int STR_FEC_RATE_IN( char *p, int n, uint8_t fec_in_rate )
 {
 	if ( fec_in_rate == 0 ) return 0;
 	return snprintf( p, n, "fect_rate_in:%d ", fec_in_rate );
 }
-inline int STR_FEC_OUT( char *p, int n, unsigned char fec_out )
+inline int STR_FEC_OUT( char *p, int n, uint8_t fec_out )
 {
 	if ( fec_out == 0 ) return 0;
 	return snprintf( p, n, "fect_out:%d ", fec_out );
 }
-inline int STR_FEC_RATE_OUT( char *p, int n, unsigned char fec_out_rate )
+inline int STR_FEC_RATE_OUT( char *p, int n, uint8_t fec_out_rate )
 {
 	if ( fec_out_rate == 0 ) return 0;
 	return snprintf( p, n, "fect_rate_out:%d ", fec_out_rate );

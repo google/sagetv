@@ -34,9 +34,9 @@ typedef struct TS_FAST_FILTER_DUMPER
 
 typedef struct TS_FILTER_DUMP
 {
-	unsigned short state;
+	uint16_t state;
 	TS_PARSER* ts_parser;
-	int packet_length;
+	int32_t packet_length;
 	TS_FAST_FILTER_DUMPER dumper;
 
 } TS_FILTER_DUMP;

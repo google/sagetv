@@ -139,14 +139,14 @@ typedef struct {
 	int countryCode;			// ISO country code
 	
 	int medium;					// (analog) one of the kSageTunerMedium constants
-	unsigned long tuningStandard;		// one of the kSageTunerStandard constants
+	uint32_t tuningStandard;		// one of the kSageTunerStandard constants
 	
 		// DTV values
 	char tunerMode[32];			// used by Channel to configure DTV sources
 	int outputFormat;			// 0:TS, 1:PS
 	
 	char channel[32];
-	unsigned long tuningFrequency;		// dup of freq specified below for DTV
+	uint32_t tuningFrequency;		// dup of freq specified below for DTV
 	int aft;					// non-zero to turn AFT circuit on
 	
 	// dtv tuning params

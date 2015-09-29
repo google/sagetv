@@ -22,13 +22,13 @@ extern "C" {
 
 typedef struct EAC3_AUDIO
 {
-	unsigned short channels;
-	unsigned short block_align;
-	unsigned long  samples_per_sec;
-	unsigned long  avgbytes_per_sec;
+	uint16_t channels;
+	uint16_t block_align;
+	uint32_t  samples_per_sec;
+	uint32_t  avgbytes_per_sec;
 } EAC3_AUDIO;
 
-int ReadEAC3AudioHeader( EAC3_AUDIO *pEAC3Audio, const unsigned char* pStart, int Size );
+int ReadEAC3AudioHeader( EAC3_AUDIO *pEAC3Audio, const uint8_t* pStart, int Size );
 
 #ifdef __cplusplus
 }

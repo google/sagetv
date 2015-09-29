@@ -353,6 +353,7 @@ public class SeriesInfo extends DBObject
   public String getCharacterForActor(Person actor)
   {
     if (actor == null) return "";
+    if (actor.extID == 0) return guessCharacterForActor(actor.name);
     for (int i = 0; i < people.length; i++)
     {
       // Resolve aliases as well so they match

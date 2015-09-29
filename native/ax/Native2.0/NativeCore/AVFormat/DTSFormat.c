@@ -22,13 +22,13 @@
 
 #define DTS_HEADER_SIZE 14
 
-static const unsigned int dts_samplerate[] =
+static const uint32_t dts_samplerate[] =
 {
     0, 8000, 16000, 32000, 0, 0, 11025, 22050, 44100, 0, 0,
     12000, 24000, 48000, 96000, 192000
 };
 
-static const unsigned int dts_bitrate[] =
+static const uint32_t dts_bitrate[] =
 {
     32000, 56000, 64000, 96000, 112000, 128000,
     192000, 224000, 256000, 320000, 384000,
@@ -38,7 +38,7 @@ static const unsigned int dts_bitrate[] =
     2048000, 3072000, 3840000, 1/*open*/, 2/*variable*/, 3/*lossless*/
 };
 
-static void LittleEndian( unsigned char *p_out, const unsigned char *p_in, int i_in )
+static void LittleEndian( uint8_t *p_out, const uint8_t *p_in, int i_in )
 {
     int i;
     for( i = 0; i < i_in/2; i++  )
@@ -48,9 +48,9 @@ static void LittleEndian( unsigned char *p_out, const unsigned char *p_in, int i
     }
 }
 
-static int LittleEndian14( unsigned char *p_out, const unsigned char *p_in, int i_in, int i_le )
+static int LittleEndian14( uint8_t *p_out, const uint8_t *p_in, int i_in, int i_le )
 {
-    unsigned char tmp, cur = 0;
+    uint8_t tmp, cur = 0;
     int bits_in, bits_out = 0;
     int i, i_out = 0;
 
@@ -94,24 +94,24 @@ static int LittleEndian14( unsigned char *p_out, const unsigned char *p_in, int 
     return i_out;
 }
 
-static int UnpackDTSInfo( DTS_AUDIO *pDTSAudio, const unsigned char *buf )
+static int UnpackDTSInfo( DTS_AUDIO *pDTSAudio, const uint8_t *buf )
 {
-    unsigned int audio_mode;
-    unsigned int sample_rate;
-    unsigned int bit_rate;
-    unsigned int frame_length;
-	unsigned int pcm_resolution;
-	unsigned int channels;
+    uint32_t audio_mode;
+    uint32_t sample_rate;
+    uint32_t bit_rate;
+    uint32_t frame_length;
+	  uint32_t pcm_resolution;
+	  uint32_t channels;
 
-    unsigned int frame_size;
-    unsigned int lfe;
+    uint32_t frame_size;
+    uint32_t lfe;
 
     frame_length = ((buf[4] & 0x01) << 6) | (buf[5] >> 2);
     frame_size = ((buf[5] & 0x03) << 12) | (buf[6] << 4) | (buf[7] >> 4);
     audio_mode = ((buf[7] & 0x0f) << 2) | (buf[8] >> 6);
     sample_rate = (buf[8] >> 2) & 0x0f;
     bit_rate = ((buf[8] & 0x03) << 3) | ((buf[9] >> 5) & 0x07);
-	pcm_resolution = ((buf[13] & 0x01)<<2) | ((buf[14] >> 6 ) & 0x03);
+	  pcm_resolution = ((buf[13] & 0x01)<<2) | ((buf[14] >> 6 ) & 0x03);
 
     if( sample_rate >= sizeof( dts_samplerate ) /sizeof( dts_samplerate[0] ) )
 		return 0;
@@ -191,12 +191,11 @@ static int UnpackDTSInfo( DTS_AUDIO *pDTSAudio, const unsigned char *buf )
 }
 
 
-int ReadDTS_AudioHeader( DTS_AUDIO *pDTSAudio, const unsigned char* pbData, int Size )
-//static bool UnpackDTSHead( AV_CONTEXT* av, const unsigned char *pbData, int Size ) 
+int ReadDTS_AudioHeader( DTS_AUDIO *pDTSAudio, const uint8_t* pbData, int Size )
 {
 	int i, ret=0;
-	const unsigned char* pData = pbData;
-    unsigned char buf[DTS_HEADER_SIZE];
+	const uint8_t* pData = pbData;
+  uint8_t buf[DTS_HEADER_SIZE];
 
 	if ( Size < DTS_HEADER_SIZE )
 		return 0;

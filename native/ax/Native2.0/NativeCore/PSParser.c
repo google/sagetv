@@ -25,7 +25,7 @@
 
 #define DROP_PARSING_THRESHOLD  120*8
 void PSParserZero( PS_PARSER *pPSParser );
-static int CreateESId( unsigned char cStreamId, unsigned char cPESSubId );
+static int CreateESId( uint8_t cStreamId, uint8_t cPESSubId );
 
 PS_PARSER* CreatePSParser( TRACKS* pTracks  )
 {
@@ -103,11 +103,11 @@ void ResetPSParser( PS_PARSER *pPSParser )
 	                          IS_PADDING_START_CODE(x) || IS_PSM_START_CODE(x)    ||\
                               IS_PES_STREAM_ID(x) || IS_END_CODE( x ) )
 
-static int ProcessPESData( PS_PARSER *pPSParser, const unsigned char* pData, int nSize,  PES *pPES );
-static int DumpPESDHeader( PS_PARSER *pPSParser, const unsigned char* pData, int nSize,  PES *pPES );
+static int ProcessPESData( PS_PARSER *pPSParser, const uint8_t* pData, int nSize,  PES *pPES );
+static int DumpPESDHeader( PS_PARSER *pPSParser, const uint8_t* pData, int nSize,  PES *pPES );
 static int CheckPSParseDone( PS_PARSER *pPSParser );
 static void PostStatusMessage( PS_PARSER *pPSParser, char* pMessageText );
-inline unsigned char* SearchPSStart( const unsigned char* pData, int nBytes )
+inline uint8_t* SearchPSStart( const uint8_t* pData, int nBytes )
 
 #define	END_PACKET_TYPE			0x01
 #define	PSM_PACKET_TYPE			0x02
@@ -118,7 +118,7 @@ inline unsigned char* SearchPSStart( const unsigned char* pData, int nBytes )
 #define	UNKNOWN_PACKET_TYPE		0x0f
 
 {
-	unsigned long code;
+	uint32_t code;
 
 	if ( nBytes < 4 )
 		return NULL;
@@ -127,42 +127,42 @@ inline unsigned char* SearchPSStart( const unsigned char* pData, int nBytes )
 	while ( --nBytes )
 	{
 		if ( ( (code&0x00ffffff)==0x01 ) && IS_PS_STREAM_ID( *(pData) ) )
-			return (unsigned char* )pData-3;
+			return (uint8_t* )pData-3;
 		code = (( code << 8 )| *pData++ );
 	}
 
 	return NULL;
 }
 
-static int UnpackPackHeader( const unsigned char* pData, int nBytes, unsigned long *pDemux, ULONGLONG* pSCR )
+static int UnpackPackHeader( const uint8_t* pData, int nBytes, uint32_t *pDemux, ULONGLONG* pSCR )
 {
 	int length = 0;
-	unsigned long demux;
-	unsigned int pad_bytes = 0;
-	unsigned char c;
+	uint32_t demux;
+	uint32_t pad_bytes = 0;
+	uint8_t c;
 	ULONGLONG ll = 0;
-	unsigned long l;
+	uint32_t l;
 	//mpeg2
 	if ( nBytes < 12 ) return 0;
 	if ( (pData[4] & 0xC0 ) == 0x40 )
 	{
 		if ( nBytes < 14 ) return -14;
-		ll =  ((ULONGLONG)((unsigned char)pData[4] & 0x38 ))>>3;   //3bits
+		ll =  ((ULONGLONG)((uint8_t)pData[4] & 0x38 ))>>3;   //3bits
 		ll <<= 2;
-		ll |= ((LONGLONG)((unsigned char)pData[4] & 0x03 ));   //2bits
+		ll |= ((LONGLONG)((uint8_t)pData[4] & 0x03 ));   //2bits
 		ll <<= 8;
-		ll |= ((LONGLONG)((unsigned char)pData[5] ));          //8bits
+		ll |= ((LONGLONG)((uint8_t)pData[5] ));          //8bits
 		ll <<= 5;
-		ll |= ((LONGLONG)((unsigned char)pData[6] &0xf8 ))>>3;    //5bits
+		ll |= ((LONGLONG)((uint8_t)pData[6] &0xf8 ))>>3;    //5bits
 		ll <<= 2;
-		ll |= ((LONGLONG)((unsigned char)pData[6] &0x03 ));    //2bits
+		ll |= ((LONGLONG)((uint8_t)pData[6] &0x03 ));    //2bits
 		ll <<= 8;
-		ll |= ((LONGLONG)((unsigned char)pData[7]));       //8bits
+		ll |= ((LONGLONG)((uint8_t)pData[7]));       //8bits
 		ll <<= 5;
-		ll |= ((LONGLONG)((unsigned char)pData[8] &0xf8 ))>>3;     //5bits
+		ll |= ((LONGLONG)((uint8_t)pData[8] &0xf8 ))>>3;     //5bits
 
-		l = ((unsigned long)((unsigned char)pData[8] &0x03 ))<<7;  //2bits
-		l |= ((unsigned long)((unsigned char)pData[9] &0xfe ))>>1;  //7bits
+		l = ((uint32_t)((uint8_t)pData[8] &0x03 ))<<7;  //2bits
+		l |= ((uint32_t)((uint8_t)pData[9] &0xfe ))>>1;  //7bits
 		*pSCR = ll*300+l;
 	
         //skip system_clock_reference_extension
@@ -213,13 +213,13 @@ static int UnpackPackHeader( const unsigned char* pData, int nBytes, unsigned lo
 	return 0;
 }
 
-static int DecodeSystemHeader( PS_PARSER* pPSParser, const unsigned char* pData, int nBytes )
+static int DecodeSystemHeader( PS_PARSER* pPSParser, const uint8_t* pData, int nBytes )
 {
 	int length = 0, header_len;
-	unsigned long demux=0;
-	unsigned char stream_id;
-	unsigned short block_size = 0;
-	//unsigned char* pData;
+	uint32_t demux=0;
+	uint8_t stream_id;
+	uint16_t block_size = 0;
+	//uint8_t* pData;
 
 	if ( nBytes < 9 ) return -9;
 	header_len = ( pData[4] << 8 )|pData[5];
@@ -286,20 +286,20 @@ static int DecodeSystemHeader( PS_PARSER* pPSParser, const unsigned char* pData,
 	return header_len;
 }
 
-static int UnpackPadPack( const unsigned char* pbData, int nBytes )
+static int UnpackPadPack( const uint8_t* pbData, int nBytes )
 {
-	unsigned short Len;
+	uint16_t Len;
 	if ( nBytes < 6 ) return -6;
 	Len = pbData[5] | (pbData[4] << 8);
 	return Len+6;
 
 }
 
-unsigned char* GetDescriptor( const unsigned char *pData, int Bytes, unsigned char Tag, int *pLength );
-static int ExtractSageInfo( SAGETV_PRIVATE_DATA *pSageTVPrivate, unsigned char* pData, int Bytes )
+uint8_t* GetDescriptor( const uint8_t *pData, int Bytes, uint8_t Tag, int *pLength );
+static int ExtractSageInfo( SAGETV_PRIVATE_DATA *pSageTVPrivate, uint8_t* pData, int Bytes )
 {
-	unsigned char* ptr;
-	unsigned char ctrl_bits;
+	uint8_t* ptr;
+	uint8_t ctrl_bits;
 	ptr = pData + 6;
 	if ( memcmp( ptr, "SAGE", 4 ) )
 		return 0;
@@ -327,9 +327,9 @@ static int ExtractSageInfo( SAGETV_PRIVATE_DATA *pSageTVPrivate, unsigned char* 
 	return 1;
 }
 
-static int ExtractSageMetaData( char **pSageTVMetaData, unsigned char* pData, int Bytes )
+static int ExtractSageMetaData( char **pSageTVMetaData, uint8_t* pData, int Bytes )
 {
-	unsigned char* ptr;
+	uint8_t* ptr;
 	ptr = pData + 6;
 	if ( Bytes > 10 && memcmp( ptr, "META", 4 ) )
 		return 0;
@@ -346,10 +346,10 @@ static int ExtractSageMetaData( char **pSageTVMetaData, unsigned char* pData, in
 #define  VIDEO_WINDOW_DESC_TAG			 8          //ISO 13818-1-200
 
 
-static int UnpackPsmPack( PS_PARSER* pPSParser, const unsigned char* pbData, int nBytes )
+static int UnpackPsmPack( PS_PARSER* pPSParser, const uint8_t* pbData, int nBytes )
 {
-	unsigned int pack_len, psm_info_len, es_map_len;
-	unsigned int pos, bytes, len;
+	uint32_t pack_len, psm_info_len, es_map_len;
+	uint32_t pos, bytes, len;
 
 	if ( nBytes < 6 ) return 0;
 	pack_len = pbData[5] | (pbData[4] << 8);
@@ -412,11 +412,11 @@ static int UnpackPsmPack( PS_PARSER* pPSParser, const unsigned char* pbData, int
 }
 
 ///////////////////////////////// PUSH SECTION  //////////////////////////////////////////
-int PushDataPSParser( PS_PARSER *pPSParser, const unsigned char* pData, int nSize, int* pExpectedBytes )
+int PushDataPSParser( PS_PARSER *pPSParser, const uint8_t* pData, int nSize, int* pExpectedBytes )
 {
 	int used_bytes = 0, bytes;
-	const unsigned char *p;
-	unsigned char code;
+	const uint8_t *p;
+	uint8_t code;
 
 	pPSParser->block_count++;
 
@@ -502,7 +502,7 @@ int PushDataPSParser( PS_PARSER *pPSParser, const unsigned char* pData, int nSiz
 		} else
 		if ( IS_PACK_START_CODE(code) )
 		{
-			unsigned long demux;
+			uint32_t demux;
 			ULONGLONG scr;
 			bytes = UnpackPackHeader( p, nSize-used_bytes, &demux, &scr );
 			if ( bytes > 0 )
@@ -515,7 +515,7 @@ int PushDataPSParser( PS_PARSER *pPSParser, const unsigned char* pData, int nSiz
 					PCR_DATA pcr_data;
 					pcr_data.pcr = scr;
 					pcr_data.pid = 0;
-					pcr_data.ts_packet_counter = (unsigned long)pPSParser->used_bytes;
+					pcr_data.ts_packet_counter = (uint32_t)pPSParser->used_bytes;
 					pcr_data.container = &pPSParser->es_streams;
 					pPSParser->dumper.scr_dumper( pPSParser->dumper.scr_dumper_context, (void*)&pcr_data, sizeof(PCR_DATA) );
 				}
@@ -571,7 +571,7 @@ int PushDataPSParser( PS_PARSER *pPSParser, const unsigned char* pData, int nSiz
 			if ( bytes > 0 )
 			{ 
 				SAGETV_PRIVATE_DATA sagetv_private_data={0};
-				unsigned short last_pack_type = pPSParser->pack_type;
+				uint16_t last_pack_type = pPSParser->pack_type;
 				pPSParser->pack_type = PADDING_PACKET_TYPE;
 				//extract embedded Sage infomation
 				if ( used_bytes + bytes > nSize )
@@ -579,7 +579,7 @@ int PushDataPSParser( PS_PARSER *pPSParser, const unsigned char* pData, int nSiz
 					*pExpectedBytes = (used_bytes + bytes ) - nSize;
 					break;
 				}
-				if ( ExtractSageInfo( &sagetv_private_data, (unsigned char*)pData+used_bytes, nSize-used_bytes  ) )
+				if ( ExtractSageInfo( &sagetv_private_data, (uint8_t*)pData+used_bytes, nSize-used_bytes  ) )
 				{
 					pPSParser->sagetv_private_data = sagetv_private_data;
 					SageLog(( _LOG_TRACE, 3, TEXT("**** SageTV Recording Data ver. %d (v:%d a:%d)****"), 
@@ -588,7 +588,7 @@ int PushDataPSParser( PS_PARSER *pPSParser, const unsigned char* pData, int nSiz
 				if (  END_PACKET_TYPE ==last_pack_type ) 
 				{
 					char *meta_data_p = NULL;
-					if ( ExtractSageMetaData( &meta_data_p, (unsigned char*)pData+used_bytes, nSize-used_bytes ) )
+					if ( ExtractSageMetaData( &meta_data_p, (uint8_t*)pData+used_bytes, nSize-used_bytes ) )
 					{
 						SageLog(( _LOG_TRACE, 3, TEXT("**** SageTV Metadata found %d ****"), meta_data_p ));
 					}
@@ -689,7 +689,7 @@ inline static void DumpESBlockOfPS( PS_PARSER *pPSParser, TRACK* pTrack )
 }
 
 
-static int ProcessPESData( PS_PARSER *pPSParser, const unsigned char* pData, int nSize,  PES *pPES )
+static int ProcessPESData( PS_PARSER *pPSParser, const uint8_t* pData, int nSize,  PES *pPES )
 {
 	ES_ELEMENT  *es_element_ptr = NULL;
 	AV_ELEMENT  *av_element_ptr = NULL;
@@ -773,7 +773,7 @@ static int ProcessPESData( PS_PARSER *pPSParser, const unsigned char* pData, int
 				if ( es_element_ptr->content_type == SUBTITLE_DATA )
 				{
 					SUBTITLE sub;
-					unsigned char* pDesc=GetPSESDesc( es_element_ptr, &pPSParser->psm_list );
+					uint8_t* pDesc=GetPSESDesc( es_element_ptr, &pPSParser->psm_list );
 					if ( pDesc && ParseDVBSubtitleDesc( &sub, pDesc, sizeof( pPSParser->psm_list.psm->stream_info) ) )
 					{
 						sub.type = 1;
@@ -800,9 +800,9 @@ static int ProcessPESData( PS_PARSER *pPSParser, const unsigned char* pData, int
 	if ( track != NULL && pPSParser->dumper.esblock_dumper && pPES->packet_length )
 	{
 		//ASSERT( pPES->packet_length );
-		track->buffer_start = (unsigned char*)pData;
+		track->buffer_start = (uint8_t*)pData;
 		track->buffer_size  = 6+ pPES->packet_length;
-		track->es_data_start = (unsigned char*)pData;
+		track->es_data_start = (uint8_t*)pData;
 		track->es_data_bytes = 6+ pPES->packet_length;
 
 		track->buffer_index = 0xffff;
@@ -819,7 +819,7 @@ static int ProcessPESData( PS_PARSER *pPSParser, const unsigned char* pData, int
 
 }
 
-static int DumpPESDHeader( PS_PARSER *pPSParser, const unsigned char* pData, int nSize,  PES *pPES )
+static int DumpPESDHeader( PS_PARSER *pPSParser, const uint8_t* pData, int nSize,  PES *pPES )
 {
 	ES_ELEMENT  *es_element_ptr = NULL;
 	//AV_ELEMENT  *av_element_ptr = NULL;
@@ -904,9 +904,9 @@ void PSParserZero( PS_PARSER *pPSParser )
 
 static void CreateSubtitileStream( PS_PARSER *pPSParser, PSM_LIST *pPSMList )
 {
-	unsigned char  stream_id;
-	unsigned short stream_type;
-	unsigned char* stream_inf;
+	uint8_t  stream_id;
+	uint16_t stream_type;
+	uint8_t* stream_inf;
 	int i, j;
 	ES_ELEMENT  es_element;
 
@@ -1041,7 +1041,7 @@ static int CheckPSParseDone( PS_PARSER *pPSParser )
 									pPSParser->sagetv_private_data.audio_main_track,
 									video_ready, audio_ready, subtitle_ready ));
 
-			SageLog(( _LOG_TRACE, 3, TEXT("Stream Ready pos:%d"), (unsigned long)pPSParser->used_bytes ));
+			SageLog(( _LOG_TRACE, 3, TEXT("Stream Ready pos:%d"), (uint32_t)pPSParser->used_bytes ));
 			return 1;
 		} else
 		{
@@ -1061,7 +1061,7 @@ static int CheckPSParseDone( PS_PARSER *pPSParser )
 									pPSParser->sagetv_private_data.audio_main_track,
 									video_ready, audio_ready, subtitle_ready  ));
 						SageLog(( _LOG_TRACE, 3, TEXT("WARNING: found %d stream of total %d"), parsing_done_num, total_stream ));
-						SageLog(( _LOG_TRACE, 3, TEXT("Stream Ready pos:%d"), (unsigned long)pPSParser->used_bytes ));
+						SageLog(( _LOG_TRACE, 3, TEXT("Stream Ready pos:%d"), (uint32_t)pPSParser->used_bytes ));
 						return 1;
 					}
 
@@ -1103,7 +1103,7 @@ static int CheckPSParseDone( PS_PARSER *pPSParser )
 			}
 			CreateSubtitileStream( pPSParser, &pPSParser->psm_list );
 
-			SageLog(( _LOG_TRACE, 3, TEXT("Stream Ready pos:%d"), (unsigned long)pPSParser->used_bytes ));
+			SageLog(( _LOG_TRACE, 3, TEXT("Stream Ready pos:%d"), (uint32_t)pPSParser->used_bytes ));
 			return 1;
 		}
 	}
@@ -1132,7 +1132,7 @@ int PickupMainTrack( PS_PARSER *pPSParser, TRACKS* pTracks )
 	return 0;
 }
 
-static int CreateESId( unsigned char cStreamId, unsigned char cPESSubId )
+static int CreateESId( uint8_t cStreamId, uint8_t cPESSubId )
 {
 	if ( IS_VIDEO_STREAM_ID( cStreamId ) )
 	{
@@ -1165,12 +1165,12 @@ static int CreateESId( unsigned char cStreamId, unsigned char cPESSubId )
 
 
 
-int CheckPSFormat( const unsigned char* pData, int nSize)
+int CheckPSFormat( const uint8_t* pData, int nSize)
 {
 	int score = 0, new_score=0, state = 0;
 	int used_bytes = 0, bytes;
-	const unsigned char *p;
-	unsigned char code;
+	const uint8_t *p;
+	uint8_t code;
 	int pack_packet_present = 0, psm_packet_present = 0, sysme_packet_present = 0;
 
 	p = pData;
@@ -1211,7 +1211,7 @@ int CheckPSFormat( const unsigned char* pData, int nSize)
 			{
 				SAGETV_PRIVATE_DATA sagetv_private_data;
 				//extract embedded Sage infomation
-				if ( ExtractSageInfo( &sagetv_private_data, (unsigned char*)pData+used_bytes, nSize-used_bytes  ) )
+				if ( ExtractSageInfo( &sagetv_private_data, (uint8_t*)pData+used_bytes, nSize-used_bytes  ) )
 				{
 					score = 900;
 				}
@@ -1282,9 +1282,9 @@ static void PostStatusMessage( PS_PARSER *pPSParser, char* pMessageText )
 	{
 		MESSAGE_DATA message={0};
 		strncpy( message.title, "STATUS", sizeof(message.title) );
-		message.message = (unsigned char*)pMessageText;
-		message.message_length = (unsigned short)strlen(pMessageText)+1 ;
-		message.buffer = (unsigned char*)pMessageText;
+		message.message = (uint8_t*)pMessageText;
+		message.message_length = (uint16_t)strlen(pMessageText)+1 ;
+		message.buffer = (uint8_t*)pMessageText;
 		message.buffer_length = message.message_length ;
 	
 		pPSParser->dumper.message_dumper( pPSParser->dumper.message_dumper_context, &message, sizeof(message) );
@@ -1296,12 +1296,12 @@ ULONGLONG PSDataUsedBytes( PS_PARSER *pPSParser )
 	return pPSParser->used_bytes;
 }
 
-unsigned long PSStreamBoundRate( PS_PARSER* pParser )
+uint32_t PSStreamBoundRate( PS_PARSER* pParser )
 {
 	return pParser->demux_bound;
 }
 
-char* _pes_header_( unsigned char* p )
+char* _pes_header_( uint8_t* p )
 {
 	static char buf[38];
 	snprintf( buf, sizeof(buf), "ES:%02x %02x %02x %02x %02x %02x %02x %2x %02x ", 
@@ -1310,7 +1310,7 @@ char* _pes_header_( unsigned char* p )
 }
 
 /*
-static unsigned char* _search_data_( unsigned char* match, int len, unsigned char* data, int data_size )
+static uint8_t* _search_data_( uint8_t* match, int len, uint8_t* data, int data_size )
 {
 	int i;
 	for ( i = 0; i<data_size-len; i++ )
@@ -1320,9 +1320,9 @@ static unsigned char* _search_data_( unsigned char* match, int len, unsigned cha
 	
 	return NULL;
 }
-static void _s_(unsigned char*data, int size)
+static void _s_(uint8_t*data, int size)
 {
-	unsigned char pat1[]= { 0x2f, 0xaf, 0xb5, 0x3d, 0x41, 0xcf, 0x2f, 0x49, 0x4d, 0x5e, 0x38, 0xdb, 0x92, 0x7c, 0xcb, 0x9a, 0xf3, 0xab, 0xe4,
+	uint8_t pat1[]= { 0x2f, 0xaf, 0xb5, 0x3d, 0x41, 0xcf, 0x2f, 0x49, 0x4d, 0x5e, 0x38, 0xdb, 0x92, 0x7c, 0xcb, 0x9a, 0xf3, 0xab, 0xe4,
 		0x1e, 0xa9, 0x2c, 0x07, 0xb0, 0x3e, 0x7e, 0xec, 0x57, 0xb9, 0x1a, 0xd3, 0x0d, 0x26 };
 	if ( _search_data_( pat1, sizeof(pat1)-1, data, size ) )
 	{
@@ -1331,8 +1331,8 @@ static void _s_(unsigned char*data, int size)
 }
 */
 /*{
-	unsigned char pat1[]= { 0x0, 0x0, 0x01 ,0xe0 ,0x00 ,0x00 ,0x81 ,0xc0 ,0x0b ,0x33 ,0xc6 ,0x33 ,0x77 ,0xf1 ,0x13 ,0xc6 ,0x33 ,0x23 ,0x91 ,0xff };
-	unsigned char pat2[]= { 00, 00, 01, 0xb3 };
+	uint8_t pat1[]= { 0x0, 0x0, 0x01 ,0xe0 ,0x00 ,0x00 ,0x81 ,0xc0 ,0x0b ,0x33 ,0xc6 ,0x33 ,0x77 ,0xf1 ,0x13 ,0xc6 ,0x33 ,0x23 ,0x91 ,0xff };
+	uint8_t pat2[]= { 00, 00, 01, 0xb3 };
 	if ( _search_data_( pat2, 4, data, 188 ) && _search_data_( pat1, 7, data, 188 ) )
 	{
 		printf( "STOP" );
@@ -1342,7 +1342,7 @@ static void _s_(unsigned char*data, int size)
 /*
 if ( pPES->stream_id == 0xe0 )
 {
-	unsigned char *np = track->es_data_start+track->es_data_bytes;
+	uint8_t *np = track->es_data_start+track->es_data_bytes;
 	if ( np[0] || np[1] || np[2] != 0x01 || np[3] != 0xba && np[3] != 0xbe )
 		printf( "STOP" );
 
@@ -1373,7 +1373,7 @@ if ( pPES->stream_id == 0xe0 )
 
 		/*{
 			unsigned language_code;
-			unsigned char audio_type;
+			uint8_t audio_type;
 			language_code = GetLanguageCode( &pbData[pos], len );
 			if ( language_code )
 			{

@@ -26,9 +26,9 @@ extern "C" {
 
 typedef struct TUNE_DAT
 {
-	unsigned short nid;
-	unsigned short onid;
-	unsigned short tsid;
+	uint16_t nid;
+	uint16_t onid;
+	uint16_t tsid;
 	union {
 		TERRESTRIAL_TUNE t;
 		CABLE_TUNE		 c;
@@ -39,8 +39,8 @@ typedef struct TUNE_DAT
 
 typedef struct CHANNEL_DAT
 {
-	unsigned char  state;  //state=3 ready
-	unsigned char  reserve;//
+	uint8_t  state;  //state=3 ready
+	uint8_t  reserve;//
 	union {
 		ATSC_CHANNEL   atsc;
 		DVB_CHANNEL	   dvb;
@@ -50,38 +50,38 @@ typedef struct CHANNEL_DAT
 
 typedef struct PROGRAM_DAT
 {
-	unsigned char  service;  
-	unsigned char  channel;
-	unsigned short tsid;
-	unsigned short program_id;
+	uint8_t  service;  
+	uint8_t  channel;
+	uint16_t tsid;
+	uint16_t program_id;
 } PROGRAM_DAT;
 
 typedef struct TUNE_LIST
 {
-	unsigned short total_list_num;
-	unsigned short tune_num;
-	unsigned char  stream_format;  //ATSC, DVB
-	unsigned char  sub_format;     //T,C,S, 
+	uint16_t total_list_num;
+	uint16_t tune_num;
+	uint8_t  stream_format;  //ATSC, DVB
+	uint8_t  sub_format;     //T,C,S, 
 	TUNE_DAT *tune;
 } TUNE_LIST;
 
 typedef struct CHANNEL_LIST
 {
-	unsigned short total_list_num;
-	unsigned short channel_num;
-	unsigned char  stream_format;  //ATSC, DVB
-	unsigned char  sub_format;     //T,C,S, 
+	uint16_t total_list_num;
+	uint16_t channel_num;
+	uint8_t  stream_format;  //ATSC, DVB
+	uint8_t  sub_format;     //T,C,S, 
 	CHANNEL_DAT    *channel;
 } CHANNEL_LIST;
 
 typedef struct PROGRAM_LIST
 {
-	unsigned short total_list_num;
-	unsigned short program_num;
-	unsigned short flag;
-	unsigned short drop_program_num;
-	unsigned char  stream_format;  //ATSC, DVB
-	unsigned char  sub_format;     //T,C,S, 
+	uint16_t total_list_num;
+	uint16_t program_num;
+	uint16_t flag;
+	uint16_t drop_program_num;
+	uint8_t  stream_format;  //ATSC, DVB
+	uint8_t  sub_format;     //T,C,S, 
 	PROGRAM_DAT    *program;
 } PROGRAM_LIST;
 
@@ -94,39 +94,39 @@ typedef struct PROGRAM_LIST
 
 typedef struct SCAN
 {
-	unsigned short task; //1:psi channel scan; 2:naked channel scan
-	unsigned short command;
+	uint16_t task; //1:psi channel scan; 2:naked channel scan
+	uint16_t command;
 	struct DEMUXER *demuxer;
 
-	unsigned char  stream_format;  //ATSC, DVB
-	unsigned char  sub_format;     //T,C,S, QAM 
+	uint8_t  stream_format;  //ATSC, DVB
+	uint8_t  sub_format;     //T,C,S, QAM 
 
-	unsigned short state;
+	uint16_t state;
 	CHANNEL_LIST   channel_list;
 	TUNE_LIST      tune_list;
 	PROGRAM_LIST   program_list;
 
-	unsigned short local_nid;
-	unsigned short local_onid;
-	unsigned short local_tsid;
-	unsigned short selected_tune_index;
+	uint16_t local_nid;
+	uint16_t local_onid;
+	uint16_t local_tsid;
+	uint16_t selected_tune_index;
 	TUNE tune;
 
-	unsigned long  maxium_psi_checking_bytes;
-	unsigned long  psi_timeout;
+	uint32_t  maxium_psi_checking_bytes;
+	uint32_t  psi_timeout;
 
-	unsigned long  parse_bytes;
-	unsigned long  last_parser_bytes;
-	unsigned long  time_elapse;
-	unsigned long  last_time_clock;
+	uint32_t  parse_bytes;
+	uint32_t  last_parser_bytes;
+	uint32_t  time_elapse;
+	uint32_t  last_time_clock;
 
-	unsigned short naked_channel_found;
-	unsigned short pmt_dump_enabled;
+	uint16_t naked_channel_found;
+	uint16_t pmt_dump_enabled;
 
-	unsigned long  pat_counter;
-	unsigned long  pmt_counter;
-	unsigned long  psi_counter;
-	unsigned long  nit_counter;
+	uint32_t  pat_counter;
+	uint32_t  pmt_counter;
+	uint32_t  psi_counter;
+	uint32_t  nit_counter;
 	int demuxer_myown_flag;
 	int fd;
 } SCAN;
@@ -149,9 +149,9 @@ int  IsChannelInfoReady( SCAN* pScan );
 int  ChannelInfoState( SCAN* pScan );
 int  ChannelInfoChannelNum( SCAN* pScan );
 int  IsNakedStream( SCAN* pScan );
-int  UpdateTimeClock( SCAN* pScan, unsigned long lMillionSecond );
+int  UpdateTimeClock( SCAN* pScan, uint32_t lMillionSecond );
 
-int	 PushScanStreamData( SCAN* pScan, unsigned char *pData, int nBytes, int *nExpectedBytes );
+int	 PushScanStreamData( SCAN* pScan, uint8_t *pData, int nBytes, int *nExpectedBytes );
 
 int  MergeChannelListProgramList(  SCAN *pScan );
 int  GuessChannelInfSize( CHANNEL_LIST *pChannelList );
@@ -167,14 +167,14 @@ int ChannelInfoReadyNum( SCAN* pScan );
 CHANNEL_LIST* GetChannelList( SCAN *pScan );
 TUNE_LIST*    GetTuneList( SCAN *pScan );
 PROGRAM_LIST* GetProgramList( SCAN *pScan );
-int  GetStreamFormat( SCAN *pScan, unsigned short* pStreamFormat, unsigned short *pSubFormat );
+int  GetStreamFormat( SCAN *pScan, uint16_t* pStreamFormat, uint16_t *pSubFormat );
 
 CHANNEL_LIST* DupChannelList( CHANNEL_LIST *pChannelList );
 void ReleaseChannelList( CHANNEL_LIST *pChannelList );
 TUNE_LIST*    DupTuneList( TUNE_LIST *pTuneList );
 void ReleaseTuneList( TUNE_LIST *pTuneList );
 
-unsigned short GetTracksAttr( SCAN*  pScan );
+uint16_t GetTracksAttr( SCAN*  pScan );
 
 
 #ifdef __cplusplus

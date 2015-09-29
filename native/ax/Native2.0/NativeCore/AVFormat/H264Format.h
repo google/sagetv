@@ -22,31 +22,31 @@ extern "C" {
 
 typedef struct H264_VIDEO
 {
-	unsigned short profile, level;
-	unsigned short constraint_set0;
-	unsigned short constraint_set1;
-	unsigned short constraint_set2;
-	unsigned short width, height;
-	unsigned short progressive; //PAFF
-	unsigned short padding1;
-	unsigned short padding2;
-	unsigned long  sps_id;
-	unsigned long  cbr;
-	unsigned long  frame_rate_nomi;
-	unsigned long  frame_rate_deno;
-	unsigned short ar_nomi;
-	unsigned short ar_deno;
-	unsigned short sps_length;
-	unsigned short padding;
-	unsigned char  sps[256];
-	int guessH264; //-100, 100, 0: is unsure, 100 sure is H264 
+	uint16_t profile, level;
+	uint16_t constraint_set0;
+	uint16_t constraint_set1;
+	uint16_t constraint_set2;
+	uint16_t width, height;
+	uint16_t progressive; //PAFF
+	uint16_t padding1;
+	uint16_t padding2;
+	uint32_t sps_id;
+	uint32_t cbr;
+	uint32_t frame_rate_nomi;
+	uint32_t frame_rate_deno;
+	uint16_t ar_nomi;
+	uint16_t ar_deno;
+	uint16_t sps_length;
+	uint16_t padding;
+	uint8_t  sps[256];
+	int32_t  guessH264; //-100, 100, 0: is unsure, 100 sure is H264 
 } H264_VIDEO;
 
-float H264AspectRatioF( unsigned short nomi, unsigned short deno, long width, long height );
-int H264AspectRatioDenoValue( unsigned short nomi, unsigned short deno, long width, long height );
-int H264AspectRatioNomiValue( unsigned short nomi, unsigned short deno, long width, long height );
+float H264AspectRatioF( uint16_t nomi, uint16_t deno, int32_t width, int32_t height );
+int H264AspectRatioDenoValue( uint16_t nomi, uint16_t deno, int32_t width, int32_t height );
+int H264AspectRatioNomiValue( uint16_t nomi, uint16_t deno, int32_t width, int32_t height );
 
-int ReadH264VideoHeader( H264_VIDEO *pH264Video, const unsigned char* pStart, int Size );
+int ReadH264VideoHeader( H264_VIDEO *pH264Video, const uint8_t* pStart, int Size );
 
 #ifdef __cplusplus
 }

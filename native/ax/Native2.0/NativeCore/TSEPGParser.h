@@ -33,7 +33,7 @@ typedef struct TS_EPG_PARSER_DUMPER
 
 typedef struct TS_EPG_PARSER
 {
-	unsigned long state;
+	uint32_t state;
 	TS_FILTER* ts_filter;
 	TS_EPG_PARSER_DUMPER dumper;
 

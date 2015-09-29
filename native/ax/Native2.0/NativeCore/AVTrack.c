@@ -76,7 +76,7 @@ void ReleaseTracks( TRACKS* pTracks )
 }
 
 
-void CheckTracksAttr( TRACKS* pTracks, unsigned long LanguageCode )
+void CheckTracksAttr( TRACKS* pTracks, uint32_t LanguageCode )
 {
 	int i;
 	if ( IS_TS_TYPE( pTracks->track_type ) )
@@ -274,14 +274,14 @@ static int MpegVideoInf( MPEG_VIDEO *pMpegVideo, char* pBuffer, int nSize )
 		if ( pMpegVideo->chrome == 1  ) chrome_format = "cs=yuv420p;"; else
 		if ( pMpegVideo->chrome == 2  ) chrome_format = "cs=yuv422p;"; else
 		if ( pMpegVideo->chrome == 3  ) chrome_format = "cs=yuv444p;"; 
-			
-		pos += snprintf( p+pos, nSize-pos, "fps=%f;fpsn=%d;fpsd=%d;ar=%f;arn=%d;ard=%d;w=%ld;h=%ld;lace=%d;%s",
+
+		pos += snprintf( p+pos, nSize-pos, "fps=%f;fpsn=%d;fpsd=%d;ar=%f;arn=%d;ard=%d;w=%d;h=%d;lace=%d;%s",
 			              (float)pMpegVideo->frame_rate_nomi/pMpegVideo->frame_rate_deno,
 						  pMpegVideo->frame_rate_nomi, 
 						  pMpegVideo->frame_rate_deno,
-						  Mepg2AspectRatioF( (unsigned char)(pMpegVideo->ar_info & 0x0f), pMpegVideo->width, pMpegVideo->height ),
-						  Mepg2AspectRatioNomiValue( (unsigned char)(pMpegVideo->ar_info & 0x0f), pMpegVideo->width, pMpegVideo->height ),
-						  Mepg2AspectRatioDenoValue( (unsigned char)(pMpegVideo->ar_info & 0x0f), pMpegVideo->width, pMpegVideo->height ),
+						  Mepg2AspectRatioF( (uint8_t)(pMpegVideo->ar_info & 0x0f), pMpegVideo->width, pMpegVideo->height ),
+						  Mepg2AspectRatioNomiValue( (uint8_t)(pMpegVideo->ar_info & 0x0f), pMpegVideo->width, pMpegVideo->height ),
+						  Mepg2AspectRatioDenoValue( (uint8_t)(pMpegVideo->ar_info & 0x0f), pMpegVideo->width, pMpegVideo->height ),
 						  pMpegVideo->width, 
 						  pMpegVideo->height,
 						  !pMpegVideo->progressive,
@@ -289,11 +289,11 @@ static int MpegVideoInf( MPEG_VIDEO *pMpegVideo, char* pBuffer, int nSize )
 
 	} else
 	{
-		pos += snprintf( p+pos, nSize-pos, "fps=%f;fpsn=%d;fpsd=%d;ar=%f;w=%ld;h=%ld;",
+		pos += snprintf( p+pos, nSize-pos, "fps=%f;fpsn=%d;fpsd=%d;ar=%f;w=%d;h=%d;",
 			              (float)pMpegVideo->frame_rate_nomi/pMpegVideo->frame_rate_deno,
 						  pMpegVideo->frame_rate_nomi, 
 						  pMpegVideo->frame_rate_deno,
-						  Mepg1AspectRatioF( (unsigned char)(pMpegVideo->ar_info & 0x0f), pMpegVideo->width, pMpegVideo->height ),
+						  Mepg1AspectRatioF( (uint8_t)(pMpegVideo->ar_info & 0x0f), pMpegVideo->width, pMpegVideo->height ),
 						  pMpegVideo->width, pMpegVideo->height );
 	}
 	return pos;
@@ -322,7 +322,7 @@ static int AC3AudioInf( AV_ELEMENT *pAVElmnt, char* pBuffer, int nSize )
 	char* p = pBuffer;
 	int pos = 0;
 	if ( nSize <= 0 ) return 0;
-	pos += snprintf( p+pos, nSize-pos, "sr=%ld;ch=%d;br=%ld;", pAVElmnt->d.a.ac3.samples_per_sec, 
+	pos += snprintf( p+pos, nSize-pos, "sr=%d;ch=%d;br=%d;", pAVElmnt->d.a.ac3.samples_per_sec, 
 		             pAVElmnt->d.a.ac3.channels, pAVElmnt->d.a.ac3.avgbytes_per_sec );
 	return pos;
 }
@@ -331,7 +331,7 @@ static int DTSAudioInf( AV_ELEMENT *pAVElmnt, char* pBuffer, int nSize )
 	char* p = pBuffer;
 	int pos = 0;
 	if ( nSize <= 0 ) return 0;
-	pos += snprintf( p+pos, nSize-pos, "sr=%ld;ch=%d;br=%ld;", pAVElmnt->d.a.dts.samples_per_sec, 
+	pos += snprintf( p+pos, nSize-pos, "sr=%d;ch=%d;br=%d;", pAVElmnt->d.a.dts.samples_per_sec, 
 		             pAVElmnt->d.a.dts.channels, pAVElmnt->d.a.dts.avgbytes_per_sec );
 	return pos;
 }
@@ -340,7 +340,7 @@ static int AACAudioInf( AV_ELEMENT *pAVElmnt, char* pBuffer, int nSize )
 	char* p = pBuffer;
 	int pos = 0;
 	if ( nSize <= 0 ) return 0;
-	pos += snprintf( p+pos, nSize-pos, "sr=%ld;ch=%d;br=%ld;at=%s%s;", pAVElmnt->d.a.aac.samples_per_sec, 
+	pos += snprintf( p+pos, nSize-pos, "sr=%d;ch=%d;br=%d;at=%s%s;", pAVElmnt->d.a.aac.samples_per_sec, 
 		             pAVElmnt->d.a.aac.channels, pAVElmnt->d.a.aac.avgbytes_per_sec,
 					 pAVElmnt->d.a.aac.format==1?"ADTS":"LATM", 
 					 pAVElmnt->d.a.aac.version==0?"":(pAVElmnt->d.a.aac.version==2)?"-MPEG2":"-MPEG4" );
@@ -351,7 +351,7 @@ static int AACHEAudioInf( AV_ELEMENT *pAVElmnt, char* pBuffer, int nSize )
 	char* p = pBuffer;
 	int pos = 0;
 	if ( nSize <= 0 ) return 0;
-	pos += snprintf( p+pos, nSize-pos, "sr=%ld;ch=%d;br=%ld;at=%s%s;", pAVElmnt->d.a.aac.samples_per_sec, 
+	pos += snprintf( p+pos, nSize-pos, "sr=%d;ch=%d;br=%d;at=%s%s;", pAVElmnt->d.a.aac.samples_per_sec, 
 		             pAVElmnt->d.a.aac.channels, pAVElmnt->d.a.aac.avgbytes_per_sec,
 					 pAVElmnt->d.a.aac.format==1?"ADTS":"LATM", 
 					 pAVElmnt->d.a.aac.version==0?"":(pAVElmnt->d.a.aac.version==2)?"-MPEG2":"-MPEG4" );
@@ -362,7 +362,7 @@ static int MPEGAudioInf( AV_ELEMENT *pAVElmnt, char* pBuffer, int nSize )
 	char* p = pBuffer;
 	int pos = 0;
 	if ( nSize <= 0 ) return 0;
-	pos += snprintf( p+pos, nSize-pos, "sr=%ld;ch=%d;br=%ld;", pAVElmnt->d.a.mpeg_audio.samples_per_sec, 
+	pos += snprintf( p+pos, nSize-pos, "sr=%d;ch=%d;br=%d;", pAVElmnt->d.a.mpeg_audio.samples_per_sec, 
 		             pAVElmnt->d.a.mpeg_audio.channels, pAVElmnt->d.a.mpeg_audio.avgbytes_per_sec*8 );
 	return pos;
 }
@@ -371,7 +371,7 @@ static int LPCMAudioInf( AV_ELEMENT *pAVElmnt, char* pBuffer, int nSize )
 	char* p = pBuffer;
 	int pos = 0;
 	if ( nSize <= 0 ) return 0;
-	pos += snprintf( p+pos, nSize-pos, "sr=%ld;ch=%d;br=%ld,bits=%d;src=%d;", pAVElmnt->d.a.lpcm.samples_per_sec, 
+	pos += snprintf( p+pos, nSize-pos, "sr=%d;ch=%d;br=%d,bits=%d;src=%d;", pAVElmnt->d.a.lpcm.samples_per_sec, 
 					pAVElmnt->d.a.lpcm.channels, pAVElmnt->d.a.lpcm.avgbytes_per_sec, pAVElmnt->d.a.lpcm.bits_per_sample, pAVElmnt->d.a.lpcm.lpcm_source );
 	return pos;
 }
@@ -513,7 +513,7 @@ int  AVElmntInfo( AV_ELEMENT *pAVElmnt, char* pBuffer, int nSize )
 
 }
 
-static unsigned long GetVideoRate( AV_ELEMENT *pAVElmnt  )
+static uint32_t GetVideoRate( AV_ELEMENT *pAVElmnt  )
 {
 
 	if ( pAVElmnt->format_fourcc == SAGE_FOURCC( "MP1V" ) )	
@@ -536,7 +536,7 @@ static unsigned long GetVideoRate( AV_ELEMENT *pAVElmnt  )
 	return 0;
 }
 
-unsigned long GetAudioRate( AV_ELEMENT *pAVElmnt )
+uint32_t GetAudioRate( AV_ELEMENT *pAVElmnt )
 {
 	if ( pAVElmnt->format_fourcc == SAGE_FOURCC( "AAC " ) )
 	{
@@ -596,7 +596,7 @@ int TagInfo( int nOutputFormat, TS_ELEMENT *pTSElmnt, ES_ELEMENT *pESElmnt, char
 	return pos;
 }
 
-char* AudioType( unsigned char type );
+char* AudioType( uint8_t type );
 int TracksInfo( TRACKS* pTracks, char* pBuffer, int nSize )
 {
 	int i, pos = 0, video_num=0, audio_num=0;
@@ -604,7 +604,7 @@ int TracksInfo( TRACKS* pTracks, char* pBuffer, int nSize )
 	char *p = pBuffer;
 	ES_ELEMENT *pESElmnt; 
 
-	unsigned long bit_rate = 0;
+	uint32_t bit_rate = 0;
 
 	if ( IS_TS_TYPE( pTracks->track_type ) )
 	{
@@ -692,7 +692,7 @@ int TracksInfo( TRACKS* pTracks, char* pBuffer, int nSize )
 	}
 
 	if ( nSize > pos && bit_rate > 0 )
-		pos += snprintf( p+pos, nSize-pos, "br=%ld;", bit_rate );
+		pos += snprintf( p+pos, nSize-pos, "br=%d;", bit_rate );
 
 	if ( IS_TS_TYPE( pTracks->track_type ) )
 	{
@@ -747,8 +747,8 @@ int TracksInfo( TRACKS* pTracks, char* pBuffer, int nSize )
 		if ( pTracks->track[i].av_elmnt->content_type == AUDIO_DATA )
 		{
 			char tmp[16];
-			unsigned long language_code;
-			unsigned char audio_type;
+			uint32_t language_code;
+			uint8_t audio_type;
 			if ( nSize > pos )	pos += snprintf( p+pos, nSize-pos, "[" );
 			pos += AVElmntInfo( pTracks->track[i].av_elmnt, p+pos, nSize-pos );
 			if ( i == pTracks->main_audio_index )
@@ -765,7 +765,7 @@ int TracksInfo( TRACKS* pTracks, char* pBuffer, int nSize )
 			}
 			if ( language_code )
 			{
-				if ( language_code == LanguageCode( (unsigned char*)"qaa" ) )
+				if ( language_code == LanguageCode( (uint8_t*)"qaa" ) )
 					strncpy( tmp, "original", sizeof(tmp) );
 				else
 					Language(language_code, tmp );
@@ -784,7 +784,7 @@ int TracksInfo( TRACKS* pTracks, char* pBuffer, int nSize )
 		if ( pTracks->track[i].av_elmnt->content_type == SUBTITLE_DATA )
 		{
 			char tmp[16];
-			unsigned long language_code;
+			uint32_t language_code;
 			if ( nSize > pos ) pos += snprintf( p+pos, nSize-pos, "[" );
 			pos += AVElmntInfo( pTracks->track[i].av_elmnt, p+pos, nSize-pos );
 			if ( pTracks->track[i].ts_elmnt != NULL && pTracks->track[i].ts_elmnt->language_code )
@@ -806,7 +806,7 @@ int TracksInfo( TRACKS* pTracks, char* pBuffer, int nSize )
 	return pos;
 }
 
-char* AudioType( unsigned char type )
+char* AudioType( uint8_t type )
 {
 	if ( type == 1 )
 		return "Silent";

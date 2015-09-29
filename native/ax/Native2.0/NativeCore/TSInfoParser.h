@@ -42,15 +42,15 @@ extern "C" {
 #define TAG_VERIOSN	0x01
 typedef struct PVR_META_INF
 {
-	unsigned char state;
-	unsigned char ver;
-	unsigned short program_pid;
-	unsigned short program_num;
-	unsigned short tsid;
-	unsigned short video_pid;
-	unsigned short audio_pid;
-	unsigned char  video_type;
-	unsigned char  audio_type;
+	uint8_t state;
+	uint8_t ver;
+	uint16_t program_pid;
+	uint16_t program_num;
+	uint16_t tsid;
+	uint16_t video_pid;
+	uint16_t audio_pid;
+	uint8_t  video_type;
+	uint8_t  audio_type;
 } PVR_META_INF;
 
 typedef struct TS_INFO_PARSER_DUMPER
@@ -77,44 +77,44 @@ typedef struct TS_INFO_PARSER_DUMPER
 
 typedef struct ES_BUFFER
 {
-	unsigned short stream_id;
+	uint16_t stream_id;
 	PES pes;
-	int buffer_size;
-	unsigned char* buffer;
-	int bytes;
-	int main_track;
-	int input_bytes;
+	int32_t buffer_size;
+	uint8_t* buffer;
+	int32_t bytes;
+	int32_t main_track;
+	int32_t input_bytes;
 } ES_BUFFER;
 
 
 typedef struct TS_INFO_PARSER
 {
-	unsigned long state;
+	uint32_t state;
 	TS_FILTER* ts_filter;
 	TS_INFO_PARSER_DUMPER dumper;
 	TUNE tune;
 
-	int max_stream_num;
+	int32_t max_stream_num;
 	TS_STREAMS ts_streams;
 	ES_STREAMS es_streams;
 	AV_STREAMS av_streams;
 	ES_BUFFER* es_buffer;
 
-	unsigned long utc_sec;
-	unsigned long utc_sec_start;
-	unsigned long pcr_sec;
-	unsigned long pcr_sec_start;
+	uint32_t utc_sec;
+	uint32_t utc_sec_start;
+	uint32_t pcr_sec;
+	uint32_t pcr_sec_start;
 		
 	char avinf[1024*2];
-	int  avinf_size;
+	int32_t  avinf_size;
 
-	unsigned long total_bytes;
-	unsigned long max_check_limit;
-	short total_video_num;
-	short total_audio_num;
-	short found_video_num;
-	short found_audio_num;
-	unsigned long bit_rate;
+	uint32_t total_bytes;
+	uint32_t max_check_limit;
+	int16_t total_video_num;
+	int16_t total_audio_num;
+	int16_t found_video_num;
+	int16_t found_audio_num;
+	uint32_t bit_rate;
 	
 } TS_INFO_PARSER;
 
@@ -131,12 +131,12 @@ int  StartTSInfoParser( TS_INFO_PARSER *pTSInfoParser, int nFlag );
 void StopTSInfoParser( TS_INFO_PARSER *pTSInfoParser );
 void SetupTSTune( TS_INFO_PARSER *pTSInfoParser, TUNE *pTune );
 void DisableParseData( TS_INFO_PARSER *pTSInfoParser );
-int  PushTSPacketParser( TS_INFO_PARSER *pTSInfoParser, unsigned char* pData, int nSize );
+int  PushTSPacketParser( TS_INFO_PARSER *pTSInfoParser, uint8_t* pData, int nSize );
 int  CheckTrackAVInfRead( TS_INFO_PARSER *pTSInfoParser );
 int  GetAVInfo( TS_INFO_PARSER *pTSInfoParser, char* pBuffer, int nSize );
-int  GetPVRMetaInf( PVR_META_INF* pMetaInf, unsigned char *pData );
-int  SearchPVRMetaInf( int* pNextStart, unsigned char *pData, int nBytes );
-int	 CheckSagePVRData( const unsigned char* pData, int nBytes );
+int  GetPVRMetaInf( PVR_META_INF* pMetaInf, uint8_t *pData );
+int  SearchPVRMetaInf( int* pNextStart, uint8_t *pData, int nBytes );
+int	 CheckSagePVRData( const uint8_t* pData, int nBytes );
 
 #ifdef __cplusplus
 }

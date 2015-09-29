@@ -23,25 +23,25 @@ extern "C" {
 
 typedef struct AVINF
 {
-	unsigned short state;
-	unsigned short task;
+	uint16_t state;
+	uint16_t task;
 	struct DEMUXER* demuxer;
 
 	ULONGLONG first_pts;
 	ULONGLONG last_pts;
 	ULONGLONG current_pts;
 
-	unsigned long video_data_block;
-	unsigned long audio_data_block;
+	uint32_t video_data_block;
+	uint32_t audio_data_block;
 
-	unsigned long max_check_bytes;
+	uint32_t max_check_bytes;
 
 } AVINF;
 
 typedef struct AVPTS
 {
-	unsigned short state;
-	unsigned short task;
+	uint16_t state;
+	uint16_t task;
 	struct DEMUXER* demuxer;
 
 	ULONGLONG first_pts;
@@ -52,27 +52,27 @@ typedef struct AVPTS
 	ULONGLONG current_dts;
 	ULONGLONG current_pcr;
 
-	unsigned long video_data_block;
-	unsigned long audio_data_block;
+	uint32_t video_data_block;
+	uint32_t audio_data_block;
 
-	unsigned long max_check_bytes;
+	uint32_t max_check_bytes;
 
-	unsigned short output_format;
+	uint16_t output_format;
 	ULONGLONG file_size;
 	ULONGLONG push_bytes;
 
-	unsigned long count;
-	unsigned long ill_pcr_count;
-	unsigned long ill_pts_count;
+	uint32_t count;
+	uint32_t ill_pcr_count;
+	uint32_t ill_pts_count;
 
 	int pts_file;
 
 } AVPTS;
 
-int GetAVFormat(  char* pFileName, unsigned long nCheckMaxiumSize, int bStreamData, 
+int GetAVFormat(  char* pFileName, uint32_t nCheckMaxiumSize, int bStreamData, 
 			   int nRequestedTSChannel,   char* pFormatBuf, int nFormatSize, char* pDurationBuf, 
 			   int nDurationBufSize, int* nTotalChannel );
-int GetAVPts( char* pFileName, char* pPTSFile, int nOption, unsigned long nCheckMaxiumSize, 
+int GetAVPts( char* pFileName, char* pPTSFile, int nOption, uint32_t nCheckMaxiumSize, 
 			   int nRequestedTSChannel, int* nTotalChannel );
 
 ULONGLONG  hs_long_long( char* digital );

@@ -20,16 +20,18 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
 
 typedef struct AC3_AUDIO
 {
-	unsigned short channels;
-	unsigned short block_align;
-	unsigned long  samples_per_sec;
-	unsigned long  avgbytes_per_sec;
+	uint16_t channels;
+	uint16_t block_align;
+	uint32_t  samples_per_sec;
+	uint32_t  avgbytes_per_sec;
 } AC3_AUDIO;
 
-int ReadAC3AudioHeader( AC3_AUDIO *pAC3Audio, const unsigned char* pStart, int Size );
+int ReadAC3AudioHeader( AC3_AUDIO *pAC3Audio, const uint8_t* pStart, int Size );
 
 #ifdef __cplusplus
 }

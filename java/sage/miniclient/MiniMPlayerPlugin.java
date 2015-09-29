@@ -67,12 +67,19 @@ public class MiniMPlayerPlugin implements Runnable
   public static final int COLORKEY_VALUE = 0x080010;
   public static final boolean USE_STDIN = false;
   private static Boolean sixteenBitDesktop = null;
+  
+  /**
+   * Using the New MPLAYER build
+   */
+  static boolean newmplayer=false;
+  
   public MiniMPlayerPlugin(GFXCMD2 inTarget, MiniClientConnection myConn)
   {
     this.myConn = myConn;
     alive = true;
     currState = NO_STATE;
     gfxEngine = inTarget;
+    
     if (!"true".equals(MiniClient.myProperties.getProperty("opengl", "true")))
     {
       if (MiniClient.WINDOWS_OS)
@@ -374,6 +381,12 @@ public class MiniMPlayerPlugin implements Runnable
           streamBufferSize = 8192;
           disableCache = true;
         }
+        
+        if (newmplayer) {
+        	// cache doesn't work with new mplayer
+        	disableCache=true;
+        }
+        
         cmdOpts1 += " -stream-buffer-size " + streamBufferSize;
 
         if (MiniClient.WINDOWS_OS)
@@ -497,8 +510,6 @@ public class MiniMPlayerPlugin implements Runnable
         }
         else if (file.toLowerCase().indexOf(".mpg") != -1 || file.toLowerCase().indexOf(".ts") != -1)
         {
-          // Add CC parsing
-          cmdOpt2 += " -subcc -printcc";
           if ( MiniClient.myProperties.getProperty("disable_deinterlacing", "false").equalsIgnoreCase("false") )
           {
             // Don't deinterlace for opengl mode and xvmc on Linux
@@ -544,8 +555,17 @@ public class MiniMPlayerPlugin implements Runnable
         else
           cmds.add(new java.io.File(file).getPath());
 
-        if ("TRUE".equals(MiniClient.myProperties.getProperty("player_cmdline_debug", null))) System.out.println("Executing mplayer cmd: " + cmds);
-        mpProc = Runtime.getRuntime().exec((String[])cmds.toArray(new String[0]));
+        String args[] = (String[])cmds.toArray(new String[0]);
+        if ("TRUE".equals(MiniClient.myProperties.getProperty("player_cmdline_debug", null)))
+        {
+            StringBuilder sb = new StringBuilder();
+            for (String s: args) {
+            	sb.append(s).append(" ");
+            }
+            // format the COMMAND so that we can actually copy/paste it easily for debugging
+            System.out.println("MPLAYER COMMAND: " + sb.toString());
+        }
+        mpProc = Runtime.getRuntime().exec(args);
       }
       catch (java.io.IOException e)
       {

@@ -51,7 +51,7 @@ enum {
 #define IS_PRIVATE_STREAM_ID( StreamId)  ( (StreamId == 0xBD ) || (StreamId == 0xBF ) ) 
 #define IS_PES_STREAM_ID(x)	  (  IS_VIDEO_STREAM_ID( x ) ||  IS_AUDIO_STREAM_ID( x ) ||  IS_OTHER_STREAM_ID( x ) || IS_PRIVATE_STREAM_ID( x ) /*|| IS_SUBTITLE_STREAM_ID( x )*/ )
 #define IS_TS_PES_STREAM_ID(x)(  IS_VIDEO_STREAM_ID( x ) ||  IS_AUDIO_STREAM_ID( x ) ||  IS_OTHER_STREAM_ID( x ) || IS_PRIVATE_STREAM_ID( x )  )
-static inline int IsPESHeaderInPs( const unsigned char* pData, int nBytes )
+static inline int IsPESHeaderInPs( const uint8_t* pData, int nBytes )
 {
 	if ( nBytes < 4 )
 		return 0;
@@ -62,7 +62,7 @@ static inline int IsPESHeaderInPs( const unsigned char* pData, int nBytes )
 	return IS_PES_STREAM_ID( pData[3] ) /*|| IS_SUBTITLE_STREAM_ID( pData[3] )*/;
 }
 
-static inline int IsPESHeaderInTs( const unsigned char* pData, int nBytes )
+static inline int IsPESHeaderInTs( const uint8_t* pData, int nBytes )
 {
 	if ( nBytes < 4 )
 		return 0;
@@ -74,7 +74,7 @@ static inline int IsPESHeaderInTs( const unsigned char* pData, int nBytes )
 }
 
 //check if it's expected stream id or TS stream id
-static inline int IsPESHeaderOfTS( unsigned char StrmID, const unsigned char* pData, int nBytes )
+static inline int IsPESHeaderOfTS( uint8_t StrmID, const uint8_t* pData, int nBytes )
 {
 	if ( nBytes < 4 )
 		return 0;
@@ -94,7 +94,7 @@ static inline void CleanUpPES( PES* pPES )
 	pPES->packet_length = 0; 
 }
 
-static inline unsigned short MakeESId( unsigned char cStreamId, unsigned char cStreamSubId )
+static inline uint16_t MakeESId( uint8_t cStreamId, uint8_t cStreamSubId )
 {
 	if ( IS_VIDEO_STREAM_ID(cStreamId) )
 	{
@@ -115,12 +115,12 @@ static inline void AssignPTS( PES *pPES1, PES *pPES2 )
 		pPES1->dts = pPES2->dts;
 }
 
-int  ReadPESHeader( const unsigned char* pData, int nBytes, PES *pPES );
-void ReadPESSubId( PES* pPES, const unsigned char *pData, int nBytes );
+int  ReadPESHeader( const uint8_t* pData, int nBytes, PES *pPES );
+void ReadPESSubId( PES* pPES, const uint8_t *pData, int nBytes );
 
-int AnylyzePSESElement( ES_ELEMENT *pESEelement, struct PSM_LIST* pPSMList,const unsigned char* pData, int nSize  ); 
+int AnylyzePSESElement( ES_ELEMENT *pESEelement, struct PSM_LIST* pPSMList,const uint8_t* pData, int nSize  ); 
 int AnylyzeTSESElement( ES_ELEMENT *pESElmnt );
-unsigned char* GetPSESDesc( ES_ELEMENT *pESElmnt, PSM_LIST *pPSMList );
+uint8_t* GetPSESDesc( ES_ELEMENT *pESElmnt, PSM_LIST *pPSMList );
 //debug utility
 void _prints_es_elmnt( ES_ELEMENT* elmnt, int slot_index, int scrambling_flag );
 char* _time_stamp( ULONGLONG llTime, char* pBuffer, int nSize );

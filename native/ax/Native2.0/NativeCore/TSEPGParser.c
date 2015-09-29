@@ -27,7 +27,7 @@
 
 
 
-static int PSIPidDumper( void* pContext, unsigned char* pData, int nSize )
+static int PSIPidDumper( void* pContext, uint8_t* pData, int nSize )
 {
 	TS_EPG_PARSER *pTSEPGParser = (TS_EPG_PARSER*)pContext;
 	return pTSEPGParser->dumper.pid_dumper( pTSEPGParser->dumper.pid_dumper_context, pData, nSize );
@@ -92,11 +92,11 @@ void StopTSEPGParser( TS_EPG_PARSER *pTSEPGParser )
 }
 
 
-int TSProcessInfo( TS_FILTER* pTSFilter, unsigned char* pData );
-int PushTSEPGPacketParser( TS_EPG_PARSER *pTSEPGParser, unsigned char* pData, int nSize )
+int TSProcessInfo( TS_FILTER* pTSFilter, uint8_t* pData );
+int PushTSEPGPacketParser( TS_EPG_PARSER *pTSEPGParser, uint8_t* pData, int nSize )
 {
 	int used_bytes = 0, size = nSize;
-	unsigned char* data = pData;
+	uint8_t* data = pData;
 
 	while ( size >= TS_PACKET_LENGTH )
 	{

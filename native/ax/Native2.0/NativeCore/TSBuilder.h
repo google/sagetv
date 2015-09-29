@@ -56,23 +56,23 @@ typedef struct TS_PROGRAM
 
 	//PMT
 	TS_SECTION *pmt_section;
-	unsigned short pmt_program;
+	uint16_t pmt_program;
 	TS_PACKET      pmt_packet;
 
 	ULONGLONG pcr;
 	ULONGLONG last_pcr;
-	unsigned short pcr_pid;
+	uint16_t pcr_pid;
 
 } TS_PROGRAM;
 
 typedef struct TS_BUILDER
 {
 	//unsigned  short status;
-	unsigned  short state;
+	uint16_t state;
 
 	TS_BUILDER_DUMPER dumper;
 
-	unsigned short packet_length;
+	uint16_t packet_length;
 
 	TS_SECTION*  pat_section;
 	TS_PACKET    pat_packet;
@@ -80,18 +80,18 @@ typedef struct TS_BUILDER
 	TS_PROGRAM*  progams[MAX_PROGRAM_NUM];
 
 	DATA_BUFFER    *output_buffer;  //a buffer holds packets
-	unsigned char  *local_data_buffer;       
-	unsigned short  local_data_size;
+	uint8_t  *local_data_buffer;       
+	uint16_t  local_data_size;
 	MEM_ALLOC_HOOK pfn_mem_alloc_hook;
 	void* pfn_mem_alloc_hook_context;
-	unsigned short  block_data_size;
+	uint16_t  block_data_size;
 
 	OUTPUT_DATA  output_data;       //dump data
 	ULONGLONG  used_bytes;
 	ULONGLONG  output_bytes;
-	unsigned long output_packets;
-	unsigned long input_blocks;
-	unsigned long output_blocks;
+	uint32_t output_packets;
+	uint32_t input_blocks;
+	uint32_t output_blocks;
 
 } TS_BUILDER;
 
@@ -101,15 +101,15 @@ void UpdatePMT( TS_BUILDER *pTSBuilder, int nProgramIndex );
 void ReleaseTSBuilder( TS_BUILDER *pTSBuilder );
 void ResetTSBuilder( TS_BUILDER *pTSBuilder );
 void SetupBlockDataSize( TS_BUILDER *pTSBuilder, int nSize );
-int  PushTSBlockData( TS_BUILDER *pTSBuilder, int nProgramIndex, int nTrackIndex, int GroupFlag, unsigned char* pData, int nBytes );
+int  PushTSBlockData( TS_BUILDER *pTSBuilder, int nProgramIndex, int nTrackIndex, int GroupFlag, uint8_t* pData, int nBytes );
 void FlushOutData( TS_BUILDER *pTSBuilder );
 void SetupTSBuilderAllocMemoryHook( TS_BUILDER *pTSBuilder, MEM_ALLOC_HOOK pfnMemAlloc, void* pMemAllocContext );
 
-unsigned char LookupStreamType( unsigned long lFourCC );
-unsigned int  PutDescriptor( unsigned char *pData, unsigned char Tag, unsigned char *pDesc, int nDescLength );
-unsigned char *AppendDescriptor( unsigned char *pData, int nBytes, unsigned char Tag, unsigned char *pDesc, int nDescLength );
+uint8_t LookupStreamType( uint32_t lFourCC );
+int     PutDescriptor( uint8_t *pData, uint8_t Tag, uint8_t *pDesc, int nDescLength );
+uint8_t *AppendDescriptor( uint8_t *pData, int nBytes, uint8_t Tag, uint8_t *pDesc, int nDescLength );
 
-char* _pes_header_( unsigned char* p );
+char* _pes_header_( uint8_t* p );
 
 #ifdef __cplusplus
 }

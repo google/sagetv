@@ -42,19 +42,19 @@
 static int InitScanData( SCAN* pScan, int nStreamType, int nSubType );
 static int AddTuneList( TUNE_LIST *pTuneList, TUNE_DATA *pTuneData, int *pUpdatedFlag  );
 static int AddChannelList( CHANNEL_LIST *pChannelList, CHANNEL_DATA *pChannelData, TUNE_LIST *pTuneList );
-static unsigned long MaxPSICheckBytes( int nStreamType, int nSubType );
+static uint32_t MaxPSICheckBytes( int nStreamType, int nSubType );
 static int CheckChannelStateReady( CHANNEL_LIST *pChannelList );
 static void _display_av_inf( TRACKS *pTracks );
 
 static int  UpdateChannelList( CHANNEL_LIST *pChannelList, TUNE_DAT* pTuneData );
 static void AssignTuneData( DVB_CHANNEL* pDVBChannel, TUNE_DAT* pTuneData );
-static int  AddProgrmToList( PROGRAM_LIST *pProgramList, unsigned short nTsid, unsigned short nProgramId, unsigned short nChannel );
+static int  AddProgrmToList( PROGRAM_LIST *pProgramList, uint16_t nTsid, uint16_t nProgramId, uint16_t nChannel );
 static void ChannelScanZero( SCAN* pScan  );
 static int  FindProgram( PROGRAM_LIST *pProgramList, int nChannel );
-int HasCADesc( unsigned char *pData, int nBytes );
+int HasCADesc( uint8_t *pData, int nBytes );
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-static int ChannelDataDumper( void* pContext, unsigned char* pData, int nSize )
+static int ChannelDataDumper( void* pContext, uint8_t* pData, int nSize )
 {
 	SCAN *pScan = (SCAN*)pContext;
 	CHANNEL_DATA *channel_data = (CHANNEL_DATA*)pData;
@@ -103,7 +103,7 @@ static int ChannelDataDumper( void* pContext, unsigned char* pData, int nSize )
 	return 1;
 }
 
-static int TuneDataDumper( void* pContext, unsigned char* pData, int nSize )
+static int TuneDataDumper( void* pContext, uint8_t* pData, int nSize )
 {
 	SCAN *pScan = (SCAN*)pContext;
 	TUNE_DATA *tune_data = (TUNE_DATA*)pData;
@@ -206,14 +206,14 @@ static int TuneDataDumper( void* pContext, unsigned char* pData, int nSize )
 }
 
 /*
-static int PATDumper( void* pContext, unsigned char* pData, int nSize )
+static int PATDumper( void* pContext, uint8_t* pData, int nSize )
 {
 	SCAN *pScan = (SCAN*)pContext;
 	pScan->pat_counter++;
 }
 */
 
-static int PMTDumper( void* pContext, unsigned char* pData, int nSize )
+static int PMTDumper( void* pContext, uint8_t* pData, int nSize )
 {
 	SCAN *pScan = (SCAN*)pContext;
 	PMT_DATA  *pPmtData  = (PMT_DATA*)pData;
@@ -466,7 +466,7 @@ static int AVInfMEssageDumper( void* pContext, void* pData, int nSize )
 //}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
-int	PushScanStreamData( SCAN* pScan, unsigned char *pData, int nBytes, int *nExpectedBytes )
+int	PushScanStreamData( SCAN* pScan, uint8_t *pData, int nBytes, int *nExpectedBytes )
 {
 	int ret;
 	ret = PushDemuxStreamData( pScan->demuxer, pData, nBytes, nExpectedBytes );
@@ -676,7 +676,7 @@ void ChannelScanTune( SCAN* pScan, TUNE *pTune )
 	SetupDemuxTSTune( pScan->demuxer, 0, pTune );
 }
 
-static unsigned long MaxPSICheckBytes( int nStreamType, int nSubType )
+static uint32_t MaxPSICheckBytes( int nStreamType, int nSubType )
 {
 	if ( nStreamType == ATSC_STREAM )
 	{
@@ -703,7 +703,7 @@ static unsigned long MaxPSICheckBytes( int nStreamType, int nSubType )
 
 }
 
-static unsigned long MaxPSICheckTimeOut( int nStreamType, int nSubType )
+static uint32_t MaxPSICheckTimeOut( int nStreamType, int nSubType )
 {
 		if ( nStreamType == ATSC_STREAM )
 	{
@@ -781,7 +781,7 @@ int IsChannelInfoReady( SCAN* pScan )
 	return 0;
 }
 
-int UpdateTimeClock( SCAN* pScan, unsigned long lMillionSecond )
+int UpdateTimeClock( SCAN* pScan, uint32_t lMillionSecond )
 {
 	if ( lMillionSecond > pScan->last_time_clock )
 	{
@@ -913,7 +913,7 @@ static int InitScanData( SCAN* pScan, int nStreamType, int nSubType )
 	return 0;
 }
 
-static TUNE_DAT *GetTuneData( TUNE_LIST *pTuneList, unsigned short nOnid, unsigned short nTsid )
+static TUNE_DAT *GetTuneData( TUNE_LIST *pTuneList, uint16_t nOnid, uint16_t nTsid )
 {
 	int i;
 	for ( i = 0; i<pTuneList->tune_num; i++ )
@@ -1189,7 +1189,7 @@ static int CheckChannelStateReady( CHANNEL_LIST *pChannelList )
 	}
 	return 1;
 }
-static int AddProgrmToList( PROGRAM_LIST *pProgramList, unsigned short nTsid, unsigned short nProgramId, unsigned short nChannel )
+static int AddProgrmToList( PROGRAM_LIST *pProgramList, uint16_t nTsid, uint16_t nProgramId, uint16_t nChannel )
 {
 	int i;
 	if ( nProgramId == 0xffff ) 
@@ -1207,7 +1207,7 @@ static int AddProgrmToList( PROGRAM_LIST *pProgramList, unsigned short nTsid, un
 			return -1;
 	}
 
-	pProgramList->program[i].channel = (unsigned char)nChannel;
+	pProgramList->program[i].channel = (uint8_t)nChannel;
 	pProgramList->program[i].program_id = nProgramId;
 	pProgramList->program[i].tsid = nTsid;
 	pProgramList->program[i].service = 0;
@@ -1284,7 +1284,7 @@ int MergeChannelListProgramList(  SCAN *pScan )
 	return pChannelList->channel_num;
 }
 
-int GetStreamFormat( SCAN *pScan, unsigned short* pStreamFormat, unsigned short *pSubFormat )
+int GetStreamFormat( SCAN *pScan, uint16_t* pStreamFormat, uint16_t *pSubFormat )
 {
 	*pStreamFormat = pScan->stream_format;
 	*pSubFormat    = pScan->sub_format;
@@ -1636,7 +1636,7 @@ void ReleaseTuneList( TUNE_LIST *pTuneList )
 	SAGETV_FREE( pTuneList );
 }
 
-unsigned short GetTracksAttr( SCAN*  pScan )
+uint16_t GetTracksAttr( SCAN*  pScan )
 {
 	return pScan->demuxer->tracks[0]->track_attr;
 }

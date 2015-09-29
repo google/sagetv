@@ -3,10 +3,10 @@
  *
  * Copyright © 2006 Silicondust USA Inc. <www.silicondust.com>.
  *
- * This library is free software; you can redistribute it and/or 
+ * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 3 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -14,20 +14,8 @@
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library.  If not, see <http://www.gnu.org/licenses/>.
- * 
- * As a special exception to the GNU Lesser General Public License,
- * you may link, statically or dynamically, an application with a
- * publicly distributed version of the Library to produce an
- * executable file containing portions of the Library, and
- * distribute that executable file under terms of your choice,
- * without any of the additional requirements listed in clause 4 of
- * the GNU Lesser General Public License.
- * 
- * By "a publicly distributed version of the Library", we mean
- * either the unmodified Library as distributed by Silicondust, or a
- * modified version of the Library that is distributed under the
- * conditions defined in the GNU Lesser General Public License.
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifdef __cplusplus
 extern "C" {
@@ -60,7 +48,7 @@ struct hdhomerun_video_stats_t {
  *
  * When no longer needed, the socket should be destroyed by calling hdhomerun_control_destroy.
  */
-extern LIBTYPE struct hdhomerun_video_sock_t *hdhomerun_video_create(uint16_t listen_port, size_t buffer_size, struct hdhomerun_debug_t *dbg);
+extern LIBTYPE struct hdhomerun_video_sock_t *hdhomerun_video_create(uint16_t listen_port, bool_t allow_port_reuse, size_t buffer_size, struct hdhomerun_debug_t *dbg);
 extern LIBTYPE void hdhomerun_video_destroy(struct hdhomerun_video_sock_t *vs);
 
 /*
@@ -69,6 +57,12 @@ extern LIBTYPE void hdhomerun_video_destroy(struct hdhomerun_video_sock_t *vs);
  * Returns 16-bit port with native endianness, or 0 on error.
  */
 extern LIBTYPE uint16_t hdhomerun_video_get_local_port(struct hdhomerun_video_sock_t *vs);
+
+/*
+ * Join/leave multicast group.
+ */
+extern LIBTYPE int hdhomerun_video_join_multicast_group(struct hdhomerun_video_sock_t *vs, uint32_t multicast_ip, uint32_t local_ip);
+extern LIBTYPE void hdhomerun_video_leave_multicast_group(struct hdhomerun_video_sock_t *vs, uint32_t multicast_ip, uint32_t local_ip);
 
 /*
  * Read data from buffer.
@@ -99,6 +93,11 @@ extern LIBTYPE void hdhomerun_video_flush(struct hdhomerun_video_sock_t *vs);
  */
 extern LIBTYPE void hdhomerun_video_debug_print_stats(struct hdhomerun_video_sock_t *vs);
 extern LIBTYPE void hdhomerun_video_get_stats(struct hdhomerun_video_sock_t *vs, struct hdhomerun_video_stats_t *stats);
+
+/*
+ * Internal use only.
+ */
+extern LIBTYPE hdhomerun_sock_t hdhomerun_video_get_sock(struct hdhomerun_video_sock_t *vs);
 
 #ifdef __cplusplus
 }

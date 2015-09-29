@@ -1,12 +1,12 @@
 /*
  * hdhomerun_channelscan.c
  *
- * Copyright © 2007-2008 Silicondust USA Inc. <www.silicondust.com>.
+ * Copyright © 2007-2010 Silicondust USA Inc. <www.silicondust.com>.
  *
- * This library is free software; you can redistribute it and/or 
+ * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 3 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -14,20 +14,8 @@
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library.  If not, see <http://www.gnu.org/licenses/>.
- * 
- * As a special exception to the GNU Lesser General Public License,
- * you may link, statically or dynamically, an application with a
- * publicly distributed version of the Library to produce an
- * executable file containing portions of the Library, and
- * distribute that executable file under terms of your choice,
- * without any of the additional requirements listed in clause 4 of
- * the GNU Lesser General Public License.
- * 
- * By "a publicly distributed version of the Library", we mean
- * either the unmodified Library as distributed by Silicondust, or a
- * modified version of the Library that is distributed under the
- * conditions defined in the GNU Lesser General Public License.
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include "hdhomerun.h"
@@ -60,6 +48,7 @@ struct hdhomerun_channelscan_t *channelscan_create(struct hdhomerun_device_t *hd
 
 void channelscan_destroy(struct hdhomerun_channelscan_t *scan)
 {
+	hdhomerun_channel_list_destroy(scan->channel_list);
 	free(scan);
 }
 
@@ -67,7 +56,7 @@ static int channelscan_find_lock(struct hdhomerun_channelscan_t *scan, uint32_t 
 {
 	/* Set channel. */
 	char channel_str[64];
-	sprintf(channel_str, "auto:%ld", (unsigned long)frequency);
+	hdhomerun_sprintf(channel_str, channel_str + sizeof(channel_str), "auto:%u", (unsigned int)frequency);
 
 	int ret = hdhomerun_device_set_tuner_channel(scan->hd, channel_str);
 	if (ret <= 0) {
@@ -99,7 +88,7 @@ static int channelscan_find_lock(struct hdhomerun_channelscan_t *scan, uint32_t 
 			return 1;
 		}
 
-		msleep(250);
+		msleep_approx(250);
 	}
 }
 
@@ -168,6 +157,13 @@ static int channelscan_detect_programs(struct hdhomerun_channelscan_t *scan, str
 			continue;
 		}
 
+		unsigned int original_network_id;
+		if (sscanf(line, "onid=0x%x", &original_network_id) == 1) {
+			result->original_network_id = original_network_id;
+			result->original_network_id_detected = TRUE;
+			continue;
+		}
+
 		if (program_count >= HDHOMERUN_CHANNELSCAN_MAX_PROGRAM_COUNT) {
 			continue;
 		}
@@ -175,8 +171,7 @@ static int channelscan_detect_programs(struct hdhomerun_channelscan_t *scan, str
 		struct hdhomerun_channelscan_program_t program;
 		memset(&program, 0, sizeof(program));
 
-		strncpy(program.program_str, line, sizeof(program.program_str));
-		program.program_str[sizeof(program.program_str) - 1] = 0;
+		hdhomerun_sprintf(program.program_str, program.program_str + sizeof(program.program_str), "%s", line);
 
 		unsigned int program_number;
 		unsigned int virtual_major, virtual_minor;
@@ -237,8 +232,10 @@ int channelscan_advance(struct hdhomerun_channelscan_t *scan, struct hdhomerun_c
 
 	/* Combine channels with same frequency. */
 	result->frequency = hdhomerun_channel_entry_frequency(entry);
-	strncpy(result->channel_str, hdhomerun_channel_entry_name(entry), sizeof(result->channel_str) - 1);
-	result->channel_str[sizeof(result->channel_str) - 1] = 0;
+
+	char *ptr = result->channel_str;
+	char *end = result->channel_str + sizeof(result->channel_str);
+	hdhomerun_sprintf(ptr, end, hdhomerun_channel_entry_name(entry));
 
 	while (1) {
 		entry = hdhomerun_channel_list_prev(scan->channel_list, entry);
@@ -252,8 +249,8 @@ int channelscan_advance(struct hdhomerun_channelscan_t *scan, struct hdhomerun_c
 			break;
 		}
 
-		char *ptr = strchr(result->channel_str, 0);
-		sprintf(ptr, ", %s", hdhomerun_channel_entry_name(entry));
+		ptr = strchr(ptr, 0);
+		hdhomerun_sprintf(ptr, end, ", %s", hdhomerun_channel_entry_name(entry));
 	}
 
 	return 1;
@@ -303,7 +300,7 @@ int channelscan_detect(struct hdhomerun_channelscan_t *scan, struct hdhomerun_ch
 			break;
 		}
 
-		msleep(250);
+		msleep_approx(250);
 	}
 
 	/* Lock => skip overlapping channels. */

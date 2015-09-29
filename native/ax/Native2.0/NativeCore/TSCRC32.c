@@ -17,7 +17,7 @@
 #include <stdint.h>
 #include "TSCRC32.h"
 
-static unsigned long ts_crc32_table[256] =
+static uint32_t ts_crc32_table[256] =
 {
   0x00000000, 0x04c11db7, 0x09823b6e, 0x0d4326d9,
   0x130476dc, 0x17c56b6b, 0x1a864db2, 0x1e475005,
@@ -85,7 +85,7 @@ static unsigned long ts_crc32_table[256] =
   0xbcb4666d, 0xb8757bda, 0xb5365d03, 0xb1f740b4
 };
 
-unsigned long CalTSCRC32( const unsigned char *pData, int len )
+uint32_t CalTSCRC32( const unsigned char *pData, int len )
 {
     uint32_t crc = 0xffffffff;
     unsigned char* p_byte = (unsigned char*)pData;

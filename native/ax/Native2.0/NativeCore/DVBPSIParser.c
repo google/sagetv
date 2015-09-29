@@ -44,9 +44,9 @@
 #define DVB_CONTENT_DESC_TAG	0x54  //genre code
 #define DVB_LOCAL_TIME_OFFSET   0x58
 
-static unsigned long UnpackBCDcode( char* p, int bytes );
-static unsigned long MJD2Locatime( unsigned char* pMJD );
-static long BCDTime( unsigned char* pMJD );
+static uint32_t UnpackBCDcode( char* p, int bytes );
+static uint32_t MJD2Locatime( uint8_t* pMJD );
+static int32_t  BCDTime( uint8_t* pMJD );
 
 static NIT *CreateNit(  );
 static void ReleaseNit( NIT* pNit );
@@ -56,36 +56,36 @@ static void ReleaseSdt( SDT* pSdt );
 static void AddSdtToList( DVB_PSI* pDVBPSI, SDT *pSdt );
 static void ResetNitList( DVB_PSI* pDVBPSI );
 
-static int ParserDVBTextCharSet( unsigned char* code, int bytes );
-static char* DVBTextCharSetName( unsigned char* code, int bytes );
+static int ParserDVBTextCharSet( uint8_t* code, int bytes );
+static char* DVBTextCharSetName( uint8_t* code, int bytes );
 
 static void ReleaseEnvtList( EVNT_LIST *pEvntList );
 
 #define MESSAGE_INDEX	255
 static int NumberOfShortEeventDesc( DESC_DATA *pDescData );
-static unsigned long LanguageOfShortEeventDesc( DESC_DATA *pDescData, int nEeventIndex );
+static uint32_t LanguageOfShortEeventDesc( DESC_DATA *pDescData, int nEeventIndex );
 //static int BytesOfShortEeventDesc( DESC_DATA *pDescData, int nEeventIndex );
 static int UnpackShortEeventDesc( DESC_DATA *pDescData, int nEeventIndex, MESG256* pMesg  );
 
 static int NumberOfExtendEeventDesc( DESC_DATA *pDescData );
 static int ItemsOfExtendEeventDesc( DESC_DATA *pDescData, int nEeventIndex );
-static unsigned long LanguageOfExtendEeventDesc( DESC_DATA *pDescData, int nEeventIndex );
+static uint32_t LanguageOfExtendEeventDesc( DESC_DATA *pDescData, int nEeventIndex );
 static int BytesOfExtendEeventDesc( DESC_DATA *pDescData, int nEeventIndex, int nItemIndex );
 static int UnpackExtendEeventDesc( DESC_DATA *pDescData, int nEeventIndex, int nItemIndex, MESG256* pMesg  );
 
 static int UnpackPrentalRating( DESC_DATA *pDescData, STRING256 *pString ) ;
 static int UnpackContentGenre( DESC_DATA *pDescData, STRING256 *pString );
 
-static int FilterDVBTextCtrlCode( unsigned char* code, int bytes ) ;
-//static int TotalDVBTextCtrlCodeNum( unsigned char* code, int bytes );
+static int FilterDVBTextCtrlCode( uint8_t* code, int bytes ) ;
+//static int TotalDVBTextCtrlCodeNum( uint8_t* code, int bytes );
 
-char* DVBGenreString( unsigned char code );
+char* DVBGenreString( uint8_t code );
 
 void DumpAllNits( DVB_PSI* pDVBPSI );
 void DumpAllSdts( DVB_PSI* pDVBPSI );
 void DumpAllEvnts( DVB_PSI* pDVBPSI );
 
-static int DVBFormatEPG( unsigned short onid, unsigned short tsid, unsigned short sid, unsigned long language_code, EVNT *evnt, DESC_DATA* desc );
+static int DVBFormatEPG( uint16_t onid, uint16_t tsid, uint16_t sid, uint32_t language_code, EVNT *evnt, DESC_DATA* desc );
 
 DVB_PSI*  CreateDVBPSI( PSI_PARSER* pPSIParser )
 {
@@ -184,7 +184,7 @@ static void AddNitToList( DVB_PSI* pDVBPSI, NIT *pNit )
 {
 	if ( pDVBPSI->nit_list.nit_num >= pDVBPSI->nit_list.nit_total_num )
 	{
-		unsigned short new_list_num = pDVBPSI->nit_list.nit_total_num + NIT_LIST_NODE_NUM;	
+		uint16_t new_list_num = pDVBPSI->nit_list.nit_total_num + NIT_LIST_NODE_NUM;	
 		NIT** new_list = (NIT**)SAGETV_MALLOC(  sizeof( NIT* )*new_list_num );
 		memcpy( new_list, pDVBPSI->nit_list.nit_list,  sizeof( NIT* )*pDVBPSI->nit_list.nit_num );
 		SAGETV_FREE( pDVBPSI->nit_list.nit_list ); //release old one.
@@ -244,7 +244,7 @@ static void AddSdtToList( DVB_PSI* pDVBPSI, SDT *pSdt )
 {
 	if ( pDVBPSI->sdt_list.sdt_num >= pDVBPSI->sdt_list.sdt_total_num )
 	{
-		unsigned short new_list_num = pDVBPSI->sdt_list.sdt_total_num + SDT_LIST_NODE_NUM;	
+		uint16_t new_list_num = pDVBPSI->sdt_list.sdt_total_num + SDT_LIST_NODE_NUM;	
 		SDT** new_list = (SDT**)SAGETV_MALLOC(  sizeof( SDT* )*new_list_num );
 		memcpy( new_list, pDVBPSI->sdt_list.sdt_list,  sizeof( SDT* )*pDVBPSI->sdt_list.sdt_num );
 		SAGETV_FREE( pDVBPSI->sdt_list.sdt_list ); //release old one.
@@ -256,7 +256,7 @@ static void AddSdtToList( DVB_PSI* pDVBPSI, SDT *pSdt )
 	//ASSERT( pDVBPSI->sdt_list.sdt_num <= pDVBPSI->sdt_list.sdt_total_num );
 }
 
-SDT* GetSdtFromList( DVB_PSI* pDVBPSI, unsigned short onid, unsigned short tsid )
+SDT* GetSdtFromList( DVB_PSI* pDVBPSI, uint16_t onid, uint16_t tsid )
 {
 	int i;
 	for ( i = 0; i<pDVBPSI->sdt_list.sdt_num; i++ )
@@ -294,7 +294,7 @@ void DumpAllSdts( DVB_PSI* pDVBPSI )
 
 ////////////////////////////////////////////////
 
-static NIT* GetNit( DVB_PSI* pDVBPSI, unsigned short onid, unsigned short tsid, unsigned short sid )
+static NIT* GetNit( DVB_PSI* pDVBPSI, uint16_t onid, uint16_t tsid, uint16_t sid )
 {
 	int i, j;
 	for ( i = 0; i<pDVBPSI->nit_list.nit_num; i++ )
@@ -317,9 +317,9 @@ static int UnpackNIT( DVB_PSI* pDVBPSI, TS_SECTION* pSection )
 {
 	SECTION_HEADER section_header;
 	int  desc_bytes, ts_loop_bytes, total_bytes, used_bytes;
-	unsigned short network_id;
-	unsigned char *pData;
-	unsigned char *desc_ptr;
+	uint16_t network_id;
+	uint8_t *pData;
+	uint8_t *desc_ptr;
 	int desc_len;
 	NIT *nit;
 	int i, drop_nit = 0;
@@ -367,9 +367,9 @@ static int UnpackNIT( DVB_PSI* pDVBPSI, TS_SECTION* pSection )
 		nit->network_id = network_id;
 		memcpy ( nit->network_name, network_name, sizeof(nit->network_name) ); ;
 
-		nit->tsid  = ( ((unsigned char)pData[0])<<8 ) | (unsigned char)pData[1];
-		nit->onid  = ( ((unsigned char)pData[2])<<8 ) | pData[3];
-		desc_bytes = (( (unsigned char)pData[4]&0x0f ) << 8 ) | pData[5];
+		nit->tsid  = ( ((uint8_t)pData[0])<<8 ) | (uint8_t)pData[1];
+		nit->onid  = ( ((uint8_t)pData[2])<<8 ) | pData[3];
+		desc_bytes = (( (uint8_t)pData[4]&0x0f ) << 8 ) | pData[5];
 		if ( desc_bytes == 0 ) 
 		{
 			break;
@@ -399,7 +399,7 @@ static int UnpackNIT( DVB_PSI* pDVBPSI, TS_SECTION* pSection )
 
 			if ( ( desc_ptr = GetDescriptor( pData, desc_bytes, SERVICE_LIST_TAG, &desc_len ) )!= NULL )
 			{
-				unsigned char* p = desc_ptr +2;
+				uint8_t* p = desc_ptr +2;
 				int service_num = desc_len / 3;
 				int k=0;
 				nit->service_list = SAGETV_MALLOC( sizeof( NIT_SERVICE ) * service_num );
@@ -418,7 +418,7 @@ static int UnpackNIT( DVB_PSI* pDVBPSI, TS_SECTION* pSection )
 
 			if ( ( desc_ptr = GetDescriptor( pData, desc_bytes, TERRESTRIAL_DELIVERY_TAG, &desc_len ) )!= NULL )
 			{
-				unsigned char* p = desc_ptr+2;
+				uint8_t* p = desc_ptr+2;
 				nit->type = 1;
 				nit->dvb.t.freq = (p[0]<<24) | (p[1]<<16) | (p[2]<<8) | p[3];
 				nit->dvb.t.freq *= 10;
@@ -434,7 +434,7 @@ static int UnpackNIT( DVB_PSI* pDVBPSI, TS_SECTION* pSection )
 			else
 			if ( ( desc_ptr = GetDescriptor( pData, desc_bytes, CABLE_DELIVERY_TAG, &desc_len ) )!= NULL )
 			{
-				unsigned char* p = desc_ptr+2;
+				uint8_t* p = desc_ptr+2;
 				nit->type = 2;
 				nit->dvb.c.freq = UnpackBCDcode( (char*)p, 4 );
 				nit->dvb.c.freq *= 10;
@@ -462,7 +462,7 @@ static int UnpackNIT( DVB_PSI* pDVBPSI, TS_SECTION* pSection )
 			else
 			if ( ( desc_ptr = GetDescriptor( pData, desc_bytes, SATELLITE_DELIVERY_TAG, &desc_len ) )!= NULL )
 			{
-				unsigned char* p = desc_ptr+2;
+				uint8_t* p = desc_ptr+2;
 				nit->type = 3;
 
 				nit->dvb.s.freq = UnpackBCDcode( (char*)p, 4 );
@@ -508,10 +508,10 @@ static int UnpackNIT( DVB_PSI* pDVBPSI, TS_SECTION* pSection )
 					char buf[32];
 					snprintf( buf, sizeof(buf), "%s", StreamFormatString( pDVBPSI->psi_parser->stream_format, pDVBPSI->psi_parser->sub_format ) );
 					memcpy( message_data.title, "FORMAT", 7 );
-					message_data.message = (unsigned char*)buf;
-					message_data.message_length = (unsigned short)strlen(buf);
-					message_data.buffer = (unsigned char*)buf;
-					message_data.buffer_length = (unsigned short)sizeof(buf);
+					message_data.message = (uint8_t*)buf;
+					message_data.message_length = (uint16_t)strlen(buf);
+					message_data.buffer = (uint8_t*)buf;
+					message_data.buffer_length = (uint16_t)sizeof(buf);
 					pDVBPSI->psi_parser->dumper.message_dumper( pDVBPSI->psi_parser->dumper.message_context, &message_data, sizeof(message_data) );
 				}
 			}
@@ -549,7 +549,7 @@ static int UnpackNIT( DVB_PSI* pDVBPSI, TS_SECTION* pSection )
 				}
 				
 				pDVBPSI->psi_parser->dumper.tune_info_dumper( pDVBPSI->psi_parser->dumper.channel_info_context, 
-																  (unsigned char*)&tune_data, sizeof(tune_data) );
+																  (uint8_t*)&tune_data, sizeof(tune_data) );
 				drop_nit = ( tune_data.command != 1 );
 			}
 
@@ -575,21 +575,21 @@ static int UnpackNIT( DVB_PSI* pDVBPSI, TS_SECTION* pSection )
 
 static int ParserService( SERVICE* pService, char* pData, int Bytes )
 {
-	unsigned char*p;
+	uint8_t*p;
 	int len1, len2;
 	int code_byte, bytes;
 	if ( pData == NULL || Bytes <= 2 )
 		return 0;
 
-	p = (unsigned char*)pData;
+	p = (uint8_t*)pData;
 	pService->type = pData[0];
 	
-	len1 = ((unsigned char)pData[1]);
+	len1 = ((uint8_t)pData[1]);
 	if ( len1+2 > Bytes )
 		return 1;
 
 	code_byte = ParserDVBTextCharSet( p+2, len1 );
-	pService->provider_name.charset_code = (unsigned char*)DVBTextCharSetName( p+2, len1 );
+	pService->provider_name.charset_code = (uint8_t*)DVBTextCharSetName( p+2, len1 );
 	if ( len1-code_byte >=0 )
 	{
 		bytes = _MIN( (len1-code_byte), sizeof(pService->provider_name.data)-1 );
@@ -598,15 +598,15 @@ static int ParserService( SERVICE* pService, char* pData, int Bytes )
 		pService->provider_name.data[bytes] = 0x0;
 	}
 
-	len2 = ((unsigned char)pData[len1+2]);
+	len2 = ((uint8_t)pData[len1+2]);
 	if ( len2+len1+2+1 > Bytes )
 		return 0;
 	
 	if ( len2-code_byte >= 0 )
 	{
-		p = (unsigned char*)pData+1+len1+2;
+		p = (uint8_t*)pData+1+len1+2;
 		code_byte = ParserDVBTextCharSet( p, len2 );
-		pService->service_name.charset_code = (unsigned char*)DVBTextCharSetName( p, len2 );
+		pService->service_name.charset_code = (uint8_t*)DVBTextCharSetName( p, len2 );
 		bytes = _MIN( len2-code_byte, (int)sizeof(pService->service_name.data)-1 );
 		memcpy( pService->service_name.data, p+code_byte, bytes );
 		pService->service_name.data[bytes] = 0x0;
@@ -617,12 +617,12 @@ static int ParserService( SERVICE* pService, char* pData, int Bytes )
 
 static int ParserLinkage( LINKAGE* pLinkage, char* pData, int Bytes )
 {
-	unsigned char *p = (unsigned char*)pData+7;
+	uint8_t *p = (uint8_t*)pData+7;
 	pLinkage->tsid = (p[0]<<8)|p[1];
 	pLinkage->onid = (p[2]<<8)|p[3];
 	pLinkage->sid  = (p[4]<<8)|p[5];
 	pLinkage->linkage_type = pData[6];
-	p = (unsigned char*)pData+7;
+	p = (uint8_t*)pData+7;
 	if ( pLinkage->linkage_type == 8 )
 	{
 		int	orignal_type = *p & 0x01; //orignal type, 0=nit 1=SDT
@@ -656,9 +656,9 @@ static int UnpackSDT( DVB_PSI* pDVBPSI, TS_SECTION* pSection )
 {
 	SECTION_HEADER section_header;
 	int  desc_bytes, bytes, total_bytes;
-	unsigned char *pData;
-	unsigned char* p;
-	unsigned char *desc_ptr;
+	uint8_t *pData;
+	uint8_t* p;
+	uint8_t *desc_ptr;
 	int desc_len;
 	int i, n, found_sdt=0, drop_sdt=1;
 	SDT	 *sdt;
@@ -687,7 +687,7 @@ static int UnpackSDT( DVB_PSI* pDVBPSI, TS_SECTION* pSection )
 
 	sdt = CreateSdt( );
 	sdt->tsid = section_header.tsid;
-	sdt->onid = (((unsigned char)pData[0])<<8 ) | (unsigned char)pData[1];
+	sdt->onid = (((uint8_t)pData[0])<<8 ) | (uint8_t)pData[1];
 	sdt->service_num = 0;
 	p = pData+2+1; //skip a reserved byte
 
@@ -794,7 +794,7 @@ static int UnpackSDT( DVB_PSI* pDVBPSI, TS_SECTION* pSection )
 
 		}
 		pDVBPSI->psi_parser->dumper.channel_info_dumper( pDVBPSI->psi_parser->dumper.channel_info_context, 
-			                                              (unsigned char*)&channel_data, sizeof(channel_data) );
+			                                              (uint8_t*)&channel_data, sizeof(channel_data) );
 		drop_sdt = ( channel_data.command != 1 );
 	}
 
@@ -937,7 +937,7 @@ static void ReleaseEvntRow( EVNT_COL *pEvntCol )
 	pEvntCol->total_row_num = 0;
 }
 
-static EVNT* FindEvntCell( EVNT_COL *pEvntCol, unsigned short EventId )
+static EVNT* FindEvntCell( EVNT_COL *pEvntCol, uint16_t EventId )
 {
 	int i;
 	for ( i = 0; i<pEvntCol->row_num; i++ )
@@ -948,7 +948,7 @@ static EVNT* FindEvntCell( EVNT_COL *pEvntCol, unsigned short EventId )
 	return NULL;
 }
 
-static EVNT* AddEvnt( EVNT_COL *pEvntCol, unsigned short EeventId )
+static EVNT* AddEvnt( EVNT_COL *pEvntCol, uint16_t EeventId )
 {
 	int i, k;
 	for ( i = 0; i<pEvntCol->row_num; i++ )
@@ -997,7 +997,7 @@ static void ReleaseEnvtList( EVNT_LIST *pEvntList )
 }
 
 
-EVNT* FindEvnt( EVNT_LIST *pEvntList, unsigned short ONID, unsigned short TSID, unsigned short SID, unsigned short EeventId )
+EVNT* FindEvnt( EVNT_LIST *pEvntList, uint16_t ONID, uint16_t TSID, uint16_t SID, uint16_t EeventId )
 {
 	int i;
 	for ( i = 0; i<pEvntList->col_num; i++ )
@@ -1010,7 +1010,7 @@ EVNT* FindEvnt( EVNT_LIST *pEvntList, unsigned short ONID, unsigned short TSID, 
 	return NULL;
 }
 
-EVNT* AddNewEvnt( EVNT_LIST *pEvntList, unsigned short ONID, unsigned short TSID, unsigned short SID, unsigned short EeventId )
+EVNT* AddNewEvnt( EVNT_LIST *pEvntList, uint16_t ONID, uint16_t TSID, uint16_t SID, uint16_t EeventId )
 {
 	int i, k;
 	for ( i = 0; i<pEvntList->col_num; i++ )
@@ -1077,8 +1077,8 @@ void SortEvnts( EVNT_LIST *pEvntList )
 		
 		for ( j= i+1; j<pEvntList->total_col_num; j++ )
 		{
-			unsigned short onid1, tsid1, sid1;
-			unsigned short onid2, tsid2, sid2;
+			uint16_t onid1, tsid1, sid1;
+			uint16_t onid2, tsid2, sid2;
 			onid1 = pEvntList->evnt_col[i].onid;
 			tsid1 = pEvntList->evnt_col[i].tsid;
 			sid1 = pEvntList->evnt_col[i].sid;
@@ -1101,7 +1101,7 @@ void SortEvnts( EVNT_LIST *pEvntList )
 	}
 }
 
-int DVBFormatEPG( unsigned short onid, unsigned short tsid, unsigned short sid, unsigned long language_code, EVNT *evnt, DESC_DATA* desc );
+int DVBFormatEPG( uint16_t onid, uint16_t tsid, uint16_t sid, uint32_t language_code, EVNT *evnt, DESC_DATA* desc );
 void DumpAllEvnts( DVB_PSI* pDVBPSI )
 {
 	int i,j;
@@ -1119,7 +1119,7 @@ void DumpAllEvnts( DVB_PSI* pDVBPSI )
 	{
 		for ( j = 0; j<pDVBPSI->evnt_list.evnt_col[i].row_num; j++ )
 		{
-			unsigned short onid, tsid, sid;
+			uint16_t onid, tsid, sid;
 			onid = pDVBPSI->evnt_list.evnt_col[i].onid;
 			tsid = pDVBPSI->evnt_list.evnt_col[i].tsid;
 			sid =  pDVBPSI->evnt_list.evnt_col[i].sid;
@@ -1133,13 +1133,13 @@ void DumpAllEvnts( DVB_PSI* pDVBPSI )
 
 }
 
-static int DVBFormatEPG( unsigned short onid, unsigned short tsid, unsigned short sid, unsigned long language_code, EVNT *evnt, DESC_DATA* desc )
+static int DVBFormatEPG( uint16_t onid, uint16_t tsid, uint16_t sid, uint32_t language_code, EVNT *evnt, DESC_DATA* desc )
 {
 	int len, pos, event_num;
-	unsigned char *p;
+	uint8_t *p;
 	int event_index, item_index;
 	int bytes;
-	unsigned char tmp[256];
+	uint8_t tmp[256];
 
 	MESG256 title;
 	MESG256 mesg;
@@ -1184,7 +1184,7 @@ static int DVBFormatEPG( unsigned short onid, unsigned short tsid, unsigned shor
 	len += UnpackContentGenre( &evnt->content_desc, &genre );
 
 	p = NewDescData( desc, len ); //alloc buffer for message
-	pos = snprintf( (char*)p, len,  "EPG-1|%d-%d-%d %s|%s|%ld|",
+	pos = snprintf( (char*)p, len,  "EPG-1|%d-%d-%d %s|%s|%d|",
 					onid, tsid, sid, "DT", 	UTCFormat(evnt->start_time, (char*)tmp, sizeof(tmp)), evnt->duration_length );
 
 	pos += snprintf( (char*)p+pos, len-pos, "%s", Language(language_code, (char*)tmp ) );
@@ -1278,7 +1278,7 @@ static int DVBFormatEPG( unsigned short onid, unsigned short tsid, unsigned shor
 static int NumberOfShortEeventDesc( DESC_DATA *pDescData )
 {
 	int total_bytes = pDescData->desc_bytes;
-	unsigned char *pData = pDescData->desc_ptr;
+	uint8_t *pData = pDescData->desc_ptr;
 	int desc_len;
 	int event_number = 0;
 
@@ -1295,7 +1295,7 @@ static int NumberOfShortEeventDesc( DESC_DATA *pDescData )
 	return event_number;
 }
 
-static unsigned char* GetShortEeventDesc( unsigned char *pData, unsigned short nBytes, int nIndex, int *pLength )
+static uint8_t* GetShortEeventDesc( uint8_t *pData, uint16_t nBytes, int nIndex, int *pLength )
 {
 	int event_number = 0;
 	*pLength = 0;
@@ -1324,7 +1324,7 @@ static int BytesOfShortEeventDesc( DESC_DATA *pDescData, int nEeventIndex )
 	int title_length, mesg_length;
 	int total_bytes;
 	int code_byte;
-	unsigned char *pData;
+	uint8_t *pData;
 
 	pData = GetShortEeventDesc( pDescData->desc_ptr, pDescData->desc_bytes, nEeventIndex, &total_bytes );
 
@@ -1335,7 +1335,7 @@ static int BytesOfShortEeventDesc( DESC_DATA *pDescData, int nEeventIndex )
 	if ( total_bytes < 4 )
 		return 0;
 
-	title_length = (unsigned char)pData[3];
+	title_length = (uint8_t)pData[3];
 	if ( title_length == 0 ) 
 		return 0;
 
@@ -1355,10 +1355,10 @@ static int BytesOfShortEeventDesc( DESC_DATA *pDescData, int nEeventIndex )
 }
 */
 
-static unsigned long LanguageOfShortEeventDesc( DESC_DATA *pDescData, int nEeventIndex )
+static uint32_t LanguageOfShortEeventDesc( DESC_DATA *pDescData, int nEeventIndex )
 {
 	int total_bytes;
-	unsigned char *pData;
+	uint8_t *pData;
 
 	pData = GetShortEeventDesc( pDescData->desc_ptr, pDescData->desc_bytes, nEeventIndex, &total_bytes );
 
@@ -1376,7 +1376,7 @@ static int UnpackShortEeventDesc( DESC_DATA *pDescData, int nEeventIndex, MESG25
 	int title_length, mesg_length, len;
 	int total_bytes;
 	int code_byte;
-	unsigned char *pData;
+	uint8_t *pData;
 
 	pData = GetShortEeventDesc( pDescData->desc_ptr, pDescData->desc_bytes, nEeventIndex, &total_bytes );
 
@@ -1390,16 +1390,16 @@ static int UnpackShortEeventDesc( DESC_DATA *pDescData, int nEeventIndex, MESG25
 		return 0;
 
 	pMesg->language_code = LanguageCode( pData ); //( pData[2] <<16 )|(pData[1]<<8)|(pData[0]);
-	pMesg->charset_code = (unsigned char*)"";
+	pMesg->charset_code = (uint8_t*)"";
 
-	title_length = (unsigned char)pData[3];
+	title_length = (uint8_t)pData[3];
 	if ( title_length == 0 ) return 0;
 	if ( title_length < total_bytes-4 )
 	{
-		unsigned char *p = pData+4;
+		uint8_t *p = pData+4;
 		len = title_length;
 		code_byte = ParserDVBTextCharSet( p, len );
-		pMesg->charset_code = (unsigned char*)DVBTextCharSetName( p, len );
+		pMesg->charset_code = (uint8_t*)DVBTextCharSetName( p, len );
 		len -= code_byte;
 		memcpy( pMesg->title_data, p+code_byte, len );
 		pMesg->title_bytes = len;
@@ -1414,10 +1414,10 @@ static int UnpackShortEeventDesc( DESC_DATA *pDescData, int nEeventIndex, MESG25
 
 	if (  mesg_length + title_length+1 <= total_bytes - 4 )
 	{
-		unsigned char *p = pData+4+title_length+1;
+		uint8_t *p = pData+4+title_length+1;
 		len = mesg_length;
 		code_byte = ParserDVBTextCharSet( p, len );
-		pMesg->charset_code = (unsigned char*)DVBTextCharSetName( p, len );
+		pMesg->charset_code = (uint8_t*)DVBTextCharSetName( p, len );
 		len -= code_byte;
 		memcpy( pMesg->body_data, p+code_byte, len );
 		pMesg->body_bytes = len;
@@ -1430,7 +1430,7 @@ static int UnpackShortEeventDesc( DESC_DATA *pDescData, int nEeventIndex, MESG25
 static int NumberOfExtendEeventDesc( DESC_DATA *pDescData )
 {
 	int total_bytes = pDescData->desc_bytes;
-	unsigned char *pData = pDescData->desc_ptr;
+	uint8_t *pData = pDescData->desc_ptr;
 	int desc_len;
 	int event_number = 0;
 
@@ -1447,7 +1447,7 @@ static int NumberOfExtendEeventDesc( DESC_DATA *pDescData )
 	return event_number;
 }
 
-static unsigned char* GetExtendEeventDesc( unsigned char *pData, unsigned short nBytes, int nIndex, int *pLength )
+static uint8_t* GetExtendEeventDesc( uint8_t *pData, uint16_t nBytes, int nIndex, int *pLength )
 {
 	int event_number = 0;
 
@@ -1476,8 +1476,8 @@ static int ItemsOfExtendEeventDesc( DESC_DATA *pDescData, int nEeventIndex )
 	int len, i;
 	int item_bytes;
 	int total_bytes;
-	unsigned char *pData;
-	unsigned char* p;
+	uint8_t *pData;
+	uint8_t* p;
 
 	pData = GetExtendEeventDesc( pDescData->desc_ptr, pDescData->desc_bytes, nEeventIndex, &total_bytes );
 
@@ -1487,9 +1487,9 @@ static int ItemsOfExtendEeventDesc( DESC_DATA *pDescData, int nEeventIndex )
 
 	if ( total_bytes < 4 )		return 0;
 
-	item_bytes = (unsigned char)pData[4];
+	item_bytes = (uint8_t)pData[4];
 	
-	p = (unsigned char*)pData+5; 
+	p = (uint8_t*)pData+5; 
 	total_bytes -= 5;
 	item_bytes = _MIN( total_bytes, item_bytes );
 
@@ -1501,15 +1501,15 @@ static int ItemsOfExtendEeventDesc( DESC_DATA *pDescData, int nEeventIndex )
 		if ( p[0] == 0 || len+1+(int)p[0] > item_bytes )
 			return i;
 
-		len += 1 + (unsigned char)p[0];
-		p   += 1 + (unsigned char)p[0];
+		len += 1 + (uint8_t)p[0];
+		p   += 1 + (uint8_t)p[0];
 
 		//skip item char data
 		if ( p[0] == 0 || len+1+(int)p[0] > item_bytes )
 			return i;
 
-		len += 1 + (unsigned char)p[0];
-		p += 1 + (unsigned char)p[0];
+		len += 1 + (uint8_t)p[0];
+		p += 1 + (uint8_t)p[0];
 		i++;
 	}
 
@@ -1521,11 +1521,11 @@ static int BytesOfExtendEeventDesc( DESC_DATA *pDescData, int nEeventIndex, int 
 {
 	int len, bytes, i;
 	int total_bytes;
-	unsigned char *pData;
+	uint8_t *pData;
 	int item_bytes;
 	int title_bytes, body_bytes;
 	int code_byte; 
-	unsigned char* p;
+	uint8_t* p;
 
 	pData = GetExtendEeventDesc( pDescData->desc_ptr, pDescData->desc_bytes, nEeventIndex, &total_bytes );
 
@@ -1538,11 +1538,11 @@ static int BytesOfExtendEeventDesc( DESC_DATA *pDescData, int nEeventIndex, int 
 
 	if ( total_bytes < 4 )		return 0;
 
-	item_bytes = (unsigned char)pData[4];
+	item_bytes = (uint8_t)pData[4];
 	
 	if ( nItemIndex == MESSAGE_INDEX )
 	{
-		p = (unsigned char*)pData+5+item_bytes; 
+		p = (uint8_t*)pData+5+item_bytes; 
 		if ( p[0] && 5+item_bytes + p[0] < total_bytes )
 		{
 			bytes = (int)p[0];
@@ -1554,7 +1554,7 @@ static int BytesOfExtendEeventDesc( DESC_DATA *pDescData, int nEeventIndex, int 
 	} else
 	if ( item_bytes > 0 )
 	{
-		p = (unsigned char*)pData+5; 
+		p = (uint8_t*)pData+5; 
 		total_bytes -= 5;
 		item_bytes = _MIN( total_bytes, item_bytes );
 
@@ -1568,14 +1568,14 @@ static int BytesOfExtendEeventDesc( DESC_DATA *pDescData, int nEeventIndex, int 
 			//skip item description data
 			if ( p[0] == 0 || len+1+(int)p[0] > item_bytes )
 				return 0;
-			len += 1 + (unsigned char)p[0];
-			p   += 1 + (unsigned char)p[0];
+			len += 1 + (uint8_t)p[0];
+			p   += 1 + (uint8_t)p[0];
 
 			//skip item char data
 			if ( p[0] == 0 || len+1+(int)p[0] > item_bytes )
 				return 0;
-			len += 1 + (unsigned char)p[0];
-			p += 1 + (unsigned char)p[0];
+			len += 1 + (uint8_t)p[0];
+			p += 1 + (uint8_t)p[0];
 			i++;
 		}
 
@@ -1586,8 +1586,8 @@ static int BytesOfExtendEeventDesc( DESC_DATA *pDescData, int nEeventIndex, int 
 			title_bytes = bytes-code_byte;
 		}
 
-		len += 1 + (unsigned char)p[0];
-		p   += 1 + (unsigned char)p[0];
+		len += 1 + (uint8_t)p[0];
+		p   += 1 + (uint8_t)p[0];
 		bytes = p[0];
 		if ( p[0] && len+1+bytes <= item_bytes )
 		{
@@ -1601,10 +1601,10 @@ static int BytesOfExtendEeventDesc( DESC_DATA *pDescData, int nEeventIndex, int 
 
 }
 
-static unsigned long LanguageOfExtendEeventDesc( DESC_DATA *pDescData, int nEeventIndex )
+static uint32_t LanguageOfExtendEeventDesc( DESC_DATA *pDescData, int nEeventIndex )
 {
 	int total_bytes;
-	unsigned char *pData;
+	uint8_t *pData;
 
 	pData = GetExtendEeventDesc( pDescData->desc_ptr, pDescData->desc_bytes, nEeventIndex, &total_bytes );
 
@@ -1621,9 +1621,9 @@ static int UnpackExtendEeventDesc( DESC_DATA *pDescData, int nEeventIndex, int n
 {
 	int len, bytes, code_byte;
 	int total_bytes;
-	unsigned char *pData;
+	uint8_t *pData;
 	int item_no, item_last_no, item_bytes;
-	unsigned char* p;
+	uint8_t* p;
 	int i;
 
 	pData = GetExtendEeventDesc( pDescData->desc_ptr, pDescData->desc_bytes, nEeventIndex, &total_bytes );
@@ -1640,17 +1640,17 @@ static int UnpackExtendEeventDesc( DESC_DATA *pDescData, int nEeventIndex, int n
 	pMesg->language_code = LanguageCode( pData+1 );//( pData[3] <<16 )|(pData[2]<<8)|(pData[1]);
 	item_no = ( pData[0] >> 4 ) & 0x0f;
 	item_last_no = ( pData[0] & 0x0f );
-	item_bytes = (unsigned char)pData[4];
+	item_bytes = (uint8_t)pData[4];
 	
 	//read text
 	if ( nItemIndex == MESSAGE_INDEX )
 	{
-		p = (unsigned char*)pData+5+item_bytes; 
+		p = (uint8_t*)pData+5+item_bytes; 
 		if ( p[0] && 5+item_bytes + p[0] < total_bytes )
 		{
 			bytes = (int)p[0];
 			code_byte = ParserDVBTextCharSet( p+1, bytes );
-			pMesg->charset_code = (unsigned char*)DVBTextCharSetName( p+1, bytes );
+			pMesg->charset_code = (uint8_t*)DVBTextCharSetName( p+1, bytes );
 			bytes -= code_byte;
 			memcpy( pMesg->body_data, p+1+code_byte, bytes );
 			pMesg->body_bytes = bytes;
@@ -1660,7 +1660,7 @@ static int UnpackExtendEeventDesc( DESC_DATA *pDescData, int nEeventIndex, int n
 	} else
 	if ( item_bytes > 0 )
 	{
-		p = (unsigned char*)pData+5; 
+		p = (uint8_t*)pData+5; 
 		total_bytes -= 5;
 		item_bytes = _MIN( total_bytes, item_bytes );
 
@@ -1674,14 +1674,14 @@ static int UnpackExtendEeventDesc( DESC_DATA *pDescData, int nEeventIndex, int n
 			//skip item description data
 			if ( p[0] == 0 || len+1+(int)p[0] > item_bytes )
 				return 0;
-			len += 1 + (unsigned char)p[0];
-			p   += 1 + (unsigned char)p[0];
+			len += 1 + (uint8_t)p[0];
+			p   += 1 + (uint8_t)p[0];
 
 			//skip item char data
 			if ( p[0] == 0 || len+1+(int)p[0] > item_bytes )
 				return 0;
-			len += 1 + (unsigned char)p[0];
-			p += 1 + (unsigned char)p[0];
+			len += 1 + (uint8_t)p[0];
+			p += 1 + (uint8_t)p[0];
 			i++;
 		}
 
@@ -1689,25 +1689,25 @@ static int UnpackExtendEeventDesc( DESC_DATA *pDescData, int nEeventIndex, int n
 		if ( p[0] && len+1+bytes <= item_bytes )
 		{
 			code_byte = ParserDVBTextCharSet( p+1, bytes );
-			pMesg->charset_code = (unsigned char*)DVBTextCharSetName( p+1, bytes );
+			pMesg->charset_code = (uint8_t*)DVBTextCharSetName( p+1, bytes );
 			bytes -= code_byte;
 			memcpy( pMesg->title_data, p+1+code_byte, bytes );
 			pMesg->title_bytes = bytes;
 		}
 
-		len += 1 + (unsigned char)p[0];
-		p   += 1 + (unsigned char)p[0];
+		len += 1 + (uint8_t)p[0];
+		p   += 1 + (uint8_t)p[0];
 		bytes = p[0];
 		if ( p[0] && len+1+bytes <= item_bytes )
 		{
 			code_byte = ParserDVBTextCharSet( p+1, bytes );
-			pMesg->charset_code = (unsigned char*)DVBTextCharSetName( p+1, bytes );
+			pMesg->charset_code = (uint8_t*)DVBTextCharSetName( p+1, bytes );
 			bytes -= code_byte;
 			memcpy( pMesg->body_data, p+1+code_byte, bytes );
 			pMesg->body_bytes = bytes;
 		}
-		len += 1 + (unsigned char)p[0];
-		p   += 1 + (unsigned char)p[0];
+		len += 1 + (uint8_t)p[0];
+		p   += 1 + (uint8_t)p[0];
 	}
 
 	return pMesg->title_bytes + pMesg->body_bytes;
@@ -1717,8 +1717,8 @@ static int UnpackExtendEeventDesc( DESC_DATA *pDescData, int nEeventIndex, int n
 static int UnpackPrentalRating( DESC_DATA *pDescData, STRING256 *pString ) 
 {
 	int i, bytes, pos, size;
-	unsigned char* p, *out_p;
-	unsigned long languahe_code;
+	uint8_t* p, *out_p;
+	uint32_t languahe_code;
 	int age;
 	char tmp[16];
 
@@ -1735,7 +1735,7 @@ static int UnpackPrentalRating( DESC_DATA *pDescData, STRING256 *pString )
 	for ( i = 0; i < bytes/4; i++ )
 	{
 		languahe_code = LanguageCode( p );
-		age = (unsigned int)p[3];
+		age = (int32_t)p[3];
 		if ( languahe_code && age <100 )
 		{
 			if ( pos )
@@ -1750,12 +1750,12 @@ static int UnpackPrentalRating( DESC_DATA *pDescData, STRING256 *pString )
 	return pos;
 }
 
-char* DVBGenreCode( unsigned char code );
+char* DVBGenreCode( uint8_t code );
 static int UnpackContentGenre( DESC_DATA *pDescData, STRING256 *pString ) 
 {
 	int i, bytes, pos, size;
-	unsigned char* p, *out_p;
-	unsigned char genre_code;
+	uint8_t* p, *out_p;
+	uint8_t genre_code;
 
 	p = pDescData->desc_ptr;
 	bytes = pDescData->desc_bytes;
@@ -1791,11 +1791,11 @@ static int UnpackContentGenre( DESC_DATA *pDescData, STRING256 *pString )
 static int UnpackDVBEIT( DVB_PSI* pDVBPSI, TS_SECTION* pSection )
 {
 	SECTION_HEADER section_header;
-	unsigned short sid, tsid, onid, last_table_id;
+	uint16_t sid, tsid, onid, last_table_id;
 	int  bytes, total_bytes;
-	unsigned char *pData;
-	unsigned char* p;
-	unsigned char *desc_ptr;
+	uint8_t *pData;
+	uint8_t* p;
+	uint8_t *desc_ptr;
 	int desc_len;
 	int  n;
 	EVNT *evnt;
@@ -1829,7 +1829,7 @@ static int UnpackDVBEIT( DVB_PSI* pDVBPSI, TS_SECTION* pSection )
 		int found;
 		int running_status, free_ca_mode;
 		evnt->event_id = ( p[0]<< 8 )|p[1];
-		evnt->start_time      = (unsigned long) MJD2Locatime( p+2 );
+		evnt->start_time      = (uint32_t) MJD2Locatime( p+2 );
 		evnt->duration_length = BCDTime( p+7 );
 		running_status = (p[10] >>5 )&0x07;
 		free_ca_mode = (p[10] >> 4 )&0x01;
@@ -1850,7 +1850,7 @@ static int UnpackDVBEIT( DVB_PSI* pDVBPSI, TS_SECTION* pSection )
 		
 		{  //handle multiple short event and extend events in EIT
 			//parse short event in EIT
-			unsigned char *pn = p;
+			uint8_t *pn = p;
 			int ct = n;
 			while ( ( desc_ptr = GetDescriptor( pn, ct, SHORT_EVENT_TAG, &desc_len ) )!= NULL && desc_len > 0 )
 			{
@@ -1892,7 +1892,7 @@ static int UnpackDVBEIT( DVB_PSI* pDVBPSI, TS_SECTION* pSection )
 			if ( pDVBPSI->language_code == 0 ) 
 			{
 				char tmp[8];
-				unsigned long default_lan_code=0, language_code;
+				uint32_t default_lan_code=0, language_code;
 				int k, n;
 				n = NumberOfShortEeventDesc( &evnt->title );
 
@@ -1919,10 +1919,10 @@ static int UnpackDVBEIT( DVB_PSI* pDVBPSI, TS_SECTION* pSection )
 							char buf[32];
 							snprintf( buf, sizeof(buf), "%s", Language(language_code, tmp) );
 							memcpy( message_data.title, "LANGUAGE", 9 );
-							message_data.message = (unsigned char*)buf;
-							message_data.message_length = (unsigned short)strlen(buf);
-							message_data.buffer = (unsigned char*)buf;
-							message_data.buffer_length = (unsigned short)sizeof(buf);
+							message_data.message = (uint8_t*)buf;
+							message_data.message_length = (uint16_t)strlen(buf);
+							message_data.buffer = (uint8_t*)buf;
+							message_data.buffer_length = (uint16_t)sizeof(buf);
 							pDVBPSI->psi_parser->dumper.message_dumper( pDVBPSI->psi_parser->dumper.message_context, &message_data, sizeof(message_data) );
 						}
 						if ( default_lan_code == 0 ) //use first one as default lanuage
@@ -1980,10 +1980,10 @@ static int UnpackDVBEIT( DVB_PSI* pDVBPSI, TS_SECTION* pSection )
 	return 1;
 }
 
-static int UnpackDVBTime( DVB_PSI* pDVBPSI, unsigned char *pData, int nBytes )
+static int UnpackDVBTime( DVB_PSI* pDVBPSI, uint8_t *pData, int nBytes )
 {
 	int bytes;
-	unsigned long utc_sec;
+	uint32_t utc_sec;
 	//table id 0x70 is TDT; table id 0x73 is TOT
 	if ( pData[0] != 0x70 && pData[0] != 0x73 )
 		return 0;
@@ -1992,7 +1992,7 @@ static int UnpackDVBTime( DVB_PSI* pDVBPSI, unsigned char *pData, int nBytes )
 		return 0;
 
 	bytes = (( pData[1] & 0x0f )<<8 ) | pData[2];
-	utc_sec = (unsigned long) MJD2Locatime( (unsigned char*)pData+3 );
+	utc_sec = (uint32_t) MJD2Locatime( (uint8_t*)pData+3 );
 
 	if ( utc_sec != pDVBPSI->system_time && pDVBPSI->psi_parser->dumper.system_time_dumper )
 	{
@@ -2017,13 +2017,13 @@ static int UnpackDVBTime( DVB_PSI* pDVBPSI, unsigned char *pData, int nBytes )
 		bytes = (( pData[8] & 0x0f )<<8 ) | pData[9];
 		if ( bytes + 8 <= nBytes && pData[10] == DVB_LOCAL_TIME_OFFSET )
 		{
-			unsigned char *p = pData+10+2;
-			unsigned long contry_code = LanguageCode( p );
-			unsigned char country_region_id = (p[3] & 0xfc)>>2;
-			unsigned char local_time_offset_polarity = p[3]&0x1;
-			unsigned short local_time_offset =  (unsigned short)UnpackBCDcode( p+4, 2 );
-			unsigned long  time_of_change = MJD2Locatime( (unsigned char*)p+6 );
-			unsigned short next_local_time_offset = (unsigned short)UnpackBCDcode( p+11, 2 );;
+			uint8_t *p = pData+10+2;
+			uint32_t contry_code = LanguageCode( p );
+			uint8_t country_region_id = (p[3] & 0xfc)>>2;
+			uint8_t local_time_offset_polarity = p[3]&0x1;
+			uint16_t local_time_offset =  (uint16_t)UnpackBCDcode( p+4, 2 );
+			uint32_t  time_of_change = MJD2Locatime( (uint8_t*)p+6 );
+			uint16_t next_local_time_offset = (uint16_t)UnpackBCDcode( p+11, 2 );;
 		}
 	}
 	*/
@@ -2033,8 +2033,8 @@ static int UnpackDVBTime( DVB_PSI* pDVBPSI, unsigned char *pData, int nBytes )
 
 int ProcessDVBPSI( DVB_PSI* pDVBPSI, TS_PACKET *pTSPacket )
 {
-	unsigned short pid = pTSPacket->pid;
-	const unsigned char* payload_data; int payload_size;
+	uint16_t pid = pTSPacket->pid;
+	const uint8_t* payload_data; int payload_size;
 
 	payload_data = pTSPacket->data + pTSPacket->payload_offset;
 	payload_size = pTSPacket->payload_bytes;
@@ -2089,10 +2089,10 @@ int ProcessDVBPSI( DVB_PSI* pDVBPSI, TS_PACKET *pTSPacket )
 	if ( pid == 0x0014 )  //TDT and TOT (time date)
 	{
 		//TDT doesn't use section pack data
-		unsigned char *p = (unsigned char *)payload_data;
+		uint8_t *p = (uint8_t *)payload_data;
 		int size = payload_size;
-		p    += *((unsigned char *)p) + 1;
-		size -= *((unsigned char *)p) + 1;
+		p    += *((uint8_t *)p) + 1;
+		size -= *((uint8_t *)p) + 1;
 		UnpackDVBTime(  pDVBPSI, p, size ); 
 		return 1;
 	}
@@ -2102,10 +2102,10 @@ int ProcessDVBPSI( DVB_PSI* pDVBPSI, TS_PACKET *pTSPacket )
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
-static unsigned long UnpackBCDcode( char* p, int bytes )
+static uint32_t UnpackBCDcode( char* p, int bytes )
 {
 	int i;
-	unsigned long val = 0;
+	uint32_t val = 0;
 	for ( i=0; i<bytes; i++, p++ )
 	{
 		val *= 10;
@@ -2116,18 +2116,18 @@ static unsigned long UnpackBCDcode( char* p, int bytes )
 	return val;
 }
 
-static unsigned long MJD2Locatime( unsigned char* pMJD )
+static uint32_t MJD2Locatime( uint8_t* pMJD )
 {
-	unsigned long mjd;
+	uint32_t mjd;
 	struct tm lt={0};
-	unsigned int y,m,d,wd;
+	int32_t y,m,d,wd;
 
 	mjd = ( pMJD[0]<<8 ) | (pMJD[1]);
 
-	y = (unsigned int)((mjd - 15078.2)/365.25);
-	m = (unsigned int)((mjd - 14956.1-(unsigned int)(y*365.25))/30.6001);
-	d = (unsigned int)(mjd)-14956-(unsigned int)(y*365.25)-(unsigned int)(m*30.6001);
-	wd = (unsigned int)((mjd+2)%7+1);
+	y = (int32_t)((mjd - 15078.2)/365.25);
+	m = (int32_t)((mjd - 14956.1-(int32_t)(y*365.25))/30.6001);
+	d = (int32_t)(mjd)-14956-(int32_t)(y*365.25)-(int32_t)(m*30.6001);
+	wd = (int32_t)((mjd+2)%7+1);
 	if ( m == 14 || m == 15 )
 	{
 		y++;
@@ -2144,10 +2144,10 @@ static unsigned long MJD2Locatime( unsigned char* pMJD )
 	lt.tm_min  = ( pMJD[3] >> 4 )*10 + (pMJD[3] & 0x0f);
 	lt.tm_sec  = ( pMJD[4] >> 4 )*10 + (pMJD[4] & 0x0f);
 	lt.tm_isdst = 0;
-	return (unsigned long)mktime( &lt );
+	return (uint32_t)mktime( &lt );
 }
 
-static long BCDTime( unsigned char* pMJD )
+static int32_t BCDTime( uint8_t* pMJD )
 {
 	int h,m,s;
 	h = ( pMJD[0] >> 4 )*10  + (pMJD[0] & 0x0f);
@@ -2159,7 +2159,7 @@ static long BCDTime( unsigned char* pMJD )
 
 
 
-static int ParserDVBTextCharSet( unsigned char* code, int bytes )
+static int ParserDVBTextCharSet( uint8_t* code, int bytes )
 {
 	if ( code == NULL || bytes < 1 ) return 0;
 	if ( code[0] != 0xff && code[0] >= 0x20 ) return 0;
@@ -2174,7 +2174,7 @@ static int ParserDVBTextCharSet( unsigned char* code, int bytes )
 	}
 	if ( code[0] == 0x10 && bytes >= 3 ) 
 	{
-		unsigned short chset = (code[1]<<8)|code[2];
+		uint16_t chset = (code[1]<<8)|code[2];
 		//if ( chset >= 0 && chset < 0x0f )
 		if ( chset < 0x0f )
 			return 3;
@@ -2182,7 +2182,7 @@ static int ParserDVBTextCharSet( unsigned char* code, int bytes )
 	return 1;
 }
 
-static char* DVBTextCharSetName( unsigned char* code, int bytes )
+static char* DVBTextCharSetName( uint8_t* code, int bytes )
 {
 	if ( bytes == 0 )
 		return "[set=UTF-8]"; 
@@ -2253,7 +2253,7 @@ static char* DVBTextCharSetName( unsigned char* code, int bytes )
 	}else
 	if ( code[0] == 0x10 )
 	{
-		unsigned short chset = (code[1]<<8)|code[2];
+		uint16_t chset = (code[1]<<8)|code[2];
 		if ( chset == 0x01 )
 			return "[set=ISO-8859-1]";
 		else
@@ -2310,9 +2310,9 @@ static char* DVBTextCharSetName( unsigned char* code, int bytes )
 }
 
 
-static int FilterDVBTextCtrlCode( unsigned char* code, int bytes ) 
+static int FilterDVBTextCtrlCode( uint8_t* code, int bytes ) 
 {
-	unsigned char* ps, *pt;
+	uint8_t* ps, *pt;
 	int length = 0;
 	int code_byte;
 
@@ -2335,7 +2335,7 @@ static int FilterDVBTextCtrlCode( unsigned char* code, int bytes )
 		}
 	} else
 	{
-		unsigned short wd;
+		uint16_t wd;
 		while ( bytes > 2 )
 		{
 			wd = (*ps<<8)|*(ps+1);
@@ -2356,9 +2356,9 @@ static int FilterDVBTextCtrlCode( unsigned char* code, int bytes )
 }
 
 /*
-static int TotalDVBTextCtrlCodeNum( unsigned char* code, int bytes )
+static int TotalDVBTextCtrlCodeNum( uint8_t* code, int bytes )
 {
-	unsigned char* ps;
+	uint8_t* ps;
 	int total = 0;
 	int code_byte;
 
@@ -2378,7 +2378,7 @@ static int TotalDVBTextCtrlCodeNum( unsigned char* code, int bytes )
 		}
 	} else
 	{
-		unsigned short wd;
+		uint16_t wd;
 		while ( bytes > 2 )
 		{
 			wd = (*ps<<8)|*(ps+1);

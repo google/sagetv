@@ -23,9 +23,9 @@
 
 static int SectionCrcCheck( TS_SECTION* pSection );
 static int PushSectionData( TS_SECTION* pSection, char* pData, int Bytes );
-static unsigned long GetCrc32( unsigned char* p );
+static uint32_t GetCrc32( uint8_t* p );
 //static int PopSectionData( TS_SECTION* pSection, char* pData, int Bytes );
-//static void SetCrc32( unsigned char* p, unsigned long crc32 );
+//static void SetCrc32( uint8_t* p, uint32_t crc32 );
 TS_SECTION* CreateSection(  )
 {
 	TS_SECTION* pSection = SAGETV_MALLOC( sizeof(TS_SECTION) );
@@ -56,13 +56,13 @@ void ResetSection( TS_SECTION* pSection )
 
 static int FlushSectionData( TS_SECTION* pSection )
 {
-	const unsigned char* section_data;
+	const uint8_t* section_data;
 	int nSize;
-	unsigned short section_length;
+	uint16_t section_length;
 
 	nSize = pSection->left_over_size;
 	pSection->left_over_size = 0;
-	section_data = (unsigned char*)pSection->left_over;
+	section_data = (uint8_t*)pSection->left_over;
 
 	if ( ( section_data[1] & 0x80)	!= 0x80	) //missing section syntax indicator	
 		return 0;
@@ -96,9 +96,9 @@ static int FlushSectionData( TS_SECTION* pSection )
 	return 0;
 }
 
-int UnpackSection( int bStartFlag, TS_SECTION* pSection, const unsigned char*  pbData, int nSize )
+int UnpackSection( int bStartFlag, TS_SECTION* pSection, const uint8_t*  pbData, int nSize )
 {
-	const unsigned char* section_data; 
+	const uint8_t* section_data; 
 	int   section_length;
 	int   last_bytes, offset = 0;
 
@@ -121,7 +121,7 @@ int UnpackSection( int bStartFlag, TS_SECTION* pSection, const unsigned char*  p
 		if ( bStartFlag == 1 ) 
 		{
 			offset = 1;
-			section_data += *((unsigned char *)pbData) + 1; 
+			section_data += *((uint8_t *)pbData) + 1; 
 			if ( section_data > pbData + nSize )
 				return 0;
 		}
@@ -181,7 +181,7 @@ int UnpackSection( int bStartFlag, TS_SECTION* pSection, const unsigned char*  p
 }
 
 
-unsigned char* StartSection( TS_SECTION* pSection, int nSectionLength )
+uint8_t* StartSection( TS_SECTION* pSection, int nSectionLength )
 {
 	ASSERT( nSectionLength + 4 <= pSection->data_size );
 	pSection->section_type = 0xff;
@@ -216,20 +216,20 @@ static int PushSectionData( TS_SECTION* pSection, char* pData, int Bytes )
 
 static int SectionCrcCheck( TS_SECTION* pSection )
 {
-	return ( CalTSCRC32( (const unsigned char*)pSection->data, pSection->total_bytes ) == 0 );
+	return ( CalTSCRC32( (const uint8_t*)pSection->data, pSection->total_bytes ) == 0 );
 }
 
-//static void SetCrc32( unsigned char* p, unsigned long crc )
+//static void SetCrc32( uint8_t* p, uint32_t crc )
 //{
-//	*(p++) = (unsigned char)((crc >> 24) & 0xff);
-//	*(p++) = (unsigned char)(crc >> 16) & 0xff;
-//	*(p++) = (unsigned char)(crc >> 8) & 0xff;
-//	*(p++) = (unsigned char)(crc) &  0xff;
+//	*(p++) = (uint8_t)((crc >> 24) & 0xff);
+//	*(p++) = (uint8_t)(crc >> 16) & 0xff;
+//	*(p++) = (uint8_t)(crc >> 8) & 0xff;
+//	*(p++) = (uint8_t)(crc) &  0xff;
 //}
 
-static unsigned long GetCrc32( unsigned char* p )
+static uint32_t GetCrc32( uint8_t* p )
 {
-	unsigned long crc;
+	uint32_t crc;
 	crc =  *(p++)<<24;
 	crc |= *(p++)<<16;
 	crc |= *(p++)<<8;
@@ -240,8 +240,8 @@ static unsigned long GetCrc32( unsigned char* p )
 
 void UnpackSectionDataHeader( SECTION_HEADER* pSectionHeader, TS_SECTION* pSection )
 {
-	unsigned char* data;
-	data = (unsigned char*)pSection->data + pSection->start_offset;
+	uint8_t* data;
+	data = (uint8_t*)pSection->data + pSection->start_offset;
 	pSectionHeader->table_id	  = data[0];
 	pSectionHeader->section_length= ((data[1] & 0x0f) << 8) | data[2];
 	pSectionHeader->tsid		  = (data[3] << 8)	+ data[4];
@@ -254,14 +254,14 @@ void UnpackSectionDataHeader( SECTION_HEADER* pSectionHeader, TS_SECTION* pSecti
 	pSectionHeader->section_ptr = pSection;
 }
 
-unsigned char *AllocSectionData( TS_SECTION* pSection, int nDataLength )
+uint8_t *AllocSectionData( TS_SECTION* pSection, int nDataLength )
 {
 	nDataLength += 4; //4 bytes CRC
 	if ( pSection->data == NULL || pSection->data_size < nDataLength )
 	{
 		if ( pSection->data != NULL )
 			SAGETV_FREE( pSection->data );
-		pSection->data = (unsigned char*)SAGETV_MALLOC( nDataLength );
+		pSection->data = (uint8_t*)SAGETV_MALLOC( nDataLength );
 		if ( pSection->data != NULL )
 			pSection->data_size = nDataLength;
 	}
@@ -271,27 +271,27 @@ unsigned char *AllocSectionData( TS_SECTION* pSection, int nDataLength )
 
 int SealSectionData( TS_SECTION* pSection, int nDataLength )
 {
-	unsigned long crc;
-	unsigned char *p;
+	uint32_t crc;
+	uint8_t *p;
 	int len;
 	if ( nDataLength+4 > pSection->data_size  )
 		return 0;
 
-	p = (unsigned char*)pSection->data;
+	p = (uint8_t*)pSection->data;
 	*p = pSection->start_offset > 0 ? pSection->start_offset-1 : 0;
 
-	p = (unsigned char*)pSection->data + pSection->start_offset;
+	p = (uint8_t*)pSection->data + pSection->start_offset;
 	pSection->total_bytes = nDataLength+4;  //add 4 bytes for crc32
 	len = nDataLength-pSection->start_offset+1;
 	p[1] |= ( nDataLength  >> 8 ) & 0x0f;
 	p[2]  = ( nDataLength ) & 0xff;
 	
 	crc = CalTSCRC32( p, nDataLength-pSection->start_offset );
-	p = (unsigned char *)(  p + nDataLength-pSection->start_offset);
-	*(p++) = (unsigned char)((crc >> 24) & 0xff);
-	*(p++) = (unsigned char)(crc >> 16) & 0xff;
-	*(p++) = (unsigned char)(crc >> 8) & 0xff;
-	*(p++) = (unsigned char)(crc) &  0xff;
+	p = (uint8_t *)(  p + nDataLength-pSection->start_offset);
+	*(p++) = (uint8_t)((crc >> 24) & 0xff);
+	*(p++) = (uint8_t)(crc >> 16) & 0xff;
+	*(p++) = (uint8_t)(crc >> 8) & 0xff;
+	*(p++) = (uint8_t)(crc) &  0xff;
 	return 1;
 }
 
@@ -309,8 +309,8 @@ TS_SECTION* DupSection( TS_SECTION* pSection )
 
 int BuildSectionHeader( SECTION_HEADER* pSectionHeader, TS_SECTION* pSection )
 {
-	unsigned char* data;
-	data = (unsigned char*)pSection->data + pSection->start_offset;
+	uint8_t* data;
+	data = (uint8_t*)pSection->data + pSection->start_offset;
 	data[0] = pSectionHeader->table_id;
 	data[1] = 0xb0;
 	data[1] |= ( pSectionHeader->section_length >> 8 ) & 0x0f;

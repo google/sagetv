@@ -16,11 +16,10 @@
 #
 rm -rf clientrelease
 mkdir clientrelease
-cp minirelease/MiniClient.jar ./clientrelease
-cp ../third_party/JOGL/Linux/* ./clientrelease/
-cp -R clientfiles/* ./clientrelease/
-cp so/libSageX11.so ./clientrelease/libSage.so
-cp so/libjtux.so ./clientrelease/
-cp so/libImageLoader.so ./clientrelease/
-cp ../third_party/swscale/libswscale.so ./clientrelease/
-cp elf/mplayer ./clientrelease/
+
+# this now relies on gradle to pull down the jogl dependencies automatically
+cd ..
+./gradlew --daemon linuxMiniclientRelease
+rc=$?
+cd -
+exit $rc
