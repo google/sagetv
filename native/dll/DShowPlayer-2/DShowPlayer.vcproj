@@ -48,7 +48,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(SAGEDEVJDK)\include,$(DXSDK_DIR)\include,$(SAGEDEVJDK)\include\win32,$(DXSDK_DIR)\samples\c++\directshow\baseclasses,..\..\include,..\..\ax\TSnative\,$(WMSDK_DIR)\WMFSDK9\include;..\EVRPresenter"
+				AdditionalIncludeDirectories="&quot;$(SAGEDEVJDK)\include&quot;;&quot;$(DXSDK_DIR)\include&quot;;&quot;$(SAGEDEVJDK)\include\win32&quot;;&quot;$(SAGEBASECLASSES)&quot;;..\..\include;..\..\ax\TSnative\;;..\EVRPresenter"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;DSHOWPLAYER_EXPORTS"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -78,7 +78,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="&quot;$(DXSDK_DIR)\Samples\C++\DirectShow\BaseClasses\Debug\strmbasd.lib&quot; odbc32.lib odbccp32.lib strmiids.lib winmm.lib jvm.lib d3d9.lib dmoguids.lib ../../lib/TSnative/TSnatived.lib ../../lib/TSnative/NativeCored.lib"
+				AdditionalDependencies="&quot;$(SAGEBASECLASSES)\Debug\strmbasd.lib&quot; odbc32.lib odbccp32.lib strmiids.lib winmm.lib jvm.lib d3d9.lib dmoguids.lib ../../lib/TSnative/TSnatived.lib ../../lib/TSnative/NativeCored.lib"
 				OutputFile="$(SAGEDEVDEBUG)\DShowPlayer.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -152,7 +152,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="&quot;$(SAGEDEVJDK)\include&quot;;&quot;$(DXSDK_DIR)\include&quot;;&quot;$(SAGEDEVJDK)\include\win32&quot;;&quot;$(DXSDK_DIR)\samples\c++\directshow\baseclasses&quot;;&quot;..\..\include&quot;;&quot;..\..\ax\TSnative\&quot;;&quot;$(WMSDK_DIR)\WMFSDK9\include&quot;;..\EVRPresenter"
+				AdditionalIncludeDirectories="&quot;$(SAGEDEVJDK)\include&quot;;&quot;$(DXSDK_DIR)\include&quot;;&quot;$(SAGEDEVJDK)\include\win32&quot;;&quot;$(SAGEBASECLASSES)&quot;;..\..\include;..\..\ax\TSnative\;;..\EVRPresenter"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;DSHOWPLAYER_EXPORTS"
 				StringPooling="true"
 				RuntimeLibrary="2"
@@ -181,7 +181,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="&quot;$(DXSDK_DIR)\Samples\C++\DirectShow\BaseClasses\Release\strmbase.lib&quot; odbc32.lib odbccp32.lib strmiids.lib winmm.lib jvm.lib d3d9.lib dmoguids.lib ../../lib/TSnative/TSnative.lib ../../lib/TSnative/NativeCore.lib"
+				AdditionalDependencies="&quot;$(SAGEBASECLASSES)\Release\strmbase.lib&quot; odbc32.lib odbccp32.lib strmiids.lib winmm.lib jvm.lib d3d9.lib dmoguids.lib ../../lib/TSnative/TSnative.lib ../../lib/TSnative/NativeCore.lib"
 				OutputFile="$(SAGEDEVREL)\DShowPlayer.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"

@@ -47,7 +47,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/Oxs /D_WIN32_WINNT=-0x0400 "
 				Optimization="4"
-				AdditionalIncludeDirectories="$(SAGEDEVJDK)\include,$(SAGEDEVJDK)\include\win32,$(DXSDK_DIR)\samples\C++\directshow\BaseClasses,$(DXSDK_DIR)\include"
+				AdditionalIncludeDirectories="&quot;$(SAGEDEVJDK)\include&quot;;&quot;$(SAGEDEVJDK)\include\win32&quot;;&quot;$(SAGEBASECLASSES)&quot;;&quot;$(DXSDK_DIR)\include&quot;"
 				PreprocessorDefinitions="DBG=0;WINVER=0x400;_X86_=1;_DLL;_MT;_WIN32;WIN32;STRICT;INC_OLE2;try=__try;except=__except;leave=__leave;finally=__finally"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -76,7 +76,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/subsystem:windows,4.0 /debug:none /OPT:NOREF /OPT:ICF "
-				AdditionalDependencies="&quot;$(DXSDK_DIR)\samples\C++\directshow\BaseClasses\Release\strmbase.lib&quot; msvcrt.lib quartz.lib vfw32.lib winmm.lib version.lib comctl32.lib olepro32.lib"
+				AdditionalDependencies="&quot;$(SAGEBASECLASSES)\Release\strmbase.lib&quot; msvcrt.lib quartz.lib vfw32.lib winmm.lib version.lib comctl32.lib olepro32.lib"
 				OutputFile="$(SAGEDEVREL)\MusicVisFilter.ax"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -150,7 +150,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/Oid "
 				Optimization="0"
-				AdditionalIncludeDirectories="$(SAGEDEVJDK)\include,$(SAGEDEVJDK)\include\win32,$(DXSDK_DIR)\samples\C++\directshow\BaseClasses,$(DXSDK_DIR)\include"
+				AdditionalIncludeDirectories="&quot;$(SAGEDEVJDK)\include&quot;;&quot;$(SAGEDEVJDK)\include\win32&quot;;&quot;$(SAGEBASECLASSES)&quot;;&quot;$(DXSDK_DIR)\include&quot;"
 				PreprocessorDefinitions="INC_OLE2;STRICT;_WIN32_WINNT=0x0400;WIN32;_WIN32;_MT;_DLL;_X86_=1;WINVER=0x0400;DBG=1;DEBUG;_DEBUG;try=__try;except=__except;leave=__leave;finally=__finally"
 				RuntimeLibrary="1"
 				PrecompiledHeaderFile=".\Debug/MusicVisFilter.pch"
@@ -178,7 +178,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="&quot;$(DXSDK_DIR)\samples\C++\directshow\BaseClasses\debug\strmbasd.lib&quot; msvcrtd.lib quartz.lib vfw32.lib winmm.lib version.lib comctl32.lib olepro32.lib jvm.lib"
+				AdditionalDependencies="&quot;$(SAGEBASECLASSES)\Debug\strmbasd.lib&quot; msvcrtd.lib quartz.lib vfw32.lib winmm.lib version.lib comctl32.lib olepro32.lib jvm.lib"
 				OutputFile="$(SAGEDEVDEBUG)\MusicVisFilter.ax"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
