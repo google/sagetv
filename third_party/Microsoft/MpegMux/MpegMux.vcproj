@@ -46,7 +46,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(DXSDK_DIR)\samples\C++\directshow\BaseClasses,$(DXSDK_DIR)\include,..\MpegDeMuxFilter"
+				AdditionalIncludeDirectories="&quot;$(SAGEBASECLASSES)&quot;;&quot;$(DXSDK_DIR)\include&quot;;..\MpegDeMuxFilter"
 				PreprocessorDefinitions="INC_OLE2;STRICT;_WIN32_WINNT=0x0400;WIN32;_WIN32;_MT;_DLL;_X86_=1;WINVER=0x0400;DBG=1;DEBUG;_DEBUG;try=__try;except=__except;leave=__leave;finally=__finally"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -76,7 +76,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
-				AdditionalDependencies="&quot;$(DXSDK_DIR)\samples\C++\directshow\BaseClasses\debug\strmbasd.lib&quot; quartz.lib winmm.lib msvcrtd.lib"
+				AdditionalDependencies="&quot;$(SAGEBASECLASSES)\Debug\strmbasd.lib&quot; quartz.lib winmm.lib msvcrtd.lib"
 				OutputFile="$(SAGEDEVDEBUG)\MpegMux.ax"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -150,7 +150,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="0"
-				AdditionalIncludeDirectories="$(DXSDK_DIR)\samples\C++\directshow\BaseClasses,$(DXSDK_DIR)\include,..\MpegDeMuxFilter"
+				AdditionalIncludeDirectories="&quot;$(SAGEBASECLASSES)&quot;;&quot;$(DXSDK_DIR)\include&quot;;..\MpegDeMuxFilter"
 				PreprocessorDefinitions="INC_OLE2;STRICT;_WIN32_WINNT=0x0400;WIN32;_WIN32;_MT;_DLL;_X86_=1;WINVER=0x0400;NDEBUG;try=__try;except=__except;leave=__leave;finally=__finally"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -180,7 +180,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
-				AdditionalDependencies="&quot;$(DXSDK_DIR)\samples\C++\directshow\BaseClasses\release\strmbase.lib&quot; quartz.lib winmm.lib msvcrt.lib"
+				AdditionalDependencies="&quot;$(SAGEBASECLASSES)\Release\strmbase.lib&quot; quartz.lib winmm.lib msvcrt.lib"
 				OutputFile="$(SAGEDEVREL)\MpegMux.ax"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"

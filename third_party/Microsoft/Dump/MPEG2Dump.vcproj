@@ -47,7 +47,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(DXSDK_DIR)\include,$(DXSDK_DIR)\samples\C++\DirectShow\BaseClasses,..\MpegMuxFilter,..\MpegDemuxFilter"
+				AdditionalIncludeDirectories="&quot;$(DXSDK_DIR)\include&quot;;&quot;$(SAGEBASECLASSES)&quot;;..\MpegMuxFilter;..\MpegDemuxFilter"
 				PreprocessorDefinitions="DBG=1;DEBUG;_DEBUG;INC_OLE2;STRICT;_WIN32_WINNT=0x0400;WIN32;_WIN32;_MT;_DLL;_X86_=1;WINVER=0x0400;try=__try;except=__except;leave=__leave;finally=__finally"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -75,7 +75,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="strmiids.lib &quot;$(DXSDK_DIR)\samples\C++\DirectShow\BaseClasses\debug\strmbasd.lib&quot; quartz.lib winmm.lib msvcrtd.lib wsock32.lib"
+				AdditionalDependencies="strmiids.lib &quot;$(SAGEBASECLASSES)\Debug\strmbasd.lib&quot; quartz.lib winmm.lib msvcrtd.lib wsock32.lib"
 				OutputFile="$(SAGEDEVDEBUG)\MPEG2Dump.ax"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -150,7 +150,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="0"
-				AdditionalIncludeDirectories="$(DXSDK_DIR)\include,$(DXSDK_DIR)\samples\C++\DirectShow\BaseClasses,..\MpegMuxFilter,..\MpegDemuxFilter"
+				AdditionalIncludeDirectories="&quot;$(DXSDK_DIR)\include&quot;;&quot;$(SAGEBASECLASSES)&quot;;..\MpegMuxFilter;..\MpegDemuxFilter"
 				PreprocessorDefinitions="NDEBUG;INC_OLE2;STRICT;_WIN32_WINNT=0x0400;WIN32;_WIN32;_MT;_DLL;_X86_=1;WINVER=0x0400;try=__try;except=__except;leave=__leave;finally=__finally"
 				StringPooling="true"
 				RuntimeLibrary="2"
@@ -178,7 +178,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="strmiids.lib &quot;$(DXSDK_DIR)\Samples\C++\DirectShow\BaseClasses\release\strmbase.lib&quot; quartz.lib winmm.lib msvcrt.lib wsock32.lib"
+				AdditionalDependencies="strmiids.lib &quot;$(SAGEBASECLASSES)\Release\strmbase.lib&quot; quartz.lib winmm.lib msvcrt.lib wsock32.lib"
 				OutputFile="$(SAGEDEVREL)\MPEG2Dump.ax"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
