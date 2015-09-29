@@ -41,6 +41,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/Gs"
 				Optimization="0"
+				AdditionalIncludeDirectories="..\..\..\third_party\codecs\x264\extras"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="false"
 				BasicRuntimeChecks="0"
@@ -106,6 +107,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/Gs"
+				AdditionalIncludeDirectories="..\..\..\third_party\codecs\x264\extras"
 				PreprocessorDefinitions="WIN32;"
 				RuntimeLibrary="2"
 				WarningLevel="3"

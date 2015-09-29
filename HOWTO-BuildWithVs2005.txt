@@ -1,0 +1,704 @@
+
+------------------
+---- Overview ----
+------------------
+
+This document details how to setup the build environment for
+Sagetv Open Source, using Visual Studio 2005, for the purpose
+of building "native" (non-Java) code.  It assumes a Windows
+computer with no previous installation of the tools listed below.
+
+Installation requires a number of system reboots, so be prepared
+and do not skip these reboots.
+
+
+Briefly, the following will be performed:
+
+1. Set Environment Variables
+2. Install JDK
+3. Install Gradle (optional)
+4. Install GitHub Desktop (optional)
+5. Install DirectX SDK
+6. Install Visual Studio 2005
+7. Install SDK 6.1
+8. Build the DirectShow Base Classes (in sdk6.1)
+9. Build SageTv native code
+10. Optional Info (SDK command-line tools)
+11. Considerations re: building the BaseClasses libs (for thought)
+
+
+
+=====================================================================
+1. Set Environment Variables for the created binaries
+=====================================================================
+
+Info:
+-----
+  Building the Sage "native" code requires the following Environment
+  Variables are set:
+    SAGEDEVREL
+    SAGEDEVDEBUG
+    SAGEDEVJDK
+    SAGEBASECLASSES
+    DXSDK_DIR
+
+   SAGEDEVREL and SAGEDEVDEBUG determine where the build process
+   stores the binaries produced by the build.  We'll create these two
+   now.  The others will be created later in the process.
+
+
+Prerequisites:
+-----
+  None
+
+
+Steps:
+-----
+A) Create SAGEDEVREL env. variable (User variable).
+   Value: <path to where Release binaries will be stored>
+    Example: C:\SageDev\Release
+
+B) Create SAGEDEVDEBUG env. variable (User variable).
+   Value: <path to where Debug binaries will be stored>
+    Example: C:\SageDev\Debug
+
+
+Help:
+-----
+To set an environment variable (Win 7) ..
+  Right-click on "My Computer" -> Properties
+  Click "Advanced system settings" in upper left-hand corner.
+  A new window opens.  Click "Environment Variables" button @ lower right.
+  A new window opens.  Immediately under the list of User Variables,
+    click "New".  
+  A new window opens.  
+    Enter the variable name & value.
+    Click OK.
+  
+  Click OK (multiple times) to save settings & dismiss all 3 windows.
+
+  To verify: open a **NEW** Command window and type "set".  
+    Confirm the new environment variables & values.
+
+
+
+=====================================================================
+2. Install JDK
+=====================================================================
+
+Info:
+  In trying to decide between installing the 32-bit vs. 64-bit
+  version of JDK, consider that before SageOpenSource, SageTv
+  was originally built using the 32-bit version of Java, so
+  to avoid unforseen issues it may be wise to start with a 32-bit 
+  JDK installation for initial development.
+
+Prerequisites:
+  None
+
+
+A) Download the Java Development Kit.
+
+  Available here:
+http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
+
+B) Install the Java Development Kit.
+  Note the folder that it's installed to.
+
+
+C) Create the following Environment Variable:
+    SAGEDEVJDK
+
+  It's value should be the path to where JDK was installed, i.e., 
+  something like:
+    C:\Program Files (x86)\Java\jdk1.8.0_60
+
+
+
+=====================================================================
+3. "Install" Gradle
+=====================================================================
+
+Info:
+-----
+  Gradle can be used to automate building Java code.
+  It's not currently used to build any of the Native code.
+  If you don't intend to build Java code, Gradle is optional.
+  It's installation is light-weight and non-intrusive, so this seems
+  like a good time to install it.
+
+  You run Gradle via the gradle command.
+
+  See: http://forums.sagetv.com/forums/showthread.php?t=62336
+
+
+Prerequisites:
+-----
+    Requires JDK (v1.6 or higher) to be installed.
+
+
+Steps:
+-----
+A) Download Gradle.
+  It's available here: https://gradle.org/
+
+B) Unzip and copy the unziped files to someplace like:
+  C:\Programs\gradle-2.6
+  (No actual program "installation" needed).
+
+C) Add <gradle_path>/bin to the PATH environment 
+  variable.  Usually, this is sufficient to run Gradle.
+    e.g.: <gradle_path>     C:\Programs\gradle-2.6
+
+  (no need to create an environment variable for Gradle itself)
+    
+
+Help:
+-----
+To set the PATH environment variable (Win7) ..
+  Right-click on "My Computer" -> Properties
+  Click "Advanced system settings" in upper left-hand corner.
+  A new window opens. click "Environment Variables" button @ lower right.
+  A new window opens. scroll thru the list of **System** Variables, 
+    locate and highlight "Path", and then click the "Edit" button.
+  A new window opens.  In the Variable Value field, add the following
+    at the beginning (without quotes:  "C:\Programs\gradle-2.6;".
+  Click OK (3 times) to save settings & dismiss all 3 windows.
+
+
+D) To verify: open a **NEW** Command window and type "path".  
+    Confirm that the path contains the Gradle location.
+
+  From the command prompt, type "gradle -v"; 
+    This should print the gradle version #.
+
+
+
+=====================================================================
+4. Install GitHub Desktop
+=====================================================================
+
+Info:
+-----
+  GitHub Desktop is used to access the Sage source-code repository.
+
+  Use of GitHub Desktop is optional.  It's also possible to download 
+  source code via the web interface, at:
+    https://github.com/google/sagetv
+
+
+Prerequisites:
+-----
+  None.
+
+
+GitHub Desktop can be downloaded from here:
+  https://desktop.github.com/
+
+
+
+=====================================================================
+5. Install "DirectX SDK June 2010" edition
+=====================================================================
+
+Info:
+-----
+  "DirectX SDK June 2010" provides needed libraries to build Sage
+  Microsoft has announced that this is it's final release.
+
+
+Prerequisites:
+-----
+  None.
+
+
+Steps:
+-----
+A) Download Microsoft's "DirectX SDK June 2010" edition.
+  It can be found here:
+  http://www.microsoft.com/en-us/download/details.aspx?id=6812
+
+
+B) Run the installer
+
+--> At installation, choose to include "Direct X symbol files"
+  (if this step is missed, re-run the installer again and
+   check this option)
+
+
+  The installer automatically adds DXSDK_DIR to the **System** 
+  environment variables.  On a 64-bit OS, DXSDK_DIR points to:
+    C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)
+
+IMPORTANT: must log off/on to pickup DXSDK_DIR env. var.
+    **before** accessing the Sage Solution/Project from Visual Studio.
+
+  ? Might even be best to log off/on before *installing* VS (unverified)
+
+
+
+=====================================================================
+6. Install VS2005 Pro - MSDN version (aka "vs8", "Visual Studio 8")
+=====================================================================
+
+Info:
+-----
+  VS2005 Pro is not available as a download from Microsoft.
+  It was provided on CD as part of an MSDN subscription.
+
+  At the time of this writing (Sept 2015), it is still available
+  as a download from:
+  http://getintopc.com/softwares/development/visual-studio-2005-free-download/
+
+
+Prerequisites:
+-----
+  None
+
+
+Note: 
+-----
+  Due to the age of VS2005, MS recommends installing as a
+  user with Administrator privledges (Vista and later OSs).
+
+
+Steps:
+-----
+A) Run the installer
+  (if installing from a downloaded version of VS2005, 
+   double-click autorun.exe in the "vs" folder)
+
+  A new window opens. On the installer-menu window:
+    Click on "Install VS 2005"
+
+  Product install path:
+    (on Win7-x64: C:\Program Files (x86)\Microsoft Visual Studio 8\ )
+    Ok to accept the default.
+
+  Select features to install:
+    (check) Custom
+    Accept the defaults
+
+   msg: 
+    "VS 2005 has a known compatibility issue w/this version of Windows"
+
+   Click "Check for solutions online"
+    Response: "will notifiy you later"
+    
+  "Setup completed sucessfully."
+
+------
+The installer-menu window is open again:
+  Click on "MSDN Library for VS 2005"
+
+  Choose "Custom" for the Setup Type
+
+    Install MSDN Library for VS 2005 to:
+     C:\Program Files (x86)\MSDN\
+    (ok to accept the default)
+
+  "Setup completed sucessfully."
+
+------
+The installer-menu window is open again:
+  Click on "Check for Service Releases"
+  
+  msg:
+   "Windows Update is included in Control Panel. 
+    To check for updates: Click the Start button, click 
+    All Programs, and then click Windows Update."
+
+------
+The installer-menu window is open again:
+  Click on "Exit"
+
+
+B) Run Windows Update
+    --------------------------
+    !!  VERY IMPORTANT !!
+    --------------------------
+It's very important to run Windows Update at this point.
+  There are a number of updates, including VS2005 SP1, that
+  need to be installed.  This is especially important if Visual 
+  Studio is installed on Vista, Win7 or later.
+
+  You will likely see several updates related to VS2005.
+  Accept all of them.  Verify that VS2005-SP1 is listed.
+
+  e.g.:
+    Security update for VS2005 (KB925674)
+    Security update for VS2005 (KB937060)
+    VS 2005 Service Pack 1 (no kb given)
+    ... and others
+
+  Install the updates.
+  
+
+C) Reboot.
+
+
+
+=====================================================================
+6.1 First launch of VS2005:
+=====================================================================
+
+Info:
+-----
+  Some blogs/forums indicate that VS2005 should be launched at least
+  once prior to installing the SDK.  To be safe, we do that here.
+
+
+Prerequisites:
+-----
+  VS2005 successfully installed.
+
+
+Steps:
+-----
+A) Launch VS2005
+  It can be found via:
+  Start -> All Programs -> Microsoft Visual Studio 2005 ->
+    Microsoft Visual Studio 2005
+
+  A new window opens: "Choose Default Environment Settings:
+
+  "Choose your default environment settings:
+    You probably want: "Visual C++ Development Settings"
+
+  "You can choose to use a different collection of settings at any time.
+   From the Tools menu, choose Import and Export Settings and then
+   choose Reset all settings."
+
+  Click "Start Visual Studio"
+
+  (roughly) "need a patch for Vista"
+    This can be ignored, since the patches have already been installed 
+    via Windows Update.
+
+
+B)  Close VS.
+
+
+Note:
+-----
+  Do NOT attempt to build any of the Sage binaries yet.
+
+
+
+=====================================================================
+7. Install SDK6.1
+=====================================================================
+
+Info:
+-----
+  Microsoft Windows SDK v6.1 is available as free download.
+
+
+Prerequisites:
+-----
+  Visual Studio
+
+
+Steps:
+-----
+A) Download the installer from:
+  http://www.microsoft.com/en-us/download/details.aspx?id=11310
+
+B) Launch the installer
+  (the bulk of the actual installation is downloaded)
+
+  Destination folder:
+    C:\Program Files\Microsoft SDKs\Windows\v6.1
+
+  Destination folder for Samples:
+    C:\Program Files\Microsoft SDKs\Windows\v6.1\Samples
+
+  Wait for "Installation finished OK."
+
+
+C) Run Windows update again, get updates for SDK & VS
+  (it will probably install KB2938803, among others)
+
+
+D) Reboot
+
+
+E) Run the SDK Configuration Tool
+  Start > All Programs > Microsoft Windows SDK v6.1 > 
+    Visual Studio Registration > Windows SDK Configuration Tool
+
+  A new window opens: Windows SDK Configuration Tool
+
+  Click "Make Current"
+
+
+  A new window opens:  Windows SDK - Visual Studio 2005 Integration Tool
+  "VS 2005 installation found.  
+   Click the Yes button to upgate the C++ Include, Lib and Path global
+   settings for all new VS 2005 C++ projects."
+
+    Click "YES"
+
+   ".. successfully updated"
+
+
+F) Create an environment variable to point to the DirectShow BaseClasses
+
+  i) Locate the BaseClasses folder (it's in the SDK 6.1 tree).
+
+  Assumming the standard SDK installation, it's probably at:
+    C:\Program Files\Microsoft SDKs\Windows\v6.1\Samples\Multimedia\DirectShow\BaseClasses
+
+  ii) Create a new environment variable SAGEBASECLASSES, whose value is
+  the path of the BaseClasses folder.
+
+    e.g, 
+    C:\Program Files\Microsoft SDKs\Windows\v6.1\Samples\Multimedia\DirectShow\BaseClasses
+
+
+
+=====================================================================
+8. Build the DirectShow BaseClasses (in sdk6.1)
+=====================================================================
+
+Info:
+-----
+  Prior to using the DirectShow BaseClasses (needed to build Sage
+  native code), libraries (strmbase.lib and strmbasd.lib)  
+  must first be compiled to create Release and Debug versions.
+  Microsoft provides the sources, but not the .lib files themselves, 
+  as part of the SDK6.1 installation.
+  Somewhat oddly, MS seems to expect us to build **inside** the 
+  SDK tree!  
+
+  (Later: notes included at the end of this document about this issue.)
+
+
+Prerequisites:
+-----
+  Visual Studio and SDK6.1 must be installed and configured.
+
+
+NOTE: 
+-----
+  Microsoft recommends that the following actions should be performed 
+  with Administrator access privileges.
+
+
+Steps:
+-----
+A) Locate the file  baseclasses.sln
+  If you accepted the default installation location, it'll probably be:
+  C:\Program Files\Microsoft SDKs\Windows\v6.1\Samples\Multimedia\DirectShow\BaseClasses
+
+
+B) Using Windows Explorer, open a window to the folder containing this file.
+
+
+C) Double-click on baseclasses.sln
+  This will launch VS2005 with a new Solution (BaseClasses)
+
+
+D) Build the Release library
+  On the menu bar, ensure "Release" and "Win32" is chosen.
+  In the Solution Explorer sub-window, right-click BaseClasses
+    Select Build
+
+  You should see no errors.
+  Results (strmbase.lib) should be in the BaseClasses\Release folder.
+
+
+E) Build the Debug library
+  On the menu bar, ensure "Debug" and "Win32" is chosen.
+  In the Solution Explorer sub-window, right-click BaseClasses
+    Select Build
+
+  You should see no errors.
+  Results (strmbasd.lib) should be in the BaseClasses\Debug folder.
+
+
+
+=====================================================================
+9. Build SageTv native code
+=====================================================================
+
+Info:
+-----
+  At this point we're finally ready to build "native" (non-Java)
+  Sage code.
+
+
+Prerequisites:
+-----
+  - JDK installed.
+  - DirectX SDK, SDK6.1, Visual Studio installed and configured
+  - BaseClasses libraries built.
+  - Environment variables set:
+    DXSDK_DIR
+    SAGEJDK
+    SAGEDEVJDK
+    SAGEDEVREL
+    SAGEDEVDEBUG
+    SAGEBASECLASSES
+
+
+Steps:
+-----
+A) Verify that the above environment variables have been set.
+   Visual Studio needs them all to build the Solution.
+   - Open a Command Prompt window.  
+   - Type "set".  
+   - Verify the variables listed above.
+
+
+B) Use GitHub to get a local copy of the repository onto your computer.
+
+
+C) After cloning the repository, use Windows Explorer to open
+  up a window to your local copy where the sources are stored.
+
+  Locate the SageWorkspace.sln file.  It should be in:
+    <your_local_GitHub_path>\sagetv\native
+
+
+D) Double-click on the SageWorkspace.sln file to launch VS2005 and
+  load all the child projects.
+
+  The first time VS2005 is launched to access the Solution, you
+  might encounter a series of questions about source control.
+  Answer them.
+
+
+E) Build the Solution:
+  - On the VS2005 menu bar, ensure "Release" and "Win32" is chosen.
+  - In the Solution Explorer sub-window, highlight SageWorkspace.
+  - Right-click SageLauncher, select "Build"
+
+  The resultant files will be found in the SAGEDEVRELEASE folder.
+
+
+
+=====================================================================
+10. Optional Info:  (for later use)
+  To run any of the SDK command-line tools:
+=====================================================================
+
+To run any of the SDK command-line tools (i.e., compiler, linker,
+     dump, etc), the proper environment needs to be set.
+ 
+Launch the Windows SDK Command Shell:
+    (Start > All Programs > Microsoft Windows SDK CMD Shell) 
+
+    At the SDK Cmd Shell prompt,
+    * To see the current environment settings, type "setenv"
+    * To see the available options, type "setenv /?"
+
+For example:
+    * To target XP, use: "setenv /release /86 /xp"
+    * ??? To target XP-sp3, use: "setenv /release /86 /2003 ????
+
+
+
+=====================================================================
+11. Considerations re: building the BaseClasses libs
+=====================================================================
+
+For future consideration
+------------------------
+
+Info:
+
+It's unfortunate that Microsoft chose not to provide the .lib files
+(strmbase.lib & strmbasd.lib) for the BaseClasses.  Since we have 
+to build these ourselves, there are a number of issues related 
+to the location and use of BaseClasses.  
+
+
+There are 2 primary issues to consider:
+  1. Where should the BaseClasses libs be built
+  2. Should they be built automatically
+
+
+------------------------
+Issue 1. Where to build
+------------------------
+
+The following options have been considered:
+
+Option 1:  Build the .libs within the SDK tree.  
+---------
+
+Pros: 
+  a. This seems to be what Microsoft expects will happen.  
+  b. It's the path of least resistance and easiest.
+  c. If/when MS updates the BaseClasses sources, we've got them
+  
+Cons: 
+  a. Needs to be done manually.
+  b. Potential issues with UAC and attempts to modify files within 
+    the Program Files tree.
+    This comes into play when building under multiple user accounts and
+    might also affect automated builds done by the SYSTEM account.
+  c. Building within the MS-created & installed SDK tree generally 
+    seems like a poor practice.
+
+
+Option 2: Copy the BaseClasses folder elsewhere for building the .libs.
+---------
+
+Pros:
+  a. This leaves the MS-installed SDK folder untouched and clean.
+  b. It avoids any issues with UAC.
+  c. Makes it easy to integrate with exiting VS's Sage Solution,
+    & automatic (re)builds
+
+Cons:
+  a. There would be TWO sources for BaseClass header files, which 
+    might not always be the same.  The ones in the SDK tree might be 
+    #included by some portions of the build, while the ones in 
+    the secondary folder will always be used to create .lib.
+    This has the potential to create subtle bugs that could prove 
+    VERY difficult to track down.
+
+
+--------------------------------------------
+Issue 2:  Should libs be built automatically
+--------------------------------------------
+
+Although MS provides corresponding .vcproj & .sln files for VS,
+currently, they're not currently associated with the Sage 
+native code build process.  This means that if/when MS updates 
+BaseClasses sources, we won't automatically get new .libs built.
+Depending on ones viewpoint, this may or may not be good, since
+it also isolates MS-introduced bugs from Sage.
+
+Should building the BaseClasses .lib files be added to the Sage 
+Solution?  After all, we **do** need them.
+
+
+Pros:
+  a. Will automatically build everything that's needed.
+  b. No need to manually (re)build BaseClasses lib if it 
+    changes with a future update by Microsoft (kb or sp).
+
+
+Cons:
+  a. Requires careful consideration of WHERE the libs are built.
+
+  b. Would VS require that the Project source-code folder be a part of 
+    the rest of the Sage sourcecode tree?  
+
+  c. Alternately, trying to point a new BaseClasses project back to 
+    the MS SDK folder would probably need to use an env. var.   
+    It's not clear how VS would support such a thing.  
+
+  d. If VS is pointed back to the MS SDK folder to pickup the sources,
+    and MS updates the BaseClasses sources (e.g., via Windows Update)
+    there is a risk that the update might silently break something.
+    Could be VERY challenging to track this down.
+
+
+
+
+
+
