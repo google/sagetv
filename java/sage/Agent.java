@@ -64,6 +64,7 @@ public class Agent extends DBObject implements Favorite
   public static final int DONT_AUTODELETE_FLAG = 0x01;
   public static final int KEEP_AT_MOST_MASK = 0x7E; // 6 bits
   public static final int DELETE_AFTER_CONVERT_FLAG = 0x80;
+  public static final int DISABLED_FLAG = 0x100;
 
   String getNameForType()
   {
@@ -325,6 +326,7 @@ public class Agent extends DBObject implements Favorite
     int keepAtMost = getAgentFlag(KEEP_AT_MOST_MASK);
     if (keepAtMost > 0)
       sb.append(" keep=").append(keepAtMost);
+    sb.append(" enabled=").append(!testAgentFlag(DISABLED_FLAG));
     sb.append(']');
     return sb.toString();
   }
@@ -558,6 +560,20 @@ public class Agent extends DBObject implements Favorite
   {
     return followsTrend(air, mustBeViewable, sbCache, false);
   }
+
+  /**
+   * Determine if the given airing meets the criteria for this Agent. (i.e. could the given Airing be scheduled because
+   * of this Agent)
+   *
+   * @param air The Airing to be tested
+   * @param mustBeViewable If true, the Airing must be viewable for this method to return true.  Viewable means a 
+   * recording that can be watched, or a channel that can be viewed.
+   * @param sbCache A StringBuffer to be used by this method.  If null a new StringBuffer will be created.  If non-null
+   * the buffer will be cleared and use.  When calling this method in a loop, the same StringBuffer can be used for each
+   * call to limit object creation and memory use.
+   * @param skipKeyword If true, keyword matching is not considered
+   * @return true if the given Airing matches this Agent (given the parameter criteria) , false otherwise.
+   */
   /*
    * TODO(codefu): skipKeyword is a hack before showcase. It works since the other flags are AND
    * tested; but we can have Lucene do this for us
@@ -568,6 +584,9 @@ public class Agent extends DBObject implements Favorite
     Show s = air.getShow();
     if (s == null) return false;
 
+    //A disabled agent doesn't match any airings
+    if(testAgentFlag(DISABLED_FLAG))
+        return false;
     // Do not be case sensitive when checking titles!! We got a bunch of complaints about this on our forums.
     // Don't let null titles match all the Favorites!
     if (title != null && (s.title == null || (s.title != null && title != s.title && !title.toString().equalsIgnoreCase(s.title.toString()))))
@@ -1210,10 +1229,12 @@ public class Agent extends DBObject implements Favorite
       return agentFlags & DONT_AUTODELETE_FLAG;
     else if (whichFlag == KEEP_AT_MOST_MASK)
       return (agentFlags & KEEP_AT_MOST_MASK) >> 1;
-        else if (whichFlag == DELETE_AFTER_CONVERT_FLAG)
-          return agentFlags & DELETE_AFTER_CONVERT_FLAG;
-        else
-          return 0;
+    else if (whichFlag == DELETE_AFTER_CONVERT_FLAG)
+      return agentFlags & DELETE_AFTER_CONVERT_FLAG;
+    else if (whichFlag == DISABLED_FLAG)
+      return agentFlags & DISABLED_FLAG;
+    else
+      return 0;
   }
   void setAgentFlags(int maskBits, int values)
   {

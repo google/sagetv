@@ -262,6 +262,20 @@ public final class Carny implements Runnable
       rv.setStopPadding(defaultFavoriteStopPadding);
     }
 
+    handleAddedFavorite(rv);
+
+    submitJob(new Object[] { LOVE_JOB, null });
+    sage.plugin.PluginEventManager.postEvent(sage.plugin.PluginEventManager.FAVORITE_ADDED,
+        new Object[] { sage.plugin.PluginEventManager.VAR_FAVORITE, rv });
+    return rv;
+  }
+
+  /**
+   * Update the internal Carny state after a favorite has been added (or enabled)
+   * @param rv The Favorite that was updated
+   */
+  private void handleAddedFavorite(Agent rv)
+  {
     // LOVESET UPDATE Make the updates to the loveSet that need to be & sync the clients
     // For add, we just add all of the Airings that match this Favorite to the loveAirSet
     List<Airing> airsToAdd = new ArrayList<Airing>();
@@ -338,11 +352,8 @@ public final class Carny implements Runnable
       clientSyncAll();
       Scheduler.getInstance().kick(true);
     }
-    submitJob(new Object[] { LOVE_JOB, null });
-    sage.plugin.PluginEventManager.postEvent(sage.plugin.PluginEventManager.FAVORITE_ADDED,
-        new Object[] { sage.plugin.PluginEventManager.VAR_FAVORITE, rv });
-    return rv;
   }
+
   public Agent updateFavorite(Agent fav, int agentMask, String title, String category, String subCategory,
       Person person, int role, String rated, String year, String pr, String network,
       String chanName, int slotType, int[] timeslots, String keyword)
@@ -537,6 +548,21 @@ public final class Carny implements Runnable
     } finally {
       wiz.releaseWriteLock(Wizard.AGENT_CODE);
     }
+
+    handleRemovedFavorite(fav, allFavs);
+
+    submitJob(new Object[] { LOVE_JOB, null });
+    sage.plugin.PluginEventManager.postEvent(sage.plugin.PluginEventManager.FAVORITE_REMOVED,
+        new Object[] { sage.plugin.PluginEventManager.VAR_FAVORITE, fav });
+  }
+
+  /**
+   * Update the internal Carny state after a favorite has been removed (or disabled)
+   * @param fav The Favorite that was removed
+   * @param allFavs The collection of all Favorites
+   */
+  private void handleRemovedFavorite(Agent fav, List<Agent> allFavs)
+  {
     // LOVESET UPDATE Make the updates to the loveSet that need to be & sync the clients
     List<Airing> airsThatMayDie = new ArrayList<Airing>();
     DBObject[] airs;
@@ -614,9 +640,33 @@ public final class Carny implements Runnable
     }
 
     clientSyncLoves();
-    submitJob(new Object[] { LOVE_JOB, null });
-    sage.plugin.PluginEventManager.postEvent(sage.plugin.PluginEventManager.FAVORITE_REMOVED,
-        new Object[] { sage.plugin.PluginEventManager.VAR_FAVORITE, fav });
+  }
+
+  /**
+   * Set the enabled/disabled state of a favorite
+   * @param fav The Favorite to enable/disable
+   * @param enabled true if the given favorite should be enabled, false if it should be disabled
+   */
+  public void enableFavorite(Agent fav, boolean enabled)
+  {
+      //If the DISabled flag is equal to the ENabled parameter, then the call to this function should
+      //  change the state of the given Agent, otherwise nothing changes
+      if(fav.testAgentFlag(Agent.DISABLED_FLAG) == enabled)
+      {
+          //first update the agent flag
+          setAgentFlags(fav, Agent.DISABLED_FLAG, enabled?0:Agent.DISABLED_FLAG);
+
+          //Next update the Carny internal state
+          if(enabled) {
+              handleAddedFavorite(fav);
+          } else {
+              handleRemovedFavorite(fav, Arrays.asList(Wizard.getInstance().getFavorites()));
+          }
+
+          submitJob(new Object[] { LOVE_JOB, null });
+          sage.plugin.PluginEventManager.postEvent(sage.plugin.PluginEventManager.FAVORITE_MODIFIED,
+              new Object[] { sage.plugin.PluginEventManager.VAR_FAVORITE, fav });
+      }
   }
 
   private void clientSyncAll()
@@ -956,7 +1006,7 @@ public final class Carny implements Runnable
         }
       }
       Agent currAgent = (Agent) allAgents[i];
-      if (currAgent == null)
+      if (currAgent == null || currAgent.testAgentFlag(Agent.DISABLED_FLAG))
         continue;
 
       if ((!doneInit && Sage.getBoolean("limited_carny_init", Sage.EMBEDDED)) ||
