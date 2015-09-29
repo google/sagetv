@@ -980,7 +980,7 @@ public class FavoriteAPI {
           Agent a = (Agent) stack.pop();
           if (Permissions.hasPermission(Permissions.PERMISSION_RECORDINGSCHEDULE, stack.getUIMgr()))
           {
-              Carny.getInstance().setAgentFlags(a, Agent.DISABLED_FLAG, b?0:Agent.DISABLED_FLAG);
+              Carny.getInstance().enableFavorite(a, b);
               Carny.getInstance().kick();
           }
           return null;
