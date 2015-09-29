@@ -132,7 +132,7 @@ JNIEXPORT jstring JNICALL Java_sage_media_format_MPEGParser_getMediaAVInf0
 	if ( ret >= 0 ) ret--; //ret is actual channel number; change range is 0..n; in GetAVFormat is 1...n+1
 	if ( strstr(  Format, "ENCRYPTED-TS;" ) ) 
 	{
-		sprintf( buf, "Ret:%d Program:%d Format:AV-INF|f=%s", ret, TotalProgramNum, Duration, Format );
+		sprintf( buf, "Ret:%d Program:%d Format:AV-INF|f=%s", ret, TotalProgramNum, Format );
 	} else
 	if ( strstr( Format, "UNKNOWN-TS;"  ) || strstr( Format, "UNKNOWN-PS;"  ) || strstr(  Format, "NO-AV-TS;" ) )
 	{

@@ -42,23 +42,22 @@ typedef struct PS_BUILDER_DUMPER
 
 typedef struct PS_BUILDER
 {
-	//unsigned  short status;
-	unsigned  short state;
+	uint16_t state;
 
 	PS_BUILDER_DUMPER dumper;
 
-	unsigned char video_stream_id;
-	unsigned char audio_stream_id;
-	unsigned char video_stream_type;
-	unsigned char audio_stream_type;
-	unsigned long video_demux_rate;
-	unsigned long audio_demux_rate;
-	unsigned long video_block_size;
-	unsigned long audio_block_size;
-	unsigned long demux_bound;
+	uint8_t video_stream_id;
+	uint8_t audio_stream_id;
+	uint8_t video_stream_type;
+	uint8_t audio_stream_type;
+	uint32_t video_demux_rate;
+	uint32_t audio_demux_rate;
+	uint32_t video_block_size;
+	uint32_t audio_block_size;
+	uint32_t demux_bound;
 
 	ULONGLONG scr;
-	unsigned  long demux;
+	uint32_t demux;
 
 	struct TRACKS *tracks;
 	
@@ -68,24 +67,24 @@ typedef struct PS_BUILDER
 	
 	PSM_LIST psm_list;
 
-	unsigned short build_ctrl;	
-	//unsigned short build_header_in_buffer;
-	unsigned short es_block_size;
-	unsigned char* block_buffer;
-	unsigned short buffer_size;
-	unsigned short pading_block_enable;
-	unsigned short system_packet_bytes;
+	uint16_t build_ctrl;	
+	//uint16_t build_header_in_buffer;
+	uint16_t es_block_size;
+	uint8_t* block_buffer;
+	uint16_t buffer_size;
+	uint16_t pading_block_enable;
+	uint16_t system_packet_bytes;
 
 	ULONGLONG  used_bytes;
 	ULONGLONG  output_bytes;
-	unsigned long input_blocks;
-	unsigned long output_blocks;
-	unsigned long out_of_order_blocks;
+	uint32_t input_blocks;
+	uint32_t output_blocks;
+	uint32_t out_of_order_blocks;
 	
 	SAGETV_PRIVATE_DATA sagetv_private_data;
-	int h264_frame_rate;
+	int32_t h264_frame_rate;
 	BITS_T bits;
-	unsigned char* cur_data_ptr;
+	uint8_t* cur_data_ptr;
 
 
 } PS_BUILDER;
@@ -94,14 +93,14 @@ int BlockBufferPSDump( void* pContext, void* pData, int nSize );
 PS_BUILDER* CreatePSBuilder( TRACKS* pTracks, int nMaxBufferSize, int bBuildHeaderInBuffer );
 void ReleasePSBuilder( PS_BUILDER *pPSBuilder );
 void ResetPSBuilder( PS_BUILDER *pPSBuilder );
-int PSBulderPushDataInSafe( PS_BUILDER *pPSBuilder, int nTrackIndex, int bGroup, unsigned char* pData, int nSize );
+int PSBulderPushDataInSafe( PS_BUILDER *pPSBuilder, int nTrackIndex, int bGroup, uint8_t* pData, int nSize );
 int PSBulderPushDataInBuffer( PS_BUILDER *pPSBuilder, int nTrackIndex, int bGroup, struct BLOCK_BUFFER* pBlockBuffer );
 int SetupTracks( TRACK *pTrack );
 int CreatSageStreamHeader( PS_BUILDER* pPSBuilder );
 int FlushEndOfCode( PS_BUILDER *pPSBuilder );
 void DisablePadingPacket( PS_BUILDER *pPSBuilder ); 
 
-int CreatePES2Header( unsigned char*pBuffer, int nMaxBufferSize, PES *pPES );
+int CreatePES2Header( uint8_t*pBuffer, int nMaxBufferSize, PES *pPES );
 
 #define PACK_HEADER_BYTES 14
 
@@ -121,7 +120,7 @@ static inline int BlockTotalBytes( int bHasPts, int bHasDts, int nDataSize )
 }
 
 
-char* _pes_header_( unsigned char* p );
+char* _pes_header_( uint8_t* p );
 
 #ifdef __cplusplus
 }

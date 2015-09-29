@@ -70,6 +70,8 @@ dep_make_debug:
 	cp $(TSNATIVE_LIB) libTSnatived.so
 	
 clean:
+	$(MAKE) -C $(NATIVECORE_SRC) clean
+	$(MAKE) -C $(TSNATIVE_SRC) clean
 	rm -f *.o libMPEGParser.so *.c~ *.h~ *.so
 
 install:

@@ -19,40 +19,41 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
 typedef struct MPEG_VIDEO
 {
-	unsigned char  extension_present;
-	//unsigned char  display_extension_present;	
-	//unsigned char  scalable_extension_present;
+	uint8_t  extension_present;
+	//uint8_t  display_extension_present;	
+	//uint8_t  scalable_extension_present;
 
-	short		   profile;			   //  profile - MPEG2 only	
-	short		   level;			   //  level - MPEG2 only
-	short		   progressive;		   //  progressive flag	
-	short		   chrome;			   //  chrome format
-	long		   width;			   //  Native width	in pixels
-	long		   height;			   //  Native height in	pixels
-	long		   vbv;				   //  vbv
-	long		   ar_info;			   //  aspect ratio	code from stream
-	ULONGLONG	   picture_time;	   //  Time	per	picture	in 100ns units
-	float		   picture_rate;		   //  In frames	per	second
-	long		   time_per_frame;	   //  Time per picture in MPEG units
-	//unsigned char  FrameRateCode;     //  4 bits frame rate code
-	unsigned short frame_rate_nomi;
-	unsigned short frame_rate_deno;
-	long		   bit_rate;			   //  Bits	per	second
-	short		   actual_header_length;	   //  Length of valid bytes in	raw	seq	hdr	
-	short		   padding;
-	unsigned char  raw_header[150];	   //  The real	sequence header	
+	int16_t		  profile;			   //  profile - MPEG2 only	
+	int16_t	   level;			       //  level - MPEG2 only
+	int16_t	   progressive;		   //  progressive flag	
+	int16_t	   chrome;			     //  chrome format
+	int32_t	   width;			       //  Native width	in pixels
+	int32_t	   height;			     //  Native height in	pixels
+	int32_t	   vbv;				       //  vbv
+	int32_t	   ar_info;			     //  aspect ratio	code from stream
+	uint64_t   picture_time;	   //  Time	per	picture	in 100ns units
+	float		   picture_rate;		 //  In frames	per	second
+	int32_t	   time_per_frame;	   //  Time per picture in MPEG units
+	//uint8_t  FrameRateCode;//  4 bits frame rate code
+	uint16_t   frame_rate_nomi;
+	uint16_t   frame_rate_deno;
+	int32_t	   bit_rate;			     //  Bits	per	second
+	int16_t		 actual_header_length;	   //  Length of valid bytes in	raw	seq	hdr	
+	int16_t	   padding;
+	uint8_t    raw_header[150];	   //  The real	sequence header	
 
 } MPEG_VIDEO;
 
-inline static const unsigned char* SearchMPEGStartCode( const unsigned char* pData, int nBytes, unsigned long StartCode )
+inline static const uint8_t* SearchMPEGStartCode( const uint8_t* pData, int nBytes, uint32_t StartCode )
 {
-	unsigned long code;
+	uint32_t code;
 
 	if ( nBytes < 4 )
-		return NULL;
+		return (unsigned char *)NULL;
 
 	code = 0xffffff00 |*pData++;
 	while ( --nBytes )
@@ -62,17 +63,17 @@ inline static const unsigned char* SearchMPEGStartCode( const unsigned char* pDa
 		code = (( code << 8 )| *pData++ );
 	}
 
-	return NULL;
+	return (unsigned char *)NULL;
 }
 
 
-int Mepg2FrameRateNomiValue( unsigned char code );
-int Mepg2FrameRateDenoValue( unsigned char code );
-int Mepg2AspectRatioNomiValue( unsigned char code, long width, long height );
-int Mepg2AspectRatioDenoValue( unsigned char code, long width, long height );
-float Mepg1AspectRatioF( unsigned char code, long width, long height );
-float Mepg2AspectRatioF( unsigned char code, long width, long height );
-int ReadMpegVideoHeader( MPEG_VIDEO *pMpegVideo, const unsigned char* pStart, int Size );
+int Mepg2FrameRateNomiValue( uint8_t code );
+int Mepg2FrameRateDenoValue( uint8_t code );
+int Mepg2AspectRatioNomiValue( uint8_t code, int32_t width, int32_t height );
+int Mepg2AspectRatioDenoValue( uint8_t code, int32_t width, int32_t height );
+float Mepg1AspectRatioF( uint8_t code, int32_t width, int32_t height );
+float Mepg2AspectRatioF( uint8_t code, int32_t width, int32_t height );
+int ReadMpegVideoHeader( MPEG_VIDEO *pMpegVideo, const uint8_t* pStart, int Size );
 
 #ifdef __cplusplus
 }

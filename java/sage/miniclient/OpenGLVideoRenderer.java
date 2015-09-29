@@ -15,8 +15,10 @@
  */
 package sage.miniclient;
 
-import javax.media.opengl.*;
-import com.jogamp.opengl.util.*;
+
+import com.jogamp.opengl.GL2;
+import com.jogamp.opengl.GLContext;
+import com.jogamp.opengl.Threading;
 
 public class OpenGLVideoRenderer
 {
@@ -729,9 +731,9 @@ public class OpenGLVideoRenderer
     videoheight=height;
     pureNativeMode=true;
 
-    if (javax.media.opengl.Threading.isSingleThreaded() && !javax.media.opengl.Threading.isOpenGLThread())
+    if (Threading.isSingleThreaded() && !Threading.isOpenGLThread())
     {
-      javax.media.opengl.Threading.invokeOnOpenGLThread(new Runnable() {
+      Threading.invokeOnOpenGLThread(true, new Runnable() {
         public void run() {
           createVideo();
         }
@@ -749,9 +751,9 @@ public class OpenGLVideoRenderer
     videowidth=width;
     videoheight=height;
     pureNativeMode=false;
-    if (javax.media.opengl.Threading.isSingleThreaded() && !javax.media.opengl.Threading.isOpenGLThread())
+    if (Threading.isSingleThreaded() && !Threading.isOpenGLThread())
     {
-      javax.media.opengl.Threading.invokeOnOpenGLThread(new Runnable()
+      Threading.invokeOnOpenGLThread(true, new Runnable()
       {
         public void run()
         {
@@ -776,9 +778,9 @@ public class OpenGLVideoRenderer
       videovpitch=videowidth/2;
       videobuffer=buf;
     }
-    if (javax.media.opengl.Threading.isSingleThreaded() && !javax.media.opengl.Threading.isOpenGLThread())
+    if (Threading.isSingleThreaded() && !Threading.isOpenGLThread())
     {
-      javax.media.opengl.Threading.invokeOnOpenGLThread(new Runnable()
+      Threading.invokeOnOpenGLThread(true, new Runnable()
       {
         public void run()
         {
@@ -800,9 +802,9 @@ public class OpenGLVideoRenderer
     activevideo=false;
     pureNativeMode=false;
     if(MiniClient.MAC_OS_X) {
-      if (javax.media.opengl.Threading.isSingleThreaded() && !javax.media.opengl.Threading.isOpenGLThread())
+      if (Threading.isSingleThreaded() && !Threading.isOpenGLThread())
       {
-        javax.media.opengl.Threading.invokeOnOpenGLThread(new Runnable()
+        Threading.invokeOnOpenGLThread(true,new Runnable()
         {
           public void run()
           {

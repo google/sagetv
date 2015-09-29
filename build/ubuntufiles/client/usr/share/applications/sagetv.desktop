@@ -6,5 +6,5 @@ Comment=Client/Placeshifter for SageTV MAJOR_VERSION.MINOR_VERSION.MICRO_VERSION
 Exec=/opt/sagetv/client/sageclient.sh
 TryExec=/opt/sagetv/client/sageclient.sh
 Terminal=false
-Categories=Applications;AudioVideo
+Categories=AudioVideo;Java
 Icon=SageIcon64.png

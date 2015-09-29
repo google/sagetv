@@ -33,116 +33,116 @@ extern "C" {
 
 typedef struct 
 {
-	unsigned short type;
-	unsigned short pid;
-	unsigned long  tbl_size;
+	uint16_t type;
+	uint16_t pid;
+	uint32_t  tbl_size;
 } MGT;
 
 typedef struct 
 {
-	unsigned short flag;
+	uint16_t flag;
 	char name[9*2];
 	//char extended_name[32];
-	unsigned short major_num;
-	unsigned short minor_num;
-	unsigned short tsid;
-	unsigned short program_id;
-	unsigned short service_type;
-	unsigned short source_id;
-	unsigned short modulation;
-	unsigned long  freq;
+	uint16_t major_num;
+	uint16_t minor_num;
+	uint16_t tsid;
+	uint16_t program_id;
+	uint16_t service_type;
+	uint16_t source_id;
+	uint16_t modulation;
+	uint32_t freq;
 
 } VCT;
 
 typedef struct {
 	char  dimension_name[20];
-	int   graduate_scale;
-	unsigned char rating_num;
+	int32_t graduate_scale;
+	uint8_t rating_num;
 	char  abbrev_name[16][8];
 	char  rating_value[16][150];
 } RATING;
 
 typedef struct {
-	unsigned short rating_region;
+	uint16_t rating_region;
 	char     region_name[32];
-	unsigned char dimension_num;
+	uint8_t dimension_num;
 	RATING   *rating;
 } RTT;
 
 #define MAX_CAD_RIGION_NUM 4
 typedef struct {
-	unsigned char region_num;
+	uint8_t region_num;
 
-	unsigned char rating_region[MAX_CAD_RIGION_NUM];
-	unsigned char rating_num[MAX_CAD_RIGION_NUM];
-	unsigned char rating_index[MAX_CAD_RIGION_NUM][16];
-	unsigned char value_index[MAX_CAD_RIGION_NUM][16];
+	uint8_t rating_region[MAX_CAD_RIGION_NUM];
+	uint8_t rating_num[MAX_CAD_RIGION_NUM];
+	uint8_t rating_index[MAX_CAD_RIGION_NUM][16];
+	uint8_t value_index[MAX_CAD_RIGION_NUM][16];
 	STRING256     description[MAX_CAD_RIGION_NUM];
 } CAD; //content_advisory_descriptor
 
 typedef struct 
 {
-	unsigned short ett_ext_id;
-	unsigned short event_id;
-	unsigned short source_id;
+	uint16_t ett_ext_id;
+	uint16_t event_id;
+	uint16_t source_id;
 } ETT;
 
 typedef struct 
 {
-	unsigned short event_id;
-	unsigned short source_id;
-	unsigned long  start_time;
-	unsigned long  during_length;
-	unsigned char  etm_loc;
-	DESC_DATA	   title;
-	DESC_DATA	   program;
-	unsigned long  program_crc32;
-	DESC_DATA	   cad;
-	unsigned char  genre[MAX_GENRE_NUM];
-	int 	       need_updated;
+	uint16_t  event_id;
+	uint16_t  source_id;
+	uint32_t  start_time;
+	uint32_t  during_length;
+	uint8_t   etm_loc;
+	DESC_DATA	title;
+	DESC_DATA	program;
+	uint32_t  program_crc32;
+	DESC_DATA	cad;
+	uint8_t   genre[MAX_GENRE_NUM];
+	int32_t   need_updated;
 } EIT;
 
 typedef struct 
 {
-	int eit_num;
+	int32_t eit_num;
 	EIT eit[MAX_EPG_NUM_PER_CH];
 } EIT_COL;
 
 
 typedef struct ATSC_PSI
 {
-	TS_SECTION     *atsc_psi_section;
+	TS_SECTION *atsc_psi_section;
 
-	unsigned long  system_time;
-	unsigned short mgt_num;
-	MGT			   mgt[MAX_MGT_TBL];
-	unsigned long  mgt_section_crc32; //for checking mgt updating
-	unsigned char  mgt_update_flag;
+	uint32_t system_time;
+	uint16_t mgt_num;
+	MGT			 mgt[MAX_MGT_TBL];
+	uint32_t mgt_section_crc32; //for checking mgt updating
+	uint8_t  mgt_update_flag;
 
-	unsigned short vct_num;
-	unsigned short vct_program;
-	VCT			   vct[MAX_VCT_TBL];
-	unsigned long  vct_section_crc32; ////for checking vct updating
-	unsigned char  vct_update_flag;
+	uint16_t vct_num;
+	uint16_t vct_program;
+	VCT			 vct[MAX_VCT_TBL];
+	uint32_t vct_section_crc32; ////for checking vct updating
+	uint8_t  vct_update_flag;
 
 
-	RTT			   rtt[MAX_RTT_TBL];
-	unsigned long  rtt_section_crc32; ////for checking vct updating
-	unsigned char  rtt_update_flag;
+	RTT			 rtt[MAX_RTT_TBL];
+	uint32_t rtt_section_crc32; ////for checking vct updating
+	uint8_t  rtt_update_flag;
 
-	unsigned short eit_blk_num;
-	EIT_COL		   *eit_blk;
-	unsigned long  eit_section_crc32[MAX_EIT_NUM]; ////for checking eit updating
-	unsigned char  eit_update_flag;
+	uint16_t eit_blk_num;
+	EIT_COL	*eit_blk;
+	uint32_t eit_section_crc32[MAX_EIT_NUM]; ////for checking eit updating
+	uint8_t  eit_update_flag;
 
-	unsigned long  ett_section_crc32[MAX_EIT_NUM+1]; ////for checking ett updating
-	unsigned char  ett_update_flag;
+	uint32_t ett_section_crc32[MAX_EIT_NUM+1]; ////for checking ett updating
+	uint8_t  ett_update_flag;
 
-	unsigned long  language_code;
+	uint32_t language_code;
 	struct PSI_PARSER*	psi_parser;
 
-	unsigned char not_save_epg_message;
-	unsigned char disable_channel_inf;
+	uint8_t not_save_epg_message;
+	uint8_t disable_channel_inf;
 
 	TS_STREAMS     streams; //passing channel streams information in VCT to TSFilter
 
@@ -154,12 +154,12 @@ void ResetATSCPSI( ATSC_PSI* pATSCPSI );
 int  ProcessATSCPSI( ATSC_PSI* pATSCPSI, TS_PACKET *pTSPacket );
 
 void ReleaseString( STRING* pString );
-unsigned char* NewDescData( DESC_DATA* pDesc, int nBytes );
-unsigned char* FillDescData( DESC_DATA *pDesc, unsigned char* pData, int nBytes );
+uint8_t* NewDescData( DESC_DATA* pDesc, int nBytes );
+uint8_t* FillDescData( DESC_DATA *pDesc, uint8_t* pData, int nBytes );
 void EraseDescData( DESC_DATA *pDesc );
 void ReleaseDescData( DESC_DATA *pDesc );
 
-char* _descriptor_check( unsigned char* p, int bytes );
+char* _descriptor_check( uint8_t* p, int bytes );
 
 #ifdef __cplusplus
 extern "C" }

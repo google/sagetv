@@ -22,6 +22,7 @@ rm -rf serverrelease
 rm -rf ubuntuserver
 rm -rf ubuntuclient
 rm -rf clientrelease
+rm -rf tmp
 rm sagetv*.deb
 rm sagetv*.gz
 

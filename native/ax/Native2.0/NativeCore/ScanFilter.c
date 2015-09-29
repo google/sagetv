@@ -85,11 +85,11 @@ static int IsDVBSStream( TUNE *pTune )
 //	return ( pTune->stream_format == DVB_STREAM && pTune->sub_format == CABLE );
 //}
 
-static void PushChannelScanTunerData( SCAN_FILTER* pScanFilter, unsigned char* pData, unsigned long lDataLen  )
+static void PushChannelScanTunerData( SCAN_FILTER* pScanFilter, uint8_t* pData, uint32_t lDataLen  )
 {
 	int nUsedBytes;
-	unsigned char *pStart;
-	unsigned long dwLength;
+	uint8_t *pStart;
+	uint32_t dwLength;
 	pStart   = pData;
 	dwLength = lDataLen;
 	if ( pScanFilter->nExpectedScanBytes )
@@ -121,7 +121,7 @@ static void PushChannelScanTunerData( SCAN_FILTER* pScanFilter, unsigned char* p
 }
 
 
-void ProcessScan( SCAN_FILTER* pScanFilter, unsigned char* pData, long lDataLen )
+void ProcessScan( SCAN_FILTER* pScanFilter, uint8_t* pData, int32_t lDataLen )
 {
 	int  nScanState;
 	if ( pScanFilter->nScanState == DONE_SCAN ) 
@@ -131,16 +131,16 @@ void ProcessScan( SCAN_FILTER* pScanFilter, unsigned char* pData, long lDataLen 
 	nScanState = IsChannelInfoReady( pScanFilter->pScan );
 	if ( nScanState == 2 ) //psi channels is ready
 	{
-		unsigned short iStreamFormat, iSubFormat;
+		uint16_t iStreamFormat, iSubFormat;
 		if ( GetStreamFormat( pScanFilter->pScan, &iStreamFormat, &iSubFormat ) )
 		{
-			pScanFilter->nStreamFormat = (unsigned char)iStreamFormat;
-			pScanFilter->nStreamFormat = (unsigned char)iSubFormat;
+			pScanFilter->nStreamFormat = (uint8_t)iStreamFormat;
+			pScanFilter->nStreamFormat = (uint8_t)iSubFormat;
 		}
 		if ( IsQAMStream( &pScanFilter->pScan->tune ) )
 		{
-			pScanFilter->Tune.stream_format = (unsigned char)pScanFilter->nStreamFormat;
-			pScanFilter->Tune.sub_format    = (unsigned char)pScanFilter->nStreamFormat;
+			pScanFilter->Tune.stream_format = (uint8_t)pScanFilter->nStreamFormat;
+			pScanFilter->Tune.sub_format    = (uint8_t)pScanFilter->nStreamFormat;
 			ResetChannelScan( pScanFilter->pScan );
 			DoChannelScan( pScanFilter->pScan, NAKED_SCAN );
 			ChannelScanTune( pScanFilter->pScan, &pScanFilter->Tune ); 
@@ -194,7 +194,7 @@ void ProcessScan( SCAN_FILTER* pScanFilter, unsigned char* pData, long lDataLen 
 	} 
 }
 
-int	 ScanChannelTimeClock( SCAN_FILTER* pScanFilter, unsigned long lMillionSecond )
+int	 ScanChannelTimeClock( SCAN_FILTER* pScanFilter, uint32_t lMillionSecond )
 {
 	if ( pScanFilter->nScanState == PSI_SCAN || pScanFilter->nScanState == NAKED_SCAN )
 		return UpdateTimeClock( pScanFilter->pScan, lMillionSecond );

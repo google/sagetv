@@ -32,7 +32,7 @@ static int  SetupNakeStreamTSFilter( TS_PARSER *pTSParser );
 static int  CheckTSParseDone( TS_PARSER *pTSParser );
 static void PostStatusMessage( TS_PARSER *pTSParser, char* pMessageText );
 static void PtsFix( TS_PARSER *pTSParser, SLOT* pSlot, TRACK* pTrack );
-static char* CAInfo( unsigned short CAPid, unsigned short CAID );
+static char* CAInfo( uint16_t CAPid, uint16_t CAID );
 static int IsAllChannelsLocked( TS_PARSER *pTSParser );
 
 int time_stamp( LONGLONG llTime, char* pBuffer, int nSize );
@@ -41,18 +41,18 @@ char* time_stamp_s( ULONGLONG llTime, char* pBuffer, int nSize );
 char* long_long_s( ULONGLONG llVal, char* pBuffer, int nSize );
 char* time_stamp_ss( LONGLONG llTime );
 char* long_long_ss( ULONGLONG llVal );
-//static int _s_(unsigned char*data, int size);
+//static int _s_(uint8_t*data, int size);
 
 int SetupTSFilter( TS_PARSER *pTSParser, int nSlot, PIDS_TABLE* pPidsTable );
 //////////////////////////////////////////// DUMPER Section //////////////////////////////////////////
-static int PATDumper( void* pContext, unsigned char* pData, int nSize )
+static int PATDumper( void* pContext, uint8_t* pData, int nSize )
 {
 
 	TS_PARSER *pTSParser = (TS_PARSER*)pContext;
 	PAT_DATA  *pPatData  = (PAT_DATA*)pData;
 	TS_PAT    *pPat      = (TS_PAT*)pPatData->pat_table;
 	short pat_index = pPatData->pat_index;
-	unsigned short tsid  = pPat->tsid;
+	uint16_t tsid  = pPat->tsid;
 	int program_num = pPat->total_program_number;
 	int i;
 
@@ -86,7 +86,7 @@ static int PATDumper( void* pContext, unsigned char* pData, int nSize )
 		return 0;
 }
 
-static int PMTDumper( void* pContext, unsigned char* pData, int nSize )
+static int PMTDumper( void* pContext, uint8_t* pData, int nSize )
 {
 
 	TS_PARSER *pTSParser = (TS_PARSER*)pContext;
@@ -151,7 +151,7 @@ static int PMTDumper( void* pContext, unsigned char* pData, int nSize )
 	return 1;
 }
 
-static int ChannelInfoDumper( void* pContext, unsigned char* pData, int nSize )
+static int ChannelInfoDumper( void* pContext, uint8_t* pData, int nSize )
 {
 	TS_PARSER *pTSParser = (TS_PARSER*)pContext;
 	CHANNEL_DATA *channel_data = (CHANNEL_DATA*)pData;
@@ -204,13 +204,13 @@ static int ChannelInfoDumper( void* pContext, unsigned char* pData, int nSize )
 		{
 			char tune_param[64];
 			if ( channel_data->u.dvb[i].dvb_type == 1 )
-				snprintf( tune_param, sizeof(tune_param), "(T) frq:%ld band:%d", channel_data->u.dvb[i].dvb.t.freq, channel_data->u.dvb[i].dvb.t.band );
+				snprintf( tune_param, sizeof(tune_param), "(T) frq:%d band:%d", channel_data->u.dvb[i].dvb.t.freq, channel_data->u.dvb[i].dvb.t.band );
 			else
 			if ( channel_data->u.dvb[i].dvb_type == 2 )
-				snprintf( tune_param, sizeof(tune_param), "(C) frq:%ld mod:%d", channel_data->u.dvb[i].dvb.c.freq, channel_data->u.dvb[i].dvb.c.modulation );
+				snprintf( tune_param, sizeof(tune_param), "(C) frq:%d mod:%d", channel_data->u.dvb[i].dvb.c.freq, channel_data->u.dvb[i].dvb.c.modulation );
 			else
 			if ( channel_data->u.dvb[i].dvb_type == 3 )
-				snprintf( tune_param, sizeof(tune_param), "(S) frq:%ld mod:%d", channel_data->u.dvb[i].dvb.s.freq, channel_data->u.dvb[i].dvb.s.modulation );
+				snprintf( tune_param, sizeof(tune_param), "(S) frq:%d mod:%d", channel_data->u.dvb[i].dvb.s.freq, channel_data->u.dvb[i].dvb.s.modulation );
 			else 
 				snprintf( tune_param, sizeof(tune_param), "--" );
 
@@ -242,7 +242,7 @@ static int ChannelInfoDumper( void* pContext, unsigned char* pData, int nSize )
 	return 0;
 }
 
-static int TuneInfoDumper( void* pContext, unsigned char* pData, int nSize )
+static int TuneInfoDumper( void* pContext, uint8_t* pData, int nSize )
 {
 	TS_PARSER *pTSParser = (TS_PARSER*)pContext;
 	TUNE_DATA *tune_data = (TUNE_DATA*)pData;
@@ -261,13 +261,13 @@ static int TuneInfoDumper( void* pContext, unsigned char* pData, int nSize )
 		service_tble[0] = 0x0;
 		
 		if ( tune_data->u.dvb.dvb_type == 1 )
-			snprintf( tune_param, sizeof(tune_param), "frq:%ld band:%d", tune_data->u.dvb.dvb.t.freq, tune_data->u.dvb.dvb.t.band );
+			snprintf( tune_param, sizeof(tune_param), "frq:%d band:%d", tune_data->u.dvb.dvb.t.freq, tune_data->u.dvb.dvb.t.band );
 		else
 		if ( tune_data->u.dvb.dvb_type == 2 )
-			snprintf( tune_param, sizeof(tune_param), "frq:%ld mod:%d", tune_data->u.dvb.dvb.c.freq, tune_data->u.dvb.dvb.c.modulation );
+			snprintf( tune_param, sizeof(tune_param), "frq:%d mod:%d", tune_data->u.dvb.dvb.c.freq, tune_data->u.dvb.dvb.c.modulation );
 		else
 		if ( tune_data->u.dvb.dvb_type == 3 )
-			snprintf( tune_param, sizeof(tune_param), "frq:%ld mod:%d", tune_data->u.dvb.dvb.s.freq, tune_data->u.dvb.dvb.s.modulation );
+			snprintf( tune_param, sizeof(tune_param), "frq:%d mod:%d", tune_data->u.dvb.dvb.s.freq, tune_data->u.dvb.dvb.s.modulation );
 		else 
 			snprintf( tune_param, sizeof(tune_param), "tune data not ready" );
 
@@ -294,7 +294,7 @@ static int TuneInfoDumper( void* pContext, unsigned char* pData, int nSize )
 	return 1;
 }
 
-static int MessageDumper( void* pContext, unsigned char* pData, int nSize )
+static int MessageDumper( void* pContext, uint8_t* pData, int nSize )
 {
 	TS_PARSER *pTSParser = (TS_PARSER*)pContext;
 	MESSAGE_DATA *msg = (MESSAGE_DATA*)pData;
@@ -355,7 +355,7 @@ static int MessageDumper( void* pContext, unsigned char* pData, int nSize )
 	} else
 	if ( !strcmp( msg->title, "LANGUAGE" ) )
 	{
-		unsigned long language_code = LanguageCode( msg->message );
+		uint32_t language_code = LanguageCode( msg->message );
 		SageLog(( _LOG_TRACE, 3, TEXT("found a new language \"%s\" code=0x%x in DVB PSI."), msg->message, language_code ));
 		if ( pTSParser->default_language == 0 )
 			pTSParser->default_language = language_code;
@@ -366,7 +366,7 @@ static int MessageDumper( void* pContext, unsigned char* pData, int nSize )
 
 	return 1;
 }
-static int PCRDumper( void* pContext, unsigned char* pData, int nSize )
+static int PCRDumper( void* pContext, uint8_t* pData, int nSize )
 {
 	TS_PARSER *pTSParser = (TS_PARSER*)pContext;
 	PCR_DATA  *pcr_data = (PCR_DATA *)pData;
@@ -424,7 +424,7 @@ static int PCRDumper( void* pContext, unsigned char* pData, int nSize )
 	if (  pcr_data->pcr > slot->pcr )
 	{
 		if ( pTSParser->used_bytes > slot->pcr_cue  )
-			slot->pcr_rate = (unsigned long)((pTSParser->used_bytes-slot->pcr_cue)*16384/(pcr_data->pcr-slot->pcr));
+			slot->pcr_rate = (uint32_t)((pTSParser->used_bytes-slot->pcr_cue)*16384/(pcr_data->pcr-slot->pcr));
 
 	}
 	slot->pcr = pcr_data->pcr;
@@ -462,9 +462,9 @@ static inline void UpdateGetCurrentPCRCue( TS_PARSER *pTSParser, SLOT *pSlot, TR
 	}
 }
 
-inline void FillESBlock( TRACK *pTrack, unsigned char* pData, int nBytes )
+inline void FillESBlock( TRACK *pTrack, uint8_t* pData, int nBytes )
 {
-	unsigned char* out_ptr  = pTrack->es_data_start + pTrack->es_data_bytes;
+	uint8_t* out_ptr  = pTrack->es_data_start + pTrack->es_data_bytes;
 	if ( nBytes < 0 ) 
 	{
 		SageLog(( _LOG_TRACE, 1, TEXT("ERROR !Invaild filling block data size %d (bad data), "),  nBytes ));
@@ -516,7 +516,7 @@ static inline void DumpESBlockOfTS( TS_PARSER *pTSParser, TRACK* pTrack )
 	}
 }
 
-static inline int ParserPES( PES *pPES, TRACK *pTrack, unsigned char* pData, int nBytes, int bGroupStart )
+static inline int ParserPES( PES *pPES, TRACK *pTrack, uint8_t* pData, int nBytes, int bGroupStart )
 {
 	int  ret = 0;
 	int  overflow_bytes;
@@ -580,7 +580,7 @@ static int AudioTSPriorityHack( TRACK *pTrack, int TsPriority )
 	return 0;
 }
 
-static int StreamDumper( void* pContext, unsigned char* pData, int nSize )
+static int StreamDumper( void* pContext, uint8_t* pData, int nSize )
 {
 	TS_PARSER     *pTSParser     = (TS_PARSER*)pContext;
 	STREAM_DATA   *stream_data   = (STREAM_DATA *)pData;
@@ -589,7 +589,7 @@ static int StreamDumper( void* pContext, unsigned char* pData, int nSize )
 	TRACK		  *track;
 	int			  slot_index;
 	int			  in_bytes;
-	unsigned char *in_ptr;
+	uint8_t *in_ptr;
 	int			   media_type; 
 	ASSERT( ts_elment->channel_index < slot->tracks->total_track );
 
@@ -677,7 +677,7 @@ static int StreamDumper( void* pContext, unsigned char* pData, int nSize )
 		if ( track->es_elmnt->pes.packet_length == 0 || stream_data->group_start )
 		{   
 			PES pes={0};
-			if ( IsPESHeaderOfTS( (unsigned char)track->es_elmnt->stream_id, in_ptr, in_bytes ) && //start a new es block
+			if ( IsPESHeaderOfTS( (uint8_t)track->es_elmnt->stream_id, in_ptr, in_bytes ) && //start a new es block
 				 ReadPESHeader( in_ptr, in_bytes, &pes ) > 0 )
 			{
 
@@ -740,7 +740,7 @@ static int StreamDumper( void* pContext, unsigned char* pData, int nSize )
 			in_ptr   +=  in_bytes - overflow_bytes;
 			in_bytes =  overflow_bytes;
 
-			if ( IsPESHeaderOfTS( (unsigned char)track->es_elmnt->stream_id, in_ptr, in_bytes ) && //start a new es block
+			if ( IsPESHeaderOfTS( (uint8_t)track->es_elmnt->stream_id, in_ptr, in_bytes ) && //start a new es block
 				 ReadPESHeader( in_ptr, in_bytes, &track->es_elmnt->pes ) > 0 )
 			{
 				PtsFix( pTSParser, slot, track );
@@ -803,7 +803,7 @@ static int StreamDumper( void* pContext, unsigned char* pData, int nSize )
 			if ( (track->group_start & ES_GROUP_START) == 0x0 && 
 				  track->es_data_bytes > 9 && track->es_data_bytes < 16 )
 			{
-				if ( IsPESHeaderOfTS( (unsigned char)track->es_elmnt->stream_id, track->es_data_start, track->es_data_bytes ) && //start a new es block
+				if ( IsPESHeaderOfTS( (uint8_t)track->es_elmnt->stream_id, track->es_data_start, track->es_data_bytes ) && //start a new es block
 					 ReadPESHeader( track->es_data_start, track->es_data_bytes, &track->es_elmnt->pes ) > 0 )
 				{
 					PtsFix( pTSParser, slot, track );
@@ -825,13 +825,13 @@ static int StreamDumper( void* pContext, unsigned char* pData, int nSize )
 }
 
 
-char* UTCFormat( unsigned long t, char* p, int len );
-static int SystemTimeDumper( void* pContext, unsigned char* pData, int nSize )
+char* UTCFormat( uint32_t t, char* p, int len );
+static int SystemTimeDumper( void* pContext, uint8_t* pData, int nSize )
 {
 
 	TS_PARSER *pTSParser = (TS_PARSER*)pContext;
 	TIME_DATA *time_data = (TIME_DATA*)pData;
-	unsigned long utc_sec;
+	uint32_t utc_sec;
 
 	if ( time_data->gps_sec )
 		utc_sec = time_data->gps_sec + 315993600;  //GPS start 1/6 0:0:0 1980, GMT UTC start 1/1 0:0:0 1970
@@ -869,7 +869,7 @@ static int SystemTimeDumper( void* pContext, unsigned char* pData, int nSize )
 	return 1;
 }
 
-void UpdateTSParserClock( TS_PARSER *pTSParser, unsigned long lClock )
+void UpdateTSParserClock( TS_PARSER *pTSParser, uint32_t lClock )
 {
 	if ( pTSParser->clock_time_start == 0 )
 		pTSParser->clock_time_start = lClock;
@@ -877,9 +877,9 @@ void UpdateTSParserClock( TS_PARSER *pTSParser, unsigned long lClock )
 	pTSParser->clock_time = lClock;
 }
 
-static unsigned long ParsingElapse( TS_PARSER *pTSParser )
+static uint32_t ParsingElapse( TS_PARSER *pTSParser )
 {
-	unsigned long psi_dt, clock_dt;
+	uint32_t psi_dt, clock_dt;
 	if ( pTSParser->psi_time > pTSParser->psi_time_start )
 		psi_dt   = pTSParser->psi_time - pTSParser->psi_time_start;
 	else
@@ -920,10 +920,10 @@ static int PostProgramData( TS_PARSER *pTSParser, TS_STREAMS* pStreams, PMT_DATA
 }
 
 ////////////////////////////////PUSH SECTION //////////////////////////////////
-int PushDataTSParser( TS_PARSER *pTSParser, unsigned char* pData, int nSize )//, int *pExpectedBytes )
+int PushDataTSParser( TS_PARSER *pTSParser, uint8_t* pData, int nSize )//, int *pExpectedBytes )
 {
 	int used_bytes = 0, size = nSize, start_offset;
-	unsigned char* data = pData;
+	uint8_t* data = pData;
 
 	pTSParser->block_count++;
 	
@@ -1104,7 +1104,7 @@ void ReleaseTSParser( TS_PARSER *pTSParser )
 
 void SetupTSStreamType( TS_PARSER *pTSParser, int nStreamType )
 {
-	unsigned short org_packet_length = pTSParser->packet_length;
+	uint16_t org_packet_length = pTSParser->packet_length;
 	if ( nStreamType == MPEG_ASI )
 		pTSParser->packet_length = ASI_PACKET_LENGTH;
 	else
@@ -1352,7 +1352,7 @@ void UnlockTSChannel(  TS_PARSER *pTSParser, int nSlot )
 	pTSParser->slot[nSlot].ctrl &= ~CTRL_LOCK_PMT;
 }
 
-static unsigned long GetDesLanguageCode( char* pDesc, int nLen );
+static uint32_t GetDesLanguageCode( char* pDesc, int nLen );
 int SetupTSFilter( TS_PARSER *pTSParser, int nSlot, PIDS_TABLE* pPidsTable )
 {
 	int i, ret;
@@ -1539,7 +1539,7 @@ void SetupTSEPGDump( TS_PARSER *pTSParser, DUMP pfnEPGDump, void* pEPGDumpContex
 	pTSParser->ts_filter->psi_parser->dumper.epg_dumper_context = pEPGDumpContext;
 }
 
-void SetupTSEPGDumpLanguage( TS_PARSER *pTSParser, unsigned long lLauguageCode )
+void SetupTSEPGDumpLanguage( TS_PARSER *pTSParser, uint32_t lLauguageCode )
 {
 	if ( pTSParser->ts_filter->psi_parser == NULL )
 		return;
@@ -1552,9 +1552,9 @@ static void PostStatusMessage( TS_PARSER *pTSParser, char* pMessageText )
 	{
 		MESSAGE_DATA message={0};
 		strncpy( message.title, "STATUS", sizeof(message.title) );
-		message.message = (unsigned char*)pMessageText;
-		message.message_length = (unsigned short)strlen(pMessageText)+1 ;
-		message.buffer = (unsigned char*)pMessageText;
+		message.message = (uint8_t*)pMessageText;
+		message.message_length = (uint16_t)strlen(pMessageText)+1 ;
+		message.buffer = (uint8_t*)pMessageText;
 		message.buffer_length = message.message_length ;
 	
 		pTSParser->dumper.message_dumper( pTSParser->dumper.message_dumper_context, &message, sizeof(message) );
@@ -1635,7 +1635,7 @@ static int CheckTSParseDone( TS_PARSER *pTSParser )
 
 		if ( (slot->state & CHANNEL_LOCKED) )
 		{
-			unsigned long total_es_block_num = 0;
+			uint32_t total_es_block_num = 0;
 			int av_ready = 0, av_processing = 0, other_processing = 0, encrypted = 0;;
 			for ( i = 0; i<slot->ts_streams.num_stream; i++ )
 			{
@@ -1695,7 +1695,7 @@ static int CheckTSParseDone( TS_PARSER *pTSParser )
 						} else
 						if ( slot->tracks->track[i].scrambling_flag && slot->tracks->track[i].es_blocks_counter < 10 )
 						{
-							unsigned long threshold = 1200*4;
+							uint32_t threshold = 1200*4;
 							if ( pTSParser->stream_format == DVB_STREAM )
 							{
 								threshold = 1200*8;
@@ -1848,7 +1848,7 @@ static int CheckTSParseDone( TS_PARSER *pTSParser )
 					} else
 					if ( slot->tracks->track[i].scrambling_flag && slot->tracks->track[i].es_blocks_counter < 10 )
 					{
-						unsigned long threshold = 1200*2;
+						uint32_t threshold = 1200*2;
 						if ( pTSParser->stream_format == DVB_STREAM )
 							threshold = 1200*6;
 						if ( slot->tracks->track[i].ts_packets_counter > threshold )
@@ -1929,8 +1929,8 @@ static int CheckTSParseDone( TS_PARSER *pTSParser )
 				if ( !( slot->state & (AV_DATA_READY | NO_AV_DATA ) )  ) 
 				{
 					char buf[64];
-					snprintf( buf, sizeof(buf), "STREAM READY (slot:%d) elapsed time:%ld.", k,
-						      (unsigned long)(pTSParser->psi_time - pTSParser->psi_time_start) );
+					snprintf( buf, sizeof(buf), "STREAM READY (slot:%d) elapsed time:%d.", k,
+						      (uint32_t)(pTSParser->psi_time - pTSParser->psi_time_start) );
 					_display_drop_tracks( slot->tracks );
 
 
@@ -2443,13 +2443,13 @@ static int PickupChannel( TS_PARSER *pTSParser, int nChannel, int nTotalChannel,
 	return flag;
 }
 
-static unsigned long GetDesLanguageCode( char* pDesc, int nLen )
+static uint32_t GetDesLanguageCode( char* pDesc, int nLen )
 {
 	int i = 0;
 	while ( i < nLen && pDesc[i] != ':' ) i++;
 	if ( i+4 < nLen && pDesc[i] == ':' &&  pDesc[i+4] != ':') 
     {
-		return LanguageCode( (unsigned char*)&pDesc[i+1] );
+		return LanguageCode( (uint8_t*)&pDesc[i+1] );
 	}
 	return 0;
 }
@@ -2830,10 +2830,10 @@ ULONGLONG TSDataUsedBytes( TS_PARSER *pTSParser )
 	return pTSParser->used_bytes;
 }
 
-unsigned long PacketsSNRatio( TS_PARSER *pTSParser )
+uint32_t PacketsSNRatio( TS_PARSER *pTSParser )
 {
-	unsigned long ratio;
-	unsigned long noise_packets = pTSParser->input_packets - pTSParser->valid_pcakets + pTSParser->bad_packets;
+	uint32_t ratio;
+	uint32_t noise_packets = pTSParser->input_packets - pTSParser->valid_pcakets + pTSParser->bad_packets;
 	if ( pTSParser->input_packets < 800 )
 		return 10000;
 
@@ -2844,7 +2844,7 @@ unsigned long PacketsSNRatio( TS_PARSER *pTSParser )
 	return ratio;
 }
 
-int CheckTSFormat( const unsigned char* pData, int nBytes )
+int CheckTSFormat( const uint8_t* pData, int nBytes )
 {
 	int i = 0, count = 0;
 	int score = 0;
@@ -2885,7 +2885,7 @@ int CheckTSFormat( const unsigned char* pData, int nBytes )
 	return score;
 }
 
-int CheckM2TFormat( const unsigned char* pData, int nBytes )
+int CheckM2TFormat( const uint8_t* pData, int nBytes )
 {
 	int i = 0, count = 0;
 	int score = 0;
@@ -2926,7 +2926,7 @@ int CheckM2TFormat( const unsigned char* pData, int nBytes )
 	return score;
 }
 
-int CheckASIFormat( const unsigned char* pData, int nBytes )
+int CheckASIFormat( const uint8_t* pData, int nBytes )
 {
 	int i = 0, count = 0;
 	int score = 0;
@@ -2972,7 +2972,7 @@ void WaitCleanStream( TS_PARSER *pTSParser )
 	pTSParser->wait_clean_stream = 1;
 }
 
-unsigned long GetTSParserState( TS_PARSER *pTSParser )
+uint32_t GetTSParserState( TS_PARSER *pTSParser )
 {
 	return pTSParser->state;
 }
@@ -2983,7 +2983,7 @@ void SetupATSDump( TS_PARSER *pTSParser, DUMP pfnATSDump, void* pATSDumpContext 
 	pTSParser->ts_filter->dumper.ats_dumper_context = pATSDumpContext;
 }
 
-static char* CAInfo( unsigned short CAPid, unsigned short CAID )
+static char* CAInfo( uint16_t CAPid, uint16_t CAID )
 {
 	static char _buf[16];
 	snprintf( _buf, sizeof(_buf), "CA pid:0x%04x", CAPid );
@@ -3029,7 +3029,7 @@ static void _display_drop_tracks( TRACKS* tracks )
 }
 
 /*
-static unsigned char* _search_data_( unsigned char* match, int len, unsigned char* data, int data_size )
+static uint8_t* _search_data_( uint8_t* match, int len, uint8_t* data, int data_size )
 {
 	int i;
 	for ( i = 0; i<data_size-len; i++ )
@@ -3039,9 +3039,9 @@ static unsigned char* _search_data_( unsigned char* match, int len, unsigned cha
 	
 	return NULL;
 }
-static int _s_(unsigned char*data, int size)
+static int _s_(uint8_t*data, int size)
 {
-	unsigned char pat1[]={	0x00, 0x00, 0x01, 0xb3, 0x50, 0x02, 0xd0, 0x37 };
+	uint8_t pat1[]={	0x00, 0x00, 0x01, 0xb3, 0x50, 0x02, 0xd0, 0x37 };
 	int len = 8;
 	if ( _search_data_( pat1, len, data, size ) )
 	{

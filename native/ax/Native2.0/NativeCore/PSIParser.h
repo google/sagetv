@@ -31,37 +31,37 @@ extern "C" {
 #define UNKNOWN_FORMAT	0
 
 typedef struct {
-	unsigned long language_code;
-	unsigned char *charset_code;
+	uint32_t language_code;
+	uint8_t  *charset_code;
 	DESC_DATA data;
 } STRING;
 
 typedef struct {
-	unsigned long  language_code;
-	unsigned char  *charset_code;
-	unsigned short bytes;
-	unsigned char  data[256];
+	uint32_t language_code;
+	uint8_t  *charset_code;
+	uint16_t bytes;
+	uint8_t  data[256];
 } STRING256;
 
 typedef struct {
-	unsigned long  language_code;
-	unsigned char  *charset_code;
-	unsigned short bytes;
-	unsigned char  data[128];
+	uint32_t language_code;
+	uint8_t  *charset_code;
+	uint16_t bytes;
+	uint8_t  data[128];
 } STRING128;
 
 typedef struct {
-	unsigned long  language_code;
-	unsigned char  *charset_code;
-	unsigned short title_bytes;
-	unsigned char  title_data[256];
-	unsigned short body_bytes;
-	unsigned char  body_data[256];
+	uint32_t language_code;
+	uint8_t  *charset_code;
+	uint16_t title_bytes;
+	uint8_t  title_data[256];
+	uint16_t body_bytes;
+	uint8_t  body_data[256];
 } MESG256;
 
 typedef struct {
-	unsigned long language_code;
-	unsigned char *charset_code;
+	uint32_t language_code;
+	uint8_t  *charset_code;
 	DESC_DATA	  title;
 	DESC_DATA	  body;
 } MESG;
@@ -71,26 +71,26 @@ typedef struct {
 
 typedef struct CHANNEL_DATA
 {
-	unsigned char  stream_format;  //ATSC, DVB
-	unsigned char  sub_format;     //T,S,C
-	unsigned short num_channel;    //number of channel
+	uint8_t  stream_format;  //ATSC, DVB
+	uint8_t  sub_format;     //T,S,C
+	uint16_t num_channel;    //number of channel
 	union {
 		ATSC_CHANNEL atsc[MAX_ATSC_CHANNEL];
 		DVB_CHANNEL  dvb[MAX_DVB_CHANNEL];
 	} u ;
 	struct TS_STREAMS *streams;   //optional
-	unsigned char  update_flag;   //channel table updated flag;
-	unsigned long  command;       //command return from dumper, save channel (command:1) or drop it (command:0).
+	uint8_t  update_flag;   //channel table updated flag;
+	uint32_t  command;       //command return from dumper, save channel (command:1) or drop it (command:0).
 } CHANNEL_DATA;
 
 ////////////////////////////TUNE SECTINON/////////////////////////////////////////////
 
 typedef struct ATSC_TUNE
 {
-	unsigned short major;
-	unsigned short minor;
-	unsigned short sid;
-	unsigned short atsc_type; //1:ATSC 2:QAM
+	uint16_t major;
+	uint16_t minor;
+	uint16_t sid;
+	uint16_t atsc_type; //1:ATSC 2:QAM
 	union {
 		TERRESTRIAL_TUNE atsc;
 		CABLE_TUNE		 qam;
@@ -101,11 +101,11 @@ typedef struct ATSC_TUNE
 
 typedef struct DVB_TUNE
 {
-	unsigned short onid;
-	unsigned short tsid;
-	unsigned short sid;
-	unsigned short nid;
-	unsigned short dvb_type; //1:terrestrial, 2:cable, 3:satellite
+	uint16_t onid;
+	uint16_t tsid;
+	uint16_t sid;
+	uint16_t nid;
+	uint16_t dvb_type; //1:terrestrial, 2:cable, 3:satellite
 	union {
 		TERRESTRIAL_TUNE t;
 		CABLE_TUNE		 c;
@@ -117,28 +117,28 @@ typedef struct DVB_TUNE
 
 typedef struct TUNE_DATA
 {
-	unsigned char  stream_format;  //ATSC, DVB
-	unsigned char  sub_format;     //T,C,S, QAM 
-	unsigned short num_tune;       //number of tune entry
+	uint8_t  stream_format;  //ATSC, DVB
+	uint8_t  sub_format;     //T,C,S, QAM 
+	uint16_t num_tune;       //number of tune entry
 	union {
 		ATSC_TUNE   atsc;
 		DVB_TUNE	dvb;
 	} u;
 
 	struct {
-		unsigned short sid;
-		unsigned short type;
+		uint16_t sid;
+		uint16_t type;
 	} s[MAX_TUNE_NUM] ;
 
-	unsigned short update_flag;   //channel table updated flag;
-	unsigned long  command;       //command return from dumper, save channel (command:1) or drop it (command:0).
+	uint16_t update_flag;   //channel table updated flag;
+	uint32_t  command;       //command return from dumper, save channel (command:1) or drop it (command:0).
 } TUNE_DATA;
 
 
 typedef struct TIME_DATA
 {
-	unsigned long gps_sec;
-	unsigned long utc_sec;
+	uint32_t gps_sec;
+	uint32_t utc_sec;
 
 } TIME_DATA;
 
@@ -178,15 +178,15 @@ typedef struct STREAM_DETECT
 	TS_SECTION     *psip_section;
 	TS_SECTION     *mip_section;
 	TS_SECTION     *scte_section;
-	unsigned char tsdt_count,nit_count,sdt_count,eit_count, rst_count,tdt_count,mip_count,rnt_count,dit_count,sit_count;
-	unsigned char pat_e_count, stt_e_count, opera_count,psip_count, scte_count;
-	unsigned short scte_flag;
+	uint8_t tsdt_count,nit_count,sdt_count,eit_count, rst_count,tdt_count,mip_count,rnt_count,dit_count,sit_count;
+	uint8_t pat_e_count, stt_e_count, opera_count,psip_count, scte_count;
+	uint16_t scte_flag;
 } STREAM_DETECT;
 
 typedef struct PSI_PARSER
 {
-	int stream_format; //1:ATSC; 2:DVB
-	int sub_format;    //ATSC
+	int32_t stream_format; //1:ATSC; 2:DVB
+	int32_t sub_format;    //ATSC
 
 	struct DVB_PSI  *dvb_psi;
 	struct ATSC_PSI *atsc_psi;
@@ -195,12 +195,12 @@ typedef struct PSI_PARSER
 
 	TS_FILTER* ts_filter;
 
-	unsigned long language_code;
+	uint32_t language_code;
 
     //statistic
 	int atsc_packet_count, dvb_packet_count;
 	STREAM_DETECT *stream_detect;
-	unsigned long packet_count;
+	uint32_t packet_count;
 } PSI_PARSER;
 
 
@@ -208,7 +208,7 @@ PSI_PARSER* CreatePSIParser( TS_FILTER* pTSFilter, int nFormat, int nSubFormat )
 void  ReleasePSIParser( PSI_PARSER* pPSIParser );
 void  ResetPSIParser( PSI_PARSER* pPSIParser );
 char* StreamFormatString( int format, int sub_format );
-void  SetLanguage( PSI_PARSER* pPSIParser, unsigned long nLanguageCode );
+void  SetLanguage( PSI_PARSER* pPSIParser, uint32_t nLanguageCode );
 int   ParseTSPSI( TS_FILTER* pTSFilter, TS_PACKET *pTSPacket );
 void  SetStreamFormat( PSI_PARSER* pPSIParser, int nFormat, int nSubFormat );
 
@@ -216,16 +216,16 @@ void  SetStreamFormat( PSI_PARSER* pPSIParser, int nFormat, int nSubFormat );
 void ReleaseString( STRING* pString );
 void ReleaseMesg( MESG* pMsg );
 
-char* Language( unsigned long lLanguageCode, char* pBuf );
-unsigned long LanguageCode( unsigned char* pLanguage );
+char* Language( uint32_t lLanguageCode, char* pBuf );
+uint32_t LanguageCode( uint8_t* pLanguage );
 
-char* UTCFormat( unsigned long t, char* p, int len );
+char* UTCFormat( uint32_t t, char* p, int len );
 
-unsigned char* GetDescriptor( const unsigned char *pData, int Bytes, unsigned char Tag, int *pLength );
-int TransJWideString( char* pBufOut, int nBufOutSize, unsigned short* pBufIn );
+uint8_t* GetDescriptor( const uint8_t *pData, int Bytes, uint8_t Tag, int *pLength );
+int TransJWideString( char* pBufOut, int nBufOutSize, uint16_t* pBufIn );
 
 
-char* _descriptor_check( unsigned char* p, int bytes );
+char* _descriptor_check( uint8_t* p, int bytes );
 
 #ifdef __cplusplus
 }

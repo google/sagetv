@@ -23,31 +23,31 @@ extern "C" {
 
 typedef struct
 {
-	unsigned char	section_type;     //the first byte section data
-	unsigned char	counter;		  //used for checking TS_HEADER.continuity_ct 4 bits
-	unsigned short  bytes;			  //current bytes in data
-	unsigned short  total_bytes;      //section data length
-	unsigned short  data_size;        //data allocated size (data_size >= total_bytes >= bytes )
-	unsigned short  left_over_size;   //left over bytes
-	unsigned char   *data;            //maxium is 4K bytes bytes, 
-	unsigned char   start_offset;
-	unsigned char   padding;
-	unsigned char	left_over[200];   //section data doens't start align with a TS packet, it's left over of unconsumed bytes
-	unsigned long	crc32;			  //crc32 for checking section data updated
+	uint8_t	  section_type;     //the first byte section data
+	uint8_t	  counter;		  //used for checking TS_HEADER.continuity_ct 4 bits
+	uint16_t  bytes;			  //current bytes in data
+	uint16_t  total_bytes;      //section data length
+	uint16_t  data_size;        //data allocated size (data_size >= total_bytes >= bytes )
+	uint16_t  left_over_size;   //left over bytes
+	uint8_t   *data;            //maxium is 4K bytes bytes, 
+	uint8_t   start_offset;
+	uint8_t   padding;
+	uint8_t	  left_over[200];   //section data doens't start align with a TS packet, it's left over of unconsumed bytes
+	uint32_t	crc32;			  //crc32 for checking section data updated
 } TS_SECTION;
 
 typedef struct 
 {
-	unsigned short section_length;
-	unsigned short tsid;
-	unsigned char  table_id;
-	unsigned char  version;
-	unsigned char  current_next_indicator;
-	unsigned char  section_number;
-	unsigned char  last_section_number;
-	unsigned char  *table_data;
-	unsigned short table_bytes;
-	TS_SECTION     *section_ptr;
+	uint16_t section_length;
+	uint16_t tsid;
+	uint8_t  table_id;
+	uint8_t  version;
+	uint8_t  current_next_indicator;
+	uint8_t  section_number;
+	uint8_t  last_section_number;
+	uint8_t  *table_data;
+	uint16_t table_bytes;
+	TS_SECTION *section_ptr;
 } SECTION_HEADER;
 
 
@@ -55,12 +55,12 @@ TS_SECTION* CreateSection( );
 TS_SECTION* DupSection( TS_SECTION* pSection );
 void ReleaseSection( TS_SECTION* pSection );
 void ResetSection( TS_SECTION* pSection );
-unsigned char GetSectionDataType( TS_SECTION* pSection );
-int  UnpackSection( int bStartFlag, TS_SECTION* pSection, const unsigned char*  pData, int nSize );
+uint8_t GetSectionDataType( TS_SECTION* pSection );
+int  UnpackSection( int bStartFlag, TS_SECTION* pSection, const uint8_t*  pData, int nSize );
 void UnpackSectionDataHeader( SECTION_HEADER* pSectionHeader, TS_SECTION* pSection );
-unsigned char *AllocSectionData( TS_SECTION* pSection, int nDataLength );
+uint8_t *AllocSectionData( TS_SECTION* pSection, int nDataLength );
 int  SealSectionData( TS_SECTION* pSection, int nDataLength );
-unsigned char* StartSection( TS_SECTION* pSection, int nSectionLength );
+uint8_t* StartSection( TS_SECTION* pSection, int nSectionLength );
 int BuildSectionHeader( SECTION_HEADER* pSectionHeader, TS_SECTION* pSection );
 
 #ifdef __cplusplus

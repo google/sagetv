@@ -16,6 +16,7 @@
 package sage;
 
 import java.lang.reflect.Constructor;
+
 import sage.Wizard.MaintenanceType;
 
 /*
@@ -1597,8 +1598,9 @@ public final class EPG implements Runnable
     }
     catch (Throwable e)
     {
-      System.out.println("Error updating with EPG Plugin:" + e);
-      return false;
+    	System.out.println("Error updating with EPG Plugin:");
+    	Sage.printStackTrace(e);
+    	return false;
     }
   }
 

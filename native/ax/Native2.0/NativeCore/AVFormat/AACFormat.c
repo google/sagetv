@@ -21,17 +21,17 @@
 #include "../Bits.h"
 #include "AACFormat.h"
 
-static int  UnpackAACAudioPCEChannel( const unsigned char* pData, int Size );
+static int  UnpackAACAudioPCEChannel( const uint8_t* pData, int Size );
 static const int AAC_sampling_Frequency[16] = {96000,88200,64000,48000,44100,32000,24000,22050,16000,12000,11025,8000,0,0,0,0};
 
-static int UnpackAACAudioADTS( AAC_AUDIO *pAACAudio,  const unsigned char * pbData, int Size	)
+static int UnpackAACAudioADTS( AAC_AUDIO *pAACAudio,  const uint8_t * pbData, int Size	)
 {
 	int ID, layer, protection_absent,version;
 	int profile_objectType, sampling_frequency_index, private_bit, channel_configuration, original_copy, home;
 	int copyright_identification_bit, copyright_identification_start, aac_frame_length, adts_buffer_fullness;
 	int number_of_raw_data_blocks_in_frame;
 	int raw_data_pos[4];
-	const unsigned char *pData;
+	const uint8_t *pData;
 	int i, ret=0;
 	pData = pbData;
 
@@ -153,9 +153,9 @@ static int UnpackAACAudioADTS( AAC_AUDIO *pAACAudio,  const unsigned char * pbDa
 	return 0;
 }
 
-int  UnpackAACAudioPCEChannel( const unsigned char* pData, int Size )
+int  UnpackAACAudioPCEChannel( const uint8_t* pData, int Size )
 {
-	unsigned short element_inst_tag, profile, sample_frq_index;
+	uint16_t element_inst_tag, profile, sample_frq_index;
 	int num_front_channel_elements, num_side_channel_elements;
 	int num_back_channel_elements, num_lfe_channel_elements;
 	int channels = 0;
@@ -186,17 +186,17 @@ typedef struct {
 	int  extensionSamplingFrequency;
 	int  channelConfiguration;
 	int  SamplingFrequency;
-	unsigned short profile;
+	uint16_t profile;
 	int  channel_num;
-	short frame_length;
+	int16_t frame_length;
 } LATM_CFG;
 
-static int StreamMuxConfig( AAC_AUDIO *pAACAudio, const unsigned char * pbData, int Size );
+static int StreamMuxConfig( AAC_AUDIO *pAACAudio, const uint8_t * pbData, int Size );
 
-static int UnpackAACAudioLATM( AAC_AUDIO *pAACAudio, const unsigned char * pbData, int Size	)
+static int UnpackAACAudioLATM( AAC_AUDIO *pAACAudio, const uint8_t * pbData, int Size	)
 {
-	unsigned short pack_frame_length;
-	const unsigned char* pData;
+	uint16_t pack_frame_length;
+	const uint8_t* pData;
 
 	if ( pAACAudio->state == 0 ) pAACAudio->expect_bytes = 0;
 	if ( pAACAudio->state == 3 ) return 1; //already knew foramat, skip parsing.
@@ -282,11 +282,11 @@ static int UnpackAACAudioLATM( AAC_AUDIO *pAACAudio, const unsigned char * pbDat
 	return 0;
 }
 
-static int UnpackAACHEAudio( AAC_AUDIO *pAACAudio, const unsigned char * pbData, int nSize	)
+static int UnpackAACHEAudio( AAC_AUDIO *pAACAudio, const uint8_t * pbData, int nSize	)
 {
-	unsigned short pack_frame_length;
+	uint16_t pack_frame_length;
 	int i, cfg_found = 0;
-	const unsigned char* pData;
+	const uint8_t* pData;
 	int Size;
 
 	Size = nSize;
@@ -384,7 +384,7 @@ static int UnpackAACHEAudio( AAC_AUDIO *pAACAudio, const unsigned char * pbData,
 }
 
 /*
-static int _ProgramConfigElement( LATM_CFG* cfg, const unsigned char * pbData, int* UsedBits, int* TotalBits  )
+static int _ProgramConfigElement( LATM_CFG* cfg, const uint8_t * pbData, int* UsedBits, int* TotalBits  )
 {
 	int num_front_channel_elements, num_side_channel_elements;
 	int num_back_channel_elements, num_lfe_channel_elements;
@@ -465,7 +465,7 @@ static int _ProgramConfigElement( LATM_CFG* cfg, const unsigned char * pbData, i
 	return channels;
 }
 
-static int _GASpecificConfig( LATM_CFG* cfg, const unsigned char * pbData, int* UsedBits, int* TotalBits )
+static int _GASpecificConfig( LATM_CFG* cfg, const uint8_t * pbData, int* UsedBits, int* TotalBits )
 {
 	//int  bits_offset, total_bits;
 	int ext_flag;
@@ -507,7 +507,7 @@ static int _GASpecificConfig( LATM_CFG* cfg, const unsigned char * pbData, int* 
 	return 1;
 }
 
-static void _ReadAudioSpecificConfig( LATM_CFG* cfg, const unsigned char * pbData, int* UsedBits, int* TotalBits )
+static void _ReadAudioSpecificConfig( LATM_CFG* cfg, const uint8_t * pbData, int* UsedBits, int* TotalBits )
 {
 	int samplingFrequencyIndex;
 	//int  bits_offset, total_bits;
@@ -702,11 +702,11 @@ static void ReadAudioSpecificConfig( LATM_CFG* cfg, BITS_I *pBits )
 };
 
 #define MAX_LATM_STREAM_NUM    64
-static int StreamMuxConfig( AAC_AUDIO *aac, const unsigned char * pbData, int Size )
+static int StreamMuxConfig( AAC_AUDIO *aac, const uint8_t * pbData, int Size )
 {
 	//LATM parsing according to ISO/IEC 14496-3
 	int num, prog, lay, streamCnt;
-	unsigned long frame_length_type;
+	uint32_t frame_length_type;
 	int use_same_config,  all_same_framing;
 	int audio_mux_version, frameLength;
 	int numProgram, numSubFrames;
@@ -828,7 +828,7 @@ static int StreamMuxConfig( AAC_AUDIO *aac, const unsigned char * pbData, int Si
 
 
 
-int ReadAAC_AudioHeader( AAC_AUDIO *pAACAudio, const unsigned char* pStart, int nSize )
+int ReadAAC_AudioHeader( AAC_AUDIO *pAACAudio, const uint8_t* pStart, int nSize )
 {
 	int ret = 0;
 	
@@ -841,7 +841,7 @@ int ReadAAC_AudioHeader( AAC_AUDIO *pAACAudio, const unsigned char* pStart, int 
 	return ret;	
 }
 
-int ReadAACHE_AudioHeader( AAC_AUDIO *pAACAudio, const unsigned char* pStart, int nSize )
+int ReadAACHE_AudioHeader( AAC_AUDIO *pAACAudio, const uint8_t* pStart, int nSize )
 {
 	int ret;
 	ret = UnpackAACHEAudio( pAACAudio, pStart, nSize );

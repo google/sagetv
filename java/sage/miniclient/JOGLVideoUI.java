@@ -15,6 +15,8 @@
  */
 package sage.miniclient;
 
+import com.jogamp.opengl.GLOffscreenAutoDrawable;
+
 /**
  *
  * @author Narflex
@@ -22,7 +24,7 @@ package sage.miniclient;
 public interface JOGLVideoUI
 {
   public boolean isInFrame();
-  public javax.media.opengl.GLPbuffer getPbuffer();
+  public GLOffscreenAutoDrawable getPbuffer();
   public int getCanvasHeight();
   public void videoWasUpdated();
 }

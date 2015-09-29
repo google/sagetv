@@ -30,9 +30,9 @@
 #define SEQUENCE_END_CODE        0xB7
 #define GROUP_START_CODE         0xB8
 
-inline unsigned char* SeekMPEG2StartCode( const unsigned char* pData, int nBytes, unsigned	long StartCode )
+inline uint8_t* SeekMPEG2StartCode( const uint8_t* pData, int nBytes, uint8_t StartCode )
 {
-	unsigned long code;
+	uint32_t code;
 
 	if ( nBytes < 4 )
 		return NULL;
@@ -41,21 +41,21 @@ inline unsigned char* SeekMPEG2StartCode( const unsigned char* pData, int nBytes
 	while ( --nBytes )
 	{
 		if ( ( (code&0x00ffffff)==0x01 ) && *(pData)==StartCode  )
-			return (unsigned char* )pData-3;
+			return (uint8_t* )pData-3;
 		code = (( code << 8 )| *pData++ );
 	}
 
 	return NULL;
 }
 
-int SeekFrameType( const unsigned char* pData, int Size, const unsigned char **ppStart )
+int SeekFrameType( const uint8_t* pData, int Size, const uint8_t **ppStart )
 {
-	const unsigned char* ptr;
+	const uint8_t* ptr;
 	*ppStart = NULL;
 	if ( pData == NULL ) return 0;
-	if ( (ptr = SeekMPEG2StartCode( (const unsigned char*)pData, Size, PICTURE_START_CODE ) ) != NULL )
+	if ( (ptr = SeekMPEG2StartCode( (const uint8_t*)pData, Size, PICTURE_START_CODE ) ) != NULL )
 	{
-		unsigned char picture_coding_type = ( (*(ptr+5)&0x38 )>>3 );
+		uint8_t picture_coding_type = ( (*(ptr+5)&0x38 )>>3 );
 		if ( picture_coding_type == 1 || picture_coding_type == 2 || picture_coding_type == 3 )
 		{
 			*ppStart = ptr;
@@ -65,25 +65,25 @@ int SeekFrameType( const unsigned char* pData, int Size, const unsigned char **p
 	return 0;
 } 
 
-inline unsigned char* SeekSequenceHeader( const unsigned char* pData, int Size )
+inline uint8_t* SeekSequenceHeader( const uint8_t* pData, int Size )
 {
-	return SeekMPEG2StartCode( (const unsigned char*)pData, Size, SEQUENCE_HEADER_CODE );
+	return SeekMPEG2StartCode( (const uint8_t*)pData, Size, SEQUENCE_HEADER_CODE );
 } 
 
-inline unsigned char* SeekExtensionHeader( const unsigned char* pData, int Size )
+inline uint8_t* SeekExtensionHeader( const uint8_t* pData, int Size )
 {
-	return SeekMPEG2StartCode( (const unsigned char*)pData, Size, EXTENSION_START_CODE );
+	return SeekMPEG2StartCode( (const uint8_t*)pData, Size, EXTENSION_START_CODE );
 } 
 
-inline unsigned char* SeekGroupHeader( const unsigned char* pData, int Size )
+inline uint8_t* SeekGroupHeader( const uint8_t* pData, int Size )
 {
-	return SeekMPEG2StartCode( (const unsigned char*)pData, Size, GROUP_START_CODE );
+	return SeekMPEG2StartCode( (const uint8_t*)pData, Size, GROUP_START_CODE );
 } 
 
 
-int SearchFrameStart( const unsigned char* pData, int nSize, const unsigned char **ppStart )
+int SearchFrameStart( const uint8_t* pData, int nSize, const uint8_t **ppStart )
 {
-	const unsigned char *seq_header_p, *seq_ext_p, *seq_group_p, *next_p, *frame_p;
+	const uint8_t *seq_header_p, *seq_ext_p, *seq_group_p, *next_p, *frame_p;
 	int bytes, frame_type;
 	if ( ( seq_header_p = SeekSequenceHeader( pData, nSize ) ) != NULL )
 	{

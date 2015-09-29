@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 echo Build the Sage.jar file
 ./buildsage.sh || { echo "Build failed, exiting."; exit 1; }
 echo  Build the Miniclient jar file

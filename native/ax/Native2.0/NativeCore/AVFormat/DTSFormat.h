@@ -21,19 +21,21 @@
 extern "C" {
 #endif
 
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
 
 typedef struct DTS_AUDIO
 {
-	unsigned short channels;
-	unsigned short block_align;
-	unsigned short bits_per_sample;
-	unsigned short padding;
-	unsigned long  samples_per_sec;
-	unsigned long  avgbytes_per_sec;
+	uint16_t channels;
+	uint16_t block_align;
+	uint16_t bits_per_sample;
+	uint16_t padding;
+	uint32_t samples_per_sec;
+	uint32_t avgbytes_per_sec;
 
 } DTS_AUDIO;
 
-int ReadDTS_AudioHeader( DTS_AUDIO *pDTSAudio, const unsigned char* pStart, int Size );
+int ReadDTS_AudioHeader( DTS_AUDIO *pDTSAudio, const uint8_t* pStart, int Size );
 
 #ifdef __cplusplus
 }

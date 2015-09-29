@@ -24,15 +24,17 @@
 extern "C" {
 #endif
 
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
 
 typedef struct _SUBTITLE
 {
-	unsigned short type; //1:DVB subtitle; 2:PGS
-	unsigned char  comp_type;
-	unsigned char  padding1;
-	unsigned long  lanugaue;
-	unsigned short cpgid;
-	unsigned short apgid;
+	uint16_t type; //1:DVB subtitle; 2:PGS
+	uint8_t  comp_type;
+	uint8_t  padding1;
+	uint32_t lanugaue;
+	uint16_t cpgid;
+	uint16_t apgid;
 
 } SUBTITLE;
 
@@ -46,16 +48,16 @@ typedef struct _SUBTITLE
 typedef struct _DVB_SUB
 {
 
-	unsigned short  segmnt_type;	
-	unsigned short  page_id;
-	unsigned short  segmnt_length;
-	unsigned short  cmd;
-	unsigned char   subtitle_id;
-	unsigned char   data1; //zq test use
+	uint16_t  segmnt_type;	
+	uint16_t  page_id;
+	uint16_t  segmnt_length;
+	uint16_t  cmd;
+	uint8_t   subtitle_id;
+	uint8_t   data1; //zq test use
 } DVB_SUB;
 
-int ParseDVBSubtitleDesc( SUBTITLE *pSubtitle, unsigned char* pDescDate, int nDescLenghth );
-int ReadDVBSubtitleHeader( DVB_SUB *pDVBSub, const unsigned char* pStart, int Size );
+int ParseDVBSubtitleDesc( SUBTITLE *pSubtitle, uint8_t* pDescDate, int nDescLenghth );
+int ReadDVBSubtitleHeader( DVB_SUB *pDVBSub, const uint8_t* pStart, int Size );
 
 #ifdef __cplusplus
 }

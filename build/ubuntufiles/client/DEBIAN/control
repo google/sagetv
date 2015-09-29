@@ -1,8 +1,11 @@
 Package: sagetv-client
 Priority: extra
-Section: base
+Section: contrib
 Installed-Size: 13840
-Maintainer: jeanfrancois@sagetv.com
+Maintainer: Jean Francois <jeanfrancois@sagetv.com>
+Uploaders: Sean Stuckless <sean.stuckless@gmail.com>
+Changed-By: Sean Stuckless <sean.stuckless@gmail.com>
+Vcs-Browser: https://github.com/google/sagetv
 Architecture: DEB_ARCH
 Version: MAJOR_VERSION.MINOR_VERSION.MICRO_VERSION
 Depends: libasound2, java5-runtime | java5-sdk, libfaac0

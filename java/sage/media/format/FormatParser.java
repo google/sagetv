@@ -1399,12 +1399,17 @@ public class FormatParser
         // EBML file, check if it's Matroska
         for (int i = 4; i < readBuf.length - 10; i++)
         {
-          if ((readBuf[i] & 0xFF) == 0x42 && (readBuf[i + 1] & 0xFF) == 0x82 && readBuf[i + 2] == 'm' && readBuf[i + 3] == 'a' &&
-              readBuf[i + 4] == 't' && readBuf[i + 5] == 'r' && readBuf[i + 6] == 'o' && readBuf[i + 7] == 's' && readBuf[i + 8] == 'k' &&
-              readBuf[i + 9] == 'a')
-          {
-            cf.setFormatName(MediaFormat.MATROSKA);
-            return true;
+          if ((readBuf[i] & 0xFF) == 0x42 && (readBuf[i + 1] & 0xFF) == 0x82) {
+            // Found the doctype tag, skip over the length field which can be up to
+            // 8 bytes long but will be followed by 'matroska'
+            for (int j = i + 2; j < i + 10 && j < readBuf.length - 7; j++) {
+              if (readBuf[j] == 'm' && readBuf[j + 1] == 'a' && readBuf[j + 2] == 't' && readBuf[j + 3] == 'r' &&
+                  readBuf[j + 4] == 'o' && readBuf[j + 5] == 's' && readBuf[j + 6] == 'k' && readBuf[j + 7] == 'a')
+              {
+                cf.setFormatName(MediaFormat.MATROSKA);
+                return true;
+              }
+            }
           }
         }
       }
