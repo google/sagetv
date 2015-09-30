@@ -39,7 +39,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(SAGEDEVJDK)\include\win32,$(DXSDK_DIR)\samples\C++\directshow\BaseClasses,$(DXSDK_DIR)\include,$(SAGEDEVJDK)\include,..\Native2.0\NativeCore"
+				AdditionalIncludeDirectories="&quot;$(SAGEDEVJDK)\include\win32&quot;;&quot;$(SAGEBASECLASSES)&quot;;&quot;$(DXSDK_DIR)\include&quot;;&quot;$(SAGEDEVJDK)\include&quot;;..\Native2.0\NativeCore"
 				PreprocessorDefinitions="WIN32;_WIN32;"
 				StringPooling="true"
 				MinimalRebuild="false"
@@ -61,7 +61,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
-				AdditionalDependencies="&quot;$(DXSDK_DIR)\samples\C++\directshow\BaseClasses\debug\strmbasd.lib&quot; msvcrtd.lib quartz.lib winmm.lib odbc32.lib odbccp32.lib wsock32.lib ../../lib/TSnative/NativeCored.lib"
+				AdditionalDependencies="&quot;$(SAGEBASECLASSES)\Debug\strmbasd.lib&quot; msvcrtd.lib quartz.lib winmm.lib odbc32.lib odbccp32.lib wsock32.lib ../../lib/TSnative/NativeCored.lib"
 				OutputFile="$(SAGEDEVDEBUG)\SageTVFileSrc.ax"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="$(DXSDK_DIR)\lib"
@@ -123,7 +123,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="$(SAGEDEVJDK)\include\win32,$(DXSDK_DIR)\samples\C++\directshow\BaseClasses,$(DXSDK_DIR)\include,$(SAGEDEVJDK)\include,..\Native2.0\NativeCore"
+				AdditionalIncludeDirectories="&quot;$(SAGEDEVJDK)\include\win32&quot;;&quot;$(SAGEBASECLASSES)&quot;;&quot;$(DXSDK_DIR)\include&quot;;&quot;$(SAGEDEVJDK)\include&quot;;..\Native2.0\NativeCore"
 				PreprocessorDefinitions="WIN32;_WIN32;"
 				StringPooling="true"
 				RuntimeLibrary="2"
@@ -142,7 +142,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="&quot;$(DXSDK_DIR)\samples\C++\directshow\BaseClasses\release\strmbase.lib&quot; msvcrt.lib quartz.lib winmm.lib odbc32.lib odbccp32.lib wsock32.lib ../../lib/TSnative/NativeCore.lib"
+				AdditionalDependencies="&quot;$(SAGEBASECLASSES)\Release\strmbase.lib&quot; msvcrt.lib quartz.lib winmm.lib odbc32.lib odbccp32.lib wsock32.lib ../../lib/TSnative/NativeCore.lib"
 				OutputFile="$(SAGEDEVREL)\SageTVFileSrc.ax"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="$(DXSDK_DIR)\lib"
