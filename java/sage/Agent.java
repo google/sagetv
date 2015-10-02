@@ -314,6 +314,13 @@ public class Agent extends DBObject implements Favorite
     sb.append(agentID);
     sb.append(" watchProb=");
     sb.append(watchProb);
+    sb.append(" numWatchedAirs=");
+    sb.append(lastnumWatchedAirs);
+    sb.append(" numWastedAirs=");
+    sb.append(lastnumWastedAirs);
+    sb.append(" numManualWaste=");
+    sb.append(lastnumManualWaste);
+
     sb.append(" createTime=");
     sb.append(Sage.df(createTime));
     if (stopPad != 0)
@@ -450,7 +457,7 @@ public class Agent extends DBObject implements Favorite
     }
 
     ArrayList<Airing> rv = new ArrayList<Airing>();
-    boolean keywordTest = (this.agentMask&(LOVE_MASK|KEYWORD_MASK)) == (LOVE_MASK|KEYWORD_MASK);
+    boolean keywordTest = (this.agentMask&(KEYWORD_MASK)) == (KEYWORD_MASK);
     if(keywordTest) {
       // If we're only doing a keyword mask, speed it up via Lucene
       Show[] shows = wiz.searchShowsByKeyword(getKeyword());
@@ -804,6 +811,12 @@ public class Agent extends DBObject implements Favorite
     {
       watchProb = 1;
       negator = false;
+
+	  // Save some last-used values to display for the agent; indicatre as not set.
+	  lastnumWatchedAirs = -1;
+	  lastnumWastedAirs = -1;
+	  lastnumManualWaste = -1;
+
       return true;
     }
     // There's three different things that affect this calculation.
@@ -967,6 +980,11 @@ public class Agent extends DBObject implements Favorite
     negator = ((agentMask & TITLE_MASK) != 0 || Sage.getBoolean("aggressive_negative_profiling", false)) &&
         ((numWatchedAirs == 0 && numWastedAirs > 1) ||
             (numManualWaste > numWatchedAirs));
+
+	// Save some last-used values to display for the agent.
+	lastnumWatchedAirs = numWatchedAirs;
+	lastnumWastedAirs = numWastedAirs;
+	lastnumManualWaste = numManualWaste;
 
     // We need two data points to exist if we're actor based
     if (realTotalCount == 0) return false;
@@ -1301,6 +1319,10 @@ public class Agent extends DBObject implements Favorite
   final int agentID;
   int agentMask;
   transient float watchProb;
+  transient int lastnumWatchedAirs;
+  transient int lastnumWastedAirs;
+  transient int lastnumManualWaste;
+  //* zzzz
   Stringer title;
   Stringer category;
   Stringer subCategory;
