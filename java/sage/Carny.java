@@ -566,7 +566,7 @@ public final class Carny implements Runnable
     // LOVESET UPDATE Make the updates to the loveSet that need to be & sync the clients
     List<Airing> airsThatMayDie = new ArrayList<Airing>();
     DBObject[] airs;
-    boolean keyworTest  (fav.agentMask & (Agent.KEYWORD_MASK)) == (Agent.KEYWORD_MASK);
+    boolean keywordTest = (fav.agentMask & (Agent.KEYWORD_MASK)) == (Agent.KEYWORD_MASK);
     if(keywordTest) {
       // Slim the haystack for finding needles faster.
       ArrayList<Airing> airingsHaystack = new ArrayList<Airing>();
