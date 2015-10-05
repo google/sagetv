@@ -52,7 +52,7 @@ public class Scheduler implements Runnable
   {
     return SchedulerHolder.instance;
   }
-  
+
   private Scheduler()
   {
     wiz = Wizard.getInstance();
@@ -1070,10 +1070,6 @@ public class Scheduler implements Runnable
     Object[] sortedAgents = god.sortAgentsByPriority(agentMap.keySet().toArray());
 
     if (SDBG) System.out.println("SCHED sortedAgents=" + Arrays.asList(sortedAgents));
-
-    // changedAirings holds anything that was in the schedule before that we've pushed out
-    // since we started this update, this way schedule removals by must sees get put back into the pots
-    Set<Airing> changedAirings = new HashSet<Airing>();
 
     // Set the vars for when we timeout on the iterative scheduling
     // conflict_resolution_search_depth - Give up after trying this many permutations
@@ -2100,9 +2096,6 @@ public class Scheduler implements Runnable
     {
       if (Sage.DBG && !Sage.EMBEDDED) System.out.println("MUST SEE FINAL-" + es.capDev + "-" + es.mustSee.toString());
 
-      // Now we have to do the appropriate thing with the changed ones.
-      changedAirings.removeAll(es.schedule);
-
       // SCHEDULE CLEANUP 7/22/03
       // Removal of anything from the schedule that's not in the must see & is not
       // a current record is TOTALLY SAFE. We want to clear out anything
@@ -2152,13 +2145,6 @@ public class Scheduler implements Runnable
     }
     if (irEnabled)
     {
-      for (Airing testAir : changedAirings)
-      {
-        if (!okToSchedule(testAir, currTime)) continue;
-          if (testAir.getStartTime() >= desiredStartLookTime)
-          potentials.add(testAir);
-      }
-
       potentials.sort();
 
       // Build the redudancy map. This saves us a LOT of CPU time once they have any kind of IR built up because of its n^2 performance
