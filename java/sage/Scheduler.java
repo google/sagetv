@@ -482,7 +482,7 @@ public class Scheduler implements Runnable
   // doesn't have any that are the same and that the WP is non-zero.
   private boolean okToSchedule(Airing testMe, long currTime)
   {
-    if (getSchedulingEnd(testMe) <= currTime || god.getWP(testMe) <= 0)
+    if (getSchedulingEnd(testMe) <= currTime || god.getWP(testMe) <= 0 || testMe.isDontLike())
       return false;
     for (EncoderSchedule es : encoderScheduleMap.values())
     {
