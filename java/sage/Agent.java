@@ -757,7 +757,7 @@ public class Agent extends DBObject implements Favorite
           }
           if (currPat.length() > 0)
             subPats.add(currPat.toString());
-          //				if (Sage.DBG) System.out.println("Parsed Keyword from [" + lcKeyword + "] into " + subPats);
+          //                if (Sage.DBG) System.out.println("Parsed Keyword from [" + lcKeyword + "] into " + subPats);
           keywordMatchers = new Matcher[subPats.size()];
           for (int i = 0; i < keywordMatchers.length; i++)
           {
@@ -770,7 +770,7 @@ public class Agent extends DBObject implements Favorite
             if (Character.isLetterOrDigit(c0) || c0 == '*' || c0 == '?')
               currPatStr = currPatStr + "\\b";
             currPatStr = currPatStr.replaceAll("\\*", ".*").replaceAll("\\?", "[^| ]");
-            //					if (Sage.DBG) System.out.println("Regex string #" + i + "=" + currPatStr);
+            //              if (Sage.DBG) System.out.println("Regex string #" + i + "=" + currPatStr);
             try
             {
               keywordMatchers[i] = Pattern.compile(currPatStr, Pattern.CASE_INSENSITIVE).matcher(fullShowTest);
@@ -798,7 +798,7 @@ public class Agent extends DBObject implements Favorite
           }
         }
       }
-      //			if (Sage.DBG) System.out.println("Keyword found a match with:" + air + " text=" + fullShowTest);
+      //            if (Sage.DBG) System.out.println("Keyword found a match with:" + air + " text=" + fullShowTest);
     }
 
     return true;
@@ -812,10 +812,10 @@ public class Agent extends DBObject implements Favorite
       watchProb = 1;
       negator = false;
 
-	  // Save some last-used values to display for the agent; indicatre as not set.
-	  lastnumWatchedAirs = -1;
-	  lastnumWastedAirs = -1;
-	  lastnumManualWaste = -1;
+      // Save some last-used values to display for the agent; indicatre as not set.
+      lastnumWatchedAirs = -1;
+      lastnumWastedAirs = -1;
+      lastnumManualWaste = -1;
 
       return true;
     }
@@ -977,14 +977,21 @@ public class Agent extends DBObject implements Favorite
     if ((agentMask & TITLE_MASK) == 0)
       watchProb /= 2;
 
+    // If there are more Don't Likes than Watched, set Watch Prob to 0 so this agent
+    // won't be the cause of a recording w/o stopping some other agent from causing a recording. 
+    if ( (numWatchedAirs == 0 && numWastedAirs > 1) || (numManualWaste > numWatchedAirs) )
+        watchProb = 0;
+
+    // For a Title agent (or if aggressive negative profiling is on), then check whether
+    // this agent should also prevent any other agent from recordings something; i.e.: set negator to true. 
     negator = ((agentMask & TITLE_MASK) != 0 || Sage.getBoolean("aggressive_negative_profiling", false)) &&
         ((numWatchedAirs == 0 && numWastedAirs > 1) ||
             (numManualWaste > numWatchedAirs));
 
-	// Save some last-used values to display for the agent.
-	lastnumWatchedAirs = numWatchedAirs;
-	lastnumWastedAirs = numWastedAirs;
-	lastnumManualWaste = numManualWaste;
+    // Save some last-used values to display for the agent.
+    lastnumWatchedAirs = numWatchedAirs;
+    lastnumWastedAirs = numWastedAirs;
+    lastnumManualWaste = numManualWaste;
 
     // We need two data points to exist if we're actor based
     if (realTotalCount == 0) return false;
