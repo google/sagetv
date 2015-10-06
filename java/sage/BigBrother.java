@@ -163,6 +163,7 @@ public class BigBrother
   {
     sage.plugin.PluginEventManager.postEvent(sage.plugin.PluginEventManager.WATCHED_STATE_CHANGED,
         new Object[] { sage.plugin.PluginEventManager.VAR_AIRING, a });
+    Scheduler.getInstance().kick(true);
   }
   public static void clearWatched(Airing a)
   {
@@ -282,7 +283,7 @@ public class BigBrother
     if (wa.isDVD() && !wa.isBluRay())
     {
       // DVDs don't have valid durations so we need to check the explicit watched setting on them
-      if (wa.getShow() != null && wa.getShow().lastWatched > 0)
+      if (wa.getShow() != null && wa.getShow().isWatched())
         return true;
       else
         return false;
@@ -324,7 +325,7 @@ public class BigBrother
     boolean showTest = false;
     if (air.getShow() != null && isUnique(air))
     {
-      showTest = (air.getShow().lastWatched > 0);
+      showTest = air.getShow().isWatched();
       if (showTest && !schedulingPurpose)
         return true;
     }

@@ -283,15 +283,27 @@ public final class Show extends DBObject
 
   public long getOriginalAirDate() { return originalAirDate; }
 
-  @Override
-  void clearProfile()
-  {
-  }
-
   void setLastWatched(long time)
   {
-    lastWatched = (time <= 0) ? 0 : Math.max(time, lastWatched);
-    Wizard.getInstance().logUpdate(this, Wizard.SHOW_CODE);
+    try {
+      Wizard.getInstance().acquireWriteLock(Wizard.SHOW_CODE);
+      lastWatched = (time <= 0) ? 0 : Math.max(time, lastWatched);
+      Wizard.getInstance().logUpdate(this, Wizard.SHOW_CODE);
+    } finally {
+      Wizard.getInstance().releaseWriteLock(Wizard.SHOW_CODE);
+    }
+  }
+
+  void setDontLike(boolean x)
+  {
+    if (x == dontLike) return;
+    try {
+      Wizard.getInstance().acquireWriteLock(Wizard.SHOW_CODE);
+      dontLike = x;
+      Wizard.getInstance().logUpdate(this, Wizard.SHOW_CODE);
+    } finally {
+      Wizard.getInstance().releaseWriteLock(Wizard.SHOW_CODE);
+    }
   }
 
   @Override
@@ -300,6 +312,7 @@ public final class Show extends DBObject
     Show fromMe = (Show) x;
     duration = fromMe.duration;
     lastWatched = fromMe.lastWatched;
+    dontLike = fromMe.dontLike;
     title = fromMe.title;
     episodeNameBytes = fromMe.episodeNameBytes;
     episodeNameStr = fromMe.episodeNameStr;
@@ -451,7 +464,21 @@ public final class Show extends DBObject
     else
       bonuses = Pooler.EMPTY_STRINGER_ARRAY;
 
-    lastWatched = in.readLong();
+    // The Show Don't Like & last Watched are both encoded into this field
+    long lastWatchedData = in.readLong();
+    if (lastWatchedData == 0) {
+      lastWatched = 0;
+      dontLike = false;
+    } else if (lastWatchedData == -1) {
+      lastWatched = 0;
+      dontLike = true;
+    } else if (lastWatchedData < -1) {
+      lastWatched = -1 * lastWatchedData;
+      dontLike = true;
+    } else {
+      lastWatched = lastWatchedData;
+      dontLike = false;
+    }
     if (ver < 0x2A)
     {
       Stringer primeTitle = wiz.getPrimeTitleForID(readID(in, idMap));
@@ -611,7 +638,14 @@ public final class Show extends DBObject
         out.writeInt(useLookupIdx ? bonuses[i].lookupIdx : bonuses[i].id);
     }
 
-    out.writeLong(lastWatched);
+    long lastWatchedData = lastWatched;
+    if (dontLike) {
+      if (lastWatchedData == 0)
+        lastWatchedData = -1;
+      else
+        lastWatchedData *= -1;
+    }
+    out.writeLong(lastWatchedData);
     if (!Wizard.COMPACT_DB)
       out.writeBoolean(/*forcedFirstRun*/false); // old first run data
     out.writeShort(externalID.length);
@@ -672,10 +706,13 @@ public final class Show extends DBObject
     }
     sb.append(", id=");
     sb.append(id);
-    if (lastWatched != 0)
+    if (isWatched())
     {
       sb.append(", lastWatched=");
-      sb.append(Sage.df(lastWatched));
+      sb.append(Sage.df(Math.abs(lastWatched)));
+    }
+    if (isDontLike()) {
+      sb.append(", DontLike");
     }
     sb.append(", extID=" + getExternalID());
     sb.append(']');
@@ -1259,6 +1296,14 @@ public final class Show extends DBObject
     return false;
   }
 
+  public boolean isDontLike() {
+    return dontLike;
+  }
+
+  public boolean isWatched() {
+    return lastWatched > 0;
+  }
+
   public static short[] convertLegacyShowImageData(byte photoCountTall, byte photoCountWide, byte posterCountTall, byte posterCountWide)
   {
     if (photoCountTall != 0 || photoCountWide != 0 || posterCountTall != 0 || posterCountWide != 0)
@@ -1344,6 +1389,7 @@ public final class Show extends DBObject
   long originalAirDate;
   byte[] externalID;
   long lastWatched;
+  boolean dontLike = false;
   // 2 for cachedUnique means we've forced it that way due to the EPG data
   byte cachedUnique = UNKNOWN_UNIQUE;
   short seasonNum;

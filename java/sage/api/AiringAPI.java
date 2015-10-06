@@ -495,8 +495,7 @@ public class AiringAPI{
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         Airing a = getAir(stack);
         if (a == null) return Boolean.FALSE;
-        Wasted w = Wizard.getInstance().getWastedForAiring(a);
-        return Boolean.valueOf(w != null && w.isManual());
+        return Boolean.valueOf(a.isDontLike());
       }});
     rft.put(new PredefinedJEPFunction("Airing", "SetDontLike", 1, new String[] { "Airing" }, true)
     {
@@ -509,7 +508,7 @@ public class AiringAPI{
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         Airing air = getAir(stack);
         if (Permissions.hasPermission(Permissions.PERMISSION_RECORDINGSCHEDULE, stack.getUIMgr()))
-          Carny.getInstance().submitWasteJob(air, true, true);
+          Carny.getInstance().addDontLike(air, true);
         return null;
       }});
     rft.put(new PredefinedJEPFunction("Airing", "ClearDontLike", 1, new String[] { "Airing" }, true)
@@ -523,7 +522,7 @@ public class AiringAPI{
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         Airing air = getAir(stack);
         if (Permissions.hasPermission(Permissions.PERMISSION_RECORDINGSCHEDULE, stack.getUIMgr()))
-          Carny.getInstance().submitWasteJob(air, false, true);
+          Carny.getInstance().removeDontLike(air);
         return null;
       }});
     rft.put(new PredefinedJEPFunction("Airing", "IsManualRecord", 1, new String[] { "Airing" })
