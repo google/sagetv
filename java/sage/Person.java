@@ -109,6 +109,10 @@ public class Person extends DBObject
         birthPlace + " imageID=" + headshotImageId + "]";
   }
 
+  void clearProfile()
+  {
+  }
+
   void update(DBObject x)
   {
     Person fromMe = (Person) x;

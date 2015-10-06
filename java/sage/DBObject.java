@@ -111,6 +111,10 @@ public abstract class DBObject implements Cloneable
     }
   }
 
+  void clearProfile()
+  {
+  }
+
   void update(DBObject fromMe)
   {
     this.mediaMask = fromMe.mediaMask;

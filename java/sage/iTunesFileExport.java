@@ -157,7 +157,7 @@ public class iTunesFileExport implements FileExportPlugin, Runnable
           if((plistValue != null) ? (plistValue.length() != 0) : false)
             plistString += "<key>year</key><string>"+plistValue+"</string>";
 
-          if(!theShow.isWatched()) plistString += "<key>unplayed</key><string>true</string>"; // no quotes
+          if(theShow.lastWatched == 0) plistString += "<key>unplayed</key><string>true</string>"; // no quotes
 
           plistString += "</dict></plist>";
 

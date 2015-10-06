@@ -49,6 +49,10 @@ public final class Stringer extends DBObject implements Comparable<Stringer>
     return name;
   }
 
+  void clearProfile()
+  {
+  }
+
   void update(DBObject x)
   {
     Stringer fromMe = (Stringer) x;

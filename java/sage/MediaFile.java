@@ -3996,7 +3996,7 @@ public class MediaFile extends DBObject implements SegmentedFile
   {
     if (considerInProfile && isCompleteRecording() && getContentAiring() != null && isTV())
     {
-      Carny.getInstance().addDontLike(getContentAiring(), false);
+      Carny.getInstance().submitWasteJob(getContentAiring(), true, false);
     }
     while (!files.isEmpty())
     {

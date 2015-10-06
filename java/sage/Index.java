@@ -166,6 +166,17 @@ public final class Index
     }
   }
 
+  void clearProfile()
+  {
+    try {
+      table.acquireWriteLock();
+      for (int i = 0; i < table.num; i++)
+        data[i].clearProfile();
+    } finally {
+      table.releaseWriteLock();
+    }
+  }
+
   void clear()
   {
     try {

@@ -485,7 +485,7 @@ public class Wizard implements EPGDBPublic2
   {
     return WizardHolder.instance;
   }
-
+    
   private Wizard()
   {
     prefsRoot = WIZARD_KEY + '/';
@@ -3966,23 +3966,17 @@ public class Wizard implements EPGDBPublic2
           w.manual = manual;
           logUpdate(w, WASTED_CODE);
         }
-      } else {
-        w = new Wasted(getNextWizID());
-        w.airingID = basedOn.id;
-        w.myAiring = basedOn;
-        w.manual = manual;
-        getTable(WASTED_CODE).add(w, true);
-        if (Sage.DBG) System.out.println("Added:" + w);
+        return w;
       }
+      w = new Wasted(getNextWizID());
+      w.airingID = basedOn.id;
+      w.myAiring = basedOn;
+      w.manual = manual;
+      getTable(WASTED_CODE).add(w, true);
     } finally {
       releaseWriteLock(WASTED_CODE);
     }
-    if (manual) {
-      Show s = basedOn.getShow();
-      if (s != null) {
-        s.setDontLike(true);
-      }
-    }
+    if (Sage.DBG) System.out.println("Added:" + w);
     return w;
   }
 
@@ -3991,13 +3985,6 @@ public class Wizard implements EPGDBPublic2
     if (removeMe == null) return;
     Table t = getTable(WASTED_CODE);
     t.remove(removeMe, true);
-    Airing a = getAiringForID(removeMe.airingID);
-    if (a != null) {
-      Show s = a.getShow();
-      if (s != null) {
-        s.setDontLike(false);
-      }
-    }
   }
 
   public Wasted[] getWasted()

@@ -197,6 +197,10 @@ public final class Channel extends DBObject
       return name + ' ' + netName;
   }
 
+  void clearProfile()
+  {
+  }
+
   void update(DBObject x)
   {
     Channel fromMe = (Channel) x;

@@ -717,17 +717,15 @@ public final class Carny implements Runnable
     return true;
   }
 
-  public void addDontLike(Airing air, boolean manual)
+  public void addDontLike(Airing air)
   {
-    submitWasteJob(air, true, manual);
-    Scheduler.getInstance().kick(true);
+    submitWasteJob(air, true, true);
   }
   public void removeDontLike(Airing air)
   {
     submitWasteJob(air, false, true);
-    Scheduler.getInstance().kick(true);
   }
-  private void submitWasteJob(Airing air, boolean doWaste, boolean manual)
+  public void submitWasteJob(Airing air, boolean doWaste, boolean manual)
   {
     // Don't track Wasted for non-TV content
     if (SageConstants.LITE || !air.isTV()) return;
@@ -738,13 +736,6 @@ public final class Carny implements Runnable
     }
     else if (wiz.getWastedForAiring(air) != null)
       wiz.removeWasted(wiz.getWastedForAiring(air));
-    else {
-      // Just clear it for the Show
-      Show s = air.getShow();
-      if (s != null) {
-        s.setDontLike(false);
-      }
-    }
   }
 
   void submitJob(Object[] jobData)

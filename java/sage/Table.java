@@ -39,6 +39,11 @@ public class Table
     rwLock = new ReentrantReadWriteLock(true);
   }
 
+  void clearProfile()
+  {
+    primary.clearProfile();
+  }
+
   void clear()
   {
     try {

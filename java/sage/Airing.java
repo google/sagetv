@@ -417,11 +417,9 @@ public class Airing extends DBObject implements Schedulable
     return Profiler.isMustSee(this);
   }
 
-  public boolean isDontLike() {
-    Show myShow = getShow();
-    if (myShow != null && myShow.isDontLike())
-      return true;
-    return Wizard.getInstance().getWastedForAiring(id) != null;
+  @Override
+  void clearProfile()
+  {
   }
 
   @Override
