@@ -143,12 +143,12 @@ extern off64_t lseek64( int filedes, off64_t offset, int whence );
 extern off64_t tell64( int filedes );
 #endif
 
-typedef			 long long  LONGLONG;
-typedef unsigned long long ULONGLONG;
-typedef ULONGLONG REFERENCE_TIME;
+//typedef			 long long  LONGLONG;
+//typedef unsigned long long ULONGLONG;
+//typedef ULONGLONG REFERENCE_TIME;
 #define ASSERT   assert
 
-#endif
+#endif // _APPLE_
 
 #define _MIN(x,y) ((x)>(y)? (y):(x))
 #define _MAX(x,y) ((x)>(y)? (x):(y))
