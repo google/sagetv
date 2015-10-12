@@ -35,7 +35,7 @@ public class CaptureDeviceAPI{
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         return MMC.getInstance().getCaptureDeviceNames(/*MMC.MPEG_VIDEO_ONLY_CAPTURE_MASK |
-				MMC.MPEG_VIDEO_RAW_AUDIO_CAPTURE_MASK | MMC.MPEG_AV_CAPTURE_MASK | MMC.MPEG_PURE_CAPTURE_MASK*/);
+        MMC.MPEG_VIDEO_RAW_AUDIO_CAPTURE_MASK | MMC.MPEG_AV_CAPTURE_MASK | MMC.MPEG_PURE_CAPTURE_MASK*/);
       }});
     rft.put(new PredefinedJEPFunction("CaptureDevice", "GetCaptureDeviceInputs", new String[] { "CaptureDevice" })
     {
@@ -312,11 +312,49 @@ public class CaptureDeviceAPI{
         }
         return null;
       }});
+    rft.put(new PredefinedJEPFunction("CaptureDevice", "GetCaptureDeviceMerit", new String[] {"CaptureDevice"}, true)
+    {
+      /**
+       * Gets the encoder merit for a CaptureDevice.
+       * @param CaptureDevice the name of the CaptureDevice
+       * @return The merit value for the specified CaptureDevice; If all else is equal, a capture device with a higher merit has higher priority.
+       *
+       * @declaration public int GetCaptureDeviceMerit(String CaptureDevice);
+       */
+      public Object runSafely(Catbert.FastStack stack) throws Exception{
+        String capDevName = getString(stack); 
+        CaptureDevice capDev = getCapDevObj(capDevName);
+        if (capDev == null)
+        {
+          CaptureDeviceInput capDevInput = getCapDevInputObj(capDevName);
+          if (capDevInput != null)
+            capDev = capDevInput.getCaptureDevice();
+        }
+        if (capDev != null)
+          return capDev.getMerit();
+        else
+          return 0;
+      }});
+    rft.put(new PredefinedJEPFunction("CaptureDevice", "SetCaptureDeviceMerit", new String[] {"CaptureDevice", "Merit"}, true)
+    {
+      /**
+       * Sets the encoder merit for a CaptureDevice.
+       * @param Merit The new merit value for the specified CaptureDevice
+       *
+       * @declaration public void SetCaptureDeviceMerit(int Merit);
+       */
+      public Object runSafely(Catbert.FastStack stack) throws Exception{
+        int Merit = getInt(stack);
+        CaptureDevice capDev = getCapDev(stack);
+        if (capDev != null)
+          capDev.setMerit(Merit);
+        return null;
+      }});
     /*
-		rft.put(new PredefinedJEPFunction("CaptureDevice", "", 1, new String[] {"CaptureDeviceInput"})
-		{public Object runSafely(Catbert.FastStack stack) throws Exception{
-			 return getCapDevInput(stack);
-			}});
+    rft.put(new PredefinedJEPFunction("CaptureDevice", "", 1, new String[] {"CaptureDeviceInput"})
+    {public Object runSafely(Catbert.FastStack stack) throws Exception{
+       return getCapDevInput(stack);
+      }});
      */
   }
 }

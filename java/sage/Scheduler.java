@@ -366,7 +366,7 @@ public class Scheduler implements Runnable
     {
       synchronized (this)
       {
-        //				dontKnowConflicts.clear();
+        //        dontKnowConflicts.clear();
         kick(false);
       }
     }
@@ -905,25 +905,7 @@ public class Scheduler implements Runnable
 
     // Create a list of the ES's thats sorted by merit
     CaptureDevice[] sortedEncNames = encoderScheduleMap.keySet().toArray(new CaptureDevice[0]);
-    Arrays.sort(sortedEncNames, new Comparator<CaptureDevice>()
-    {
-      public int compare(CaptureDevice c1, CaptureDevice c2)
-      {
-        int m1 = c1.getMerit();
-        int m2 = c2.getMerit();
-        if (m1 != m2)
-          return m2 - m1;
-
-        // Use the device with the better physical input type
-        int x = c2.getHighestQualityConfiguredInputType() - c1.getHighestQualityConfiguredInputType();
-        if (x != 0)
-          return x;
-
-        // The more encoding options the better, so use that one first if merit is equal
-        return c2.getEncodingQualities().length -
-            c1.getEncodingQualities().length;
-      }
-    });
+    Arrays.sort(sortedEncNames, CaptureDevice.captureDeviceSorter);
     EncoderSchedule[] sortedEncs = new EncoderSchedule[sortedEncNames.length];
     for (int i = 0; i < sortedEncNames.length; i++)
       sortedEncs[i] = encoderScheduleMap.get(sortedEncNames[i]);
@@ -2213,7 +2195,7 @@ public class Scheduler implements Runnable
       {
         Airing currAir = potentials.elementAt(i);
         // It's more optimal to do this later
-        //			if (!conflictsWithMustSee(currAir) && okToSchedule(currAir, currTime))
+        //      if (!conflictsWithMustSee(currAir) && okToSchedule(currAir, currTime))
         {
           long currAirStart = getSchedulingStart(currAir);
           long currAirEnd = getSchedulingEnd(currAir);
@@ -2237,7 +2219,7 @@ public class Scheduler implements Runnable
           calcWatch *= 1 - currRandy*FUZZIFIER;
 
           //System.out.println("Examining potential like of " + currAir + " w/ calcWatch=" + calcWatch +
-          //	" orgWatch=" + orgWatch + " " + rp);
+          //  " orgWatch=" + orgWatch + " " + rp);
           float minMaxTakeWP = Float.MAX_VALUE;
           CaptureDevice minMaxTakeEncoder = null;
           for (Map.Entry<CaptureDevice, EncoderSchedule> ent : encoderScheduleMap.entrySet())

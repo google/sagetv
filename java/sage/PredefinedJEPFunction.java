@@ -440,9 +440,8 @@ public abstract class PredefinedJEPFunction extends sage.jep.function.PostfixMat
     else
       return java.awt.Color.decode(o.toString());
   }
-  protected CaptureDevice getCapDev(Catbert.FastStack stack)
+  public static CaptureDevice getCapDevObj(Object o)
   {
-    Object o = stack.pop();
     if (o instanceof sage.vfs.MediaNode)
       o = ((sage.vfs.MediaNode)o).getDataObject();
     if (o instanceof CaptureDevice)
@@ -452,9 +451,12 @@ public abstract class PredefinedJEPFunction extends sage.jep.function.PostfixMat
     else
       return MMC.getInstance().getCaptureDeviceNamed(o.toString());
   }
-  protected CaptureDeviceInput getCapDevInput(Catbert.FastStack stack)
+  protected CaptureDevice getCapDev(Catbert.FastStack stack)
   {
-    Object o = stack.pop();
+    return getCapDevObj(stack.pop());
+  }
+  public static CaptureDeviceInput getCapDevInputObj(Object o)
+  {
     if (o instanceof sage.vfs.MediaNode)
       o = ((sage.vfs.MediaNode)o).getDataObject();
     if (o instanceof CaptureDeviceInput)
@@ -463,6 +465,10 @@ public abstract class PredefinedJEPFunction extends sage.jep.function.PostfixMat
       return null;
     else
       return MMC.getInstance().getCaptureDeviceInputNamed(o.toString());
+  }
+  protected CaptureDeviceInput getCapDevInput(Catbert.FastStack stack)
+  {
+    return getCapDevInputObj(stack.pop());
   }
   protected TVEditorial getEditorial(Catbert.FastStack stack)
   {
