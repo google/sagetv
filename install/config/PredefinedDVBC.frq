@@ -515,26 +515,43 @@
 	frq:306000000;rate:6875;mod:3;
 
 "Switzerland"
+	frq:202000000;rate:6900;mod:11
+	frq:210000000;rate:6900;mod:11
+	frq:250000000;rate:6900;mod:11
+	frq:266000000;rate:6900;mod:11
+	frq:274000000;rate:6900;mod:11
+	frq:282000000;rate:6900;mod:11
+	frq:298000000;rate:6900;mod:11
+	frq:306000000;rate:6900;mod:11
+	frq:314000000;rate:6900;mod:11
+	frq:330000000;rate:6900;mod:11
+	frq:338000000;rate:6900;mod:11
+	frq:346000000;rate:6900;mod:11
+	frq:354000000;rate:6900;mod:11
+	frq:362000000;rate:6900;mod:11
+	frq:370000000;rate:6900;mod:11
+	frq:378000000;rate:6900;mod:11
+	frq:386000000;rate:6900;mod:11
+	frq:394000000;rate:6900;mod:11
 	frq:410000000;rate:6900;mod:3
 	frq:410000000;rate:6900;mod:11
-	frq:386000000;rate:6900;mod:11
-	frq:306000000;rate:6900;mod:11	
-	frq:442000000;rate:6900;mod:11
-	frq:394000000;rate:6900;mod:11
-	frq:378000000;rate:6900;mod:11
-	frq:362000000;rate:6900;mod:11
 	frq:418000000;rate:6900;mod:11
-	frq:338000000;rate:6900;mod:11
-	frq:314000000;rate:6900;mod:11
-	frq:562000000;rate:6900;mod:11
-	frq:602000000;rate:6900;mod:11
+	frq:426000000;rate:6900;mod:3
+	frq:442000000;rate:6900;mod:11
+	frq:450000000;rate:6900;mod:11
 	frq:458000000;rate:6900;mod:3
 	frq:466000000;rate:6900;mod:11
-	frq:594000000;rate:6900;mod:11
+	frq:474000000;rate:6900;mod:11
+	frq:490000000;rate:6900;mod:11
 	frq:506000000;rate:6900;mod:11
-	frq:450000000;rate:6900;mod:11
-	frq:570000000;rate:6900;mod:11
 	frq:530000000;rate:6900;mod:11
+	frq:562000000;rate:6900;mod:11
+	frq:570000000;rate:6900;mod:11
+	frq:578000000;rate:6900;mod:11
+	frq:586000000;rate:6900;mod:11
+	frq:594000000;rate:6900;mod:11
+	frq:602000000;rate:6900;mod:11
+
 
 "Slovenia-UPC Telemach"
 	frq:418000000;rate:6875;qam:64
