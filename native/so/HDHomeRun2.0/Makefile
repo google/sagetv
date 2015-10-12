@@ -114,13 +114,13 @@ foo:
 
 OBJFILES=sage_HDHomeRun.o HDHRDevice.o DTVChannel.o SageTuner.o
 
-DTVChannel.o: DTVChannel.cp
+DTVChannel.o: DTVChannel.cpp
 	$(CC) $(CFLAGS) $(OPT_FLAGS) -o $@ $^
 
-SageTuner.o: SageTuner.cp
+SageTuner.o: SageTuner.cpp
 	$(CC) $(CFLAGS) $(OPT_FLAGS) -o $@ $^
 
-%.o: %.cp
+%.o: %.cpp
 	$(CC) $(CFLAGS) $(OPT_FLAGS) -o $@ $^
 
 libHDHomeRunCapture.so: libNativeCore.so libchannel.a stage/lib/libhdhomerun.a $(OBJFILES)
