@@ -1399,7 +1399,7 @@ public class Database {
        * @param Descending if true then the data will be sorted in descending order, if false then the order will be reversed
        * @param SortTechnique the technique to sort the data by; this can be a java.util.Comparator
        *         which then explicitly controls the sort, or it can be one of the named sorting techniques of:
-       *         Intelligent, ChannelNumber, CaseInsensitive, FavoritePriority, Natural or a method name. If null is passed then the elements "natural" sorting is used.
+       *         Intelligent, ChannelNumber, CaseInsensitive, FavoritePriority, CaptureDevicePriority, Natural or a method name. If null is passed then the elements "natural" sorting is used.
        * @return the sorted data, for passed in Maps this'll be a sorted Map; for Collections or arrays this will be an Object[] array
        *
        * @declaration public Object Sort(Object Data, boolean Descending, Object SortTechnique);
@@ -1449,6 +1449,10 @@ public class Database {
           {
             alreadySorted = true;
             currData = Carny.getInstance().sortAgentsByPriority(currData);
+          }
+          else if (filterMethName.equalsIgnoreCase("CaptureDevicePriority"))
+          {
+            sortie = CaptureDevice.captureDeviceSorter;
           }
           else
           {
@@ -3151,7 +3155,7 @@ public class Database {
        * @declaration public boolean IsDatabaseMemoryMaxed();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-				return Boolean.FALSE;
+        return Boolean.FALSE;
       }});
     rft.put(new PredefinedJEPFunction("Database", "StripLeadingArticles", new String[] { "Text" })
     {
@@ -3253,10 +3257,10 @@ public class Database {
         return Wizard.getInstance().searchForChannel(getString(stack), includeDisabled);
       }});
     /*
-		rft.put(new PredefinedJEPFunction("Database", "", 1, new String[] {""})
-		{public Object runSafely(Catbert.FastStack stack) throws Exception{
-			 return Wizard.getInstance().;
-			}});
+    rft.put(new PredefinedJEPFunction("Database", "", 1, new String[] {""})
+    {public Object runSafely(Catbert.FastStack stack) throws Exception{
+       return Wizard.getInstance().;
+      }});
      */
   }
 }
