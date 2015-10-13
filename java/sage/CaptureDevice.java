@@ -15,6 +15,8 @@
  */
 package sage;
 
+import java.util.Comparator;
+
 public abstract class CaptureDevice
 {
   static final String ENCODERS = "encoders";
@@ -345,7 +347,7 @@ public abstract class CaptureDevice
     }
     else // this is a much better default to use
       return MPEG2EncodingParams.getQualityNames();
-    //			return Pooler.EMPTY_STRING_ARRAY;
+    //      return Pooler.EMPTY_STRING_ARRAY;
 
   }
 
@@ -447,10 +449,10 @@ public abstract class CaptureDevice
   {
     return 100;
     /*if (activeSource == null) return -1;
-		if (autoTuneChannel(activeSource.getChannel()))
-			return 100;
-		else
-			return 0;*/
+    if (autoTuneChannel(activeSource.getChannel()))
+      return 100;
+    else
+      return 0;*/
   }
 
   public boolean isRecording() { return recFilename != null; }
@@ -523,6 +525,19 @@ public abstract class CaptureDevice
   }
 
   public int getMerit() { return encoderMerit; }
+
+  public void setMerit(int newMerit)
+  {
+    if ( newMerit < 0 )
+      newMerit = 0;
+
+    if ( encoderMerit != newMerit )
+    {
+      Sage.putInt(prefs + ENCODER_MERIT, encoderMerit = newMerit);
+      Scheduler.getInstance().kick(true);
+    } 
+
+  }
 
   public int getMaxChannel(CaptureDeviceInput myInput)
   {
@@ -605,36 +620,36 @@ public abstract class CaptureDevice
     return false;
 
     /*
-		// The HD-PVR will stop capture when it blasts; so don't allow fast switching w/ that device
-		if (isCaptureFeatureSupported(HDPVR_ENCODER_MASK))
-			return false;
-		// We can't fast mux switch for AVI formats or on MPEG1. It also doesn't work on SVCD formats either because
-		// they don't write out the system header frequent enough.
-		sage.media.format.MediaFormat form = getEncoderMediaFormat();
-		if (form == null)
-			return false;
-		String containerFormat = form.getFormatName();
-		// We can only fast switch MPEG2 Program Stream, so skip anything else!
-		if (!sage.media.format.MediaFormat.MPEG2_PS.equals(containerFormat))
-			return false;
-		int st = getCurrQualityStreamType();
-		if (st == MPEG2EncodingParams.STREAMOUTPUT_VCD)
-			return false;
-		// Apparently on the Plextor devices CVD doesn't work for fast mux switch for some reason...
-		if ((captureFeatureBits & MMC.MPEG_VIDEO_RAW_AUDIO_CAPTURE_MASK) != 0 && st == MPEG2EncodingParams.STREAMOUTPUT_PROGRAM)
-		{
-			return false;
-		}
+    // The HD-PVR will stop capture when it blasts; so don't allow fast switching w/ that device
+    if (isCaptureFeatureSupported(HDPVR_ENCODER_MASK))
+      return false;
+    // We can't fast mux switch for AVI formats or on MPEG1. It also doesn't work on SVCD formats either because
+    // they don't write out the system header frequent enough.
+    sage.media.format.MediaFormat form = getEncoderMediaFormat();
+    if (form == null)
+      return false;
+    String containerFormat = form.getFormatName();
+    // We can only fast switch MPEG2 Program Stream, so skip anything else!
+    if (!sage.media.format.MediaFormat.MPEG2_PS.equals(containerFormat))
+      return false;
+    int st = getCurrQualityStreamType();
+    if (st == MPEG2EncodingParams.STREAMOUTPUT_VCD)
+      return false;
+    // Apparently on the Plextor devices CVD doesn't work for fast mux switch for some reason...
+    if ((captureFeatureBits & MMC.MPEG_VIDEO_RAW_AUDIO_CAPTURE_MASK) != 0 && st == MPEG2EncodingParams.STREAMOUTPUT_PROGRAM)
+    {
+      return false;
+    }
 
         if ( ( captureFeatureBits & MMC.RAW_AV_CAPTURE_MASK) != 0 ) //ZQ. soft encoder can't be FastMux switched
         {
              return false;
         }
 
-		if (activeSource != null && !activeSource.supportsFastMuxSwitch())
-			return false;
+    if (activeSource != null && !activeSource.supportsFastMuxSwitch())
+      return false;
 
-		return true;*/
+    return true;*/
   }
 
   public boolean hasVideoProcessor()
@@ -744,6 +759,47 @@ public abstract class CaptureDevice
     }
     return x;
   }
+
+  //public static final Comparator<CaptureDevice> captureDeviceSorter = new Comparator<CaptureDevice>()
+  public static final Comparator captureDeviceSorter = new Comparator()
+  {
+    public int compare(Object o1, Object o2)
+    {
+      // Assume objects o1 and o2 refer to either CaptureDevice or DaptureDeviceInput & find the CaptureDevice for each.
+      CaptureDevice c1 = PredefinedJEPFunction.getCapDevObj( o1 );
+      CaptureDevice c2 = PredefinedJEPFunction.getCapDevObj( o2 );
+
+      // If either of the CaptureDevice objects are invalid, then put the valid object in front of the invalid one; invalid objects are equal.
+      if ( (c1 == null) || (c2 == null) )
+      {
+        if ( (c1 == null) && (c2 == null) )
+          return 0;
+        else if ( c1 == null )
+          return 1;
+        else
+          return -1;
+      }
+    
+      // Higher merit value is first.
+      int m1 = c1.getMerit();
+      int m2 = c2.getMerit();
+      if (m1 != m2)
+        return m2 - m1;
+
+      // Use the device with the better physical input type
+      int x = c2.getHighestQualityConfiguredInputType() - c1.getHighestQualityConfiguredInputType();
+      if (x != 0)
+        return x;
+
+      // The more encoding options the better, so use that one first.
+      int o = c2.getEncodingQualities().length - c1.getEncodingQualities().length;
+      if (o != 0)
+        return o;
+
+      // If all else is the same, then compare the capture device names.
+      return c1.toString().compareTo(c2.toString());
+    }
+  };
 
   protected int id;
   protected java.util.ArrayList<CaptureDeviceInput> srcConfigs;
