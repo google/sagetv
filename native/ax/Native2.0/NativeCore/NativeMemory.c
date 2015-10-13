@@ -303,6 +303,8 @@ char* sagetv_mem_inf( int loc, char *buf, int buf_size )
 }
 
 #else
+
+#if 0	// Hack - fn duplicated in TSParser.c; linker complains 'already defined'
 void* sagetv_malloc2( int size, int line )
 {
 	char* p;;
@@ -326,6 +328,7 @@ void* sagetv_malloc2( int size, int line )
 
 	return (void*)p; 
 }
+#endif // end HACK
 
 void  sagetv_free2( void* p, int line )
 {

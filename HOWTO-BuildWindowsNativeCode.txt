@@ -1,0 +1,244 @@
+
+------------------
+---- Overview ----
+------------------
+
+This document details how to setup the build environment for
+Sagetv Open Source, using Visual Studio 2015, for the purpose
+of building Windows "native" (non-Java) code.  It assumes a Windows
+computer with no previous installation of the tools listed below.
+
+Installation requires a number of system reboots, so be prepared
+and do not skip the reboots.
+
+The process involves the following steps:
+
+1. Install JDK
+2. Install GitHub Desktop (optional)
+3. Install DirectX SDK
+4. Install SDK 6.1
+5. Install Visual Studio 2015
+6. Build SageTv Windows native code
+
+
+=====================================================================
+1. Install JDK
+=====================================================================
+
+Info:
+  In deciding between installing the 32-bit vs. 64-bit
+  version of JDK, consider that prior to SageOpenSource, SageTv
+  was originally built using the 32-bit version of Java.
+  To avoid unforseen issues it may be wise to start with a 32-bit 
+  JDK installation for initial development.
+
+
+Steps:
+------
+A) Download the Java Development Kit.
+
+  Available here:
+http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
+
+B) Install the Java Development Kit.
+  Note the folder that it's installed to.
+
+C) Create the following Environment Variable:
+    SAGEDEVJDK
+
+  It's value should be the path to where JDK was installed, i.e., 
+  something like:
+    C:\Program Files (x86)\Java\jdk1.8.0_60
+
+  Do NOT quote the path, even though it may contain embedded spaces.
+
+
+=====================================================================
+2. Install GitHub Desktop
+=====================================================================
+
+Info:
+-----
+  GitHub Desktop is used to access the Sage source-code repository.
+
+  Use of GitHub Desktop is optional.  It's also possible to download 
+  source code via the web interface, at:
+    https://github.com/google/sagetv
+
+GitHub Desktop can be downloaded from:
+  https://desktop.github.com/
+
+
+=====================================================================
+3. Install "DirectX SDK June 2010" edition
+=====================================================================
+
+Info:
+-----
+  "DirectX SDK June 2010" provides needed libraries to build Sage
+  Microsoft has announced that this is it's final release.
+
+Steps:
+-----
+A) Download Microsoft's "DirectX SDK June 2010" edition.
+  It can be found at:
+  http://www.microsoft.com/en-us/download/details.aspx?id=6812
+
+B) Run the installer
+
+--> At installation, choose to include "Direct X symbol files"
+  (if this step is missed, re-run the installer again and
+   check this option)
+
+
+  The installer automatically adds DXSDK_DIR to the **System** 
+  environment variables.  On a 64-bit OS, DXSDK_DIR points to:
+    C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)
+
+C) Verify DXSDK_DIR env. variable is set (in System env. vars.)
+
+
+=====================================================================
+4. Install SDK6.1
+=====================================================================
+
+Steps:
+-----
+A) Download the installer from:
+  http://www.microsoft.com/en-us/download/details.aspx?id=11310
+
+B) Launch the installer
+  (the bulk of the actual installation is downloaded)
+
+  Accept the installer's default destinations, e.g.:
+    Destination folder:
+      C:\Program Files\Microsoft SDKs\Windows\v6.1
+
+    Destination folder for Samples:
+      C:\Program Files\Microsoft SDKs\Windows\v6.1\Samples
+
+  Wait for "Installation finished OK."
+
+C) Create an environment variable:
+    WINDOWS61SDK     
+  It's value should be the path to where the SDK was installed, i.e., 
+    C:\Program Files\Microsoft SDKs\Windows\v6.1
+  Do NOT quote the path, even though it may contain embedded spaces.
+
+D) Run Windows update, get updates for the SDK
+
+E) Reboot, if requested
+
+
+=====================================================================
+5. Install VS2015 (aka vs14)
+=====================================================================
+Visual Studio 2015 provides an IDE for working native code.  It also
+included necessary libraries and compile tools.
+
+
+A) Download from:
+    https://www.visualstudio.com/products/visual-studio-community-vs
+
+B) Save the file (vs_community.exe)
+
+C) Launch the downloaded file (runs the installer)
+
+Visual Studio Community 2015 window opens:
+  Accept the default installation location
+    e.g. C:\Program Files (x86)\Microsoft Visual Studio 14.0
+  
+  "Choose the type of installation"
+    select "Custom"
+
+  Click "Next" button
+
+  At the Select Features window, 
+    Select the following features **in addition** to the defaults:
+    Programming Languages
+      Select "Visual C++"
+        This automatically selects:
+            Common Tools for Visual C++ 2015
+            Microsoft Foundation Classes for C++  <<-- Must have y!!!
+            Windows XP Support for C++
+
+    Common Tools
+      Select "Git for Windows"
+      Select "GitHub Extension for Visual Studio"
+
+  Click "Next" button
+  Click "Install" button
+
+  (the installer runs... can take almost an hour)
+
+  Wait for "Setup Completed"
+
+  Click "Restart Now" button
+
+Note: You can re-run the installer again later to add or change
+  the installation options.
+
+
+=====================================================================
+6. Build SageTv Windows native code
+=====================================================================
+
+We're finally ready to build Windows "native" (non-Java) code.
+
+Prerequisites:
+-----
+  - JDK installed.
+  - DirectX SDK, SDK6.1 & Visual Studio installed and configured
+  - Environment variables set:
+    DXSDK_DIR
+    SAGEDEVJDK
+    WINDOWS61SDK
+
+Steps:
+-----
+A) Verify that the above environment variables have been set.
+   Visual Studio needs them all to build the Solution.
+   - Open a Command Prompt window.  
+   - Type "set".  
+   - Verify the variables listed above.
+
+B) Use Git to get a local copy of the repository onto your computer.
+
+C) After cloning the repository, use Windows Explorer to open
+  up a window to your local copy where the sources are stored.
+
+D) Locate the SageWorkspace.sln file.  It will be in:
+    <your_local_GitHub_path>\sagetv\native
+
+  Double-click on the SageWorkspace.sln file to launch Studio and
+  load all the child Projects.
+
+  The first time Studio is launched to access the Solution, you
+  might encounter a series of questions about source control.
+  Answer them.
+
+E) Build the Solution:
+  - On the Studio menu bar, ensure "Release" and "Win32" is chosen.
+  - In the Solution Explorer sub-window, highlight SageWorkspace.
+  - Right-click SageLauncher, select "Build"
+
+  The resultant files will be in native\Build\Release & Debug
+
+
+Common build failures:
+-----------------------
+* "RC1015: cannot open include file 'afxres.h' "
+  Re-run the VS2015 installer and verify that MS Foundation Classes 
+  were installed.
+
+* "fatal error C1083: Cannot open include file: 'qedit.h' "
+  This occurs if WINDOWS61SDK is missing or incorrect
+
+* "can't find jvm.lib"
+  This occurs if SAGEDEVJDK is missing or incorrect
+
+*  "fatal error C1083: Cannot open include file: 'D3dX9.h' "
+  This occurs if DXSDK_DIR is missing or incorrect
+
+
+

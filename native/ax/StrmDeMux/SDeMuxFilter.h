@@ -25,8 +25,10 @@
 #pragma warning(disable : 4996)
 #pragma warning(disable : 4995)
 
-#define snprintf  _snprintf
-#define vsnprintf  vsnprintf
+#if (defined(_MSC_VER) && (_MSC_VER < 1900))
+  #define snprintf _snprintf
+  #define vsnprintf  vsnprintf
+#endif
 
 
 #include "ISDeMux.h"

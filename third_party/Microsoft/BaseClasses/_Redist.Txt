@@ -1,0 +1,167 @@
+Windows Software Development Kit Redistributable Code
+=====================================================
+The following list is a list of files available with Microsoft Windows SDK for Windows Server 2008 and .NET Framework 3.5 for redistribution under the Windows SDK license.  If the Microsoft software you have licensed is not Windows SDK , only the files that are installed by the Microsoft software may be redistributed under such license.
+
+
+
+Static LIB files
+================
+Subject to the license terms for the software, the following .lib files may be distributed unmodified when built as part of your application:
+
+	Microsoft SDKs\Windows\v6.1\lib, 
+	Microsoft SDKs\Windows\v6.1\lib\x64 or 
+	Microsoft SDKs\Windows\v6.1\lib\ia64
+		ad1.lib
+		adslid.lib
+		ahadmin.lib
+		amstrmid.lib
+		Bits.lib
+		certidl.lib
+		CiUuid.lib
+		clfsmgmt.lib
+		corguids.lib
+		daouuid.lib
+		dmoguids.lib
+		DtcHelp.lib
+		Fci.lib
+		Fdi.lib
+		fileextd.lib
+		format.lib
+		GdiPlus.lib
+		gpmuuid.lib
+		Htmlhelp.lib
+		iepmapi.lib
+		KSGuid.lib
+		ksuser.lib
+		mfuuid.lib
+		MiniDump.lib
+		MMC.lib
+		MqOA.lib
+		msdasc.lib
+		MSTask.lib
+		MsXml2.lib
+		msxml6.lib
+		muiload.lib
+		odbccp32.lib
+		oledb.lib
+		osptk.lib
+		PEnter.lib
+		PhotoAcquireUID.lib
+		PortableDeviceGuids.lib
+		sapi.lib
+		ScrnSave.lib
+		ScrnSavW.lib
+		SearchSDK.lib
+		shell32.lib
+		SrClient.lib
+		strmiids.lib
+		strsafe.lib
+		structuredquery.lib
+		Svcguid.lib
+		taskschd.lib
+		TranscodeImageUID.lib
+		unicows.lib
+		Uuid.lib
+		vds_uuid.lib
+		WbemUuid.lib
+		wcmguid.lib
+		WiaGuid.lib
+		windowscodecs.lib
+		WindowsSideShowGuids.lib
+		WinStrm.lib
+		wmcodecdspuuid.lib
+		WS2_32.lib
+		wuguid.lib
+		xaSwitch.lib
+
+
+
+
+Windows SDK Tools
+=====================================
+Subject to the license terms for the software, the following files may be distributed 
+unmodified:
+
+	MageUI.exe
+	Mage.exe
+	xperf_ia64.msi
+	xperf_x64.msi
+	xperf_x86.msi
+
+
+.NET Framework
+=====================================
+The Windows SDK does not include any of the .NET Framework redistributable files, you must download these files from Microsoft Downloads (http://www.microsoft.com/downloads).  Subject to the license terms for the software, the following .EXE file may be distributed unmodified:
+
+	dotNetFx35setup.exe
+
+
+.NET Compact Framework V3.5
+=====================================
+Subject to the license terms for the software, you may redistribute the MSI (unmodified) or one or more of the separate files from the SDK ISO image listed below:
+
+	Located on the Windows SDK DVD ISO image:
+		NETCFSetupv35.msi
+		NETCFv35.wm.armv4i.cab
+		NETCFv35.ppc.armv4.cab
+		NETCFv35.wce.x86.cab
+		NETCFv35.wce.sh4.cab
+		NETCFv35.wce.mipsiv.cab
+		NETCFv35.wce.mipsii.cab
+		NETCFv35.wce.armv4.cab
+		NETCFv35.Messages.DE.cab
+		NETCFv35.Messages.DE.wm.cab
+		NETCFv35.Messages.EN.cab
+		NETCFv35.Messages.EN.wm.cab
+		NETCFv35.Messages.ES.cab
+		NETCFv35.Messages.ES.wm.cab
+		NETCFv35.Messages.FR.cab
+		NETCFv35.Messages.FR.wm.cab
+		NETCFv35.Messages.IT.cab
+		NETCFv35.Messages.IT.wm.cab
+		NETCFv35.Messages.JA.cab
+		NETCFv35.Messages.JA.wm.cab
+		NETCFv35.Messages.KO.cab
+		NETCFv35.Messages.KO.wm.cab
+		NETCFv35.Messages.zh-CHS.cab
+		NETCFv35.Messages.zh-CHS.wm.cab
+		NETCFv35.Messages.zh-CHT.cab
+		NETCFv35.Messages.zh-CHT.wm.cab
+
+
+
+Visual C++ Compiler Redist files
+=====================================
+Subject to the license terms for the software, you may redistribute MSM files listed below unmodified as a part of your installation package:
+
+	Microsoft SDKs\Windows\v6.1\Redist
+		microsoft.vcxx.crt.i64_msm.msm
+		microsoft.vcxx.crt.x64_msm.msm
+		microsoft.vcxx.crt.x86_msm.msm
+		policy.x.xx.microsoft.vcxx.crt.i64_msm.msm
+		policy.x.xx.microsoft.vcxx.crt.x64_msm.msm
+		policy.x.xx.microsoft.vcxx.crt.x86_msm.msm
+
+For your convenience, we have provided the following folders for use when redistributing VC++ runtime files. Subject to the license terms for the software, you may redistribute the folder (unmodified) in the application local folder as a sub-folder with no change to the folder name. You may also redistribute all the files (*.dll and *.manifest) within a folder, listed below the folder for your convenience, as an entire set. 
+
+	Microsoft Viual Studio 9.0\VC\redist\x86\Microsoft.VC90.CRT\
+		Microsoft.VC90.CRT.manifest
+		msvcm90.dll
+		msvcp90.dll
+		msvcr90.dll
+
+
+
+TabletPC 1.7
+=====================================
+Subject to the license terms for the software, you may redistribute MSM files listed below unmodified as a part of your installation package:
+
+	IACOM.msm
+	IACore.msm
+	IAWinFrm.msm
+	IAWinFX.msm
+	InkDiv.msm
+	journal.msm
+	journalMAN.msm
+	rtscom.msm
+	tpcman17.msm
