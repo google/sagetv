@@ -446,10 +446,24 @@ public abstract class PredefinedJEPFunction extends sage.jep.function.PostfixMat
       o = ((sage.vfs.MediaNode)o).getDataObject();
     if (o instanceof CaptureDevice)
       return (CaptureDevice)o;
+    else if (o instanceof CaptureDeviceInput)
+      return ((CaptureDeviceInput)o).getCaptureDevice();
     else if (o == null)
       return null;
     else
-      return MMC.getInstance().getCaptureDeviceNamed(o.toString());
+    {
+      CaptureDevice capDev = MMC.getInstance().getCaptureDeviceNamed(o.toString());
+      if ( capDev != null )
+        return capDev;
+      else
+      {
+        CaptureDeviceInput capDevInput = MMC.getInstance().getCaptureDeviceInputNamed(o.toString());
+        if ( capDevInput != null )
+          return capDevInput.getCaptureDevice();
+        else
+          return null;
+      }
+    }
   }
   protected CaptureDevice getCapDev(Catbert.FastStack stack)
   {

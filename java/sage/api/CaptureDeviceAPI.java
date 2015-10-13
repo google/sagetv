@@ -322,14 +322,7 @@ public class CaptureDeviceAPI{
        * @declaration public int GetCaptureDeviceMerit(String CaptureDevice);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        String capDevName = getString(stack); 
-        CaptureDevice capDev = getCapDevObj(capDevName);
-        if (capDev == null)
-        {
-          CaptureDeviceInput capDevInput = getCapDevInputObj(capDevName);
-          if (capDevInput != null)
-            capDev = capDevInput.getCaptureDevice();
-        }
+        CaptureDevice capDev = getCapDev(stack);
         if (capDev != null)
           return capDev.getMerit();
         else
@@ -341,7 +334,7 @@ public class CaptureDeviceAPI{
        * Sets the encoder merit for a CaptureDevice.
        * @param Merit The new merit value for the specified CaptureDevice
        *
-       * @declaration public void SetCaptureDeviceMerit(int Merit);
+       * @declaration public void SetCaptureDeviceMerit(String CaptureDevice, int Merit);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         int Merit = getInt(stack);

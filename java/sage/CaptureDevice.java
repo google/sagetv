@@ -765,24 +765,11 @@ public abstract class CaptureDevice
   {
     public int compare(Object o1, Object o2)
     {
-      // Assume objects o1 and o2  refer to either CaptureDevice or DaptureDeviceInput & find the CaptureDevice for each.
+      // Assume objects o1 and o2 refer to either CaptureDevice or DaptureDeviceInput & find the CaptureDevice for each.
       CaptureDevice c1 = PredefinedJEPFunction.getCapDevObj( o1 );
-      if ( c1 == null )
-      {
-        CaptureDeviceInput cdi1 = PredefinedJEPFunction.getCapDevInputObj(o1);
-        if ( cdi1 != null )
-          c1 = cdi1.getCaptureDevice();
-      }
-
       CaptureDevice c2 = PredefinedJEPFunction.getCapDevObj( o2 );
-      if ( c2 == null )
-      {
-        CaptureDeviceInput cdi2 = PredefinedJEPFunction.getCapDevInputObj(o2);
-        if ( cdi2 != null )
-          c2 = cdi2.getCaptureDevice();
-      }
 
-      // If either of the CaptureDevice objects are invalid, the compare is invalid.
+      // If either of the CaptureDevice objects are invalid, then put the valid object in front of the invalid one; invalid objects are equal.
       if ( (c1 == null) || (c2 == null) )
       {
         if ( (c1 == null) && (c2 == null) )
