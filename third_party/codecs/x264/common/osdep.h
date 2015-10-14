@@ -43,7 +43,11 @@
 #define inline __inline
 #define strcasecmp stricmp
 #define strncasecmp strnicmp
+
+#if (defined(_MSC_VER) && (_MSC_VER < 1900))
 #define snprintf _snprintf
+#endif
+
 #define fseek _fseeki64
 #define ftell _ftelli64
 #define isfinite _finite

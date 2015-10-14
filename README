@@ -13,6 +13,7 @@ install - default config files for installs
 java - java source code
 native - C/C++ source code, top-level MSDEV projects for Windows native code
 native/ax - Windows DirectShow filter C++ source code
+native/Build/ - Windows binaries; created dynamically by building Native code
 native/common - shared common source/header files
 native/crosslibs - cross platform native code
 native/dll - Windows DLL C++ source code

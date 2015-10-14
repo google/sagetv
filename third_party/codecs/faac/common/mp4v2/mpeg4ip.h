@@ -75,7 +75,11 @@ typedef int socklen_t;
 /* Let's avoid some boring conflicting declarations */
 typedef int ssize_t;
 #endif /* #ifndef __MINGW32__ */
+
+#if (defined(_MSC_VER) && (_MSC_VER < 1900))
 #define snprintf _snprintf
+#endif
+
 #define strncasecmp _strnicmp
 #define strcasecmp _stricmp
 

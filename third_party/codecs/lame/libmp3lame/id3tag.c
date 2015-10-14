@@ -51,7 +51,7 @@ char *strchr (), *strrchr ();
 #endif
 
 
-#ifdef _MSC_VER
+#if (defined(_MSC_VER) && (_MSC_VER < 1900))
 #define snprintf _snprintf
 #endif
 

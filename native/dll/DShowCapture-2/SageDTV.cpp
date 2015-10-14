@@ -1626,7 +1626,7 @@ void SageTunerStop( void* Capture )
 	pCapInfo->pMC->Stop();
 }
 
-void SageDelay( void* Capture, unsigned long ms )
+void SageDelay(void* Capture, uint32_t ms)
 {
 	Sleep( ms );
 }
