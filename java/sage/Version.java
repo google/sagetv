@@ -23,7 +23,7 @@ public class Version
 {
   public static final byte MAJOR_VERSION = 9;
   public static final byte MINOR_VERSION = 0;
-  public static final byte MICRO_VERSION = 0;
+  public static final byte MICRO_VERSION = 2;
 
   public static final String VERSION = MAJOR_VERSION + "." + MINOR_VERSION + "." + MICRO_VERSION + "." + SageConstants.BUILD_VERSION;
 

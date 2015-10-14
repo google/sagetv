@@ -229,7 +229,7 @@ typedef struct Channel
 	int32_t  freqScheme;        //freqTable's freq type: 1:ATSC, 2:NTSC-CABLE, 3:NTSC-HRC, 4:user defined
 	FREQTBL  FreqTable;
 	FREQTBL* PreDefinedFreqTable;
-	int32_t  delayParse;        //postponde to start parser im million seconds
+	uint32_t  delayParse;        //postponde to start parser im million seconds
 	uint32_t freqShift;
 	int32_t	 frqTableUpdateCheck;
 	uint32_t frqTableTimeStamp;

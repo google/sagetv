@@ -152,8 +152,12 @@ static __inline int pthread_num_processors_np()
 #    include <stdio.h>
 
 /* Non ANSI mapping */
-#    define snprintf _snprintf
-#    define vsnprintf _vsnprintf
+
+#if (defined(_MSC_VER) && (_MSC_VER < 1900))
+  #define snprintf _snprintf
+  #define vsnprintf  vsnprintf
+#endif
+
 
 /*
  * This function must be declared/defined all the time because MSVC does

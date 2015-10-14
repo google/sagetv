@@ -24,6 +24,8 @@ extern "C" {
 #define NULL    ((void *)0)
 #endif
 
+#define _USE_32BIT_TIME_T
+
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
@@ -37,7 +39,9 @@ typedef LONGLONG REFERENCE_TIME;
 #pragma warning(disable : 4995)
 #pragma warning(disable : 234)
 
-#define _USE_32BIT_TIME_T
+#ifndef inline
+#define inline __inline
+#endif
 
 #ifndef ASSERT	
 #define ASSERT	assert
@@ -47,8 +51,10 @@ typedef LONGLONG REFERENCE_TIME;
 #define TEXT( x ) x
 #endif
 
-#define snprintf  _snprintf
-#define vsnprintf  vsnprintf
+#if (defined(_MSC_VER) && (_MSC_VER < 1900))
+  #define snprintf _snprintf
+  #define vsnprintf  vsnprintf
+#endif
 
 #ifndef lstrlen
 #define lstrlen	strlen
@@ -143,12 +149,12 @@ extern off64_t lseek64( int filedes, off64_t offset, int whence );
 extern off64_t tell64( int filedes );
 #endif
 
-typedef			 long long  LONGLONG;
-typedef unsigned long long ULONGLONG;
-typedef ULONGLONG REFERENCE_TIME;
+//typedef			 long long  LONGLONG;
+//typedef unsigned long long ULONGLONG;
+//typedef ULONGLONG REFERENCE_TIME;
 #define ASSERT   assert
 
-#endif
+#endif // _APPLE_
 
 #define _MIN(x,y) ((x)>(y)? (y):(x))
 #define _MAX(x,y) ((x)>(y)? (x):(y))

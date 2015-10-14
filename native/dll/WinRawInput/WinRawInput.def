@@ -1,6 +1,6 @@
-; Win32ShellHook.def : Declares the module parameters for the DLL.
+; WinRawInput.def : Declares the module parameters for the DLL.
 
-LIBRARY      "Win32ShellHook"
+LIBRARY      "WinRawInput"
 
 SECTIONS
 	.shared READ WRITE SHARED

@@ -13,13 +13,11 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// English (U.S.) resources
+// English (United States) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-#ifdef _WIN32
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #pragma code_page(1252)
-#endif //_WIN32
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -53,8 +51,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 6,0,13,1
- PRODUCTVERSION 2,0,0,1
+ FILEVERSION 9,0,0,5
+ PRODUCTVERSION 9,0,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -69,14 +67,14 @@ BEGIN
     BEGIN
         BLOCK "080004b0"
         BEGIN
-            VALUE "CompanyName", "SageTV, LLC"
+            VALUE "CompanyName", "SageTV Open Source"
             VALUE "FileDescription", "SageTV"
-            VALUE "FileVersion", "6, 0, 13, 1"
+            VALUE "FileVersion", "9.0.0.5"
             VALUE "InternalName", "SageTV"
-            VALUE "LegalCopyright", "Copyright © 2001-2006 SageTV, LLC"
+            VALUE "LegalCopyright", "Copyright © © 2015 The SageTV Authors"
             VALUE "OriginalFilename", "SageTV.exe"
             VALUE "ProductName", "SageTV"
-            VALUE "ProductVersion", "6.0"
+            VALUE "ProductVersion", "9.0.0.0"
         END
     END
     BLOCK "VarFileInfo"
@@ -95,7 +93,7 @@ END
 // remains consistent on all systems.
 IDI_ICON1               ICON                    "SageIcon.ico"
 IDI_ICON2               ICON                    "icon3.ico"
-#endif    // English (U.S.) resources
+#endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

@@ -107,7 +107,10 @@ typedef INT64 int64_t;
 #        define DEBUG
 #    endif
 */
+
+#if (defined(_MSC_VER) && (_MSC_VER < 1900))
 #    define snprintf _snprintf
+#endif
 
 #else /* CONFIG_WIN32 */
 

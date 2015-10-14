@@ -13,7 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#ifndef _USE_32BIT_TIME_T
 #define _USE_32BIT_TIME_T
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
