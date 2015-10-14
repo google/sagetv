@@ -16,6 +16,7 @@ ext {
     sageJarName = 'Sage.jar'
     sageJarDestinationDir = 'build/release/'
 	sageReleaseDestinationDir = 'build/serverrelease/'
+	sageJarPackageDestinationDir = 'build/'
     
     miniJarName = 'MiniClient.jar'
     miniJarDestinationDir = 'build/minirelease/'
@@ -46,7 +47,7 @@ ext {
 version = baseVersion
 
 // Just printing out the SAGETV build version for informational purposes
-System.out.println("SAGETV VERSION ${versionArch}");
+// System.out.println("SAGETV VERSION ${versionArch}");
 
 // set gradle's buildDir to something other than the default 'build', or
 // we'll end up deleting EVERYTHING in 'build' when we ./gradlew clean
@@ -254,8 +255,56 @@ task sageJavadoc(type: Javadoc) {
   source = sourceSets.main.allJava
 }
 
+/**
+ * Package SageTV jar and the STV together
+ */
+task (packageSageJar) << {
+	file(sageJarPackageDestinationDir).mkdirs();
+	
+	ant.zip(destfile: new File(sageJarPackageDestinationDir,"SageJar-${baseVersion}.zip").getAbsolutePath()) {
+		fileset(dir: sageJarDestinationDir) {
+			include(name: '*.jar')
+		}
+		zipfileset(dir: 'stvs/SageTV7', prefix: 'STVs/SageTV7/') {
+			include(name: 'SageTV7.xml')
+			
+		}
+	}
+}
+
+/**
+ * Task to update the build number in SageConstants based on the # of git commits
+ * Not sure I like it, yet.
+ */
+task (updateBuildNumber) << {
+	// use git to find the build version
+	ant.exec(
+		command: 'git rev-list HEAD --count', 
+		os: 'Linux', 
+		failonerror: true, 
+		outputproperty: 'sagebuildnum')
+	
+	buildVersion = ant.sagebuildnum
+	
+	if (buildVersion==null) buildVersion=0;
+	
+	// update SageConstants.java
+	ant.replaceregexp(
+		file: 'java/sage/SageConstants.java', 
+		match: "public static final int BUILD_VERSION = [0-9]+;",
+		replace: "public static final int BUILD_VERSION = ${buildVersion};"
+	)
+
+	// reupdate these values since buildVersion changes	
+	baseVersion = "${majorVersion}.${minorVersion}.${microVersion}.${buildVersion}"
+	versionArch = "${baseVersion}_" + (arch==64 ? 'amd64' : 'i386')
+	
+	System.out.println("SAGETV VERSION ${versionArch}");
+}
+
 // task dependencies
-sageJar.dependsOn classes, cleanSageJar
+compileJava.dependsOn updateBuildNumber
+sageJar.dependsOn cleanSageJar, classes
 miniclientJar.dependsOn clean, miniclientClasses, cleanMiniJar
 linuxMiniClientRelease.dependsOn miniclientJar
 
@@ -339,9 +388,9 @@ bintray {
 	user = System.getenv("BINTRAY_USER")
 	key = System.getenv("BINTRAY_API");
 	filesSpec {
-		from 'build/release'
+		// from 'build/release'
 		from ('build') {
-			include '*.tar.gz', '*.deb'
+			include '*.tar.gz', '*.deb', '*.zip'
 		}
 		into "sagetv/${baseVersion}"
 	}
