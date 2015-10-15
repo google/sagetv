@@ -64,7 +64,6 @@
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
     <Link>
       <AdditionalDependencies>$(SolutionDir)\..\third_party\Microsoft\BaseClasses\Debug\strmbasd.lib;vcruntimed.lib;ucrtd.lib;msvcrtd.lib;quartz.lib;winmm.lib;odbc32.lib;odbccp32.lib;wsock32.lib;$(SolutionDir)/lib/TSnative/NativeCored.lib;%(AdditionalDependencies)</AdditionalDependencies>
