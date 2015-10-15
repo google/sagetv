@@ -9,6 +9,7 @@
 /clientrelease/
 /sagetv*.deb
 /sagetv*.gz
+/SageJar*.zip
 
 /classes/
 /libs/

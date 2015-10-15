@@ -32,3 +32,7 @@ tar czf ../sagetv-server_"$MAJOR_VERSION"."$MINOR_VERSION"."$MICRO_VERSION"_"$AR
 cd ../clientrelease
 tar czf ../sagetv-client_"$MAJOR_VERSION"."$MINOR_VERSION"."$MICRO_VERSION"_"$ARCH".tar.gz *
 
+cd ../../
+./gradlew packageSageJar
+cd build
+
