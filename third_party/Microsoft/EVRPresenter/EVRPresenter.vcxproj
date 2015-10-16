@@ -64,7 +64,6 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
     <Link>
       <AdditionalDependencies>vcruntimed.lib;ucrtd.lib;strmiids.lib;dxva2.lib;d3d9.lib;mfuuid.lib;mfplat.lib;evr.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
