@@ -37,7 +37,7 @@
 long AFDFormatDump( void* context, short bytes, void* mesg )
 {
 	CPlayerData*  PlayerData = (CPlayerData*)context;
-	printf( "AFD MSG : %s\r\n", mesg );
+	printf( "AFD MSG : %s\r\n", (char *) mesg );
 	return 1;
 }
 

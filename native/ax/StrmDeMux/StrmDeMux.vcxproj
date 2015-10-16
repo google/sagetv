@@ -105,7 +105,6 @@
       <StackCommitSize>2097152</StackCommitSize>
       <OptimizeReferences>false</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <EntryPointSymbol>DllEntryPoint%4012</EntryPointSymbol>
       <ImportLibrary>.\Release/SDeMux.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
@@ -138,7 +137,6 @@
       <BrowseInformation>true</BrowseInformation>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CallingConvention>Cdecl</CallingConvention>
       <CompileAs>CompileAsCpp</CompileAs>
     </ClCompile>

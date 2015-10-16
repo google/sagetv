@@ -1,0 +1,10 @@
+Template: sagetv-server/haskey
+Type: boolean
+Default: false
+Description: Do you have a SageTV license key to enter?
+ .
+ Providing a SageTV license key allows you to access the SageTV EPG data.
+
+Template: sagetv-server/activkey
+Type: string
+Description: Enter your SageTV license key.

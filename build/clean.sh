@@ -25,6 +25,7 @@ rm -rf clientrelease
 rm -rf tmp
 rm sagetv*.deb
 rm sagetv*.gz
+rm SageJar-*.zip
 
 make -C ../native/so/SageLinux clean
 make -C ../native/so/IVTVCapture clean
