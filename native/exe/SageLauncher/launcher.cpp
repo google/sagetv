@@ -1339,8 +1339,10 @@ int launchJVMSage(LPSTR lpszCmdLine, HWND hWnd, BOOL bClient, BOOL bService)
 
 	char winBuf[16];
     char stdOutBuf[16];
-    sprintf(winBuf, "%d", hWnd);
-    sprintf(stdOutBuf, "%d", stdOutHandle);
+
+	// parsed as base 10 integers from Java
+	sprintf(winBuf, "%lld", (jlong) hWnd);
+    sprintf(stdOutBuf, "%lld", (jlong) stdOutHandle);
     jobjectArray args = env->NewObjectArray((prefFile == 0) ? 3 : 4, env->FindClass("java/lang/String"),
     	env->NewStringUTF(winBuf));
 	env->SetObjectArrayElement(args, 1, env->NewStringUTF(stdOutBuf));

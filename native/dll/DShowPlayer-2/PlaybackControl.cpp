@@ -413,7 +413,7 @@ JNIEXPORT jstring JNICALL Java_sage_media_format_MPEGParser_getMediaAVInf0
 	if ( ret >= 0 )	ret--;
 	if ( strstr(  Format, "ENCRYPTED-TS;" ) ) 
 	{
-		sprintf( buf, "Ret:%d Program:%d Format:AV-INF|f=%s", ret, TotalProgramNum, Duration, Format );
+		sprintf( buf, "Ret:%d Program:%d Duration:%s Format:AV-INF|f=%s", ret, TotalProgramNum, Duration, Format );
 	} else
 	if ( strstr( Format, "UNKNOWN-TS;"  ) || strstr( Format, "UNKNOWN-PS;"  ) || strstr(  Format, "NO-AV-TS;" ) )
 	{

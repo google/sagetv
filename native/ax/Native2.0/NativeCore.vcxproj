@@ -60,7 +60,6 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CompileAs>CompileAsC</CompileAs>
     </ClCompile>
     <Lib>
@@ -76,6 +75,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <SuppressStartupBanner>true</SuppressStartupBanner>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
     </ClCompile>
     <Lib>
       <OutputFile>$(SolutionDir)\lib\TSnative\NativeCore.lib</OutputFile>
