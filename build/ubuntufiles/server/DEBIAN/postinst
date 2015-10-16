@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+. /usr/share/debconf/confmodule
+ACTIVKEYFILE=/opt/sagetv/server/activkey
 
 action="$1"
 
@@ -22,6 +24,21 @@ umask 022
 if [ "$action" != configure ]
   then
   exit 0
+fi
+
+db_get sagetv-server/haskey
+HASKEY="$RET"
+
+if [ $HASKEY = "true" ]; then
+   db_get sagetv-server/activkey
+   ACTIVKEY="$RET"
+   
+   if [ ! -e $ACTIVKEYFILE ]; then
+      echo "$ACTIVKEY" > $ACTIVKEYFILE
+   else
+      mv -f $ACTIVKEYFILE $ACTIVKEYFILE.old
+      echo "$ACTIVKEY" > $ACTIVKEYFILE
+   fi
 fi
 
 if [ -x /etc/init.d/sagetv ]; then
