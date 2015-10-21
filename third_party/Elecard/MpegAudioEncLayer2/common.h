@@ -25,9 +25,6 @@
 #define FFMPEG_VERSION_INT 0x000406
 #define FFMPEG_VERSION     "0.4.6"
 
-#if defined(WIN32) && !defined(__MINGW32__) && !defined(__CYGWIN__)
-#    define CONFIG_WIN32
-#endif
 
 //#define ALT_BITSTREAM_WRITER
 //#define ALIGNED_BITSTREAM_WRITER
@@ -55,6 +52,10 @@
 #    endif
 
 #endif /* HAVE_AV_CONFIG_H */
+
+#if defined(WIN32) && !defined(__MINGW32__) && !defined(__CYGWIN__) && !defined(CONFIG_WIN32)
+#    define CONFIG_WIN32
+#endif
 
 /* Suppress restrict if it was not defined in config.h.  */
 #ifndef restrict
@@ -107,7 +108,10 @@ typedef INT64 int64_t;
 #        define DEBUG
 #    endif
 */
+
+#if (defined(_MSC_VER) && (_MSC_VER < 1900))
 #    define snprintf _snprintf
+#endif
 
 #else /* CONFIG_WIN32 */
 
@@ -154,7 +158,7 @@ typedef signed long long INT64;
 
 /* debug stuff */
 
-#    ifndef DEBUG
+#    if !defined(DEBUG) && !defined(NDEBUG)
 #        define NDEBUG
 #    endif
 #    include <assert.h>

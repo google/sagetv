@@ -359,7 +359,7 @@ HRESULT D3DPresentEngine::CreateVideoSamples(
 
 //	slog(("EVRPresenter create video sample %dx%d format=%d\r\n", width, height, (int)d3dFormat));
     // Create the video samples.
-    for (int i = 0; i < PRESENTER_BUFFER_COUNT; i++)
+    for (unsigned int i = 0; i < PRESENTER_BUFFER_COUNT; i++)
     {
 		// Create the D3D surface for this media sample
 		hr = pDevice->CreateRenderTarget(width, height, 

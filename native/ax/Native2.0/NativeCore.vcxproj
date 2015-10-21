@@ -1,0 +1,163 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{D7D53682-AC32-437E-BFAB-C06A44F095FF}</ProjectGuid>
+    <RootNamespace>NativeCore</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v140_xp</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v140_xp</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>12.0.30501.0</_ProjectFileVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(SolutionDir)\lib\TSnative\</OutDir>
+    <IntDir>.\Debug\</IntDir>
+    <TargetName>NativeCored</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)\lib\TSnative\</OutDir>
+    <IntDir>.\Release\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <AdditionalOptions>/Gs %(AdditionalOptions)</AdditionalOptions>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <WarningLevel>Level3</WarningLevel>
+      <CompileAs>CompileAsC</CompileAs>
+    </ClCompile>
+    <Lib>
+      <OutputFile>$(SolutionDir)\lib\TSnative\NativeCored.lib</OutputFile>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <AdditionalOptions>/Gs %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+    </ClCompile>
+    <Lib>
+      <OutputFile>$(SolutionDir)\lib\TSnative\NativeCore.lib</OutputFile>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="NativeCore\ATSCPSIParser.c" />
+    <ClCompile Include="NativeCore\AVAnalyzer.c" />
+    <ClCompile Include="NativeCore\AVFormat\AACFormat.c" />
+    <ClCompile Include="NativeCore\AVFormat\AC3Format.c" />
+    <ClCompile Include="NativeCore\AVFormat\DTSFormat.c" />
+    <ClCompile Include="NativeCore\AVFormat\EAC3Format.c" />
+    <ClCompile Include="NativeCore\AVFormat\H264Format.c" />
+    <ClCompile Include="NativeCore\AVFormat\LPCMFormat.c" />
+    <ClCompile Include="NativeCore\AVFormat\MpegAudioFormat.c" />
+    <ClCompile Include="NativeCore\AVFormat\MpegVideoFormat.c" />
+    <ClCompile Include="NativeCore\AVFormat\Subtitle.c" />
+    <ClCompile Include="NativeCore\AVFormat\VC1Format.c" />
+    <ClCompile Include="NativeCore\AVTrack.c" />
+    <ClCompile Include="NativeCore\Bits.c" />
+    <ClCompile Include="NativeCore\BlockBuffer.c" />
+    <ClCompile Include="NativeCore\ChannelScan.c" />
+    <ClCompile Include="NativeCore\Demuxer.c" />
+    <ClCompile Include="NativeCore\DVBPSIParser.c" />
+    <ClCompile Include="NativeCore\ESAnalyzer.c" />
+    <ClCompile Include="NativeCore\GetAVInf.c" />
+    <ClCompile Include="NativeCore\NativeCore.c" />
+    <ClCompile Include="NativeCore\NativeMemory.c" />
+    <ClCompile Include="NativeCore\PSBuilder.c" />
+    <ClCompile Include="NativeCore\PSIParser.c" />
+    <ClCompile Include="NativeCore\PSIParserConstData.c" />
+    <ClCompile Include="NativeCore\PSParser.c" />
+    <ClCompile Include="NativeCore\Remuxer.c" />
+    <ClCompile Include="NativeCore\ScanFilter.c" />
+    <ClCompile Include="NativeCore\SectionData.c" />
+    <ClCompile Include="NativeCore\TSBuilder.c" />
+    <ClCompile Include="NativeCore\TSChannelParser.c" />
+    <ClCompile Include="NativeCore\TSCRC32.c" />
+    <ClCompile Include="NativeCore\TSEPGParser.c" />
+    <ClCompile Include="NativeCore\TSFilter.c" />
+    <ClCompile Include="NativeCore\TSInfoParser.c" />
+    <ClCompile Include="NativeCore\TSParser.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="NativeCore\ATSCPSIParser.h" />
+    <ClInclude Include="NativeCore\AVAnalyzer.h" />
+    <ClInclude Include="NativeCore\AVFormat\AACFormat.h" />
+    <ClInclude Include="NativeCore\AVFormat\AC3Format.h" />
+    <ClInclude Include="NativeCore\AVFormat\DTSFormat.h" />
+    <ClInclude Include="NativeCore\AVFormat\H264Format.h" />
+    <ClInclude Include="NativeCore\AVFormat\LPCMFormat.h" />
+    <ClInclude Include="NativeCore\AVFormat\MpegAudioFormat.h" />
+    <ClInclude Include="NativeCore\AVFormat\MpegVideoFormat.h" />
+    <ClInclude Include="NativeCore\AVFormat\Subtitle.h" />
+    <ClInclude Include="NativeCore\AVFormat\VC1Format.h" />
+    <ClInclude Include="NativeCore\AVTrack.h" />
+    <ClInclude Include="NativeCore\Bits.h" />
+    <ClInclude Include="NativeCore\BlockBuffer.h" />
+    <ClInclude Include="NativeCore\ChannelScan.h" />
+    <ClInclude Include="NativeCore\ChannelScanInc.h" />
+    <ClInclude Include="NativeCore\Demuxer.h" />
+    <ClInclude Include="NativeCore\DVBPSIParser.h" />
+    <ClInclude Include="NativeCore\ESAnalyzer.h" />
+    <ClInclude Include="NativeCore\GetAVInf.h" />
+    <ClInclude Include="NativeCore\NativeCore.h" />
+    <ClInclude Include="NativeCore\NativeMemory.h" />
+    <ClInclude Include="NativeCore\PSBuilder.h" />
+    <ClInclude Include="NativeCore\PSIParser.h" />
+    <ClInclude Include="NativeCore\PSIParserConstData.h" />
+    <ClInclude Include="NativeCore\PSParser.h" />
+    <ClInclude Include="NativeCore\Remuxer.h" />
+    <ClInclude Include="NativeCore\ScanFilter.h" />
+    <ClInclude Include="NativeCore\SectionData.h" />
+    <ClInclude Include="NativeCore\TSBuilder.h" />
+    <ClInclude Include="NativeCore\TSChannelParser.h" />
+    <ClInclude Include="NativeCore\TSCRC32.h" />
+    <ClInclude Include="NativeCore\TSEPGParser.h" />
+    <ClInclude Include="NativeCore\TSFilter.h" />
+    <ClInclude Include="NativeCore\TSInfoParser.h" />
+    <ClInclude Include="NativeCore\TSParser.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

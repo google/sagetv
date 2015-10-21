@@ -73,6 +73,7 @@ public class MediaFile extends DBObject implements SegmentedFile
   private static final boolean VIDEO_THUMBNAIL_FILE_GEN = Sage.getBoolean("video_thumbnail_generation", true);
   private static final String THUMB_FOLDER_NAME = Sage.get("ui/thumbnail_folder", "GeneratedThumbnails");
   public static final File THUMB_FOLDER = new File(Sage.getPath("cache"), THUMB_FOLDER_NAME);
+  public static final String ILLEGAL_FILE_NAME_CHARACTERS = "\\/:*?<>|\"";  // Jeff Harrison - 10/2/2015
 
   // Ensure this directory is created, we rely on this in a few places
   static
@@ -3996,7 +3997,7 @@ public class MediaFile extends DBObject implements SegmentedFile
   {
     if (considerInProfile && isCompleteRecording() && getContentAiring() != null && isTV())
     {
-      Carny.getInstance().submitWasteJob(getContentAiring(), true, false);
+      Carny.getInstance().addDontLike(getContentAiring(), false);
     }
     while (!files.isEmpty())
     {
@@ -4147,18 +4148,21 @@ public class MediaFile extends DBObject implements SegmentedFile
       else
       {
         Show s = getShow();
+        // Jeff Harrison - 10/5/2015
+        // Add spaces around SxxExx and Episode Name
+        String sectionDivider = (Sage.getBoolean("extended_filenames", false) ? " - " : "-");				
         String namePart = (forcedStringName != null ? forcedStringName :
           (createValidFilename(s.getTitle()) +
-              ((Sage.getBoolean("use_season_episode_nums_in_filenames", false) && s.getSeasonNumber() > 0 && s.getEpisodeNumber() > 0) ?
-                  ("-S" + (s.getSeasonNumber() < 10 ? "0" : "") + s.getSeasonNumber() + "E" + (s.getEpisodeNumber() < 10 ? "0" : "") + s.getEpisodeNumber()) : "") +
-                  ((Sage.getBoolean("use_episodes_in_filenames", true) && s.getEpisodeName().length() > 0) ?
-                      ('-' + createValidFilename(s.getEpisodeName())) : "")));
+            ((Sage.getBoolean("use_season_episode_nums_in_filenames", false) && s.getSeasonNumber() > 0 && s.getEpisodeNumber() > 0) ?
+              (sectionDivider + "S" + (s.getSeasonNumber() < 10 ? "0" : "") + s.getSeasonNumber() + "E" + (s.getEpisodeNumber() < 10 ? "0" : "") + s.getEpisodeNumber()) : "") +
+                ((Sage.getBoolean("use_episodes_in_filenames", true) && s.getEpisodeName().length() > 0) ?
+                  (sectionDivider + createValidFilename(s.getEpisodeName())) : "")));
         if (namePart.length() == 0 || "-".equals(namePart))
           namePart = Sage.get("default_filename_when_null", "SageTV");
         else if (namePart.startsWith("-")) // messes up cmd line switches, so don't use - for first char
           namePart = namePart.substring(1);
-        return new File(videoDirectory, namePart + (skipAiringID ? "" : ("-" +
-            infoAiringID)) + '-' + fileNum + getFileExtension());
+        return new File(videoDirectory, namePart + (skipAiringID ? "" : (sectionDivider +
+          infoAiringID)) + '-' + fileNum + getFileExtension());
       }
     }
 
@@ -4259,9 +4263,13 @@ public class MediaFile extends DBObject implements SegmentedFile
       {
         if (Character.isLetterOrDigit(c))
           sb.append(c);
-      }
-      else if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z'))
-        sb.append(c);
+      } else if ((c >= 'a' && c <= 'z') ||
+        (c >= '0' && c <= '9') ||
+        (c >= 'A' && c <= 'Z') ||
+        // Jeff Harrison - 10/2/2015
+        // Keep spaces and other extra characters in filenames excluding illegal characters
+        (Sage.getBoolean("extended_filenames", false) && !ILLEGAL_FILE_NAME_CHARACTERS.contains(c + "")))
+          sb.append(c);
     }
     return sb.toString();
   }

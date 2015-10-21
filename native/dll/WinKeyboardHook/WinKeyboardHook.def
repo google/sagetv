@@ -1,6 +1,6 @@
-; Win32ShellHook.def : Declares the module parameters for the DLL.
+; WinKeyboardHook.def : Declares the module parameters for the DLL.
 
-LIBRARY      "Win32ShellHook"
+LIBRARY      "WinKeyboardHook"
 
 SECTIONS
 	.shared READ WRITE SHARED

@@ -1,0 +1,11 @@
+#!/bin/sh -e
+. /usr/share/debconf/confmodule
+
+db_input high sagetv-server/haskey || true
+db_go
+
+db_get sagetv-server/haskey
+if [ "$RET" = "true" ]; then
+   db_input high sagetv-server/activkey || true
+   db_go
+fi

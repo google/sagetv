@@ -1845,7 +1845,9 @@ public class Catbert
             paramTypes[i] = new Class[] { args[i].getClass(), Character.TYPE};
           }
           else if (args[i] instanceof Airing)
-            paramTypes[i] = new Class[] { new Airing(0).getClass() }; // for FakeAiring
+            paramTypes[i] = new Class[] { Airing.class }; // for FakeAiring
+          else if (args[i] instanceof Person)
+            paramTypes[i] = new Class[] { Person.class, String.class };
           else if (args[i] == null)
             paramTypes[i] = null;
           else
@@ -1982,6 +1984,8 @@ public class Catbert
                 args[i] = ((Number) args[i]).floatValue();
               else if (methArgs[i] == Double.TYPE)
                 args[i] = ((Number) args[i]).doubleValue();
+            } else if (args[i] instanceof Person && methArgs[i].isAssignableFrom(String.class)) {
+              args[i] = ((Person) args[i]).toString();
             }
           }
           result = theConst.newInstance(args);
@@ -2131,6 +2135,8 @@ public class Catbert
                 args[i] = new Float(((Number) args[i]).floatValue());
               else if (methArgs[i] == Double.TYPE)
                 args[i] = new Double(((Number) args[i]).doubleValue());
+            } else if (args[i] instanceof Person && methArgs[i].isAssignableFrom(String.class)) {
+              args[i] = ((Person) args[i]).toString();
             }
           }
           result = theMeth.invoke(instObj, args);

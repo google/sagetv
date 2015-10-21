@@ -1,0 +1,6 @@
+
+BaseClasses comes from:
+
+Microsoft Windows SDK 6.1
+
+C:\Program Files\Microsoft SDKs\Windows\v6.1\Samples\Multimedia\DirectShow\BaseClasses

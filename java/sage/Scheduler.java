@@ -52,7 +52,7 @@ public class Scheduler implements Runnable
   {
     return SchedulerHolder.instance;
   }
-  
+
   private Scheduler()
   {
     wiz = Wizard.getInstance();
@@ -366,7 +366,7 @@ public class Scheduler implements Runnable
     {
       synchronized (this)
       {
-        //				dontKnowConflicts.clear();
+        //        dontKnowConflicts.clear();
         kick(false);
       }
     }
@@ -482,7 +482,7 @@ public class Scheduler implements Runnable
   // doesn't have any that are the same and that the WP is non-zero.
   private boolean okToSchedule(Airing testMe, long currTime)
   {
-    if (getSchedulingEnd(testMe) <= currTime || god.getWP(testMe) <= 0)
+    if (getSchedulingEnd(testMe) <= currTime || god.getWP(testMe) <= 0 || testMe.isDontLike())
       return false;
     for (EncoderSchedule es : encoderScheduleMap.values())
     {
@@ -905,25 +905,7 @@ public class Scheduler implements Runnable
 
     // Create a list of the ES's thats sorted by merit
     CaptureDevice[] sortedEncNames = encoderScheduleMap.keySet().toArray(new CaptureDevice[0]);
-    Arrays.sort(sortedEncNames, new Comparator<CaptureDevice>()
-    {
-      public int compare(CaptureDevice c1, CaptureDevice c2)
-      {
-        int m1 = c1.getMerit();
-        int m2 = c2.getMerit();
-        if (m1 != m2)
-          return m2 - m1;
-
-        // Use the device with the better physical input type
-        int x = c2.getHighestQualityConfiguredInputType() - c1.getHighestQualityConfiguredInputType();
-        if (x != 0)
-          return x;
-
-        // The more encoding options the better, so use that one first if merit is equal
-        return c2.getEncodingQualities().length -
-            c1.getEncodingQualities().length;
-      }
-    });
+    Arrays.sort(sortedEncNames, CaptureDevice.captureDeviceSorter);
     EncoderSchedule[] sortedEncs = new EncoderSchedule[sortedEncNames.length];
     for (int i = 0; i < sortedEncNames.length; i++)
       sortedEncs[i] = encoderScheduleMap.get(sortedEncNames[i]);
@@ -1070,10 +1052,6 @@ public class Scheduler implements Runnable
     Object[] sortedAgents = god.sortAgentsByPriority(agentMap.keySet().toArray());
 
     if (SDBG) System.out.println("SCHED sortedAgents=" + Arrays.asList(sortedAgents));
-
-    // changedAirings holds anything that was in the schedule before that we've pushed out
-    // since we started this update, this way schedule removals by must sees get put back into the pots
-    Set<Airing> changedAirings = new HashSet<Airing>();
 
     // Set the vars for when we timeout on the iterative scheduling
     // conflict_resolution_search_depth - Give up after trying this many permutations
@@ -2100,9 +2078,6 @@ public class Scheduler implements Runnable
     {
       if (Sage.DBG && !Sage.EMBEDDED) System.out.println("MUST SEE FINAL-" + es.capDev + "-" + es.mustSee.toString());
 
-      // Now we have to do the appropriate thing with the changed ones.
-      changedAirings.removeAll(es.schedule);
-
       // SCHEDULE CLEANUP 7/22/03
       // Removal of anything from the schedule that's not in the must see & is not
       // a current record is TOTALLY SAFE. We want to clear out anything
@@ -2152,13 +2127,6 @@ public class Scheduler implements Runnable
     }
     if (irEnabled)
     {
-      for (Airing testAir : changedAirings)
-      {
-        if (!okToSchedule(testAir, currTime)) continue;
-          if (testAir.getStartTime() >= desiredStartLookTime)
-          potentials.add(testAir);
-      }
-
       potentials.sort();
 
       // Build the redudancy map. This saves us a LOT of CPU time once they have any kind of IR built up because of its n^2 performance
@@ -2227,7 +2195,7 @@ public class Scheduler implements Runnable
       {
         Airing currAir = potentials.elementAt(i);
         // It's more optimal to do this later
-        //			if (!conflictsWithMustSee(currAir) && okToSchedule(currAir, currTime))
+        //      if (!conflictsWithMustSee(currAir) && okToSchedule(currAir, currTime))
         {
           long currAirStart = getSchedulingStart(currAir);
           long currAirEnd = getSchedulingEnd(currAir);
@@ -2251,7 +2219,7 @@ public class Scheduler implements Runnable
           calcWatch *= 1 - currRandy*FUZZIFIER;
 
           //System.out.println("Examining potential like of " + currAir + " w/ calcWatch=" + calcWatch +
-          //	" orgWatch=" + orgWatch + " " + rp);
+          //  " orgWatch=" + orgWatch + " " + rp);
           float minMaxTakeWP = Float.MAX_VALUE;
           CaptureDevice minMaxTakeEncoder = null;
           for (Map.Entry<CaptureDevice, EncoderSchedule> ent : encoderScheduleMap.entrySet())

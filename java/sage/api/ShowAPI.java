@@ -375,20 +375,35 @@ public class ShowAPI {
         Show s = getShow(stack);
         return (s==null) ? "" : s.getPeopleString(Show.ALL_ROLES);
       }});
-    rft.put(new PredefinedJEPFunction("Show", "GetPeopleListInShow", 1, new String[] { "Show" })
+    rft.put(new PredefinedJEPFunction("Show", "GetPersonListInShow", 1, new String[] { "Show" })
     {
       /**
        * Gets a list of all of the people involved in this Show. The order of the returned list will
        * correlate with the values returned from {@link #GetRolesInShow GetRolesInShow}.
        * @param Show the Show object
        * @return a list of all of the people involved in this Show as a Person array
-       * @since 5.1
+       * @since 9.0.3
        *
-       * @declaration public Person[] GetPeopleListInShow(Show Show);
+       * @declaration public Person[] GetPersonListInShow(Show Show);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         Show s = getShow(stack);
         return (s==null) ? Pooler.EMPTY_PERSON_ARRAY : s.getPeopleObjList(Show.ALL_ROLES);
+      }});
+    rft.put(new PredefinedJEPFunction("Show", "GetPeopleListInShow", 1, new String[] { "Show" })
+    {
+      /**
+       * Gets a list of all of the people involved in this Show. The order of the returned list will
+       * correlate with the values returned from {@link #GetRolesInShow GetRolesInShow}.
+       * @param Show the Show object
+       * @return a list of all of the people involved in this Show as a String array
+       * @since 5.1
+       *
+       * @declaration public String[] GetPeopleListInShow(Show Show);
+       */
+      public Object runSafely(Catbert.FastStack stack) throws Exception{
+        Show s = getShow(stack);
+        return (s==null) ? Pooler.EMPTY_STRING_ARRAY : s.getPeopleList(Show.ALL_ROLES);
       }});
     rft.put(new PredefinedJEPFunction("Show", "GetPeopleAndCharacterListInShow", 1, new String[] { "Show" })
     {
@@ -539,10 +554,26 @@ public class ShowAPI {
        * Gets the people in the specified Show in the specified Role. Returned as a String array.
        * @param Show the Show object
        * @param Role the role to get the people for
-       * @return the people in the specified Show in the specified Role as a Person array
+       * @return the people in the specified Show in the specified Role as a String array
        * @since 5.1
        *
-       * @declaration public Person[] GetPeopleListInShowInRole(Show Show, String Role);
+       * @declaration public String[] GetPeopleListInShowInRole(Show Show, String Role);
+       */
+      public Object runSafely(Catbert.FastStack stack) throws Exception{
+        String role = getString(stack);
+        Show s = getShow(stack);
+        return (s==null) ? Pooler.EMPTY_STRING_ARRAY : s.getPeopleList(Show.getRoleForString(role));
+      }});
+    rft.put(new PredefinedJEPFunction("Show", "GetPersonListInShowInRole", 2, new String[] { "Show", "Role" })
+    {
+      /**
+       * Gets the people in the specified Show in the specified Role. Returned as a Person array.
+       * @param Show the Show object
+       * @param Role the role to get the people for
+       * @return the people in the specified Show in the specified Role as a Person array
+       * @since 9.0.3
+       *
+       * @declaration public Person[] GetPersonListInShowInRole(Show Show, String Role);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         String role = getString(stack);
@@ -555,10 +586,34 @@ public class ShowAPI {
        * Gets the people in the specified Show in the specified Roles. Returned as a String array.
        * @param Show the Show object
        * @param RoleList the roles to get the people for
-       * @return the people in the specified Show in the specified Roles as a Person array
+       * @return the people in the specified Show in the specified Roles as a String array
        * @since 5.1
        *
-       * @declaration public Person[] GetPeopleListInShowInRoles(Show Show, String[] RoleList);
+       * @declaration public String[] GetPeopleListInShowInRoles(Show Show, String[] RoleList);
+       */
+      public Object runSafely(Catbert.FastStack stack) throws Exception{
+        String[] roles = getStringList(stack);
+        Show s = getShow(stack);
+        if (s == null) return "";
+        java.util.ArrayList rv = new java.util.ArrayList();
+        for (int i = 0; i < roles.length; i++)
+        {
+          String[] str = s.getPeopleList(Show.getRoleForString(roles[i]));
+          for (int j = 0; (str != null) && j < str.length; j++)
+            rv.add(str[j]);
+        }
+        return (String[]) rv.toArray(Pooler.EMPTY_STRING_ARRAY);
+      }});
+     rft.put(new PredefinedJEPFunction("Show", "GetPersonListInShowInRoles", 2, new String[] { "Show", "RoleList" })
+    {
+      /**
+       * Gets the people in the specified Show in the specified Roles. Returned as a Person array.
+       * @param Show the Show object
+       * @param RoleList the roles to get the people for
+       * @return the people in the specified Show in the specified Roles as a Person array
+       * @since 9.0.3
+       *
+       * @declaration public Person[] GetPersonListInShowInRoles(Show Show, String[] RoleList);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         String[] roles = getStringList(stack);

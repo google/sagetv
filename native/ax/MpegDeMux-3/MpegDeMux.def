@@ -1,5 +1,5 @@
 
-LIBRARY         MpegDeMux-2.ax
+LIBRARY         MpegDeMux.ax
 EXPORTS
                 DllGetClassObject PRIVATE
                 DllCanUnloadNow PRIVATE

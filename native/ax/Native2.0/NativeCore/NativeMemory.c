@@ -303,29 +303,6 @@ char* sagetv_mem_inf( int loc, char *buf, int buf_size )
 }
 
 #else
-void* sagetv_malloc2( int size, int line )
-{
-	char* p;;
-	if ( size < 0 || size > 1024*512 )
-	{
-		char buf[128];
-		sprintf( buf, "!!!Memeory alloc size invalid size:%d TSParser.c::line %d\n", size, line ); 
-		_log_error( buf );
-
-		return NULL;
-	}
-
-	p = (char*)malloc( size );
-	if ( p ) memset( p, 0, size );
-	else
-	{
-		char buf[128];
-		sprintf( buf, "!!!Memeory alloc failed  size:%d TSParser.c::line %d\n", size, line ); 
-		_log_error( buf );
-	}
-
-	return (void*)p; 
-}
 
 void  sagetv_free2( void* p, int line )
 {
