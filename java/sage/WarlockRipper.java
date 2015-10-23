@@ -245,7 +245,7 @@ public class WarlockRipper extends EPGDataSource
   }
 
   // This may take some time due to the diskspace calculation so do it before we connect to the server
-  private static String getSubmitInfo(Wizard wiz, String providerID)
+  public static String getSubmitInfo(Wizard wiz, String providerID)
   {
     StringBuffer sb = new StringBuffer();
     sb.append("SUBMIT_INFO ");
