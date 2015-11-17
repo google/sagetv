@@ -3047,7 +3047,10 @@ public class MiniPlayer implements DVDMediaPlayer
         {
           clientInStream = new FastPusherReply(clientSocket);
         }
-        byte []b = Sage.EMBEDDED ? url.getBytes(Sage.I18N_CHARSET) : url.getBytes();
+        // 11/17/2015 Narflex - This was I18N_CHARSET for all cases in V7; then for
+        // some reason we made it I18N_CHARSET for EMBEDDED only...and getBytes() for
+        // the other cases. I'm changing it back to the old way of always I18N_CHARSET.
+        byte []b = url.getBytes(Sage.I18N_CHARSET);
         sockBuf.clear();
         sockBuf.putInt(MEDIACMD_OPENURL<<24 | b.length+1+4);
         sockBuf.putInt(b.length+1);
