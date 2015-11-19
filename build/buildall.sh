@@ -15,6 +15,11 @@
 # limitations under the License.
 #
 
+if [ "$JDK_HOME" = "" ] ; then
+	echo "JDK_HOME is not set"
+	exit 1;
+fi
+
 echo Build the Sage.jar file
 ./buildsage.sh || { echo "Build failed, exiting."; exit 1; }
 echo  Build the Miniclient jar file
@@ -30,3 +35,4 @@ echo  Copy the files for the client install
 echo  Build the tarballs and debian packages
 ./buildtarballs.sh || { echo "Build failed, exiting."; exit 1; }
 ./buildubuntu.sh || { echo "Build failed, exiting."; exit 1; }
+
