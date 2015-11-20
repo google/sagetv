@@ -2,6 +2,10 @@
 *~
 config*.log
 
+.buildnumber
+
+/java/sage/SageConstants.java.bak
+
 /native/**/*.o
 /native/**/*.map
 /native/**/*.a
