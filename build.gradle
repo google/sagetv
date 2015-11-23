@@ -29,16 +29,12 @@ ext {
 	arch=Integer.parseInt(System.getProperty('sun.arch.data.model')); // 32 or 64
 	releaseBuild = (System.getProperty("SAGETV_RELEASE", System.getenv("SAGETV_RELEASE")) != null)	
 	snapshotId = (releaseBuild?"":("SNAPSHOT-"+ new java.text.SimpleDateFormat("yyyyMMdd_hhmm").format(new java.util.Date() )))
-	
-	// SageTV version info as per Version.java
-	// eventually version should be sourced from another location, but until then
-	// we can look it up this way
+
 	versionText = new File('java/sage/Version.java').text
 	majorVersion = (versionText =~ /MAJOR_VERSION = ([0-9]+)/)[0][1]
 	minorVersion = (versionText =~ /MINOR_VERSION = ([0-9]+)/)[0][1]
 	microVersion = (versionText =~ /MICRO_VERSION = ([0-9]+)/)[0][1]
-	buildVersionText = new File('java/sage/SageConstants.java').text
-	buildVersion = (buildVersionText =~ /BUILD_VERSION = ([0-9]+)/)[0][1]
+	buildVersion =  getBuildNumber()
 
 	baseVersion = "${majorVersion}.${minorVersion}.${microVersion}.${buildVersion}"
 	versionArch = "${baseVersion}_" + (arch==64 ? 'amd64' : 'i386')
@@ -273,20 +269,45 @@ task (packageSageJar) << {
 }
 
 /**
+ * Get the current build number from the git commit history, but use the .buildnumber or SageConstants
+ * if the git command is not available.
+ * 
+ * @return build number
+ */
+def getBuildNumber() {
+	def buildVerText = new File('java/sage/SageConstants.java').text
+	// pull the build number from the .buildnumber, if it exists, otherwise, look in SageConstants.java
+	def buildVer =  (new File('.buildnumber').exists())?(new File(".buildnumber").text) : (buildVerText =~ /BUILD_VERSION = ([0-9]+)/)[0][1]
+	
+	if (OperatingSystem.current().isLinux()) {
+		// use git to find the build version
+		ant.exec(
+			command: 'git rev-list HEAD --count',
+			os: 'Linux',
+			failonerror: true,
+			outputproperty: 'sagebuildnum')
+		
+		buildVer = ant.sagebuildnum		
+	}
+	
+	if (buildVer == null) buildVer=0;
+	return buildVer;
+}
+
+/**
  * Task to update the build number in SageConstants based on the # of git commits
  * Not sure I like it, yet.
  */
 task (updateBuildNumber) << {
-	// use git to find the build version
-	ant.exec(
-		command: 'git rev-list HEAD --count', 
-		os: 'Linux', 
-		failonerror: true, 
-		outputproperty: 'sagebuildnum')
+	buildVersion = getBuildNumber()
 	
-	buildVersion = ant.sagebuildnum
+	def file = new File('java/sage/SageConstants.java');
+	def fileBak = new File('java/sage/SageConstants.java.bak');
 	
-	if (buildVersion==null) buildVersion=0;
+	if (!fileBak.exists()) {
+		fileBak.text = file.text
+		System.out.println("Backed up ${file}")
+	}
 	
 	// update SageConstants.java
 	ant.replaceregexp(
@@ -300,6 +321,25 @@ task (updateBuildNumber) << {
 	versionArch = "${baseVersion}_" + (arch==64 ? 'amd64' : 'i386')
 	
 	System.out.println("SAGETV VERSION ${versionArch}");
+	
+	// save buildnumber to file
+	// we'll be referencing it later
+	// Eventually we'll do this, but for now, fetch it every time
+	// new File('.buildnumber').write(buildVersion)
+}
+
+/**
+ * restore the SageConstants.java that was modified during updateBuildNumber
+ */
+task (restoreSageConstants) << {
+	def file = new File('java/sage/SageConstants.java');
+	def fileBak = new File('java/sage/SageConstants.java.bak');
+	
+	if (fileBak.exists()) {
+		file.text = fileBak.text
+		System.out.println("Restored ${file}");
+		fileBak.deleteOnExit()
+	}	
 }
 
 // task dependencies
@@ -307,6 +347,7 @@ compileJava.dependsOn updateBuildNumber
 sageJar.dependsOn cleanSageJar, classes
 miniclientJar.dependsOn clean, miniclientClasses, cleanMiniJar
 linuxMiniClientRelease.dependsOn miniclientJar
+sageJar.finalizedBy restoreSageConstants
 
 // Eclipse project setup
 eclipse {

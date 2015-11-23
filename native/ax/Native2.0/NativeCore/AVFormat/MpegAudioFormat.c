@@ -45,8 +45,8 @@ static const int SamplingRateTbl[2][3] =
 int ReadMpegAudioHeader( MPEG_AUDIO *pMpegAudio, const uint8_t* pStart, int Size )
 {
 	int Layer,i,MPGVersion, CRC_protected, BiteRateIndex, SampleRateIndex;
-	int8_t LayerCode;
-	const int8_t *pData;
+	uint8_t LayerCode;
+	const uint8_t *pData;
 	uint32_t Bitrate;
 
 	pData = pStart;
