@@ -344,7 +344,7 @@ public final class NetworkCaptureDevice extends CaptureDevice
   public boolean isFunctioning()
   {
     boolean rv = "OK".equals(submitHostCommand("NOOP"));
-    if (Sage.EMBEDDED && !rv && !launchedMonitorThread)
+    if (!rv && !launchedMonitorThread)
     {
       if (hasConfiguredInput())
       {
@@ -362,7 +362,7 @@ public final class NetworkCaptureDevice extends CaptureDevice
                 Scheduler.getInstance().kick(false);
                 break;
               }
-              try{Thread.sleep(1000);}catch(Exception e){}
+              try{Thread.sleep((Sage.EMBEDDED) ? 1000 : 15000);}catch(Exception e){}
             }
             launchedMonitorThread = false;
           }
