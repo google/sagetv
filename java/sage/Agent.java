@@ -457,7 +457,8 @@ public class Agent extends DBObject implements Favorite
     }
 
     ArrayList<Airing> rv = new ArrayList<Airing>();
-    boolean keywordTest = (this.agentMask&(KEYWORD_MASK)) == (KEYWORD_MASK);
+    boolean keywordTest = (this.agentMask&(KEYWORD_MASK)) == (KEYWORD_MASK) &&
+        !Sage.getBoolean("use_legacy_keyword_favorites", true);
     if(keywordTest) {
       // If we're only doing a keyword mask, speed it up via Lucene
       Show[] shows = wiz.searchShowsByKeyword(getKeyword());
@@ -573,7 +574,7 @@ public class Agent extends DBObject implements Favorite
    * of this Agent)
    *
    * @param air The Airing to be tested
-   * @param mustBeViewable If true, the Airing must be viewable for this method to return true.  Viewable means a 
+   * @param mustBeViewable If true, the Airing must be viewable for this method to return true.  Viewable means a
    * recording that can be watched, or a channel that can be viewed.
    * @param sbCache A StringBuffer to be used by this method.  If null a new StringBuffer will be created.  If non-null
    * the buffer will be cleared and use.  When calling this method in a loop, the same StringBuffer can be used for each
@@ -978,12 +979,12 @@ public class Agent extends DBObject implements Favorite
       watchProb /= 2;
 
     // If there are more Don't Likes than Watched, set Watch Prob to 0 so this agent
-    // won't be the cause of a recording w/o stopping some other agent from causing a recording. 
+    // won't be the cause of a recording w/o stopping some other agent from causing a recording.
     if ( (numWatchedAirs == 0 && numWastedAirs > 1) || (numManualWaste > numWatchedAirs) )
         watchProb = 0;
 
     // For a Title agent (or if aggressive negative profiling is on), then check whether
-    // this agent should also prevent any other agent from recordings something; i.e.: set negator to true. 
+    // this agent should also prevent any other agent from recordings something; i.e.: set negator to true.
     negator = ((agentMask & TITLE_MASK) != 0 || Sage.getBoolean("aggressive_negative_profiling", false)) &&
         ((numWatchedAirs == 0 && numWastedAirs > 1) ||
             (numManualWaste > numWatchedAirs));

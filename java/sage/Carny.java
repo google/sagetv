@@ -280,7 +280,8 @@ public final class Carny implements Runnable
     // For add, we just add all of the Airings that match this Favorite to the loveAirSet
     List<Airing> airsToAdd = new ArrayList<Airing>();
     long start = Sage.time();
-    boolean keywordTest = (rv.agentMask&(Agent.KEYWORD_MASK)) == (Agent.KEYWORD_MASK);
+    boolean keywordTest = (rv.agentMask&(Agent.KEYWORD_MASK)) == (Agent.KEYWORD_MASK) &&
+        !Sage.getBoolean("use_legacy_keyword_favorites", true);
     if(keywordTest) {
       Show[] shows = wiz.searchShowsByKeyword(rv.getKeyword());
       for (Show show : shows) {
@@ -409,7 +410,8 @@ public final class Carny implements Runnable
     ArrayList<Airing> airsThatMayDie = new ArrayList<Airing>();
     ArrayList<Airing> airsThatWillSurvive = new ArrayList<Airing>();
     DBObject[] airs;
-    boolean keywordTest = ((oldFav.agentMask&fav.agentMask)&(Agent.KEYWORD_MASK)) == (Agent.KEYWORD_MASK);
+    boolean keywordTest = ((oldFav.agentMask&fav.agentMask)&(Agent.KEYWORD_MASK)) == (Agent.KEYWORD_MASK) &&
+        !Sage.getBoolean("use_legacy_keyword_favorites", true);
     if(keywordTest) {
       // Slim the haystack for finding needles faster.
       Set<Airing> airingsHaystack = new HashSet<Airing>();
@@ -566,7 +568,8 @@ public final class Carny implements Runnable
     // LOVESET UPDATE Make the updates to the loveSet that need to be & sync the clients
     List<Airing> airsThatMayDie = new ArrayList<Airing>();
     DBObject[] airs;
-    boolean keywordTest = (fav.agentMask & (Agent.KEYWORD_MASK)) == (Agent.KEYWORD_MASK);
+    boolean keywordTest = (fav.agentMask & (Agent.KEYWORD_MASK)) == (Agent.KEYWORD_MASK) &&
+        !Sage.getBoolean("use_legacy_keyword_favorites", true);
     if(keywordTest) {
       // Slim the haystack for finding needles faster.
       ArrayList<Airing> airingsHaystack = new ArrayList<Airing>();
