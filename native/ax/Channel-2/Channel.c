@@ -701,7 +701,7 @@ void closeChannel( CHANNEL_DATA *Channel )
 			Channel->FreqTable.tbl.atsc = NULL;
 		}
 	} else
-	if ( !strncmp( Channel->sourceType, "QAM", 4 ) )
+	if ( !strncmp( Channel->sourceType, "QAM", 3 ) )
 	{
 		if ( Channel->FreqTable.tbl.qam != NULL )
 		{
@@ -709,7 +709,7 @@ void closeChannel( CHANNEL_DATA *Channel )
 			Channel->FreqTable.tbl.qam = NULL;
 		}
 	}
-	if ( !strncmp( Channel->sourceType, "DVB-T", 4 ) )
+	if ( !strncmp( Channel->sourceType, "DVB-T", 5 ) )
 	{
 		if ( Channel->FreqTable.tbl.dvbt != NULL )
 		{
@@ -717,7 +717,7 @@ void closeChannel( CHANNEL_DATA *Channel )
 			Channel->FreqTable.tbl.dvbt = NULL;
 		}
 	}
-	if ( !strncmp( Channel->sourceType, "DVB-C", 4 ) )
+	if ( !strncmp( Channel->sourceType, "DVB-C", 5 ) )
 	{
 		if ( Channel->FreqTable.tbl.dvbc != NULL )
 		{
@@ -725,7 +725,7 @@ void closeChannel( CHANNEL_DATA *Channel )
 			Channel->FreqTable.tbl.dvbc = NULL;
 		}
 	}
-	if ( !strncmp( Channel->sourceType, "DVB-S", 4 ) )
+	if ( !strncmp( Channel->sourceType, "DVB-S", 5 ) )
 	{
 		if ( Channel->FreqTable.tbl.dvbs != NULL )
 		{
@@ -739,7 +739,8 @@ void closeChannel( CHANNEL_DATA *Channel )
 			free( Channel->PreDefinedFreqTable->tbl.dvbt );
 		free( Channel->PreDefinedFreqTable );
 	}
-	SageLog(( _LOG_TRACE, 3, "Channel closed.\r\n" ));
+
+	SageLog((_LOG_TRACE, 3, "Channel closed. sourceType:%s\r\n", Channel->sourceType));
 }
 
 void* setChannelDev( CHANNEL_DATA *Channel, void* Dev )
