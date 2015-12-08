@@ -216,10 +216,10 @@ static void UnpackVCT( ATSC_PSI* pATSCPSI, TS_SECTION* pSection )
 	}
 
 
-	p = section_header.table_data;
-	p += 1; //skip protocal version 1 bytes
-	pATSCPSI->vct_num = *p; // MAX_VCT_TBL;
-	p += 1;
+	p = section_header.table_data;  // points to byte[8], 'protocol version' field
+	p += 1;                 // skip protocol version (1 byte)
+	pATSCPSI->vct_num = *p; // MAX_VCT_TBL; num_channels_in_section
+	p += 1;                 // point to start of table
 
 	pATSCPSI->vct_program = section_header.tsid;
 	pVCT = pATSCPSI->vct;
@@ -253,7 +253,7 @@ static void UnpackVCT( ATSC_PSI* pATSCPSI, TS_SECTION* pSection )
 					  pATSCPSI->vct[i].service_type != vct.service_type ||
 					  pATSCPSI->vct[i].source_id  != vct.source_id  ||
 					  pATSCPSI->vct[i].tsid  != vct.tsid ;
-					 
+
 		if ( check_flag )
 		{
 			update_flag = 1;
