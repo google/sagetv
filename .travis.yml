@@ -12,4 +12,3 @@ script:
   - export JAVA_ARCH=amd64
   - cd build
   - ./buildall.sh
-
