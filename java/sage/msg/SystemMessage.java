@@ -45,6 +45,7 @@ public class SystemMessage extends SageMsg
   public static final int CAPTURE_DEVICE_DATASCAN_ERROR_MSG = 1104;
   public static final int VIDEO_DIRECTORY_OFFLINE_MSG = 1105;
   public static final int PLAYLIST_MISSING_SEGMENT = 1106;
+  public static final int RECORDING_BITRATE_TOO_LOW_ERROR_MSG = 1107;
   // General
   public static final int SYSTEM_LOCKUP_DETECTION_MSG = 1200;
   public static final int OUT_OF_MEMORY_MSG = 1201;
@@ -83,6 +84,8 @@ public class SystemMessage extends SageMsg
         return sage.Sage.rez("SYSTEM_LOCKUP_DETECTION");
       case OUT_OF_MEMORY_MSG:
         return sage.Sage.rez("OUT_OF_MEMORY");
+      case RECORDING_BITRATE_TOO_LOW_ERROR_MSG:
+        return sage.Sage.rez("RECORDING_BITRATE_TOO_LOW_ERROR");
       case SOFTWARE_UPDATE_AVAILABLE_MSG:
         return sage.Sage.rez("SOFTWARE_UPDATE_AVAILABLE");
       case STORAGE_MONITOR_MSG:
@@ -209,6 +212,36 @@ public class SystemMessage extends SageMsg
     // so I could restart the HDPVR to fix the problem. :)
     return new SystemMessage(ENCODER_HALT_MSG, (haltCount >= sage.Sage.getInt("msg/halt_count_for_error", 2)) ? ERROR_PRIORITY : WARNING_PRIORITY,
         sage.Sage.rez("ENCODER_HALT_MSG", new Object[] { cdiName, tit, chanName, physicalChannel }), props);
+  }
+
+  public static SystemMessage createBitrateTooLowMsg(sage.CaptureDevice capDev, sage.CaptureDeviceInput cdi, sage.Airing currAir, sage.Channel chan,
+      String physicalChannel)
+  {
+    java.util.Properties props = new java.util.Properties();
+    String cdiName = "";
+    String capDevName = "";
+    String chanName = "";
+    String tit = "";
+    int airID = 0;
+    if (capDev != null)
+      capDevName = capDev.getName();
+    if (cdi != null)
+      cdiName = cdi.toString();
+    if (chan != null)
+      chanName = chan.getName();
+    if (currAir != null)
+    {
+      tit = currAir.getTitle();
+      airID = currAir.getID();
+    }
+    props.setProperty("CaptureDevice", capDevName);
+    props.setProperty("CaptureDeviceInput", cdiName);
+    props.setProperty("ChannelName", chanName);
+    props.setProperty("PhysicalChannel", physicalChannel);
+    props.setProperty("Title", tit);
+    props.setProperty("AiringID", Integer.toString(airID));
+    return new SystemMessage(RECORDING_BITRATE_TOO_LOW_ERROR_MSG, ERROR_PRIORITY,
+        sage.Sage.rez("RECORDING_BITRATE_TOO_LOW_ERROR_MSG", new Object[] { cdiName, tit, chanName, physicalChannel }), props);
   }
 
   public static SystemMessage createDiskspaceMsg(boolean error)

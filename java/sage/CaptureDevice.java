@@ -535,7 +535,7 @@ public abstract class CaptureDevice
     {
       Sage.putInt(prefs + ENCODER_MERIT, encoderMerit = newMerit);
       Scheduler.getInstance().kick(true);
-    } 
+    }
 
   }
 
@@ -748,6 +748,10 @@ public abstract class CaptureDevice
     return Sage.getLong(prefs + "delay_to_wait_after_tuning", isCaptureFeatureSupported(HDPVR_ENCODER_MASK) ? 4000 : 0);
   }
 
+  public long getBitrateThresholdForError() {
+    return Sage.getLong(prefs + "minimum_bitrate_error_threshold_bps", 0);
+  }
+
   public int getHighestQualityConfiguredInputType()
   {
     int x = -1;
@@ -779,7 +783,7 @@ public abstract class CaptureDevice
         else
           return -1;
       }
-    
+
       // Higher merit value is first.
       int m1 = c1.getMerit();
       int m2 = c2.getMerit();

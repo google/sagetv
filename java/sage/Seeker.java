@@ -2873,6 +2873,19 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
         sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createFailedRecordingMsg(es.capDev.getActiveInput(), es.currRecord,
 					es.currRecord.getChannel(), EPG.getInstance().getPhysicalChannel(es.capDev.getActiveInput() != null ?
                 es.capDev.getActiveInput().getProviderID() : 0, es.currRecord.getStationID())));
+      } else {
+        // Check if we have low bitrate detection configured, and if it was too low...post a message about it.
+        long bitrateThreshold = es.capDev.getBitrateThresholdForError();
+        if (bitrateThreshold > 0) {
+          long actualBitrate = es.currRecordFile.getSize() * 8000 / es.currRecordFile.getRecordDuration();
+          if (actualBitrate < bitrateThreshold) {
+            if (Sage.DBG) System.out.println("Seeker detected a bitrate of " + actualBitrate + " which is below the error threshold of " +
+                bitrateThreshold + " and will post a system message about this for: " + es.currRecordFile);
+            sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createBitrateTooLowMsg(es.capDev, es.capDev.getActiveInput(), es.currRecord,
+              es.currRecord.getChannel(), EPG.getInstance().getPhysicalChannel(es.capDev.getActiveInput() != null ?
+                    es.capDev.getActiveInput().getProviderID() : 0, es.currRecord.getStationID())));
+          }
+        }
       }
 
       /*
