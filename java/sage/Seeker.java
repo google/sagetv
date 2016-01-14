@@ -3840,6 +3840,11 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
           wasKicked = false;
 
           // Don't start recording until we're all ready to go!
+          // Narflex 1/14/16 - This used to only be done during Seeker init. But there was a change made a few
+          // months ago where redetectCaptureDevices in MMC may be called by an encoder plugin after startup.
+          // If that happens, and there were no prior existing devices...then this would stay false until the
+          // next restart of SageTV. Putting it here corrects that problem.
+          mmcPresent = Sage.getBoolean(prefs + MMC_PRESENT, true) && (Sage.MAC_OS_X || mmc.getCaptureDeviceNames().length > 0);
           canRecord = mmcPresent && sched.isPrepped() && !disableLibraryScanning;
 
           cleanDeniedMustSees();
