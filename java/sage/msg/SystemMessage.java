@@ -175,7 +175,8 @@ public class SystemMessage extends SageMsg
         sage.Sage.rez("VIDEO_DIRECTORY_OFFLINE_MSG", new Object[] { dirPath }), props);
   }
 
-  public static SystemMessage createEncoderHaltMsg(sage.CaptureDevice capDev, sage.CaptureDeviceInput cdi, sage.Airing currAir, sage.Channel chan, String physicalChannel, boolean first)
+  public static SystemMessage createEncoderHaltMsg(sage.CaptureDevice capDev, sage.CaptureDeviceInput cdi, sage.Airing currAir, sage.Channel chan,
+      String physicalChannel, int haltCount)
   {
     java.util.Properties props = new java.util.Properties();
     String cdiName = "";
@@ -200,7 +201,13 @@ public class SystemMessage extends SageMsg
     props.setProperty("PhysicalChannel", physicalChannel);
     props.setProperty("Title", tit);
     props.setProperty("AiringID", Integer.toString(airID));
-    return new SystemMessage(ENCODER_HALT_MSG, first ? WARNING_PRIORITY : ERROR_PRIORITY,
+    // Narflex 1/14/16 - I changed this so that we get the number of consecutive halts in a recording rather than
+    // whether it was just the first or not. This will allow customizing how many halts mean an error state; and then I also
+    // made another change for the code that disables messages from raising the global alerts level so it can be done based
+    // on the priority of the message as well. The reason was because sometimes my HDPVR gets in a bad state and will have hundreds
+    // of halts in a recording...but having a couple of them is normal; but when it's having hundreds...I wanted to know about it
+    // so I could restart the HDPVR to fix the problem. :)
+    return new SystemMessage(ENCODER_HALT_MSG, (haltCount >= sage.Sage.getInt("msg/halt_count_for_error", 2)) ? ERROR_PRIORITY : WARNING_PRIORITY,
         sage.Sage.rez("ENCODER_HALT_MSG", new Object[] { cdiName, tit, chanName, physicalChannel }), props);
   }
 

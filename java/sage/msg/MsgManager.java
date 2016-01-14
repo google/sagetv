@@ -407,7 +407,13 @@ public class MsgManager implements Runnable
       // save the new message log
       sysMsgVec.add(smsg);
 
-      if (smsg.getPriority() > alertLevel && Sage.getBoolean("msg/alert_enabled/" + smsg.getType(), true))
+      // Narflex: 1/14/16 - I wanted a feature where I could get the HALT detected message to increase the
+      // global alert level only in the error case...but not in the warning case. So this is done in a way that
+      // anybody who had a message type disabled before...will still have it enabled now. But then an extra property
+      // will show up relating to the specific alert levels for that message to allow a finer grain of control. Currently
+      // this would only apply to the HALT message since no other messages have multiple levels for the same message.
+      if (smsg.getPriority() > alertLevel && (Sage.getBoolean("msg/alert_enabled/" + smsg.getType(), true) ||
+          Sage.getBoolean("msg/alert_enabled/" + smsg.getType() + "-" + smsg.getPriority(), false)))
       {
         alertLevel = smsg.getPriority();
         Sage.putInt("msg/curr_alert_level", alertLevel);

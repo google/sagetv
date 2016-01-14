@@ -126,7 +126,7 @@ public class Seeker implements Runnable
   {
     return SeekerHolder.instance;
   }
-    
+
   private Seeker()
   {
     sched = Scheduler.getInstance();
@@ -2628,7 +2628,7 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
               encState.lastCheckedSize == recLength))
           {
             // See if there's already a dead file...if so, just give up.
-            /*if (recLength == 0 && encState.alreadyReset)
+            /*if (recLength == 0 && encState.resetCount > 0)
         {
           // We've effectively lost the ability to record...which is the MMC
           if (Sage.DBG) System.out.println("SEEKER IS ABANDONING THE ENCODER...IT'S DEAD");
@@ -2681,20 +2681,20 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
                 // Don't send a hook for this....the system message will do the job and otherwise the errors can stack up
                 //Catbert.distributeHookToAll("MediaPlayerError", new Object[] { Sage.rez("Capture"), e.getMessage() });
               }
+              encState.resetCount++;
                 sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createEncoderHaltMsg(encState.capDev, encState.capDev.getActiveInput(),
                     encState.currRecord, encState.currRecord.getChannel(),
                     EPG.getInstance().getPhysicalChannel(encState.capDev.getActiveInput() != null ?
                         encState.capDev.getActiveInput().getProviderID() : 0, encState.currRecord.getStationID()),
-                        !encState.alreadyReset));
+                      encState.resetCount));
               encState.resetRequested = false;
-              encState.alreadyReset = true;
               encState.lastSizeCheckTime = 0;
               encState.lastCheckedSize = 0;
             }
           }
           else if (encState.lastCheckedSize != recLength)
           {
-            encState.alreadyReset = false;
+            encState.resetCount = 0;
             encState.lastSizeCheckTime = Sage.time();
             encState.lastCheckedSize = recLength;
           }
@@ -6698,7 +6698,7 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
     private MediaFile currRecordFile;
     private Airing switcherAir;
     private MediaFile switcherFile;
-    private boolean alreadyReset;
+    private int resetCount;
     private String myQuality;
     private CaptureDevice capDev;
     private int lastStationID;
