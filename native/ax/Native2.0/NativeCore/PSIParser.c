@@ -342,22 +342,45 @@ int ParseTSPSI( TS_FILTER* pTSFilter, TS_PACKET *pTSPacket )
 	pPSIParser->packet_count++;
 
 	if ( pPSIParser->stream_format == 0 && pPSIParser->packet_count < 100000 )
-	{ 
+	{
 		int stream_format=0, sub_format=0;
 
 		if ( pPSIParser->stream_detect == NULL )
 			pPSIParser->stream_detect = CreateStreamDetect( );
-		//guess stream format
-		if ( IsATSPSICPacket( pPSIParser->stream_detect, pTSPacket  ) )
+        
+        //
+        // guess stream format
+        //
+		if ( IsATSPSICPacket( pPSIParser->stream_detect, pTSPacket ) )
+		{
 			pPSIParser->atsc_packet_count++;
-		else
-		if ( IsDVBPSIPacket( pPSIParser->stream_detect, pTSPacket   ) )
-			pPSIParser->dvb_packet_count++; 
 
-		if ( pPSIParser->dvb_packet_count >= pPSIParser->atsc_packet_count + 2 )
-			stream_format = DVB_STREAM;
-		if ( pPSIParser->dvb_packet_count + 2 <= pPSIParser->atsc_packet_count )
-			stream_format = ATSC_STREAM;
+			SageLog((_LOG_TRACE, 3, TEXT("ParseTSPSI(): packet_count:%d atsc_packet_count:%d pid:0x%04x"),
+			    pPSIParser->packet_count, pPSIParser->atsc_packet_count, pTSPacket->pid));
+		}
+		else
+		if ( IsDVBPSIPacket( pPSIParser->stream_detect, pTSPacket ) ) 
+		{
+		    pPSIParser->dvb_packet_count++;
+
+		    SageLog((_LOG_TRACE, 3, TEXT("ParseTSPSI(): packet_count:%d dvb_packet_count:%d pid:0x%04x"),
+			    pPSIParser->packet_count, pPSIParser->dvb_packet_count, pTSPacket->pid));			
+        }
+
+        /* Suddenlink cable (clear QAM, in Truckee, Calif) carries ATSC stream with a 12:1 ratio of DVB to ATSC pkts
+         * (see comment for possbily related old issue in ChannelScan.c re: 'QAM stream carries DVB-C PSI in Lubbock TX')
+         * "Guess" by giving higher weight to ATSC packets, based on a ratio of 16:1
+         * Want to see >= 2 atsc packets to decide it's ATSC
+         * Test case: 15 (DVB), 1 (ATSC), 15 (DVB), 1 (ATSC) : result=ATSC Stream detected
+         */
+#define ATSC_PKT_WEIGHT 16
+        if ( (pPSIParser->atsc_packet_count >= 2)
+         && ((pPSIParser->atsc_packet_count * ATSC_PKT_WEIGHT) >= pPSIParser->dvb_packet_count))
+            stream_format = ATSC_STREAM;
+        else
+        if (pPSIParser->dvb_packet_count >= ((pPSIParser->atsc_packet_count + 1) * ATSC_PKT_WEIGHT))
+                stream_format = DVB_STREAM;
+
 
 		//if we know format, create psi
 		if ( stream_format == ATSC_STREAM )
@@ -368,6 +391,14 @@ int ParseTSPSI( TS_FILTER* pTSFilter, TS_PACKET *pTSPacket )
 
 		if ( stream_format )
 		{
+
+            SageLog((_LOG_TRACE, 3, TEXT("ParseTSPSI(): atsc_packet_count:%d dvb_packet_count:%d total:%d"),
+                pPSIParser->atsc_packet_count, pPSIParser->dvb_packet_count,
+                pPSIParser->atsc_packet_count + pPSIParser->dvb_packet_count));
+            SageLog((_LOG_TRACE, 3, TEXT(" .. determined stream_format:%d (%s) sub_format:%d (%s)"),
+                stream_format, (stream_format == ATSC_STREAM) ? "ATSC" : "DVB",
+                sub_format, (sub_format == CABLE) ? "CABLE" : "not cable"));
+
 			SetStreamFormat( pPSIParser, stream_format, sub_format );
 			ReleaseStreamDetect( pPSIParser->stream_detect );
 			pPSIParser->stream_detect = NULL;
@@ -377,7 +408,7 @@ int ParseTSPSI( TS_FILTER* pTSFilter, TS_PACKET *pTSPacket )
 	if ( pPSIParser->stream_format == ATSC_STREAM )
 	{
 		ret = ProcessATSCPSI( pPSIParser->atsc_psi, pTSPacket );
-		return ret;
+		return ret;	// 0=fail, 1=ok
 	} else
 	if ( pPSIParser->stream_format == DVB_STREAM )
 	{
