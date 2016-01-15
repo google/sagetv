@@ -20,12 +20,41 @@ import javax.xml.parsers.*;
 import org.xml.sax.*;
 import org.xml.sax.helpers.*;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * This class is responsible for managing the currently active plugins in the system
  * @author Narflex
  */
 public class CorePluginManager implements Runnable
 {
+  private static final String REPOS_PROP_KEY = "sagetv_repos";
+  private static final String REPO_URL_PROP_KEY = "url";
+  private static final String REPO_MD5_PROP_KEY = "md5";
+  private static final String REPO_LOCALFILE_PROP_KEY = "local";
+  // The Repo Properties contains a set of Plugin Repositories that SageTV will periodically check for new
+  // and updated SageTV Plugins.
+  // The main key is sagetv_repos
+  // Each Repo has a unique id, and contains the URL for the REPO, md5, and the local filename
+  // sagetv_repos/xxxx/url=Plugin Repo URL
+  // sagetv_repos/xxxx/md5=Plugin Repo MD5
+  // sagetv_repos/xxxx/local=The Local Filename to use for this repo
+  //
+  // There are reserved REPO IDs, v7, and v9, with future reserved ids of v10, v11, etc.
+  // sagetv_repos/v7/url=Plugin Repo URL
+  //
+  // When SageTV loads the REPO plugins, it will read v7, then v9, and then any alternate repos
+  // listed in the sagetv_additional_repo_list, which is a comma separated list of alternate repos and
+  // the order in which to read them.
+  // Finally, SageTVPluginsDev.xml is read last, as means to allow devs to forcefully overrade the plugins
+  // listed in the plugin system.
+
+  // Comma separated list of alternate repos.  Should not contain, v7, v9, etc, but can contain additional
+  // configured repos.  Configured repos would be configured under the sagetv_repos parent key.
+  private static final String ADDITIONAL_REPOS_PROP_KEY = "sagetv_additional_repo_list";
+
   private static final String PLUGIN_PROP_KEY = "sagetv_core_plugins";
   public static final String STANDARD_TYPE_PLUGIN = "Standard";
   public static final String LIBRARY_TYPE_PLUGIN = "Library";
@@ -82,6 +111,13 @@ public class CorePluginManager implements Runnable
     }
     return chosenOne;
   }
+
+  /** return the repo's value for key **/
+  static String repoValue(String id, String key, String defValue)
+  {
+    return getServerProperty(REPOS_PROP_KEY + "/" + id + "/" + key, defValue);
+  }
+
   /** Creates a new instance of CorePluginManager */
   private CorePluginManager()
   {
@@ -396,7 +432,7 @@ public class CorePluginManager implements Runnable
   }
 
   // This loads all of the plugin definitions from a repository XML file
-  private synchronized void loadRepoPlugins(java.io.File repoXmlFile)
+  private synchronized void loadRepoPlugins(List<File> repoXmlFiles)
   {
     // Use a SAX parser for this so we can reuse this code on the embedded systems
     if (repoHandler == null)
@@ -409,12 +445,13 @@ public class CorePluginManager implements Runnable
       latestRepoPluginsTemp = new java.util.HashMap();
     else
       latestRepoPluginsTemp.clear();
-    processRepoXmlFile(repoXmlFile);
-    repoXmlFile = new java.io.File("SageTVPluginsDev.xml");
-    if (repoXmlFile.isFile())
-    {
-      processRepoXmlFile(repoXmlFile);
+
+    for (File repoXmlFile: repoXmlFiles) {
+      if (repoXmlFile.exists()) {
+        processRepoXmlFile(repoXmlFile);
+      }
     }
+
     allRepoPlugins = allRepoPluginsTemp;
     allRepoPluginsTemp = null;
     latestRepoPlugins = latestRepoPluginsTemp;
@@ -426,15 +463,15 @@ public class CorePluginManager implements Runnable
     java.io.InputStream inStream = null;
     try
     {
-      if (Sage.DBG) System.out.println("Analyzing plugin repository XML file...");
+      if (Sage.DBG) System.out.println("Analyzing plugin repository XML file: " + repoXmlFile);
       inStream = new java.io.BufferedInputStream(new java.io.FileInputStream(repoXmlFile));
       factory.setValidating(false);
       factory.newSAXParser().parse(inStream, repoHandler);
-      if (Sage.DBG) System.out.println("Done processing plugin repository XML file " + " repositoryVersion=" + repoVer);
+      if (Sage.DBG) System.out.println("Done processing plugin repository XML file["+repoXmlFile+"] " + " repositoryVersion=" + repoVer);
     }
     catch (Exception e)
     {
-      if (Sage.DBG) System.out.println("ERROR parsing SageTVPlugin Repository XML file of: " + e);
+      if (Sage.DBG) System.out.println("ERROR parsing SageTVPlugin Repository XML file["+repoXmlFile+"] of: " + e);
       if (Sage.DBG) e.printStackTrace();
     }
     if (inStream != null)
@@ -634,81 +671,146 @@ public class CorePluginManager implements Runnable
     }
   }
 
+  /**
+   * For the given Plugin URL, verify if the local Plugin File needs updating based on doing a MD5 check
+   * against the md5 URL.  If the plugin repo needs updating, then a new copy is downloaded and saved to
+   * the localFileName.
+   * @param repoUrl
+   * @param md5Url
+   * @param localFileName
+   * @return
+     */
+  boolean updateLocalPluginRepoFile(String repoUrl, String md5Url, String localFileName)
+  {
+    java.io.File localPlugRepo = getLocalPluginFile(localFileName);
+    if (!Sage.getBoolean("disable_plugin_repository_updates", false) || !localPlugRepo.isFile())
+    {
+      boolean localOK = false;
+      if (localPlugRepo.isFile()) {
+        if (md5Url != null) {
+          String localMD5 = IOUtils.calcMD5(localPlugRepo);
+          if (Sage.DBG) System.out.println("Checking to see if the plugin repository file " + localPlugRepo + " needs to be updated using MD5 URL: " + md5Url);
+          java.io.InputStream urlStream = null;
+          try {
+            java.net.URL verUrl = new java.net.URL(md5Url);
+            urlStream = verUrl.openStream();
+            StringBuffer sb = new StringBuffer();
+            byte[] buf = new byte[128];
+            int numRead = urlStream.read(buf);
+            while (numRead != -1) {
+              sb.append(new String(buf, 0, numRead, Sage.BYTE_CHARSET));
+              numRead = urlStream.read(buf);
+            }
+            String remoteMD5 = sb.toString().trim();
+            if (remoteMD5.equalsIgnoreCase(localMD5)) {
+              localOK = true;
+              if (Sage.DBG)
+                System.out.println("Local plugin repository file's checksum matches server's, no need to download a new one for " + localPlugRepo);
+            }
+          } catch (Exception e) {
+            if (Sage.DBG) System.out.println("ERROR trying to retrieve the "+ localMD5 +" file of:" + e);
+          } finally {
+            if (urlStream != null) {
+              try {
+                urlStream.close();
+              } catch (Exception e) {
+              }
+              urlStream = null;
+            }
+          }
+        }
+      }
+      if (!localOK)
+      {
+        if (Sage.DBG) System.out.println("Downloading new " + localPlugRepo + " file from " + repoUrl);
+        FileDownloader downer = new FileDownloader(null);
+        Object downRV = downer.downloadFile(repoUrl, null, localPlugRepo);
+        if (!(downRV instanceof Boolean) || !((Boolean)downRV).booleanValue())
+        {
+          if (Sage.DBG) System.out.println("ERROR failed downloading " + repoUrl + " file.");
+          // Just re-use what we have if its there
+          if (!localPlugRepo.isFile())
+            return false;
+        }
+        // Wait for the download to finish....
+        while (!downer.isComplete())
+        {
+          try { Thread.sleep(250); } catch(Exception e){}
+        }
+        if (!downer.wasSuccessful())
+        {
+          if (Sage.DBG) System.out.println("ERROR failed downloading " + repoUrl + " file.");
+          // Just re-use what we have if its there
+          if (!localPlugRepo.isFile())
+            return false;
+        }
+      }
+    }
+
+    // updated
+    return true;
+  }
+
+  /**
+   * Given the localFilename return the java File object, accounting for if the we are running
+   * as EMBEDDED or not.
+   *
+   * @param localFileName local filename without paths (paths will be stripped)
+   * @return
+     */
+  File getLocalPluginFile(String localFileName)
+  {
+    String name = new File(localFileName).getName(); // just ensures that name doesn't include a path.
+    return new java.io.File(Sage.EMBEDDED ? "/rw/sage/" + name : name);
+  }
+
   // Returns true if the refresh succeeded
   public synchronized boolean refreshAvailablePlugins()
   {
     // Clients only do the update check, they don't get the repo information themselves
     if (!Sage.client)
     {
-      // NOTE: This should download the SageTVPlugins.ver file and check if there's a new repo file and then download it
-      java.io.File localPlugRepo = new java.io.File(Sage.EMBEDDED ? "/rw/sage/SageTVPlugins.xml" : "SageTVPlugins.xml");
-      if (!Sage.getBoolean("disable_plugin_repository_updates", false) || !localPlugRepo.isFile())
+      List<File> localFiles = new ArrayList<File>();
+
+      // SageTV 7 Plugins
+      String sageTV7URL = repoValue("v7", REPO_URL_PROP_KEY, "http://download.sagetv.com/SageTVPlugins.xml");
+      String sageTV7MD5 = repoValue("v7", REPO_MD5_PROP_KEY, "http://download.sagetv.com/SageTVPlugins.md5.txt");
+      String sageTV7Local = repoValue("v7", REPO_LOCALFILE_PROP_KEY, "SageTVPlugins.xml");
+      localFiles.add(getLocalPluginFile(sageTV7Local));
+      updateLocalPluginRepoFile(sageTV7URL, sageTV7MD5, sageTV7Local);
+
+      // SageTV 9 Plugins
+      String sageTV9URL = repoValue("v9", REPO_URL_PROP_KEY, "https://raw.githubusercontent.com/OpenSageTV/sagetv-plugin-repo/master/SageTVPluginsV9.xml");
+      String sageTV9MD5 = repoValue("v9", REPO_MD5_PROP_KEY, "https://raw.githubusercontent.com/OpenSageTV/sagetv-plugin-repo/master/SageTVPluginsV9.md5");
+      String sageTV9Local = repoValue("v9", REPO_LOCALFILE_PROP_KEY, "SageTVPluginsV9.xml");
+      localFiles.add(getLocalPluginFile(sageTV9Local));
+      updateLocalPluginRepoFile(sageTV9URL, sageTV9MD5, sageTV9Local);
+
+      // process any alternate REPOS
+      String alternateRepos[] = getServerProperty(ADDITIONAL_REPOS_PROP_KEY, "").split("\\s,\\s");
+      if (alternateRepos!=null)
       {
-        boolean localOK = false;
-        if (localPlugRepo.isFile())
+        String sageTVURL;
+        String sageTVMD5;
+        String sageTVLocal;
+        for (String repoid: alternateRepos)
         {
-          String localMD5 = IOUtils.calcMD5(localPlugRepo);
-          if (Sage.DBG) System.out.println("Checking to see if the plugin repository file needs to be updated...");
-          java.io.InputStream urlStream = null;
-          try
-          {
-            java.net.URL verUrl = new java.net.URL("http://download.sagetv.com/SageTVPlugins.md5.txt");
-            urlStream = verUrl.openStream();
-            StringBuffer sb = new StringBuffer();
-            byte[] buf = new byte[128];
-            int numRead = urlStream.read(buf);
-            while (numRead != -1)
-            {
-              sb.append(new String(buf, 0, numRead, Sage.BYTE_CHARSET));
-              numRead = urlStream.read(buf);
-            }
-            String remoteMD5 = sb.toString().trim();
-            if (remoteMD5.equalsIgnoreCase(localMD5))
-            {
-              localOK = true;
-              if (Sage.DBG) System.out.println("Local plugin repository file's checksum matches server's, no need to download a new one.");
-            }
-          }
-          catch (Exception e)
-          {
-            if (Sage.DBG) System.out.println("ERROR trying to retrieve the SageTVPlugins.md5.txt file of:" + e);
-          }
-          finally
-          {
-            if (urlStream != null)
-            {
-              try{urlStream.close();}catch(Exception e){}
-              urlStream = null;
-            }
-          }
-        }
-        if (!localOK)
-        {
-          if (Sage.DBG) System.out.println("Downloading new SageTVPlugins.xml file from the server...");
-          FileDownloader downer = new FileDownloader(null);
-          Object downRV = downer.downloadFile("http://download.sagetv.com/SageTVPlugins.xml", null, localPlugRepo);
-          if (!(downRV instanceof Boolean) || !((Boolean)downRV).booleanValue())
-          {
-            if (Sage.DBG) System.out.println("ERROR failed downloading SageTVPlugins.xml file.");
-            // Just re-use what we have if its there
-            if (!localPlugRepo.isFile())
-              return false;
-          }
-          // Wait for the download to finish....
-          while (!downer.isComplete())
-          {
-            try { Thread.sleep(250); } catch(Exception e){}
-          }
-          if (!downer.wasSuccessful())
-          {
-            if (Sage.DBG) System.out.println("ERROR failed downloading SageTVPlugins.xml file.");
-            // Just re-use what we have if its there
-            if (!localPlugRepo.isFile())
-              return false;
-          }
+          if ("v7".equals(repoid)) continue;
+          if ("v9".equals(repoid)) continue;
+          if (repoid.trim().length()==0) continue;
+
+          sageTVURL = repoValue(repoid, REPO_URL_PROP_KEY, null);
+          sageTVMD5 = repoValue(repoid, REPO_MD5_PROP_KEY, null);
+          sageTVLocal = repoValue(repoid, REPO_LOCALFILE_PROP_KEY, "SageTVPlugins_"+repoid+".xml");
+          localFiles.add(getLocalPluginFile(sageTVLocal));
+          updateLocalPluginRepoFile(sageTVURL, sageTVMD5, sageTVLocal);
         }
       }
-      loadRepoPlugins(localPlugRepo);
+
+      // lastly, add in the "SageTVPluginsDev.xml"
+      localFiles.add(getLocalPluginFile("SageTVPluginsDev.xml"));
+
+      loadRepoPlugins(localFiles);
     }
 
     // Check if there's any new updates available and post system messages about them.

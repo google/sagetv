@@ -26,6 +26,8 @@ extern "C" {
 
 #define _USE_32BIT_TIME_T
 
+#define _LARGEFILE64_SOURCE
+
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 

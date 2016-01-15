@@ -126,7 +126,7 @@ public class Seeker implements Runnable
   {
     return SeekerHolder.instance;
   }
-    
+
   private Seeker()
   {
     sched = Scheduler.getInstance();
@@ -2628,7 +2628,7 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
               encState.lastCheckedSize == recLength))
           {
             // See if there's already a dead file...if so, just give up.
-            /*if (recLength == 0 && encState.alreadyReset)
+            /*if (recLength == 0 && encState.resetCount > 0)
         {
           // We've effectively lost the ability to record...which is the MMC
           if (Sage.DBG) System.out.println("SEEKER IS ABANDONING THE ENCODER...IT'S DEAD");
@@ -2681,20 +2681,20 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
                 // Don't send a hook for this....the system message will do the job and otherwise the errors can stack up
                 //Catbert.distributeHookToAll("MediaPlayerError", new Object[] { Sage.rez("Capture"), e.getMessage() });
               }
+              encState.resetCount++;
                 sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createEncoderHaltMsg(encState.capDev, encState.capDev.getActiveInput(),
                     encState.currRecord, encState.currRecord.getChannel(),
                     EPG.getInstance().getPhysicalChannel(encState.capDev.getActiveInput() != null ?
                         encState.capDev.getActiveInput().getProviderID() : 0, encState.currRecord.getStationID()),
-                        !encState.alreadyReset));
+                      encState.resetCount));
               encState.resetRequested = false;
-              encState.alreadyReset = true;
               encState.lastSizeCheckTime = 0;
               encState.lastCheckedSize = 0;
             }
           }
           else if (encState.lastCheckedSize != recLength)
           {
-            encState.alreadyReset = false;
+            encState.resetCount = 0;
             encState.lastSizeCheckTime = Sage.time();
             encState.lastCheckedSize = recLength;
           }
@@ -2873,6 +2873,19 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
         sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createFailedRecordingMsg(es.capDev.getActiveInput(), es.currRecord,
 					es.currRecord.getChannel(), EPG.getInstance().getPhysicalChannel(es.capDev.getActiveInput() != null ?
                 es.capDev.getActiveInput().getProviderID() : 0, es.currRecord.getStationID())));
+      } else {
+        // Check if we have low bitrate detection configured, and if it was too low...post a message about it.
+        long bitrateThreshold = es.capDev.getBitrateThresholdForError();
+        if (bitrateThreshold > 0) {
+          long actualBitrate = es.currRecordFile.getSize() * 8000 / es.currRecordFile.getRecordDuration();
+          if (actualBitrate < bitrateThreshold) {
+            if (Sage.DBG) System.out.println("Seeker detected a bitrate of " + actualBitrate + " which is below the error threshold of " +
+                bitrateThreshold + " and will post a system message about this for: " + es.currRecordFile);
+            sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createBitrateTooLowMsg(es.capDev, es.capDev.getActiveInput(), es.currRecord,
+              es.currRecord.getChannel(), EPG.getInstance().getPhysicalChannel(es.capDev.getActiveInput() != null ?
+                    es.capDev.getActiveInput().getProviderID() : 0, es.currRecord.getStationID())));
+          }
+        }
       }
 
       /*
@@ -3840,6 +3853,11 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
           wasKicked = false;
 
           // Don't start recording until we're all ready to go!
+          // Narflex 1/14/16 - This used to only be done during Seeker init. But there was a change made a few
+          // months ago where redetectCaptureDevices in MMC may be called by an encoder plugin after startup.
+          // If that happens, and there were no prior existing devices...then this would stay false until the
+          // next restart of SageTV. Putting it here corrects that problem.
+          mmcPresent = Sage.getBoolean(prefs + MMC_PRESENT, true) && (Sage.MAC_OS_X || mmc.getCaptureDeviceNames().length > 0);
           canRecord = mmcPresent && sched.isPrepped() && !disableLibraryScanning;
 
           cleanDeniedMustSees();
@@ -6693,7 +6711,7 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
     private MediaFile currRecordFile;
     private Airing switcherAir;
     private MediaFile switcherFile;
-    private boolean alreadyReset;
+    private int resetCount;
     private String myQuality;
     private CaptureDevice capDev;
     private int lastStationID;
