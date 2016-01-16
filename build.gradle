@@ -98,7 +98,7 @@ sourceSets {
 	miniclient {
 		java {
 			srcDirs = [
-				'java',
+				'java'
 			]
             includes = [
             	'sage/miniclient/MiniClient.java',
@@ -137,7 +137,7 @@ dependencies {
  */
 tasks.withType(JavaCompile) {
 	//options.fork=true
-	options.compilerArgs << "-sourcepath" << sourceSets.main.java.srcDirs.join(":")
+	options.compilerArgs << "-sourcepath" << sourceSets.main.java.srcDirs.join(java.io.File.pathSeparator)
 }
 
 task miniclient(type:JavaCompile) << {
