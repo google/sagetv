@@ -1655,6 +1655,31 @@ public class Global {
         }
         return Boolean.FALSE; // this means we're a full SageTV UI running under Linux
       }});
+    rft.put(new PredefinedJEPFunction("Global", "IsTouchUI")
+    {
+      /**
+       * Returns true if this UI is being run in a touch environment, such as a phone or tablet.
+       * @return true if this UI is being run in a touch environment, false otherwise
+       *
+       * @since 9.0.4
+       * @declaration public boolean IsTouchUI();
+       */
+      public Object runSafely(Catbert.FastStack stack) throws Exception{
+        if (stack.getUIMgr() == null) // if we have no UI, we're not touch enabled
+          return Boolean.FALSE;
+        int uiType = stack.getUIMgr().getUIClientType();
+        // If we're a Remote UI with a TOUCH then we're a touch enabled UI
+        if (uiType == UIClient.REMOTE_UI)
+        {
+          if (stack.getUIMgr().getRootPanel().getRenderEngine() instanceof MiniClientSageRenderer)
+          {
+            String ipdp = ((MiniClientSageRenderer) stack.getUIMgr().getRootPanel().getRenderEngine()).getInputDevsProp();
+            if (ipdp != null && ipdp.indexOf("TOUCH") != -1)
+              return Boolean.TRUE;
+          }
+        }
+        return Boolean.FALSE; // Touch is not enabled on this UI
+      }});
     rft.put(new PredefinedJEPFunction("Global", "IsServerUI")
     {
       /**
