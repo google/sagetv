@@ -116,10 +116,11 @@ public class PseudoMenu implements EventHandler
       //comp.invalidateAll();
     }
 
-    multipleTextInputs = comp.getNumTextInputs(0) > 1;
+    int numTextInputs=comp.getNumTextInputs(0);
+    multipleTextInputs = numTextInputs > 1;
 
     // notify the UI Renderer as to which Menu we are activating, so that it can pass it to the client as a HINT
-    uiMgr.getRootPanel().getRenderEngine().setMenuHint(widg.getName(), null, comp.getNumTextInputs(0)>0);
+    uiMgr.getRootPanel().getRenderEngine().setMenuHint(widg.getName(), null, numTextInputs>0);
   }
 
   public boolean hasMultipleTextInputs()

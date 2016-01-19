@@ -1330,18 +1330,22 @@ public class MiniClientSageRenderer extends SageRenderer
 
   private boolean checkForMenuHintUpdates()
   {
-    if (menuHint.hasHint())
+    String hintText;
+    synchronized (menuHint) {
+      hintText=menuHint.format();
+      menuHint.clear();
+    }
+    if (hintText!=null)
     {
-      try
-      {
-        int propRV = sendSetProperty("MENU_HINT", menuHint.format());
+      try {
+        int propRV = sendSetProperty("MENU_HINT", hintText);
         if (propRV != 0)
         {
-          if (Sage.DBG) System.out.println("MiniClient did not succeed with menu hint change to:" + menuHint.menuName + ", errcode=" + propRV);
+          if (Sage.DBG)
+            System.out.println("MiniClient did not succeed with menu hint change to:" + hintText + ", errcode=" + propRV);
         }
-        menuHint.clear();
-      }
-      catch (java.io.IOException e)
+
+      } catch (java.io.IOException e)
       {
         if (Sage.DBG) System.out.println("Error w/ MiniClient UI:" + e);
         connectionError();
@@ -8013,9 +8017,11 @@ public class MiniClientSageRenderer extends SageRenderer
   @Override
   public void setMenuHint(String menuName, String popupName, boolean hasTextInput)
   {
-    menuHint.menuName=menuName;
-    menuHint.popupName=popupName;
-    menuHint.hasTextInput=hasTextInput;
+    synchronized (menuHint) {
+      menuHint.menuName = menuName;
+      menuHint.popupName = popupName;
+      menuHint.hasTextInput = hasTextInput;
+    }
   }
 
   private TextSurfaceCache getCachedTextSurfacePtr(RenderingOp op)
