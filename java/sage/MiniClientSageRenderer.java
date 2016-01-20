@@ -1328,6 +1328,37 @@ public class MiniClientSageRenderer extends SageRenderer
     return true;
   }
 
+  private boolean checkForMenuHintUpdates()
+  {
+    String hintText;
+    synchronized (menuHint) {
+      // menuHint.format() will return null if no hint is available
+      // otherwise get a formatted hint text to send to the client
+      hintText=menuHint.format();
+      menuHint.clear();
+    }
+
+    // if we have a hint, then push it to the client
+    if (hintText!=null)
+    {
+      try {
+        int propRV = sendSetProperty("MENU_HINT", hintText);
+        if (propRV != 0)
+        {
+          if (Sage.DBG)
+            System.out.println("MiniClient did not succeed with menu hint change to:" + hintText + ", errcode=" + propRV);
+        }
+
+      } catch (java.io.IOException e)
+      {
+        if (Sage.DBG) System.out.println("Error w/ MiniClient UI:" + e);
+        connectionError();
+        return false;
+      }
+    }
+    return true;
+  }
+
   private boolean checkForDARUpdates()
   {
     if (lastSetDAR != vf.getDisplayAspectRatio())
@@ -1393,6 +1424,8 @@ public class MiniClientSageRenderer extends SageRenderer
     if (!checkForARChangeUpdates())
       return false;
     if (!checkForAudioOutputChangeUpdates())
+      return false;
+    if (!checkForMenuHintUpdates())
       return false;
     if (!checkForDARUpdates())
       return false;
@@ -7985,6 +8018,16 @@ public class MiniClientSageRenderer extends SageRenderer
 
   private boolean iPhoneMode;
 
+  @Override
+  public void setMenuHint(String menuName, String popupName, boolean hasTextInput)
+  {
+    synchronized (menuHint) {
+      menuHint.menuName = menuName;
+      menuHint.popupName = popupName;
+      menuHint.hasTextInput = hasTextInput;
+    }
+  }
+
   private TextSurfaceCache getCachedTextSurfacePtr(RenderingOp op)
   {
     // Media extenders on a LAN don't need this optimization because its faster to do it by rendering everything;
@@ -8767,5 +8810,44 @@ public class MiniClientSageRenderer extends SageRenderer
     public long lastUsed;
     public String key;
     public int size;
+  }
+
+  // reuse a single container to hold all the menu related hints
+  private MenuHintItem menuHint = new MenuHintItem();
+  protected static class MenuHintItem
+  {
+    public String menuName;
+    public String popupName;
+    public boolean hasTextInput;
+
+    public MenuHintItem()
+    {
+    }
+
+    public void clear()
+    {
+      menuName=null;
+      popupName=null;
+      hasTextInput=false;
+    }
+
+    /**
+     * @return true if there is a menu or popup in this hint
+     */
+    public boolean hasHint()
+    {
+      return menuName!=null || popupName!=null;
+    }
+
+    /**
+     * @return formatted hint text, or null, if no hint is available
+     */
+    public String format()
+    {
+      if (!hasHint()) return null;
+      return "menuName:" + menuName +
+              ", popupName:" + popupName +
+              ", hasTextInput:" + hasTextInput;
+    }
   }
 }

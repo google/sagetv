@@ -78,20 +78,18 @@ public class PseudoMenu implements EventHandler
     }
   }
 
-  public void activate(boolean redo)
-  {
+  public void activate(boolean redo) {
     if (SageConstants.ENFORCE_EMBEDDED_RESTRICTIONS && Sage.EMBEDDED && (!System.getProperty("java.version").startsWith("phoneme_advanced") ||
-        System.getProperty("os.name").indexOf("Linux") == -1 || System.getProperty("os.version").indexOf("sigma") == -1) &&
-        Math.random() < 0.05)
+            System.getProperty("os.name").indexOf("Linux") == -1 || System.getProperty("os.version").indexOf("sigma") == -1) &&
+            Math.random() < 0.05)
       System.exit(0);
     active = true;
     if (!comp.hasFreshlyLoadedContext() && !redo)
       comp.reloadAttributeContext();
-    Catbert.processUISpecificHook("BeforeMenuLoad", new Object[] { Boolean.valueOf(redo) }, uiMgr, false);
+    Catbert.processUISpecificHook("BeforeMenuLoad", new Object[]{Boolean.valueOf(redo)}, uiMgr, false);
 
     // This can happen with menu shortcuts
-    if (!active)
-    {
+    if (!active) {
       comp.unfreshAttributeContext();
       return;
     }
@@ -108,11 +106,9 @@ public class PseudoMenu implements EventHandler
     if (comp.getWidth() > 0 && comp.getHeight() > 0)
       comp.doLayout();
 
-    if ((comp.hasFocusableChildren() || uiMgr.allowHiddenFocus()) && (!redo || !comp.doesHierarchyHaveFocus()))
-    {
-      Catbert.processUISpecificHook("MenuNeedsDefaultFocus", new Object[] { Boolean.valueOf(redo) }, uiMgr, false);
-      if (!comp.doesHierarchyHaveFocus())
-      {
+    if ((comp.hasFocusableChildren() || uiMgr.allowHiddenFocus()) && (!redo || !comp.doesHierarchyHaveFocus())) {
+      Catbert.processUISpecificHook("MenuNeedsDefaultFocus", new Object[]{Boolean.valueOf(redo)}, uiMgr, false);
+      if (!comp.doesHierarchyHaveFocus()) {
         if (!comp.checkForcedFocus())
           comp.setDefaultFocus();
       }
@@ -120,7 +116,11 @@ public class PseudoMenu implements EventHandler
       //comp.invalidateAll();
     }
 
-    multipleTextInputs = comp.getNumTextInputs(0) > 1;
+    int numTextInputs=comp.getNumTextInputs(0);
+    multipleTextInputs = numTextInputs > 1;
+
+    // notify the UI Renderer as to which Menu we are activating, so that it can pass it to the client as a HINT
+    uiMgr.getRootPanel().getRenderEngine().setMenuHint(widg.getName(), null, numTextInputs>0);
   }
 
   public boolean hasMultipleTextInputs()
@@ -763,6 +763,9 @@ public class PseudoMenu implements EventHandler
       Catbert.processUISpecificHook("MenuNeedsDefaultFocus", null, uiMgr, false);
       ensureMenuFocus(false);
       newPopup.invalidateAll();
+
+      // notify the UI Renderer as to which Menu/Popup we are activating, so that it can pass it to the client as a HINT
+      uiMgr.getRootPanel().getRenderEngine().setMenuHint(widg.getName(),  newPopup.widg.getName(), newPopup.getNumTextInputs(0)>0);
     }
     finally
     {
@@ -890,6 +893,19 @@ public class PseudoMenu implements EventHandler
         if (uiMgr.isXBMCCompatible())
           comp.evaluateTree(false, true);
         ensureMenuFocus(true);
+
+        // notify that the popup is removed
+        // notify the UI Renderer as to which Menu/Popup we are activating, so that it can pass it to the client as a HINT
+        if (popupStack.size()>0)
+        {
+          uiMgr.getRootPanel().getRenderEngine().setMenuHint(widg.getName() ,
+                  ((Catbert.ExecutionPosition) popupStack.peek()).getUI().widg.getName(),
+                  ((Catbert.ExecutionPosition) popupStack.peek()).getUI().getNumTextInputs(0)>0);
+        }
+        else
+        {
+          uiMgr.getRootPanel().getRenderEngine().setMenuHint(widg.getName() , null, comp.getNumTextInputs(0)>0);
+        }
       }
       finally
       {
