@@ -1332,9 +1332,13 @@ public class MiniClientSageRenderer extends SageRenderer
   {
     String hintText;
     synchronized (menuHint) {
+      // menuHint.format() will return null if no hint is available
+      // otherwise get a formatted hint text to send to the client
       hintText=menuHint.format();
       menuHint.clear();
     }
+
+    // if we have a hint, then push it to the client
     if (hintText!=null)
     {
       try {
@@ -8827,13 +8831,20 @@ public class MiniClientSageRenderer extends SageRenderer
       hasTextInput=false;
     }
 
+    /**
+     * @return true if there is a menu or popup in this hint
+     */
     public boolean hasHint()
     {
       return menuName!=null || popupName!=null;
     }
 
+    /**
+     * @return formatted hint text, or null, if no hint is available
+     */
     public String format()
     {
+      if (!hasHint()) return null;
       return "menuName:" + menuName +
               ", popupName:" + popupName +
               ", hasTextInput:" + hasTextInput;
