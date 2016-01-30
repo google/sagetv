@@ -84,25 +84,41 @@ JNIEXPORT void JNICALL Java_sage_DShowMediaPlayer_setVideoDecoderFilter0
 	slog((env, "DShowPlayer setVideoDecoderFilter0(%s) called\r\n", cName));
 	CComPtr<IBaseFilter> pFilter = NULL;
 	HRESULT hr;
-	if (!strcmp("SageTV MPEG Video Decoder", cName)|| !strcmp( "SageTV MPEG-2 Video Decoder", cName ) )
+	//if (!strcmp("SageTV MPEG Video Decoder", cName)|| !strcmp( "SageTV MPEG-2 Video Decoder", cName ) )
+	//{
+	//	/*
+	//	 * PROPRIETARY CODE BLOCK DISABLED FOR OPEN SOURCE RELEASE - START
+	//	if (GetRegistryDword(HKEY_LOCAL_MACHINE, "SOFTWARE\\Frey Technologies\\Common\\DSFilters\\MpegDec",
+	//			"EnableDXVA", 0))
+	//	{
+	//		slog((env, "Using DXVA Enabled SageTV MPEG-2 Video Decoder\r\n"));
+	//		hr = CoCreateInstance(CLSID_EM2VD, NULL, CLSCTX_INPROC_SERVER,
+	//			IID_IBaseFilter, (void **)&pFilter);
+	//	}
+	//	else
+	//	{
+	//		slog((env, "Using legacy SageTV MPEG Video Decoder\r\n"));
+	//		hr = CoCreateInstance(CLSID_MainConceptMPEGVideoDecoder, NULL, CLSCTX_INPROC_SERVER,
+	//			IID_IBaseFilter, (void **)&pFilter);
+	//	}
+	//	 * PROPRIETARY CODE BLOCK DISABLED FOR OPEN SOURCE RELEASE - END
+	//	 */
+	//}
+	//else
+		//hr = FindFilterByName(&pFilter, CLSID_LegacyAmFilterCategory, cName);
+	if (!strcmp("SageTV MPEG Video Decoder", cName) || !strcmp("SageTV MPEG-2 Video Decoder", cName))
 	{
-		/*
-		 * PROPRIETARY CODE BLOCK DISABLED FOR OPEN SOURCE RELEASE - START
 		if (GetRegistryDword(HKEY_LOCAL_MACHINE, "SOFTWARE\\Frey Technologies\\Common\\DSFilters\\MpegDec",
-				"EnableDXVA", 0))
+			"EnableDXVA", 0))
 		{
 			slog((env, "Using DXVA Enabled SageTV MPEG-2 Video Decoder\r\n"));
-			hr = CoCreateInstance(CLSID_EM2VD, NULL, CLSCTX_INPROC_SERVER,
-				IID_IBaseFilter, (void **)&pFilter);
+			hr = FindFilterByName(&pFilter, CLSID_LegacyAmFilterCategory, "SageTV MPEG-2 Video Decoder");
 		}
 		else
 		{
 			slog((env, "Using legacy SageTV MPEG Video Decoder\r\n"));
-			hr = CoCreateInstance(CLSID_MainConceptMPEGVideoDecoder, NULL, CLSCTX_INPROC_SERVER,
-				IID_IBaseFilter, (void **)&pFilter);
+			hr = FindFilterByName(&pFilter, CLSID_LegacyAmFilterCategory, "SageTV MPEG Video Decoder");
 		}
-		 * PROPRIETARY CODE BLOCK DISABLED FOR OPEN SOURCE RELEASE - END
-		 */
 	}
 	else
 		hr = FindFilterByName(&pFilter, CLSID_LegacyAmFilterCategory, cName);
