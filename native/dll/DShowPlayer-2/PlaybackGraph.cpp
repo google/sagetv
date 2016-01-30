@@ -84,28 +84,6 @@ JNIEXPORT void JNICALL Java_sage_DShowMediaPlayer_setVideoDecoderFilter0
 	slog((env, "DShowPlayer setVideoDecoderFilter0(%s) called\r\n", cName));
 	CComPtr<IBaseFilter> pFilter = NULL;
 	HRESULT hr;
-	//if (!strcmp("SageTV MPEG Video Decoder", cName)|| !strcmp( "SageTV MPEG-2 Video Decoder", cName ) )
-	//{
-	//	/*
-	//	 * PROPRIETARY CODE BLOCK DISABLED FOR OPEN SOURCE RELEASE - START
-	//	if (GetRegistryDword(HKEY_LOCAL_MACHINE, "SOFTWARE\\Frey Technologies\\Common\\DSFilters\\MpegDec",
-	//			"EnableDXVA", 0))
-	//	{
-	//		slog((env, "Using DXVA Enabled SageTV MPEG-2 Video Decoder\r\n"));
-	//		hr = CoCreateInstance(CLSID_EM2VD, NULL, CLSCTX_INPROC_SERVER,
-	//			IID_IBaseFilter, (void **)&pFilter);
-	//	}
-	//	else
-	//	{
-	//		slog((env, "Using legacy SageTV MPEG Video Decoder\r\n"));
-	//		hr = CoCreateInstance(CLSID_MainConceptMPEGVideoDecoder, NULL, CLSCTX_INPROC_SERVER,
-	//			IID_IBaseFilter, (void **)&pFilter);
-	//	}
-	//	 * PROPRIETARY CODE BLOCK DISABLED FOR OPEN SOURCE RELEASE - END
-	//	 */
-	//}
-	//else
-		//hr = FindFilterByName(&pFilter, CLSID_LegacyAmFilterCategory, cName);
 	if (!strcmp("SageTV MPEG Video Decoder", cName) || !strcmp("SageTV MPEG-2 Video Decoder", cName))
 	{
 		if (GetRegistryDword(HKEY_LOCAL_MACHINE, "SOFTWARE\\Frey Technologies\\Common\\DSFilters\\MpegDec",
@@ -255,7 +233,7 @@ JNIEXPORT void JNICALL Java_sage_DShowMediaPlayer_setVideoDecoderFilter0
 		 */
 	}
 	env->ReleaseStringUTFChars(jfilterName, cName);
-	
+
 }
 
 /*
@@ -351,7 +329,7 @@ JNIEXPORT void JNICALL Java_sage_DShowMediaPlayer_setVideoRendererFilter0
 		{
 			IDirect3D9* pD3D = (IDirect3D9*) jD3D;
 			IDirect3DDevice9* pD3DDevice = (IDirect3DDevice9*) jD3DDevice;
-			// Set the rendering mode and number of streams.  
+			// Set the rendering mode and number of streams.
 			CComPtr<IVMRFilterConfig9> pConfig = NULL;
 			// See if it's EVR or VMR
 			hr = pFilter->QueryInterface(IID_IVMRFilterConfig9, (void**)&(pConfig.p));
@@ -376,7 +354,7 @@ JNIEXPORT void JNICALL Java_sage_DShowMediaPlayer_setVideoRendererFilter0
 				 * 10/13/04 - The first problem came back where the format types are wrong. No idea
 				 * why this was working fine yesterday.
 				 */
-				if (GetRegistryDword(HKEY_LOCAL_MACHINE, 
+				if (GetRegistryDword(HKEY_LOCAL_MACHINE,
 					"Software\\Frey Technologies\\SageTV\\DirectX9", "AllowCCForVMR9", 1) &&
 					ccOK)
 				{
@@ -393,7 +371,7 @@ JNIEXPORT void JNICALL Java_sage_DShowMediaPlayer_setVideoRendererFilter0
 				}
 
 				CComPtr<IVMRSurfaceAllocatorNotify9> lpIVMRSurfAllocNotify = NULL;
-				pFilter->QueryInterface(IID_IVMRSurfaceAllocatorNotify9, 
+				pFilter->QueryInterface(IID_IVMRSurfaceAllocatorNotify9,
 					(void**)&(lpIVMRSurfAllocNotify.p));
 
 				// create our surface allocator
@@ -462,7 +440,7 @@ JNIEXPORT void JNICALL Java_sage_DShowMediaPlayer_setVideoRendererFilter0
 						if (osInfo.dwMajorVersion >= 6)
 							evrInputsDefault = 3;
 					}
-					DWORD evrInputs = GetRegistryDword(HKEY_LOCAL_MACHINE, 
+					DWORD evrInputs = GetRegistryDword(HKEY_LOCAL_MACHINE,
 						"Software\\Frey Technologies\\SageTV\\DirectX9", "EVRInputPins", evrInputsDefault);
 					slog((env, "Using %d input pins on the EVR\r\n", (int)evrInputs));
 					pEvrConfig->SetNumberOfStreams(evrInputs < 1 ? 1 : (evrInputs > 3 ? 3 : evrInputs));
@@ -489,7 +467,7 @@ JNIEXPORT void JNICALL Java_sage_DShowMediaPlayer_setVideoRendererFilter0
 			if (vmrConn.formattype == FORMAT_VideoInfo2)
 			{
 				VIDEOINFOHEADER2* vih2 = (VIDEOINFOHEADER2*) vmrConn.pbFormat;
-				
+
 				// Fill in the VideoDesc structure
 				VideoDesc.dwSize = sizeof(VMR9VideoDesc);
 				VideoDesc.dwSampleWidth = vih2->bmiHeader.biWidth;
@@ -500,7 +478,7 @@ JNIEXPORT void JNICALL Java_sage_DShowMediaPlayer_setVideoRendererFilter0
 				VideoDesc.InputSampleFreq.dwDenominator = 1001;
 				VideoDesc.OutputFrameFreq.dwNumerator = 60000;
 				VideoDesc.OutputFrameFreq.dwDenominator = 1001;
-				hr = pVmrDeint->GetNumberOfDeinterlaceModes(&VideoDesc, 
+				hr = pVmrDeint->GetNumberOfDeinterlaceModes(&VideoDesc,
 					&dwNumModes, NULL);
 				HTESTPRINT(hr);
 				if (SUCCEEDED(hr) && (dwNumModes != 0))
@@ -510,7 +488,7 @@ JNIEXPORT void JNICALL Java_sage_DShowMediaPlayer_setVideoRendererFilter0
 					if (pModes)
 					{
 						// Fill the array.
-						hr = pVmrDeint->GetNumberOfDeinterlaceModes(&VideoDesc, 
+						hr = pVmrDeint->GetNumberOfDeinterlaceModes(&VideoDesc,
 							&dwNumModes, pModes);
 						if (SUCCEEDED(hr))
 						{
@@ -540,7 +518,7 @@ JNIEXPORT void JNICALL Java_sage_DShowMediaPlayer_setVideoRendererFilter0
 										slog(("VM9Deinterlacing Tech: PixelAdaptive\r\n"));
 									else if (Caps.DeinterlaceTechnology == DeinterlaceTech9_MotionVectorSteered)
 										slog(("VM9Deinterlacing Tech: MotionVectorSteered\r\n"));
-									else 
+									else
 										slog(("VM9Deinterlacing Tech: Proprietary...\r\n"));
 								}
 							}
@@ -782,7 +760,7 @@ JNIEXPORT void JNICALL Java_sage_DShowMediaPlayer_setVideoHWND0
  * Signature: (JLjava/lang/String;Ljava/lang/String;ZZ)V
  */
 JNIEXPORT void JNICALL Java_sage_DShowMediaPlayer_setupGraph0
-	(JNIEnv *env, jobject jo, jlong dataPtr, jstring jFilename, jstring jhostname, 
+	(JNIEnv *env, jobject jo, jlong dataPtr, jstring jFilename, jstring jhostname,
 		jboolean renderVideo, jboolean renderAudio)
 {
 	NPE_RET(dataPtr);
@@ -839,7 +817,7 @@ JNIEXPORT void JNICALL Java_sage_DShowMediaPlayer_teardownGraph0
 	CPlayerData* playData = (CPlayerData*) dataPtr;
 	if (playData)
 	{
-		
+
 		try
 		{
 			slog((env, "Tearing down playback graph\r\n"));
@@ -1253,7 +1231,7 @@ JNIEXPORT jint JNICALL Java_sage_DShowMediaPlayer_processEvents0
 
 	jint rv = 0;
 
-	while (SUCCEEDED(pIME->GetEvent(&lEvent, (LONG_PTR *) &lParam1, 
+	while (SUCCEEDED(pIME->GetEvent(&lEvent, (LONG_PTR *) &lParam1,
                     (LONG_PTR *) &lParam2, lTimeOut)))
 	{
         slog((env, "Event: %#x l1=0x%x l2=0x%x\r\n", lEvent, lParam1, lParam2));
@@ -1261,7 +1239,7 @@ JNIEXPORT jint JNICALL Java_sage_DShowMediaPlayer_processEvents0
 		switch(lEvent)
         {
 			case WM_DEMUX_EVENT:
-				slog((env, "Demuxer end of stream event received\r\n")); 
+				slog((env, "Demuxer end of stream event received\r\n"));
 				rv = 2;
 				break;
 
