@@ -25,18 +25,18 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE 
+1 TEXTINCLUDE
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE 
+2 TEXTINCLUDE
 BEGIN
     "#include ""afxres.h""\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE 
+3 TEXTINCLUDE
 BEGIN
     "\r\n"
     "\0"
@@ -51,8 +51,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 9,0,0,6
- PRODUCTVERSION 9,0,0,0
+ FILEVERSION 9,0,4,220
+ PRODUCTVERSION 9,0,4,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -69,12 +69,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "SageTV Open Source"
             VALUE "FileDescription", "SageTV"
-            VALUE "FileVersion", "9.0.0.6"
+            VALUE "FileVersion", "9.0.4.220"
             VALUE "InternalName", "SageTV"
             VALUE "LegalCopyright", "Copyright © © 2015 The SageTV Authors"
             VALUE "OriginalFilename", "SageTV.exe"
             VALUE "ProductName", "SageTV"
-            VALUE "ProductVersion", "9.0.0.0"
+            VALUE "ProductVersion", "9.0.4.0"
         END
     END
     BLOCK "VarFileInfo"
