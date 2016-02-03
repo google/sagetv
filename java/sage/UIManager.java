@@ -1161,7 +1161,7 @@ public class UIManager implements Runnable, UIClient
         }
         // Don't reset MVP/PS UIs on upgrade of a server or they'll keep getting reset every time they connect
         // until the server is restarted!
-        if (!Sage.EMBEDDED && (fileStr == null || (Sage.getBoolean("wizard/revert_stv_on_upgrade", true) && ((SageTV.upgrade &&
+        if (!Sage.EMBEDDED && (fileStr == null || (Sage.getBoolean("wizard/revert_stv_on_upgrade", false) && ((SageTV.upgrade &&
             getUIClientType() != UIClient.REMOTE_UI) || (getUIClientType() == UIClient.REMOTE_UI && !SAGE.equals(get("ui/last_version", "")))))))
         {
           fileStr = new File(System.getProperty("user.dir"),
