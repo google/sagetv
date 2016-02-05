@@ -32,8 +32,8 @@ ACL_mutex * ACL_CreateMutex();
 void ACL_RemoveMutex(ACL_mutex *mutex);
 int ACL_LockMutex(ACL_mutex *mutex);
 int ACL_UnlockMutex(ACL_mutex *mutex);
-ACL_Thread * ACL_CreateThread(int (*threadfunc)(void *), void *data);
-int ACL_ThreadJoin(ACL_Thread * t);
+ACL_Thread * ACL_CreateThread(void * (*threadfunc)(void *), void *data);
+void * ACL_ThreadJoin(ACL_Thread * t);
 int ACL_RemoveThread(ACL_Thread * t);
 void ACL_Delay(unsigned int delay);
 
