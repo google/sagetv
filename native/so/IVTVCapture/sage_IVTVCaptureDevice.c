@@ -192,7 +192,7 @@ static void throwEncodingException(JNIEnv* env, jint errCode)
 
 // JFT, Is there a safe way to do logs from that thread?
 // see native/common/jni-util.cpp for example from other thread
-static int CaptureThread(void *data)
+static void * CaptureThread(void *data)
 {
     MyDevFDs *x=(MyDevFDs *) data;
     fd_set rfds;
@@ -219,7 +219,7 @@ static int CaptureThread(void *data)
         tv.tv_usec = 100000;
         retval = select(maxfd+1, &rfds, NULL, NULL, &tv);
         if (retval == -1)
-            return -1;
+            return (void *) -1;
         if(FD_ISSET(x->capFd, &rfds))
         {
             FD_CLR(x->capFd, &rfds);
@@ -252,7 +252,7 @@ static int CaptureThread(void *data)
             ACL_UnlockMutex(x->capMutex);
         }
     }
-    return 0;
+    return (void *) 0;
 }
 
 /*

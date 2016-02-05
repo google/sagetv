@@ -665,7 +665,7 @@ JNIEXPORT void JNICALL Java_sage_SFIRTuner_init0(JNIEnv *env, jobject jo)
 	jstring jfname = (jstring)GetObjectField(env, jo, "devFilename", "Ljava/lang/String;");
 	const char* cname = (*env)->GetStringUTFChars(env, jfname, NULL);
 	deviceDLL = dlopen(cname, RTLD_NOW);
-	SetLongField(env, jo, "nativeDllHandle", (jint) deviceDLL);
+	SetLongField(env, jo, "nativeDllHandle", (jlong) deviceDLL);
 	(*env)->ReleaseStringUTFChars(env, jfname, cname);
 }
 
