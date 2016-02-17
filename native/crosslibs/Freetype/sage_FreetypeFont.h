@@ -20,7 +20,7 @@ extern "C" {
  * Method:    loadFreetypeLib0
  * Signature: ()J
  */
-JNIEXPORT jlong JNICALL _Java_sage_FreetypeFont_loadFreetypeLib0
+JNIEXPORT jlong JNICALL Java_sage_FreetypeFont_loadFreetypeLib0
   (JNIEnv *, jclass);
 
 /*
@@ -28,7 +28,7 @@ JNIEXPORT jlong JNICALL _Java_sage_FreetypeFont_loadFreetypeLib0
  * Method:    closeFreetypeLib0
  * Signature: (J)Z
  */
-JNIEXPORT jboolean JNICALL _Java_sage_FreetypeFont_closeFreetypeLib0
+JNIEXPORT jboolean JNICALL Java_sage_FreetypeFont_closeFreetypeLib0
   (JNIEnv *, jclass, jlong);
 
 /*
@@ -36,7 +36,7 @@ JNIEXPORT jboolean JNICALL _Java_sage_FreetypeFont_closeFreetypeLib0
  * Method:    closeFontFace0
  * Signature: (J)Z
  */
-JNIEXPORT jboolean JNICALL _Java_sage_FreetypeFont_closeFontFace0
+JNIEXPORT jboolean JNICALL Java_sage_FreetypeFont_closeFontFace0
   (JNIEnv *, jobject, jlong);
 
 /*
@@ -44,7 +44,7 @@ JNIEXPORT jboolean JNICALL _Java_sage_FreetypeFont_closeFontFace0
  * Method:    loadFontFace0
  * Signature: (JLjava/lang/String;II)J
  */
-JNIEXPORT jlong JNICALL _Java_sage_FreetypeFont_loadFontFace0
+JNIEXPORT jlong JNICALL Java_sage_FreetypeFont_loadFontFace0
   (JNIEnv *, jobject, jlong, jstring, jint, jint);
 
 /*
@@ -52,7 +52,7 @@ JNIEXPORT jlong JNICALL _Java_sage_FreetypeFont_loadFontFace0
  * Method:    deriveFontFace0
  * Signature: (JII)J
  */
-JNIEXPORT jlong JNICALL _Java_sage_FreetypeFont_deriveFontFace0
+JNIEXPORT jlong JNICALL Java_sage_FreetypeFont_deriveFontFace0
   (JNIEnv *, jobject, jlong, jint, jint);
 
 /*
@@ -60,7 +60,7 @@ JNIEXPORT jlong JNICALL _Java_sage_FreetypeFont_deriveFontFace0
  * Method:    getGlyphForChar0
  * Signature: (JC)I
  */
-JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_getGlyphForChar0
+JNIEXPORT jint JNICALL Java_sage_FreetypeFont_getGlyphForChar0
   (JNIEnv *, jobject, jlong, jchar);
 
 /*
@@ -68,7 +68,7 @@ JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_getGlyphForChar0
  * Method:    loadGlyph0
  * Signature: (JI)V
  */
-JNIEXPORT void JNICALL _Java_sage_FreetypeFont_loadGlyph0
+JNIEXPORT void JNICALL Java_sage_FreetypeFont_loadGlyph0
   (JNIEnv *, jobject, jlong, jint);
 
 /*
@@ -76,7 +76,7 @@ JNIEXPORT void JNICALL _Java_sage_FreetypeFont_loadGlyph0
  * Method:    renderGlyph0
  * Signature: (JLjava/awt/image/BufferedImage;II)I
  */
-JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_renderGlyph0
+JNIEXPORT jint JNICALL Java_sage_FreetypeFont_renderGlyph0
   (JNIEnv *, jobject, jlong, jobject, jint, jint);
 
 /*
@@ -84,7 +84,7 @@ JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_renderGlyph0
  * Method:    renderGlyphRaw0
  * Signature: (JLsage/media/image/RawImage;IIII)Lsage/media/image/RawImage;
  */
-JNIEXPORT jobject JNICALL _Java_sage_FreetypeFont_renderGlyphRaw0
+JNIEXPORT jobject JNICALL Java_sage_FreetypeFont_renderGlyphRaw0
   (JNIEnv *, jobject, jlong, jobject, jint, jint, jint, jint);
 
 /*
@@ -92,7 +92,7 @@ JNIEXPORT jobject JNICALL _Java_sage_FreetypeFont_renderGlyphRaw0
  * Method:    getNumGlyphs0
  * Signature: (J)I
  */
-JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_getNumGlyphs0
+JNIEXPORT jint JNICALL Java_sage_FreetypeFont_getNumGlyphs0
   (JNIEnv *, jobject, jlong);
 
 /*
@@ -100,7 +100,7 @@ JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_getNumGlyphs0
  * Method:    getGlyphWidth0
  * Signature: (J)I
  */
-JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_getGlyphWidth0
+JNIEXPORT jint JNICALL Java_sage_FreetypeFont_getGlyphWidth0
   (JNIEnv *, jobject, jlong);
 
 /*
@@ -108,7 +108,7 @@ JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_getGlyphWidth0
  * Method:    getGlyphHeight0
  * Signature: (J)I
  */
-JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_getGlyphHeight0
+JNIEXPORT jint JNICALL Java_sage_FreetypeFont_getGlyphHeight0
   (JNIEnv *, jobject, jlong);
 
 /*
@@ -116,7 +116,7 @@ JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_getGlyphHeight0
  * Method:    getGlyphBearingX0
  * Signature: (J)I
  */
-JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_getGlyphBearingX0
+JNIEXPORT jint JNICALL Java_sage_FreetypeFont_getGlyphBearingX0
   (JNIEnv *, jobject, jlong);
 
 /*
@@ -124,7 +124,7 @@ JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_getGlyphBearingX0
  * Method:    getGlyphBearingY0
  * Signature: (J)I
  */
-JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_getGlyphBearingY0
+JNIEXPORT jint JNICALL Java_sage_FreetypeFont_getGlyphBearingY0
   (JNIEnv *, jobject, jlong);
 
 /*
@@ -132,7 +132,7 @@ JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_getGlyphBearingY0
  * Method:    getGlyphAdvance0
  * Signature: (J)I
  */
-JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_getGlyphAdvance0
+JNIEXPORT jint JNICALL Java_sage_FreetypeFont_getGlyphAdvance0
   (JNIEnv *, jobject, jlong);
 
 /*
@@ -140,7 +140,7 @@ JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_getGlyphAdvance0
  * Method:    getFontHeight0
  * Signature: (J)I
  */
-JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_getFontHeight0
+JNIEXPORT jint JNICALL Java_sage_FreetypeFont_getFontHeight0
   (JNIEnv *, jobject, jlong);
 
 /*
@@ -148,7 +148,7 @@ JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_getFontHeight0
  * Method:    getFontAscent0
  * Signature: (J)I
  */
-JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_getFontAscent0
+JNIEXPORT jint JNICALL Java_sage_FreetypeFont_getFontAscent0
   (JNIEnv *, jobject, jlong);
 
 /*
@@ -156,7 +156,7 @@ JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_getFontAscent0
  * Method:    getFontDescent0
  * Signature: (J)I
  */
-JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_getFontDescent0
+JNIEXPORT jint JNICALL Java_sage_FreetypeFont_getFontDescent0
   (JNIEnv *, jobject, jlong);
 
 #ifdef __cplusplus
