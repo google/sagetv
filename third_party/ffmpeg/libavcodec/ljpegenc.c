@@ -1,6 +1,6 @@
 /*
  * lossless JPEG encoder
- * Copyright (c) 2000, 2001 Fabrice Bellard.
+ * Copyright (c) 2000, 2001 Fabrice Bellard
  * Copyright (c) 2003 Alex Beregszaszi
  * Copyright (c) 2003-2004 Michael Niedermayer
  *
@@ -26,7 +26,7 @@
  */
 
 /**
- * @file ljpegenc.c
+ * @file
  * lossless JPEG encoder.
  */
 
@@ -56,7 +56,7 @@ static int encode_picture_lossless(AVCodecContext *avctx, unsigned char *buf, in
 
     s->header_bits= put_bits_count(&s->pb);
 
-    if(avctx->pix_fmt == PIX_FMT_RGB32){
+    if(avctx->pix_fmt == PIX_FMT_BGRA){
         int x, y, i;
         const int linesize= p->linesize[0];
         uint16_t (*buffer)[4]= (void *) s->rd_scratchpad;
@@ -141,9 +141,9 @@ static int encode_picture_lossless(AVCodecContext *avctx, unsigned char *buf, in
                                 }
 
                                 if(i==0)
-                                    ff_mjpeg_encode_dc(s, (int8_t)(*ptr - pred), m->huff_size_dc_luminance, m->huff_code_dc_luminance); //FIXME ugly
+                                    ff_mjpeg_encode_dc(s, *ptr - pred, m->huff_size_dc_luminance, m->huff_code_dc_luminance); //FIXME ugly
                                 else
-                                    ff_mjpeg_encode_dc(s, (int8_t)(*ptr - pred), m->huff_size_dc_chrominance, m->huff_code_dc_chrominance);
+                                    ff_mjpeg_encode_dc(s, *ptr - pred, m->huff_size_dc_chrominance, m->huff_code_dc_chrominance);
                             }
                         }
                     }
@@ -164,9 +164,9 @@ static int encode_picture_lossless(AVCodecContext *avctx, unsigned char *buf, in
                                 PREDICT(pred, ptr[-linesize-1], ptr[-linesize], ptr[-1], predictor);
 
                                 if(i==0)
-                                    ff_mjpeg_encode_dc(s, (int8_t)(*ptr - pred), m->huff_size_dc_luminance, m->huff_code_dc_luminance); //FIXME ugly
+                                    ff_mjpeg_encode_dc(s, *ptr - pred, m->huff_size_dc_luminance, m->huff_code_dc_luminance); //FIXME ugly
                                 else
-                                    ff_mjpeg_encode_dc(s, (int8_t)(*ptr - pred), m->huff_size_dc_chrominance, m->huff_code_dc_chrominance);
+                                    ff_mjpeg_encode_dc(s, *ptr - pred, m->huff_size_dc_chrominance, m->huff_code_dc_chrominance);
                             }
                         }
                     }
@@ -181,17 +181,18 @@ static int encode_picture_lossless(AVCodecContext *avctx, unsigned char *buf, in
     s->picture_number++;
 
     flush_put_bits(&s->pb);
-    return pbBufPtr(&s->pb) - s->pb.buf;
+    return put_bits_ptr(&s->pb) - s->pb.buf;
 //    return (put_bits_count(&f->pb)+7)/8;
 }
 
 
 AVCodec ljpeg_encoder = { //FIXME avoid MPV_* lossless JPEG should not need them
     "ljpeg",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_LJPEG,
     sizeof(MpegEncContext),
     MPV_encode_init,
     encode_picture_lossless,
     MPV_encode_end,
+    .long_name = NULL_IF_CONFIG_SMALL("Lossless JPEG"),
 };

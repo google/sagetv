@@ -1,6 +1,6 @@
 /*
  * H.263 decoder
- * Copyright (c) 2001 Fabrice Bellard.
+ * Copyright (c) 2001 Fabrice Bellard
  * Copyright (c) 2002-2004 Michael Niedermayer <michaelni@gmx.at>
  *
  * This file is part of FFmpeg.
@@ -21,21 +21,26 @@
  */
 
 /**
- * @file h263dec.c
+ * @file
  * H.263 decoder.
  */
 
+#include "internal.h"
 #include "avcodec.h"
 #include "dsputil.h"
 #include "mpegvideo.h"
+#include "h263.h"
 #include "h263_parser.h"
 #include "mpeg4video_parser.h"
 #include "msmpeg4.h"
+#include "vdpau_internal.h"
+#include "flv.h"
+#include "mpeg4video.h"
 
 //#define DEBUG
 //#define PRINT_FRAME_TIME
 
-int ff_h263_decode_init(AVCodecContext *avctx)
+av_cold int ff_h263_decode_init(AVCodecContext *avctx)
 {
     MpegEncContext *s = avctx->priv_data;
 
@@ -51,19 +56,16 @@ int ff_h263_decode_init(AVCodecContext *avctx)
     s->quant_precision=5;
     s->decode_mb= ff_h263_decode_mb;
     s->low_delay= 1;
-    avctx->pix_fmt= PIX_FMT_YUV420P;
+    avctx->pix_fmt= avctx->get_format(avctx, avctx->codec->pix_fmts);
     s->unrestricted_mv= 1;
 
     /* select sub codec */
     switch(avctx->codec->id) {
     case CODEC_ID_H263:
         s->unrestricted_mv= 0;
+        avctx->chroma_sample_location = AVCHROMA_LOC_CENTER;
         break;
     case CODEC_ID_MPEG4:
-        s->decode_mb= ff_mpeg4_decode_mb;
-        s->time_increment_bits = 4; /* default value for broken headers */
-        s->h263_pred = 1;
-        s->low_delay = 0; //default, might be overriden in the vol header during header parsing
         break;
     case CODEC_ID_MSMPEG4V1:
         s->h263_msmpeg4 = 1;
@@ -95,6 +97,7 @@ int ff_h263_decode_init(AVCodecContext *avctx)
         s->h263_msmpeg4 = 1;
         s->h263_pred = 1;
         s->msmpeg4_version=6;
+        avctx->chroma_sample_location = AVCHROMA_LOC_LEFT;
         break;
     case CODEC_ID_H263I:
         break;
@@ -105,21 +108,19 @@ int ff_h263_decode_init(AVCodecContext *avctx)
         return -1;
     }
     s->codec_id= avctx->codec->id;
+    avctx->hwaccel= ff_find_hwaccel(avctx->codec->id, avctx->pix_fmt);
 
     /* for h263, we allocate the images after having read the header */
     if (avctx->codec->id != CODEC_ID_H263 && avctx->codec->id != CODEC_ID_MPEG4)
         if (MPV_common_init(s) < 0)
             return -1;
 
-    if (ENABLE_MSMPEG4_DECODER && s->h263_msmpeg4)
-        ff_msmpeg4_decode_init(s);
-    else
         h263_decode_init_vlc(s);
 
     return 0;
 }
 
-int ff_h263_decode_end(AVCodecContext *avctx)
+av_cold int ff_h263_decode_end(AVCodecContext *avctx)
 {
     MpegEncContext *s = avctx->priv_data;
 
@@ -133,7 +134,7 @@ int ff_h263_decode_end(AVCodecContext *avctx)
 static int get_consumed_bytes(MpegEncContext *s, int buf_size){
     int pos= (get_bits_count(&s->gb)+7)>>3;
 
-    if(s->divx_packed){
+    if(s->divx_packed || s->avctx->hwaccel){
         //we would have to scan through the whole buf to handle the weird reordering ...
         return buf_size;
     }else if(s->flags&CODEC_FLAG_TRUNCATED){
@@ -159,10 +160,17 @@ static int decode_slice(MpegEncContext *s){
 
     ff_set_qscale(s, s->qscale);
 
+    if (s->avctx->hwaccel) {
+        const uint8_t *start= s->gb.buffer + get_bits_count(&s->gb)/8;
+        const uint8_t *end  = ff_h263_find_resync_marker(start + 1, s->gb.buffer_end);
+        skip_bits_long(&s->gb, 8*(end - start));
+        return s->avctx->hwaccel->decode_slice(s->avctx, start, end - start);
+    }
+
     if(s->partitioned_frame){
         const int qscale= s->qscale;
 
-        if(s->codec_id==CODEC_ID_MPEG4){
+        if(CONFIG_MPEG4_DECODER && s->codec_id==CODEC_ID_MPEG4){
             if(ff_mpeg4_decode_partitions(s) < 0)
                 return -1;
         }
@@ -208,7 +216,7 @@ static int decode_slice(MpegEncContext *s){
 //printf("%d %d %06X\n", ret, get_bits_count(&s->gb), show_bits(&s->gb, 24));
             ret= s->decode_mb(s, s->block);
 
-            if (s->pict_type!=B_TYPE)
+            if (s->pict_type!=FF_B_TYPE)
                 ff_h263_update_motion_val(s);
 
             if(ret<0){
@@ -255,8 +263,8 @@ static int decode_slice(MpegEncContext *s){
     /* try to detect the padding bug */
     if(      s->codec_id==CODEC_ID_MPEG4
        &&   (s->workaround_bugs&FF_BUG_AUTODETECT)
-       &&    s->gb.size_in_bits - get_bits_count(&s->gb) >=0
-       &&    s->gb.size_in_bits - get_bits_count(&s->gb) < 48
+       &&    get_bits_left(&s->gb) >=0
+       &&    get_bits_left(&s->gb) < 48
 //       &&   !s->resync_marker
        &&   !s->data_partitioning){
 
@@ -279,7 +287,7 @@ static int decode_slice(MpegEncContext *s){
     }
 
     if(s->workaround_bugs&FF_BUG_AUTODETECT){
-        if(s->padding_bug_score > -2 && !s->data_partitioning /*&& (s->divx_version || !s->resync_marker)*/)
+        if(s->padding_bug_score > -2 && !s->data_partitioning /*&& (s->divx_version>=0 || !s->resync_marker)*/)
             s->workaround_bugs |=  FF_BUG_NO_PADDING;
         else
             s->workaround_bugs &= ~FF_BUG_NO_PADDING;
@@ -287,15 +295,15 @@ static int decode_slice(MpegEncContext *s){
 
     // handle formats which don't have unique end markers
     if(s->msmpeg4_version || (s->workaround_bugs&FF_BUG_NO_PADDING)){ //FIXME perhaps solve this more cleanly
-        int left= s->gb.size_in_bits - get_bits_count(&s->gb);
+        int left= get_bits_left(&s->gb);
         int max_extra=7;
 
         /* no markers in M$ crap */
-        if(s->msmpeg4_version && s->pict_type==I_TYPE)
+        if(s->msmpeg4_version && s->pict_type==FF_I_TYPE)
             max_extra+= 17;
 
         /* buggy padding but the frame should still end approximately at the bitstream end */
-        if((s->workaround_bugs&FF_BUG_NO_PADDING) && s->error_resilience>=3)
+        if((s->workaround_bugs&FF_BUG_NO_PADDING) && s->error_recognition>=3)
             max_extra+= 48;
         else if((s->workaround_bugs&FF_BUG_NO_PADDING))
             max_extra+= 256*256*256*64;
@@ -312,7 +320,7 @@ static int decode_slice(MpegEncContext *s){
     }
 
     av_log(s->avctx, AV_LOG_ERROR, "slice end not reached but screenspace end (%d left %06X, score= %d)\n",
-            s->gb.size_in_bits - get_bits_count(&s->gb),
+            get_bits_left(&s->gb),
             show_bits(&s->gb, 24), s->padding_bug_score);
 
     ff_er_add_slice(s, s->resync_mb_x, s->resync_mb_y, s->mb_x, s->mb_y, (AC_END|DC_END|MV_END)&part_mask);
@@ -322,19 +330,16 @@ static int decode_slice(MpegEncContext *s){
 
 int ff_h263_decode_frame(AVCodecContext *avctx,
                              void *data, int *data_size,
-                             const uint8_t *buf, int buf_size)
+                             AVPacket *avpkt)
 {
+    const uint8_t *buf = avpkt->data;
+    int buf_size = avpkt->size;
     MpegEncContext *s = avctx->priv_data;
     int ret;
     AVFrame *pict = data;
 
 #ifdef PRINT_FRAME_TIME
 uint64_t time= rdtsc();
-#endif
-#ifdef DEBUG
-    av_log(avctx, AV_LOG_DEBUG, "*****frame %d size=%d\n", avctx->frame_number, buf_size);
-    if(buf_size>0)
-        av_log(avctx, AV_LOG_DEBUG, "bytes=%x %x %x %x\n", buf[0], buf[1], buf[2], buf[3]);
 #endif
     s->flags= avctx->flags;
     s->flags2= avctx->flags2;
@@ -355,9 +360,9 @@ uint64_t time= rdtsc();
     if(s->flags&CODEC_FLAG_TRUNCATED){
         int next;
 
-        if(s->codec_id==CODEC_ID_MPEG4){
+        if(CONFIG_MPEG4_DECODER && s->codec_id==CODEC_ID_MPEG4){
             next= ff_mpeg4_find_frame_end(&s->parse_context, buf, buf_size);
-        }else if(s->codec_id==CODEC_ID_H263){
+        }else if(CONFIG_H263_DECODER && s->codec_id==CODEC_ID_H263){
             next= ff_h263_find_frame_end(&s->parse_context, buf, buf_size);
         }else{
             av_log(s->avctx, AV_LOG_ERROR, "this codec does not support truncated bitstreams\n");
@@ -390,11 +395,11 @@ retry:
     }
 
     /* let's go :-) */
-    if (ENABLE_WMV2_DECODER && s->msmpeg4_version==5) {
+    if (CONFIG_WMV2_DECODER && s->msmpeg4_version==5) {
         ret= ff_wmv2_decode_picture_header(s);
-    } else if (ENABLE_MSMPEG4_DECODER && s->msmpeg4_version) {
+    } else if (CONFIG_MSMPEG4_DECODER && s->msmpeg4_version) {
         ret = msmpeg4_decode_picture_header(s);
-    } else if (s->h263_pred) {
+    } else if (CONFIG_MPEG4_DECODER && s->h263_pred) {
         if(s->avctx->extradata_size && s->picture_number==0){
             GetBitContext gb;
 
@@ -402,13 +407,10 @@ retry:
             ret = ff_mpeg4_decode_picture_header(s, &gb);
         }
         ret = ff_mpeg4_decode_picture_header(s, &s->gb);
-
-        if(s->flags& CODEC_FLAG_LOW_DELAY)
-            s->low_delay=1;
-    } else if (s->codec_id == CODEC_ID_H263I) {
-        ret = intel_h263_decode_picture_header(s);
-    } else if (s->h263_flv) {
-        ret = flv_h263_decode_picture_header(s);
+    } else if (CONFIG_H263I_DECODER && s->codec_id == CODEC_ID_H263I) {
+        ret = ff_intel_h263_decode_picture_header(s);
+    } else if (CONFIG_FLV_DECODER && s->h263_flv) {
+        ret = ff_flv_decode_picture_header(s);
     } else {
         ret = h263_decode_picture_header(s);
     }
@@ -423,33 +425,35 @@ retry:
 
     avctx->has_b_frames= !s->low_delay;
 
-    if(s->xvid_build==0 && s->divx_version==0 && s->lavc_build==0){
-        if(s->stream_codec_tag == ff_get_fourcc("XVID") ||
-           s->codec_tag == ff_get_fourcc("XVID") || s->codec_tag == ff_get_fourcc("XVIX") ||
-           s->codec_tag == ff_get_fourcc("RMP4"))
-            s->xvid_build= -1;
+    if(s->xvid_build==-1 && s->divx_version==-1 && s->lavc_build==-1){
+        if(s->stream_codec_tag == AV_RL32("XVID") ||
+           s->codec_tag == AV_RL32("XVID") || s->codec_tag == AV_RL32("XVIX") ||
+           s->codec_tag == AV_RL32("RMP4") ||
+           s->codec_tag == AV_RL32("SIPP")
+           )
+            s->xvid_build= 0;
 #if 0
-        if(s->codec_tag == ff_get_fourcc("DIVX") && s->vo_type==0 && s->vol_control_parameters==1
+        if(s->codec_tag == AV_RL32("DIVX") && s->vo_type==0 && s->vol_control_parameters==1
            && s->padding_bug_score > 0 && s->low_delay) // XVID with modified fourcc
-            s->xvid_build= -1;
+            s->xvid_build= 0;
 #endif
     }
 
-    if(s->xvid_build==0 && s->divx_version==0 && s->lavc_build==0){
-        if(s->codec_tag == ff_get_fourcc("DIVX") && s->vo_type==0 && s->vol_control_parameters==0)
+    if(s->xvid_build==-1 && s->divx_version==-1 && s->lavc_build==-1){
+        if(s->codec_tag == AV_RL32("DIVX") && s->vo_type==0 && s->vol_control_parameters==0)
             s->divx_version= 400; //divx 4
     }
 
-    if(s->xvid_build && s->divx_version){
+    if(s->xvid_build>=0 && s->divx_version>=0){
         s->divx_version=
-        s->divx_build= 0;
+        s->divx_build= -1;
     }
 
     if(s->workaround_bugs&FF_BUG_AUTODETECT){
-        if(s->codec_tag == ff_get_fourcc("XVIX"))
+        if(s->codec_tag == AV_RL32("XVIX"))
             s->workaround_bugs|= FF_BUG_XVID_ILACE;
 
-        if(s->codec_tag == ff_get_fourcc("UMP4")){
+        if(s->codec_tag == AV_RL32("UMP4")){
             s->workaround_bugs|= FF_BUG_UMP4;
         }
 
@@ -461,16 +465,16 @@ retry:
             s->workaround_bugs|= FF_BUG_QPEL_CHROMA2;
         }
 
-        if(s->xvid_build && s->xvid_build<=3)
+        if(s->xvid_build<=3U)
             s->padding_bug_score= 256*256*256*64;
 
-        if(s->xvid_build && s->xvid_build<=1)
+        if(s->xvid_build<=1U)
             s->workaround_bugs|= FF_BUG_QPEL_CHROMA;
 
-        if(s->xvid_build && s->xvid_build<=12)
+        if(s->xvid_build<=12U)
             s->workaround_bugs|= FF_BUG_EDGE;
 
-        if(s->xvid_build && s->xvid_build<=32)
+        if(s->xvid_build<=32U)
             s->workaround_bugs|= FF_BUG_DC_CLIP;
 
 #define SET_QPEL_FUNC(postfix1, postfix2) \
@@ -478,43 +482,43 @@ retry:
     s->dsp.put_no_rnd_ ## postfix1 = ff_put_no_rnd_ ## postfix2;\
     s->dsp.avg_ ## postfix1 = ff_avg_ ## postfix2;
 
-        if(s->lavc_build && s->lavc_build<4653)
+        if(s->lavc_build<4653U)
             s->workaround_bugs|= FF_BUG_STD_QPEL;
 
-        if(s->lavc_build && s->lavc_build<4655)
+        if(s->lavc_build<4655U)
             s->workaround_bugs|= FF_BUG_DIRECT_BLOCKSIZE;
 
-        if(s->lavc_build && s->lavc_build<4670){
+        if(s->lavc_build<4670U){
             s->workaround_bugs|= FF_BUG_EDGE;
         }
 
-        if(s->lavc_build && s->lavc_build<=4712)
+        if(s->lavc_build<=4712U)
             s->workaround_bugs|= FF_BUG_DC_CLIP;
 
-        if(s->divx_version)
+        if(s->divx_version>=0)
             s->workaround_bugs|= FF_BUG_DIRECT_BLOCKSIZE;
 //printf("padding_bug_score: %d\n", s->padding_bug_score);
         if(s->divx_version==501 && s->divx_build==20020416)
             s->padding_bug_score= 256*256*256*64;
 
-        if(s->divx_version && s->divx_version<500){
+        if(s->divx_version<500U){
             s->workaround_bugs|= FF_BUG_EDGE;
         }
 
-        if(s->divx_version)
+        if(s->divx_version>=0)
             s->workaround_bugs|= FF_BUG_HPEL_CHROMA;
 #if 0
         if(s->divx_version==500)
             s->padding_bug_score= 256*256*256*64;
 
         /* very ugly XVID padding bug detection FIXME/XXX solve this differently
-         * lets hope this at least works
+         * Let us hope this at least works.
          */
-        if(   s->resync_marker==0 && s->data_partitioning==0 && s->divx_version==0
+        if(   s->resync_marker==0 && s->data_partitioning==0 && s->divx_version==-1
            && s->codec_id==CODEC_ID_MPEG4 && s->vo_type==0)
             s->workaround_bugs|= FF_BUG_NO_PADDING;
 
-        if(s->lavc_build && s->lavc_build<4609) //FIXME not sure about the version num but a 4609 file seems ok
+        if(s->lavc_build<4609U) //FIXME not sure about the version num but a 4609 file seems ok
             s->workaround_bugs|= FF_BUG_NO_PADDING;
 #endif
     }
@@ -548,8 +552,8 @@ retry:
 }
 #endif
 
-#if defined(HAVE_MMX) && defined(CONFIG_GPL)
-    if(s->codec_id == CODEC_ID_MPEG4 && s->xvid_build && avctx->idct_algo == FF_IDCT_AUTO && (mm_flags & MM_MMX)){
+#if HAVE_MMX
+    if(s->codec_id == CODEC_ID_MPEG4 && s->xvid_build>=0 && avctx->idct_algo == FF_IDCT_AUTO && (mm_flags & FF_MM_MMX)){
         avctx->idct_algo= FF_IDCT_XVIDMMX;
         avctx->coded_width= 0; // force reinit
 //        dsputil_init(&s->dsp, avctx);
@@ -576,35 +580,35 @@ retry:
         goto retry;
     }
 
-    if((s->codec_id==CODEC_ID_H263 || s->codec_id==CODEC_ID_H263P))
+    if((s->codec_id==CODEC_ID_H263 || s->codec_id==CODEC_ID_H263P || s->codec_id == CODEC_ID_H263I))
         s->gob_index = ff_h263_get_gob_height(s);
 
     // for hurry_up==5
     s->current_picture.pict_type= s->pict_type;
-    s->current_picture.key_frame= s->pict_type == I_TYPE;
+    s->current_picture.key_frame= s->pict_type == FF_I_TYPE;
 
     /* skip B-frames if we don't have reference frames */
-    if(s->last_picture_ptr==NULL && (s->pict_type==B_TYPE || s->dropable)) return get_consumed_bytes(s, buf_size);
+    if(s->last_picture_ptr==NULL && (s->pict_type==FF_B_TYPE || s->dropable)) return get_consumed_bytes(s, buf_size);
     /* skip b frames if we are in a hurry */
-    if(avctx->hurry_up && s->pict_type==B_TYPE) return get_consumed_bytes(s, buf_size);
-    if(   (avctx->skip_frame >= AVDISCARD_NONREF && s->pict_type==B_TYPE)
-       || (avctx->skip_frame >= AVDISCARD_NONKEY && s->pict_type!=I_TYPE)
+    if(avctx->hurry_up && s->pict_type==FF_B_TYPE) return get_consumed_bytes(s, buf_size);
+    if(   (avctx->skip_frame >= AVDISCARD_NONREF && s->pict_type==FF_B_TYPE)
+       || (avctx->skip_frame >= AVDISCARD_NONKEY && s->pict_type!=FF_I_TYPE)
        ||  avctx->skip_frame >= AVDISCARD_ALL)
         return get_consumed_bytes(s, buf_size);
     /* skip everything if we are in a hurry>=5 */
     if(avctx->hurry_up>=5) return get_consumed_bytes(s, buf_size);
 
     if(s->next_p_frame_damaged){
-        if(s->pict_type==B_TYPE)
+        if(s->pict_type==FF_B_TYPE)
             return get_consumed_bytes(s, buf_size);
         else
             s->next_p_frame_damaged=0;
     }
 
-    if((s->avctx->flags2 & CODEC_FLAG2_FAST) && s->pict_type==B_TYPE){
+    if((s->avctx->flags2 & CODEC_FLAG2_FAST) && s->pict_type==FF_B_TYPE){
         s->me.qpel_put= s->dsp.put_2tap_qpel_pixels_tab;
         s->me.qpel_avg= s->dsp.avg_2tap_qpel_pixels_tab;
-    }else if((!s->no_rounding) || s->pict_type==B_TYPE){
+    }else if((!s->no_rounding) || s->pict_type==FF_B_TYPE){
         s->me.qpel_put= s->dsp.put_qpel_pixels_tab;
         s->me.qpel_avg= s->dsp.avg_qpel_pixels_tab;
     }else{
@@ -615,15 +619,21 @@ retry:
     if(MPV_frame_start(s, avctx) < 0)
         return -1;
 
-#ifdef DEBUG
-    av_log(avctx, AV_LOG_DEBUG, "qscale=%d\n", s->qscale);
-#endif
+    if (CONFIG_MPEG4_VDPAU_DECODER && (s->avctx->codec->capabilities & CODEC_CAP_HWACCEL_VDPAU)) {
+        ff_vdpau_mpeg4_decode_picture(s, s->gb.buffer, s->gb.buffer_end - s->gb.buffer);
+        goto frame_end;
+    }
+
+    if (avctx->hwaccel) {
+        if (avctx->hwaccel->start_frame(avctx, s->gb.buffer, s->gb.buffer_end - s->gb.buffer) < 0)
+            return -1;
+    }
 
     ff_er_frame_start(s);
 
     //the second part of the wmv2 header contains the MB skip bits which are stored in current_picture->mb_type
     //which is not available before MPV_frame_start()
-    if (ENABLE_WMV2_DECODER && s->msmpeg4_version==5){
+    if (CONFIG_WMV2_DECODER && s->msmpeg4_version==5){
         ret = ff_wmv2_decode_secondary_picture_header(s);
         if(ret<0) return ret;
         if(ret==1) goto intrax8_decoded;
@@ -649,13 +659,15 @@ retry:
         decode_slice(s);
     }
 
-    if (s->h263_msmpeg4 && s->msmpeg4_version<4 && s->pict_type==I_TYPE)
-        if(!ENABLE_MSMPEG4_DECODER || msmpeg4_decode_ext_header(s, buf_size) < 0){
+    if (s->h263_msmpeg4 && s->msmpeg4_version<4 && s->pict_type==FF_I_TYPE)
+        if(!CONFIG_MSMPEG4_DECODER || msmpeg4_decode_ext_header(s, buf_size) < 0){
             s->error_status_table[s->mb_num-1]= AC_ERROR|DC_ERROR|MV_ERROR;
         }
 
+    assert(s->bitstream_buffer_size==0);
+frame_end:
     /* divx 5.01+ bistream reorder stuff */
-    if(s->codec_id==CODEC_ID_MPEG4 && s->bitstream_buffer_size==0 && s->divx_packed){
+    if(s->codec_id==CODEC_ID_MPEG4 && s->divx_packed){
         int current_pos= get_bits_count(&s->gb)>>3;
         int startcode_found=0;
 
@@ -668,16 +680,18 @@ retry:
                 }
             }
         }
-        if(s->gb.buffer == s->bitstream_buffer && buf_size>20){ //xvid style
+        if(s->gb.buffer == s->bitstream_buffer && buf_size>7 && s->xvid_build>=0){ //xvid style
             startcode_found=1;
             current_pos=0;
         }
 
         if(startcode_found){
-            s->bitstream_buffer= av_fast_realloc(
-                s->bitstream_buffer,
+            av_fast_malloc(
+                &s->bitstream_buffer,
                 &s->allocated_bitstream_buffer_size,
                 buf_size - current_pos + FF_INPUT_BUFFER_PADDING_SIZE);
+            if (!s->bitstream_buffer)
+                return AVERROR(ENOMEM);
             memcpy(s->bitstream_buffer, buf + current_pos, buf_size - current_pos);
             s->bitstream_buffer_size= buf_size - current_pos;
         }
@@ -686,11 +700,16 @@ retry:
 intrax8_decoded:
     ff_er_frame_end(s);
 
+    if (avctx->hwaccel) {
+        if (avctx->hwaccel->end_frame(avctx) < 0)
+            return -1;
+    }
+
     MPV_frame_end(s);
 
 assert(s->current_picture.pict_type == s->current_picture_ptr->pict_type);
 assert(s->current_picture.pict_type == s->pict_type);
-    if (s->pict_type == B_TYPE || s->low_delay) {
+    if (s->pict_type == FF_B_TYPE || s->low_delay) {
         *pict= *(AVFrame*)s->current_picture_ptr;
     } else if (s->last_picture_ptr != NULL) {
         *pict= *(AVFrame*)s->last_picture_ptr;
@@ -701,10 +720,6 @@ assert(s->current_picture.pict_type == s->pict_type);
         ff_print_debug_info(s, pict);
     }
 
-    /* Return the Picture timestamp as the frame number */
-    /* we subtract 1 because it is added on utils.c     */
-    avctx->frame_number = s->picture_number - 1;
-
 #ifdef PRINT_FRAME_TIME
 av_log(avctx, AV_LOG_DEBUG, "%"PRId64"\n", rdtsc()-time);
 #endif
@@ -712,22 +727,9 @@ av_log(avctx, AV_LOG_DEBUG, "%"PRId64"\n", rdtsc()-time);
     return get_consumed_bytes(s, buf_size);
 }
 
-AVCodec mpeg4_decoder = {
-    "mpeg4",
-    CODEC_TYPE_VIDEO,
-    CODEC_ID_MPEG4,
-    sizeof(MpegEncContext),
-    ff_h263_decode_init,
-    NULL,
-    ff_h263_decode_end,
-    ff_h263_decode_frame,
-    CODEC_CAP_DRAW_HORIZ_BAND | CODEC_CAP_DR1 | CODEC_CAP_TRUNCATED | CODEC_CAP_DELAY,
-    .flush= ff_mpeg_flush,
-};
-
 AVCodec h263_decoder = {
     "h263",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_H263,
     sizeof(MpegEncContext),
     ff_h263_decode_init,
@@ -736,76 +738,7 @@ AVCodec h263_decoder = {
     ff_h263_decode_frame,
     CODEC_CAP_DRAW_HORIZ_BAND | CODEC_CAP_DR1 | CODEC_CAP_TRUNCATED | CODEC_CAP_DELAY,
     .flush= ff_mpeg_flush,
-};
-
-AVCodec msmpeg4v1_decoder = {
-    "msmpeg4v1",
-    CODEC_TYPE_VIDEO,
-    CODEC_ID_MSMPEG4V1,
-    sizeof(MpegEncContext),
-    ff_h263_decode_init,
-    NULL,
-    ff_h263_decode_end,
-    ff_h263_decode_frame,
-    CODEC_CAP_DRAW_HORIZ_BAND | CODEC_CAP_DR1,
-};
-
-AVCodec msmpeg4v2_decoder = {
-    "msmpeg4v2",
-    CODEC_TYPE_VIDEO,
-    CODEC_ID_MSMPEG4V2,
-    sizeof(MpegEncContext),
-    ff_h263_decode_init,
-    NULL,
-    ff_h263_decode_end,
-    ff_h263_decode_frame,
-    CODEC_CAP_DRAW_HORIZ_BAND | CODEC_CAP_DR1,
-};
-
-AVCodec msmpeg4v3_decoder = {
-    "msmpeg4",
-    CODEC_TYPE_VIDEO,
-    CODEC_ID_MSMPEG4V3,
-    sizeof(MpegEncContext),
-    ff_h263_decode_init,
-    NULL,
-    ff_h263_decode_end,
-    ff_h263_decode_frame,
-    CODEC_CAP_DRAW_HORIZ_BAND | CODEC_CAP_DR1,
-};
-
-AVCodec wmv1_decoder = {
-    "wmv1",
-    CODEC_TYPE_VIDEO,
-    CODEC_ID_WMV1,
-    sizeof(MpegEncContext),
-    ff_h263_decode_init,
-    NULL,
-    ff_h263_decode_end,
-    ff_h263_decode_frame,
-    CODEC_CAP_DRAW_HORIZ_BAND | CODEC_CAP_DR1,
-};
-
-AVCodec h263i_decoder = {
-    "h263i",
-    CODEC_TYPE_VIDEO,
-    CODEC_ID_H263I,
-    sizeof(MpegEncContext),
-    ff_h263_decode_init,
-    NULL,
-    ff_h263_decode_end,
-    ff_h263_decode_frame,
-    CODEC_CAP_DRAW_HORIZ_BAND | CODEC_CAP_DR1,
-};
-
-AVCodec flv_decoder = {
-    "flv",
-    CODEC_TYPE_VIDEO,
-    CODEC_ID_FLV1,
-    sizeof(MpegEncContext),
-    ff_h263_decode_init,
-    NULL,
-    ff_h263_decode_end,
-    ff_h263_decode_frame,
-    CODEC_CAP_DRAW_HORIZ_BAND | CODEC_CAP_DR1
+    .max_lowres= 3,
+    .long_name= NULL_IF_CONFIG_SMALL("H.263 / H.263-1996, H.263+ / H.263-1998 / H.263 version 2"),
+    .pix_fmts= ff_hwaccel_pixfmt_list_420,
 };

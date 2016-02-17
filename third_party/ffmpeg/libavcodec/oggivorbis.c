@@ -115,6 +115,9 @@ static int oggvorbis_decode_init(AVCodecContext *avccontext) {
 
     avccontext->channels = context->vi.channels;
     avccontext->sample_rate = context->vi.rate;
+    avccontext->frame_size  = FFMIN(vorbis_info_blocksize(&context->vi, 0), 
+        vorbis_info_blocksize(&context->vi, 1))>>2;
+    avccontext->sample_fmt = SAMPLE_FMT_S16;
     avccontext->time_base= (AVRational){1, avccontext->sample_rate};
 
     vorbis_synthesis_init(&context->vd, &context->vi);

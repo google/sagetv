@@ -1,5 +1,4 @@
-/* ffmpeg/libavcodec/ppc/fdct_altivec.c, this file is part of the
- * AltiVec optimized library for the FFMPEG Multimedia System
+/*
  * Copyright (C) 2003  James Klicman <james@klicman.org>
  *
  * This file is part of FFmpeg.
@@ -19,12 +18,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-
-#include "common.h"
-#include "dsputil.h"
-#include "dsputil_ppc.h"
-#include "gcc_fixes.h"
-
+#include "config.h"
+#if HAVE_ALTIVEC_H
+#include <altivec.h>
+#endif
+#include "libavutil/common.h"
+#include "libavcodec/dsputil.h"
+#include "dsputil_altivec.h"
 
 #define vs16(v) ((vector signed short)(v))
 #define vs32(v) ((vector signed int)(v))
@@ -58,9 +58,9 @@
 
 
 static vector float fdctconsts[3] = {
-    (vector float)AVV( W0, W1, W2, W3 ),
-    (vector float)AVV( W4, W5, W6, W7 ),
-    (vector float)AVV( W8, W9, WA, WB )
+    { W0, W1, W2, W3 },
+    { W4, W5, W6, W7 },
+    { W8, W9, WA, WB }
 };
 
 #define LD_W0 vec_splat(cnsts0, 0)
@@ -197,16 +197,12 @@ static vector float fdctconsts[3] = {
 
 void fdct_altivec(int16_t *block)
 {
-POWERPC_PERF_DECLARE(altivec_fdct, 1);
     vector signed short *bp;
     vector float *cp;
     vector float b00, b10, b20, b30, b40, b50, b60, b70;
     vector float b01, b11, b21, b31, b41, b51, b61, b71;
     vector float mzero, cnst, cnsts0, cnsts1, cnsts2;
     vector float x0, x1, x2, x3, x4, x5, x6, x7, x8;
-
-    POWERPC_PERF_START_COUNT(altivec_fdct, 1);
-
 
     /* setup constants {{{ */
     /* mzero = -0.0 */
@@ -486,8 +482,6 @@ POWERPC_PERF_DECLARE(altivec_fdct, 1);
 
 #undef CTS
     /* }}} */
-
-POWERPC_PERF_STOP_COUNT(altivec_fdct, 1);
 }
 
 /* vim:set foldmethod=marker foldlevel=0: */

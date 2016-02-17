@@ -11,12 +11,9 @@ E: aizvorski AT gmail DOT com
 D: x86 asm (sse2)
 
 N: Alex Wright
-E: alexw0885 AT hotmail DOT com
+E: alexw0885 AT gmail DOT com
 D: Motion estimation (subpel and mixed refs)
 D: B-RDO
-
-N: Andrew Dunstan
-D: win64 asm port
 
 N: bobololo
 D: Avisynth input
@@ -26,7 +23,7 @@ N: Christian Heine
 E: sennindemokrit AT gmx DOT net
 D: x86 asm
 
-N: Placeholder
+N: David Wolstencroft
 D: Altivec optimizations
 
 N: Eric Petit
@@ -36,11 +33,8 @@ D: Altivec asm
 D: BeOS and MacOS X ports.
 S: France
 
-N: Francesco Corriga
-D: VfW
-
 N: Gabriel Bouvigne
-E: gabriel.bouvigne AT joost DOT com
+E: bouvigne AT mp3-tech DOT org
 D: 2pass VBV
 
 N: Guillaume Poirier
@@ -48,17 +42,11 @@ E: gpoirier CHEZ mplayerhq POINT hu
 D: Altivec optimizations
 S: Brittany, France
 
-N: Fiona Glaser
-E: fiona AT x264 DOT com
+N: Jason Garrett-Glaser
+E: darkshikari AT gmail DOT com
 D: x86 asm, 1pass VBV, adaptive quantization, inline asm
 D: various speed optimizations, bugfixes
 S: USA
-
-N: Justin Clay
-E: justin_clay AT hotmail DOT com
-C: wheatgerm
-D: Inital work on VfW
-S: Nova Scotia, Canada
 
 N: Laurent Aimar
 E: fenrir AT via.ecp DOT fr
@@ -96,7 +84,6 @@ E: chenm001 AT 163 DOT com
 C: chenm001
 D: Win32/VC 6.0 port
 D: gcc asm to nasm conversion
-D: VfW
 S: China
 
 N: Phil Jensen
@@ -107,15 +94,7 @@ N: Radek Czyz
 E: radoslaw AT syskin DOT cjb DOT net
 D: Cached motion compensation
 
-N: Riccardo Stievano
-E: walkunafraid AT tin DOT it
-D: VfW
-
 N: Tuukka Toivonen
 E: tuukkat AT ee DOT oulu DOT fi
 D: Visualization
-
-N: Vincent Torri
-E: Vincent DOT Torri AT iecn DOT u-nancy DOT fr
-D: GTK frontend
 

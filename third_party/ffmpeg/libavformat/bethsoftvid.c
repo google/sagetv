@@ -20,15 +20,16 @@
  */
 
 /**
- * @file bethsoftvid.c
+ * @file
  * @brief Bethesda Softworks VID (.vid) file demuxer
  * @author Nicholas Tung [ntung (at. ntung com] (2007-03)
  * @sa http://wiki.multimedia.cx/index.php?title=Bethsoft_VID
  * @sa http://www.svatopluk.com/andux/docs/dfvid.html
  */
 
+#include "libavutil/intreadwrite.h"
 #include "avformat.h"
-#include "bethsoftvideo.h"
+#include "libavcodec/bethsoftvideo.h"
 
 typedef struct BVID_DemuxContext
 {
@@ -73,7 +74,7 @@ static int vid_read_header(AVFormatContext *s,
     if (!stream)
         return AVERROR(ENOMEM);
     av_set_pts_info(stream, 32, 1, 60);     // 16 ms increments, i.e. 60 fps
-    stream->codec->codec_type = CODEC_TYPE_VIDEO;
+    stream->codec->codec_type = AVMEDIA_TYPE_VIDEO;
     stream->codec->codec_id = CODEC_ID_BETHSOFTVID;
     stream->codec->width = get_le16(pb);
     stream->codec->height = get_le16(pb);
@@ -85,12 +86,12 @@ static int vid_read_header(AVFormatContext *s,
     stream = av_new_stream(s, 0);
     if (!stream)
         return AVERROR(ENOMEM);
-    stream->codec->codec_type = CODEC_TYPE_AUDIO;
+    stream->codec->codec_type = AVMEDIA_TYPE_AUDIO;
     stream->codec->codec_id = CODEC_ID_PCM_U8;
     stream->codec->channels = 1;
     stream->codec->sample_rate = 11025;
-    stream->codec->bits_per_sample = 8;
-    stream->codec->bit_rate = stream->codec->channels * stream->codec->sample_rate * stream->codec->bits_per_sample;
+    stream->codec->bits_per_coded_sample = 8;
+    stream->codec->bit_rate = stream->codec->channels * stream->codec->sample_rate * stream->codec->bits_per_coded_sample;
 
     return 0;
 }
@@ -197,12 +198,12 @@ static int vid_read_packet(AVFormatContext *s,
             get_le16(pb);
             // soundblaster DAC used for sample rate, as on specification page (link above)
             s->streams[1]->codec->sample_rate = 1000000 / (256 - get_byte(pb));
-            s->streams[1]->codec->bit_rate = s->streams[1]->codec->channels * s->streams[1]->codec->sample_rate * s->streams[1]->codec->bits_per_sample;
+            s->streams[1]->codec->bit_rate = s->streams[1]->codec->channels * s->streams[1]->codec->sample_rate * s->streams[1]->codec->bits_per_coded_sample;
         case AUDIO_BLOCK:
             audio_length = get_le16(pb);
             ret_value = av_get_packet(pb, pkt, audio_length);
             pkt->stream_index = 1;
-            return (ret_value != audio_length ? AVERROR(EIO) : ret_value);
+            return ret_value != audio_length ? AVERROR(EIO) : ret_value;
 
         case VIDEO_P_FRAME:
         case VIDEO_YOFF_P_FRAME:
@@ -225,7 +226,7 @@ static int vid_read_packet(AVFormatContext *s,
 
 AVInputFormat bethsoftvid_demuxer = {
     "bethsoftvid",
-    "Bethesda Softworks 'Daggerfall' VID format",
+    NULL_IF_CONFIG_SMALL("Bethesda Softworks VID format"),
     sizeof(BVID_DemuxContext),
     vid_probe,
     vid_read_header,

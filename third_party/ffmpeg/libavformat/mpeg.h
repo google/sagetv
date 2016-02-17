@@ -1,6 +1,6 @@
 /*
  * MPEG1/2 muxer and demuxer common defines
- * Copyright (c) 2000, 2001, 2002 Fabrice Bellard.
+ * Copyright (c) 2000, 2001, 2002 Fabrice Bellard
  *
  * This file is part of FFmpeg.
  *
@@ -19,8 +19,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef FFMPEG_MPEG_H
-#define FFMPEG_MPEG_H
+#ifndef AVFORMAT_MPEG_H
+#define AVFORMAT_MPEG_H
+
+#include <stdint.h>
+#include "libavutil/intreadwrite.h"
 
 #define PACK_START_CODE             ((unsigned int)0x000001ba)
 #define SYSTEM_HEADER_START_CODE    ((unsigned int)0x000001bb)
@@ -50,6 +53,7 @@
 #define STREAM_TYPE_PRIVATE_DATA    0x06
 #define STREAM_TYPE_AUDIO_AAC       0x0f
 #define STREAM_TYPE_VIDEO_MPEG4     0x10
+#define STREAM_TYPE_AUDIO_AAC_LATM  0x11
 #define STREAM_TYPE_VIDEO_H264      0x1b
 
 #define STREAM_TYPE_AUDIO_AC3       0x81
@@ -66,4 +70,4 @@ static inline int64_t ff_parse_pes_pts(uint8_t *buf) {
              AV_RB16(buf+3) >> 1;
 }
 
-#endif /* FFMPEG_MPEG_H */
+#endif /* AVFORMAT_MPEG_H */

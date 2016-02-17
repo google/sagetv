@@ -5,7 +5,7 @@
  *
  * Authors: Loren Merritt <lorenm@u.washington.edu>
  *          Laurent Aimar <fenrir@via.ecp.fr>
- *          Fiona Glaser <fiona@x264.com>
+ *          Jason Garrett-Glaser <darkshikari@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -91,31 +91,18 @@ static const uint8_t x264_mb_type_fix[X264_MBTYPE_MAX] =
     B_DIRECT, B_L0_L0, B_L0_L1, B_L0_BI, B_L1_L0, B_L1_L1,
     B_L1_BI, B_BI_L0, B_BI_L1, B_BI_BI, B_8x8, B_SKIP
 };
-static const uint8_t x264_mb_type_list0_table[X264_MBTYPE_MAX][2] =
+static const uint8_t x264_mb_type_list_table[X264_MBTYPE_MAX][2][2] =
 {
-    {0,0}, {0,0}, {0,0}, {0,0}, /* INTRA */
-    {1,1},                  /* P_L0 */
-    {0,0},                  /* P_8x8 */
-    {1,1},                  /* P_SKIP */
-    {0,0},                  /* B_DIRECT */
-    {1,1}, {1,0}, {1,1},    /* B_L0_* */
-    {0,1}, {0,0}, {0,1},    /* B_L1_* */
-    {1,1}, {1,0}, {1,1},    /* B_BI_* */
-    {0,0},                  /* B_8x8 */
-    {0,0}                   /* B_SKIP */
-};
-static const uint8_t x264_mb_type_list1_table[X264_MBTYPE_MAX][2] =
-{
-    {0,0}, {0,0}, {0,0}, {0,0}, /* INTRA */
-    {0,0},                  /* P_L0 */
-    {0,0},                  /* P_8x8 */
-    {0,0},                  /* P_SKIP */
-    {0,0},                  /* B_DIRECT */
-    {0,0}, {0,1}, {0,1},    /* B_L0_* */
-    {1,0}, {1,1}, {1,1},    /* B_L1_* */
-    {1,0}, {1,1}, {1,1},    /* B_BI_* */
-    {0,0},                  /* B_8x8 */
-    {0,0}                   /* B_SKIP */
+    {{0,0},{0,0}}, {{0,0},{0,0}}, {{0,0},{0,0}}, {{0,0},{0,0}}, /* INTRA */
+    {{1,1},{0,0}},                                              /* P_L0 */
+    {{0,0},{0,0}},                                              /* P_8x8 */
+    {{1,1},{0,0}},                                              /* P_SKIP */
+    {{0,0},{0,0}},                                              /* B_DIRECT */
+    {{1,1},{0,0}}, {{1,0},{0,1}}, {{1,1},{0,1}},                /* B_L0_* */
+    {{0,1},{1,0}}, {{0,0},{1,1}}, {{0,1},{1,1}},                /* B_L1_* */
+    {{1,1},{1,0}}, {{1,0},{1,1}}, {{1,1},{1,1}},                /* B_BI_* */
+    {{0,0},{0,0}},                                              /* B_8x8 */
+    {{0,0},{0,0}}                                               /* B_SKIP */
 };
 
 #define IS_SUB4x4(type) ( (type ==D_L0_4x4)||(type ==D_L1_4x4)||(type ==D_BI_4x4))
@@ -251,17 +238,30 @@ static const uint16_t block_idx_xy_fdec[16] =
     2*4 + 3*4*FDEC_STRIDE, 3*4 + 3*4*FDEC_STRIDE
 };
 
-static const uint8_t i_chroma_qp_table[52+12*2] =
+#define QP(qP) ( (qP)+QP_BD_OFFSET )
+static const uint8_t i_chroma_qp_table[QP_MAX+1+12*2] =
 {
-     0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-     0,  1,  2,  3,  4,  5,  6,  7,  8,  9,
-    10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-    20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
-    29, 30, 31, 32, 32, 33, 34, 34, 35, 35,
-    36, 36, 37, 37, 37, 38, 38, 38, 39, 39,
-    39, 39,
-    39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39,
+         0,      0,      0,      0,      0,      0,
+         0,      0,      0,      0,      0,      0,
+#if BIT_DEPTH > 9
+   QP(-12),QP(-11),QP(-10), QP(-9), QP(-8), QP(-7),
+#endif
+#if BIT_DEPTH > 8
+    QP(-6), QP(-5), QP(-4), QP(-3), QP(-2), QP(-1),
+#endif
+     QP(0),  QP(1),  QP(2),  QP(3),  QP(4),  QP(5),
+     QP(6),  QP(7),  QP(8),  QP(9), QP(10), QP(11),
+    QP(12), QP(13), QP(14), QP(15), QP(16), QP(17),
+    QP(18), QP(19), QP(20), QP(21), QP(22), QP(23),
+    QP(24), QP(25), QP(26), QP(27), QP(28), QP(29),
+    QP(29), QP(30), QP(31), QP(32), QP(32), QP(33),
+    QP(34), QP(34), QP(35), QP(35), QP(36), QP(36),
+    QP(37), QP(37), QP(37), QP(38), QP(38), QP(38),
+    QP(39), QP(39), QP(39), QP(39),
+    QP(39), QP(39), QP(39), QP(39), QP(39), QP(39),
+    QP(39), QP(39), QP(39), QP(39), QP(39), QP(39),
 };
+#undef QP
 
 enum cabac_ctx_block_cat_e
 {
@@ -273,16 +273,26 @@ enum cabac_ctx_block_cat_e
     DCT_LUMA_8x8  = 5,
 };
 
+/* Per-frame allocation: is allocated per-thread only in frame-threads mode. */
+int  x264_macroblock_cache_allocate( x264_t *h );
+void x264_macroblock_cache_free( x264_t *h );
 
-int  x264_macroblock_cache_init( x264_t *h );
+/* Per-thread allocation: is allocated per-thread even in sliced-threads mode. */
+int  x264_macroblock_thread_allocate( x264_t *h, int b_lookahead );
+void x264_macroblock_thread_free( x264_t *h, int b_lookahead );
+
 void x264_macroblock_slice_init( x264_t *h );
-void x264_macroblock_cache_load( x264_t *h, int i_mb_x, int i_mb_y );
+void x264_macroblock_thread_init( x264_t *h );
+void x264_macroblock_cache_load( x264_t *h, int mb_x, int mb_y );
+void x264_macroblock_cache_load_deblock( x264_t *h );
+void x264_macroblock_cache_load_neighbours_deblock( x264_t *h, int mb_x, int mb_y );
 void x264_macroblock_cache_save( x264_t *h );
-void x264_macroblock_cache_end( x264_t *h );
 
 void x264_macroblock_bipred_init( x264_t *h );
 
 void x264_prefetch_fenc( x264_t *h, x264_frame_t *fenc, int i_mb_x, int i_mb_y );
+
+void x264_copy_column8( pixel *dst, pixel *src );
 
 /* x264_mb_predict_mv_16x16:
  *      set mvp with predicted mv for D_16x16 block
@@ -304,32 +314,18 @@ void x264_mb_predict_mv( x264_t *h, int i_list, int idx, int i_width, int16_t mv
  *      if b_changed != NULL, set it to whether refs or mvs differ from
  *      before this functioncall. */
 int x264_mb_predict_mv_direct16x16( x264_t *h, int *b_changed );
-/* x264_mb_load_mv_direct8x8:
- *      set h->mb.cache.mv and h->mb.cache.ref for B_DIRECT
- *      must be called only after x264_mb_predict_mv_direct16x16 */
-void x264_mb_load_mv_direct8x8( x264_t *h, int idx );
 /* x264_mb_predict_mv_ref16x16:
  *      set mvc with D_16x16 prediction.
  *      uses all neighbors, even those that didn't end up using this ref.
  *      h->mb. need only valid values from other blocks */
 void x264_mb_predict_mv_ref16x16( x264_t *h, int i_list, int i_ref, int16_t mvc[8][2], int *i_mvc );
 
-
-int  x264_mb_predict_intra4x4_mode( x264_t *h, int idx );
-int  x264_mb_predict_non_zero_code( x264_t *h, int idx );
-
-/* x264_mb_transform_8x8_allowed:
- *      check whether any partition is smaller than 8x8 (or at least
- *      might be, according to just partition type.)
- *      doesn't check for cbp */
-int  x264_mb_transform_8x8_allowed( x264_t *h );
-
 void x264_mb_mc( x264_t *h );
 void x264_mb_mc_8x8( x264_t *h, int i8 );
 
 static ALWAYS_INLINE uint32_t pack16to32( int a, int b )
 {
-#ifdef WORDS_BIGENDIAN
+#if WORDS_BIGENDIAN
    return b + (a<<16);
 #else
    return a + (b<<16);
@@ -337,7 +333,7 @@ static ALWAYS_INLINE uint32_t pack16to32( int a, int b )
 }
 static ALWAYS_INLINE uint32_t pack8to16( int a, int b )
 {
-#ifdef WORDS_BIGENDIAN
+#if WORDS_BIGENDIAN
    return b + (a<<8);
 #else
    return a + (b<<8);
@@ -345,7 +341,7 @@ static ALWAYS_INLINE uint32_t pack8to16( int a, int b )
 }
 static ALWAYS_INLINE uint32_t pack8to32( int a, int b, int c, int d )
 {
-#ifdef WORDS_BIGENDIAN
+#if WORDS_BIGENDIAN
    return d + (c<<8) + (b<<16) + (a<<24);
 #else
    return a + (b<<8) + (c<<16) + (d<<24);
@@ -353,98 +349,79 @@ static ALWAYS_INLINE uint32_t pack8to32( int a, int b, int c, int d )
 }
 static ALWAYS_INLINE uint32_t pack16to32_mask( int a, int b )
 {
-#ifdef WORDS_BIGENDIAN
+#if WORDS_BIGENDIAN
    return (b&0xFFFF) + (a<<16);
 #else
    return (a&0xFFFF) + (b<<16);
 #endif
 }
-static ALWAYS_INLINE void x264_macroblock_cache_rect1( void *dst, int width, int height, uint8_t val )
+static ALWAYS_INLINE uint64_t pack32to64( uint32_t a, uint32_t b )
 {
-    int dy;
-    if( width == 4 )
-    {
-        uint32_t val2 = val * 0x01010101;
-        for( dy = 0; dy < height; dy++ )
-            ((uint32_t*)dst)[2*dy] = val2;
-    }
-    else // 2
-    {
-        uint32_t val2 = val * 0x0101;
-        for( dy = 0; dy < height; dy++ )
-            ((uint16_t*)dst)[4*dy] = val2;
-    }
+#ifdef WORDS_BIGENDIAN
+   return b + ((uint64_t)a<<32);
+#else
+   return a + ((uint64_t)b<<32);
+#endif
 }
-static ALWAYS_INLINE void x264_macroblock_cache_rect4( void *dst, int width, int height, uint32_t val )
-{
-    int dy, dx;
-    if( width == 1 || WORD_SIZE < 8 )
-    {
-        for( dy = 0; dy < height; dy++ )
-            for( dx = 0; dx < width; dx++ )
-                ((uint32_t*)dst)[dx+8*dy] = val;
-    }
-    else
-    {
-        uint64_t val64 = val + ((uint64_t)val<<32);
-        for( dy = 0; dy < height; dy++ )
-            for( dx = 0; dx < width/2; dx++ )
-                ((uint64_t*)dst)[dx+4*dy] = val64;
-    }
-}
-#define x264_macroblock_cache_mv_ptr(a,x,y,w,h,l,mv) x264_macroblock_cache_mv(a,x,y,w,h,l,*(uint32_t*)mv)
-static ALWAYS_INLINE void x264_macroblock_cache_mv( x264_t *h, int x, int y, int width, int height, int i_list, uint32_t mv )
-{
-    x264_macroblock_cache_rect4( &h->mb.cache.mv[i_list][X264_SCAN8_0+x+8*y], width, height, mv );
-}
-static ALWAYS_INLINE void x264_macroblock_cache_mvd( x264_t *h, int x, int y, int width, int height, int i_list, uint32_t mv )
-{
-    x264_macroblock_cache_rect4( &h->mb.cache.mvd[i_list][X264_SCAN8_0+x+8*y], width, height, mv );
-}
-static ALWAYS_INLINE void x264_macroblock_cache_ref( x264_t *h, int x, int y, int width, int height, int i_list, uint8_t ref )
-{
-    x264_macroblock_cache_rect1( &h->mb.cache.ref[i_list][X264_SCAN8_0+x+8*y], width, height, ref );
-}
-static ALWAYS_INLINE void x264_macroblock_cache_skip( x264_t *h, int x, int y, int width, int height, int b_skip )
-{
-    x264_macroblock_cache_rect1( &h->mb.cache.skip[X264_SCAN8_0+x+8*y], width, height, b_skip );
-}
-static ALWAYS_INLINE void x264_macroblock_cache_intra8x8_pred( x264_t *h, int x, int y, int i_mode )
-{
-    int8_t *cache = &h->mb.cache.intra4x4_pred_mode[X264_SCAN8_0+x+8*y];
-    cache[0] = cache[1] = cache[8] = cache[9] = i_mode;
-}
-#define array_non_zero(a) array_non_zero_int(a, sizeof(a))
-#define array_non_zero_int array_non_zero_int_c
-static ALWAYS_INLINE int array_non_zero_int_c( void *v, int i_count )
-{
-    uint64_t *x = v;
-    if(i_count == 8)
-        return !!x[0];
-    else if(i_count == 16)
-        return !!(x[0]|x[1]);
-    else if(i_count == 32)
-        return !!(x[0]|x[1]|x[2]|x[3]);
-    else
-    {
-        int i;
-        i_count /= sizeof(uint64_t);
-        for( i = 0; i < i_count; i++ )
-            if( x[i] ) return 1;
-        return 0;
-    }
-}
-/* This function and its MMX version only work on arrays of size 16 */
-static ALWAYS_INLINE int array_non_zero_count( int16_t *v )
-{
-    int i;
-    int i_nz;
 
-    for( i = 0, i_nz = 0; i < 16; i++ )
+#if X264_HIGH_BIT_DEPTH
+#   define pack_pixel_1to2 pack16to32
+#   define pack_pixel_2to4 pack32to64
+#else
+#   define pack_pixel_1to2 pack8to16
+#   define pack_pixel_2to4 pack16to32
+#endif
+
+#define array_non_zero(a) array_non_zero_int(a, sizeof(a)/sizeof(dctcoef))
+#define array_non_zero_int array_non_zero_int
+static ALWAYS_INLINE int array_non_zero_int( dctcoef *v, int i_count )
+{
+    for( int i = 0; i < i_count; i++ )
         if( v[i] )
-            i_nz++;
+            return 1;
+    return 0;
+}
+static ALWAYS_INLINE int x264_mb_predict_intra4x4_mode( x264_t *h, int idx )
+{
+    const int ma = h->mb.cache.intra4x4_pred_mode[x264_scan8[idx] - 1];
+    const int mb = h->mb.cache.intra4x4_pred_mode[x264_scan8[idx] - 8];
+    const int m  = X264_MIN( x264_mb_pred_mode4x4_fix(ma),
+                             x264_mb_pred_mode4x4_fix(mb) );
 
-    return i_nz;
+    if( m < 0 )
+        return I_PRED_4x4_DC;
+
+    return m;
+}
+static ALWAYS_INLINE int x264_mb_predict_non_zero_code( x264_t *h, int idx )
+{
+    const int za = h->mb.cache.non_zero_count[x264_scan8[idx] - 1];
+    const int zb = h->mb.cache.non_zero_count[x264_scan8[idx] - 8];
+
+    int i_ret = za + zb;
+
+    if( i_ret < 0x80 )
+        i_ret = ( i_ret + 1 ) >> 1;
+    return i_ret & 0x7f;
+}
+/* x264_mb_transform_8x8_allowed:
+ *      check whether any partition is smaller than 8x8 (or at least
+ *      might be, according to just partition type.)
+ *      doesn't check for cbp */
+static ALWAYS_INLINE int x264_mb_transform_8x8_allowed( x264_t *h )
+{
+    // intra and skip are disallowed
+    // large partitions are allowed
+    // direct and 8x8 are conditional
+    static const uint8_t partition_tab[X264_MBTYPE_MAX] = {
+        0,0,0,0,1,2,0,1,1,1,1,1,1,1,1,1,1,1,0,
+    };
+
+    if( !h->pps->b_transform_8x8_mode )
+        return 0;
+    if( h->mb.i_type != P_8x8 )
+        return partition_tab[h->mb.i_type];
+    return M32( h->mb.i_sub_partition ) == D_L0_8x8*0x01010101;
 }
 
 #endif

@@ -22,9 +22,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "dsputil.h"
+#include "libavcodec/dsputil.h"
+#include "dsputil_vis.h"
 
-static const DECLARE_ALIGNED_8(int16_t, coeffs[28]) = {
+static const DECLARE_ALIGNED(8, int16_t, coeffs)[28] = {
     - 1259,- 1259,- 1259,- 1259,
     - 4989,- 4989,- 4989,- 4989,
     -11045,-11045,-11045,-11045,
@@ -33,13 +34,13 @@ static const DECLARE_ALIGNED_8(int16_t, coeffs[28]) = {
      25080, 25080, 25080, 25080,
      12785, 12785, 12785, 12785
 };
-static const DECLARE_ALIGNED_8(uint16_t, scale[4]) = {
+static const DECLARE_ALIGNED(8, uint16_t, scale)[4] = {
     65536>>6, 65536>>6, 65536>>6, 65536>>6
 };
-static const DECLARE_ALIGNED_8(uint16_t, rounder[4]) = {
+static const DECLARE_ALIGNED(8, uint16_t, rounder)[4] = {
     1<<5, 1<<5, 1<<5, 1<<5
 };
-static const DECLARE_ALIGNED_8(uint16_t, expand[4]) = {
+static const DECLARE_ALIGNED(8, uint16_t, expand)[4] = {
     1<<14, 1<<14, 1<<14, 1<<14
 };
 
@@ -384,11 +385,11 @@ static const DECLARE_ALIGNED_8(uint16_t, expand[4]) = {
         "st %%f14, [%12+" dest "] \n\t"\
 
 
-inline void ff_simple_idct_vis(DCTELEM *data) {
+void ff_simple_idct_vis(DCTELEM *data) {
     int out1, out2, out3, out4;
-    DECLARE_ALIGNED_8(int16_t, temp[8*8]);
+    DECLARE_ALIGNED(8, int16_t, temp)[8*8];
 
-    asm volatile(
+    __asm__ volatile(
         INIT_IDCT
 
 #define ADDROUNDER
@@ -428,7 +429,7 @@ void ff_simple_idct_put_vis(uint8_t *dest, int line_size, DCTELEM *data) {
     int out1, out2, out3, out4, out5;
     int r1, r2, r3, r4, r5, r6, r7;
 
-    asm volatile(
+    __asm__ volatile(
         "wr %%g0, 0x8, %%gsr \n\t"
 
         INIT_IDCT
@@ -478,7 +479,7 @@ void ff_simple_idct_add_vis(uint8_t *dest, int line_size, DCTELEM *data) {
     int out1, out2, out3, out4, out5, out6;
     int r1, r2, r3, r4, r5, r6, r7;
 
-    asm volatile(
+    __asm__ volatile(
         "wr %%g0, 0x8, %%gsr \n\t"
 
         INIT_IDCT

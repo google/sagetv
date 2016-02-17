@@ -18,8 +18,14 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
+
+#include "libavutil/intreadwrite.h"
 #include "avcodec.h"
 #include "rle.h"
+
+typedef struct TargaContext {
+    AVFrame picture;
+} TargaContext;
 
 /**
  * RLE compress the image, with maximum size of out_size
@@ -70,7 +76,7 @@ static int targa_encode_frame(AVCodecContext *avctx,
                               unsigned char *outbuf,
                               int buf_size, void *data){
     AVFrame *p = data;
-    int bpp, picsize, datasize;
+    int bpp, picsize, datasize = -1;
     uint8_t *out;
 
     if(avctx->width > 0xffff || avctx->height > 0xffff) {
@@ -87,7 +93,7 @@ static int targa_encode_frame(AVCodecContext *avctx,
     p->key_frame= 1;
 
     /* zero out the header and only set applicable fields */
-    memset(outbuf, 0, 11);
+    memset(outbuf, 0, 12);
     AV_WL16(outbuf+12, avctx->width);
     AV_WL16(outbuf+14, avctx->height);
     outbuf[17] = 0x20;           /* origin is top-left. no alpha */
@@ -98,7 +104,7 @@ static int targa_encode_frame(AVCodecContext *avctx,
         outbuf[2] = 3;           /* uncompressed grayscale image */
         outbuf[16] = 8;          /* bpp */
         break;
-    case PIX_FMT_RGB555:
+    case PIX_FMT_RGB555LE:
         outbuf[2] = 2;           /* uncompresses true-color image */
         outbuf[16] = 16;         /* bpp */
         break;
@@ -114,7 +120,8 @@ static int targa_encode_frame(AVCodecContext *avctx,
     out = outbuf + 18;  /* skip past the header we just output */
 
     /* try RLE compression */
-    datasize = targa_encode_rle(out, picsize, p, bpp, avctx->width, avctx->height);
+    if (avctx->coder_type != FF_CODER_TYPE_RAW)
+        datasize = targa_encode_rle(out, picsize, p, bpp, avctx->width, avctx->height);
 
     /* if that worked well, mark the picture as RLE compressed */
     if(datasize >= 0)
@@ -133,17 +140,24 @@ static int targa_encode_frame(AVCodecContext *avctx,
     return out + 26 - outbuf;
 }
 
-static int targa_encode_init(AVCodecContext *avctx)
+static av_cold int targa_encode_init(AVCodecContext *avctx)
 {
+    TargaContext *s = avctx->priv_data;
+
+    avcodec_get_frame_defaults(&s->picture);
+    s->picture.key_frame= 1;
+    avctx->coded_frame= &s->picture;
+
     return 0;
 }
 
 AVCodec targa_encoder = {
     .name = "targa",
-    .type = CODEC_TYPE_VIDEO,
+    .type = AVMEDIA_TYPE_VIDEO,
     .id = CODEC_ID_TARGA,
-    .priv_data_size = 0,
+    .priv_data_size = sizeof(TargaContext),
     .init = targa_encode_init,
     .encode = targa_encode_frame,
-    .pix_fmts= (enum PixelFormat[]){PIX_FMT_BGR24, PIX_FMT_RGB555, PIX_FMT_GRAY8, -1},
+    .pix_fmts= (const enum PixelFormat[]){PIX_FMT_BGR24, PIX_FMT_RGB555LE, PIX_FMT_GRAY8, PIX_FMT_NONE},
+    .long_name= NULL_IF_CONFIG_SMALL("Truevision Targa image"),
 };

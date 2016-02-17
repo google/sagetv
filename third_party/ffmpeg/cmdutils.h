@@ -23,10 +23,46 @@
 #define FFMPEG_CMDUTILS_H
 
 #include <inttypes.h>
+#include "libavcodec/avcodec.h"
+#include "libavformat/avformat.h"
+#include "libswscale/swscale.h"
 
 /**
- * Parses a string and returns its corresponding value as a double.
- * Exits from the application if the string cannot be correctly
+ * program name, defined by the program for show_version().
+ */
+extern const char program_name[];
+
+/**
+ * program birth year, defined by the program for show_banner()
+ */
+extern const int program_birth_year;
+
+extern const int this_year;
+
+extern const char **opt_names;
+extern AVCodecContext *avcodec_opts[AVMEDIA_TYPE_NB];
+extern AVFormatContext *avformat_opts;
+extern struct SwsContext *sws_opts;
+
+/**
+ * Fallback for options that are not explicitly handled, these will be
+ * parsed through AVOptions.
+ */
+int opt_default(const char *opt, const char *arg);
+
+/**
+ * Set the libav* libraries log level.
+ */
+int opt_loglevel(const char *opt, const char *arg);
+
+/**
+ * Limit the execution time.
+ */
+int opt_timelimit(const char *opt, const char *arg);
+
+/**
+ * Parse a string and return its corresponding value as a double.
+ * Exit from the application if the string cannot be correctly
  * parsed or the corresponding value is invalid.
  *
  * @param context the context of the value to be set (e.g. the
@@ -38,6 +74,22 @@
  * @param max the maximum valid accepted value
  */
 double parse_number_or_die(const char *context, const char *numstr, int type, double min, double max);
+
+/**
+ * Parse a string specifying a time and return its corresponding
+ * value as a number of microseconds. Exit from the application if
+ * the string cannot be correctly parsed.
+ *
+ * @param context the context of the value to be set (e.g. the
+ * corresponding commandline option name)
+ * @param timestr the string to be parsed
+ * @param is_duration a flag which tells how to interpret timestr, if
+ * not zero timestr is interpreted as a duration, otherwise as a
+ * date
+ *
+ * @see parse_date()
+ */
+int64_t parse_time_or_die(const char *context, const char *timestr, int is_duration);
 
 typedef struct {
     const char *name;
@@ -54,6 +106,7 @@ typedef struct {
 #define OPT_SUBTITLE 0x0200
 #define OPT_FUNC2  0x0400
 #define OPT_INT64  0x0800
+#define OPT_EXIT   0x1000
      union {
         void (*func_arg)(const char *); //FIXME passing error code as int return would be nicer then exit() in the func
         int *int_arg;
@@ -69,9 +122,9 @@ typedef struct {
 void show_help_options(const OptionDef *options, const char *msg, int mask, int value);
 
 /**
- * Parses the command line arguments.
+ * Parse the command line arguments.
  * @param options Array with the definitions required to interpret every
- * option of the form: -<option_name> [<argument>]
+ * option of the form: -option_name [argument]
  * @param parse_arg_function Name of the function called to process every
  * argument without a leading option name flag. NULL if such arguments do
  * not have to be processed.
@@ -79,29 +132,92 @@ void show_help_options(const OptionDef *options, const char *msg, int mask, int 
 void parse_options(int argc, char **argv, const OptionDef *options,
                    void (* parse_arg_function)(const char*));
 
+void set_context_opts(void *ctx, void *opts_ctx, int flags);
+
+/**
+ * Print an error message to stderr, indicating filename and a human
+ * readable description of the error code err.
+ *
+ * If strerror_r() is not available the use of this function in a
+ * multithreaded application may be unsafe.
+ *
+ * @see av_strerror()
+ */
 void print_error(const char *filename, int err);
 
+void list_fmts(void (*get_fmt_string)(char *buf, int buf_size, int fmt), int nb_fmts);
+
 /**
- * Prints the program banner to stderr. The banner contents depend on the
+ * Print the program banner to stderr. The banner contents depend on the
  * current version of the repository and of the libav* libraries used by
  * the program.
- * @param program_name name of the program
- * @param program_birth_year year of birth of the program
  */
-void show_banner(const char *program_name, int program_birth_year);
+void show_banner(void);
 
 /**
- * Prints the version of the program to stdout. The version message
+ * Print the version of the program to stdout. The version message
  * depends on the current versions of the repository and of the libav*
  * libraries.
- * @param program_name name of the program
  */
-void show_version(const char *program_name);
+void show_version(void);
 
 /**
- * Prints the license of the program to stdout. The license depends on
+ * Print the license of the program to stdout. The license depends on
  * the license of the libraries compiled into the program.
  */
 void show_license(void);
+
+/**
+ * Print a listing containing all the formats supported by the
+ * program.
+ */
+void show_formats(void);
+
+/**
+ * Print a listing containing all the codecs supported by the
+ * program.
+ */
+void show_codecs(void);
+
+/**
+ * Print a listing containing all the filters supported by the
+ * program.
+ */
+void show_filters(void);
+
+/**
+ * Print a listing containing all the bit stream filters supported by the
+ * program.
+ */
+void show_bsfs(void);
+
+/**
+ * Print a listing containing all the protocols supported by the
+ * program.
+ */
+void show_protocols(void);
+
+/**
+ * Print a listing containing all the pixel formats supported by the
+ * program.
+ */
+void show_pix_fmts(void);
+
+/**
+ * Return a positive value if a line read from standard input
+ * starts with [yY], otherwise return 0.
+ */
+int read_yesno(void);
+
+/**
+ * Read the file with name filename, and put its content in a newly
+ * allocated 0-terminated buffer.
+ *
+ * @param bufptr location where pointer to buffer is returned
+ * @param size   location where size of buffer is returned
+ * @return 0 in case of success, a negative value corresponding to an
+ * AVERROR error code in case of failure.
+ */
+int read_file(const char *filename, char **bufptr, size_t *size);
 
 #endif /* FFMPEG_CMDUTILS_H */

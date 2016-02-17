@@ -24,13 +24,13 @@
 
 #include "avcodec.h"
 #include "bytestream.h"
-#include "bitstream.h"
+#include "get_bits.h"
 
 typedef struct PCXContext {
     AVFrame picture;
 } PCXContext;
 
-static int pcx_init(AVCodecContext *avctx) {
+static av_cold int pcx_init(AVCodecContext *avctx) {
     PCXContext *s = avctx->priv_data;
 
     avcodec_get_frame_defaults(&s->picture);
@@ -42,20 +42,25 @@ static int pcx_init(AVCodecContext *avctx) {
 /**
  * @return advanced src pointer
  */
-static const char *pcx_rle_decode(const uint8_t *src, uint8_t *dst,
-                            unsigned int bytes_per_scanline) {
+static const uint8_t *pcx_rle_decode(const uint8_t *src, uint8_t *dst,
+                            unsigned int bytes_per_scanline, int compressed) {
     unsigned int i = 0;
     unsigned char run, value;
 
-    while (i<bytes_per_scanline) {
-        run = 1;
-        value = *src++;
-        if (value >= 0xc0) {
-            run = value & 0x3f;
+    if (compressed) {
+        while (i<bytes_per_scanline) {
+            run = 1;
             value = *src++;
+            if (value >= 0xc0) {
+                run = value & 0x3f;
+                value = *src++;
+            }
+            while (i<bytes_per_scanline && run--)
+                dst[i++] = value;
         }
-        while (i<bytes_per_scanline && run--)
-            dst[i++] = value;
+    } else {
+        memcpy(dst, src, bytes_per_scanline);
+        src += bytes_per_scanline;
     }
 
     return src;
@@ -66,25 +71,31 @@ static void pcx_palette(const uint8_t **src, uint32_t *dst, unsigned int pallen)
 
     for (i=0; i<pallen; i++)
         *dst++ = bytestream_get_be24(src);
-    memset(dst, 0, (256 - pallen) * sizeof(*dst));
+    if (pallen < 256)
+        memset(dst, 0, (256 - pallen) * sizeof(*dst));
 }
 
 static int pcx_decode_frame(AVCodecContext *avctx, void *data, int *data_size,
-                            const uint8_t *buf, int buf_size) {
+                            AVPacket *avpkt) {
+    const uint8_t *buf = avpkt->data;
+    int buf_size = avpkt->size;
     PCXContext * const s = avctx->priv_data;
     AVFrame *picture = data;
     AVFrame * const p = &s->picture;
-    int xmin, ymin, xmax, ymax;
+    int compressed, xmin, ymin, xmax, ymax;
     unsigned int w, h, bits_per_pixel, bytes_per_line, nplanes, stride, y, x,
                  bytes_per_scanline;
     uint8_t *ptr;
     uint8_t const *bufstart = buf;
+    uint8_t *scanline;
+    int ret = -1;
 
-    if (buf[0] != 0x0a || buf[1] > 5 || buf[1] == 1 || buf[2] != 1) {
+    if (buf[0] != 0x0a || buf[1] > 5) {
         av_log(avctx, AV_LOG_ERROR, "this is not PCX encoded data\n");
         return -1;
     }
 
+    compressed = buf[2];
     xmin = AV_RL16(buf+ 4);
     ymin = AV_RL16(buf+ 6);
     xmax = AV_RL16(buf+ 8);
@@ -145,11 +156,13 @@ static int pcx_decode_frame(AVCodecContext *avctx, void *data, int *data_size,
     ptr    = p->data[0];
     stride = p->linesize[0];
 
-    if (nplanes == 3 && bits_per_pixel == 8) {
-        uint8_t scanline[bytes_per_scanline];
+    scanline = av_malloc(bytes_per_scanline);
+    if (!scanline)
+        return AVERROR(ENOMEM);
 
+    if (nplanes == 3 && bits_per_pixel == 8) {
         for (y=0; y<h; y++) {
-            buf = pcx_rle_decode(buf, scanline, bytes_per_scanline);
+            buf = pcx_rle_decode(buf, scanline, bytes_per_scanline, compressed);
 
             for (x=0; x<w; x++) {
                 ptr[3*x  ] = scanline[x                    ];
@@ -161,11 +174,10 @@ static int pcx_decode_frame(AVCodecContext *avctx, void *data, int *data_size,
         }
 
     } else if (nplanes == 1 && bits_per_pixel == 8) {
-        uint8_t scanline[bytes_per_scanline];
         const uint8_t *palstart = bufstart + buf_size - 769;
 
         for (y=0; y<h; y++, ptr+=stride) {
-            buf = pcx_rle_decode(buf, scanline, bytes_per_scanline);
+            buf = pcx_rle_decode(buf, scanline, bytes_per_scanline, compressed);
             memcpy(ptr, scanline, w);
         }
 
@@ -175,17 +187,16 @@ static int pcx_decode_frame(AVCodecContext *avctx, void *data, int *data_size,
         }
         if (*buf++ != 12) {
             av_log(avctx, AV_LOG_ERROR, "expected palette after image data\n");
-            return -1;
+            goto end;
         }
 
     } else if (nplanes == 1) {   /* all packed formats, max. 16 colors */
-        uint8_t scanline[bytes_per_scanline];
         GetBitContext s;
 
         for (y=0; y<h; y++) {
             init_get_bits(&s, scanline, bytes_per_scanline<<3);
 
-            buf = pcx_rle_decode(buf, scanline, bytes_per_scanline);
+            buf = pcx_rle_decode(buf, scanline, bytes_per_scanline, compressed);
 
             for (x=0; x<w; x++)
                 ptr[x] = get_bits(&s, bits_per_pixel);
@@ -193,11 +204,10 @@ static int pcx_decode_frame(AVCodecContext *avctx, void *data, int *data_size,
         }
 
     } else {    /* planar, 4, 8 or 16 colors */
-        uint8_t scanline[bytes_per_scanline];
         int i;
 
         for (y=0; y<h; y++) {
-            buf = pcx_rle_decode(buf, scanline, bytes_per_scanline);
+            buf = pcx_rle_decode(buf, scanline, bytes_per_scanline, compressed);
 
             for (x=0; x<w; x++) {
                 int m = 0x80 >> (x&7), v = 0;
@@ -221,10 +231,13 @@ static int pcx_decode_frame(AVCodecContext *avctx, void *data, int *data_size,
     *picture = s->picture;
     *data_size = sizeof(AVFrame);
 
-    return buf - bufstart;
+    ret = buf - bufstart;
+end:
+    av_free(scanline);
+    return ret;
 }
 
-static int pcx_end(AVCodecContext *avctx) {
+static av_cold int pcx_end(AVCodecContext *avctx) {
     PCXContext *s = avctx->priv_data;
 
     if(s->picture.data[0])
@@ -235,13 +248,14 @@ static int pcx_end(AVCodecContext *avctx) {
 
 AVCodec pcx_decoder = {
     "pcx",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_PCX,
     sizeof(PCXContext),
     pcx_init,
     NULL,
     pcx_end,
     pcx_decode_frame,
-    0,
-    NULL
+    CODEC_CAP_DR1,
+    NULL,
+    .long_name = NULL_IF_CONFIG_SMALL("PC Paintbrush PCX image"),
 };

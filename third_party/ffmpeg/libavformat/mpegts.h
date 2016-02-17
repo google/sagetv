@@ -1,6 +1,6 @@
 /*
  * MPEG2 transport stream defines
- * Copyright (c) 2003 Fabrice Bellard.
+ * Copyright (c) 2003 Fabrice Bellard
  *
  * This file is part of FFmpeg.
  *
@@ -19,14 +19,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef FFMPEG_MPEGTS_H
-#define FFMPEG_MPEGTS_H
+#ifndef AVFORMAT_MPEGTS_H
+#define AVFORMAT_MPEGTS_H
 
 #include "avformat.h"
 
 #define TS_FEC_PACKET_SIZE 204
 #define TS_DVHS_PACKET_SIZE 192
 #define TS_PACKET_SIZE 188
+#define TS_MAX_PACKET_SIZE 204
+
 #define NB_PID_MAX 8192
 #define MAX_SECTION_SIZE 4096
 
@@ -39,9 +41,6 @@
 #define PMT_TID   0x02
 #define SDT_TID   0x42
 
-/* descriptor ids */
-#define DVB_SUBT_DESCID             0x59
-
 #define STREAM_TYPE_VIDEO_MPEG1     0x01
 #define STREAM_TYPE_VIDEO_MPEG2     0x02
 #define STREAM_TYPE_AUDIO_MPEG1     0x03
@@ -50,20 +49,26 @@
 #define STREAM_TYPE_PRIVATE_DATA    0x06
 #define STREAM_TYPE_AUDIO_AAC       0x0f
 #define STREAM_TYPE_VIDEO_MPEG4     0x10
+#define STREAM_TYPE_AUDIO_AAC_LATM  0x11
 #define STREAM_TYPE_VIDEO_H264      0x1b
 #define STREAM_TYPE_VIDEO_VC1       0xea
+#define STREAM_TYPE_VIDEO_DIRAC     0xd1
 
+#define STREAM_TYPE_AUDIO_HDMV_LPCM 0x80
 #define STREAM_TYPE_AUDIO_AC3       0x81
 #define STREAM_TYPE_AUDIO_DTS       0x8a
 #define STREAM_TYPE_AUDIO_HDMV_DTS  0x82
-
-#define STREAM_TYPE_SUBTITLE_DVB    0x100
+#define STREAM_TYPE_AUDIO_HDMV_AC3_TRUE_HD   0x83
+#define STREAM_TYPE_AUDIO_HDMV_AC3_PLUS      0x84
+#define STREAM_TYPE_AUDIO_HDMV_DTS_HD        0x85
+#define STREAM_TYPE_AUDIO_HDMV_DTS_HD_MASTER 0x86
+#define STREAM_TYPE_AUDIO_HDMV_SUBPICTURE    0x90
 
 typedef struct MpegTSContext MpegTSContext;
 
-MpegTSContext *mpegts_parse_open(AVFormatContext *s);
-int mpegts_parse_packet(MpegTSContext *ts, AVPacket *pkt,
-                        const uint8_t *buf, int len);
-void mpegts_parse_close(MpegTSContext *ts);
+MpegTSContext *ff_mpegts_parse_open(AVFormatContext *s);
+int ff_mpegts_parse_packet(MpegTSContext *ts, AVPacket *pkt,
+                           const uint8_t *buf, int len);
+void ff_mpegts_parse_close(MpegTSContext *ts);
 
-#endif /* FFMPEG_MPEGTS_H */
+#endif /* AVFORMAT_MPEGTS_H */

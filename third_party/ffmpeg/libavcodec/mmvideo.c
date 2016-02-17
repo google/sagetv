@@ -1,6 +1,6 @@
 /*
  * American Laser Games MM Video Decoder
- * Copyright (c) 2006 Peter Ross
+ * Copyright (c) 2006,2008 Peter Ross
  *
  * This file is part of FFmpeg.
  *
@@ -20,9 +20,9 @@
  */
 
 /**
- * @file mm.c
+ * @file
  * American Laser Games MM Video Decoder
- * by Peter Ross (suxen_drol at hotmail dot com)
+ * by Peter Ross (pross@xvid.org)
  *
  * The MM format was used by IBM-PC ports of ALG's "arcade shooter" games,
  * including Mad Dog McCree and Crime Patrol.
@@ -31,6 +31,7 @@
  *  http://wiki.multimedia.cx/index.php?title=American_Laser_Games_MM
  */
 
+#include "libavutil/intreadwrite.h"
 #include "avcodec.h"
 
 #define MM_PREAMBLE_SIZE    6
@@ -41,35 +42,40 @@
 #define MM_TYPE_INTER_HH    0xd
 #define MM_TYPE_INTRA_HHV   0xe
 #define MM_TYPE_INTER_HHV   0xf
+#define MM_TYPE_PALETTE     0x31
 
 typedef struct MmContext {
     AVCodecContext *avctx;
     AVFrame frame;
+    int palette[AVPALETTE_COUNT];
 } MmContext;
 
-static int mm_decode_init(AVCodecContext *avctx)
+static av_cold int mm_decode_init(AVCodecContext *avctx)
 {
     MmContext *s = avctx->priv_data;
 
     s->avctx = avctx;
 
-    if (s->avctx->palctrl == NULL) {
-        av_log(avctx, AV_LOG_ERROR, "mmvideo: palette expected.\n");
-        return -1;
-    }
-
     avctx->pix_fmt = PIX_FMT_PAL8;
-
-    if (avcodec_check_dimensions(avctx, avctx->width, avctx->height))
-        return -1;
 
     s->frame.reference = 1;
     if (avctx->get_buffer(avctx, &s->frame)) {
-        av_log(s->avctx, AV_LOG_ERROR, "mmvideo: get_buffer() failed\n");
+        av_log(s->avctx, AV_LOG_ERROR, "get_buffer() failed\n");
         return -1;
     }
 
     return 0;
+}
+
+static void mm_decode_pal(MmContext *s, const uint8_t *buf, const uint8_t *buf_end)
+{
+    int i;
+    buf += 4;
+    for (i=0; i<128 && buf+2<buf_end; i++) {
+        s->palette[i] = AV_RB24(buf);
+        s->palette[i+128] = s->palette[i]<<2;
+        buf += 3;
+    }
 }
 
 static void mm_decode_intra(MmContext * s, int half_horiz, int half_vert, const uint8_t *buf, int buf_size)
@@ -150,22 +156,20 @@ static void mm_decode_inter(MmContext * s, int half_horiz, int half_vert, const 
 
 static int mm_decode_frame(AVCodecContext *avctx,
                             void *data, int *data_size,
-                            const uint8_t *buf, int buf_size)
+                            AVPacket *avpkt)
 {
+    const uint8_t *buf = avpkt->data;
+    int buf_size = avpkt->size;
     MmContext *s = avctx->priv_data;
-    AVPaletteControl *palette_control = avctx->palctrl;
+    const uint8_t *buf_end = buf+buf_size;
     int type;
-
-    if (palette_control->palette_changed) {
-        memcpy(s->frame.data[1], palette_control->palette, AVPALETTE_SIZE);
-        palette_control->palette_changed = 0;
-    }
 
     type = AV_RL16(&buf[0]);
     buf += MM_PREAMBLE_SIZE;
     buf_size -= MM_PREAMBLE_SIZE;
 
     switch(type) {
+    case MM_TYPE_PALETTE   : mm_decode_pal(s, buf, buf_end); return buf_size;
     case MM_TYPE_INTRA     : mm_decode_intra(s, 0, 0, buf, buf_size); break;
     case MM_TYPE_INTRA_HH  : mm_decode_intra(s, 1, 0, buf, buf_size); break;
     case MM_TYPE_INTRA_HHV : mm_decode_intra(s, 1, 1, buf, buf_size); break;
@@ -176,13 +180,15 @@ static int mm_decode_frame(AVCodecContext *avctx,
         return -1;
     }
 
+    memcpy(s->frame.data[1], s->palette, AVPALETTE_SIZE);
+
     *data_size = sizeof(AVFrame);
     *(AVFrame*)data = s->frame;
 
     return buf_size;
 }
 
-static int mm_decode_end(AVCodecContext *avctx)
+static av_cold int mm_decode_end(AVCodecContext *avctx)
 {
     MmContext *s = avctx->priv_data;
 
@@ -194,7 +200,7 @@ static int mm_decode_end(AVCodecContext *avctx)
 
 AVCodec mmvideo_decoder = {
     "mmvideo",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_MMVIDEO,
     sizeof(MmContext),
     mm_decode_init,
@@ -202,4 +208,5 @@ AVCodec mmvideo_decoder = {
     mm_decode_end,
     mm_decode_frame,
     CODEC_CAP_DR1,
+    .long_name = NULL_IF_CONFIG_SMALL("American Laser Games MM Video"),
 };

@@ -4,7 +4,8 @@
 ;* Copyright (C) 2005-2008 x264 project
 ;*
 ;* Authors: Loren Merritt <lorenm@u.washington.edu>
-;*          Fiona Glaser <fiona@x264.com>
+;*          Jason Garrett-Glaser <darkshikari@gmail.com>
+;*          Holger Lubitz <holger@lubitz.org>
 ;*          Mathieu Monnier <manao@melix.net>
 ;*
 ;* This program is free software; you can redistribute it and/or modify
@@ -23,36 +24,59 @@
 ;*****************************************************************************
 
 %include "x86inc.asm"
+%include "x86util.asm"
 
 SECTION_RODATA
 
-pw_1:  times 8 dw 1
-pw_16: times 8 dw 16
-pw_32: times 8 dw 32
+filt_mul20: times 16 db 20
+filt_mul15: times 8 db 1, -5
+filt_mul51: times 8 db -5, 1
+hpel_shuf: db 0,8,1,9,2,10,3,11,4,12,5,13,6,14,7,15
+deinterleave_shuf: db 0,2,4,6,8,10,12,14,1,3,5,7,9,11,13,15
 
 SECTION .text
 
-%macro LOAD_ADD 3
+cextern pw_1
+cextern pw_16
+cextern pw_32
+cextern pw_00ff
+cextern pw_3fff
+cextern pd_128
+
+%macro LOAD_ADD 4
+    movh       %4, %3
     movh       %1, %2
-    movh       m7, %3
+    punpcklbw  %4, m0
     punpcklbw  %1, m0
-    punpcklbw  m7, m0
-    paddw      %1, m7
+    paddw      %1, %4
 %endmacro
 
-%macro FILT_V2 0
-    psubw  m1, m2  ; a-b
-    psubw  m4, m5
-    psubw  m2, m3  ; b-c
-    psubw  m5, m6
-    psllw  m2, 2
-    psllw  m5, 2
-    psubw  m1, m2  ; a-5*b+4*c
-    psubw  m4, m5
-    psllw  m3, 4
-    psllw  m6, 4
-    paddw  m1, m3  ; a-5*b+20*c
-    paddw  m4, m6
+%macro LOAD_ADD_2 6
+    mova       %5, %3
+    mova       %1, %4
+    mova       %6, %5
+    mova       %2, %1
+    punpcklbw  %5, m0
+    punpcklbw  %1, m0
+    punpckhbw  %6, m0
+    punpckhbw  %2, m0
+    paddw      %1, %5
+    paddw      %2, %6
+%endmacro
+
+%macro FILT_V2 6
+    psubw  %1, %2  ; a-b
+    psubw  %4, %5
+    psubw  %2, %3  ; b-c
+    psubw  %5, %6
+    psllw  %2, 2
+    psllw  %5, 2
+    psubw  %1, %2  ; a-5*b+4*c
+    psllw  %3, 4
+    psubw  %4, %5
+    psllw  %6, 4
+    paddw  %1, %3  ; a-5*b+20*c
+    paddw  %4, %6
 %endmacro
 
 %macro FILT_H 3
@@ -64,79 +88,92 @@ SECTION .text
     paddw  %1, %3  ; ((a-b)/4-b+c)/4+c = (a-5*b+20*c)/16
 %endmacro
 
-%macro FILT_H2 0
-    psubw  m1, m2
-    psubw  m4, m5
-    psraw  m1, 2
-    psraw  m4, 2
-    psubw  m1, m2
-    psubw  m4, m5
-    paddw  m1, m3
-    paddw  m4, m6
-    psraw  m1, 2
-    psraw  m4, 2
-    paddw  m1, m3
-    paddw  m4, m6
+%macro FILT_H2 6
+    psubw  %1, %2
+    psubw  %4, %5
+    psraw  %1, 2
+    psraw  %4, 2
+    psubw  %1, %2
+    psubw  %4, %5
+    paddw  %1, %3
+    paddw  %4, %6
+    psraw  %1, 2
+    psraw  %4, 2
+    paddw  %1, %3
+    paddw  %4, %6
 %endmacro
 
-%macro FILT_PACK 1
-    paddw     m1, m7
-    paddw     m4, m7
-    psraw     m1, %1
-    psraw     m4, %1
-    packuswb  m1, m4
+%macro FILT_PACK 4
+    paddw     %1, %4
+    paddw     %2, %4
+    psraw     %1, %3
+    psraw     %2, %3
+    packuswb  %1, %2
 %endmacro
 
-%macro PALIGNR_MMX 4
-    %ifnidn %4, %2
-    mova    %4, %2
-    %endif
-    %if mmsize == 8
-    psllq   %1, (8-%3)*8
-    psrlq   %4, %3*8
-    %else
-    pslldq  %1, 16-%3
-    psrldq  %4, %3
-    %endif
-    por     %1, %4
-%endmacro
+;The hpel_filter routines use non-temporal writes for output.
+;The following defines may be uncommented for testing.
+;Doing the hpel_filter temporal may be a win if the last level cache
+;is big enough (preliminary benching suggests on the order of 4* framesize).
 
-%macro PALIGNR_SSSE3 4
-    palignr %1, %2, %3
-%endmacro
+;%define movntq movq
+;%define movntps movaps
+;%define sfence
 
 INIT_MMX
 
-%macro HPEL_V 1
+%macro HPEL_V 1-2 0
 ;-----------------------------------------------------------------------------
-; void x264_hpel_filter_v_mmxext( uint8_t *dst, uint8_t *src, int16_t *buf, int stride, int width );
+; void hpel_filter_v( uint8_t *dst, uint8_t *src, int16_t *buf, int stride, int width );
 ;-----------------------------------------------------------------------------
-cglobal x264_hpel_filter_v_%1, 5,6
+cglobal hpel_filter_v_%1, 5,6,%2
+%ifdef WIN64
+    movsxd   r4, r4d
+%endif
     lea r5, [r1+r3]
     sub r1, r3
     sub r1, r3
     add r0, r4
     lea r2, [r2+r4*2]
     neg r4
+%ifnidn %1, ssse3
     pxor m0, m0
+%else
+    mova m0, [filt_mul15]
+%endif
 .loop:
-    prefetcht0 [r5+r3*2+64]
-    LOAD_ADD  m1, [r1     ], [r5+r3*2] ; a0
-    LOAD_ADD  m2, [r1+r3  ], [r5+r3  ] ; b0
-    LOAD_ADD  m3, [r1+r3*2], [r5     ] ; c0
-    LOAD_ADD  m4, [r1     +mmsize/2], [r5+r3*2+mmsize/2] ; a1
-    LOAD_ADD  m5, [r1+r3  +mmsize/2], [r5+r3  +mmsize/2] ; b1
-    LOAD_ADD  m6, [r1+r3*2+mmsize/2], [r5     +mmsize/2] ; c1
-    FILT_V2
-    mova      m7, [pw_16 GLOBAL]
+%ifidn %1, ssse3
+    mova m1, [r1]
+    mova m4, [r1+r3]
+    mova m2, [r5+r3*2]
+    mova m5, [r5+r3]
+    mova m3, [r1+r3*2]
+    mova m6, [r5]
+    SBUTTERFLY bw, 1, 4, 7
+    SBUTTERFLY bw, 2, 5, 7
+    SBUTTERFLY bw, 3, 6, 7
+    pmaddubsw m1, m0
+    pmaddubsw m4, m0
+    pmaddubsw m2, m0
+    pmaddubsw m5, m0
+    pmaddubsw m3, [filt_mul20]
+    pmaddubsw m6, [filt_mul20]
+    paddw  m1, m2
+    paddw  m4, m5
+    paddw  m1, m3
+    paddw  m4, m6
+%else
+    LOAD_ADD_2 m1, m4, [r1     ], [r5+r3*2], m6, m7            ; a0 / a1
+    LOAD_ADD_2 m2, m5, [r1+r3  ], [r5+r3  ], m6, m7            ; b0 / b1
+    LOAD_ADD   m3,     [r1+r3*2], [r5     ], m7                ; c0
+    LOAD_ADD   m6,     [r1+r3*2+mmsize/2], [r5+mmsize/2], m7 ; c1
+    FILT_V2 m1, m2, m3, m4, m5, m6
+%endif
+    mova      m7, [pw_16]
     mova      [r2+r4*2], m1
     mova      [r2+r4*2+mmsize], m4
-    paddw     m1, m7
-    paddw     m4, m7
-    psraw     m1, 5
-    psraw     m4, 5
-    packuswb  m1, m4
-    movnt     [r0+r4], m1
+    FILT_PACK m1, m4, 5, m7
+    movnta    [r0+r4], m1
     add r1, mmsize
     add r5, mmsize
     add r4, mmsize
@@ -146,14 +183,14 @@ cglobal x264_hpel_filter_v_%1, 5,6
 HPEL_V mmxext
 
 ;-----------------------------------------------------------------------------
-; void x264_hpel_filter_c_mmxext( uint8_t *dst, int16_t *buf, int width );
+; void hpel_filter_c( uint8_t *dst, int16_t *buf, int width );
 ;-----------------------------------------------------------------------------
-cglobal x264_hpel_filter_c_mmxext, 3,3
+cglobal hpel_filter_c_mmxext, 3,3
     add r0, r2
     lea r1, [r1+r2*2]
     neg r2
     %define src r1+r2*2
-    movq m7, [pw_32 GLOBAL]
+    movq m7, [pw_32]
 .loop:
     movq   m1, [src-4]
     movq   m2, [src-2]
@@ -167,17 +204,17 @@ cglobal x264_hpel_filter_c_mmxext, 3,3
     paddw  m4, [src+14] ; a1
     paddw  m5, [src+12] ; b1
     paddw  m6, [src+10] ; c1
-    FILT_H2
-    FILT_PACK 6
+    FILT_H2 m1, m2, m3, m4, m5, m6
+    FILT_PACK m1, m4, 6, m7
     movntq [r0+r2], m1
     add r2, 8
     jl .loop
     REP_RET
 
 ;-----------------------------------------------------------------------------
-; void x264_hpel_filter_h_mmxext( uint8_t *dst, uint8_t *src, int width );
+; void hpel_filter_h( uint8_t *dst, uint8_t *src, int width );
 ;-----------------------------------------------------------------------------
-cglobal x264_hpel_filter_h_mmxext, 3,3
+cglobal hpel_filter_h_mmxext, 3,3
     add r0, r2
     add r1, r2
     neg r2
@@ -210,9 +247,9 @@ cglobal x264_hpel_filter_h_mmxext, 3,3
     punpcklbw  m7, m0
     punpcklbw  m6, m0
     paddw      m6, m7 ; a1
-    movq       m7, [pw_1 GLOBAL]
-    FILT_H2
-    FILT_PACK 1
+    movq       m7, [pw_1]
+    FILT_H2 m1, m2, m3, m4, m5, m6
+    FILT_PACK m1, m4, 1, m7
     movntq     [r0+r2], m1
     add r2, 8
     jl .loop
@@ -222,52 +259,84 @@ INIT_XMM
 
 %macro HPEL_C 1
 ;-----------------------------------------------------------------------------
-; void x264_hpel_filter_c_sse2( uint8_t *dst, int16_t *buf, int width );
+; void hpel_filter_c( uint8_t *dst, int16_t *buf, int width );
 ;-----------------------------------------------------------------------------
-cglobal x264_hpel_filter_c_%1, 3,3
+cglobal hpel_filter_c_%1, 3,3,9
     add r0, r2
     lea r1, [r1+r2*2]
     neg r2
     %define src r1+r2*2
-%ifidn %1, ssse3
-    mova    m7, [pw_32 GLOBAL]
+%ifnidn %1, sse2
+    mova    m7, [pw_32]
     %define tpw_32 m7
 %elifdef ARCH_X86_64
-    mova    m8, [pw_32 GLOBAL]
+    mova    m8, [pw_32]
     %define tpw_32 m8
 %else
-    %define tpw_32 [pw_32 GLOBAL]
+    %define tpw_32 [pw_32]
 %endif
+%ifidn %1,sse2_misalign
 .loop:
-    mova    m6, [src-16]
-    mova    m2, [src]
-    mova    m3, [src+16]
-    mova    m0, m2
-    mova    m1, m2
-    mova    m4, m3
-    mova    m5, m3
-    PALIGNR m3, m2, 2, m7
-    PALIGNR m4, m2, 4, m7
-    PALIGNR m5, m2, 6, m7
-    PALIGNR m0, m6, 12, m7
-    PALIGNR m1, m6, 14, m7
-    paddw   m2, m3
-    paddw   m1, m4
-    paddw   m0, m5
-    FILT_H  m0, m1, m2
-    paddw   m0, tpw_32
-    psraw   m0, 6
-    packuswb m0, m0
-    movq [r0+r2], m0
-    add r2, 8
+    movu    m4, [src-4]
+    movu    m5, [src-2]
+    mova    m6, [src]
+    movu    m3, [src+12]
+    movu    m2, [src+14]
+    mova    m1, [src+16]
+    paddw   m4, [src+6]
+    paddw   m5, [src+4]
+    paddw   m6, [src+2]
+    paddw   m3, [src+22]
+    paddw   m2, [src+20]
+    paddw   m1, [src+18]
+    FILT_H2 m4, m5, m6, m3, m2, m1
+%else
+    mova      m0, [src-16]
+    mova      m1, [src]
+.loop:
+    mova      m2, [src+16]
+    mova      m4, m1
+    PALIGNR   m4, m0, 12, m7
+    mova      m5, m1
+    PALIGNR   m5, m0, 14, m0
+    mova      m0, m2
+    PALIGNR   m0, m1, 6, m7
+    paddw     m4, m0
+    mova      m0, m2
+    PALIGNR   m0, m1, 4, m7
+    paddw     m5, m0
+    mova      m6, m2
+    PALIGNR   m6, m1, 2, m7
+    paddw     m6, m1
+    FILT_H    m4, m5, m6
+
+    mova      m0, m2
+    mova      m5, m2
+    PALIGNR   m2, m1, 12, m7
+    PALIGNR   m5, m1, 14, m1
+    mova      m1, [src+32]
+    mova      m3, m1
+    PALIGNR   m3, m0, 6, m7
+    paddw     m3, m2
+    mova      m6, m1
+    PALIGNR   m6, m0, 4, m7
+    paddw     m5, m6
+    mova      m6, m1
+    PALIGNR   m6, m0, 2, m7
+    paddw     m6, m0
+    FILT_H    m3, m5, m6
+%endif
+    FILT_PACK m4, m3, 6, tpw_32
+    movntps [r0+r2], m4
+    add r2, 16
     jl .loop
     REP_RET
 %endmacro
 
 ;-----------------------------------------------------------------------------
-; void x264_hpel_filter_h_sse2( uint8_t *dst, uint8_t *src, int width );
+; void hpel_filter_h( uint8_t *dst, uint8_t *src, int width );
 ;-----------------------------------------------------------------------------
-cglobal x264_hpel_filter_h_sse2, 3,3
+cglobal hpel_filter_h_sse2, 3,3,8
     add r0, r2
     add r1, r2
     neg r2
@@ -304,69 +373,305 @@ cglobal x264_hpel_filter_h_sse2, 3,3
     punpcklbw  m6, m0
     punpcklbw  m7, m0
     paddw      m6, m7 ; c1
-    mova       m7, [pw_1 GLOBAL] ; FIXME xmm8
-    FILT_H2
-    FILT_PACK 1
-    movntdq    [r0+r2], m1
+    mova       m7, [pw_1] ; FIXME xmm8
+    FILT_H2 m1, m2, m3, m4, m5, m6
+    FILT_PACK m1, m4, 1, m7
+    movntps    [r0+r2], m1
     add r2, 16
     jl .loop
     REP_RET
 
+%ifndef ARCH_X86_64
+;-----------------------------------------------------------------------------
+; void hpel_filter_h( uint8_t *dst, uint8_t *src, int width );
+;-----------------------------------------------------------------------------
+cglobal hpel_filter_h_ssse3, 3,3
+    add r0, r2
+    add r1, r2
+    neg r2
+    %define src r1+r2
+    mova      m0, [src-16]
+    mova      m1, [src]
+    mova      m7, [pw_16]
+.loop:
+    mova      m2, [src+16]
+    mova      m3, m1
+    palignr   m3, m0, 14
+    mova      m4, m1
+    palignr   m4, m0, 15
+    mova      m0, m2
+    palignr   m0, m1, 2
+    pmaddubsw m3, [filt_mul15]
+    pmaddubsw m4, [filt_mul15]
+    pmaddubsw m0, [filt_mul51]
+    mova      m5, m2
+    palignr   m5, m1, 1
+    mova      m6, m2
+    palignr   m6, m1, 3
+    paddw     m3, m0
+    mova      m0, m1
+    pmaddubsw m1, [filt_mul20]
+    pmaddubsw m5, [filt_mul20]
+    pmaddubsw m6, [filt_mul51]
+    paddw     m3, m1
+    paddw     m4, m5
+    paddw     m4, m6
+    FILT_PACK m3, m4, 5, m7
+    pshufb    m3, [hpel_shuf]
+    mova      m1, m2
+    movntps [r0+r2], m3
+    add r2, 16
+    jl .loop
+    RET
+%endif
+
 %define PALIGNR PALIGNR_MMX
-HPEL_V sse2
+%ifndef ARCH_X86_64
 HPEL_C sse2
+%endif
+HPEL_V sse2, 8
+HPEL_C sse2_misalign
 %define PALIGNR PALIGNR_SSSE3
 HPEL_C ssse3
+HPEL_V ssse3
 
-cglobal x264_sfence
+%ifdef ARCH_X86_64
+
+%macro DO_FILT_V 6
+    ;The optimum prefetch distance is difficult to determine in checkasm:
+    ;any prefetch seems slower than not prefetching.
+    ;In real use, the prefetch seems to be a slight win.
+    ;+16 is picked somewhat arbitrarily here based on the fact that even one
+    ;loop iteration is going to take longer than the prefetch.
+    prefetcht0 [r1+r2*2+16]
+%ifidn %6, ssse3
+    mova m1, [r3]
+    mova m2, [r3+r2]
+    mova %3, [r3+r2*2]
+    mova m3, [r1]
+    mova %1, [r1+r2]
+    mova %2, [r1+r2*2]
+    mova m4, m1
+    punpcklbw m1, m2
+    punpckhbw m4, m2
+    mova m2, %1
+    punpcklbw %1, %2
+    punpckhbw m2, %2
+    mova %2, m3
+    punpcklbw m3, %3
+    punpckhbw %2, %3
+
+    pmaddubsw m1, m12
+    pmaddubsw m4, m12
+    pmaddubsw %1, m0
+    pmaddubsw m2, m0
+    pmaddubsw m3, m14
+    pmaddubsw %2, m14
+
+    paddw m1, %1
+    paddw m4, m2
+    paddw m1, m3
+    paddw m4, %2
+%else
+    LOAD_ADD_2 m1, m4, [r3     ], [r1+r2*2], m2, m5            ; a0 / a1
+    LOAD_ADD_2 m2, m5, [r3+r2  ], [r1+r2  ], m3, m6            ; b0 / b1
+    LOAD_ADD_2 m3, m6, [r3+r2*2], [r1     ], %3, %4            ; c0 / c1
+    packuswb %3, %4
+    FILT_V2 m1, m2, m3, m4, m5, m6
+%endif
+    add       r3, 16
+    add       r1, 16
+    mova      %1, m1
+    mova      %2, m4
+    FILT_PACK m1, m4, 5, m15
+    movntps  [r11+r4+%5], m1
+%endmacro
+
+%macro FILT_C 4
+    mova      m1, %2
+    PALIGNR   m1, %1, 12, m2
+    mova      m2, %2
+    PALIGNR   m2, %1, 14, %1
+    mova      m3, %3
+    PALIGNR   m3, %2, 4, %1
+    mova      m4, %3
+    PALIGNR   m4, %2, 2, %1
+    paddw     m3, m2
+    mova      %1, %3
+    PALIGNR   %3, %2, 6, m2
+    paddw     m4, %2
+    paddw     %3, m1
+    FILT_H    %3, m3, m4
+%endmacro
+
+%macro DO_FILT_C 4
+    FILT_C %1, %2, %3, 6
+    FILT_C %2, %1, %4, 6
+    FILT_PACK %3, %4, 6, m15
+    movntps   [r5+r4], %3
+%endmacro
+
+%macro ADD8TO16 5
+    mova      %3, %1
+    mova      %4, %2
+    punpcklbw %1, %5
+    punpckhbw %2, %5
+    punpckhbw %3, %5
+    punpcklbw %4, %5
+    paddw     %2, %3
+    paddw     %1, %4
+%endmacro
+
+%macro DO_FILT_H 4
+    mova      m1, %2
+    PALIGNR   m1, %1, 14, m3
+    mova      m2, %2
+    PALIGNR   m2, %1, 15, m3
+    mova      m4, %3
+    PALIGNR   m4, %2, 1 , m3
+    mova      m5, %3
+    PALIGNR   m5, %2, 2 , m3
+    mova      m6, %3
+    PALIGNR   m6, %2, 3 , m3
+    mova      %1, %2
+%ifidn %4, sse2
+    ADD8TO16  m1, m6, m12, m3, m0 ; a
+    ADD8TO16  m2, m5, m12, m3, m0 ; b
+    ADD8TO16  %2, m4, m12, m3, m0 ; c
+    FILT_V2   m1, m2, %2, m6, m5, m4
+    FILT_PACK m1, m6, 5, m15
+%else ; ssse3
+    pmaddubsw m1, m12
+    pmaddubsw m2, m12
+    pmaddubsw %2, m14
+    pmaddubsw m4, m14
+    pmaddubsw m5, m0
+    pmaddubsw m6, m0
+    paddw     m1, %2
+    paddw     m2, m4
+    paddw     m1, m5
+    paddw     m2, m6
+    FILT_PACK m1, m2, 5, m15
+    pshufb    m1, [hpel_shuf]
+%endif
+    movntps [r0+r4], m1
+    mova      %2, %3
+%endmacro
+
+%macro HPEL 1
+;-----------------------------------------------------------------------------
+; void hpel_filter( uint8_t *dsth, uint8_t *dstv, uint8_t *dstc,
+;                   uint8_t *src, int stride, int width, int height)
+;-----------------------------------------------------------------------------
+cglobal hpel_filter_%1, 7,7,16
+%ifdef WIN64
+    movsxd   r4, r4d
+    movsxd   r5, r5d
+%endif
+    mov      r10, r3
+    sub       r5, 16
+    mov      r11, r1
+    and      r10, 15
+    sub       r3, r10
+    add       r0, r5
+    add      r11, r5
+    add      r10, r5
+    add       r5, r2
+    mov       r2, r4
+    neg      r10
+    lea       r1, [r3+r2]
+    sub       r3, r2
+    sub       r3, r2
+    mov       r4, r10
+    mova     m15, [pw_16]
+%ifidn %1, sse2
+    pxor      m0, m0
+%else ; ssse3
+    mova      m0, [filt_mul51]
+    mova     m12, [filt_mul15]
+    mova     m14, [filt_mul20]
+%endif
+;ALIGN 16
+.loopy:
+; first filter_v
+    DO_FILT_V m8, m7, m13, m12, 0, %1
+;ALIGN 16
+.loopx:
+    DO_FILT_V m6, m5, m11, m12, 16, %1
+.lastx:
+    paddw   m15, m15 ; pw_32
+    DO_FILT_C m9, m8, m7, m6
+    psrlw   m15, 1 ; pw_16
+    movdqa   m7, m5
+    DO_FILT_H m10, m13, m11, %1
+    add      r4, 16
+    jl .loopx
+    cmp      r4, 16
+    jl .lastx
+; setup regs for next y
+    sub      r4, r10
+    sub      r4, r2
+    sub      r1, r4
+    sub      r3, r4
+    add      r0, r2
+    add     r11, r2
+    add      r5, r2
+    mov      r4, r10
+    sub     r6d, 1
+    jg .loopy
     sfence
-    ret
+    RET
+%endmacro
 
+%define PALIGNR PALIGNR_MMX
+HPEL sse2
+%define PALIGNR PALIGNR_SSSE3
+HPEL ssse3
+%endif
 
+%undef movntq
+%undef movntps
+%undef sfence
 
 ;-----------------------------------------------------------------------------
-; void x264_plane_copy_mmxext( uint8_t *dst, int i_dst,
-;                              uint8_t *src, int i_src, int w, int h)
+; void plane_copy_core( uint8_t *dst, int i_dst,
+;                       uint8_t *src, int i_src, int w, int h)
 ;-----------------------------------------------------------------------------
-cglobal x264_plane_copy_mmxext, 6,7
+; assumes i_dst and w are multiples of 16, and i_dst>w
+cglobal plane_copy_core_mmxext, 6,7
     movsxdifnidn r1, r1d
     movsxdifnidn r3, r3d
-    add    r4d, 3
-    and    r4d, ~3
-    mov    r6d, r4d
-    and    r6d, ~15
-    sub    r1,  r6
-    sub    r3,  r6
+    movsxdifnidn r4, r4d
+    sub    r1,  r4
+    sub    r3,  r4
 .loopy:
     mov    r6d, r4d
-    sub    r6d, 64
-    jl     .endx
+    sub    r6d, 63
 .loopx:
     prefetchnta [r2+256]
     movq   mm0, [r2   ]
     movq   mm1, [r2+ 8]
-    movq   mm2, [r2+16]
-    movq   mm3, [r2+24]
-    movq   mm4, [r2+32]
-    movq   mm5, [r2+40]
-    movq   mm6, [r2+48]
-    movq   mm7, [r2+56]
     movntq [r0   ], mm0
     movntq [r0+ 8], mm1
+    movq   mm2, [r2+16]
+    movq   mm3, [r2+24]
     movntq [r0+16], mm2
     movntq [r0+24], mm3
+    movq   mm4, [r2+32]
+    movq   mm5, [r2+40]
     movntq [r0+32], mm4
     movntq [r0+40], mm5
+    movq   mm6, [r2+48]
+    movq   mm7, [r2+56]
     movntq [r0+48], mm6
     movntq [r0+56], mm7
     add    r2,  64
     add    r0,  64
     sub    r6d, 64
-    jge    .loopx
-.endx:
+    jg .loopx
     prefetchnta [r2+256]
-    add    r6d, 48
-    jl .end16
+    add    r6d, 63
+    jle .end16
 .loop16:
     movq   mm0, [r2  ]
     movq   mm1, [r2+8]
@@ -375,24 +680,223 @@ cglobal x264_plane_copy_mmxext, 6,7
     add    r2,  16
     add    r0,  16
     sub    r6d, 16
-    jge    .loop16
+    jg .loop16
 .end16:
-    add    r6d, 12
-    jl .end4
-.loop4:
-    movd   mm2, [r2+r6]
-    movd   [r0+r6], mm2
-    sub    r6d, 4
-    jge .loop4
-.end4:
-    add    r2, r3
     add    r0, r1
+    add    r2, r3
     dec    r5d
-    jg     .loopy
+    jg .loopy
     sfence
     emms
     RET
 
+
+%macro INTERLEAVE 4-5 ; dst, srcu, srcv, is_aligned, nt_hint
+    movq   m0, [%2]
+%if mmsize==16
+%if %4
+    punpcklbw m0, [%3]
+%else
+    movq   m1, [%3]
+    punpcklbw m0, m1
+%endif
+    mov%5a [%1], m0
+%else
+    movq   m1, [%3]
+    mova   m2, m0
+    punpcklbw m0, m1
+    punpckhbw m2, m1
+    mov%5a [%1], m0
+    mov%5a [%1+8], m2
+%endif
+%endmacro
+
+%macro DEINTERLEAVE 6 ; dstu, dstv, src, dstv==dstu+8, cpu, shuffle constant
+%if mmsize==16
+    mova   m0, [%3]
+%ifidn %5, ssse3
+    pshufb m0, %6
+%else
+    mova   m1, m0
+    pand   m0, %6
+    psrlw  m1, 8
+    packuswb m0, m1
+%endif
+%if %4
+    mova   [%1], m0
+%else
+    movq   [%1], m0
+    movhps [%2], m0
+%endif
+%else
+    mova   m0, [%3]
+    mova   m1, [%3+8]
+    mova   m2, m0
+    mova   m3, m1
+    pand   m0, %6
+    pand   m1, %6
+    psrlw  m2, 8
+    psrlw  m3, 8
+    packuswb m0, m1
+    packuswb m2, m3
+    mova   [%1], m0
+    mova   [%2], m2
+%endif
+%endmacro
+
+%macro PLANE_INTERLEAVE 1
+;-----------------------------------------------------------------------------
+; void plane_copy_interleave_core( uint8_t *dst, int i_dst,
+;                                  uint8_t *srcu, int i_srcu,
+;                                  uint8_t *srcv, int i_srcv, int w, int h )
+;-----------------------------------------------------------------------------
+; assumes i_dst and w are multiples of 16, and i_dst>2*w
+cglobal plane_copy_interleave_core_%1, 6,7
+    mov    r6d, r6m
+    movsxdifnidn r1, r1d
+    movsxdifnidn r3, r3d
+    movsxdifnidn r5, r5d
+    lea    r0, [r0+r6*2]
+    add    r2,  r6
+    add    r4,  r6
+%ifdef ARCH_X86_64
+    DECLARE_REG_TMP 10,11
+%else
+    DECLARE_REG_TMP 1,3
+%endif
+    mov  t0d, r7m
+    mov  t1d, r1d
+    shr  t1d, 1
+    sub  t1d, r6d
+.loopy:
+    mov    r6d, r6m
+    neg    r6
+.prefetch:
+    prefetchnta [r2+r6]
+    prefetchnta [r4+r6]
+    add    r6, 64
+    jl .prefetch
+    mov    r6d, r6m
+    neg    r6
+.loopx:
+    INTERLEAVE r0+r6*2,    r2+r6,   r4+r6,   0, nt
+    INTERLEAVE r0+r6*2+16, r2+r6+8, r4+r6+8, 0, nt
+    add    r6, 16
+    jl .loopx
+.pad:
+%if mmsize==8
+    movntq [r0+r6*2], m0
+    movntq [r0+r6*2+8], m0
+    movntq [r0+r6*2+16], m0
+    movntq [r0+r6*2+24], m0
+%else
+    movntdq [r0+r6*2], m0
+    movntdq [r0+r6*2+16], m0
+%endif
+    add    r6, 16
+    cmp    r6, t1
+    jl .pad
+    add    r0, r1mp
+    add    r2, r3mp
+    add    r4, r5
+    dec    t0d
+    jg .loopy
+    sfence
+    emms
+    RET
+
+;-----------------------------------------------------------------------------
+; void store_interleave_8x8x2( uint8_t *dst, int i_dst, uint8_t *srcu, uint8_t *srcv )
+;-----------------------------------------------------------------------------
+cglobal store_interleave_8x8x2_%1, 4,5
+    mov    r4d, 4
+.loop:
+    INTERLEAVE r0, r2, r3, 1
+    INTERLEAVE r0+r1, r2+FDEC_STRIDE, r3+FDEC_STRIDE, 1
+    add    r2, FDEC_STRIDE*2
+    add    r3, FDEC_STRIDE*2
+    lea    r0, [r0+r1*2]
+    dec    r4d
+    jg .loop
+    REP_RET
+%endmacro ; PLANE_INTERLEAVE
+
+%macro DEINTERLEAVE_START 1
+%ifidn %1, ssse3
+    mova   m4, [deinterleave_shuf]
+%else
+    mova   m4, [pw_00ff]
+%endif
+%endmacro
+
+%macro PLANE_DEINTERLEAVE 1
+;-----------------------------------------------------------------------------
+; void plane_copy_deinterleave( uint8_t *dstu, int i_dstu,
+;                               uint8_t *dstv, int i_dstv,
+;                               uint8_t *src, int i_src, int w, int h )
+;-----------------------------------------------------------------------------
+cglobal plane_copy_deinterleave_%1, 6,7
+    DEINTERLEAVE_START %1
+    mov    r6d, r6m
+    movsxdifnidn r1, r1d
+    movsxdifnidn r3, r3d
+    movsxdifnidn r5, r5d
+    add    r0,  r6
+    add    r2,  r6
+    lea    r4, [r4+r6*2]
+.loopy:
+    mov    r6d, r6m
+    neg    r6
+.loopx:
+    DEINTERLEAVE r0+r6,   r2+r6,   r4+r6*2,    0, %1, m4
+    DEINTERLEAVE r0+r6+8, r2+r6+8, r4+r6*2+16, 0, %1, m4
+    add    r6, 16
+    jl .loopx
+    add    r0, r1
+    add    r2, r3
+    add    r4, r5
+    dec dword r7m
+    jg .loopy
+    REP_RET
+
+;-----------------------------------------------------------------------------
+; void load_deinterleave_8x8x2_fenc( uint8_t *dst, uint8_t *src, int i_src )
+;-----------------------------------------------------------------------------
+cglobal load_deinterleave_8x8x2_fenc_%1, 3,4
+    DEINTERLEAVE_START %1
+    mov    r3d, 4
+.loop:
+    DEINTERLEAVE r0, r0+FENC_STRIDE/2, r1, 1, %1, m4
+    DEINTERLEAVE r0+FENC_STRIDE, r0+FENC_STRIDE*3/2, r1+r2, 1, %1, m4
+    add    r0, FENC_STRIDE*2
+    lea    r1, [r1+r2*2]
+    dec    r3d
+    jg .loop
+    REP_RET
+
+;-----------------------------------------------------------------------------
+; void load_deinterleave_8x8x2_fdec( uint8_t *dst, uint8_t *src, int i_src )
+;-----------------------------------------------------------------------------
+cglobal load_deinterleave_8x8x2_fdec_%1, 3,4
+    DEINTERLEAVE_START %1
+    mov    r3d, 4
+.loop:
+    DEINTERLEAVE r0, r0+FDEC_STRIDE/2, r1, 0, %1, m4
+    DEINTERLEAVE r0+FDEC_STRIDE, r0+FDEC_STRIDE*3/2, r1+r2, 0, %1, m4
+    add    r0, FDEC_STRIDE*2
+    lea    r1, [r1+r2*2]
+    dec    r3d
+    jg .loop
+    REP_RET
+%endmacro ; PLANE_DEINTERLEAVE
+
+INIT_MMX
+PLANE_INTERLEAVE mmxext
+PLANE_DEINTERLEAVE mmx
+INIT_XMM
+PLANE_INTERLEAVE sse2
+PLANE_DEINTERLEAVE sse2
+PLANE_DEINTERLEAVE ssse3
 
 
 ; These functions are not general-use; not only do the SSE ones require aligned input,
@@ -400,9 +904,9 @@ cglobal x264_plane_copy_mmxext, 6,7
 ; memzero SSE will fail for non-mod128.
 
 ;-----------------------------------------------------------------------------
-; void *x264_memcpy_aligned_mmx( void *dst, const void *src, size_t n );
+; void *memcpy_aligned( void *dst, const void *src, size_t n );
 ;-----------------------------------------------------------------------------
-cglobal x264_memcpy_aligned_mmx, 3,3
+cglobal memcpy_aligned_mmx, 3,3
     test r2d, 16
     jz .copy32
     sub r2d, 16
@@ -424,9 +928,9 @@ cglobal x264_memcpy_aligned_mmx, 3,3
     REP_RET
 
 ;-----------------------------------------------------------------------------
-; void *x264_memcpy_aligned_sse2( void *dst, const void *src, size_t n );
+; void *memcpy_aligned( void *dst, const void *src, size_t n );
 ;-----------------------------------------------------------------------------
-cglobal x264_memcpy_aligned_sse2, 3,3
+cglobal memcpy_aligned_sse2, 3,3
     test r2d, 16
     jz .copy32
     sub r2d, 16
@@ -454,19 +958,21 @@ cglobal x264_memcpy_aligned_sse2, 3,3
     REP_RET
 
 ;-----------------------------------------------------------------------------
-; void *x264_memzero_aligned( void *dst, size_t n );
+; void *memzero_aligned( void *dst, size_t n );
 ;-----------------------------------------------------------------------------
 %macro MEMZERO 1
-cglobal x264_memzero_aligned_%1, 2,2
+cglobal memzero_aligned_%1, 2,2
+    add  r0, r1
+    neg  r1
     pxor m0, m0
 .loop:
-    sub r1d, mmsize*8
 %assign i 0
 %rep 8
     mova [r0 + r1 + i], m0
 %assign i i+mmsize
 %endrep
-    jg .loop
+    add r1, mmsize*8
+    jl .loop
     REP_RET
 %endmacro
 
@@ -476,6 +982,155 @@ INIT_XMM
 MEMZERO sse2
 
 
+
+;-----------------------------------------------------------------------------
+; void integral_init4h( uint16_t *sum, uint8_t *pix, int stride )
+;-----------------------------------------------------------------------------
+cglobal integral_init4h_sse4, 3,4
+    lea     r3, [r0+r2*2]
+    add     r1, r2
+    neg     r2
+    pxor    m4, m4
+.loop:
+    movdqa  m0, [r1+r2]
+    movdqa  m1, [r1+r2+16]
+    palignr m1, m0, 8
+    mpsadbw m0, m4, 0
+    mpsadbw m1, m4, 0
+    paddw   m0, [r0+r2*2]
+    paddw   m1, [r0+r2*2+16]
+    movdqa  [r3+r2*2   ], m0
+    movdqa  [r3+r2*2+16], m1
+    add     r2, 16
+    jl .loop
+    REP_RET
+
+cglobal integral_init8h_sse4, 3,4
+    lea     r3, [r0+r2*2]
+    add     r1, r2
+    neg     r2
+    pxor    m4, m4
+.loop:
+    movdqa  m0, [r1+r2]
+    movdqa  m1, [r1+r2+16]
+    palignr m1, m0, 8
+    movdqa  m2, m0
+    movdqa  m3, m1
+    mpsadbw m0, m4, 0
+    mpsadbw m1, m4, 0
+    mpsadbw m2, m4, 4
+    mpsadbw m3, m4, 4
+    paddw   m0, [r0+r2*2]
+    paddw   m1, [r0+r2*2+16]
+    paddw   m0, m2
+    paddw   m1, m3
+    movdqa  [r3+r2*2   ], m0
+    movdqa  [r3+r2*2+16], m1
+    add     r2, 16
+    jl .loop
+    REP_RET
+
+%macro INTEGRAL_INIT_8V 1
+;-----------------------------------------------------------------------------
+; void integral_init8v( uint16_t *sum8, int stride )
+;-----------------------------------------------------------------------------
+cglobal integral_init8v_%1, 3,3
+    shl   r1, 1
+    add   r0, r1
+    lea   r2, [r0+r1*8]
+    neg   r1
+.loop:
+    mova  m0, [r2+r1]
+    mova  m1, [r2+r1+mmsize]
+    psubw m0, [r0+r1]
+    psubw m1, [r0+r1+mmsize]
+    mova  [r0+r1], m0
+    mova  [r0+r1+mmsize], m1
+    add   r1, 2*mmsize
+    jl .loop
+    REP_RET
+%endmacro
+
+INIT_MMX
+INTEGRAL_INIT_8V mmx
+INIT_XMM
+INTEGRAL_INIT_8V sse2
+
+;-----------------------------------------------------------------------------
+; void integral_init4v( uint16_t *sum8, uint16_t *sum4, int stride )
+;-----------------------------------------------------------------------------
+INIT_MMX
+cglobal integral_init4v_mmx, 3,5
+    shl   r2, 1
+    lea   r3, [r0+r2*4]
+    lea   r4, [r0+r2*8]
+    mova  m0, [r0+r2]
+    mova  m4, [r4+r2]
+.loop:
+    sub   r2, 8
+    mova  m1, m4
+    psubw m1, m0
+    mova  m4, [r4+r2]
+    mova  m0, [r0+r2]
+    paddw m1, m4
+    mova  m3, [r3+r2]
+    psubw m1, m0
+    psubw m3, m0
+    mova  [r0+r2], m1
+    mova  [r1+r2], m3
+    jge .loop
+    REP_RET
+
+INIT_XMM
+cglobal integral_init4v_sse2, 3,5
+    shl     r2, 1
+    add     r0, r2
+    add     r1, r2
+    lea     r3, [r0+r2*4]
+    lea     r4, [r0+r2*8]
+    neg     r2
+.loop:
+    mova    m0, [r0+r2]
+    mova    m1, [r4+r2]
+    mova    m2, m0
+    mova    m4, m1
+    shufpd  m0, [r0+r2+16], 1
+    shufpd  m1, [r4+r2+16], 1
+    paddw   m0, m2
+    paddw   m1, m4
+    mova    m3, [r3+r2]
+    psubw   m1, m0
+    psubw   m3, m2
+    mova  [r0+r2], m1
+    mova  [r1+r2], m3
+    add     r2, 16
+    jl .loop
+    REP_RET
+
+cglobal integral_init4v_ssse3, 3,5
+    shl     r2, 1
+    add     r0, r2
+    add     r1, r2
+    lea     r3, [r0+r2*4]
+    lea     r4, [r0+r2*8]
+    neg     r2
+.loop:
+    mova    m2, [r0+r2]
+    mova    m0, [r0+r2+16]
+    mova    m4, [r4+r2]
+    mova    m1, [r4+r2+16]
+    palignr m0, m2, 8
+    palignr m1, m4, 8
+    paddw   m0, m2
+    paddw   m1, m4
+    mova    m3, [r3+r2]
+    psubw   m1, m0
+    psubw   m3, m2
+    mova  [r0+r2], m1
+    mova  [r1+r2], m3
+    add     r2, 16
+    jl .loop
+    REP_RET
 
 %macro FILT8x4 7
     mova      %3, [r0+%7]
@@ -543,8 +1198,11 @@ MEMZERO sse2
 ; void frame_init_lowres_core( uint8_t *src0, uint8_t *dst0, uint8_t *dsth, uint8_t *dstv, uint8_t *dstc,
 ;                              int src_stride, int dst_stride, int width, int height )
 ;-----------------------------------------------------------------------------
-%macro FRAME_INIT_LOWRES 1 ; FIXME
-cglobal x264_frame_init_lowres_core_%1, 6,7
+%macro FRAME_INIT_LOWRES 1-2 0 ; FIXME
+cglobal frame_init_lowres_core_%1, 6,7,%2
+%ifdef WIN64
+    movsxd   r5, r5d
+%endif
     ; src += 2*(height-1)*stride + 2*width
     mov      r6d, r8m
     dec      r6d
@@ -654,6 +1312,53 @@ FRAME_INIT_LOWRES mmxext
 FRAME_INIT_LOWRES cache32_mmxext
 %endif
 INIT_XMM
-FRAME_INIT_LOWRES sse2
+FRAME_INIT_LOWRES sse2, 12
 %define PALIGNR PALIGNR_SSSE3
-FRAME_INIT_LOWRES ssse3
+FRAME_INIT_LOWRES ssse3, 12
+
+;-----------------------------------------------------------------------------
+; void mbtree_propagate_cost( int *dst, uint16_t *propagate_in, uint16_t *intra_costs,
+;                             uint16_t *inter_costs, uint16_t *inv_qscales, int len )
+;-----------------------------------------------------------------------------
+cglobal mbtree_propagate_cost_sse2, 6,6,7
+    shl r5d, 1
+    lea r0, [r0+r5*2]
+    add r1, r5
+    add r2, r5
+    add r3, r5
+    add r4, r5
+    neg r5
+    pxor      xmm5, xmm5
+    movdqa    xmm6, [pw_3fff]
+    movdqa    xmm4, [pd_128]
+.loop:
+    movq      xmm2, [r2+r5] ; intra
+    movq      xmm0, [r4+r5] ; invq
+    movq      xmm3, [r3+r5] ; inter
+    movq      xmm1, [r1+r5] ; prop
+    punpcklwd xmm2, xmm5
+    punpcklwd xmm0, xmm5
+    pmaddwd   xmm0, xmm2
+    pand      xmm3, xmm6
+    punpcklwd xmm1, xmm5
+    punpcklwd xmm3, xmm5
+    paddd     xmm0, xmm4
+    psrld     xmm0, 8       ; intra*invq>>8
+    paddd     xmm0, xmm1    ; prop + (intra*invq>>8)
+    cvtdq2ps  xmm1, xmm2    ; intra
+    psubd     xmm2, xmm3    ; intra - inter
+    rcpps     xmm3, xmm1    ; 1 / intra 1st approximation
+    cvtdq2ps  xmm0, xmm0
+    mulps     xmm1, xmm3    ; intra * (1/intra 1st approx)
+    cvtdq2ps  xmm2, xmm2
+    mulps     xmm1, xmm3    ; intra * (1/intra 1st approx)^2
+    mulps     xmm0, xmm2    ; (prop + (intra*invq>>8)) * (intra - inter)
+    addps     xmm3, xmm3    ; 2 * (1/intra 1st approx)
+    subps     xmm3, xmm1    ; 2nd approximation for 1/intra
+    mulps     xmm0, xmm3    ; / intra
+    cvttps2dq xmm0, xmm0    ; truncation isn't really desired, but matches the integer implementation
+    movdqa [r0+r5*2], xmm0
+    add r5, 8
+    jl .loop
+    REP_RET
+

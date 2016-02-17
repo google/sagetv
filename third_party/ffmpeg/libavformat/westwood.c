@@ -20,7 +20,7 @@
  */
 
 /**
- * @file westwood.c
+ * @file
  * Westwood Studios VQA & AUD file demuxers
  * by Mike Melanson (melanson@pcisys.net)
  * for more information on the Westwood file formats, visit:
@@ -33,6 +33,7 @@
  * qualify a file. Refer to wsaud_probe() for the precise parameters.
  */
 
+#include "libavutil/intreadwrite.h"
 #include "avformat.h"
 
 #define AUD_HEADER_SIZE 12
@@ -59,14 +60,13 @@
 
 #define VQA_HEADER_SIZE 0x2A
 #define VQA_FRAMERATE 15
-#define VQA_VIDEO_PTS_INC (90000 / VQA_FRAMERATE)
 #define VQA_PREAMBLE_SIZE 8
 
 typedef struct WsAudDemuxContext {
     int audio_samplerate;
     int audio_channels;
     int audio_bits;
-    int audio_type;
+    enum CodecID audio_type;
     int audio_stream_index;
     int64_t audio_frame_counter;
 } WsAudDemuxContext;
@@ -80,7 +80,6 @@ typedef struct WsVqaDemuxContext {
     int video_stream_index;
 
     int64_t audio_frame_counter;
-    int64_t video_pts;
 } WsVqaDemuxContext;
 
 static int wsaud_probe(AVProbeData *p)
@@ -90,14 +89,14 @@ static int wsaud_probe(AVProbeData *p)
     /* Probabilistic content detection strategy: There is no file signature
      * so perform sanity checks on various header parameters:
      *   8000 <= sample rate (16 bits) <= 48000  ==> 40001 acceptable numbers
+     *   flags <= 0x03 (2 LSBs are used)         ==> 4 acceptable numbers
      *   compression type (8 bits) = 1 or 99     ==> 2 acceptable numbers
-     * There is a total of 24 bits. The number space contains 2^24 =
-     * 16777216 numbers. There are 40001 * 2 = 80002 acceptable combinations
-     * of numbers. There is a 80002/16777216 = 0.48% chance of a false
-     * positive.
+     *   first audio chunk signature (32 bits)   ==> 1 acceptable number
+     * The number space contains 2^64 numbers. There are 40001 * 4 * 2 * 1 =
+     * 320008 acceptable number combinations.
      */
 
-    if (p->buf_size < AUD_HEADER_SIZE)
+    if (p->buf_size < AUD_HEADER_SIZE + AUD_CHUNK_PREAMBLE_SIZE)
         return 0;
 
     /* check sample rate */
@@ -105,9 +104,18 @@ static int wsaud_probe(AVProbeData *p)
     if ((field < 8000) || (field > 48000))
         return 0;
 
+    /* enforce the rule that the top 6 bits of this flags field are reserved (0);
+     * this might not be true, but enforce it until deemed unnecessary */
+    if (p->buf[10] & 0xFC)
+        return 0;
+
     /* note: only check for WS IMA (type 99) right now since there is no
      * support for type 1 */
     if (p->buf[11] != 99)
+        return 0;
+
+    /* read ahead to the first audio chunk and validate the first header signature */
+    if (AV_RL32(&p->buf[16]) != AUD_CHUNK_SIGNATURE)
         return 0;
 
     /* return 1/2 certainty since this file check is a little sketchy */
@@ -140,15 +148,15 @@ static int wsaud_read_header(AVFormatContext *s,
     if (!st)
         return AVERROR(ENOMEM);
     av_set_pts_info(st, 33, 1, wsaud->audio_samplerate);
-    st->codec->codec_type = CODEC_TYPE_AUDIO;
+    st->codec->codec_type = AVMEDIA_TYPE_AUDIO;
     st->codec->codec_id = wsaud->audio_type;
     st->codec->codec_tag = 0;  /* no tag */
     st->codec->channels = wsaud->audio_channels;
     st->codec->sample_rate = wsaud->audio_samplerate;
-    st->codec->bits_per_sample = wsaud->audio_bits;
+    st->codec->bits_per_coded_sample = wsaud->audio_bits;
     st->codec->bit_rate = st->codec->channels * st->codec->sample_rate *
-        st->codec->bits_per_sample / 4;
-    st->codec->block_align = st->codec->channels * st->codec->bits_per_sample;
+        st->codec->bits_per_coded_sample / 4;
+    st->codec->block_align = st->codec->channels * st->codec->bits_per_coded_sample;
 
     wsaud->audio_stream_index = st->index;
     wsaud->audio_frame_counter = 0;
@@ -187,14 +195,6 @@ static int wsaud_read_packet(AVFormatContext *s,
     return ret;
 }
 
-static int wsaud_read_close(AVFormatContext *s)
-{
-//    WsAudDemuxContext *wsaud = s->priv_data;
-
-    return 0;
-}
-
-
 static int wsvqa_probe(AVProbeData *p)
 {
     /* need 12 bytes to qualify */
@@ -226,7 +226,7 @@ static int wsvqa_read_header(AVFormatContext *s,
         return AVERROR(ENOMEM);
     av_set_pts_info(st, 33, 1, VQA_FRAMERATE);
     wsvqa->video_stream_index = st->index;
-    st->codec->codec_type = CODEC_TYPE_VIDEO;
+    st->codec->codec_type = AVMEDIA_TYPE_VIDEO;
     st->codec->codec_id = CODEC_ID_WS_VQA;
     st->codec->codec_tag = 0;  /* no fourcc */
 
@@ -251,7 +251,7 @@ static int wsvqa_read_header(AVFormatContext *s,
         if (!st)
             return AVERROR(ENOMEM);
         av_set_pts_info(st, 33, 1, VQA_FRAMERATE);
-        st->codec->codec_type = CODEC_TYPE_AUDIO;
+        st->codec->codec_type = AVMEDIA_TYPE_AUDIO;
         if (AV_RL16(&header[0]) == 1)
             st->codec->codec_id = CODEC_ID_WESTWOOD_SND1;
         else
@@ -263,10 +263,10 @@ static int wsvqa_read_header(AVFormatContext *s,
         st->codec->channels = header[26];
         if (!st->codec->channels)
             st->codec->channels = 1;
-        st->codec->bits_per_sample = 16;
+        st->codec->bits_per_coded_sample = 16;
         st->codec->bit_rate = st->codec->channels * st->codec->sample_rate *
-            st->codec->bits_per_sample / 4;
-        st->codec->block_align = st->codec->channels * st->codec->bits_per_sample;
+            st->codec->bits_per_coded_sample / 4;
+        st->codec->block_align = st->codec->channels * st->codec->bits_per_coded_sample;
 
         wsvqa->audio_stream_index = st->index;
         wsvqa->audio_samplerate = st->codec->sample_rate;
@@ -305,8 +305,6 @@ static int wsvqa_read_header(AVFormatContext *s,
 
         url_fseek(pb, chunk_size, SEEK_CUR);
     } while (chunk_tag != FINF_TAG);
-
-    wsvqa->video_pts = wsvqa->audio_frame_counter = 0;
 
     return 0;
 }
@@ -347,7 +345,6 @@ static int wsvqa_read_packet(AVFormatContext *s,
                 wsvqa->audio_frame_counter += AV_RL16(pkt->data) / wsvqa->audio_channels;
             } else {
                 pkt->stream_index = wsvqa->video_stream_index;
-                wsvqa->video_pts += VQA_VIDEO_PTS_INC;
             }
             /* stay on 16-bit alignment */
             if (skip_byte)
@@ -369,32 +366,23 @@ static int wsvqa_read_packet(AVFormatContext *s,
     return ret;
 }
 
-static int wsvqa_read_close(AVFormatContext *s)
-{
-//    WsVqaDemuxContext *wsvqa = s->priv_data;
-
-    return 0;
-}
-
-#ifdef CONFIG_WSAUD_DEMUXER
+#if CONFIG_WSAUD_DEMUXER
 AVInputFormat wsaud_demuxer = {
     "wsaud",
-    "Westwood Studios audio format",
+    NULL_IF_CONFIG_SMALL("Westwood Studios audio format"),
     sizeof(WsAudDemuxContext),
     wsaud_probe,
     wsaud_read_header,
     wsaud_read_packet,
-    wsaud_read_close,
 };
 #endif
-#ifdef CONFIG_WSVQA_DEMUXER
+#if CONFIG_WSVQA_DEMUXER
 AVInputFormat wsvqa_demuxer = {
     "wsvqa",
-    "Westwood Studios VQA format",
+    NULL_IF_CONFIG_SMALL("Westwood Studios VQA format"),
     sizeof(WsVqaDemuxContext),
     wsvqa_probe,
     wsvqa_read_header,
     wsvqa_read_packet,
-    wsvqa_read_close,
 };
 #endif

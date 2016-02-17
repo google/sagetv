@@ -22,8 +22,9 @@
 #include "avcodec.h"
 #include "bytestream.h"
 #include "bmp.h"
+#include "msrledec.h"
 
-static int bmp_decode_init(AVCodecContext *avctx){
+static av_cold int bmp_decode_init(AVCodecContext *avctx){
     BMPContext *s = avctx->priv_data;
 
     avcodec_get_frame_defaults((AVFrame*)&s->picture);
@@ -34,8 +35,10 @@ static int bmp_decode_init(AVCodecContext *avctx){
 
 static int bmp_decode_frame(AVCodecContext *avctx,
                             void *data, int *data_size,
-                            const uint8_t *buf, int buf_size)
+                            AVPacket *avpkt)
 {
+    const uint8_t *buf = avpkt->data;
+    int buf_size = avpkt->size;
     BMPContext *s = avctx->priv_data;
     AVFrame *picture = data;
     AVFrame *p = &s->picture;
@@ -63,29 +66,47 @@ static int bmp_decode_frame(AVCodecContext *avctx,
 
     fsize = bytestream_get_le32(&buf);
     if(buf_size < fsize){
-        av_log(avctx, AV_LOG_ERROR, "not enough data (%d < %d)\n",
+        av_log(avctx, AV_LOG_ERROR, "not enough data (%d < %d), trying to decode anyway\n",
                buf_size, fsize);
-        return -1;
+        fsize = buf_size;
     }
 
     buf += 2; /* reserved1 */
     buf += 2; /* reserved2 */
 
     hsize = bytestream_get_le32(&buf); /* header size */
-    if(fsize <= hsize){
-        av_log(avctx, AV_LOG_ERROR, "not enough data (%d < %d)\n",
-               fsize, hsize);
-        return -1;
-    }
-
     ihsize = bytestream_get_le32(&buf);       /* more header size */
     if(ihsize + 14 > hsize){
         av_log(avctx, AV_LOG_ERROR, "invalid header size %d\n", hsize);
         return -1;
     }
 
-    width = bytestream_get_le32(&buf);
-    height = bytestream_get_le32(&buf);
+    /* sometimes file size is set to some headers size, set a real size in that case */
+    if(fsize == 14 || fsize == ihsize + 14)
+        fsize = buf_size - 2;
+
+    if(fsize <= hsize){
+        av_log(avctx, AV_LOG_ERROR, "declared file size is less than header size (%d < %d)\n",
+               fsize, hsize);
+        return -1;
+    }
+
+    switch(ihsize){
+    case  40: // windib v3
+    case  64: // OS/2 v2
+    case 108: // windib v4
+    case 124: // windib v5
+        width = bytestream_get_le32(&buf);
+        height = bytestream_get_le32(&buf);
+        break;
+    case  12: // OS/2 v1
+        width  = bytestream_get_le16(&buf);
+        height = bytestream_get_le16(&buf);
+        break;
+    default:
+        av_log(avctx, AV_LOG_ERROR, "unsupported BMP file, patch welcome\n");
+        return -1;
+    }
 
     if(bytestream_get_le16(&buf) != 1){ /* planes */
         av_log(avctx, AV_LOG_ERROR, "invalid BMP header\n");
@@ -94,12 +115,12 @@ static int bmp_decode_frame(AVCodecContext *avctx,
 
     depth = bytestream_get_le16(&buf);
 
-    if(ihsize > 16)
+    if(ihsize == 40)
         comp = bytestream_get_le32(&buf);
     else
         comp = BMP_RGB;
 
-    if(comp != BMP_RGB && comp != BMP_BITFIELDS){
+    if(comp != BMP_RGB && comp != BMP_BITFIELDS && comp != BMP_RLE4 && comp != BMP_RLE8){
         av_log(avctx, AV_LOG_ERROR, "BMP coding %d not supported\n", comp);
         return -1;
     }
@@ -141,6 +162,25 @@ static int bmp_decode_frame(AVCodecContext *avctx,
     case 16:
         if(comp == BMP_RGB)
             avctx->pix_fmt = PIX_FMT_RGB555;
+        if(comp == BMP_BITFIELDS)
+            avctx->pix_fmt = rgb[1] == 0x07E0 ? PIX_FMT_RGB565 : PIX_FMT_RGB555;
+        break;
+    case 8:
+        if(hsize - ihsize - 14 > 0)
+            avctx->pix_fmt = PIX_FMT_PAL8;
+        else
+            avctx->pix_fmt = PIX_FMT_GRAY8;
+        break;
+    case 4:
+        if(hsize - ihsize - 14 > 0){
+            avctx->pix_fmt = PIX_FMT_PAL8;
+        }else{
+            av_log(avctx, AV_LOG_ERROR, "Unknown palette for 16-colour BMP\n");
+            return -1;
+        }
+        break;
+    case 1:
+        avctx->pix_fmt = PIX_FMT_MONOBLACK;
         break;
     default:
         av_log(avctx, AV_LOG_ERROR, "depth %d not supported\n", depth);
@@ -167,13 +207,20 @@ static int bmp_decode_frame(AVCodecContext *avctx,
     dsize = buf_size - hsize;
 
     /* Line size in file multiple of 4 */
-    n = (avctx->width * (depth / 8) + 3) & ~3;
+    n = ((avctx->width * depth) / 8 + 3) & ~3;
 
-    if(n * avctx->height > dsize){
+    if(n * avctx->height > dsize && comp != BMP_RLE4 && comp != BMP_RLE8){
         av_log(avctx, AV_LOG_ERROR, "not enough data (%d < %d)\n",
                dsize, n * avctx->height);
         return -1;
     }
+
+    // RLE may skip decoding some picture areas, so blank picture before decoding
+    if(comp == BMP_RLE4 || comp == BMP_RLE8)
+        memset(p->data[0], 0, avctx->height * p->linesize[0]);
+
+    if(depth == 4 || depth == 8)
+        memset(p->data[1], 0, 1024);
 
     if(height > 0){
         ptr = p->data[0] + (avctx->height - 1) * p->linesize[0];
@@ -183,46 +230,93 @@ static int bmp_decode_frame(AVCodecContext *avctx,
         linesize = p->linesize[0];
     }
 
-    switch(depth){
-    case 24:
-        for(i = 0; i < avctx->height; i++){
-            memcpy(ptr, buf, avctx->width*(depth>>3));
-            buf += n;
-            ptr += linesize;
-        }
-        break;
-    case 16:
-        for(i = 0; i < avctx->height; i++){
-            const uint16_t *src = (const uint16_t *) buf;
-            uint16_t *dst = (uint16_t *) ptr;
-
-            for(j = 0; j < avctx->width; j++)
-                *dst++ = le2me_16(*src++);
-
-            buf += n;
-            ptr += linesize;
-        }
-        break;
-    case 32:
-        for(i = 0; i < avctx->height; i++){
-            const uint8_t *src = buf;
-            uint8_t *dst = ptr;
-
-            for(j = 0; j < avctx->width; j++){
-                dst[0] = src[rgb[2]];
-                dst[1] = src[rgb[1]];
-                dst[2] = src[rgb[0]];
-                dst += 3;
-                src += 4;
+    if(avctx->pix_fmt == PIX_FMT_PAL8){
+        int colors = 1 << depth;
+        if(ihsize >= 36){
+            int t;
+            buf = buf0 + 46;
+            t = bytestream_get_le32(&buf);
+            if(t < 0 || t > (1 << depth)){
+                av_log(avctx, AV_LOG_ERROR, "Incorrect number of colors - %X for bitdepth %d\n", t, depth);
+            }else if(t){
+                colors = t;
             }
-
-            buf += n;
-            ptr += linesize;
         }
-        break;
-    default:
-        av_log(avctx, AV_LOG_ERROR, "BMP decoder is broken\n");
-        return -1;
+        buf = buf0 + 14 + ihsize; //palette location
+        if((hsize-ihsize-14) < (colors << 2)){ // OS/2 bitmap, 3 bytes per palette entry
+            for(i = 0; i < colors; i++)
+                ((uint32_t*)p->data[1])[i] = bytestream_get_le24(&buf);
+        }else{
+            for(i = 0; i < colors; i++)
+                ((uint32_t*)p->data[1])[i] = bytestream_get_le32(&buf);
+        }
+        buf = buf0 + hsize;
+    }
+    if(comp == BMP_RLE4 || comp == BMP_RLE8){
+        if(height < 0){
+            p->data[0] += p->linesize[0] * (avctx->height - 1);
+            p->linesize[0] = -p->linesize[0];
+        }
+        ff_msrle_decode(avctx, (AVPicture*)p, depth, buf, dsize);
+        if(height < 0){
+            p->data[0] += p->linesize[0] * (avctx->height - 1);
+            p->linesize[0] = -p->linesize[0];
+        }
+    }else{
+        switch(depth){
+        case 1:
+        case 8:
+        case 24:
+            for(i = 0; i < avctx->height; i++){
+                memcpy(ptr, buf, n);
+                buf += n;
+                ptr += linesize;
+            }
+            break;
+        case 4:
+            for(i = 0; i < avctx->height; i++){
+                int j;
+                for(j = 0; j < n; j++){
+                    ptr[j*2+0] = (buf[j] >> 4) & 0xF;
+                    ptr[j*2+1] = buf[j] & 0xF;
+                }
+                buf += n;
+                ptr += linesize;
+            }
+            break;
+        case 16:
+            for(i = 0; i < avctx->height; i++){
+                const uint16_t *src = (const uint16_t *) buf;
+                uint16_t *dst = (uint16_t *) ptr;
+
+                for(j = 0; j < avctx->width; j++)
+                    *dst++ = av_le2ne16(*src++);
+
+                buf += n;
+                ptr += linesize;
+            }
+            break;
+        case 32:
+            for(i = 0; i < avctx->height; i++){
+                const uint8_t *src = buf;
+                uint8_t *dst = ptr;
+
+                for(j = 0; j < avctx->width; j++){
+                    dst[0] = src[rgb[2]];
+                    dst[1] = src[rgb[1]];
+                    dst[2] = src[rgb[0]];
+                    dst += 3;
+                    src += 4;
+                }
+
+                buf += n;
+                ptr += linesize;
+            }
+            break;
+        default:
+            av_log(avctx, AV_LOG_ERROR, "BMP decoder is broken\n");
+            return -1;
+        }
     }
 
     *picture = s->picture;
@@ -231,7 +325,7 @@ static int bmp_decode_frame(AVCodecContext *avctx,
     return buf_size;
 }
 
-static int bmp_decode_end(AVCodecContext *avctx)
+static av_cold int bmp_decode_end(AVCodecContext *avctx)
 {
     BMPContext* c = avctx->priv_data;
 
@@ -243,11 +337,14 @@ static int bmp_decode_end(AVCodecContext *avctx)
 
 AVCodec bmp_decoder = {
     "bmp",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_BMP,
     sizeof(BMPContext),
     bmp_decode_init,
     NULL,
     bmp_decode_end,
-    bmp_decode_frame
+    bmp_decode_frame,
+    CODEC_CAP_DR1,
+    .max_lowres = 5,
+    .long_name = NULL_IF_CONFIG_SMALL("BMP image"),
 };

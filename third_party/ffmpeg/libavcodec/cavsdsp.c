@@ -248,7 +248,6 @@ static void cavs_idct8_add_c(uint8_t *dst, DCTELEM *block, int stride) {
         dst[i + 6*stride] = cm[ dst[i + 6*stride] + ((b1 - b5) >> 7)];
         dst[i + 7*stride] = cm[ dst[i + 7*stride] + ((b0 - b4) >> 7)];
     }
-    memset(block,0,64*sizeof(DCTELEM));
 }
 
 /*****************************************************************************
@@ -511,12 +510,7 @@ CAVS_MC(put_, 16)
 CAVS_MC(avg_, 8)
 CAVS_MC(avg_, 16)
 
-void ff_put_cavs_qpel8_mc00_c(uint8_t *dst, uint8_t *src, int stride);
-void ff_avg_cavs_qpel8_mc00_c(uint8_t *dst, uint8_t *src, int stride);
-void ff_put_cavs_qpel16_mc00_c(uint8_t *dst, uint8_t *src, int stride);
-void ff_avg_cavs_qpel16_mc00_c(uint8_t *dst, uint8_t *src, int stride);
-
-void ff_cavsdsp_init(DSPContext* c, AVCodecContext *avctx) {
+av_cold void ff_cavsdsp_init(DSPContext* c, AVCodecContext *avctx) {
 #define dspfunc(PFX, IDX, NUM) \
     c->PFX ## _pixels_tab[IDX][ 0] = ff_ ## PFX ## NUM ## _mc00_c; \
     c->PFX ## _pixels_tab[IDX][ 1] = ff_ ## PFX ## NUM ## _mc10_c; \

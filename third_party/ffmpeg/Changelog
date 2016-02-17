@@ -1,5 +1,110 @@
-version <next>
-- The "device" muxers and demuxers are now in a new libavdevice library
+Entries are sorted chronologically from oldest to youngest within each release,
+releases are sorted from youngest to oldest.
+
+
+version <next>:
+
+- WebM support in Matroska de/muxer
+- low overhead Ogg muxing
+- MMS-TCP support
+- VP8 de/encoding via libvpx
+- CODEC_CAP_EXPERIMENTAL added
+- Demuxer for On2's IVF format
+- Pictor/PC Paint decoder
+- HE-AAC v2 decoder
+- libfaad2 wrapper removed
+- DTS-ES extension (XCh) decoding support
+- native VP8 decoder
+- RTSP tunneling over HTTP
+- RTP depacketization of SVQ3
+- -strict inofficial replaced by -strict unofficial
+- ffplay -exitonkeydown and -exitonmousedown options added
+- native GSM / GSM MS decoder
+- RTP depacketization of QDM2
+
+
+
+version 0.6:
+
+- PB-frame decoding for H.263
+- deprecated vhook subsystem removed
+- deprecated old scaler removed
+- VQF demuxer
+- Alpha channel scaler
+- PCX encoder
+- RTP packetization of H.263
+- RTP packetization of AMR
+- RTP depacketization of Vorbis
+- CorePNG decoding support
+- Cook multichannel decoding support
+- introduced avlanguage helpers in libavformat
+- 8088flex TMV demuxer and decoder
+- per-stream language-tags extraction in asfdec
+- V210 decoder and encoder
+- remaining GPL parts in AC-3 decoder converted to LGPL
+- QCP demuxer
+- SoX native format muxer and demuxer
+- AMR-NB decoding/encoding, AMR-WB decoding via OpenCORE libraries
+- DPX image decoder
+- Electronic Arts Madcow decoder
+- DivX (XSUB) subtitle encoder
+- nonfree libamr support for AMR-NB/WB decoding/encoding removed
+- experimental AAC encoder
+- RTP depacketization of ASF and RTSP from WMS servers
+- RTMP support in libavformat
+- noX handling for OPT_BOOL X options
+- Wave64 demuxer
+- IEC-61937 compatible Muxer
+- TwinVQ decoder
+- Bluray (PGS) subtitle decoder
+- LPCM support in MPEG-TS (HDMV RID as found on Blu-ray disks)
+- WMA Pro decoder
+- Core Audio Format demuxer
+- Atrac1 decoder
+- MD STUDIO audio demuxer
+- RF64 support in WAV demuxer
+- MPEG-4 Audio Lossless Coding (ALS) decoder
+- -formats option split into -formats, -codecs, -bsfs, and -protocols
+- IV8 demuxer
+- CDG demuxer and decoder
+- R210 decoder
+- Auravision Aura 1 and 2 decoders
+- Deluxe Paint Animation playback system
+- SIPR decoder
+- Adobe Filmstrip muxer and demuxer
+- RTP depacketization of H.263
+- Bink demuxer and audio/video decoders
+- enable symbol versioning by default for linkers that support it
+- IFF PBM/ILBM bitmap decoder
+- concat protocol
+- Indeo 5 decoder
+- RTP depacketization of AMR
+- WMA Voice decoder
+- ffprobe tool
+- AMR-NB decoder
+- RTSP muxer
+- HE-AAC v1 decoder
+- Kega Game Video (KGV1) decoder
+- VorbisComment writing for FLAC, Ogg FLAC and Ogg Speex files
+- RTP depacketization of Theora
+- HTTP Digest authentication
+- RTMP/RTMPT/RTMPS/RTMPE/RTMPTE protocol support via librtmp
+- Psygnosis YOP demuxer and video decoder
+- spectral extension support in the E-AC-3 decoder
+- unsharp video filter
+- RTP hinting in the mov/3gp/mp4 muxer
+- Dirac in Ogg demuxing
+- seek to keyframes in Ogg
+- 4:2:2 and 4:4:4 Theora decoding
+- 35% faster VP3/Theora decoding
+- faster AAC decoding
+- faster H.264 decoding
+- RealAudio 1.0 (14.4K) encoder
+
+
+
+version 0.5:
+
 - DV50 AKA DVCPRO50 encoder, decoder, muxer and demuxer
 - TechSmith Camtasia (TSCC) video decoder
 - IBM Ultimotion (ULTI) video decoder
@@ -20,7 +125,7 @@ version <next>
 - Fraps FPS1 video decoder
 - Snow video encoder/decoder
 - Sonic audio encoder/decoder
-- Vorbis audio encoder/decoder
+- Vorbis audio decoder
 - Macromedia ADPCM decoder
 - Duck TrueMotion 2 video decoder
 - support for decoding FLX and DTA extensions in FLIC files
@@ -31,22 +136,23 @@ version <next>
 - TrueSpeech audio decoder
 - WMA2 audio decoder fixed, now all files should play correctly
 - RealAudio 14.4 and 28.8 decoders fixed
-- JPEG-LS encoder and decoder
-- CamStudio video decoder
+- JPEG-LS decoder
 - build system improvements
 - tabs and trailing whitespace removed from the codebase
+- CamStudio video decoder
 - AIFF/AIFF-C audio format, encoding and decoding
 - ADTS AAC file reading and writing
 - Creative VOC file reading and writing
 - American Laser Games multimedia (*.mm) playback system
-- Zip Blocks Motion Video decoder and encoder
-- Improved Theora/VP3 decoder
+- Zip Motion Blocks Video decoder
+- improved Theora/VP3 decoder
 - True Audio (TTA) decoder
 - AVS demuxer and video decoder
+- JPEG-LS encoder
 - Smacker demuxer and decoder
 - NuppelVideo/MythTV demuxer and RTjpeg decoder
 - KMVC decoder
-- MPEG-2 intra vlc support
+- MPEG-2 intra VLC support
 - MPEG-2 4:2:2 encoder
 - Flash Screen Video decoder
 - GXF demuxer
@@ -61,12 +167,14 @@ version <next>
 - VP6 video decoder
 - WavPack lossless audio decoder
 - Targa (.TGA) picture decoder
+- Vorbis audio encoder
 - Delphine Software .cin demuxer/audio and video decoder
 - Tiertex .seq demuxer/video decoder
 - MTV demuxer
 - TIFF picture encoder and decoder
 - GIF picture decoder
-- Intel Music decoder
+- Intel Music Coder decoder
+- Zip Motion Blocks Video encoder
 - Musepack decoder
 - Flash Screen Video encoder
 - Theora encoding via libtheora
@@ -83,7 +191,7 @@ version <next>
 - CRYO APC demuxer
 - Atrac3 decoder
 - V.Flash PTX decoder
-- RoQ muxer, audio encoder
+- RoQ muxer, RoQ audio encoder
 - Renderware TXD demuxer and decoder
 - extern C declarations for C++ removed from headers
 - sws_flags command line option
@@ -92,11 +200,11 @@ version <next>
 - QTRLE encoder
 - OS/2 support removed and restored again
 - AC-3 decoder
-- NUT muxer (since r10052)
-- Matroska muxer
-- Slice-based parallel H.264 decoding
-- Monkey's Audio demuxer and decoder
+- NUT muxer
 - additional SPARC (VIS) optimizations
+- Matroska muxer
+- slice-based parallel H.264 decoding
+- Monkey's Audio demuxer and decoder
 - AMV audio and video decoder
 - DNxHD encoder
 - H.264 PAFF decoding
@@ -104,12 +212,59 @@ version <next>
 - Beam Software SIFF demuxer and decoder
 - libvorbis Vorbis decoding removed in favor of native decoder
 - IntraX8 (J-Frame) subdecoder for WMV2 and VC-1
-- Ogg muxer
+- Ogg (Theora, Vorbis and FLAC) muxer
+- The "device" muxers and demuxers are now in a new libavdevice library
 - PC Paintbrush PCX decoder
 - Sun Rasterfile decoder
 - TechnoTrend PVA demuxer
 - Linux Media Labs MPEG-4 (LMLM4) demuxer
 - AVM2 (Flash 9) SWF muxer
+- QT variant of IMA ADPCM encoder
+- VFW grabber
+- iPod/iPhone compatible mp4 muxer
+- Mimic decoder
+- MSN TCP Webcam stream demuxer
+- RL2 demuxer / decoder
+- IFF demuxer
+- 8SVX audio decoder
+- non-recursive Makefiles
+- BFI demuxer
+- MAXIS EA XA (.xa) demuxer / decoder
+- BFI video decoder
+- OMA demuxer
+- MLP/TrueHD decoder
+- Electronic Arts CMV decoder
+- Motion Pixels Video decoder
+- Motion Pixels MVI demuxer
+- removed animated GIF decoder/demuxer
+- D-Cinema audio muxer
+- Electronic Arts TGV decoder
+- Apple Lossless Audio Codec (ALAC) encoder
+- AAC decoder
+- floating point PCM encoder/decoder
+- MXF muxer
+- DV100 AKA DVCPRO HD decoder and demuxer
+- E-AC-3 support added to AC-3 decoder
+- Nellymoser ASAO encoder
+- ASS and SSA demuxer and muxer
+- liba52 wrapper removed
+- SVQ3 watermark decoding support
+- Speex decoding via libspeex
+- Electronic Arts TGQ decoder
+- RV40 decoder
+- QCELP / PureVoice decoder
+- RV30 decoder
+- hybrid WavPack support
+- R3D REDCODE demuxer
+- ALSA support for playback and record
+- Electronic Arts TQI decoder
+- OpenJPEG based JPEG 2000 decoder
+- NC (NC4600) camera file demuxer
+- Gopher client support
+- MXF D-10 muxer
+- generic metadata API
+
+
 
 version 0.4.9-pre1:
 
@@ -192,6 +347,9 @@ version 0.4.9-pre1:
 - more accurate deblock filter
 - padding support
 - many optimizations and bugfixes
+- FunCom ISS audio file demuxer and according ADPCM decoding
+
+
 
 version 0.4.8:
 
@@ -202,6 +360,8 @@ version 0.4.8:
 - Xan DPCM audio decoder (Mario Brito)
 - Interplay MVE playback subsystem (Mike Melanson)
 - Duck DK3 and DK4 ADPCM audio decoders (Mike Melanson)
+
+
 
 version 0.4.7:
 
@@ -243,6 +403,8 @@ version 0.4.7:
 
 .. And lots more new enhancements and fixes.
 
+
+
 version 0.4.6:
 
 - completely new integer only MPEG audio layer 1/2/3 decoder rewritten
@@ -279,6 +441,8 @@ version 0.4.6:
 - simple stats output (Juanjo)
 - 16-bit and 15-bit RGB/BGR/GBR support (Bisqwit)
 
+
+
 version 0.4.5:
 
 - some header fixes (Zdenek Kabelac <kabi at informatics.muni.cz>)
@@ -309,6 +473,8 @@ version 0.4.5:
 - added MJPEG raw format (input/ouput)
 - added JPEG image format support (input/output)
 
+
+
 version 0.4.4:
 
 - fixed some std header definitions (Bjorn Lindgren
@@ -333,6 +499,8 @@ version 0.4.4:
 - codecs are no longer searched by read_header() (should fix ffserver
   segfault)
 
+
+
 version 0.4.3:
 
 - BGR24 patch (initial patch by Jeroen Vreeken <pe1rxq at amsat.org>)
@@ -353,6 +521,8 @@ version 0.4.3:
   <lists at reserv.at>, but changed completely since we use a format
   instead of a protocol)
 
+
+
 version 0.4.2:
 
 - added H.263/MPEG-4/MSMPEG4 decoding support. MPEG-4 decoding support
@@ -369,6 +539,7 @@ version 0.4.2:
 - added file overwrite confirmation (can be disabled with -y)
 - added custom size picture to H.263 using H.263+ (Juanjo)
 
+
 version 0.4.1:
 
 - added MSMPEG4 (aka DivX) compatible encoder. Changed default codec
@@ -380,6 +551,8 @@ version 0.4.1:
 - fixed -an option
 - improved dct_quantize speed
 - factorized some motion estimation code
+
+
 
 version 0.4.0:
 
@@ -408,9 +581,13 @@ version 0.4.0:
 - changed directories: libav for format handling, libavcodec for
   codecs
 
+
+
 version 0.3.4:
 
 - added stereo in MPEG audio encoder
+
+
 
 version 0.3.3:
 
@@ -419,15 +596,21 @@ version 0.3.3:
 - fixed rounding problems which caused quality problems at high
   bitrates and large GOP size
 
+
+
 version 0.3.2: small fixes
 
 - ASF fixes
 - put_seek bug fix
+
+
 
 version 0.3.1: added avi/divx support
 
 - added AVI support
 - added MPEG-4 codec compatible with OpenDivX. It is based on the H.263 codec
 - added sound for flash format (not tested)
+
+
 
 version 0.3: initial public release

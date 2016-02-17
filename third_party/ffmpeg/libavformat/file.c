@@ -18,23 +18,63 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
+
+#include "libavutil/avstring.h"
 #include "avformat.h"
-#include "avstring.h"
 #include <fcntl.h>
+// for nanosleep on non-Win platforms
 #ifndef __MINGW32__
-#include <unistd.h>
-#include <sys/ioctl.h>
-#include <sys/time.h>
-#else
+#include <time.h>
+#endif
+#if HAVE_SETMODE || defined(__MINGW32__)
 #include <io.h>
-#define open(fname,oflag,pmode) _open(fname,oflag,pmode)
-#define wopen(fname,oflag,pmode) _wopen(fname,oflag,pmode)
-#endif /* __MINGW32__ */
+#endif
+#include <unistd.h>
+#include <sys/stat.h>
 #include <stdlib.h>
 #include "os_support.h"
 
 
 /* standard file protocol */
+
+static int file_read(URLContext *h, unsigned char *buf, int size)
+{
+    int fd = (intptr_t) h->priv_data;
+    int rv;
+	do
+	{
+		rv = read(fd, buf, size);
+		if (rv <= 0 && ((h->flags & URL_ACTIVEFILE) == URL_ACTIVEFILE))
+		{
+#ifdef __MINGW32__
+				usleep(20000);
+#else
+				struct timespec ts;
+				ts.tv_sec = 0;
+				ts.tv_nsec = 20000000;
+				nanosleep(&ts, NULL);
+#endif
+	        if (url_interrupt_cb())
+	            return -EINTR;
+ 		}
+		else
+			break;
+	} while (1);
+	return rv;
+}
+
+static int file_write(URLContext *h, const unsigned char *buf, int size)
+{
+    int fd = (intptr_t) h->priv_data;
+    return write(fd, buf, size);
+}
+
+static int file_get_handle(URLContext *h)
+{
+    return (intptr_t) h->priv_data;
+}
+
+#if CONFIG_FILE_PROTOCOL
 
 static int file_open(URLContext *h, const char *filename, int flags)
 {
@@ -84,52 +124,32 @@ static int file_open(URLContext *h, const char *filename, int flags)
 			wfilename[wpos++] = filename[i];
 	}
 	wfilename[wpos] = 0;
-	fd = wopen(wfilename, access, 0666);
+	fd = _wopen(wfilename, access, 0666);
 	av_free(wfilename);
 #else
     fd = open(filename, access, 0666);
 #endif
-    if (fd < 0)
-        return AVERROR(ENOENT);
-    h->priv_data = (void *)(size_t)fd;
+    if (fd == -1)
+        return AVERROR(errno);
+    h->priv_data = (void *) (intptr_t) fd;
     return 0;
 }
 
-static int file_read(URLContext *h, unsigned char *buf, int size)
-{
-    int fd = (size_t)h->priv_data;
-    int rv;
-	do
-	{
-		rv = read(fd, buf, size);
-		if (rv <= 0 && ((h->flags & URL_ACTIVEFILE) == URL_ACTIVEFILE))
-		{
-			usleep(20000);
-	        if (url_interrupt_cb())
-	            return -EINTR;
- 		}
-		else
-			break;
-	} while (1);
-	return rv;
-}
-
-static int file_write(URLContext *h, unsigned char *buf, int size)
-{
-    int fd = (size_t)h->priv_data;
-    return write(fd, buf, size);
-}
-
 /* XXX: use llseek */
-static offset_t file_seek(URLContext *h, offset_t pos, int whence)
+static int64_t file_seek(URLContext *h, int64_t pos, int whence)
 {
-    int fd = (size_t)h->priv_data;
+    int fd = (intptr_t) h->priv_data;
+    if (whence == AVSEEK_SIZE) {
+        struct stat st;
+        int ret = fstat(fd, &st);
+        return ret < 0 ? AVERROR(errno) : st.st_size;
+    }
     return lseek(fd, pos, whence);
 }
 
 static int file_close(URLContext *h)
 {
-    int fd = (size_t)h->priv_data;
+    int fd = (intptr_t) h->priv_data;
     return close(fd);
 }
 
@@ -140,14 +160,17 @@ URLProtocol file_protocol = {
     file_write,
     file_seek,
     file_close,
+    .url_get_file_handle = file_get_handle,
 };
 
-/* pipe protocol */
+#endif /* CONFIG_FILE_PROTOCOL */
+
+#if CONFIG_PIPE_PROTOCOL
 
 static int pipe_open(URLContext *h, const char *filename, int flags)
 {
     int fd;
-    const char * final;
+    char *final;
     av_strstart(filename, "pipe:", &filename);
 
     fd = strtol(filename, &final, 10);
@@ -158,10 +181,10 @@ static int pipe_open(URLContext *h, const char *filename, int flags)
             fd = 0;
         }
     }
-#ifdef O_BINARY
+#if HAVE_SETMODE
     setmode(fd, O_BINARY);
 #endif
-    h->priv_data = (void *)(size_t)fd;
+    h->priv_data = (void *) (intptr_t) fd;
     h->is_streamed = 1;
     return 0;
 }
@@ -171,4 +194,7 @@ URLProtocol pipe_protocol = {
     pipe_open,
     file_read,
     file_write,
+    .url_get_file_handle = file_get_handle,
 };
+
+#endif /* CONFIG_PIPE_PROTOCOL */

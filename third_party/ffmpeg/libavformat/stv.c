@@ -26,7 +26,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include "avstring.h"
+#include "libavutil/avstring.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -34,6 +34,7 @@
 #include <errno.h>
 #ifndef __MINGW32__
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -45,12 +46,17 @@
 
 #define ASKAHEAD 65536
 
+// OSX doesn't have MSG_NOSIGNAL defined, neither does cygwin
+#if (defined(__APPLE__) || defined(__MINGW32__))
+#define MSG_NOSIGNAL 0
+#endif
+
 typedef struct {
   char host[256];
   int port;
   char url[1024];
-  offset_t actualSize;
-  offset_t pos;
+  int64_t actualSize;
+  int64_t pos;
   int fd;
   int readahead;
   unsigned int readaheadfactor; // Set to 0 when go out of the read ahead buffer
@@ -58,6 +64,14 @@ typedef struct {
   unsigned char flushBuf[4096];
 } STVContext;
 
+#ifdef DEBUG_STV
+static long long get_timebase()
+{
+  struct timeval tm;
+  gettimeofday(&tm, 0);
+  return tm.tv_sec * 1000000LL + (tm.tv_usec);
+}
+#endif
 
 static int flushReadAhead(STVContext *p)
 {
@@ -65,7 +79,7 @@ static int flushReadAhead(STVContext *p)
     while(p->readahead)
     {
         int count = recv(p->fd, p->flushBuf, (p->readahead > 4096 ) ? 4096 : p->readahead, 0);
-        if(count<0)
+        if(count<=0)
         {
             av_log(NULL, AV_LOG_ERROR, "FAILURE %d\n", __LINE__);
             return -1;
@@ -177,10 +191,10 @@ static int OpenConnection(STVContext* p)
 
 	// Set the socket timeout option. If a timeout occurs, then it'll be just
 	// like the server closed the socket.
-	tv.tv_sec = 30;
+/*	tv.tv_sec = 30;
 	tv.tv_usec = 0;
 	setsockopt(newfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
-	setsockopt(newfd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
+	setsockopt(newfd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));*/
 	// Set the socket linger option, this makes sure the QUIT message gets received
 	// by the server before the TCP reset message does.
 //	LINGER lingonberry;
@@ -203,6 +217,12 @@ static int OpenConnection(STVContext* p)
         #endif
 		return 0;
 	}
+	
+#if !defined(MINGW32) // defined(__APPLE__)
+// Darwin/BSD doesn't have h_addr field, it has an array of addresses instead
+// Apparently neither does whatever lib is installed with Ubuntu 8.10 beta...
+#define h_addr h_addr_list[0]
+#endif
     memcpy(&inetAddress->sin_addr.s_addr, hostptr->h_addr, hostptr->h_length );
  
     if (connect(newfd, (struct sockaddr *) ((void *)&address), sizeof(address)) < 0)
@@ -263,7 +283,7 @@ static int OpenConnection(STVContext* p)
 	av_strlcat(data, "\r\n", 512);
 	dataSize = strlen(data);
 #endif
-	if (send(newfd, data, dataSize, 0) < dataSize)
+	if (send(newfd, data, dataSize, MSG_NOSIGNAL) < dataSize)
 	{
 		close(newfd);
         #ifdef DEBUG_STV
@@ -272,7 +292,7 @@ static int OpenConnection(STVContext* p)
 		return 0;
 	}
 
-	if ((res = sockReadLine(newfd, data, sizeof(data))) < 0 || strcmp(data, "OK"))
+	if ((res = sockReadLine(newfd, data, sizeof(data))) <= 0 || strcmp(data, "OK"))
 	{
 		close(newfd);
         #ifdef DEBUG_STV
@@ -288,6 +308,9 @@ static int OpenConnection(STVContext* p)
 
 int ReOpenConnection(STVContext* p)
 {
+    char data[512];
+	int dataSize;
+	int readaheadval=p->readahead;
     #ifdef DEBUG_STV
     av_log(NULL, AV_LOG_ERROR, "Reopening connection\n");
     #endif
@@ -296,14 +319,25 @@ int ReOpenConnection(STVContext* p)
 	p->fd = 0;
 	if (OpenConnection(p))
 	{
+		// We must ask for same data in readahead
+        snprintf(data, 512, "READ %"PRId64" %d\r\n", p->pos, readaheadval);
+        dataSize = strlen(data);
+        #ifdef DEBUG_STV
+        av_log(NULL, AV_LOG_ERROR, "Sending cmd to SageTV Server:%s\n", data);
+        #endif
+        if (send(p->fd, data, dataSize, MSG_NOSIGNAL) < dataSize)
+        {
+            return 0;
+        }
+        p->readahead=readaheadval; // We must know how much ahead we were
 		return 1;
 	}
 	return 0;
 }
 
-static offset_t stv_seek(URLContext *h, offset_t pos, int whence)
+static int64_t stv_seek(URLContext *h, int64_t pos, int whence)
 {
-	offset_t availSize;
+	int64_t availSize;
 	char data[512];
 	int dataSize;
 	int nbytes;
@@ -311,11 +345,7 @@ static offset_t stv_seek(URLContext *h, offset_t pos, int whence)
 	STVContext* p = h->priv_data;
     flushReadAhead(p);
     #ifdef DEBUG_STV
-#ifndef __MINGW32__
-    av_log(NULL, AV_LOG_ERROR, "stv_seek %lld %d\n", pos, whence);
-#else
-    av_log(NULL, AV_LOG_ERROR, "stv_seek %I64d %d active=%d\n", pos, whence, ((h->flags & URL_ACTIVEFILE) == URL_ACTIVEFILE));
-#endif
+    av_log(NULL, AV_LOG_ERROR, "stv_seek %"PRId64" %d active=%d\n", pos, whence, ((h->flags & URL_ACTIVEFILE) == URL_ACTIVEFILE));
     #endif
 	if (pos >= 0 && ((h->flags & URL_ACTIVEFILE) == URL_ACTIVEFILE) && whence != SEEK_END && 
 		whence != AVSEEK_SIZE)
@@ -334,7 +364,7 @@ static offset_t stv_seek(URLContext *h, offset_t pos, int whence)
         #ifdef DEBUG_STV
         av_log(NULL, AV_LOG_ERROR, "Sending cmd to SageTV Server:%s", data);
         #endif
-        if (send(p->fd, data, dataSize, 0) < dataSize)
+        if (send(p->fd, data, dataSize, MSG_NOSIGNAL) < dataSize)
         {
             #ifdef DEBUG_STV
             av_log(NULL, AV_LOG_ERROR, "FAILURE %d\n", __LINE__);
@@ -346,7 +376,7 @@ static offset_t stv_seek(URLContext *h, offset_t pos, int whence)
                 #endif
                 return 0;
             }
-            if (send(p->fd, data, dataSize, 0) < dataSize)
+            if (send(p->fd, data, dataSize, MSG_NOSIGNAL) < dataSize)
             {
                 #ifdef DEBUG_STV
                 av_log(NULL, AV_LOG_ERROR, "FAILURE %d\n", __LINE__);
@@ -356,7 +386,7 @@ static offset_t stv_seek(URLContext *h, offset_t pos, int whence)
         }
         flushReadAhead(p);
         nbytes = sockReadLine(p->fd, data, sizeof(data));
-        if (nbytes < 0)
+        if (nbytes <= 0)
         {
             #ifdef DEBUG_STV
             av_log(NULL, AV_LOG_ERROR, "FAILURE %d\n", __LINE__);
@@ -369,7 +399,7 @@ static offset_t stv_seek(URLContext *h, offset_t pos, int whence)
                 return 0;
             }
             strcpy(data, "SIZE\r\n");
-            if (send(p->fd, data, dataSize, 0) < dataSize)
+            if (send(p->fd, data, dataSize, MSG_NOSIGNAL) < dataSize)
             {
                 #ifdef DEBUG_STV
                 av_log(NULL, AV_LOG_ERROR, "FAILURE %d\n", __LINE__);
@@ -378,7 +408,7 @@ static offset_t stv_seek(URLContext *h, offset_t pos, int whence)
             }
             flushReadAhead(p);
             nbytes = sockReadLine(p->fd, data, sizeof(data));
-            if (nbytes < 0)
+            if (nbytes <= 0)
             {
                 #ifdef DEBUG_STV
                 av_log(NULL, AV_LOG_ERROR, "FAILURE %d\n", __LINE__);
@@ -431,14 +461,14 @@ static offset_t stv_seek(URLContext *h, offset_t pos, int whence)
 	}
 }
 
-static offset_t size(URLContext* h, STVContext* p, offset_t *availSize)
+static int64_t size(URLContext* h, STVContext* p, int64_t *availSize)
 {
 	char data[512];
-	offset_t otherAvail;
+	int64_t otherAvail;
 	int dataSize;
 	int nbytes;
 	char* spacePtr;
-	offset_t totalSize;
+	int64_t totalSize;
 	if (!availSize)
 		availSize = &otherAvail;
 	strcpy(data, "SIZE\r\n");
@@ -446,7 +476,7 @@ static offset_t size(URLContext* h, STVContext* p, offset_t *availSize)
     #ifdef DEBUG_STV
     av_log(NULL, AV_LOG_ERROR, "Sending2 cmd to SageTV Server:%s\n", data);
     #endif
-	if (send(p->fd, data, dataSize, 0) < dataSize)
+	if (send(p->fd, data, dataSize, MSG_NOSIGNAL) < dataSize)
 	{
         #ifdef DEBUG_STV
         av_log(NULL, AV_LOG_ERROR, "FAILURE %d\n", __LINE__);
@@ -459,7 +489,7 @@ static offset_t size(URLContext* h, STVContext* p, offset_t *availSize)
             #endif
 			return 0;
 		}
-		if (send(p->fd, data, dataSize, 0) < dataSize)
+		if (send(p->fd, data, dataSize, MSG_NOSIGNAL) < dataSize)
 		{
             #ifdef DEBUG_STV
             av_log(NULL, AV_LOG_ERROR, "FAILURE %d\n", __LINE__);
@@ -470,7 +500,7 @@ static offset_t size(URLContext* h, STVContext* p, offset_t *availSize)
 
     flushReadAhead(p);
 	nbytes = sockReadLine(p->fd, data, sizeof(data));
-	if (nbytes < 0)
+	if (nbytes <= 0)
 	{
         #ifdef DEBUG_STV
         av_log(NULL, AV_LOG_ERROR, "FAILURE %d\n", __LINE__);
@@ -483,7 +513,7 @@ static offset_t size(URLContext* h, STVContext* p, offset_t *availSize)
 			return 0;
 		}
 		strcpy(data, "SIZE\r\n");
-		if (send(p->fd, data, dataSize, 0) < dataSize)
+		if (send(p->fd, data, dataSize, MSG_NOSIGNAL) < dataSize)
 		{
             #ifdef DEBUG_STV
             av_log(NULL, AV_LOG_ERROR, "FAILURE %d\n", __LINE__);
@@ -492,7 +522,7 @@ static offset_t size(URLContext* h, STVContext* p, offset_t *availSize)
 		}
         flushReadAhead(p);
 		nbytes = sockReadLine(p->fd, data, sizeof(data));
-		if (nbytes < 0)
+		if (nbytes <= 0)
 		{
             #ifdef DEBUG_STV
             av_log(NULL, AV_LOG_ERROR, "FAILURE %d\n", __LINE__);
@@ -540,7 +570,7 @@ static int stv_read(URLContext *h, unsigned char* pbBuffer, int max_len)
 	// Check on EOS condition
 	if ((h->flags & URL_ACTIVEFILE) == URL_ACTIVEFILE && ((max_len + p->pos) > p->actualSize))
 	{
-		offset_t totalSize;
+		int64_t totalSize;
 		totalSize = size(h, p, &p->actualSize);
 		if(totalSize==p->actualSize) h->flags&=~URL_ACTIVEFILE;
 		#ifdef DEBUG_STV
@@ -567,8 +597,8 @@ static int stv_read(URLContext *h, unsigned char* pbBuffer, int max_len)
 			{
 				max_len = 0;
 				return -1; // Signal EOF
+			}
 		}
-	}
 		p->readahead+=max_len;
 	}
 	else
@@ -577,21 +607,18 @@ static int stv_read(URLContext *h, unsigned char* pbBuffer, int max_len)
 	}
 	if (max_len <= 0) return 0;
 	if (stv_read_len > max_len ) stv_read_len = max_len;
+// Test JFT
     #ifdef DEBUG_STV
-    av_log(NULL, AV_LOG_ERROR, "Read ahead values %d %d %d\n", 
-        p->readahead, p->readaheadfactor, max_len);
+    av_log(NULL, AV_LOG_ERROR, "Read ahead values %d %d %d at %lld\n", 
+        p->readahead, p->readaheadfactor, max_len, get_timebase());
     #endif
 
-#ifndef __MINGW32__
-	snprintf(data, 512, "READ %lld %d\r\n", p->pos+p->readahead-max_len, max_len);
-#else
-	snprintf(data, 512, "READ %I64d %d\r\n", p->pos+p->readahead-max_len, max_len);
-#endif
+	snprintf(data, 512, "READ %"PRId64" %d\r\n", p->pos+p->readahead-max_len, max_len);
 	dataSize = strlen(data);
     #ifdef DEBUG_STV
     av_log(NULL, AV_LOG_ERROR, "Sending cmd to SageTV Server:%s\n", data);
     #endif
-	if (send(p->fd, data, dataSize, 0) < dataSize)
+	if (send(p->fd, data, dataSize, MSG_NOSIGNAL) < dataSize)
 	{
         #ifdef DEBUG_STV
         av_log(NULL, AV_LOG_ERROR, "FAILURE %d\n", __LINE__);
@@ -604,29 +631,27 @@ static int stv_read(URLContext *h, unsigned char* pbBuffer, int max_len)
             #endif
 			return 0;
 		}
-		if (send(p->fd, data, dataSize, 0) < dataSize)
-		{
-            #ifdef DEBUG_STV
-            av_log(NULL, AV_LOG_ERROR, "FAILURE %d\n", __LINE__);
-            #endif
-			return 0;
-		}
 	}
+
+    #ifdef DEBUG_STV
+    av_log(NULL, AV_LOG_ERROR, "Before receiving reply");
+    #endif
 
 	pOriginalBuffer = pbBuffer;
 	originaldwBytesToRead = stv_read_len;
 	bytesRead = 0;
 	nbytes = recv(p->fd, (char*)pbBuffer, stv_read_len, 0);
-	while (nbytes >= 0 && stv_read_len > 0)
+	while (nbytes > 0 && stv_read_len > 0)
 	{
 		stv_read_len -= nbytes;
 		pbBuffer += nbytes;
 		bytesRead += nbytes;
+		p->pos += nbytes;
 		p->readahead-= nbytes;
 		if (stv_read_len > 0)
 			nbytes = recv(p->fd, (char*)pbBuffer, stv_read_len, 0);
 	}
-	if (nbytes < 0)
+	if (nbytes <= 0)
 	{
         #ifdef DEBUG_STV
         av_log(NULL, AV_LOG_ERROR, "FAILURE %d\n", __LINE__);
@@ -638,26 +663,18 @@ static int stv_read(URLContext *h, unsigned char* pbBuffer, int max_len)
             #endif
 			return 0;
 		}
-		if (send(p->fd, data, dataSize, 0) < dataSize)
-		{
-            #ifdef DEBUG_STV
-            av_log(NULL, AV_LOG_ERROR, "FAILURE %d\n", __LINE__);
-            #endif
-			return 0;
-		}
-		bytesRead = 0;
-		pbBuffer = pOriginalBuffer;
-		max_len = originaldwBytesToRead;
-		nbytes = recv(p->fd, (char*)pbBuffer, max_len, 0);
-		while (nbytes >= 0 && max_len > 0)
-		{
-			max_len -= nbytes;
-			pbBuffer += nbytes;
-			bytesRead += nbytes;
-			if (max_len > 0)
-				nbytes = recv(p->fd, (char*)pbBuffer, max_len, 0);
-		}
-		if (nbytes < 0)
+        nbytes = recv(p->fd, (char*)pbBuffer, stv_read_len, 0);
+        while (nbytes > 0 && stv_read_len > 0)
+        {
+            stv_read_len -= nbytes;
+            pbBuffer += nbytes;
+            bytesRead += nbytes;
+            p->pos += nbytes;
+            p->readahead-= nbytes;
+            if (stv_read_len > 0)
+                nbytes = recv(p->fd, (char*)pbBuffer, stv_read_len, 0);
+        }
+		if (nbytes <= 0)
 		{
             #ifdef DEBUG_STV
             av_log(NULL, AV_LOG_ERROR, "FAILURE %d\n", __LINE__);
@@ -669,7 +686,6 @@ static int stv_read(URLContext *h, unsigned char* pbBuffer, int max_len)
     av_log(NULL, AV_LOG_ERROR, "Read %d bytes from network (%lld %d)\n", 
         bytesRead, p->actualSize, h->flags & URL_ACTIVEFILE);
     #endif
-	p->pos += bytesRead;
 	return bytesRead;
 }
 
@@ -681,7 +697,7 @@ static int stv_close(URLContext *h)
 		char* data = "QUIT\r\n";
 		int dataSize = strlen(data);
         flushReadAhead(p);
-		send(p->fd, data, dataSize, 0);
+		send(p->fd, data, dataSize, MSG_NOSIGNAL);
 		close(p->fd);
 		p->fd = 0;
 	}

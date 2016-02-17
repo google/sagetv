@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef FFMPEG_MMI_H
-#define FFMPEG_MMI_H
+#ifndef AVCODEC_PS2_MMI_H
+#define AVCODEC_PS2_MMI_H
 
 #define align16 __attribute__ ((aligned (16)))
 
@@ -60,112 +60,112 @@
 
 
 #define         lq(base, off, reg)        \
-        __asm__ __volatile__ ("lq " #reg ", %0("#base ")" : : "i" (off) )
+        __asm__ volatile ("lq " #reg ", %0("#base ")" : : "i" (off) )
 
 #define         lq2(mem, reg)        \
-        __asm__ __volatile__ ("lq " #reg ", %0" : : "r" (mem))
+        __asm__ volatile ("lq " #reg ", %0" : : "r" (mem))
 
 #define         sq(reg, off, base)        \
-        __asm__ __volatile__ ("sq " #reg ", %0("#base ")" : : "i" (off) )
+        __asm__ volatile ("sq " #reg ", %0("#base ")" : : "i" (off) )
 
 /*
 #define         ld(base, off, reg)        \
-        __asm__ __volatile__ ("ld " #reg ", " #off "("#base ")")
+        __asm__ volatile ("ld " #reg ", " #off "("#base ")")
 */
 
 #define         ld3(base, off, reg)        \
-        __asm__ __volatile__ (".word %0" : : "i" ( 0xdc000000 | (base<<21) | (reg<<16) | (off)))
+        __asm__ volatile (".word %0" : : "i" ( 0xdc000000 | (base<<21) | (reg<<16) | (off)))
 
 #define         ldr3(base, off, reg)        \
-        __asm__ __volatile__ (".word %0" : : "i" ( 0x6c000000 | (base<<21) | (reg<<16) | (off)))
+        __asm__ volatile (".word %0" : : "i" ( 0x6c000000 | (base<<21) | (reg<<16) | (off)))
 
 #define         ldl3(base, off, reg)        \
-        __asm__ __volatile__ (".word %0" : : "i" ( 0x68000000 | (base<<21) | (reg<<16) | (off)))
+        __asm__ volatile (".word %0" : : "i" ( 0x68000000 | (base<<21) | (reg<<16) | (off)))
 
 /*
 #define         sd(reg, off, base)        \
-        __asm__ __volatile__ ("sd " #reg ", " #off "("#base ")")
+        __asm__ volatile ("sd " #reg ", " #off "("#base ")")
 */
 //seems assembler has bug encoding mnemonic 'sd', so DIY
 #define         sd3(reg, off, base)        \
-        __asm__ __volatile__ (".word %0" : : "i" ( 0xfc000000 | (base<<21) | (reg<<16) | (off)))
+        __asm__ volatile (".word %0" : : "i" ( 0xfc000000 | (base<<21) | (reg<<16) | (off)))
 
 #define         sw(reg, off, base)        \
-        __asm__ __volatile__ ("sw " #reg ", " #off "("#base ")")
+        __asm__ volatile ("sw " #reg ", " #off "("#base ")")
 
 #define         sq2(reg, mem)        \
-        __asm__ __volatile__ ("sq " #reg ", %0" : : "m" (*(mem)))
+        __asm__ volatile ("sq " #reg ", %0" : : "m" (*(mem)))
 
 #define         pinth(rs, rt, rd) \
-        __asm__ __volatile__ ("pinth  " #rd ", " #rs ", " #rt )
+        __asm__ volatile ("pinth  " #rd ", " #rs ", " #rt )
 
 #define         phmadh(rs, rt, rd) \
-        __asm__ __volatile__ ("phmadh " #rd ", " #rs ", " #rt )
+        __asm__ volatile ("phmadh " #rd ", " #rs ", " #rt )
 
 #define         pcpyud(rs, rt, rd) \
-        __asm__ __volatile__ ("pcpyud " #rd ", " #rs ", " #rt )
+        __asm__ volatile ("pcpyud " #rd ", " #rs ", " #rt )
 
 #define         pcpyld(rs, rt, rd) \
-        __asm__ __volatile__ ("pcpyld " #rd ", " #rs ", " #rt )
+        __asm__ volatile ("pcpyld " #rd ", " #rs ", " #rt )
 
 #define         pcpyh(rt, rd) \
-        __asm__ __volatile__ ("pcpyh  " #rd ", " #rt )
+        __asm__ volatile ("pcpyh  " #rd ", " #rt )
 
 #define         paddw(rs, rt, rd) \
-        __asm__ __volatile__ ("paddw  " #rd ", " #rs ", " #rt )
+        __asm__ volatile ("paddw  " #rd ", " #rs ", " #rt )
 
 #define         pextlw(rs, rt, rd) \
-        __asm__ __volatile__ ("pextlw " #rd ", " #rs ", " #rt )
+        __asm__ volatile ("pextlw " #rd ", " #rs ", " #rt )
 
 #define         pextuw(rs, rt, rd) \
-        __asm__ __volatile__ ("pextuw " #rd ", " #rs ", " #rt )
+        __asm__ volatile ("pextuw " #rd ", " #rs ", " #rt )
 
 #define         pextlh(rs, rt, rd) \
-        __asm__ __volatile__ ("pextlh " #rd ", " #rs ", " #rt )
+        __asm__ volatile ("pextlh " #rd ", " #rs ", " #rt )
 
 #define         pextuh(rs, rt, rd) \
-        __asm__ __volatile__ ("pextuh " #rd ", " #rs ", " #rt )
+        __asm__ volatile ("pextuh " #rd ", " #rs ", " #rt )
 
 #define         psubw(rs, rt, rd) \
-        __asm__ __volatile__ ("psubw  " #rd ", " #rs ", " #rt )
+        __asm__ volatile ("psubw  " #rd ", " #rs ", " #rt )
 
 #define         psraw(rt, sa, rd) \
-        __asm__ __volatile__ ("psraw  " #rd ", " #rt ", %0" : : "i"(sa) )
+        __asm__ volatile ("psraw  " #rd ", " #rt ", %0" : : "i"(sa) )
 
 #define         ppach(rs, rt, rd) \
-        __asm__ __volatile__ ("ppach  " #rd ", " #rs ", " #rt )
+        __asm__ volatile ("ppach  " #rd ", " #rs ", " #rt )
 
 #define         ppacb(rs, rt, rd) \
-        __asm__ __volatile__ ("ppacb  " #rd ", " #rs ", " #rt )
+        __asm__ volatile ("ppacb  " #rd ", " #rs ", " #rt )
 
 #define         prevh(rt, rd) \
-        __asm__ __volatile__ ("prevh  " #rd ", " #rt )
+        __asm__ volatile ("prevh  " #rd ", " #rt )
 
 #define         pmulth(rs, rt, rd) \
-        __asm__ __volatile__ ("pmulth " #rd ", " #rs ", " #rt )
+        __asm__ volatile ("pmulth " #rd ", " #rs ", " #rt )
 
 #define         pmaxh(rs, rt, rd) \
-        __asm__ __volatile__ ("pmaxh " #rd ", " #rs ", " #rt )
+        __asm__ volatile ("pmaxh " #rd ", " #rs ", " #rt )
 
 #define         pminh(rs, rt, rd) \
-        __asm__ __volatile__ ("pminh " #rd ", " #rs ", " #rt )
+        __asm__ volatile ("pminh " #rd ", " #rs ", " #rt )
 
 #define         pinteh(rs, rt, rd) \
-        __asm__ __volatile__ ("pinteh  " #rd ", " #rs ", " #rt )
+        __asm__ volatile ("pinteh  " #rd ", " #rs ", " #rt )
 
 #define         paddh(rs, rt, rd) \
-        __asm__ __volatile__ ("paddh  " #rd ", " #rs ", " #rt )
+        __asm__ volatile ("paddh  " #rd ", " #rs ", " #rt )
 
 #define         psubh(rs, rt, rd) \
-        __asm__ __volatile__ ("psubh  " #rd ", " #rs ", " #rt )
+        __asm__ volatile ("psubh  " #rd ", " #rs ", " #rt )
 
 #define         psrah(rt, sa, rd) \
-        __asm__ __volatile__ ("psrah  " #rd ", " #rt ", %0" : : "i"(sa) )
+        __asm__ volatile ("psrah  " #rd ", " #rt ", %0" : : "i"(sa) )
 
 #define         pmfhl_uw(rd) \
-        __asm__ __volatile__ ("pmfhl.uw  " #rd)
+        __asm__ volatile ("pmfhl.uw  " #rd)
 
 #define         pextlb(rs, rt, rd) \
-        __asm__ __volatile__ ("pextlb  " #rd ", " #rs ", " #rt )
+        __asm__ volatile ("pextlb  " #rd ", " #rs ", " #rt )
 
-#endif /* FFMPEG_MMI_H */
+#endif /* AVCODEC_PS2_MMI_H */

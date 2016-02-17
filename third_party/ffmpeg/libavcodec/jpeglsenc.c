@@ -21,13 +21,14 @@
  */
 
 /**
- * @file jpeglsenc.c
+ * @file
  * JPEG-LS encoder.
  */
 
 #include "avcodec.h"
-#include "bitstream.h"
+#include "get_bits.h"
 #include "golomb.h"
+#include "mathops.h"
 #include "dsputil.h"
 #include "mjpeg.h"
 #include "jpegls.h"
@@ -368,7 +369,7 @@ static int encode_picture_ls(AVCodecContext *avctx, unsigned char *buf, int buf_
     return put_bits_count(&pb) >> 3;
 }
 
-static int encode_init_ls(AVCodecContext *ctx) {
+static av_cold int encode_init_ls(AVCodecContext *ctx) {
     JpeglsContext *c = (JpeglsContext*)ctx->priv_data;
 
     c->avctx = ctx;
@@ -383,11 +384,12 @@ static int encode_init_ls(AVCodecContext *ctx) {
 
 AVCodec jpegls_encoder = { //FIXME avoid MPV_* lossless JPEG should not need them
     "jpegls",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_JPEGLS,
     sizeof(JpeglsContext),
     encode_init_ls,
     encode_picture_ls,
     NULL,
-    .pix_fmts= (enum PixelFormat[]){PIX_FMT_BGR24, PIX_FMT_RGB24, PIX_FMT_GRAY8, PIX_FMT_GRAY16, -1},
+    .pix_fmts= (const enum PixelFormat[]){PIX_FMT_BGR24, PIX_FMT_RGB24, PIX_FMT_GRAY8, PIX_FMT_GRAY16, PIX_FMT_NONE},
+    .long_name= NULL_IF_CONFIG_SMALL("JPEG-LS"),
 };

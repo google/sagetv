@@ -1,22 +1,52 @@
 ;*****************************************************************************
 ;* x86inc.asm
 ;*****************************************************************************
-;* Copyright (C) 2005-2008 Loren Merritt <lorenm@u.washington.edu>
+;* Copyright (C) 2005-2008 x264 project
 ;*
-;* This program is free software; you can redistribute it and/or modify
-;* it under the terms of the GNU General Public License as published by
-;* the Free Software Foundation; either version 2 of the License, or
-;* (at your option) any later version.
+;* Authors: Loren Merritt <lorenm@u.washington.edu>
+;*          Anton Mitrofanov <BugMaster@narod.ru>
 ;*
-;* This program is distributed in the hope that it will be useful,
-;* but WITHOUT ANY WARRANTY; without even the implied warranty of
-;* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-;* GNU General Public License for more details.
+;* Permission to use, copy, modify, and/or distribute this software for any
+;* purpose with or without fee is hereby granted, provided that the above
+;* copyright notice and this permission notice appear in all copies.
 ;*
-;* You should have received a copy of the GNU General Public License
-;* along with this program; if not, write to the Free Software
-;* Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111, USA.
+;* THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+;* WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+;* MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+;* ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+;* WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+;* ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+;* OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 ;*****************************************************************************
+
+; This is a header file for the x264ASM assembly language, which uses
+; NASM/YASM syntax combined with a large number of macros to provide easy
+; abstraction between different calling conventions (x86_32, win64, linux64).
+; It also has various other useful features to simplify writing the kind of
+; DSP functions that are most often used in x264.
+
+; Unlike the rest of x264, this file is available under an ISC license, as it
+; has significant usefulness outside of x264 and we want it to be available
+; to the largest audience possible.  Of course, if you modify it for your own
+; purposes to add a new feature, we strongly encourage contributing a patch
+; as this feature might be useful for others as well.  Send patches or ideas
+; to x264-devel@videolan.org .
+
+%define program_name x264
+
+%ifdef ARCH_X86_64
+    %ifidn __OUTPUT_FORMAT__,win32
+        %define WIN64
+    %else
+        %define UNIX64
+    %endif
+%endif
+
+%ifdef PREFIX
+    %define mangle(x) _ %+ x
+%else
+    %define mangle(x) x
+%endif
 
 ; FIXME: All of the 64bit asm functions that take a stride as an argument
 ; via register, assume that the high dword of that register is filled with 0.
@@ -26,37 +56,27 @@
 ; Name of the .rodata section.
 ; Kludge: Something on OS X fails to align .rodata even given an align attribute,
 ; so use a different read-only section.
-%macro SECTION_RODATA 0
+%macro SECTION_RODATA 0-1 16
     %ifidn __OUTPUT_FORMAT__,macho64
-        SECTION .text align=16
+        SECTION .text align=%1
     %elifidn __OUTPUT_FORMAT__,macho
-        SECTION .text align=16
+        SECTION .text align=%1
         fakegot:
     %else
-        SECTION .rodata align=16
+        SECTION .rodata align=%1
     %endif
 %endmacro
 
-; PIC support macros.
-; x86_64 can't fit 64bit address literals in most instruction types,
-; so shared objects (under the assumption that they might be anywhere
-; in memory) must use an address mode that does fit.
-; So all accesses to global variables must use this macro, e.g.
-;     mov eax, [foo GLOBAL]
-; instead of
-;     mov eax, [foo]
-;
+%ifdef WIN64
+    %define PIC
+%elifndef ARCH_X86_64
 ; x86_32 doesn't require PIC.
 ; Some distros prefer shared objects to be PIC, but nothing breaks if
 ; the code contains a few textrels, so we'll skip that complexity.
-
-%ifndef ARCH_X86_64
     %undef PIC
 %endif
 %ifdef PIC
-    %define GLOBAL wrt rip
-%else
-    %define GLOBAL
+    default rel
 %endif
 
 ; Macros to eliminate most code duplication between x86_32 and x86_64:
@@ -67,11 +87,12 @@
 ; PROLOGUE:
 ; %1 = number of arguments. loads them from stack if needed.
 ; %2 = number of registers used. pushes callee-saved regs if needed.
-; %3 = list of names to define to registers
+; %3 = number of xmm registers used. pushes callee-saved xmm regs if needed.
+; %4 = list of names to define to registers
 ; PROLOGUE can also be invoked by adding the same options to cglobal
 
 ; e.g.
-; cglobal foo, 2,3, dst, src, tmp
+; cglobal foo, 2,3,0, dst, src, tmp
 ; declares a function (foo), taking two args (dst and src) and one local variable (tmp)
 
 ; TODO Some functions can use some args directly from the stack. If they're the
@@ -85,12 +106,25 @@
 ; Same, but if it doesn't pop anything it becomes a 2-byte ret, for athlons
 ; which are slow when a normal ret follows a branch.
 
+; registers:
+; rN and rNq are the native-size register holding function argument N
+; rNd, rNw, rNb are dword, word, and byte size
+; rNm is the original location of arg N (a register or on the stack), dword
+; rNmp is native size
+
 %macro DECLARE_REG 6
     %define r%1q %2
     %define r%1d %3
     %define r%1w %4
     %define r%1b %5
     %define r%1m %6
+    %ifid %6 ; i.e. it's a register
+        %define r%1mp %2
+    %elifdef ARCH_X86_64 ; memory
+        %define r%1mp qword %6
+    %else
+        %define r%1mp dword %6
+    %endif
     %define r%1  %2
 %endmacro
 
@@ -115,6 +149,29 @@ DECLARE_REG_SIZE dx, dl
 DECLARE_REG_SIZE si, sil
 DECLARE_REG_SIZE di, dil
 DECLARE_REG_SIZE bp, bpl
+
+; t# defines for when per-arch register allocation is more complex than just function arguments
+
+%macro DECLARE_REG_TMP 1-*
+    %assign %%i 0
+    %rep %0
+        CAT_XDEFINE t, %%i, r%1
+        %assign %%i %%i+1
+        %rotate 1
+    %endrep
+%endmacro
+
+%macro DECLARE_REG_TMP_SIZE 0-*
+    %rep %0
+        %define t%1q t%1 %+ q
+        %define t%1d t%1 %+ d
+        %define t%1w t%1 %+ w
+        %define t%1b t%1 %+ b
+        %rotate 1
+    %endrep
+%endmacro
+
+DECLARE_REG_TMP_SIZE 0,1,2,3,4,5,6,7,8,9
 
 %ifdef ARCH_X86_64
     %define gprsize 8
@@ -172,6 +229,7 @@ DECLARE_REG_SIZE bp, bpl
             CAT_UNDEF arg_name %+ %%i, d
             CAT_UNDEF arg_name %+ %%i, w
             CAT_UNDEF arg_name %+ %%i, b
+            CAT_UNDEF arg_name %+ %%i, m
             CAT_UNDEF arg_name, %%i
             %assign %%i %%i+1
         %endrep
@@ -183,6 +241,7 @@ DECLARE_REG_SIZE bp, bpl
         %xdefine %1d r %+ %%i %+ d
         %xdefine %1w r %+ %%i %+ w
         %xdefine %1b r %+ %%i %+ b
+        %xdefine %1m r %+ %%i %+ m
         CAT_XDEFINE arg_name, %%i, %1
         %assign %%i %%i+1
         %rotate 1
@@ -190,7 +249,89 @@ DECLARE_REG_SIZE bp, bpl
     %assign n_arg_names %%i
 %endmacro
 
-%ifdef ARCH_X86_64 ;========================================================
+%ifdef WIN64 ; Windows x64 ;=================================================
+
+DECLARE_REG 0, rcx, ecx, cx,  cl,  ecx
+DECLARE_REG 1, rdx, edx, dx,  dl,  edx
+DECLARE_REG 2, r8,  r8d, r8w, r8b, r8d
+DECLARE_REG 3, r9,  r9d, r9w, r9b, r9d
+DECLARE_REG 4, rdi, edi, di,  dil, [rsp + stack_offset + 40]
+DECLARE_REG 5, rsi, esi, si,  sil, [rsp + stack_offset + 48]
+DECLARE_REG 6, rax, eax, ax,  al,  [rsp + stack_offset + 56]
+%define r7m [rsp + stack_offset + 64]
+%define r8m [rsp + stack_offset + 72]
+
+%macro LOAD_IF_USED 2 ; reg_id, number_of_args
+    %if %1 < %2
+        mov r%1, [rsp + stack_offset + 8 + %1*8]
+    %endif
+%endmacro
+
+%macro PROLOGUE 2-4+ 0 ; #args, #regs, #xmm_regs, arg_names...
+    ASSERT %2 >= %1
+    %assign regs_used %2
+    ASSERT regs_used <= 7
+    %if regs_used > 4
+        push r4
+        push r5
+        %assign stack_offset stack_offset+16
+    %endif
+    WIN64_SPILL_XMM %3
+    LOAD_IF_USED 4, %1
+    LOAD_IF_USED 5, %1
+    LOAD_IF_USED 6, %1
+    DEFINE_ARGS %4
+%endmacro
+
+%macro WIN64_SPILL_XMM 1
+    %assign xmm_regs_used %1
+    ASSERT xmm_regs_used <= 16
+    %if xmm_regs_used > 6
+        sub rsp, (xmm_regs_used-6)*16+16
+        %assign stack_offset stack_offset+(xmm_regs_used-6)*16+16
+        %assign %%i xmm_regs_used
+        %rep (xmm_regs_used-6)
+            %assign %%i %%i-1
+            movdqa [rsp + (%%i-6)*16+8], xmm %+ %%i
+        %endrep
+    %endif
+%endmacro
+
+%macro WIN64_RESTORE_XMM_INTERNAL 1
+    %if xmm_regs_used > 6
+        %assign %%i xmm_regs_used
+        %rep (xmm_regs_used-6)
+            %assign %%i %%i-1
+            movdqa xmm %+ %%i, [%1 + (%%i-6)*16+8]
+        %endrep
+        add %1, (xmm_regs_used-6)*16+16
+    %endif
+%endmacro
+
+%macro WIN64_RESTORE_XMM 1
+    WIN64_RESTORE_XMM_INTERNAL %1
+    %assign stack_offset stack_offset-(xmm_regs_used-6)*16+16
+    %assign xmm_regs_used 0
+%endmacro
+
+%macro RET 0
+    WIN64_RESTORE_XMM_INTERNAL rsp
+    %if regs_used > 4
+        pop r5
+        pop r4
+    %endif
+    ret
+%endmacro
+
+%macro REP_RET 0
+    %if regs_used > 4 || xmm_regs_used > 6
+        RET
+    %else
+        rep ret
+    %endif
+%endmacro
+
+%elifdef ARCH_X86_64 ; *nix x64 ;=============================================
 
 DECLARE_REG 0, rdi, edi, di,  dil, edi
 DECLARE_REG 1, rsi, esi, si,  sil, esi
@@ -208,12 +349,11 @@ DECLARE_REG 6, rax, eax, ax,  al,  [rsp + stack_offset + 8]
     %endif
 %endmacro
 
-%macro PROLOGUE 2-3+ ; #args, #regs, arg_names...
+%macro PROLOGUE 2-4+ ; #args, #regs, #xmm_regs, arg_names...
     ASSERT %2 >= %1
     ASSERT %2 <= 7
-    %assign stack_offset 0
     LOAD_IF_USED 6, %1
-    DEFINE_ARGS %3
+    DEFINE_ARGS %4
 %endmacro
 
 %macro RET 0
@@ -256,9 +396,8 @@ DECLARE_REG 6, ebp, ebp, bp, null, [esp + stack_offset + 28]
     %endif
 %endmacro
 
-%macro PROLOGUE 2-3+ ; #args, #regs, arg_names...
+%macro PROLOGUE 2-4+ ; #args, #regs, #xmm_regs, arg_names...
     ASSERT %2 >= %1
-    %assign stack_offset 0
     %assign regs_used %2
     ASSERT regs_used <= 7
     PUSH_IF_USED 3
@@ -272,7 +411,7 @@ DECLARE_REG 6, ebp, ebp, bp, null, [esp + stack_offset + 28]
     LOAD_IF_USED 4, %1
     LOAD_IF_USED 5, %1
     LOAD_IF_USED 6, %1
-    DEFINE_ARGS %3
+    DEFINE_ARGS %4
 %endmacro
 
 %macro RET 0
@@ -293,6 +432,13 @@ DECLARE_REG 6, ebp, ebp, bp, null, [esp + stack_offset + 28]
 
 %endif ;======================================================================
 
+%ifndef WIN64
+%macro WIN64_SPILL_XMM 1
+%endmacro
+%macro WIN64_RESTORE_XMM 1
+%endmacro
+%endif
+
 
 
 ;=============================================================================
@@ -303,36 +449,37 @@ DECLARE_REG 6, ebp, ebp, bp, null, [esp + stack_offset + 28]
 
 ; Symbol prefix for C linkage
 %macro cglobal 1-2+
+    %xdefine %1 mangle(program_name %+ _ %+ %1)
+    %xdefine %1.skip_prologue %1 %+ .skip_prologue
     %ifidn __OUTPUT_FORMAT__,elf
-        %ifdef PREFIX
-            global _%1:function hidden
-            %define %1 _%1
-        %else
-            global %1:function hidden
-        %endif
+        global %1:function hidden
     %else
-        %ifdef PREFIX
-            global _%1
-            %define %1 _%1
-        %else
-            global %1
-        %endif
+        global %1
     %endif
     align function_align
     %1:
     RESET_MM_PERMUTATION ; not really needed, but makes disassembly somewhat nicer
+    %assign stack_offset 0
     %if %0 > 1
         PROLOGUE %2
     %endif
 %endmacro
 
 %macro cextern 1
-    %ifdef PREFIX
-        extern _%1
-        %define %1 _%1
-    %else
-        extern %1
-    %endif
+    %xdefine %1 mangle(program_name %+ _ %+ %1)
+    extern %1
+%endmacro
+
+;like cextern, but without the prefix
+%macro cextern_naked 1
+    %xdefine %1 mangle(%1)
+    extern %1
+%endmacro
+
+%macro const 2+
+    %xdefine %1 mangle(program_name %+ _ %+ %1)
+    global %1
+    %1: %2
 %endmacro
 
 ; This is needed for ELF, otherwise the GNU linker assumes the stack is
@@ -340,9 +487,6 @@ DECLARE_REG 6, ebp, ebp, bp, null, [esp + stack_offset + 28]
 %ifidn __OUTPUT_FORMAT__,elf
 SECTION .note.GNU-stack noalloc noexec nowrite progbits
 %endif
-
-%assign FENC_STRIDE 16
-%assign FDEC_STRIDE 32
 
 ; merge mmx and sse*
 
@@ -361,7 +505,7 @@ SECTION .note.GNU-stack noalloc noexec nowrite progbits
     %define mova movq
     %define movu movq
     %define movh movd
-    %define movnt movntq
+    %define movnta movntq
     %assign %%i 0
     %rep 8
     CAT_XDEFINE m, %%i, mm %+ %%i
@@ -385,7 +529,7 @@ SECTION .note.GNU-stack noalloc noexec nowrite progbits
     %define mova movdqa
     %define movu movdqu
     %define movh movq
-    %define movnt movntdq
+    %define movnta movntdq
     %assign %%i 0
     %rep num_mmregs
     CAT_XDEFINE m, %%i, xmm %+ %%i
@@ -450,7 +594,10 @@ INIT_MMX
 %endrep
 %endmacro
 
-%macro SAVE_MM_PERMUTATION 1
+; If SAVE_MM_PERMUTATION is placed at the end of a function and given the
+; function name, then any later calls to that function will automatically
+; load the permutation, so values can be returned in mmregs.
+%macro SAVE_MM_PERMUTATION 1 ; name to save as
     %assign %%i 0
     %rep num_mmregs
     CAT_XDEFINE %1_m, %%i, m %+ %%i
@@ -458,7 +605,7 @@ INIT_MMX
     %endrep
 %endmacro
 
-%macro LOAD_MM_PERMUTATION 1
+%macro LOAD_MM_PERMUTATION 1 ; name to load from
     %assign %%i 0
     %rep num_mmregs
     CAT_XDEFINE m, %%i, %1_m %+ %%i
@@ -474,7 +621,27 @@ INIT_MMX
     %endif
 %endmacro
 
-; substitutions which are functionally identical but reduce code size
-%define movdqa movaps
-%define movdqu movups
+; Substitutions that reduce instruction size but are functionally equivalent
+%macro add 2
+    %ifnum %2
+        %if %2==128
+            sub %1, -128
+        %else
+            add %1, %2
+        %endif
+    %else
+        add %1, %2
+    %endif
+%endmacro
 
+%macro sub 2
+    %ifnum %2
+        %if %2==128
+            add %1, -128
+        %else
+            sub %1, %2
+        %endif
+    %else
+        sub %1, %2
+    %endif
+%endmacro

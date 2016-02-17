@@ -1,6 +1,6 @@
 /*
  * MJPEG encoder
- * Copyright (c) 2000, 2001 Fabrice Bellard.
+ * Copyright (c) 2000, 2001 Fabrice Bellard
  * Copyright (c) 2003 Alex Beregszaszi
  * Copyright (c) 2003-2004 Michael Niedermayer
  *
@@ -26,7 +26,7 @@
  */
 
 /**
- * @file mjpegenc.c
+ * @file
  * MJPEG encoder.
  */
 
@@ -44,7 +44,7 @@
 #undef TWOMATRIXES
 
 
-int ff_mjpeg_encode_init(MpegEncContext *s)
+av_cold int ff_mjpeg_encode_init(MpegEncContext *s)
 {
     MJpegContext *m;
 
@@ -59,11 +59,11 @@ int ff_mjpeg_encode_init(MpegEncContext *s)
     ff_mjpeg_build_huffman_codes(m->huff_size_dc_luminance,
                                  m->huff_code_dc_luminance,
                                  ff_mjpeg_bits_dc_luminance,
-                                 ff_mjpeg_val_dc_luminance);
+                                 ff_mjpeg_val_dc);
     ff_mjpeg_build_huffman_codes(m->huff_size_dc_chrominance,
                                  m->huff_code_dc_chrominance,
                                  ff_mjpeg_bits_dc_chrominance,
-                                 ff_mjpeg_val_dc_chrominance);
+                                 ff_mjpeg_val_dc);
     ff_mjpeg_build_huffman_codes(m->huff_size_ac_luminance,
                                  m->huff_code_ac_luminance,
                                  ff_mjpeg_bits_ac_luminance,
@@ -135,13 +135,13 @@ static void jpeg_table_header(MpegEncContext *s)
     /* huffman table */
     put_marker(p, DHT);
     flush_put_bits(p);
-    ptr = pbBufPtr(p);
+    ptr = put_bits_ptr(p);
     put_bits(p, 16, 0); /* patched later */
     size = 2;
     size += put_huffman_table(s, 0, 0, ff_mjpeg_bits_dc_luminance,
-                              ff_mjpeg_val_dc_luminance);
+                              ff_mjpeg_val_dc);
     size += put_huffman_table(s, 0, 1, ff_mjpeg_bits_dc_chrominance,
-                              ff_mjpeg_val_dc_chrominance);
+                              ff_mjpeg_val_dc);
 
     size += put_huffman_table(s, 1, 0, ff_mjpeg_bits_ac_luminance,
                               ff_mjpeg_val_ac_luminance);
@@ -174,7 +174,7 @@ static void jpeg_put_comments(MpegEncContext *s)
     if(!(s->flags & CODEC_FLAG_BITEXACT)){
         put_marker(p, COM);
         flush_put_bits(p);
-        ptr = pbBufPtr(p);
+        ptr = put_bits_ptr(p);
         put_bits(p, 16, 0); /* patched later */
         ff_put_string(p, LIBAVCODEC_IDENT, 1);
         size = strlen(LIBAVCODEC_IDENT)+3;
@@ -186,7 +186,7 @@ static void jpeg_put_comments(MpegEncContext *s)
        ||s->avctx->pix_fmt == PIX_FMT_YUV444P){
         put_marker(p, COM);
         flush_put_bits(p);
-        ptr = pbBufPtr(p);
+        ptr = put_bits_ptr(p);
         put_bits(p, 16, 0); /* patched later */
         ff_put_string(p, "CS=ITU601", 1);
         size = strlen("CS=ITU601")+3;
@@ -211,7 +211,7 @@ void ff_mjpeg_encode_picture_header(MpegEncContext *s)
     }
 
     put_bits(&s->pb, 16, 17);
-    if(lossless && s->avctx->pix_fmt == PIX_FMT_RGB32)
+    if(lossless && s->avctx->pix_fmt == PIX_FMT_BGRA)
         put_bits(&s->pb, 8, 9); /* 9 bits/component RCT */
     else
         put_bits(&s->pb, 8, 8); /* 8 bits/component */
@@ -313,11 +313,8 @@ static void escape_FF(MpegEncContext *s, int start)
 
     if(ff_count==0) return;
 
-    /* skip put bits */
-    for(i=0; i<ff_count-3; i+=4)
-        put_bits(&s->pb, 32, 0);
-    put_bits(&s->pb, (ff_count-i)*8, 0);
     flush_put_bits(&s->pb);
+    skip_put_bytes(&s->pb, ff_count);
 
     for(i=size-1; ff_count; i--){
         int v= buf[i];
@@ -369,7 +366,7 @@ void ff_mjpeg_encode_dc(MpegEncContext *s, int val,
 
         put_bits(&s->pb, huff_size[nbits], huff_code[nbits]);
 
-        put_bits(&s->pb, nbits, mant & ((1 << nbits) - 1));
+        put_sbits(&s->pb, nbits, mant);
     }
 }
 
@@ -421,7 +418,7 @@ static void encode_block(MpegEncContext *s, DCTELEM *block, int n)
 
             put_bits(&s->pb, huff_size_ac[code], huff_code_ac[code]);
 
-            put_bits(&s->pb, nbits, mant & ((1 << nbits) - 1));
+            put_sbits(&s->pb, nbits, mant);
             run = 0;
         }
     }
@@ -448,11 +445,12 @@ void ff_mjpeg_encode_mb(MpegEncContext *s, DCTELEM block[6][64])
 
 AVCodec mjpeg_encoder = {
     "mjpeg",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_MJPEG,
     sizeof(MpegEncContext),
     MPV_encode_init,
     MPV_encode_picture,
     MPV_encode_end,
-    .pix_fmts= (enum PixelFormat[]){PIX_FMT_YUVJ420P, PIX_FMT_YUVJ422P, -1},
+    .pix_fmts= (const enum PixelFormat[]){PIX_FMT_YUVJ420P, PIX_FMT_YUVJ422P, PIX_FMT_NONE},
+    .long_name= NULL_IF_CONFIG_SMALL("MJPEG (Motion JPEG)"),
 };

@@ -19,10 +19,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef FFMPEG_MATROSKA_H
-#define FFMPEG_MATROSKA_H
+#ifndef AVFORMAT_MATROSKA_H
+#define AVFORMAT_MATROSKA_H
 
-#include "avcodec.h"
+#include "libavcodec/avcodec.h"
+#include "metadata.h"
 
 /* EBML version supported */
 #define EBML_VERSION 1
@@ -41,15 +42,16 @@
 
 /* general EBML types */
 #define EBML_ID_VOID               0xEC
+#define EBML_ID_CRC32              0xBF
 
 /*
- * Matroska element IDs. max. 32-bit.
+ * Matroska element IDs, max. 32 bits
  */
 
 /* toplevel segment */
 #define MATROSKA_ID_SEGMENT    0x18538067
 
-/* matroska top-level master IDs */
+/* Matroska top-level master IDs */
 #define MATROSKA_ID_INFO       0x1549A966
 #define MATROSKA_ID_TRACKS     0x1654AE6B
 #define MATROSKA_ID_CUES       0x1C53BB6B
@@ -57,6 +59,7 @@
 #define MATROSKA_ID_SEEKHEAD   0x114D9B74
 #define MATROSKA_ID_ATTACHMENTS 0x1941A469
 #define MATROSKA_ID_CLUSTER    0x1F43B675
+#define MATROSKA_ID_CHAPTERS   0x1043A770
 
 /* IDs in the info master */
 #define MATROSKA_ID_TIMECODESCALE 0x2AD7B1
@@ -81,14 +84,20 @@
 #define MATROSKA_ID_CODECNAME  0x258688
 #define MATROSKA_ID_CODECINFOURL 0x3B4040
 #define MATROSKA_ID_CODECDOWNLOADURL 0x26B240
+#define MATROSKA_ID_CODECDECODEALL 0xAA
 #define MATROSKA_ID_TRACKNAME  0x536E
 #define MATROSKA_ID_TRACKLANGUAGE 0x22B59C
 #define MATROSKA_ID_TRACKFLAGENABLED 0xB9
 #define MATROSKA_ID_TRACKFLAGDEFAULT 0x88
+#define MATROSKA_ID_TRACKFLAGFORCED 0x55AA
 #define MATROSKA_ID_TRACKFLAGLACING 0x9C
 #define MATROSKA_ID_TRACKMINCACHE 0x6DE7
 #define MATROSKA_ID_TRACKMAXCACHE 0x6DF8
 #define MATROSKA_ID_TRACKDEFAULTDURATION 0x23E383
+#define MATROSKA_ID_TRACKCONTENTENCODINGS 0x6D80
+#define MATROSKA_ID_TRACKCONTENTENCODING 0x6240
+#define MATROSKA_ID_TRACKTIMECODESCALE 0x23314F
+#define MATROSKA_ID_TRACKMAXBLKADDID 0x55EE
 
 /* IDs in the trackvideo master */
 #define MATROSKA_ID_VIDEOFRAMERATE 0x2383E3
@@ -96,6 +105,11 @@
 #define MATROSKA_ID_VIDEODISPLAYHEIGHT 0x54BA
 #define MATROSKA_ID_VIDEOPIXELWIDTH 0xB0
 #define MATROSKA_ID_VIDEOPIXELHEIGHT 0xBA
+#define MATROSKA_ID_VIDEOPIXELCROPB 0x54AA
+#define MATROSKA_ID_VIDEOPIXELCROPT 0x54BB
+#define MATROSKA_ID_VIDEOPIXELCROPL 0x54CC
+#define MATROSKA_ID_VIDEOPIXELCROPR 0x54DD
+#define MATROSKA_ID_VIDEODISPLAYUNIT 0x54B2
 #define MATROSKA_ID_VIDEOFLAGINTERLACED 0x9A
 #define MATROSKA_ID_VIDEOSTEREOMODE 0x53B9
 #define MATROSKA_ID_VIDEOASPECTRATIO 0x54B3
@@ -108,6 +122,14 @@
 #define MATROSKA_ID_AUDIOBITDEPTH 0x6264
 #define MATROSKA_ID_AUDIOCHANNELS 0x9F
 
+/* IDs in the content encoding master */
+#define MATROSKA_ID_ENCODINGORDER 0x5031
+#define MATROSKA_ID_ENCODINGSCOPE 0x5032
+#define MATROSKA_ID_ENCODINGTYPE 0x5033
+#define MATROSKA_ID_ENCODINGCOMPRESSION 0x5034
+#define MATROSKA_ID_ENCODINGCOMPALGO 0x4254
+#define MATROSKA_ID_ENCODINGCOMPSETTINGS 0x4255
+
 /* ID in the cues master */
 #define MATROSKA_ID_POINTENTRY 0xBB
 
@@ -118,9 +140,22 @@
 /* IDs in the cuetrackposition master */
 #define MATROSKA_ID_CUETRACK   0xF7
 #define MATROSKA_ID_CUECLUSTERPOSITION 0xF1
+#define MATROSKA_ID_CUEBLOCKNUMBER 0x5378
 
 /* IDs in the tags master */
-/* TODO */
+#define MATROSKA_ID_TAG                 0x7373
+#define MATROSKA_ID_SIMPLETAG           0x67C8
+#define MATROSKA_ID_TAGNAME             0x45A3
+#define MATROSKA_ID_TAGSTRING           0x4487
+#define MATROSKA_ID_TAGLANG             0x447A
+#define MATROSKA_ID_TAGDEFAULT          0x4484
+#define MATROSKA_ID_TAGDEFAULT_BUG      0x44B4
+#define MATROSKA_ID_TAGTARGETS          0x63C0
+#define MATROSKA_ID_TAGTARGETS_TYPE       0x63CA
+#define MATROSKA_ID_TAGTARGETS_TYPEVALUE  0x68CA
+#define MATROSKA_ID_TAGTARGETS_TRACKUID   0x63C5
+#define MATROSKA_ID_TAGTARGETS_CHAPTERUID 0x63C4
+#define MATROSKA_ID_TAGTARGETS_ATTACHUID  0x63C6
 
 /* IDs in the seekhead master */
 #define MATROSKA_ID_SEEKENTRY  0x4DBB
@@ -131,6 +166,8 @@
 
 /* IDs in the cluster master */
 #define MATROSKA_ID_CLUSTERTIMECODE 0xE7
+#define MATROSKA_ID_CLUSTERPOSITION 0xA7
+#define MATROSKA_ID_CLUSTERPREVSIZE 0xAB
 #define MATROSKA_ID_BLOCKGROUP 0xA0
 #define MATROSKA_ID_SIMPLEBLOCK 0xA3
 
@@ -141,12 +178,31 @@
 
 /* IDs in the attachments master */
 #define MATROSKA_ID_ATTACHEDFILE        0x61A7
+#define MATROSKA_ID_FILEDESC            0x467E
 #define MATROSKA_ID_FILENAME            0x466E
 #define MATROSKA_ID_FILEMIMETYPE        0x4660
 #define MATROSKA_ID_FILEDATA            0x465C
 #define MATROSKA_ID_FILEUID             0x46AE
 
+/* IDs in the chapters master */
+#define MATROSKA_ID_EDITIONENTRY        0x45B9
+#define MATROSKA_ID_CHAPTERATOM         0xB6
+#define MATROSKA_ID_CHAPTERTIMESTART    0x91
+#define MATROSKA_ID_CHAPTERTIMEEND      0x92
+#define MATROSKA_ID_CHAPTERDISPLAY      0x80
+#define MATROSKA_ID_CHAPSTRING          0x85
+#define MATROSKA_ID_CHAPLANG            0x437C
+#define MATROSKA_ID_EDITIONUID          0x45BC
+#define MATROSKA_ID_EDITIONFLAGHIDDEN   0x45BD
+#define MATROSKA_ID_EDITIONFLAGDEFAULT  0x45DB
+#define MATROSKA_ID_EDITIONFLAGORDERED  0x45DD
+#define MATROSKA_ID_CHAPTERUID          0x73C4
+#define MATROSKA_ID_CHAPTERFLAGHIDDEN   0x98
+#define MATROSKA_ID_CHAPTERFLAGENABLED  0x4598
+#define MATROSKA_ID_CHAPTERPHYSEQUIV    0x63C3
+
 typedef enum {
+  MATROSKA_TRACK_TYPE_NONE     = 0x0,
   MATROSKA_TRACK_TYPE_VIDEO    = 0x1,
   MATROSKA_TRACK_TYPE_AUDIO    = 0x2,
   MATROSKA_TRACK_TYPE_COMPLEX  = 0x3,
@@ -156,40 +212,18 @@ typedef enum {
 } MatroskaTrackType;
 
 typedef enum {
-  MATROSKA_EYE_MODE_MONO  = 0x0,
-  MATROSKA_EYE_MODE_RIGHT = 0x1,
-  MATROSKA_EYE_MODE_LEFT  = 0x2,
-  MATROSKA_EYE_MODE_BOTH  = 0x3,
-} MatroskaEyeMode;
-
-typedef enum {
-  MATROSKA_ASPECT_RATIO_MODE_FREE  = 0x0,
-  MATROSKA_ASPECT_RATIO_MODE_KEEP  = 0x1,
-  MATROSKA_ASPECT_RATIO_MODE_FIXED = 0x2,
-} MatroskaAspectRatioMode;
+  MATROSKA_TRACK_ENCODING_COMP_ZLIB        = 0,
+  MATROSKA_TRACK_ENCODING_COMP_BZLIB       = 1,
+  MATROSKA_TRACK_ENCODING_COMP_LZO         = 2,
+  MATROSKA_TRACK_ENCODING_COMP_HEADERSTRIP = 3,
+} MatroskaTrackEncodingCompAlgo;
 
 /*
- * These aren't in any way "matroska-form" things,
- * it's just something I use in the muxer/demuxer.
- */
-
-typedef enum {
-  MATROSKA_TRACK_ENABLED = (1<<0),
-  MATROSKA_TRACK_DEFAULT = (1<<1),
-  MATROSKA_TRACK_LACING  = (1<<2),
-  MATROSKA_TRACK_SHIFT   = (1<<16)
-} MatroskaTrackFlags;
-
-typedef enum {
-  MATROSKA_VIDEOTRACK_INTERLACED = (MATROSKA_TRACK_SHIFT<<0)
-} MatroskaVideoTrackFlags;
-
-/*
- * Matroska Codec IDs. Strings.
+ * Matroska Codec IDs, strings
  */
 
 typedef struct CodecTags{
-    char str[16];
+    char str[20];
     enum CodecID id;
 }CodecTags;
 
@@ -198,13 +232,11 @@ typedef struct CodecMime{
     enum CodecID id;
 }CodecMime;
 
-#define MATROSKA_CODEC_ID_VIDEO_VFW_FOURCC   "V_MS/VFW/FOURCC"
-#define MATROSKA_CODEC_ID_AUDIO_ACM          "A_MS/ACM"
-
 /* max. depth in the EBML tree structure */
 #define EBML_MAX_DEPTH 16
 
 extern const CodecTags ff_mkv_codec_tags[];
 extern const CodecMime ff_mkv_mime_tags[];
+extern const AVMetadataConv ff_mkv_metadata_conv[];
 
-#endif /* FFMPEG_MATROSKA_H */
+#endif /* AVFORMAT_MATROSKA_H */

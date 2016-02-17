@@ -1,26 +1,35 @@
-include ../config.mak
+include $(SUBDIR)../config.mak
 
-CFLAGS+=-I$(SRC_PATH)/libavformat -I$(SRC_PATH)/libavcodec -I$(SRC_PATH)/libswscale
-
-OBJS = allfilters.o \
-       avfilter.o \
-       defaults.o \
-       formats.o \
-
-#OBJS-$(CONFIG_VF_XXXX)       += vf_xxx.o
+NAME = avfilter
+FFLIBS = avcodec avutil swscale
+FFLIBS-$(CONFIG_AVFILTER_LAVF) += avformat
 
 HEADERS = avfilter.h
 
-EXTRALIBS := -L$(BUILD_ROOT)/libavcodec -lavcodec$(BUILDSUF) \
-             -L$(BUILD_ROOT)/libswscale -lswscale$(BUILDSUF) \
-             -L$(BUILD_ROOT)/libavutil  -lavutil$(BUILDSUF) $(EXTRALIBS)
+OBJS = allfilters.o                                                     \
+       avfilter.o                                                       \
+       avfiltergraph.o                                                  \
+       defaults.o                                                       \
+       formats.o                                                        \
+       graphparser.o                                                    \
+       parseutils.o                                                     \
 
-ifeq ($(CONFIG_AVFILTER_LAVF),yes)
-EXTRALIBS := -L$(BUILD_ROOT)/libavformat -lavformat$(BUILDSUF) $(EXTRALIBS)
-endif
+OBJS-$(CONFIG_ASPECT_FILTER)                 += vf_aspect.o
+OBJS-$(CONFIG_CROP_FILTER)                   += vf_crop.o
+OBJS-$(CONFIG_FORMAT_FILTER)                 += vf_format.o
+OBJS-$(CONFIG_NOFORMAT_FILTER)               += vf_format.o
+OBJS-$(CONFIG_NULL_FILTER)                   += vf_null.o
+OBJS-$(CONFIG_PAD_FILTER)                    += vf_pad.o
+OBJS-$(CONFIG_PIXDESCTEST_FILTER)            += vf_pixdesctest.o
+OBJS-$(CONFIG_PIXELASPECT_FILTER)            += vf_aspect.o
+OBJS-$(CONFIG_SCALE_FILTER)                  += vf_scale.o
+OBJS-$(CONFIG_SLICIFY_FILTER)                += vf_slicify.o
+OBJS-$(CONFIG_UNSHARP_FILTER)                += vf_unsharp.o
+OBJS-$(CONFIG_VFLIP_FILTER)                  += vf_vflip.o
 
-NAME=avfilter
-LIBVERSION=$(LAVFILTERVERSION)
-LIBMAJOR=$(LAVFILTERMAJOR)
+OBJS-$(CONFIG_BUFFER_FILTER)                 += vsrc_buffer.o
+OBJS-$(CONFIG_NULLSRC_FILTER)                += vsrc_nullsrc.o
 
-include ../common.mak
+OBJS-$(CONFIG_NULLSINK_FILTER)               += vsink_nullsink.o
+
+include $(SUBDIR)../subdir.mak

@@ -18,58 +18,85 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef FFMPEG_LOG_H
-#define FFMPEG_LOG_H
+#ifndef AVUTIL_LOG_H
+#define AVUTIL_LOG_H
 
 #include <stdarg.h>
+#include "avutil.h"
 
 /**
- * Used by av_log
+ * Describe the class of an AVClass context structure. That is an
+ * arbitrary struct of which the first field is a pointer to an
+ * AVClass struct (e.g. AVCodecContext, AVFormatContext etc.).
  */
-typedef struct AVCLASS AVClass;
-struct AVCLASS {
+typedef struct {
+    /**
+     * The name of the class; usually it is the same name as the
+     * context structure type to which the AVClass is associated.
+     */
     const char* class_name;
-    const char* (*item_name)(void*); /* actually passing a pointer to an AVCodecContext
-                                        or AVFormatContext, which begin with an AVClass.
-                                        Needed because av_log is in libavcodec and has no visibility
-                                        of AVIn/OutputFormat */
+
+    /**
+     * A pointer to a function which returns the name of a context
+     * instance ctx associated with the class.
+     */
+    const char* (*item_name)(void* ctx);
+
+    /**
+     * a pointer to the first option specified in the class if any or NULL
+     *
+     * @see av_set_default_options()
+     */
     const struct AVOption *option;
-};
+
+    /**
+     * LIBAVUTIL_VERSION with which this structure was created.
+     * This is used to allow fields to be added without requiring major
+     * version bumps everywhere.
+     */
+
+    int version;
+
+    /**
+     * Offset in the structure where log_level_offset is stored.
+     * 0 means there is no such variable
+     */
+    int log_level_offset_offset;
+
+    /**
+     * Offset in the structure where a pointer to the parent context for loging is stored.
+     * for example a decoder that uses eval.c could pass its AVCodecContext to eval as such
+     * parent context. And a av_log() implementation could then display the parent context
+     * can be NULL of course
+     */
+    int parent_log_context_offset;
+} AVClass;
 
 /* av_log API */
 
-#if LIBAVUTIL_VERSION_INT < (50<<16)
-#define AV_LOG_QUIET -1
-#define AV_LOG_FATAL 0
-#define AV_LOG_ERROR 0
-#define AV_LOG_WARNING 1
-#define AV_LOG_INFO 1
-#define AV_LOG_VERBOSE 1
-#define AV_LOG_DEBUG 2
-#else
 #define AV_LOG_QUIET    -8
 
 /**
- * something went really wrong and we will crash now
+ * Something went really wrong and we will crash now.
  */
 #define AV_LOG_PANIC     0
 
 /**
- * something went wrong and recovery is not possible
- * like no header in a format which depends on it or a combination
- * of parameters which are not allowed
+ * Something went wrong and recovery is not possible.
+ * For example, no header was found for a format which depends
+ * on headers or an illegal combination of parameters is used.
  */
 #define AV_LOG_FATAL     8
 
 /**
- * something went wrong and cannot losslessly be recovered
- * but not all future data is affected
+ * Something went wrong and cannot losslessly be recovered.
+ * However, not all future data is affected.
  */
 #define AV_LOG_ERROR    16
 
 /**
- * something somehow does not look correct / something which may or may not
- * lead to some problems like use of -vstrict -2
+ * Something somehow does not look correct. This may or may not
+ * lead to problems. An example would be the use of '-vstrict -2'.
  */
 #define AV_LOG_WARNING  24
 
@@ -77,18 +104,13 @@ struct AVCLASS {
 #define AV_LOG_VERBOSE  40
 
 /**
- * stuff which is only useful for libav* developers
+ * Stuff which is only useful for libav* developers.
  */
 #define AV_LOG_DEBUG    48
-#endif
-
-#if LIBAVUTIL_VERSION_INT < (50<<16)
-extern int av_log_level;
-#endif
 
 /**
- * Send the specified message to the log if the level is less than or equal to
- * the current av_log_level. By default, all logging messages are sent to
+ * Send the specified message to the log if the level is less than or equal
+ * to the current av_log_level. By default, all logging messages are sent to
  * stderr. This behavior can be altered by setting a different av_vlog callback
  * function.
  *
@@ -101,15 +123,16 @@ extern int av_log_level;
  * @see av_vlog
  */
 #ifdef __GNUC__
-extern void av_log(void*, int level, const char *fmt, ...) __attribute__ ((__format__ (__printf__, 3, 4)));
+void av_log(void *avcl, int level, const char *fmt, ...) __attribute__ ((__format__ (__printf__, 3, 4)));
 #else
-extern void av_log(void*, int level, const char *fmt, ...);
+void av_log(void *avcl, int level, const char *fmt, ...);
 #endif
 
-extern void av_vlog(void*, int level, const char *fmt, va_list);
-extern int av_log_get_level(void);
-extern void av_log_set_level(int);
-extern void av_log_set_callback(void (*)(void*, int, const char*, va_list));
-extern void av_log_default_callback(void* ptr, int level, const char* fmt, va_list vl);
+void av_vlog(void *avcl, int level, const char *fmt, va_list);
+int av_log_get_level(void);
+void av_log_set_level(int);
+void av_log_set_callback(void (*)(void*, int, const char*, va_list));
+void av_log_default_callback(void* ptr, int level, const char* fmt, va_list vl);
+const char* av_default_item_name(void* ctx);
 
-#endif /* FFMPEG_LOG_H */
+#endif /* AVUTIL_LOG_H */

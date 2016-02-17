@@ -23,10 +23,9 @@
 
 // SSD assumes all args aligned
 // other cmp functions assume first arg aligned
-typedef int  (*x264_pixel_cmp_t) ( uint8_t *, int, uint8_t *, int );
-typedef void (*x264_pixel_cmp_x3_t) ( uint8_t *, uint8_t *, uint8_t *, uint8_t *, int, int[3] );
-typedef void (*x264_pixel_cmp_x4_t) ( uint8_t *, uint8_t *, uint8_t *, uint8_t *, uint8_t *, int, int[4] );
-typedef int  (*x264_pixel_var_t) ( uint8_t *, int, uint32_t * );
+typedef int  (*x264_pixel_cmp_t) ( pixel *, int, pixel *, int );
+typedef void (*x264_pixel_cmp_x3_t) ( pixel *, pixel *, pixel *, pixel *, int, int[3] );
+typedef void (*x264_pixel_cmp_x4_t) ( pixel *, pixel *, pixel *, pixel *, pixel *, int, int[4] );
 
 enum
 {
@@ -69,13 +68,20 @@ typedef struct
     x264_pixel_cmp_t ssim[7];
     x264_pixel_cmp_t sa8d[4];
     x264_pixel_cmp_t mbcmp[7]; /* either satd or sad for subpel refine and mode decision */
+    x264_pixel_cmp_t mbcmp_unaligned[7]; /* unaligned mbcmp for subpel */
     x264_pixel_cmp_t fpelcmp[7]; /* either satd or sad for fullpel motion search */
     x264_pixel_cmp_x3_t fpelcmp_x3[7];
     x264_pixel_cmp_x4_t fpelcmp_x4[7];
-    x264_pixel_var_t var[4];
+    x264_pixel_cmp_t sad_aligned[7]; /* Aligned SAD for mbcmp */
+    int (*var2_8x8)( pixel *, int, pixel *, int, int * );
 
-    void (*ssim_4x4x2_core)( const uint8_t *pix1, int stride1,
-                             const uint8_t *pix2, int stride2, int sums[2][4] );
+    uint64_t (*var[4])( pixel *pix, int stride );
+    uint64_t (*hadamard_ac[4])( pixel *pix, int stride );
+
+    uint64_t (*ssd_nv12_core)( pixel *pixuv1, int stride1,
+                               pixel *pixuv2, int stride2, int width, int height );
+    void (*ssim_4x4x2_core)( const pixel *pix1, int stride1,
+                             const pixel *pix2, int stride2, int sums[2][4] );
     float (*ssim_end4)( int sum0[5][4], int sum1[5][4], int width );
 
     /* multiple parallel calls to cmp. */
@@ -89,16 +95,25 @@ typedef struct
     int (*ads[7])( int enc_dc[4], uint16_t *sums, int delta,
                    uint16_t *cost_mvx, int16_t *mvs, int width, int thresh );
 
-    /* calculate satd of V, H, and DC modes.
+    /* calculate satd or sad of V, H, and DC modes.
      * may be NULL, in which case just use pred+satd instead. */
-    void (*intra_satd_x3_16x16)( uint8_t *fenc, uint8_t *fdec, int res[3] );
-    void (*intra_satd_x3_8x8c)( uint8_t *fenc, uint8_t *fdec, int res[3] );
-    void (*intra_satd_x3_4x4)( uint8_t *fenc, uint8_t *fdec, int res[3] );
-    void (*intra_sa8d_x3_8x8)( uint8_t *fenc, uint8_t edge[33], int res[3] );
+    void (*intra_mbcmp_x3_16x16)( pixel *fenc, pixel *fdec  , int res[3] );
+    void (*intra_satd_x3_16x16) ( pixel *fenc, pixel *fdec  , int res[3] );
+    void (*intra_sad_x3_16x16)  ( pixel *fenc, pixel *fdec  , int res[3] );
+    void (*intra_mbcmp_x3_8x8c) ( pixel *fenc, pixel *fdec  , int res[3] );
+    void (*intra_satd_x3_8x8c)  ( pixel *fenc, pixel *fdec  , int res[3] );
+    void (*intra_sad_x3_8x8c)   ( pixel *fenc, pixel *fdec  , int res[3] );
+    void (*intra_mbcmp_x3_4x4)  ( pixel *fenc, pixel *fdec  , int res[3] );
+    void (*intra_satd_x3_4x4)   ( pixel *fenc, pixel *fdec  , int res[3] );
+    void (*intra_sad_x3_4x4)    ( pixel *fenc, pixel *fdec  , int res[3] );
+    void (*intra_mbcmp_x3_8x8)  ( pixel *fenc, pixel edge[33], int res[3] );
+    void (*intra_sa8d_x3_8x8)   ( pixel *fenc, pixel edge[33], int res[3] );
+    void (*intra_sad_x3_8x8)    ( pixel *fenc, pixel edge[33], int res[3] );
 } x264_pixel_function_t;
 
 void x264_pixel_init( int cpu, x264_pixel_function_t *pixf );
-int64_t x264_pixel_ssd_wxh( x264_pixel_function_t *pf, uint8_t *pix1, int i_pix1, uint8_t *pix2, int i_pix2, int i_width, int i_height );
-float x264_pixel_ssim_wxh( x264_pixel_function_t *pf, uint8_t *pix1, int i_pix1, uint8_t *pix2, int i_pix2, int i_width, int i_height );
+uint64_t x264_pixel_ssd_nv12( x264_pixel_function_t *pf, pixel *pix1, int i_pix1, pixel *pix2, int i_pix2, int i_width, int i_height );
+uint64_t x264_pixel_ssd_wxh( x264_pixel_function_t *pf, pixel *pix1, int i_pix1, pixel *pix2, int i_pix2, int i_width, int i_height );
+float x264_pixel_ssim_wxh( x264_pixel_function_t *pf, pixel *pix1, int i_pix1, pixel *pix2, int i_pix2, int i_width, int i_height, void *buf );
 
 #endif

@@ -1,6 +1,6 @@
 /*
  * MJPEG parser
- * Copyright (c) 2000, 2001 Fabrice Bellard.
+ * Copyright (c) 2000, 2001 Fabrice Bellard
  * Copyright (c) 2003 Alex Beregszaszi
  * Copyright (c) 2003-2004 Michael Niedermayer
  *
@@ -22,7 +22,7 @@
  */
 
 /**
- * @file mjpeg_parser.c
+ * @file
  * MJPEG parser.
  */
 
@@ -71,19 +71,23 @@ static int find_frame_end(ParseContext *pc, const uint8_t *buf, int buf_size){
 }
 
 static int jpeg_parse(AVCodecParserContext *s,
-                           AVCodecContext *avctx,
-                           const uint8_t **poutbuf, int *poutbuf_size,
-                           const uint8_t *buf, int buf_size)
+                      AVCodecContext *avctx,
+                      const uint8_t **poutbuf, int *poutbuf_size,
+                      const uint8_t *buf, int buf_size)
 {
     ParseContext *pc = s->priv_data;
     int next;
 
-    next= find_frame_end(pc, buf, buf_size);
+    if(s->flags & PARSER_FLAG_COMPLETE_FRAMES){
+        next= buf_size;
+    }else{
+        next= find_frame_end(pc, buf, buf_size);
 
-    if (ff_combine_frame(pc, next, &buf, &buf_size) < 0) {
-        *poutbuf = NULL;
-        *poutbuf_size = 0;
-        return buf_size;
+        if (ff_combine_frame(pc, next, &buf, &buf_size) < 0) {
+            *poutbuf = NULL;
+            *poutbuf_size = 0;
+            return buf_size;
+        }
     }
 
     *poutbuf = buf;

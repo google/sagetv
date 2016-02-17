@@ -15,9 +15,10 @@ be properly added to the respective issue.
 The subscription URL for the ffmpeg-issues list is:
 http://live.polito/mailman/listinfo/ffmpeg-issues
 The URL of the webinterface of the tracker is:
-http(s)://roundup.mplayerhq/roundup/ffmpeg/
+http(s)://roundup.ffmpeg/roundup/ffmpeg/
 Note the URLs in this document are obfuscated, you must append the top level
-domain of Hungary to the tracker, and of Italy to the mailing list.
+domain for non-profit organizations to the tracker, and of Italy to the
+mailing list.
 
 Email Interface:
 ----------------
@@ -146,8 +147,13 @@ bug/closed/fixed
     Bugs which have to the best of our knowledge been fixed.
 
 bug/closed/wont_fix
-    Bugs which we will not fix, the reasons here could be legal, philosophical
-    or others.
+    Bugs which we will not fix. Possible reasons include legality, high
+    complexity for the sake of supporting obscure corner cases, speed loss
+    for similarly esoteric purposes, et cetera.
+    This also means that we would reject a patch.
+    If we are just too lazy to fix a bug then the correct state is open
+    and unassigned. Closed means that the case is closed which is not
+    the case if we are just waiting for a patch.
 
 bug/closed/works_for_me
     Bugs for which sufficient information was provided to reproduce but

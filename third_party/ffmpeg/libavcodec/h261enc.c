@@ -21,13 +21,14 @@
  */
 
 /**
- * @file h261enc.c
+ * @file
  * H.261 encoder.
  */
 
 #include "dsputil.h"
 #include "avcodec.h"
 #include "mpegvideo.h"
+#include "h263.h"
 #include "h261.h"
 #include "h261data.h"
 
@@ -55,13 +56,13 @@ void ff_h261_encode_picture_header(MpegEncContext * s, int picture_number){
     align_put_bits(&s->pb);
 
     /* Update the pointer to last GOB */
-    s->ptr_lastgob = pbBufPtr(&s->pb);
+    s->ptr_lastgob = put_bits_ptr(&s->pb);
 
     put_bits(&s->pb, 20, 0x10); /* PSC */
 
     temp_ref= s->picture_number * (int64_t)30000 * s->avctx->time_base.num /
                          (1001 * (int64_t)s->avctx->time_base.den); //FIXME maybe this should use a timestamp
-    put_bits(&s->pb, 5, temp_ref & 0x1f); /* TemporalReference */
+    put_sbits(&s->pb, 5, temp_ref); /* TemporalReference */
 
     put_bits(&s->pb, 1, 0); /* split screen off */
     put_bits(&s->pb, 1, 0); /* camera  off */
@@ -83,7 +84,7 @@ void ff_h261_encode_picture_header(MpegEncContext * s, int picture_number){
 }
 
 /**
- * Encodes a group of blocks header.
+ * Encode a group of blocks header.
  */
 static void h261_encode_gob_header(MpegEncContext * s, int mb_line){
     H261Context * h = (H261Context *)s;
@@ -256,7 +257,7 @@ void ff_h261_encode_init(MpegEncContext *s){
  */
 static void h261_encode_block(H261Context * h, DCTELEM * block, int n){
     MpegEncContext * const s = &h->s;
-    int level, run, last, i, j, last_index, last_non_zero, sign, slevel, code;
+    int level, run, i, j, last_index, last_non_zero, sign, slevel, code;
     RLTable *rl;
 
     rl = &h261_rl_tcoeff;
@@ -294,7 +295,6 @@ static void h261_encode_block(H261Context * h, DCTELEM * block, int n){
         level = block[j];
         if (level) {
             run = i - last_non_zero - 1;
-            last = (i == last_index);
             sign = 0;
             slevel = level;
             if (level < 0) {
@@ -309,7 +309,7 @@ static void h261_encode_block(H261Context * h, DCTELEM * block, int n){
                 put_bits(&s->pb, 6, run);
                 assert(slevel != 0);
                 assert(level <= 127);
-                put_bits(&s->pb, 8, slevel & 0xff);
+                put_sbits(&s->pb, 8, slevel);
             } else {
                 put_bits(&s->pb, 1, sign);
             }
@@ -323,12 +323,13 @@ static void h261_encode_block(H261Context * h, DCTELEM * block, int n){
 
 AVCodec h261_encoder = {
     "h261",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_H261,
     sizeof(H261Context),
     MPV_encode_init,
     MPV_encode_picture,
     MPV_encode_end,
-    .pix_fmts= (enum PixelFormat[]){PIX_FMT_YUV420P, -1},
+    .pix_fmts= (const enum PixelFormat[]){PIX_FMT_YUV420P, PIX_FMT_NONE},
+    .long_name= NULL_IF_CONFIG_SMALL("H.261"),
 };
 

@@ -20,12 +20,11 @@
  */
 
 /**
- * @file qpeg.c
+ * @file
  * QPEG codec.
  */
 
 #include "avcodec.h"
-#include "mpegvideo.h"
 
 typedef struct QpegContext{
     AVCodecContext *avctx;
@@ -109,9 +108,9 @@ static void qpeg_decode_intra(const uint8_t *src, uint8_t *dst, int size,
     }
 }
 
-static int qpeg_table_h[16] =
+static const int qpeg_table_h[16] =
  { 0x00, 0x20, 0x20, 0x20, 0x18, 0x10, 0x10, 0x20, 0x10, 0x08, 0x18, 0x08, 0x08, 0x18, 0x10, 0x04};
-static int qpeg_table_w[16] =
+static const int qpeg_table_w[16] =
  { 0x00, 0x20, 0x18, 0x08, 0x18, 0x10, 0x20, 0x10, 0x08, 0x10, 0x20, 0x20, 0x08, 0x10, 0x18, 0x04};
 
 /* Decodes delta frames */
@@ -249,8 +248,10 @@ static void qpeg_decode_inter(const uint8_t *src, uint8_t *dst, int size,
 
 static int decode_frame(AVCodecContext *avctx,
                         void *data, int *data_size,
-                        const uint8_t *buf, int buf_size)
+                        AVPacket *avpkt)
 {
+    const uint8_t *buf = avpkt->data;
+    int buf_size = avpkt->size;
     QpegContext * const a = avctx->priv_data;
     AVFrame * const p= (AVFrame*)&a->pic;
     uint8_t* outdata;
@@ -285,18 +286,21 @@ static int decode_frame(AVCodecContext *avctx,
     return buf_size;
 }
 
-static int decode_init(AVCodecContext *avctx){
+static av_cold int decode_init(AVCodecContext *avctx){
     QpegContext * const a = avctx->priv_data;
 
+    if (!avctx->palctrl) {
+        av_log(avctx, AV_LOG_FATAL, "Missing required palette via palctrl\n");
+        return -1;
+    }
     a->avctx = avctx;
     avctx->pix_fmt= PIX_FMT_PAL8;
-    a->pic.data[0] = NULL;
     a->refdata = av_malloc(avctx->width * avctx->height);
 
     return 0;
 }
 
-static int decode_end(AVCodecContext *avctx){
+static av_cold int decode_end(AVCodecContext *avctx){
     QpegContext * const a = avctx->priv_data;
     AVFrame * const p= (AVFrame*)&a->pic;
 
@@ -309,7 +313,7 @@ static int decode_end(AVCodecContext *avctx){
 
 AVCodec qpeg_decoder = {
     "qpeg",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_QPEG,
     sizeof(QpegContext),
     decode_init,
@@ -317,4 +321,5 @@ AVCodec qpeg_decoder = {
     decode_end,
     decode_frame,
     CODEC_CAP_DR1,
+    .long_name = NULL_IF_CONFIG_SMALL("Q-team QPEG"),
 };

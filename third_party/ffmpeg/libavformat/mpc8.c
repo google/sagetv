@@ -18,9 +18,10 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
+
+#include "libavcodec/get_bits.h"
+#include "libavcodec/unary.h"
 #include "avformat.h"
-#include "bitstream.h"
-#include "unary.h"
 
 /// Two-byte MPC tag
 #define MKMPCTAG(a, b) (a | (b << 8))
@@ -50,10 +51,54 @@ typedef struct {
     int64_t samples;
 } MPCContext;
 
+static inline int64_t bs_get_v(uint8_t **bs)
+{
+    int64_t v = 0;
+    int br = 0;
+    int c;
+
+    do {
+        c = **bs; (*bs)++;
+        v <<= 7;
+        v |= c & 0x7F;
+        br++;
+        if (br > 10)
+            return -1;
+    } while (c & 0x80);
+
+    return v - br;
+}
+
 static int mpc8_probe(AVProbeData *p)
 {
-    if (AV_RL32(p->buf) == TAG_MPCK)
-        return AVPROBE_SCORE_MAX;
+    uint8_t *bs = p->buf + 4;
+    uint8_t *bs_end = bs + p->buf_size;
+    int64_t size;
+
+    if (p->buf_size < 16)
+        return 0;
+    if (AV_RL32(p->buf) != TAG_MPCK)
+        return 0;
+    while (bs < bs_end + 3) {
+        int header_found = (bs[0] == 'S' && bs[1] == 'H');
+        if (bs[0] < 'A' || bs[0] > 'Z' || bs[1] < 'A' || bs[1] > 'Z')
+            return 0;
+        bs += 2;
+        size = bs_get_v(&bs);
+        if (size < 2)
+            return 0;
+        if (bs + size - 2 >= bs_end)
+            return AVPROBE_SCORE_MAX / 4 - 1; //seems to be valid MPC but no header yet
+        if (header_found) {
+            if (size < 11 || size > 28)
+                return 0;
+            if (!AV_RL32(bs)) //zero CRC is invalid
+                return 0;
+            return AVPROBE_SCORE_MAX;
+        } else {
+            bs += size - 2;
+        }
+    }
     return 0;
 }
 
@@ -96,7 +141,7 @@ static void mpc8_parse_seektable(AVFormatContext *s, int64_t off)
         av_log(s, AV_LOG_ERROR, "No seek table at given position\n");
         return;
     }
-    if(!(buf = av_malloc(size)))
+    if(!(buf = av_malloc(size + FF_INPUT_BUFFER_PADDING_SIZE)))
         return;
     get_buffer(s->pb, buf, size);
     init_get_bits(&gb, buf, size * 8);
@@ -179,9 +224,9 @@ static int mpc8_read_header(AVFormatContext *s, AVFormatParameters *ap)
     st = av_new_stream(s, 0);
     if (!st)
         return AVERROR(ENOMEM);
-    st->codec->codec_type = CODEC_TYPE_AUDIO;
+    st->codec->codec_type = AVMEDIA_TYPE_AUDIO;
     st->codec->codec_id = CODEC_ID_MUSEPACK8;
-    st->codec->bits_per_sample = 16;
+    st->codec->bits_per_coded_sample = 16;
 
     st->codec->extradata_size = 2;
     st->codec->extradata = av_mallocz(st->codec->extradata_size + FF_INPUT_BUFFER_PADDING_SIZE);
@@ -205,6 +250,8 @@ static int mpc8_read_packet(AVFormatContext *s, AVPacket *pkt)
     while(!url_feof(s->pb)){
         pos = url_ftell(s->pb);
         mpc8_get_chunk_header(s->pb, &tag, &size);
+        if (size < 0)
+            return -1;
         if(tag == TAG_AUDIOPACKET){
             if(av_get_packet(s->pb, pkt, size) < 0)
                 return AVERROR(ENOMEM);
@@ -234,7 +281,7 @@ static int mpc8_read_seek(AVFormatContext *s, int stream_index, int64_t timestam
 
 AVInputFormat mpc8_demuxer = {
     "mpc8",
-    "musepack8",
+    NULL_IF_CONFIG_SMALL("Musepack SV8"),
     sizeof(MPCContext),
     mpc8_probe,
     mpc8_read_header,

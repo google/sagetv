@@ -1,7 +1,7 @@
 /*
  * MPEG4 Video frame extraction
- * Copyright (c) 2003 Fabrice Bellard.
- * Copyright (c) 2003 Michael Niedermayer.
+ * Copyright (c) 2003 Fabrice Bellard
+ * Copyright (c) 2003 Michael Niedermayer
  *
  * This file is part of FFmpeg.
  *
@@ -22,6 +22,7 @@
 
 #include "parser.h"
 #include "mpegvideo.h"
+#include "mpeg4video.h"
 #include "mpeg4video_parser.h"
 
 
@@ -82,7 +83,7 @@ static int av_mpeg4_decode_header(AVCodecParserContext *s1,
 
     init_get_bits(gb, buf, 8 * buf_size);
     ret = ff_mpeg4_decode_picture_header(s, gb);
-    if (s->width) {
+    if (s->width && (!avctx->width || !avctx->height || !avctx->coded_width || !avctx->coded_height)) {
         avcodec_set_dimensions(avctx, s->width, s->height);
     }
     s1->pict_type= s->pict_type;
@@ -90,7 +91,7 @@ static int av_mpeg4_decode_header(AVCodecParserContext *s1,
     return ret;
 }
 
-static int mpeg4video_parse_init(AVCodecParserContext *s)
+static av_cold int mpeg4video_parse_init(AVCodecParserContext *s)
 {
     ParseContext1 *pc = s->priv_data;
 

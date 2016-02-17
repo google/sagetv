@@ -1,5 +1,5 @@
 /*
- * A very simple circular buffer FIFO implementation
+ * a very simple circular buffer FIFO implementation
  * Copyright (c) 2000, 2001, 2002 Fabrice Bellard
  * Copyright (c) 2006 Roman Shaposhnik
  *
@@ -22,76 +22,89 @@
 #include "common.h"
 #include "fifo.h"
 
-int av_fifo_init(AVFifoBuffer *f, int size)
+AVFifoBuffer *av_fifo_alloc(unsigned int size)
 {
-    f->wptr = f->rptr =
+    AVFifoBuffer *f= av_mallocz(sizeof(AVFifoBuffer));
+    if(!f)
+        return NULL;
     f->buffer = av_malloc(size);
     f->end = f->buffer + size;
+    av_fifo_reset(f);
     if (!f->buffer)
-        return -1;
-    return 0;
+        av_freep(&f);
+    return f;
 }
 
 void av_fifo_free(AVFifoBuffer *f)
 {
-    av_free(f->buffer);
+    if(f){
+        av_free(f->buffer);
+        av_free(f);
+    }
+}
+
+void av_fifo_reset(AVFifoBuffer *f)
+{
+    f->wptr = f->rptr = f->buffer;
+    f->wndx = f->rndx = 0;
 }
 
 int av_fifo_size(AVFifoBuffer *f)
 {
-    int size = f->wptr - f->rptr;
-    if (size < 0)
-        size += f->end - f->buffer;
-    return size;
+    return (uint32_t)(f->wndx - f->rndx);
 }
 
-/**
- * Get data from the fifo (returns -1 if not enough data).
- */
-int av_fifo_read(AVFifoBuffer *f, uint8_t *buf, int buf_size)
+int av_fifo_space(AVFifoBuffer *f)
 {
-    return av_fifo_generic_read(f, buf_size, NULL, buf);
+    return f->end - f->buffer - av_fifo_size(f);
 }
 
-/**
- * Resizes a FIFO.
- */
-void av_fifo_realloc(AVFifoBuffer *f, unsigned int new_size) {
+int av_fifo_realloc2(AVFifoBuffer *f, unsigned int new_size) {
     unsigned int old_size= f->end - f->buffer;
 
     if(old_size < new_size){
         int len= av_fifo_size(f);
-        AVFifoBuffer f2;
+        AVFifoBuffer *f2= av_fifo_alloc(new_size);
 
-        av_fifo_init(&f2, new_size);
-        av_fifo_read(f, f2.buffer, len);
-        f2.wptr += len;
+        if (!f2)
+            return -1;
+        av_fifo_generic_read(f, f2->buffer, len, NULL);
+        f2->wptr += len;
+        f2->wndx += len;
         av_free(f->buffer);
-        *f= f2;
+        *f= *f2;
+        av_free(f2);
     }
+    return 0;
 }
 
-void av_fifo_write(AVFifoBuffer *f, const uint8_t *buf, int size)
+// src must NOT be const as it can be a context for func that may need updating (like a pointer or byte counter)
+int av_fifo_generic_write(AVFifoBuffer *f, void *src, int size, int (*func)(void*, void*, int))
 {
+    int total = size;
     do {
         int len = FFMIN(f->end - f->wptr, size);
-        memcpy(f->wptr, buf, len);
+        if(func) {
+            if(func(src, f->wptr, len) <= 0)
+                break;
+        } else {
+            memcpy(f->wptr, src, len);
+            src = (uint8_t*)src + len;
+        }
+// Write memory barrier needed for SMP here in theory
         f->wptr += len;
         if (f->wptr >= f->end)
             f->wptr = f->buffer;
-        buf += len;
+        f->wndx += len;
         size -= len;
     } while (size > 0);
+    return total - size;
 }
 
 
-/** get data from the fifo (return -1 if not enough data) */
-int av_fifo_generic_read(AVFifoBuffer *f, int buf_size, void (*func)(void*, void*, int), void* dest)
+int av_fifo_generic_read(AVFifoBuffer *f, void *dest, int buf_size, void (*func)(void*, void*, int))
 {
-    int size = av_fifo_size(f);
-
-    if (size < buf_size)
-        return -1;
+// Read memory barrier needed for SMP here in theory
     do {
         int len = FFMIN(f->end - f->rptr, buf_size);
         if(func) func(dest, f->rptr, len);
@@ -99,16 +112,18 @@ int av_fifo_generic_read(AVFifoBuffer *f, int buf_size, void (*func)(void*, void
             memcpy(dest, f->rptr, len);
             dest = (uint8_t*)dest + len;
         }
+// memory barrier needed for SMP here in theory
         av_fifo_drain(f, len);
         buf_size -= len;
     } while (buf_size > 0);
     return 0;
 }
 
-/** discard data from the fifo */
+/** Discard data from the FIFO. */
 void av_fifo_drain(AVFifoBuffer *f, int size)
 {
     f->rptr += size;
     if (f->rptr >= f->end)
         f->rptr -= f->end - f->buffer;
+    f->rndx += size;
 }

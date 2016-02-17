@@ -1,6 +1,6 @@
 /*
  * MJPEG encoder and decoder
- * Copyright (c) 2000, 2001 Fabrice Bellard.
+ * Copyright (c) 2000, 2001 Fabrice Bellard
  * Copyright (c) 2003 Alex Beregszaszi
  * Copyright (c) 2003-2004 Michael Niedermayer
  *
@@ -26,7 +26,7 @@
  */
 
 /**
- * @file mjpeg.c
+ * @file
  * MJPEG encoder and decoder.
  */
 
@@ -64,13 +64,11 @@ const unsigned char std_chrominance_quant_tbl[64] = {
 /* IMPORTANT: these are only valid for 8-bit data precision! */
 const uint8_t ff_mjpeg_bits_dc_luminance[17] =
 { /* 0-base */ 0, 0, 1, 5, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0 };
-const uint8_t ff_mjpeg_val_dc_luminance[] =
+const uint8_t ff_mjpeg_val_dc[12] =
 { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
 
 const uint8_t ff_mjpeg_bits_dc_chrominance[17] =
 { /* 0-base */ 0, 0, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0 };
-const uint8_t ff_mjpeg_val_dc_chrominance[] =
-{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
 
 const uint8_t ff_mjpeg_bits_ac_luminance[17] =
 { /* 0-base */ 0, 0, 2, 1, 3, 3, 2, 4, 3, 5, 5, 4, 4, 0, 0, 1, 0x7d };

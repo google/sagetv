@@ -1,14 +1,10 @@
+include $(SUBDIR)../config.mak
 
-include ../config.mak
-
-EXTRALIBS := -L$(BUILD_ROOT)/libavutil -lavutil$(BUILDSUF) $(EXTRALIBS)
-
-NAME=postproc
-LIBVERSION=$(SPPVERSION)
-LIBMAJOR=$(SPPMAJOR)
+NAME = postproc
+FFLIBS = avutil
 
 HEADERS = postprocess.h
 
 OBJS = postprocess.o
 
-include ../common.mak
+include $(SUBDIR)../subdir.mak

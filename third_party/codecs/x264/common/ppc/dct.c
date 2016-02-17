@@ -21,13 +21,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02111, USA.
  *****************************************************************************/
 
-#ifdef SYS_LINUX
-#include <altivec.h>
-#endif
-
 #include "common/common.h"
 #include "ppccommon.h"
 
+#if !X264_HIGH_BIT_DEPTH
 #define VEC_DCT(a0,a1,a2,a3,b0,b1,b2,b3) \
     b1 = vec_add( a0, a3 );              \
     b3 = vec_add( a1, a2 );              \
@@ -40,8 +37,7 @@
     b3 = vec_sub( a0, a1 );              \
     b3 = vec_sub( b3, a1 )
 
-void x264_sub4x4_dct_altivec( int16_t dct[4][4],
-        uint8_t *pix1, uint8_t *pix2 )
+void x264_sub4x4_dct_altivec( int16_t dct[4][4], uint8_t *pix1, uint8_t *pix2 )
 {
     PREP_DIFF_8BYTEALIGNED;
     vec_s16_t dct0v, dct1v, dct2v, dct3v;
@@ -63,8 +59,7 @@ void x264_sub4x4_dct_altivec( int16_t dct[4][4],
     vec_st(vec_perm(tmp2v, tmp3v, permHighv), 16, (int16_t*)dct);
 }
 
-void x264_sub8x8_dct_altivec( int16_t dct[4][4][4],
-        uint8_t *pix1, uint8_t *pix2 )
+void x264_sub8x8_dct_altivec( int16_t dct[4][4][4], uint8_t *pix1, uint8_t *pix2 )
 {
     PREP_DIFF_8BYTEALIGNED;
     vec_s16_t dct0v, dct1v, dct2v, dct3v, dct4v, dct5v, dct6v, dct7v;
@@ -103,8 +98,7 @@ void x264_sub8x8_dct_altivec( int16_t dct[4][4][4],
     vec_st(vec_perm(tmp6v, tmp7v, permLowv),  112, (int16_t*)dct);
 }
 
-void x264_sub16x16_dct_altivec( int16_t dct[16][4][4],
-        uint8_t *pix1, uint8_t *pix2 ) 
+void x264_sub16x16_dct_altivec( int16_t dct[16][4][4], uint8_t *pix1, uint8_t *pix2 )
 {
     x264_sub8x8_dct_altivec( &dct[ 0], &pix1[0], &pix2[0] );
     x264_sub8x8_dct_altivec( &dct[ 4], &pix1[8], &pix2[8] );
@@ -212,7 +206,7 @@ void x264_sub8x8_dct8_altivec( int16_t dct[8][8], uint8_t *pix1, uint8_t *pix2 )
     vec_st( dct_tr1v, 16,  (signed short *)dct );
     vec_st( dct_tr2v, 32,  (signed short *)dct );
     vec_st( dct_tr3v, 48,  (signed short *)dct );
-    
+
     vec_st( dct_tr4v, 64,  (signed short *)dct );
     vec_st( dct_tr5v, 80,  (signed short *)dct );
     vec_st( dct_tr6v, 96,  (signed short *)dct );
@@ -489,4 +483,5 @@ void x264_zigzag_scan_4x4_field_altivec( int16_t level[16], int16_t dct[4][4] )
     vec_st( tmp0v, 0x00, level );
     vec_st( tmp1v, 0x10, level );
 }
+#endif // !X264_HIGH_BIT_DEPTH
 

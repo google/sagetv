@@ -18,64 +18,83 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
+
+#include "libavutil/intreadwrite.h"
 #include "avformat.h"
 #include "avio.h"
+#include "avc.h"
 
-const uint8_t *ff_avc_find_startcode(const uint8_t *p, const uint8_t *end)
+static const uint8_t *ff_avc_find_startcode_internal(const uint8_t *p, const uint8_t *end)
 {
-    const uint8_t *a = p + 4 - ((long)p & 3);
+    const uint8_t *a = p + 4 - ((intptr_t)p & 3);
 
-    for( end -= 3; p < a && p < end; p++ ) {
-        if( p[0] == 0 && p[1] == 0 && p[2] == 1 )
+    for (end -= 3; p < a && p < end; p++) {
+        if (p[0] == 0 && p[1] == 0 && p[2] == 1)
             return p;
     }
 
-    for( end -= 3; p < end; p += 4 ) {
+    for (end -= 3; p < end; p += 4) {
         uint32_t x = *(const uint32_t*)p;
-//      if( (x - 0x01000100) & (~x) & 0x80008000 ) // little endian
-//      if( (x - 0x00010001) & (~x) & 0x00800080 ) // big endian
-        if( (x - 0x01010101) & (~x) & 0x80808080 ) { // generic
-            if( p[1] == 0 ) {
-                if( p[0] == 0 && p[2] == 1 )
-                    return p-1;
-                if( p[2] == 0 && p[3] == 1 )
+//      if ((x - 0x01000100) & (~x) & 0x80008000) // little endian
+//      if ((x - 0x00010001) & (~x) & 0x00800080) // big endian
+        if ((x - 0x01010101) & (~x) & 0x80808080) { // generic
+            if (p[1] == 0) {
+                if (p[0] == 0 && p[2] == 1)
                     return p;
-            }
-            if( p[3] == 0 ) {
-                if( p[2] == 0 && p[4] == 1 )
+                if (p[2] == 0 && p[3] == 1)
                     return p+1;
-                if( p[4] == 0 && p[5] == 1 )
+            }
+            if (p[3] == 0) {
+                if (p[2] == 0 && p[4] == 1)
                     return p+2;
+                if (p[4] == 0 && p[5] == 1)
+                    return p+3;
             }
         }
     }
 
-    for( end += 3; p < end; p++ ) {
-        if( p[0] == 0 && p[1] == 0 && p[2] == 1 )
+    for (end += 3; p < end; p++) {
+        if (p[0] == 0 && p[1] == 0 && p[2] == 1)
             return p;
     }
 
     return end + 3;
 }
 
-int ff_avc_parse_nal_units(const uint8_t *buf_in, uint8_t **buf, int *size)
-{
-    ByteIOContext *pb;
-    const uint8_t *p = buf_in;
-    const uint8_t *end = p + *size;
-    const uint8_t *nal_start, *nal_end;
-    int ret = url_open_dyn_buf(&pb);
-    if(ret < 0)
-        return ret;
+const uint8_t *ff_avc_find_startcode(const uint8_t *p, const uint8_t *end){
+    const uint8_t *out= ff_avc_find_startcode_internal(p, end);
+    if(p<out && out<end && !out[-1]) out--;
+    return out;
+}
 
+int ff_avc_parse_nal_units(ByteIOContext *pb, const uint8_t *buf_in, int size)
+{
+    const uint8_t *p = buf_in;
+    const uint8_t *end = p + size;
+    const uint8_t *nal_start, *nal_end;
+
+    size = 0;
     nal_start = ff_avc_find_startcode(p, end);
     while (nal_start < end) {
         while(!*(nal_start++));
         nal_end = ff_avc_find_startcode(nal_start, end);
         put_be32(pb, nal_end - nal_start);
         put_buffer(pb, nal_start, nal_end - nal_start);
+        size += 4 + nal_end - nal_start;
         nal_start = nal_end;
     }
+    return size;
+}
+
+int ff_avc_parse_nal_units_buf(const uint8_t *buf_in, uint8_t **buf, int *size)
+{
+    ByteIOContext *pb;
+    int ret = url_open_dyn_buf(&pb);
+    if(ret < 0)
+        return ret;
+
+    ff_avc_parse_nal_units(pb, buf_in, *size);
+
     av_freep(buf);
     *size = url_close_dyn_buf(pb, buf);
     return 0;
@@ -85,12 +104,13 @@ int ff_isom_write_avcc(ByteIOContext *pb, const uint8_t *data, int len)
 {
     if (len > 6) {
         /* check for h264 start code */
-        if (AV_RB32(data) == 0x00000001) {
+        if (AV_RB32(data) == 0x00000001 ||
+            AV_RB24(data) == 0x000001) {
             uint8_t *buf=NULL, *end, *start;
             uint32_t sps_size=0, pps_size=0;
             uint8_t *sps=0, *pps=0;
 
-            int ret = ff_avc_parse_nal_units(data, &buf, &len);
+            int ret = ff_avc_parse_nal_units_buf(data, &buf, &len);
             if (ret < 0)
                 return ret;
             start = buf;

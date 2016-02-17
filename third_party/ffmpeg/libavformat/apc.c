@@ -19,8 +19,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include <string.h>
 #include "avformat.h"
-#include "string.h"
 
 static int apc_probe(AVProbeData *p)
 {
@@ -43,7 +43,7 @@ static int apc_read_header(AVFormatContext *s, AVFormatParameters *ap)
     if (!st)
         return AVERROR(ENOMEM);
 
-    st->codec->codec_type = CODEC_TYPE_AUDIO;
+    st->codec->codec_type = AVMEDIA_TYPE_AUDIO;
     st->codec->codec_id = CODEC_ID_ADPCM_IMA_WS;
 
     get_le32(pb); /* number of samples */
@@ -62,8 +62,8 @@ static int apc_read_header(AVFormatContext *s, AVFormatParameters *ap)
     if (get_le32(pb))
         st->codec->channels = 2;
 
-    st->codec->bits_per_sample = 4;
-    st->codec->bit_rate = st->codec->bits_per_sample * st->codec->channels
+    st->codec->bits_per_coded_sample = 4;
+    st->codec->bit_rate = st->codec->bits_per_coded_sample * st->codec->channels
                           * st->codec->sample_rate;
     st->codec->block_align = 1;
 
@@ -82,7 +82,7 @@ static int apc_read_packet(AVFormatContext *s, AVPacket *pkt)
 
 AVInputFormat apc_demuxer = {
     "apc",
-    "CRYO APC format",
+    NULL_IF_CONFIG_SMALL("CRYO APC format"),
     0,
     apc_probe,
     apc_read_header,

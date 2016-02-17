@@ -19,11 +19,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef FFMPEG_RTJPEG_H
-#define FFMPEG_RTJPEG_H
+#ifndef AVCODEC_RTJPEG_H
+#define AVCODEC_RTJPEG_H
 
 #include <stdint.h>
-#include <dsputil.h>
+#include "dsputil.h"
 
 typedef struct {
     int w, h;
@@ -31,6 +31,7 @@ typedef struct {
     uint8_t scan[64];
     uint32_t lquant[64];
     uint32_t cquant[64];
+    DECLARE_ALIGNED(16, DCTELEM, block)[64];
 } RTJpegContext;
 
 void rtjpeg_decode_init(RTJpegContext *c, DSPContext *dsp,
@@ -39,4 +40,4 @@ void rtjpeg_decode_init(RTJpegContext *c, DSPContext *dsp,
 
 int rtjpeg_decode_frame_yuv420(RTJpegContext *c, AVFrame *f,
                                const uint8_t *buf, int buf_size);
-#endif /* FFMPEG_RTJPEG_H */
+#endif /* AVCODEC_RTJPEG_H */

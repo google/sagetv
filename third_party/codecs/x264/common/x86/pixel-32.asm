@@ -3,8 +3,8 @@
 ;*****************************************************************************
 ;* Copyright (C) 2003-2008 x264 project
 ;*
-;* Authors: Laurent Aimar <fenrir@via.ecp.fr>
-;*          Loren Merritt <lorenm@u.washington.edu>
+;* Authors: Loren Merritt <lorenm@u.washington.edu>
+;*          Laurent Aimar <fenrir@via.ecp.fr>
 ;*
 ;* This program is free software; you can redistribute it and/or modify
 ;* it under the terms of the GNU General Public License as published by
@@ -27,31 +27,19 @@
 SECTION .text
 INIT_MMX
 
-%macro LOAD_DIFF_4P 4  ; mp, mt, dx, dy
-    movd        %1, [eax+ebx*%4+%3]
-    movd        %2, [ecx+edx*%4+%3]
-    punpcklbw   %1, %2
-    punpcklbw   %2, %2
-    psubw       %1, %2
-%endmacro
-
 %macro LOAD_DIFF_4x8P 1 ; dx
-    LOAD_DIFF_4P  m0, m7, %1, 0
-    LOAD_DIFF_4P  m1, m7, %1, 1
-    lea  eax, [eax+2*ebx]
-    lea  ecx, [ecx+2*edx]
-    LOAD_DIFF_4P  m2, m7, %1, 0
-    LOAD_DIFF_4P  m3, m7, %1, 1
-    lea  eax, [eax+2*ebx]
-    lea  ecx, [ecx+2*edx]
-    LOAD_DIFF_4P  m4, m7, %1, 0
-    LOAD_DIFF_4P  m5, m7, %1, 1
-    lea  eax, [eax+2*ebx]
-    lea  ecx, [ecx+2*edx]
-    LOAD_DIFF_4P  m6, m7, %1, 0
-    movq [spill], m6
-    LOAD_DIFF_4P  m7, m6, %1, 1
-    movq m6, [spill]
+    LOAD_DIFF  m0, m7, none, [r0+%1],      [r2+%1]
+    LOAD_DIFF  m1, m6, none, [r0+%1+r1],   [r2+%1+r3]
+    LOAD_DIFF  m2, m7, none, [r0+%1+r1*2], [r2+%1+r3*2]
+    LOAD_DIFF  m3, m6, none, [r0+%1+r4],   [r2+%1+r5]
+    lea  r0, [r0+4*r1]
+    lea  r2, [r2+4*r3]
+    LOAD_DIFF  m4, m7, none, [r0+%1],      [r2+%1]
+    LOAD_DIFF  m5, m6, none, [r0+%1+r1],   [r2+%1+r3]
+    LOAD_DIFF  m6, m7, none, [r0+%1+r1*2], [r2+%1+r3*2]
+    movq [spill], m5
+    LOAD_DIFF  m7, m5, none, [r0+%1+r4],   [r2+%1+r5]
+    movq m5, [spill]
 %endmacro
 
 %macro SUM4x8_MM 0
@@ -73,38 +61,35 @@ INIT_MMX
 %endmacro
 
 ;-----------------------------------------------------------------------------
-; int x264_pixel_sa8d_8x8_mmxext( uint8_t *, int, uint8_t *, int )
+; int pixel_sa8d_8x8( uint8_t *, int, uint8_t *, int )
 ;-----------------------------------------------------------------------------
-cglobal x264_pixel_sa8d_8x8_mmxext
-    push   ebx
-    mov    eax, [esp+ 8]  ; pix1
-    mov    ebx, [esp+12]  ; stride1
-    mov    ecx, [esp+16]  ; pix2
-    mov    edx, [esp+20]  ; stride2
-    sub    esp, 0x70
+cglobal pixel_sa8d_8x8_internal_mmxext
+    push   r0
+    push   r2
+    sub    esp, 0x74
 %define args  esp+0x74
 %define spill esp+0x60 ; +16
 %define trans esp+0    ; +96
     LOAD_DIFF_4x8P 0
-    HADAMARD8_1D m0, m1, m2, m3, m4, m5, m6, m7
+    HADAMARD8_V m0, m1, m2, m3, m4, m5, m6, m7
 
-    movq   [spill], m0
-    TRANSPOSE4x4W 4, 5, 6, 7, 0
+    movq   [spill], m1
+    TRANSPOSE4x4W 4, 5, 6, 7, 1
     movq   [trans+0x00], m4
     movq   [trans+0x08], m5
     movq   [trans+0x10], m6
     movq   [trans+0x18], m7
-    movq   m0, [spill]
+    movq   m1, [spill]
     TRANSPOSE4x4W 0, 1, 2, 3, 4
     movq   [trans+0x20], m0
     movq   [trans+0x28], m1
     movq   [trans+0x30], m2
     movq   [trans+0x38], m3
 
-    mov    eax, [args+4]
-    mov    ecx, [args+12]
+    mov    r0, [args+4]
+    mov    r2, [args]
     LOAD_DIFF_4x8P 4
-    HADAMARD8_1D m0, m1, m2, m3, m4, m5, m6, m7
+    HADAMARD8_V m0, m1, m2, m3, m4, m5, m6, m7
 
     movq   [spill], m7
     TRANSPOSE4x4W 0, 1, 2, 3, 7
@@ -113,13 +98,13 @@ cglobal x264_pixel_sa8d_8x8_mmxext
     movq   [trans+0x50], m2
     movq   [trans+0x58], m3
     movq   m7, [spill]
-    TRANSPOSE4x4W 4, 5, 6, 7, 0
+    TRANSPOSE4x4W 4, 5, 6, 7, 1
     movq   m0, [trans+0x00]
     movq   m1, [trans+0x08]
     movq   m2, [trans+0x10]
     movq   m3, [trans+0x18]
 
-    HADAMARD8_1D m0, m1, m2, m3, m4, m5, m6, m7
+    HADAMARD8_V m0, m1, m2, m3, m4, m5, m6, m7
     SUM4x8_MM
     movq   [trans], m0
 
@@ -132,21 +117,11 @@ cglobal x264_pixel_sa8d_8x8_mmxext
     movq   m6, [trans+0x50]
     movq   m7, [trans+0x58]
 
-    HADAMARD8_1D m0, m1, m2, m3, m4, m5, m6, m7
+    HADAMARD8_V m0, m1, m2, m3, m4, m5, m6, m7
     SUM4x8_MM
 
     pavgw  m0, [trans]
-    pshufw m1, m0, 01001110b
-    paddw  m0, m1
-    pshufw m1, m0, 10110001b
-    paddw  m0, m1
-    movd  eax, m0
-    and   eax, 0xffff
-    mov   ecx, eax ; preserve rounding for 16x16
-    add   eax, 1
-    shr   eax, 1
-    add   esp, 0x70
-    pop   ebx
+    add   esp, 0x7c
     ret
 %undef args
 %undef spill
@@ -194,9 +169,9 @@ cglobal x264_pixel_sa8d_8x8_mmxext
 %endmacro
 
 ;-----------------------------------------------------------------------------
-; void x264_intra_sa8d_x3_8x8_core_mmxext( uint8_t *fenc, int16_t edges[2][8], int *res )
+; void intra_sa8d_x3_8x8_core( uint8_t *fenc, int16_t edges[2][8], int *res )
 ;-----------------------------------------------------------------------------
-cglobal x264_intra_sa8d_x3_8x8_core_mmxext
+cglobal intra_sa8d_x3_8x8_core_mmxext
     mov    eax, [esp+4]
     mov    ecx, [esp+8]
     sub    esp, 0x70
@@ -205,7 +180,7 @@ cglobal x264_intra_sa8d_x3_8x8_core_mmxext
 %define trans esp+0    ; +96
 %define sum   esp+0    ; +32
     LOAD_4x8P 0
-    HADAMARD8_1D m0, m1, m2, m3, m4, m5, m6, m7
+    HADAMARD8_V m0, m1, m2, m3, m4, m5, m6, m7
 
     movq   [spill], m0
     TRANSPOSE4x4W 4, 5, 6, 7, 0
@@ -221,7 +196,7 @@ cglobal x264_intra_sa8d_x3_8x8_core_mmxext
     movq   [trans+0x38], m3
 
     LOAD_4x8P 4
-    HADAMARD8_1D m0, m1, m2, m3, m4, m5, m6, m7
+    HADAMARD8_V m0, m1, m2, m3, m4, m5, m6, m7
 
     movq   [spill], m7
     TRANSPOSE4x4W 0, 1, 2, 3, 7
@@ -236,7 +211,7 @@ cglobal x264_intra_sa8d_x3_8x8_core_mmxext
     movq   m2, [trans+0x10]
     movq   m3, [trans+0x18]
 
-    HADAMARD8_1D m0, m1, m2, m3, m4, m5, m6, m7
+    HADAMARD8_V m0, m1, m2, m3, m4, m5, m6, m7
 
     movq [spill+0], m0
     movq [spill+8], m1
@@ -271,7 +246,7 @@ cglobal x264_intra_sa8d_x3_8x8_core_mmxext
     movq   m6, [trans+0x50]
     movq   m7, [trans+0x58]
 
-    HADAMARD8_1D m0, m1, m2, m3, m4, m5, m6, m7
+    HADAMARD8_V m0, m1, m2, m3, m4, m5, m6, m7
 
     movd   [sum+0x10], m0
     movd   [sum+0x12], m1
@@ -354,10 +329,10 @@ cglobal x264_intra_sa8d_x3_8x8_core_mmxext
 
 
 ;-----------------------------------------------------------------------------
-; void x264_pixel_ssim_4x4x2_core_mmxext( const uint8_t *pix1, int stride1,
-;                                         const uint8_t *pix2, int stride2, int sums[2][4] )
+; void pixel_ssim_4x4x2_core( const uint8_t *pix1, int stride1,
+;                             const uint8_t *pix2, int stride2, int sums[2][4] )
 ;-----------------------------------------------------------------------------
-cglobal x264_pixel_ssim_4x4x2_core_mmxext
+cglobal pixel_ssim_4x4x2_core_mmxext
     push     ebx
     push     edi
     mov      ebx, [esp+16]

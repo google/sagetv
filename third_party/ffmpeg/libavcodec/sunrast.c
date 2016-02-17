@@ -19,6 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "libavutil/intreadwrite.h"
 #include "avcodec.h"
 
 #define RT_OLD          0
@@ -32,7 +33,7 @@ typedef struct SUNRASTContext {
     AVFrame picture;
 } SUNRASTContext;
 
-static int sunrast_init(AVCodecContext *avctx) {
+static av_cold int sunrast_init(AVCodecContext *avctx) {
     SUNRASTContext *s = avctx->priv_data;
 
     avcodec_get_frame_defaults(&s->picture);
@@ -42,7 +43,8 @@ static int sunrast_init(AVCodecContext *avctx) {
 }
 
 static int sunrast_decode_frame(AVCodecContext *avctx, void *data,
-                                int *data_size, const uint8_t *buf, int buf_size) {
+                                int *data_size, AVPacket *avpkt) {
+    const uint8_t *buf = avpkt->data;
     SUNRASTContext * const s = avctx->priv_data;
     AVFrame *picture = data;
     AVFrame * const p = &s->picture;
@@ -62,7 +64,7 @@ static int sunrast_decode_frame(AVCodecContext *avctx, void *data,
     maptype   = AV_RB32(buf+24);
     maplength = AV_RB32(buf+28);
 
-    if (type > RT_BYTE_ENCODED && type <= RT_FORMAT_IFF) {
+    if (type == RT_FORMAT_TIFF || type == RT_FORMAT_IFF) {
         av_log(avctx, AV_LOG_ERROR, "unsupported (compression) type\n");
         return -1;
     }
@@ -85,7 +87,7 @@ static int sunrast_decode_frame(AVCodecContext *avctx, void *data,
             avctx->pix_fmt = PIX_FMT_PAL8;
             break;
         case 24:
-            avctx->pix_fmt = PIX_FMT_BGR24;
+            avctx->pix_fmt = (type == RT_FORMAT_RGB) ? PIX_FMT_RGB24 : PIX_FMT_BGR24;
             break;
         default:
             av_log(avctx, AV_LOG_ERROR, "invalid depth\n");
@@ -172,7 +174,7 @@ static int sunrast_decode_frame(AVCodecContext *avctx, void *data,
     return buf - bufstart;
 }
 
-static int sunrast_end(AVCodecContext *avctx) {
+static av_cold int sunrast_end(AVCodecContext *avctx) {
     SUNRASTContext *s = avctx->priv_data;
 
     if(s->picture.data[0])
@@ -183,13 +185,14 @@ static int sunrast_end(AVCodecContext *avctx) {
 
 AVCodec sunrast_decoder = {
     "sunrast",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_SUNRAST,
     sizeof(SUNRASTContext),
     sunrast_init,
     NULL,
     sunrast_end,
     sunrast_decode_frame,
-    0,
-    NULL
+    CODEC_CAP_DR1,
+    NULL,
+    .long_name = NULL_IF_CONFIG_SMALL("Sun Rasterfile image"),
 };

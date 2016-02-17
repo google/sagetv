@@ -21,12 +21,12 @@
  */
 
 /**
- * @file intfloat_readwrite.c
- * Portable IEEE float/double read/write functions.
+ * @file
+ * portable IEEE float/double read/write functions
  */
 
+#include <stdint.h>
 #include <math.h>
-#include "common.h"
 #include "intfloat_readwrite.h"
 
 double av_int2dbl(int64_t v){
@@ -52,7 +52,7 @@ double av_ext2dbl(const AVExtFloat ext){
         return 0.0/0.0;
     e -= 16383 + 63;        /* In IEEE 80 bits, the whole (i.e. 1.xxxx)
                              * mantissa bit is written as opposed to the
-                             * single and double precision formats */
+                             * single and double precision formats. */
     if (ext.exponent[0]&0x80)
         m= -m;
     return ldexp(m, e);
