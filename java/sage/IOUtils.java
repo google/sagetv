@@ -1202,6 +1202,7 @@ public class IOUtils
   public static final int SMB_MOUNT_EXISTS = 0;
   public static final int SMB_MOUNT_SUCCEEDED = 1;
   public static final int SMB_MOUNT_FAILED = -1;
+  public static Boolean has_smbmount;
   public static int doSMBMount(String smbPath, String localPath)
   {
     if (smbPath.startsWith("smb://"))
@@ -1253,20 +1254,19 @@ public class IOUtils
             smbOptions = "guest:";
         }
         // check to see if property exists if it doesn't check for smbmount with "which" command
-        if (Sage.getRawProperties().getWithNoDefault("smbmount_present") == null)
+        if (IOUtils.has_smbmount == null)
         {
             String result = IOUtils.exec(new String[] {"which", "smbmount"});
             // if nothing returned from "which" command then smbmount is not present so set property false
             if (result == null || result.isEmpty())
             {
-                Sage.putBoolean("smbmount_present", false);
+                IOUtils.has_smbmount = Boolean.FALSE;
             } else {
-                Sage.putBoolean("smbmount_present", true);
+                IOUtils.has_smbmount = Boolean.TRUE;
             }
         }
         // set execution variable based on property value
-        String execSMBMount = Sage.getBoolean("smbmount_present", true) ?
-            "smbmount" : "mount.cifs";
+        String execSMBMount = IOUtils.has_smbmount.booleanValue() ? "smbmount" : "mount.cifs";
         if (IOUtils.exec2(Sage.LINUX_OS ? new String[] { execSMBMount, smbPath, localPath , "-o", smbOptions } :
           new String[] { "mount_smbfs", "-N", "//" + smbOptions + "@" + smbPath.substring(2), localPath}) == 0)
         {
