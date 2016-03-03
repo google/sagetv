@@ -1252,7 +1252,22 @@ public class IOUtils
           else
             smbOptions = "guest:";
         }
-        if (IOUtils.exec2(Sage.LINUX_OS ? new String[] { "smbmount", smbPath, localPath , "-o", smbOptions } :
+        // check to see if property exists if it doesn't check for smbmount with "which" command
+        if (Sage.getRawProperties().getWithNoDefault("smbmount_present") == null)
+        {
+            String result = IOUtils.exec(new String[] {"which", "smbmount"});
+            // if nothing returned from "which" command then smbmount is not present so set property false
+            if (result == null || result.isEmpty())
+            {
+                Sage.putBoolean("smbmount_present", false);
+            } else {
+                Sage.putBoolean("smbmount_present", true);
+            }
+        }
+        // set execution variable based on property value
+        String execSMBMount = Sage.getBoolean("smbmount_present", true) ?
+            "smbmount" : "mount.cifs";
+        if (IOUtils.exec2(Sage.LINUX_OS ? new String[] { execSMBMount, smbPath, localPath , "-o", smbOptions } :
           new String[] { "mount_smbfs", "-N", "//" + smbOptions + "@" + smbPath.substring(2), localPath}) == 0)
         {
           if (Sage.DBG) System.out.println("SMB Mount Succeeded");
