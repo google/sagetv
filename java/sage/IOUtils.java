@@ -1258,15 +1258,15 @@ public class IOUtils
         {
             String result = IOUtils.exec(new String[] {"which", "smbmount"});
             // if nothing returned from "which" command then smbmount is not present so set property false
-            if (result == null || result.isEmpty())
+            if (result == null || result.length() == 0)
             {
                 IOUtils.has_smbmount = Boolean.FALSE;
             } else {
                 IOUtils.has_smbmount = Boolean.TRUE;
             }
         }
-        // set execution variable based on property value
-        String execSMBMount = IOUtils.has_smbmount.booleanValue() ? "smbmount" : "mount.cifs";
+        // set execution variable based on static Boolean value
+        String execSMBMount = IOUtils.has_smbmount ? "smbmount" : "mount.cifs";
         if (IOUtils.exec2(Sage.LINUX_OS ? new String[] { execSMBMount, smbPath, localPath , "-o", smbOptions } :
           new String[] { "mount_smbfs", "-N", "//" + smbOptions + "@" + smbPath.substring(2), localPath}) == 0)
         {
