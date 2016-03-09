@@ -149,7 +149,7 @@
       <AdditionalIncludeDirectories>..\..\BaseClasses;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>$(WINDOWS61SDK)\Lib\strmiids.lib;$(SolutionDir)\..\third_party\Microsoft\BaseClasses\Debug\strmbasd.lib;quartz.lib;winmm.lib;msvcrtd.lib;vcruntimed.lib;ucrtd.lib;odbc32.lib;odbccp32.lib;$(SolutionDir)/lib/TSnative/NativeCored.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)\..\third_party\Microsoft\BaseClasses\Debug\strmbasd.lib;quartz.lib;winmm.lib;msvcrtd.lib;vcruntimed.lib;ucrtd.lib;odbc32.lib;odbccp32.lib;$(SolutionDir)/lib/TSnative/NativeCored.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(SolutionDir)\Build\Debug\MpegDeMux.ax</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
