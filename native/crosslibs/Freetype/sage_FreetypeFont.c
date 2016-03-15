@@ -243,7 +243,7 @@ JNIEXPORT void JNICALL Java_sage_FreetypeFont_loadGlyph0
 	//FT_Face face = (FT_Face) facePtr;
 	FTDataStruct* fontData = (FTDataStruct*)(intptr_t) fontPtr;
 	FT_Activate_Size(fontData->sizePtr);
-	int error = FT_Load_Glyph(fontData->facePtr, glyphCode, FT_LOAD_DEFAULT);
+	int error = FT_Load_Glyph(fontData->facePtr, glyphCode, FT_LOAD_FORCE_AUTOHINT);
 	if ((fontData->style & FT_STYLE_FLAG_BOLD) != 0)
 	{
 		// Apply bold effect
