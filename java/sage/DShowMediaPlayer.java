@@ -135,6 +135,7 @@ public class DShowMediaPlayer implements DVDMediaPlayer
       videoFilters.add("Microsoft MPEG-2 Video Decoder");
       audioFilters.add("Microsoft MPEG-1/DD Audio Decoder");
       videoFilters.add("Microsoft DTV-DVD Video Decoder");
+      audioFilters.add("Microsoft DTV-DVD Audio Decoder");
       String extraFilters = Sage.get(PREFS_ROOT + ADDITIONAL_AUDIO_FILTERS, "");
       java.util.StringTokenizer toker = new java.util.StringTokenizer(extraFilters, ";");
       while (toker.hasMoreTokens())
