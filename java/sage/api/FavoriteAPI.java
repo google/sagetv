@@ -229,11 +229,11 @@ public class FavoriteAPI {
        * @param Favorite the Favorite object
        * @return the person that an Airing must have to be included in this Favorite, returns the empty string if person isn't a field that needs to match
        *
-       * @declaration public Object GetFavoritePerson(Favorite Favorite);
+       * @declaration public String GetFavoritePerson(Favorite Favorite);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         Person rv = ((Agent) stack.pop()).getPersonObj();
-        return (rv != null) ? ((Object) rv) : "";
+        return (rv != null) ? rv.toString() : "";
       }});
     rft.put(new PredefinedJEPFunction("Favorite", "GetFavoriteRated", 1, new String[] { "Favorite" })
     {
