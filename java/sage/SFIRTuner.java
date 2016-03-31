@@ -618,14 +618,18 @@ public class SFIRTuner implements Runnable
         try
         {
           int cmdNum = Integer.parseInt(cmdString);
+	
           if (baseRemote.channelDigits != 0)
           {
-            int hiChan = (int)Math.round(Math.pow(10, baseRemote.channelDigits));
-            while (hiChan/10 > cmdNum)
-            {
-              cmdString = "0" + cmdString;
-              hiChan /= 10;
-            }
+             if (cmdString.length() != baseRemote.channelDigits)
+             {
+            	int hiChan = (int)Math.round(Math.pow(10, baseRemote.channelDigits));
+            	while (hiChan/10 > cmdNum)
+            	{
+                    cmdString = "0" + cmdString;
+                    hiChan /= 10;
+                }
+             }
           }
         }catch (Exception e){}
         if (baseRemote.prefixCmd != null && baseRemote.prefixCmd.length() > 0)
