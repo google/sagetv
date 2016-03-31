@@ -138,7 +138,7 @@ const char* DeviceName()
     return "Infrared Blaster";
 }
 
-int OpenDevice(int ComPort) 
+void * OpenDevice(int ComPort) 
 {
     int i2cfile;
     int i2cnumber = ComPort;
@@ -175,30 +175,33 @@ int OpenDevice(int ComPort)
         fprintf(stderr, "error reading back status\n");
         close(i2cfile);
         return(0);
-    }
+    } 
     fprintf(stderr, "Initialized IRBlaster %08X\n", res);
     IRBlasterData *irb = malloc(sizeof(IRBlasterData));
-    if(irb==NULL) return (int) irb;
+    if(irb==NULL) return (void*) irb;
     
     irb->i2cfile=i2cfile;
     memset(irb->IRData,0,sizeof(0x60*83));
-    return (int) irb; 
+    return (void*) irb; 
 }
 
-void CloseDevice(int devHandle) 
+void CloseDevice(void * devHandle) 
 {
-    if(devHandle==0) return;
+    if(devHandle==0) {
+	fprintf(stderr, "CloseDevice handle is NULL\n");
+	return;
+    }
     IRBlasterData *irb=(IRBlasterData *) devHandle;
     close(irb->i2cfile);
     free(irb);
 }
 
-unsigned long FindBitRate(int devhandle)
+unsigned long FindBitRate(void * devhandle)
 {
     return 0;
 }
 
-unsigned long FindCarrierFrequency(int devHandle)
+unsigned long FindCarrierFrequency(void * devHandle)
 {
     return 0;
 }
@@ -335,7 +338,7 @@ void InitDevice()
 {
 }
 
-command* RecordCommand(int devHandle, unsigned char *Name)
+command* RecordCommand(void* devHandle, unsigned char *Name)
 {
     return 0;
 }
@@ -345,7 +348,7 @@ void send_command(char *cmd, char* recvBuf, int* recvSize)
     fprintf(stderr, "Send command %s\n",cmd);
 }
 
-void PlayCommand (int devHandle, remote *remote, unsigned char *name, int tx_repeats)
+void PlayCommand (void * devHandle, remote *remote, unsigned char *name, int tx_repeats)
 {
     IRBlasterData *irb=(IRBlasterData *) devHandle;
     FILE *remotefile;        
