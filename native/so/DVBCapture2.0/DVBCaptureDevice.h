@@ -26,6 +26,7 @@
 #define strnicmp  strncasecmp
 #define stricmp   strcasecmp
 #define MAX_STREAMS	16
+#define ALL_PIDS 0x2000
 
 //typedef int (*OUTPUT_DUMP)( void* context, unsigned char* pData, unsigned long lBytes );
 typedef struct {
