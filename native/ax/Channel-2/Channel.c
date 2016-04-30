@@ -3229,9 +3229,9 @@ int scanDVBSChannel( CHANNEL_DATA *Channel, char* tuningString, char** scanResul
 	if (  ( freq = SageTuneDVBSFrequency( Channel->Dev, DVBSFreq, 0 ) )< 0 )
 		return -1;
 
-//	ret = WaiteScanDone( Channel );
-//	if ( ret < 0 )
-//		SageStopParser( Channel->Dev );
+	ret = WaiteScanDone( Channel );
+	if ( ret < 0 )
+		SageStopParser( Channel->Dev );
 
 	//scan channel on a stream
 	tune.stream_format = DVB_STREAM;
