@@ -229,6 +229,15 @@ public final class NetworkCaptureDevice extends CaptureDevice
     currentlyRecordingBufferSize = recordBufferSize;
     uploadID = 0;
     uploadID = getUploadFileID(new java.io.File(encodeFile));
+
+    if (activeSource.getType() != CaptureDeviceInput.DIGITAL_TUNER_CROSSBAR_INDEX &&
+            activeSource.usesTuningPlugin())
+    {
+      if (Sage.LINUX_OS) doPluginTuneLinux(activeSource, channel, null, isCaptureFeatureSupported(HDPVR_ENCODER_MASK));
+      else if (Sage.WINDOWS_OS) doPluginTuneWindows(activeSource, channel);
+      else if (Sage.MAC_OS_X) doPluginTuneMac(activeSource, channel);
+    }
+
     if (currentlyRecordingBufferSize > 0)
     {
       submitHostCommand("BUFFER " + getNetworkSourceName() + '|' + channel + '|' + currentlyRecordingBufferSize + '|' +

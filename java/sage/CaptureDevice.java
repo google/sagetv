@@ -442,6 +442,82 @@ public abstract class CaptureDevice
     return rv;
   }
 
+  /**
+   * Tune using a plugin for Mac
+   *
+   * @param activeSource The capture device input that will provide the tuning plugin and
+   *                     configuration.
+   * @param tuneString The actual channel/string to be tuned.
+   */
+  protected static void doPluginTuneMac(CaptureDeviceInput activeSource, String tuneString) {
+    // Don't merge this method with the Windows plugin tune method so if in the future these need to
+    // be different methods, there's only one place that needs to be updated.
+    doPluginTuneWindows(activeSource, tuneString);
+  }
+
+  /**
+   * Tune using a plugin for Windows
+   *
+   * @param activeSource The capture device input that will provide the tuning plugin and
+   *                     configuration.
+   * @param tuneString The actual channel/string to be tuned.
+   */
+  protected static void doPluginTuneWindows(CaptureDeviceInput activeSource, String tuneString) {
+    if (!DirecTVSerialControl.DIRECTV_SERIAL_CONTROL.equals(activeSource.getTuningPlugin()))
+    {
+      SFIRTuner tunePlug = ExternalTuningManager.getIRTunerPlugin(activeSource.getTuningPlugin(),
+              activeSource.getTuningPluginPort());
+      if (tunePlug != null)
+        tunePlug.playTuneString(activeSource.getDevice(), tuneString);
+    }
+    else
+      ExternalTuningManager.getDirecTVSerialControl().tune(activeSource.getTuningPluginPort() == 0 ?
+              activeSource.getDevice() : ("COM" + activeSource.getTuningPluginPort()) , tuneString);
+  }
+
+  /**
+   * Tune using a plugin in Linux.
+   *
+   * @param activeSource The capture device input that will provide the tuning plugin and
+   *                     configuration.
+   * @param tuneString The actual channel/string to be tuned.
+   * @param linuxVideoDevice The device name under /dev. If this value is null, the capture device
+   *                         itself may not be used for tuning.
+   * @param forceSynchronous Force the capture device to be tuned synchronously.
+   */
+  protected static void doPluginTuneLinux(
+          CaptureDeviceInput activeSource, String tuneString,
+          String linuxVideoDevice, boolean forceSynchronous) {
+
+    if (!DirecTVSerialControl.DIRECTV_SERIAL_CONTROL.equals(activeSource.getTuningPlugin()))
+    {
+      String plugName = activeSource.getTuningPlugin();
+      int plugPort = activeSource.getTuningPluginPort();
+      SFIRTuner tunePlug = null;
+      if (linuxVideoDevice != null && plugName != null && plugName.endsWith("PVR150Tuner.so") && !Sage.getBoolean("linux/disable_auto_i2c_port_matching", false))
+      {
+        // Dynamically get the I2C address to make sure it's right
+        plugPort = LinuxIVTVCaptureManager.getCardI2CForDevice("/dev/" + linuxVideoDevice);
+        if (plugPort < 0) // then use the configured one
+          plugPort = activeSource.getTuningPluginPort();
+        tunePlug = ExternalTuningManager.getIRTunerPlugin(plugName, plugPort);
+        if (tunePlug == null && plugPort != activeSource.getTuningPluginPort())
+        {
+          if (Sage.DBG) System.out.println("Failed using auto-detected i2c port of " + plugPort + " and reverting to default port of " + activeSource.getTuningPluginPort());
+          tunePlug = ExternalTuningManager.getIRTunerPlugin(plugName, activeSource.getTuningPluginPort());
+        }
+      }
+      else
+        tunePlug = ExternalTuningManager.getIRTunerPlugin(plugName, plugPort);
+      if (tunePlug != null)
+        tunePlug.playTuneString(activeSource.getDevice(), tuneString,
+                forceSynchronous);
+    }
+    else
+      ExternalTuningManager.getDirecTVSerialControl().tune(activeSource.getTuningPluginPort() == 0 ?
+              activeSource.getDevice() : ("COM" + activeSource.getTuningPluginPort()) , tuneString);
+  }
+
   protected abstract boolean doTuneChannel(String tuneString, boolean autotune);
   protected abstract boolean doScanChannel(String tuneString);
   protected abstract String doScanChannelInfo(String tuneString);
