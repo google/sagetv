@@ -475,7 +475,7 @@ public class DShowCaptureDevice extends CaptureDevice
                 !tuneString.equals(getChannel()) ||
                 recordBufferSize > 0))
         {
-          doPluginTune(tuneString);
+          doPluginTuneWindows(activeSource, tuneString);
         }
       }
       else
@@ -487,7 +487,7 @@ public class DShowCaptureDevice extends CaptureDevice
                 !tuneString.equals(getChannel()) ||
                 recordBufferSize > 0))
         {
-          doPluginTune(tuneString);
+          doPluginTuneWindows(activeSource, tuneString);
         }
         rv = true;
       }

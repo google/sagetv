@@ -286,7 +286,7 @@ public class HDHomeRunCaptureDevice extends CaptureDevice implements Runnable
             (Sage.getBoolean(MMC.MMC_KEY + '/' + MMC.ALWAYS_TUNE_CHANNEL, true) ||
                 !tuneString.equals(getChannel())))
         {
-          doPluginTune(tuneString);
+          doPluginTuneWindows(activeSource, tuneString);
         }
       }
       else // must be external tuner type
@@ -295,7 +295,7 @@ public class HDHomeRunCaptureDevice extends CaptureDevice implements Runnable
             (Sage.getBoolean(MMC.MMC_KEY + '/' + MMC.ALWAYS_TUNE_CHANNEL, true) ||
                 !tuneString.equals(getChannel())))
         {
-          doPluginTune(tuneString);
+          doPluginTuneWindows(activeSource, tuneString);
         }
         rv = true;
       }

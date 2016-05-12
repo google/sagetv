@@ -395,7 +395,7 @@ public class MacNativeCaptureDevice extends CaptureDevice implements Runnable
                 !tuneString.equals(getChannel()) ||
                 recordBufferSize > 0))
         {
-          doPluginTune(tuneString);
+          doPluginTuneMac(activeSource, tuneString);
         }
       }
       else // must be external tuner type
@@ -407,7 +407,7 @@ public class MacNativeCaptureDevice extends CaptureDevice implements Runnable
                 !tuneString.equals(getChannel()) ||
                 recordBufferSize > 0))
         {
-          doPluginTune(tuneString);
+          doPluginTuneMac(activeSource, tuneString);
         }
         rv = true;
       }

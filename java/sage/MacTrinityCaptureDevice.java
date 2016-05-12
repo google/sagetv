@@ -619,7 +619,7 @@ public class MacTrinityCaptureDevice extends CaptureDevice implements Runnable
                 !tuneString.equals(getChannel()) ||
                 recordBufferSize > 0))
         {
-          doPluginTune(tuneString);
+          doPluginTuneMac(activeSource, tuneString);
         }
 
       }
@@ -635,7 +635,7 @@ public class MacTrinityCaptureDevice extends CaptureDevice implements Runnable
                 !tuneString.equals(getChannel()) ||
                 recordBufferSize > 0))
         {
-          doPluginTune(tuneString);
+          doPluginTuneMac(activeSource, tuneString);
         }
 
         rv = true;
