@@ -229,6 +229,9 @@ public final class NetworkCaptureDevice extends CaptureDevice
     currentlyRecordingBufferSize = recordBufferSize;
     uploadID = 0;
     uploadID = getUploadFileID(new java.io.File(encodeFile));
+
+    doPluginTune(channel);
+
     if (currentlyRecordingBufferSize > 0)
     {
       submitHostCommand("BUFFER " + getNetworkSourceName() + '|' + channel + '|' + currentlyRecordingBufferSize + '|' +

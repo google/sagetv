@@ -785,36 +785,30 @@ public class IVTVCaptureDevice extends CaptureDevice implements Runnable
   }
 
 
-
-  private void doPluginTune(String tuneString)
+  @Override
+  protected void doPluginTune(String tuneString)
   {
-    if (!DirecTVSerialControl.DIRECTV_SERIAL_CONTROL.equals(activeSource.getTuningPlugin()))
+    String plugName = activeSource.getTuningPlugin();
+    int plugPort = activeSource.getTuningPluginPort();
+    SFIRTuner tunePlug;
+
+    if (plugName != null && plugName.endsWith("PVR150Tuner.so") && !Sage.getBoolean("linux/disable_auto_i2c_port_matching", false))
     {
-      String plugName = activeSource.getTuningPlugin();
-      int plugPort = activeSource.getTuningPluginPort();
-      SFIRTuner tunePlug = null;
-      if (plugName != null && plugName.endsWith("PVR150Tuner.so") && !Sage.getBoolean("linux/disable_auto_i2c_port_matching", false))
+      // Dynamically get the I2C address to make sure it's right
+      plugPort = LinuxIVTVCaptureManager.getCardI2CForDevice("/dev/" + linuxVideoDevice);
+      if (plugPort < 0) // then use the configured one
+        plugPort = activeSource.getTuningPluginPort();
+
+      tunePlug = ExternalTuningManager.getIRTunerPlugin(plugName, plugPort);
+      if (tunePlug == null && plugPort != activeSource.getTuningPluginPort())
       {
-        // Dynamically get the I2C address to make sure it's right
-        plugPort = LinuxIVTVCaptureManager.getCardI2CForDevice("/dev/" + linuxVideoDevice);
-        if (plugPort < 0) // then use the configured one
-          plugPort = activeSource.getTuningPluginPort();
-        tunePlug = ExternalTuningManager.getIRTunerPlugin(plugName, plugPort);
-        if (tunePlug == null && plugPort != activeSource.getTuningPluginPort())
-        {
-          if (Sage.DBG) System.out.println("Failed using auto-detected i2c port of " + plugPort + " and reverting to default port of " + activeSource.getTuningPluginPort());
-          tunePlug = ExternalTuningManager.getIRTunerPlugin(plugName, activeSource.getTuningPluginPort());
-        }
+        if (Sage.DBG) System.out.println("Failed using auto-detected i2c port of " + plugPort + " and reverting to default port of " + activeSource.getTuningPluginPort());
+
+        plugPort = activeSource.getTuningPluginPort();
       }
-      else
-        tunePlug = ExternalTuningManager.getIRTunerPlugin(plugName, plugPort);
-      if (tunePlug != null)
-        tunePlug.playTuneString(activeSource.getDevice(), tuneString,
-            isCaptureFeatureSupported(HDPVR_ENCODER_MASK));
     }
-    else
-      ExternalTuningManager.getDirecTVSerialControl().tune(activeSource.getTuningPluginPort() == 0 ?
-          activeSource.getDevice() : ("COM" + activeSource.getTuningPluginPort()) , tuneString);
+
+    super.doPluginTune(tuneString, plugPort);
   }
 
 

@@ -286,7 +286,7 @@ public class HDHomeRunCaptureDevice extends CaptureDevice implements Runnable
             (Sage.getBoolean(MMC.MMC_KEY + '/' + MMC.ALWAYS_TUNE_CHANNEL, true) ||
                 !tuneString.equals(getChannel())))
         {
-          doPluginTune(tuneString);
+          doPluginTuneWindows(activeSource, tuneString);
         }
       }
       else // must be external tuner type
@@ -295,7 +295,7 @@ public class HDHomeRunCaptureDevice extends CaptureDevice implements Runnable
             (Sage.getBoolean(MMC.MMC_KEY + '/' + MMC.ALWAYS_TUNE_CHANNEL, true) ||
                 !tuneString.equals(getChannel())))
         {
-          doPluginTune(tuneString);
+          doPluginTuneWindows(activeSource, tuneString);
         }
         rv = true;
       }
@@ -344,20 +344,6 @@ public class HDHomeRunCaptureDevice extends CaptureDevice implements Runnable
   public int getSignalStrength()
   {
     return getSignalStrength0(pHandle);
-  }
-
-  private void doPluginTune(String tuneString)
-  {
-    if (!DirecTVSerialControl.DIRECTV_SERIAL_CONTROL.equals(activeSource.getTuningPlugin()))
-    {
-      SFIRTuner tunePlug = ExternalTuningManager.getIRTunerPlugin(activeSource.getTuningPlugin(),
-          activeSource.getTuningPluginPort());
-      if (tunePlug != null)
-        tunePlug.playTuneString(activeSource.getDevice(), tuneString);
-    }
-    else
-      ExternalTuningManager.getDirecTVSerialControl().tune(activeSource.getTuningPluginPort() == 0 ?
-          activeSource.getDevice() : ("COM" + activeSource.getTuningPluginPort()) , tuneString);
   }
 
   public void setEncodingQuality(String encodingName)
