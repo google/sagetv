@@ -803,7 +803,8 @@ public class IVTVCaptureDevice extends CaptureDevice implements Runnable
       if (tunePlug == null && plugPort != activeSource.getTuningPluginPort())
       {
         if (Sage.DBG) System.out.println("Failed using auto-detected i2c port of " + plugPort + " and reverting to default port of " + activeSource.getTuningPluginPort());
-          plugPort = activeSource.getTuningPluginPort();
+
+        plugPort = activeSource.getTuningPluginPort();
       }
     }
 
