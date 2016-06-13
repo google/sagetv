@@ -442,6 +442,25 @@ public abstract class CaptureDevice
     return rv;
   }
 
+  protected void doPluginTune(String tuneString) {
+    doPluginTune(tuneString, activeSource.getTuningPluginPort());
+  }
+
+  protected void doPluginTune(String tuneString, int plugPort)
+  {
+    if (!DirecTVSerialControl.DIRECTV_SERIAL_CONTROL.equals(activeSource.getTuningPlugin()))
+    {
+      SFIRTuner tunePlug = ExternalTuningManager.getIRTunerPlugin(activeSource.getTuningPlugin(),
+              plugPort);
+      if (tunePlug != null)
+        tunePlug.playTuneString(activeSource.getDevice(), tuneString,
+                isCaptureFeatureSupported(HDPVR_ENCODER_MASK));
+    }
+    else
+      ExternalTuningManager.getDirecTVSerialControl().tune(plugPort == 0 ?
+              activeSource.getDevice() : ("COM" + plugPort) , tuneString);
+  }
+
   protected abstract boolean doTuneChannel(String tuneString, boolean autotune);
   protected abstract boolean doScanChannel(String tuneString);
   protected abstract String doScanChannelInfo(String tuneString);
