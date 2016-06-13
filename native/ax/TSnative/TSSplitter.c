@@ -149,7 +149,7 @@ unsigned long TSAVStreamHook( void* handle, short channel, void* data )
 
 	parser = (TS_PARSER *)handle;
 	ts = (TSSPLT*)parser->env;
-	
+
 	stream_index = av_info->sub_channel;
 
 	if ( ts == NULL || stream_index >= MAX_STREAM_NUM || stream_index < 0  )
@@ -268,9 +268,25 @@ unsigned long TSAVStreamHook( void* handle, short channel, void* data )
 		//start build video or audio from start frame (PES header)
 		if ( ts->builder_state >= 2 ) 
 		{
-			PushAVPacketData( ts->ts_builder, ts->program_id, av_info->sub_channel, 
+			int packet_increment = 1;
+
+			// Insert PAT and PMT packets at interval.
+			if (ts->ts_packet_num % 2000 == 0)
+			{				
+				PushPat( ts->ts_builder );
+				packet_increment++;
+			}
+
+			if (ts->ts_packet_num % 8000 == 0)
+			{
+				PushPmt( ts->ts_builder, ts->program_id );
+				packet_increment++;
+			}
+
+			PushAVPacketData( ts->ts_builder, ts->program_id, av_info->sub_channel,
 					  av_info->start_group_flag, av_info->data, av_info->bytes );
-			ts->ts_packet_num++;
+
+			ts->ts_packet_num += packet_increment;
 		}
 
 		ts->stream_counter[stream_index]++;
@@ -2149,7 +2165,7 @@ void* OpenTSSplitter( int OutputSel )
 	{
 		SetTSDumpAVCallback( splt->parser, (LPFNParserDump)TSAVStreamHook );
 		SetTSDumpSignalCallback( splt->parser, (LPFNParserDump)TSAVSignalHook );
-	
+
 	} else
 	{
 		SetTSDumpAVCallback( splt->parser, (LPFNParserDump)PSAVStreamHook );

@@ -33,6 +33,8 @@ make -C ../../native/so/MPEGParser2.0 || { echo "Build failed, exiting."; exit 1
 cp ../../native/so/MPEGParser2.0/*.so .
 make -C ../../native/so/HDHomeRun2.0 || { echo "Build failed, exiting."; exit 1; }
 cp ../../native/so/HDHomeRun2.0/*.so .
+make -C ../../native/dll/JavaRemuxer2 || { echo "Build failed, exiting."; exit 1; }
+cp ../../native/dll/JavaRemuxer2/*.so .
 
 mkdir irtunerplugins
 cd irtunerplugins
