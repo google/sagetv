@@ -31,7 +31,7 @@ public class MediaServerRemuxer
 {
   private static final boolean MEDIA_SERVER_DEBUG = Sage.DBG && Sage.getBoolean("media_server_debug", false);
 
-  private static final int MAX_TRANSFER = 16544;
+  private static final int MAX_TRANSFER = 33088;
   private static final int MAX_INIT_BUFFER_SIZE = 10485700;
   private static final long SWITCH_BYTES_LIMIT = 8388608;
 
@@ -274,16 +274,13 @@ public class MediaServerRemuxer
     {
       if (!switching)
       {
-        System.out.println("Start checking for switch.");
         switchMediaServer = mediaServer;
         switchFilename = filename;
         switchUploadId = uploadId;
 
         switchData = 0;
         switching = true;
-        System.out.println("Checking for switch.");
         doSwitch();
-        System.out.println("Checked for switch.");
       }
     }
   }
@@ -340,12 +337,10 @@ public class MediaServerRemuxer
     {
       if (switchIndex != -1)
       {
-        System.out.println("Done checking for switch.");
         synchronized (switchLock)
         {
           if (switchIndex != 0)
           {
-            System.out.println("Writing out old data.");
             int oldLimit = writeBuffer.position();
 
             writeBuffer.position(switchIndex);
@@ -353,15 +348,11 @@ public class MediaServerRemuxer
 
             writeBuffer.limit(oldLimit).position(switchIndex);
             writeBuffer.compact();
-            System.out.println("Done writing out old data.");
           }
 
-          System.out.println("Closing old file.");
           switchMediaServer.closeFile(false);
-          System.out.println("Opening new file.");
           switchMediaServer.openWriteFile(switchFilename, switchUploadId);
 
-          System.out.println("Getting new file channel.");
           this.fileChannel = switchMediaServer.getFileChannel();
 
           // The thread switching the file is the same thread that writes to the file, so this will
@@ -787,7 +778,7 @@ public class MediaServerRemuxer
     @Override
     public void write(byte[] b, int off, int len) throws IOException
     {
-      if (writeBuffer.remaining() < len)
+      /*if (writeBuffer.remaining() < len)
       {
         synchronized (switchLock)
         {
@@ -803,9 +794,10 @@ public class MediaServerRemuxer
         {
           writeBuffer = ByteBuffer.allocateDirect(len);
         }
-      }
+      }*/
 
       writeBuffer.put(b, off, len);
+      writeFile(writeBuffer);
     }
 
     byte moveByte[];
