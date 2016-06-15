@@ -301,16 +301,19 @@ public class MediaServerRemuxer
   /**
    * Wait until switching has completed or the current thread has been interrupted.
    *
-   * @return true if switching has completed.
+   * @return true if switching has completed. false may be returned if the thread was interrupted.
    */
   public boolean waitIsSwitched()
   {
     synchronized (switchLock)
     {
       while (switching) {
-        try {
+        try
+        {
           switchLock.wait(500);
-        } catch (InterruptedException e) {
+        }
+        catch (InterruptedException e)
+        {
           break;
         }
       }
@@ -327,7 +330,7 @@ public class MediaServerRemuxer
     int switchIndex = getSwitchIndex(writeBuffer, 0, searchBytes);
     switchData += searchBytes;
 
-    if (switchData > SWITCH_BYTES_LIMIT)
+    if (switchIndex == -1 && switchData > SWITCH_BYTES_LIMIT)
     {
       if (Sage.DBG) System.out.println("WARNING Could not find transition point after searching 8 MB of data in stream!");
       switchIndex = 0;
@@ -411,9 +414,8 @@ public class MediaServerRemuxer
       }
 
       int searchLimit = 188 - (h264 ? 7 : 6);
-      int targetPID = videoPid;
-      byte targetHighByte = (byte)(0x40 | ((targetPID >> 8) & 0xFF));
-      byte targetLoByte = (byte)(targetPID & 0xFF);
+      byte targetHighByte = (byte)(0x40 | ((videoPid >> 8) & 0xFF));
+      byte targetLoByte = (byte)(videoPid & 0xFF);
 
       // Second we find a TS packet with section start and target PID
       while ((i + 188) <= endPos)
@@ -558,6 +560,7 @@ public class MediaServerRemuxer
 
     while(data.hasRemaining())
     {
+      // A null ContainerFormat means the stream is still being initialized.
       if (containerFormat == null)
       {
         int writeLimit = Math.min(transferBuffer.length - initOffset, data.remaining());
@@ -753,9 +756,7 @@ public class MediaServerRemuxer
               buffer[offset + 376] == MTS_SYNC_BYTE;
 
           if (tsSynced)
-          {
             break;
-          }
         }
 
 
@@ -778,26 +779,28 @@ public class MediaServerRemuxer
     @Override
     public void write(byte[] b, int off, int len) throws IOException
     {
-      /*if (writeBuffer.remaining() < len)
+      if (writeBuffer.remaining() < len)
       {
         synchronized (switchLock)
         {
           if (switching)
           {
+            // This method will write out the "searched" data before it returns.
             doSwitch();
           }
+          else
+          {
+            writeFile(writeBuffer);
+          }
         }
-
-        writeFile(writeBuffer);
 
         if (writeBuffer.remaining() < len)
         {
           writeBuffer = ByteBuffer.allocateDirect(len);
         }
-      }*/
+      }
 
       writeBuffer.put(b, off, len);
-      writeFile(writeBuffer);
     }
 
     byte moveByte[];
