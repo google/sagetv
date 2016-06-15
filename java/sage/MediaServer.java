@@ -944,7 +944,7 @@ public class MediaServer implements Runnable
             {
               if (remuxer != null) {
                 // This eliminates an extra copy since the remuxer can currently only accept a byte
-                // array for data. Also make it a multiple of 188 to reduce the changes partial
+                // array for data. Also make it a multiple of 188 to reduce the chances of partial
                 // packet buffering.
                 hackBuf = java.nio.ByteBuffer.allocate(65424);
               } else {
