@@ -32,20 +32,20 @@
 
 typedef struct {
 	REMUXER *pRemuxer;
-	int inputFormat;
-	int outputFormat;	
-	int streamFormat;
-	int channel;
+	int32_t inputFormat;
+	int32_t outputFormat;
+	int32_t streamFormat;
+	int32_t channel;
 	DUMP *pfnOutputDump;
 	jobject outStream;
 	char* pFormat;
 	
-	unsigned long bytes_in, bytes_out;
+	uint64_t bytes_in, bytes_out;
 
 	JNIEnv *env;
 	jmethodID outStreamWrite;
 	jbyteArray outBuf;
-	int outBufSize;
+	int32_t outBufSize;
 } JavaRemuxer2;
 
 static int OutputDump(void* pContext, void* pData, int nSize)
@@ -53,11 +53,11 @@ static int OutputDump(void* pContext, void* pData, int nSize)
 	JavaRemuxer2* jr = (JavaRemuxer2*)pContext;
 
 	OUTPUT_DATA *pOutputData = (OUTPUT_DATA*)pData;
-	unsigned char* pBlockData = pOutputData->data_ptr;
-	int nBytes = pOutputData->bytes;
-	//unsigned long dwUsedBytes;
-	//unsigned long dwGroupFlag = pOutputData->group_flag;
-	//int nGroupStart = pOutputData->start_offset;
+	uint8_t* pBlockData = pOutputData->data_ptr;
+	int32_t nBytes = pOutputData->bytes;
+	//uint64_t dwUsedBytes;
+	//uint64_t dwGroupFlag = pOutputData->group_flag;
+	//int32_t nGroupStart = pOutputData->start_offset;
 
 	// This should reduce the number of time a byte array is created to return data.
 	if (jr->outBuf == NULL) {
