@@ -583,8 +583,10 @@ public class MediaServer implements Runnable
     {
       long availSize = -1;
       long totalSize = -1;
-      if (currFile != null) {
-        if (xcoder != null) {
+      if (currFile != null)
+      {
+        if (xcoder != null)
+        {
           availSize = xcoder.getVirtualTranscodeSize();
           totalSize = xcoder.isTranscodeDone() ? availSize : getLargeFileSize(currFile.toString());
         }

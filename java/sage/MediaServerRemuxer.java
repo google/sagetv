@@ -789,7 +789,7 @@ public class MediaServerRemuxer
             !formatName.equals(MediaFormat.MPEG1_VIDEO) &&
             !formatName.equals(MediaFormat.MPEG2_VIDEO))
         {
-          videoFormat = null;
+          containerFormat = null;
           return;
         }
       }
