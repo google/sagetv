@@ -83,7 +83,7 @@
       <AdditionalLibraryDirectories>$(DXSDK_DIR)\lib;$(SAGEDEVJDK)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>.\Release/$(TargetName).pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
-      <MapFileName>.\Release/DShowPlayer.map</MapFileName>
+      <MapFileName>.\Release/JavaRemuxer2.map</MapFileName>
       <ImportLibrary>.\Release\$(TargetName).lib</ImportLibrary>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
