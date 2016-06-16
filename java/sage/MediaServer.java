@@ -528,7 +528,7 @@ public class MediaServer implements Runnable
       }
     }
 
-    protected void openWriteFile(String filename, int uploadKey) throws java.io.IOException
+    protected void openWriteFile(String filename, int uploadKey, boolean reply) throws java.io.IOException
     {
       currFile = new java.io.File(filename);
       currFile = currFile.getCanonicalFile(); // any relative path hacking is removed here
@@ -563,10 +563,14 @@ public class MediaServer implements Runnable
       {
         uploadStream = new java.io.FileOutputStream(currFile);
         fileChannel = uploadStream.getChannel();
-        commBufWrite.clear();
-        commBufWrite.put("OK\r\n".getBytes()).flip();
-        int numWritten = s.write(commBufWrite);
-        if (MEDIA_SERVER_DEBUG) System.out.println("MediaServer wrote out " + numWritten + " bytes");
+        if (reply)
+        {
+          commBufWrite.clear();
+          commBufWrite.put("OK\r\n".getBytes()).flip();
+          int numWritten = s.write(commBufWrite);
+          if (MEDIA_SERVER_DEBUG)
+            System.out.println("MediaServer wrote out " + numWritten + " bytes");
+        }
       }
       else
       {
@@ -1037,7 +1041,7 @@ public class MediaServer implements Runnable
             fname = IOUtils.convertPlatformPathChars(fname);
             int uploadKey = Integer.parseInt(tempString.substring(idx + 1));
             if (MEDIA_SERVER_DEBUG) System.out.println("Converted pathname to:" + fname);
-            openWriteFile(fname, uploadKey);
+            openWriteFile(fname, uploadKey, true);
           }
           else if (tempString.indexOf("WRITEOPENW ") == 0)
           {
@@ -1049,7 +1053,7 @@ public class MediaServer implements Runnable
             fname = IOUtils.convertPlatformPathChars(fname);
             int uploadKey = Integer.parseInt(tempString.substring(idx + 1));
             if (MEDIA_SERVER_DEBUG) System.out.println("Converted pathname to:" + fname);
-            openWriteFile(fname, uploadKey);
+            openWriteFile(fname, uploadKey, true);
           }
           else if (tempString.indexOf("LISTW ") == 0)
           {
@@ -1238,7 +1242,7 @@ public class MediaServer implements Runnable
               if (mode.equals("AUTO"))
               {
                 boolean isTV = toker.nextToken().equals("TRUE");
-                remuxer = new MediaServerRemuxer(fileChannel, outputFormat, isTV);
+                remuxer = new MediaServerRemuxer(fileChannel, outputFormat, isTV, this);
               }
               else
               {
@@ -1247,7 +1251,7 @@ public class MediaServer implements Runnable
                 // be logged so we know to tell the user to upgrade.
                 if (Sage.DBG) System.out.println("MediaServer remux mode not supported;" +
                     " defaulting to AUTO TRUE");
-                remuxer = new MediaServerRemuxer(fileChannel, outputFormat, true);
+                remuxer = new MediaServerRemuxer(fileChannel, outputFormat, true, this);
               }
 
               commBufWrite.clear();
@@ -1278,10 +1282,17 @@ public class MediaServer implements Runnable
                 commBufWrite.put((remuxer.isInitialized() ?
                     remuxer.getContainerFormat().getFullPropertyString() + "\r\n" : "NULL\r\n").getBytes()).flip();
               }
+              else if (config.equals("FILE"))
+              {
+                commBufWrite.clear();
+                commBufWrite.put((currFile != null ?
+                    currFile.getAbsoluteFile() + "\r\n" : "NULL\r\n").getBytes()).flip();
+              }
               else if (config.equals("MODE"))
               {
                 commBufWrite.clear();
-                commBufWrite.put((remuxer.getOutputFormat() == MPEGParser2.REMUX_TS ? "TS\r\n" : "PS\r\n").getBytes()).flip();
+                commBufWrite.put((remuxer.getOutputFormat() == MPEGParser2.REMUX_TS ?
+                    "TS\r\n" : "PS\r\n").getBytes()).flip();
               }
               else if (config.startsWith("BUFFER "))
               {
@@ -1315,7 +1326,7 @@ public class MediaServer implements Runnable
               int uploadKey = Integer.parseInt(tempString.substring(idx + 1));
               if (MEDIA_SERVER_DEBUG) System.out.println("Converted pathname to:" + fname);
 
-              remuxer.startSwitch(this, fname, uploadKey);
+              remuxer.startSwitch(fname, uploadKey);
               //Later we will call openWriteFile(fname, uploadKey);
 
               commBufWrite.clear();
@@ -1411,8 +1422,14 @@ public class MediaServer implements Runnable
       }
     }
 
-    public FileChannel getFileChannel() {
+    public FileChannel getFileChannel()
+    {
       return fileChannel;
+    }
+
+    public java.io.File getFile()
+    {
+      return currFile;
     }
 
     protected java.nio.channels.SocketChannel s;

@@ -21,10 +21,13 @@ import sage.media.format.MPEGParser2;
 import sage.media.format.MediaFormat;
 import sage.media.format.VideoFormat;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class MediaServerRemuxer
@@ -35,15 +38,19 @@ public class MediaServerRemuxer
   private static final int MAX_INIT_BUFFER_SIZE = 10485700;
   private static final long SWITCH_BYTES_LIMIT = 8388608;
 
+  private static final Map<File, MediaServerRemuxer> remuxerMap =
+      new ConcurrentHashMap<File, MediaServerRemuxer>();
+
   private boolean closed;
 
   private final Object switchLock;
   private boolean switching;
-  private MediaServer.Connection switchMediaServer;
+  private final MediaServer.Connection mediaServer;
   private String switchFilename;
   private int switchUploadId;
   private long switchData;
 
+  private File currentFile;
   private final RemuxWriter writer;
   private ByteBuffer writeBuffer;
   private FileChannel fileChannel;
@@ -82,15 +89,17 @@ public class MediaServerRemuxer
    * @param fileChannel The starting FileChannel to be used for writing.
    * @param outputFormat The format of the remuxed stream.
    * @param isTV Is the incoming stream expected to have video?
+   * @param mediaServer The media server creating this instance.
    */
-  public MediaServerRemuxer(FileChannel fileChannel, int outputFormat, boolean isTV)
+  public MediaServerRemuxer(FileChannel fileChannel, int outputFormat, boolean isTV, MediaServer.Connection mediaServer)
   {
     this(fileChannel,
         1572864, outputFormat,
         isTV ? MPEGParser2.StreamFormat.ATSC : MPEGParser2.StreamFormat.FREE,
         MPEGParser2.SubFormat.UNKNOWN,
         MPEGParser2.TuneStringType.CHANNEL,
-        1, 0, 0, 0, 0);
+        1, 0, 0, 0, 0,
+        mediaServer);
   }
 
   /**
@@ -109,7 +118,8 @@ public class MediaServerRemuxer
    * @param data1 The first number of a hyphenated tune string.
    * @param data2 The second number of a hyphenated tune string.
    * @param data3 The third number of a hyphenated tune string.
-   * @throws IllegalArgumentException
+   * @param mediaServer The media server creating this instance.
+   * @throws IllegalArgumentException If the media server is null or the remuxer can't be opened.
    */
   public MediaServerRemuxer(FileChannel fileChannel, int initData,
                             int outputFormat,
@@ -120,13 +130,20 @@ public class MediaServerRemuxer
                             int tsid,
                             int data1,
                             int data2,
-                            int data3) throws IllegalArgumentException
+                            int data3,
+                            MediaServer.Connection mediaServer) throws IllegalArgumentException
   {
+    if (mediaServer == null)
+    {
+      throw new IllegalArgumentException("The media server cannot be null.");
+    }
+
     closed = false;
 
     switchLock = new Object();
     switching = false;
-    switchMediaServer = null;
+    this.mediaServer = mediaServer;
+    currentFile = mediaServer.getFile();
     switchFilename = null;
     switchUploadId = 0;
     switchData = 0;
@@ -167,6 +184,8 @@ public class MediaServerRemuxer
     {
       throw new IllegalArgumentException("Unable to initialize the remuxer.");
     }
+
+    remuxerMap.put(currentFile, this);
   }
 
 
@@ -236,6 +255,9 @@ public class MediaServerRemuxer
       return;
     }
 
+    if (currentFile != null)
+      remuxerMap.remove(currentFile);
+
     if (remuxer2 != null)
     {
       remuxer2.close();
@@ -265,17 +287,16 @@ public class MediaServerRemuxer
    * the bytes on each write for an opportunity. Once a switching point is detected, all new data
    * will be buffered until switchOutput is called.
    *
-   * @param mediaServer The media server connection instance to use.
    * @param filename The new filename to switch to.
    * @param uploadId The upload ID to be used to authorize the new filename.
    */
-  public void startSwitch(MediaServer.Connection mediaServer, String filename, int uploadId)
+  public void startSwitch(String filename, int uploadId)
   {
     synchronized (switchLock)
     {
-      if (!switching)
+      // Don't allow SWITCH to the same file.
+      if (!switching && new File(filename) != currentFile)
       {
-        switchMediaServer = mediaServer;
         switchFilename = filename;
         switchUploadId = uploadId;
 
@@ -284,6 +305,11 @@ public class MediaServerRemuxer
         doSwitch();
       }
     }
+  }
+
+  public static MediaServerRemuxer getRemuxer(File filename)
+  {
+    return remuxerMap.get(filename);
   }
 
   /**
@@ -308,6 +334,9 @@ public class MediaServerRemuxer
   {
     synchronized (switchLock)
     {
+      // 30 second timeout.
+      int timeout = 60;
+
       while (switching) {
         try
         {
@@ -315,6 +344,12 @@ public class MediaServerRemuxer
         }
         catch (InterruptedException e)
         {
+          break;
+        }
+
+        if (timeout-- <= 0)
+        {
+          doSwitch(true);
           break;
         }
       }
@@ -325,16 +360,30 @@ public class MediaServerRemuxer
 
   private void doSwitch()
   {
+    doSwitch(false);
+  }
+
+  private void doSwitch(boolean force)
+  {
     int searchBytes = writeBuffer.position();
 
-    // The thread pushing to the remuxer is the same thread that calls this method.
     int switchIndex = getSwitchIndex(writeBuffer, 0, searchBytes);
     switchData += searchBytes;
 
-    if (switchIndex == -1 && switchData > SWITCH_BYTES_LIMIT)
+    if (switchIndex == -1)
     {
-      if (Sage.DBG) System.out.println("WARNING Could not find transition point after searching 8 MB of data in stream!");
-      switchIndex = 0;
+      if (switchData > SWITCH_BYTES_LIMIT)
+      {
+        if (Sage.DBG)
+          System.out.println("WARNING Could not find transition point after searching 8 MB of data in stream!");
+
+        switchIndex = 0;
+      }
+      else if (force)
+      {
+        if (Sage.DBG) System.out.println("WARNING Could not find transition point!");
+        switchIndex = 0;
+      }
     }
 
     try
@@ -343,6 +392,8 @@ public class MediaServerRemuxer
       {
         synchronized (switchLock)
         {
+          remuxerMap.remove(currentFile);
+
           if (switchIndex != 0)
           {
             int oldLimit = writeBuffer.position();
@@ -354,10 +405,10 @@ public class MediaServerRemuxer
             writeBuffer.compact();
           }
 
-          switchMediaServer.closeFile(false);
-          switchMediaServer.openWriteFile(switchFilename, switchUploadId);
+          mediaServer.closeFile(false);
+          mediaServer.openWriteFile(switchFilename, switchUploadId, false);
 
-          this.fileChannel = switchMediaServer.getFileChannel();
+          this.fileChannel = mediaServer.getFileChannel();
 
           // The thread switching the file is the same thread that writes to the file, so this will
           // not create a race condition.
@@ -365,6 +416,8 @@ public class MediaServerRemuxer
 
           writer.writeFile(writeBuffer);
 
+          currentFile = new File(switchFilename);
+          remuxerMap.put(currentFile, this);
           switching = false;
           switchLock.notifyAll();
         }
