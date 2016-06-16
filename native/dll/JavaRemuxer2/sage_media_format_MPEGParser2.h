@@ -11,12 +11,6 @@ extern "C" {
 #define sage_media_format_MPEGParser2_REMUX_TS 1L
 #undef sage_media_format_MPEGParser2_REMUX_PS
 #define sage_media_format_MPEGParser2_REMUX_PS 16L
-#undef sage_media_format_MPEGParser2_ATSC_STREAM
-#define sage_media_format_MPEGParser2_ATSC_STREAM 1L
-#undef sage_media_format_MPEGParser2_DVB_STREAM
-#define sage_media_format_MPEGParser2_DVB_STREAM 2L
-#undef sage_media_format_MPEGParser2_FREE_STREAM
-#define sage_media_format_MPEGParser2_FREE_STREAM 3L
 /*
  * Class:     sage_media_format_MPEGParser2
  * Method:    openRemuxer0
