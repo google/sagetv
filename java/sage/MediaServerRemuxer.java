@@ -35,8 +35,6 @@ public class MediaServerRemuxer
   private static final int MAX_INIT_BUFFER_SIZE = 10485700;
   private static final long SWITCH_BYTES_LIMIT = 8388608;
 
-  private static final int MTS_SYNC_BYTE = 0x47;
-
   private boolean closed;
 
   private final Object switchLock;
@@ -245,6 +243,9 @@ public class MediaServerRemuxer
 
       try
       {
+        if (partialTransferIndex > 0)
+          writer.write(partialTransfer, 0, partialTransferIndex);
+
         writer.flush();
       }
       catch (IOException e)
@@ -627,10 +628,13 @@ public class MediaServerRemuxer
         {
           // Change over to TS if the video is anything other than MPEG2.
 
-          String videoFormat = containerFormat.getVideoFormat().getFormatName();
+          VideoFormat videoFormat = containerFormat.getVideoFormat();
+          String formatName = videoFormat != null ? videoFormat.getFormatName() : null;
 
-          if (outputFormat == MPEGParser2.REMUX_PS &&
-              (!videoFormat.equals(MediaFormat.MPEG1_VIDEO) || !videoFormat.equals(MediaFormat.MPEG2_VIDEO)))
+          if (formatName != null &&
+              outputFormat == MPEGParser2.REMUX_PS &&
+              !formatName.equals(MediaFormat.MPEG1_VIDEO) &&
+              !formatName.equals(MediaFormat.MPEG2_VIDEO))
           {
             remuxer2.close();
             outputFormat = MPEGParser2.REMUX_TS;
@@ -668,8 +672,8 @@ public class MediaServerRemuxer
 
           pushData(transferBuffer, 0, initOffset);
 
-          // We no longer need a large buffer. The buffer will grow if needed.
-          transferBuffer = new byte[4136];
+          // We no longer need a large buffer.
+          transferBuffer = new byte[98304];
 
           // This keeps an empty buffer from reaching the main loop.
           if (!data.hasRemaining())
@@ -685,24 +689,13 @@ public class MediaServerRemuxer
         int bufferOffset = 0;
         byte currentBuffer[];
 
-        // Handle the direct buffer from commBufRead.
-        if (data.isDirect())
+        if (transferBuffer == null || data.remaining() > transferBuffer.length)
         {
-          if (transferBuffer == null || data.remaining() > transferBuffer.length)
-          {
-            transferBuffer = new byte[data.remaining() * 2];
-          }
+          transferBuffer = new byte[data.remaining() * 2];
+        }
 
-          data.get(transferBuffer, 0, totalLength);
-          currentBuffer = transferBuffer;
-        }
-        else
-        {
-          // Get the backing byte array instead of copying the data twice.
-          currentBuffer = data.array();
-          bufferOffset = data.arrayOffset() + data.position();
-          data.position(data.position() + totalLength);
-        }
+        data.get(transferBuffer, 0, totalLength);
+        currentBuffer = transferBuffer;
 
         pushData(currentBuffer, bufferOffset, totalLength);
       }
@@ -751,9 +744,9 @@ public class MediaServerRemuxer
         {
           offset++;
 
-          tsSynced = buffer[offset] == MTS_SYNC_BYTE &&
-              buffer[offset + 188] == MTS_SYNC_BYTE &&
-              buffer[offset + 376] == MTS_SYNC_BYTE;
+          tsSynced = buffer[offset] == 0x47 &&
+              buffer[offset + 188] == 0x47 &&
+              buffer[offset + 376] == 0x47;
 
           if (tsSynced)
             break;
@@ -779,6 +772,28 @@ public class MediaServerRemuxer
     @Override
     public void write(byte[] b, int off, int len) throws IOException
     {
+      // Don't write anything if the stream is PS and it should be TS.
+      if (containerFormat == null)
+      {
+        containerFormat = remuxer2.getContainerFormat();
+
+        if (containerFormat == null) {
+          return;
+        }
+
+        VideoFormat videoFormat = containerFormat.getVideoFormat();
+        String formatName = videoFormat != null ? videoFormat.getFormatName() : null;
+
+        if (formatName != null &&
+            outputFormat == MPEGParser2.REMUX_PS &&
+            !formatName.equals(MediaFormat.MPEG1_VIDEO) &&
+            !formatName.equals(MediaFormat.MPEG2_VIDEO))
+        {
+          videoFormat = null;
+          return;
+        }
+      }
+
       if (writeBuffer.remaining() < len)
       {
         synchronized (switchLock)

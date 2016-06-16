@@ -942,14 +942,7 @@ public class MediaServer implements Runnable
             // We also don't use them by default on Windows because of poor performance w/ network shares
             if (hackBuf == null)
             {
-              if (remuxer != null) {
-                // This eliminates an extra copy since the remuxer can currently only accept a byte
-                // array for data. Also make it a multiple of 188 to reduce the chances of partial
-                // packet buffering.
-                hackBuf = java.nio.ByteBuffer.allocate(65424);
-              } else {
-                hackBuf = java.nio.ByteBuffer.allocateDirect(65536);
-              }
+              hackBuf = java.nio.ByteBuffer.allocateDirect(65536);
             }
             hackBuf.clear();
             hackBuf.limit((int)Math.min(length, hackBuf.capacity()));
