@@ -18,7 +18,7 @@ package sage.media.format;
 
 import sage.Sage;
 
-import java.io.*;
+import java.io.OutputStream;
 
 public class MPEGParser2
 {
@@ -85,7 +85,7 @@ public class MPEGParser2
       inputStream = new java.io.FileInputStream(inputFile);
       outputStream = new java.io.BufferedOutputStream(new java.io.FileOutputStream(outputFile));
       remuxer = openRemuxer(REMUX_TS, outputFormat, isTV ? StreamFormat.ATSC : StreamFormat.FREE,
-          SubFormat.UNKNOWN, TuneStringType.CHANNEL, 1, 0, 0, 0, 0, outputStream);
+          SubFormat.UNKNOWN, TuneStringType.CHANNEL, 0, 0, 0, 0, 0, outputStream);
 
       if (remuxer == null)
         return false;
@@ -256,7 +256,7 @@ public class MPEGParser2
     if (streamFormat == StreamFormat.UNKNOWN)
     {
       streamFormat = StreamFormat.FREE;
-      channel = 1;
+      channel = 0;
     }
 
     long ptr = openRemuxer0(inputFormat, outputFormat, streamFormat.ordinal(), subFormat.ordinal(), (byte)tuneStringType.ordinal(), (short)channel, (short)tsid, (short)data1, (short)data2, (short)data3, outStream);
@@ -264,6 +264,7 @@ public class MPEGParser2
     if (ptr > 0)
       return new Remuxer2(ptr, inputFormat, outputFormat, streamFormat, subFormat, channel, tsid, data1, data2, data3, outStream);
 
+    if (Sage.DBG) System.out.println("ERROR cannot create rumuxer!");
     return null;
   }
 

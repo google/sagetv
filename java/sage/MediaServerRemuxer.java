@@ -49,6 +49,7 @@ public class MediaServerRemuxer
   private String switchFilename;
   private int switchUploadId;
   private long switchData;
+  private boolean interAssistance;
 
   private File currentFile;
   private final RemuxWriter writer;
@@ -98,7 +99,7 @@ public class MediaServerRemuxer
         isTV ? MPEGParser2.StreamFormat.ATSC : MPEGParser2.StreamFormat.FREE,
         MPEGParser2.SubFormat.UNKNOWN,
         MPEGParser2.TuneStringType.CHANNEL,
-        1, 0, 0, 0, 0,
+        0, 0, 0, 0, 0,
         mediaServer);
   }
 
@@ -147,6 +148,7 @@ public class MediaServerRemuxer
     switchFilename = null;
     switchUploadId = 0;
     switchData = 0;
+    interAssistance = true;
 
     bufferIndex = 0;
     bufferLimit = 0;
@@ -313,6 +315,23 @@ public class MediaServerRemuxer
   }
 
   /**
+   * Disable internal assistance for this remuxer instance.
+   * <p/>
+   * This will cause the commands SWITCH and GET_FILE_SIZE to be sent to the network encoder instead
+   * of being redirected internally. The only reason you should want to use this is for
+   * troubleshooting.
+   */
+  public void disableInterAssistance()
+  {
+    synchronized (switchLock)
+    {
+      if (Sage.DBG) System.out.println("INFO Network encoder internal assistance has been disabled.");
+      remuxerMap.remove(currentFile);
+      interAssistance = false;
+    }
+  }
+
+  /**
    * Get if switching has completed.
    *
    * @return true if switching has completed.
@@ -322,6 +341,20 @@ public class MediaServerRemuxer
     synchronized (switchLock)
     {
       return !switching;
+    }
+  }
+
+  /**
+   * Get if switching has completed.
+   *
+   * @return true if switching has completed.
+   */
+  public void forceSwitched()
+  {
+    synchronized (switchLock)
+    {
+      if (Sage.DBG) System.out.println("WARNING Forcing transition point!");
+      doSwitch(true);
     }
   }
 
@@ -349,6 +382,7 @@ public class MediaServerRemuxer
 
         if (timeout-- <= 0)
         {
+          if (Sage.DBG) System.out.println("WARNING Could not find transition point after over 30 seconds!");
           doSwitch(true);
           break;
         }
@@ -374,14 +408,13 @@ public class MediaServerRemuxer
     {
       if (switchData > SWITCH_BYTES_LIMIT)
       {
-        if (Sage.DBG)
-          System.out.println("WARNING Could not find transition point after searching 8 MB of data in stream!");
+        if (Sage.DBG) System.out.println(
+            "WARNING Could not find transition point after searching 8 MB of data in stream!");
 
         switchIndex = 0;
       }
       else if (force)
       {
-        if (Sage.DBG) System.out.println("WARNING Could not find transition point!");
         switchIndex = 0;
       }
     }
@@ -417,7 +450,9 @@ public class MediaServerRemuxer
           writer.writeFile(writeBuffer);
 
           currentFile = new File(switchFilename);
-          remuxerMap.put(currentFile, this);
+          if (interAssistance)
+            remuxerMap.put(currentFile, this);
+
           switching = false;
           switchLock.notifyAll();
         }
@@ -640,7 +675,8 @@ public class MediaServerRemuxer
             }
             else
             {
-              System.out.println("Video format does not exist. Transition points will not be able to be determined.");
+              if (MEDIA_SERVER_DEBUG) System.out.println("Video format does not exist." +
+                  " Transition points will not be able to be determined.");
             }
           }
         }
