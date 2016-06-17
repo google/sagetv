@@ -1276,6 +1276,18 @@ public class MediaServer implements Runnable
                 commBufWrite.clear();
                 commBufWrite.put((remuxer.isSwitched() ? "TRUE\r\n" : "FALSE\r\n").getBytes()).flip();
               }
+              else if (config.equals("FORCE_SWITCHED"))
+              {
+                remuxer.forceSwitched();
+                commBufWrite.clear();
+                commBufWrite.put(OK_BYTES).flip();
+              }
+              else if (config.equals("DISABLE_ASSIST"))
+              {
+                remuxer.disableInterAssistance();
+                commBufWrite.clear();
+                commBufWrite.put(OK_BYTES).flip();
+              }
               else if (config.equals("FORMAT"))
               {
                 commBufWrite.clear();
