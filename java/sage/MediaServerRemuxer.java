@@ -32,8 +32,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class MediaServerRemuxer
 {
-  private static final boolean MEDIA_SERVER_DEBUG = Sage.DBG && Sage.getBoolean("media_server_debug", false);
-
   private static final int MAX_TRANSFER = 33088;
   private static final int MAX_INIT_BUFFER_SIZE = 10485700;
   private static final long SWITCH_BYTES_LIMIT = 8388608;
@@ -684,7 +682,7 @@ public class MediaServerRemuxer
             }
             else
             {
-              if (MEDIA_SERVER_DEBUG) System.out.println("Video format does not exist." +
+              if (Sage.DBG) System.out.println("Video format does not exist." +
                   " Transition points will not be able to be determined.");
             }
           }
@@ -698,7 +696,7 @@ public class MediaServerRemuxer
             System.arraycopy(transferBuffer, 0, newBuffer, 0, transferBuffer.length);
             transferBuffer = newBuffer;
 
-            if (MEDIA_SERVER_DEBUG) System.out.println("Container format not detected," +
+            if (Sage.DBG) System.out.println("Container format not detected," +
                 " trying again with more data. transferBuffer=" + transferBuffer.length);
           }
           else if (containerFormat == null && transferBuffer.length == MAX_INIT_BUFFER_SIZE)
@@ -716,7 +714,7 @@ public class MediaServerRemuxer
             data3 = 0;
             remuxer2 = MPEGParser2.openRemuxer(inputFormat, outputFormat, streamFormat, subFormat, tuneStringType, channel, tsid, data1, data2, data3, writer);
 
-            if (MEDIA_SERVER_DEBUG) System.out.println("Container format not detected," +
+            if (Sage.DBG) System.out.println("Container format not detected," +
                 " clearing buffer, setting channel to 1." +
                 " transferBuffer=" + transferBuffer.length);
           }
@@ -811,9 +809,41 @@ public class MediaServerRemuxer
     {
       transferLength = Math.min(MAX_TRANSFER, length - offset);
 
-      // Packets less than the maximum.
+      // Not enough data to fill the transfer buffer.
       if (transferLength < partialTransfer.length - partialTransferIndex)
       {
+        // If we are out of sync, try to fixed it. This should not be happening at all, but it is
+        // possible and the network encoder may not know it happened.
+        if (buffer[offset] != 0x47 || !tsSynced)
+        {
+          int startingOffset = offset;
+          if (Sage.DBG) System.out.println("Remuxer is buffering out of sync.");
+
+          while (length - (offset + 377) > 0)
+          {
+            offset++;
+
+            tsSynced = buffer[offset] == 0x47 &&
+                buffer[offset + 188] == 0x47 &&
+                buffer[offset + 376] == 0x47;
+
+            if (tsSynced)
+              break;
+          }
+
+          if (!tsSynced)
+          {
+            if (Sage.DBG) System.out.println(
+              "Remuxer cannot find sync byte after checking " + (offset - startingOffset) + " bytes");
+
+            // Drop the data. This will endlessly loop otherwise.
+            return;
+          }
+
+          // The available length has changed.
+          continue;
+        }
+
         System.arraycopy(buffer, offset, partialTransfer, partialTransferIndex, transferLength);
         partialTransferIndex += transferLength;
         break;
@@ -832,11 +862,11 @@ public class MediaServerRemuxer
       }
 
       // If we are out of sync, try to fixed it. This should not be happening at all, but it is
-      // possible and the network encoder isn't going to know it happened.
-      if (buffer[offset] != 0x47)
+      // possible and the network encoder may not know it happened.
+      if (buffer[offset] != 0x47 || !tsSynced)
       {
         int startingOffset = offset;
-        if (MEDIA_SERVER_DEBUG) System.out.println("Remuxer is out of sync.");
+        if (Sage.DBG) System.out.println("Remuxer is out of sync.");
 
         while (length - (offset + 377) > 0)
         {
@@ -850,8 +880,7 @@ public class MediaServerRemuxer
             break;
         }
 
-
-        if (!tsSynced && MEDIA_SERVER_DEBUG) System.out.println(
+        if (!tsSynced && Sage.DBG) System.out.println(
             "Remuxer cannot find sync byte after checking " + (offset - startingOffset) + " bytes");
 
         // The available length has changed.
