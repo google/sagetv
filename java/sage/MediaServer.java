@@ -1284,7 +1284,7 @@ public class MediaServer implements Runnable
               }
               else if (config.equals("DISABLE_ASSIST"))
               {
-                remuxer.disableInterAssistance();
+                remuxer.disableInterAssist();
                 commBufWrite.clear();
                 commBufWrite.put(OK_BYTES).flip();
               }

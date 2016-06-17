@@ -32,6 +32,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class MediaServerRemuxer
 {
+  private static final int TS_ALIGN = 188;
   private static final int MAX_TRANSFER = 33088;
   private static final int MAX_INIT_BUFFER_SIZE = 10485700;
   private static final long SWITCH_BYTES_LIMIT = 8388608;
@@ -47,7 +48,7 @@ public class MediaServerRemuxer
   private String switchFilename;
   private int switchUploadId;
   private long switchData;
-  private boolean interAssistance;
+  private boolean interAssist;
 
   private File currentFile;
   private final RemuxWriter writer;
@@ -93,7 +94,7 @@ public class MediaServerRemuxer
   public MediaServerRemuxer(FileChannel fileChannel, int outputFormat, boolean isTV, MediaServer.Connection mediaServer)
   {
     this(fileChannel,
-        1572864, outputFormat,
+        2621472, outputFormat,
         isTV ? MPEGParser2.StreamFormat.ATSC : MPEGParser2.StreamFormat.FREE,
         MPEGParser2.SubFormat.UNKNOWN,
         MPEGParser2.TuneStringType.CHANNEL,
@@ -146,7 +147,7 @@ public class MediaServerRemuxer
     switchFilename = null;
     switchUploadId = 0;
     switchData = 0;
-    interAssistance = true;
+    interAssist = true;
 
     bufferIndex = 0;
     bufferLimit = 0;
@@ -270,8 +271,7 @@ public class MediaServerRemuxer
         writer.flush();
       }
       catch (IOException e)
-      {
-      }
+      {}
     }
 
     closed = true;
@@ -319,7 +319,7 @@ public class MediaServerRemuxer
    * of being redirected internally. The only reason you should want to use this is for
    * troubleshooting.
    */
-  public void disableInterAssistance()
+  public void disableInterAssist()
   {
     synchronized (switchLock)
     {
@@ -327,7 +327,7 @@ public class MediaServerRemuxer
         System.out.println("INFO Network encoder internal assistance has been disabled.");
       if (currentFile != null)
         remuxerMap.remove(currentFile);
-      interAssistance = false;
+      interAssist = false;
     }
   }
 
@@ -451,7 +451,7 @@ public class MediaServerRemuxer
           writer.writeFile(writeBuffer);
 
           currentFile = new File(switchFilename);
-          if (interAssistance)
+          if (interAssist)
             remuxerMap.put(currentFile, this);
 
           switching = false;
@@ -697,7 +697,7 @@ public class MediaServerRemuxer
             transferBuffer = newBuffer;
 
             if (Sage.DBG) System.out.println("Container format not detected," +
-                " trying again with more data. transferBuffer=" + transferBuffer.length);
+                " expanding buffer. transferBuffer=" + transferBuffer.length);
           }
           else if (containerFormat == null && transferBuffer.length == MAX_INIT_BUFFER_SIZE)
           {
@@ -715,7 +715,7 @@ public class MediaServerRemuxer
             remuxer2 = MPEGParser2.openRemuxer(inputFormat, outputFormat, streamFormat, subFormat, tuneStringType, channel, tsid, data1, data2, data3, writer);
 
             if (Sage.DBG) System.out.println("Container format not detected," +
-                " clearing buffer, setting channel to 1." +
+                " clearing buffer, setting channel to 0." +
                 " transferBuffer=" + transferBuffer.length);
           }
         }
@@ -812,38 +812,6 @@ public class MediaServerRemuxer
       // Not enough data to fill the transfer buffer.
       if (transferLength < partialTransfer.length - partialTransferIndex)
       {
-        // If we are out of sync, try to fixed it. This should not be happening at all, but it is
-        // possible and the network encoder may not know it happened.
-        if (buffer[offset] != 0x47 || !tsSynced)
-        {
-          int startingOffset = offset;
-          if (Sage.DBG) System.out.println("Remuxer is buffering out of sync.");
-
-          while (length - (offset + 377) > 0)
-          {
-            offset++;
-
-            tsSynced = buffer[offset] == 0x47 &&
-                buffer[offset + 188] == 0x47 &&
-                buffer[offset + 376] == 0x47;
-
-            if (tsSynced)
-              break;
-          }
-
-          if (!tsSynced)
-          {
-            if (Sage.DBG) System.out.println(
-              "Remuxer cannot find sync byte after checking " + (offset - startingOffset) + " bytes");
-
-            // Drop the data. This will endlessly loop otherwise.
-            return;
-          }
-
-          // The available length has changed.
-          continue;
-        }
-
         System.arraycopy(buffer, offset, partialTransfer, partialTransferIndex, transferLength);
         partialTransferIndex += transferLength;
         break;
@@ -855,8 +823,57 @@ public class MediaServerRemuxer
         transferLength = partialTransfer.length - partialTransferIndex;
         System.arraycopy(buffer, offset, partialTransfer, partialTransferIndex, transferLength);
 
-        remuxer2.pushRemuxData(partialTransfer, 0, partialTransfer.length);
-        partialTransferIndex = 0;
+        int extraBytes = 0;
+        int partialTransferOffset = 0;
+        int partialTransferLength = partialTransfer.length;
+
+        // If we are out of sync, try to fixed it. This should not be happening at all, but it is
+        // possible and the network encoder may not know it happened.
+        if (partialTransfer[partialTransferOffset] != 0x47 || !tsSynced)
+        {
+          int startingOffset = partialTransferOffset;
+          if (Sage.DBG && tsSynced) System.out.println("Remuxer is buffering out of sync.");
+
+          while (partialTransferLength - (partialTransferOffset + 377) > 0)
+          {
+            partialTransferOffset++;
+
+            tsSynced = buffer[partialTransferOffset] == 0x47 &&
+                buffer[partialTransferOffset + TS_ALIGN] == 0x47 &&
+                buffer[partialTransferOffset + TS_ALIGN * 2] == 0x47;
+
+            if (tsSynced)
+              break;
+          }
+
+          if (!tsSynced)
+          {
+            if (Sage.DBG) System.out.println(
+                "Remuxer cannot find sync byte after checking " + (offset - startingOffset) + " bytes");
+
+            // Drop the data. This will endlessly loop otherwise.
+            partialTransferIndex = 0;
+            return;
+          }
+
+          // The available length has changed.
+          partialTransferLength = partialTransferLength - partialTransferOffset;
+          extraBytes = partialTransferLength % TS_ALIGN;
+          partialTransferLength -= extraBytes;
+        }
+
+        remuxer2.pushRemuxData(partialTransfer, partialTransferOffset, partialTransferLength);
+
+        if (extraBytes > 0)
+        {
+          System.arraycopy(partialTransfer, partialTransferOffset + partialTransferLength, partialTransfer, 0, extraBytes);
+          partialTransferIndex = extraBytes;
+        }
+        else
+        {
+          partialTransferIndex = 0;
+        }
+
         offset += transferLength;
         continue;
       }
@@ -873,8 +890,8 @@ public class MediaServerRemuxer
           offset++;
 
           tsSynced = buffer[offset] == 0x47 &&
-              buffer[offset + 188] == 0x47 &&
-              buffer[offset + 376] == 0x47;
+              buffer[offset + TS_ALIGN] == 0x47 &&
+              buffer[offset + TS_ALIGN * 2] == 0x47;
 
           if (tsSynced)
             break;
