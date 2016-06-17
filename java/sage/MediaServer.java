@@ -1226,7 +1226,7 @@ public class MediaServer implements Runnable
               commBufWrite.clear();
               commBufWrite.put("INIT_ERROR\r\n".getBytes()).flip();
 
-              if (Sage.DBG) System.out.println("MediaServer is already in remux mode: " +
+              if (Sage.DBG) System.out.println("MediaServer is already in remux mode ignoring: " +
                   tempString.substring(tempString.indexOf(" ") + 1));
             }
             else
@@ -1328,7 +1328,8 @@ public class MediaServer implements Runnable
             int numWritten = s.write(commBufWrite);
             if (MEDIA_SERVER_DEBUG) System.out.println("MediaServer wrote out " + numWritten + " bytes");
           }
-          else if (tempString.indexOf("REMUX_SWITCH ") == 0) {
+          else if (tempString.indexOf("REMUX_SWITCH ") == 0)
+          {
             if (remuxer != null)
             {
               int idx = tempString.lastIndexOf(" ");
@@ -1371,7 +1372,7 @@ public class MediaServer implements Runnable
       catch (Exception e)
       {
         System.out.println("Error in MediaServerConnection of :" + e);
-        e.printStackTrace();
+        e.printStackTrace(System.out);
       }
       finally
       {

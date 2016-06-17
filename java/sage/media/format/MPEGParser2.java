@@ -47,14 +47,16 @@ public class MPEGParser2
     FREE
   }
 
-  public enum SubFormat {
+  public enum SubFormat
+  {
     UNKNOWN,
     TERRESTRIAL,
     CABLE,
     SATELLITE
   }
 
-  public enum TuneStringType {
+  public enum TuneStringType
+  {
     CHANNEL,
     PROGRAM,
     XX_XX,
@@ -65,10 +67,14 @@ public class MPEGParser2
   static
   {
     if (System.getProperty("os.name").toLowerCase().contains("windows") ||
-        System.getProperty("os.name").toLowerCase().contains("linux")) {
-      try {
+        System.getProperty("os.name").toLowerCase().contains("linux"))
+    {
+      try
+      {
         System.loadLibrary("JavaRemuxer2");
-      } catch (Throwable t) {
+      }
+      catch (Throwable t)
+      {
         System.out.println("ERROR Loading native JavaRemuxer2 library of: " + t);
       }
     }
@@ -110,22 +116,27 @@ public class MPEGParser2
       System.out.println("ERROR with remuxing of: " + e);
       e.printStackTrace(System.out);
       return false;
-    }
-    finally
+    } finally
     {
       if (inputStream != null)
       {
         try
         {
           inputStream.close();
-        }catch (Exception e){}
+        }
+        catch (Exception e)
+        {
+        }
       }
       if (outputStream != null)
       {
         try
         {
           outputStream.close();
-        }catch (Exception e){}
+        }
+        catch (Exception e)
+        {
+        }
       }
       if (remuxer != null)
         remuxer.close();
@@ -190,8 +201,10 @@ public class MPEGParser2
       }
     }
 
-    try {
-      switch (tuneStringType) {
+    try
+    {
+      switch (tuneStringType)
+      {
         case CHANNEL:
           break;
         case PROGRAM:
@@ -207,8 +220,7 @@ public class MPEGParser2
           {
             data2 = Integer.parseInt(split[0].trim());
             data3 = Integer.parseInt(split[1].trim());
-          }
-          else
+          } else
           {
             data1 = Integer.parseInt(split[0].trim());
             data2 = Integer.parseInt(split[1].trim());
@@ -231,7 +243,7 @@ public class MPEGParser2
       return null;
     }
 
-    return openRemuxer(inputFormat,outputFormat, streamFormat, subFormat, tuneStringType, channel, tsid, data1, data2, data3, outStream);
+    return openRemuxer(inputFormat, outputFormat, streamFormat, subFormat, tuneStringType, channel, tsid, data1, data2, data3, outStream);
   }
 
   public static Remuxer2 openRemuxer(int inputFormat,
@@ -259,7 +271,7 @@ public class MPEGParser2
       channel = 0;
     }
 
-    long ptr = openRemuxer0(inputFormat, outputFormat, streamFormat.ordinal(), subFormat.ordinal(), (byte)tuneStringType.ordinal(), (short)channel, (short)tsid, (short)data1, (short)data2, (short)data3, outStream);
+    long ptr = openRemuxer0(inputFormat, outputFormat, streamFormat.ordinal(), subFormat.ordinal(), (byte) tuneStringType.ordinal(), (short) channel, (short) tsid, (short) data1, (short) data2, (short) data3, outStream);
 
     if (ptr > 0)
       return new Remuxer2(ptr, inputFormat, outputFormat, streamFormat, subFormat, channel, tsid, data1, data2, data3, outStream);
@@ -281,7 +293,9 @@ public class MPEGParser2
                                           java.io.OutputStream outStream);
 
   private static native void closeRemuxer0(long ptr);
+
   private static native long pushRemuxData0(long ptr, byte[] buf, int offset, int length);
+
   private static native String getAvFormat0(long ptr);
 
   public static class Remuxer2
@@ -370,7 +384,8 @@ public class MPEGParser2
         if (newFormat != null)
         {
           containerFormat = ContainerFormat.buildFormatFromString(newFormat.substring(7)); // skip the AV-INF| part
-          if (sage.Sage.DBG) System.out.println("Detected remuxing format of:" + newFormat + " formatObject=" + containerFormat);
+          if (sage.Sage.DBG)
+            System.out.println("Detected remuxing format of:" + newFormat + " formatObject=" + containerFormat);
         }
       }
 
@@ -383,7 +398,7 @@ public class MPEGParser2
      * This method must be used for initialization if you want to know what will be remuxed before
      * anything is written to OutputStream.
      *
-     * @param data Bytes to push into the remuxer.
+     * @param data   Bytes to push into the remuxer.
      * @param offset The offset to start pushing at.
      * @param length The number of bytes to push from the offset.
      * @return true if initialization is complete.
@@ -422,7 +437,7 @@ public class MPEGParser2
      * <p/>
      * This method must be used for data to be sent to the provided OutputStream.
      *
-     * @param data Bytes to push into the remuxer.
+     * @param data   Bytes to push into the remuxer.
      * @param offset The offset to start pushing at.
      * @param length The number of bytes to push from the offset.
      * @return The number of bytes used.

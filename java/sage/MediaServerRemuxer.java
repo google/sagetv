@@ -87,10 +87,10 @@ public class MediaServerRemuxer
    * <p/>
    * The input stream is assumed TS.
    *
-   * @param fileChannel The starting FileChannel to be used for writing.
+   * @param fileChannel  The starting FileChannel to be used for writing.
    * @param outputFormat The format of the remuxed stream.
-   * @param isTV Is the incoming stream expected to have video?
-   * @param mediaServer The media server creating this instance.
+   * @param isTV         Is the incoming stream expected to have video?
+   * @param mediaServer  The media server creating this instance.
    */
   public MediaServerRemuxer(FileChannel fileChannel, int outputFormat, boolean isTV, MediaServer.Connection mediaServer)
   {
@@ -106,20 +106,20 @@ public class MediaServerRemuxer
   /**
    * Create a new media server remuxer.
    *
-   * @param fileChannel The starting FileChannel to be used for writing.
-   * @param initData The starting buffer size used to buffer data during detection. It will
-   *                 automatically expand if necessary.
-   * @param outputFormat The format of the remuxed stream.
-   * @param streamFormat The format of the incoming A/V streams.
-   * @param subFormat The sub-format of the incoming A/V streams.
+   * @param fileChannel    The starting FileChannel to be used for writing.
+   * @param initData       The starting buffer size used to buffer data during detection. It will
+   *                       automatically expand if necessary.
+   * @param outputFormat   The format of the remuxed stream.
+   * @param streamFormat   The format of the incoming A/V streams.
+   * @param subFormat      The sub-format of the incoming A/V streams.
    * @param tuneStringType The format of the provided tune string. If a tune string is not in use,
    *                       be sure to set this value to CHANNEL.
-   * @param channel If the tune string type is a channel, this will set the channel. 1 = default
-   * @param tsid The program number to select from a TS.
-   * @param data1 The first number of a hyphenated tune string.
-   * @param data2 The second number of a hyphenated tune string.
-   * @param data3 The third number of a hyphenated tune string.
-   * @param mediaServer The media server creating this instance.
+   * @param channel        If the tune string type is a channel, this will set the channel. 1 = default
+   * @param tsid           The program number to select from a TS.
+   * @param data1          The first number of a hyphenated tune string.
+   * @param data2          The second number of a hyphenated tune string.
+   * @param data3          The third number of a hyphenated tune string.
+   * @param mediaServer    The media server creating this instance.
    * @throws IllegalArgumentException If the media server is null or the remuxer can't be opened.
    */
   public MediaServerRemuxer(FileChannel fileChannel, int initData,
@@ -253,9 +253,8 @@ public class MediaServerRemuxer
    */
   public void close()
   {
-    if (closed) {
+    if (closed)
       return;
-    }
 
     if (currentFile != null)
       remuxerMap.remove(currentFile);
@@ -273,7 +272,8 @@ public class MediaServerRemuxer
         writer.flush();
       }
       catch (IOException e)
-      {}
+      {
+      }
     }
 
     closed = true;
@@ -325,8 +325,10 @@ public class MediaServerRemuxer
   {
     synchronized (switchLock)
     {
-      if (Sage.DBG) System.out.println("INFO Network encoder internal assistance has been disabled.");
-      remuxerMap.remove(currentFile);
+      if (Sage.DBG)
+        System.out.println("INFO Network encoder internal assistance has been disabled.");
+      if (currentFile != null)
+        remuxerMap.remove(currentFile);
       interAssistance = false;
     }
   }
@@ -345,9 +347,7 @@ public class MediaServerRemuxer
   }
 
   /**
-   * Get if switching has completed.
-   *
-   * @return true if switching has completed.
+   * Force the the file transition.
    */
   public void forceSwitched()
   {
@@ -370,7 +370,8 @@ public class MediaServerRemuxer
       // 30 second timeout.
       int timeout = 60;
 
-      while (switching) {
+      while (switching)
+      {
         try
         {
           switchLock.wait(500);
@@ -382,7 +383,8 @@ public class MediaServerRemuxer
 
         if (timeout-- <= 0)
         {
-          if (Sage.DBG) System.out.println("WARNING Could not find transition point after over 30 seconds!");
+          if (Sage.DBG)
+            System.out.println("WARNING Could not find transition point after over 30 seconds!");
           doSwitch(true);
           break;
         }
@@ -425,7 +427,8 @@ public class MediaServerRemuxer
       {
         synchronized (switchLock)
         {
-          remuxerMap.remove(currentFile);
+          if (currentFile != null)
+            remuxerMap.remove(currentFile);
 
           if (switchIndex != 0)
           {
@@ -465,16 +468,21 @@ public class MediaServerRemuxer
     }
     catch (IOException e)
     {
-      e.printStackTrace(System.out);
+      if (Sage.DBG)
+      {
+        System.out.println("ERROR in MediaServerRemuxer while switching:" + e);
+        e.printStackTrace(System.out);
+      }
     }
   }
 
   private int getSwitchIndex(ByteBuffer data, int offset, int length)
   {
     // H.264 and MPEG-2 are the only formats supported.
-    if(!h264 && !mpeg2)
+    if (!h264 && !mpeg2)
     {
-      if (Sage.DBG) System.out.println("CANNOT perform fast switch on a non-H264/MPEG2 MPEG2 TS file!");
+      if (Sage.DBG)
+        System.out.println("CANNOT perform fast switch on a non-H264/MPEG2 MPEG2 TS file!");
       return 0;
     }
 
@@ -491,9 +499,9 @@ public class MediaServerRemuxer
 
       // First we try to locate TS packets
       int endPos = length + offset;
-      for(i = offset; i < endPos; i++)
+      for (i = offset; i < endPos; i++)
       {
-        if(data.get(i) == 0x47 &&
+        if (data.get(i) == 0x47 &&
             (i + 188) < endPos && data.get(i + 188) == 0x47 &&
             (i + 376) < endPos && data.get(i + 376) == 0x47)
         {
@@ -503,8 +511,8 @@ public class MediaServerRemuxer
       }
 
       int searchLimit = 188 - (h264 ? 7 : 6);
-      byte targetHighByte = (byte)(0x40 | ((videoPid >> 8) & 0xFF));
-      byte targetLoByte = (byte)(videoPid & 0xFF);
+      byte targetHighByte = (byte) (0x40 | ((videoPid >> 8) & 0xFF));
+      byte targetLoByte = (byte) (videoPid & 0xFF);
 
       // Second we find a TS packet with section start and target PID
       while ((i + 188) <= endPos)
@@ -515,7 +523,7 @@ public class MediaServerRemuxer
         {
           tsStart = i;
 
-          for(int j = 4; j < searchLimit; j++)
+          for (int j = 4; j < searchLimit; j++)
           {
             // Verify if that packet contains the magic sequence 00 00 00 01 09 10 00
             // If it does, the data up to the begining of this TS packet go in old file
@@ -543,7 +551,8 @@ public class MediaServerRemuxer
                   data.get(i + j + 1) == 0x00 &&
                   data.get(i + j + 2) == 0x01 &&
                   data.get(i + j + 3) == 0x00 &&
-                  (data.get(i + j + 5) & 0x38) == 0x08) { //xx001xxx is I-Frame
+                  (data.get(i + j + 5) & 0x38) == 0x08) //xx001xxx is I-Frame
+              {
                 // We have found the vid packet with the magic sequence, write that to old file
                 return tsStart;
               }
@@ -586,7 +595,7 @@ public class MediaServerRemuxer
             cur |= b;
           }
 
-          while(pos < 2048)
+          while (pos < 2048)
           {
             b = data.get(i + pos) & 0xff;
             pos += 1;
@@ -596,10 +605,10 @@ public class MediaServerRemuxer
             if (mpeg2)
             {
               // Video start sequence: 00 00 01 B3
-              if((cur & 0xFFFFFF00) == 0x00000100)
+              if ((cur & 0xFFFFFF00) == 0x00000100)
               {
                 // Video
-                if((b == 0xB3))
+                if ((b == 0xB3))
                 {
                   return psStart;
                 }
@@ -607,11 +616,11 @@ public class MediaServerRemuxer
             }
             else // H.264 (Just in case?)
             {
-              if(cur == 0x00000001)
+              if (cur == 0x00000001)
               {
-                if((i + pos + 3) < 2048)
+                if ((i + pos + 3) < 2048)
                 {
-                  if(data.get(i + pos) == 0x09 &&
+                  if (data.get(i + pos) == 0x09 &&
                       data.get(i + pos + 1) == 0x10 &&
                       data.get(i + pos + 2) == 0x00)
                   {
@@ -647,7 +656,7 @@ public class MediaServerRemuxer
 
     int bytesRead = data.remaining();
 
-    while(data.hasRemaining())
+    while (data.hasRemaining())
     {
       // A null ContainerFormat means the stream is still being initialized.
       if (containerFormat == null)
@@ -700,7 +709,7 @@ public class MediaServerRemuxer
             // Change to auto-detect the channel in case the selection is wrong.
             remuxer2.close();
             tuneStringType = MPEGParser2.TuneStringType.CHANNEL;
-            channel = 1;
+            channel = 0;
             tsid = 0;
             data1 = 0;
             data2 = 0;
@@ -866,7 +875,8 @@ public class MediaServerRemuxer
       {
         containerFormat = remuxer2.getContainerFormat();
 
-        if (containerFormat == null) {
+        if (containerFormat == null)
+        {
           return;
         }
 
@@ -908,6 +918,7 @@ public class MediaServerRemuxer
     }
 
     byte moveByte[];
+
     @Override
     public void write(int b) throws IOException
     {
@@ -917,7 +928,7 @@ public class MediaServerRemuxer
         moveByte = new byte[1];
       }
 
-      moveByte[0] = (byte)b;
+      moveByte[0] = (byte) b;
 
       write(moveByte, 0, 1);
     }
@@ -928,7 +939,7 @@ public class MediaServerRemuxer
 
       if (bufferLimit > 0 && (bufferIndex += data.remaining()) >= bufferLimit)
       {
-        int overLimit = (int)(bufferIndex - bufferLimit);
+        int overLimit = (int) (bufferIndex - bufferLimit);
 
         if (overLimit > 0)
         {
