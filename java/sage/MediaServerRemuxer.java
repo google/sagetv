@@ -34,7 +34,7 @@ public class MediaServerRemuxer
 {
   private static final int TS_ALIGN = 188;
   private static final int MAX_TRANSFER = 33088;
-  private static final int MAX_INIT_BUFFER_SIZE = 10485700;
+  private static final int MAX_INIT_BUFFER_SIZE = 20971400;
   private static final long SWITCH_BYTES_LIMIT = 8388608;
 
   private static final Map<File, MediaServerRemuxer> remuxerMap =
@@ -94,7 +94,7 @@ public class MediaServerRemuxer
   public MediaServerRemuxer(FileChannel fileChannel, int outputFormat, boolean isTV, MediaServer.Connection mediaServer)
   {
     this(fileChannel,
-        2621472, outputFormat,
+        5242944, outputFormat,
         isTV ? MPEGParser2.StreamFormat.ATSC : MPEGParser2.StreamFormat.FREE,
         MPEGParser2.SubFormat.UNKNOWN,
         MPEGParser2.TuneStringType.CHANNEL,
@@ -662,35 +662,32 @@ public class MediaServerRemuxer
         int writeLimit = Math.min(transferBuffer.length - initOffset, data.remaining());
 
         data.get(transferBuffer, initOffset, writeLimit);
+        pushData(transferBuffer, initOffset, writeLimit);
+        containerFormat = remuxer2.getContainerFormat();
 
-        boolean detected = remuxer2.pushInitData(transferBuffer, initOffset, writeLimit);
         initOffset += writeLimit;
 
-        if (detected)
+        if (containerFormat != null)
         {
-          containerFormat = remuxer2.getContainerFormat();
+          // Reset the partial transfer index or the very first write will be out of sync.
+          partialTransferIndex = 0;
+          VideoFormat videoFormat = remuxer2.getContainerFormat().getVideoFormat();
 
-          if (containerFormat != null)
+          if (videoFormat != null)
           {
-            VideoFormat videoFormat = remuxer2.getContainerFormat().getVideoFormat();
-
-            if (videoFormat != null)
-            {
-              h264 = videoFormat.getFormatName().equals(MediaFormat.H264);
-              mpeg2 = videoFormat.getFormatName().equals(MediaFormat.MPEG2_VIDEO);
-              videoPid = Integer.parseInt(videoFormat.getId(), 16);
-            }
-            else
-            {
-              if (Sage.DBG) System.out.println("Video format does not exist." +
-                  " Transition points will not be able to be determined.");
-            }
+            h264 = videoFormat.getFormatName().equals(MediaFormat.H264);
+            mpeg2 = videoFormat.getFormatName().equals(MediaFormat.MPEG2_VIDEO);
+            videoPid = Integer.parseInt(videoFormat.getId(), 16);
+          }
+          else
+          {
+            if (Sage.DBG) System.out.println("Video format does not exist." +
+                " Transition points will not be able to be determined.");
           }
         }
-
-        if (initOffset == transferBuffer.length)
+        else if (initOffset == transferBuffer.length)
         {
-          if (containerFormat == null && transferBuffer.length < MAX_INIT_BUFFER_SIZE)
+          if (transferBuffer.length < MAX_INIT_BUFFER_SIZE)
           {
             byte[] newBuffer = new byte[Math.min(transferBuffer.length * 2, MAX_INIT_BUFFER_SIZE)];
             System.arraycopy(transferBuffer, 0, newBuffer, 0, transferBuffer.length);
@@ -699,7 +696,7 @@ public class MediaServerRemuxer
             if (Sage.DBG) System.out.println("Container format not detected," +
                 " expanding buffer. transferBuffer=" + transferBuffer.length);
           }
-          else if (containerFormat == null && transferBuffer.length == MAX_INIT_BUFFER_SIZE)
+          else if (transferBuffer.length == MAX_INIT_BUFFER_SIZE)
           {
             // Reset the buffer and keep trying until the file is closed.
             initOffset = 0;
@@ -804,10 +801,11 @@ public class MediaServerRemuxer
   private void pushData(byte[] buffer, int offset, int length)
   {
     int transferLength;
+    int limit = offset + length;
 
-    while (offset < length)
+    while (offset < limit)
     {
-      transferLength = Math.min(MAX_TRANSFER, length - offset);
+      transferLength = Math.min(MAX_TRANSFER, limit - offset);
 
       // Not enough data to fill the transfer buffer.
       if (transferLength < partialTransfer.length - partialTransferIndex)
@@ -862,7 +860,10 @@ public class MediaServerRemuxer
           partialTransferLength -= extraBytes;
         }
 
-        remuxer2.pushRemuxData(partialTransfer, partialTransferOffset, partialTransferLength);
+        if (containerFormat != null)
+          remuxer2.pushRemuxData(partialTransfer, partialTransferOffset, partialTransferLength);
+        else
+          remuxer2.pushInitData(partialTransfer, partialTransferOffset, partialTransferLength);
 
         if (extraBytes > 0)
         {
@@ -904,7 +905,10 @@ public class MediaServerRemuxer
         continue;
       }
 
-      remuxer2.pushRemuxData(buffer, offset, transferLength);
+      if (containerFormat != null)
+        remuxer2.pushRemuxData(buffer, offset, transferLength);
+      else
+        remuxer2.pushInitData(buffer, offset, transferLength);
 
       offset += transferLength;
     }
@@ -916,27 +920,10 @@ public class MediaServerRemuxer
     @Override
     public void write(byte[] b, int off, int len) throws IOException
     {
-      // Don't write anything if the stream is PS and it should be TS.
+      // Don't write anything if the stream is not detected since the detection data will rewind.
       if (containerFormat == null)
       {
-        containerFormat = remuxer2.getContainerFormat();
-
-        if (containerFormat == null)
-        {
-          return;
-        }
-
-        VideoFormat videoFormat = containerFormat.getVideoFormat();
-        String formatName = videoFormat != null ? videoFormat.getFormatName() : null;
-
-        if (formatName != null &&
-            outputFormat == MPEGParser2.REMUX_PS &&
-            !formatName.equals(MediaFormat.MPEG1_VIDEO) &&
-            !formatName.equals(MediaFormat.MPEG2_VIDEO))
-        {
-          containerFormat = null;
-          return;
-        }
+        return;
       }
 
       if (writeBuffer.remaining() < len)

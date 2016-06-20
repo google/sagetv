@@ -385,7 +385,7 @@ public class MPEGParser2
         {
           containerFormat = ContainerFormat.buildFormatFromString(newFormat.substring(7)); // skip the AV-INF| part
           if (sage.Sage.DBG)
-            System.out.println("Detected remuxing format of:" + newFormat + " formatObject=" + containerFormat);
+            System.out.println("Detected remuxing format of: " + newFormat);
         }
       }
 
