@@ -33,8 +33,10 @@ import java.util.concurrent.atomic.AtomicLong;
 public class MediaServerRemuxer
 {
   private static final int TS_ALIGN = 188;
-  private static final int MAX_TRANSFER = 33088;
-  private static final int MAX_INIT_BUFFER_SIZE = 20971400;
+  // The transfers need to be 188 byte aligned.
+  private static final int MAX_TRANSFER = 176 * TS_ALIGN;
+  // Any max size that is not a multiple of 188 is a waste since the extra bytes will not be used.
+  private static final int MAX_INIT_BUFFER_SIZE = 111550 * TS_ALIGN;
   private static final long SWITCH_BYTES_LIMIT = 8388608;
 
   private static final Map<File, MediaServerRemuxer> remuxerMap =
@@ -88,13 +90,14 @@ public class MediaServerRemuxer
    *
    * @param fileChannel  The starting FileChannel to be used for writing.
    * @param outputFormat The format of the remuxed stream.
-   * @param isTV         Is the incoming stream expected to have video?
+   * @param isTV         Is the incoming stream from a TV Tuner?
    * @param mediaServer  The media server creating this instance.
    */
   public MediaServerRemuxer(FileChannel fileChannel, int outputFormat, boolean isTV, MediaServer.Connection mediaServer)
   {
+    // Any initial size that is not a multiple of 188 is a waste since the extra bytes will not be used.
     this(fileChannel,
-        5242944, outputFormat,
+        27888 * TS_ALIGN, outputFormat,
         isTV ? MPEGParser2.StreamFormat.ATSC : MPEGParser2.StreamFormat.FREE,
         MPEGParser2.SubFormat.UNKNOWN,
         MPEGParser2.TuneStringType.CHANNEL,
@@ -295,7 +298,7 @@ public class MediaServerRemuxer
     synchronized (switchLock)
     {
       // Don't allow SWITCH to the same file.
-      if (!switching && new File(filename) != currentFile)
+      if (!switching && !new File(filename).equals(currentFile))
       {
         switchFilename = filename;
         switchUploadId = uploadId;
@@ -479,8 +482,7 @@ public class MediaServerRemuxer
     // H.264 and MPEG-2 are the only formats supported.
     if (!h264 && !mpeg2)
     {
-      if (Sage.DBG)
-        System.out.println("CANNOT perform fast switch on a non-H264/MPEG2 MPEG2 TS file!");
+      if (Sage.DBG) System.out.println("Forcing fast switch on a non-H264/MPEG2 file!");
       return 0;
     }
 
@@ -488,7 +490,7 @@ public class MediaServerRemuxer
     {
       if (videoPid == -1)
       {
-        if (Sage.DBG) System.out.println("CANNOT perform fast switch without a video PID!");
+        if (Sage.DBG) System.out.println("Forcing fast switch without a video PID!");
         return 0;
       }
 
@@ -501,7 +503,7 @@ public class MediaServerRemuxer
       {
         if (data.get(i) == 0x47 &&
             (i + 188) < endPos && data.get(i + 188) == 0x47 &&
-            (i + 376) < endPos && data.get(i + 376) == 0x47)
+            (i + 188 * 2) < endPos && data.get(i + 188 * 2) == 0x47)
         {
 
           break;
@@ -765,8 +767,9 @@ public class MediaServerRemuxer
 
           pushData(transferBuffer, 0, initOffset);
 
-          // We no longer need a large buffer.
-          transferBuffer = new byte[98304];
+          // We no longer need a large buffer. 64k is the largest amount of data that should come in
+          // at one time from the media server.
+          transferBuffer = new byte[65536];
 
           // This keeps an empty buffer from reaching the main loop.
           if (!data.hasRemaining())
@@ -884,9 +887,9 @@ public class MediaServerRemuxer
       if (buffer[offset] != 0x47 || !tsSynced)
       {
         int startingOffset = offset;
-        if (Sage.DBG) System.out.println("Remuxer is out of sync.");
+        if (Sage.DBG && tsSynced) System.out.println("Remuxer is out of sync.");
 
-        while (length - (offset + 377) > 0)
+        while (length - (offset + (188 * 2)) > 0)
         {
           offset++;
 
