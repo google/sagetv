@@ -40,7 +40,8 @@ extern "C" {
 #define TBL_PID_START    0x20
 #define ELMNT_PID_START  0x80
 
-#define PACKET_POOL_NUMBER  (8*1024/188+1)
+// Allow 8k out, plus PAT and PMT, plus 43 new packets, plus 1
+#define PACKET_POOL_NUMBER  (8*1024/188+2+43+1)
 
 typedef struct {
 	short			Type;		//reserver
