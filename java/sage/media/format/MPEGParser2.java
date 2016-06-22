@@ -66,8 +66,7 @@ public class MPEGParser2
 
   static
   {
-    if (System.getProperty("os.name").toLowerCase().contains("windows") ||
-        System.getProperty("os.name").toLowerCase().contains("linux"))
+    if (Sage.WINDOWS_OS || Sage.LINUX_OS)
     {
       try
       {
@@ -96,7 +95,9 @@ public class MPEGParser2
       if (remuxer == null)
         return false;
 
-      byte[] buf = new byte[8084];
+      // This is a multiple of 188 to keep the data aligned. Otherwise we need to use feedback from
+      // the remuxer to keep the data aligned.
+      byte[] buf = new byte[43 * 188];
       int numRead = 0;
       while ((numRead = inputStream.read(buf)) != -1)
       {
@@ -116,7 +117,8 @@ public class MPEGParser2
       System.out.println("ERROR with remuxing of: " + e);
       e.printStackTrace(System.out);
       return false;
-    } finally
+    }
+    finally
     {
       if (inputStream != null)
       {
