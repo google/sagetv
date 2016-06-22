@@ -596,7 +596,8 @@ public class MediaServer implements Runnable
         }
         if (remuxer != null)
         {
-          availSize = totalSize = remuxer.getFileSize();
+          availSize = remuxer.getFileSize();
+          totalSize = getLargeFileSize(currFile.toString());
         }
         else if (currMF != null)
         {
@@ -1236,22 +1237,29 @@ public class MediaServer implements Runnable
 
               StringTokenizer toker = new StringTokenizer(tempString.substring(12), " ");
 
-              String mode = toker.nextToken();
-              int outputFormat = toker.nextToken().equals("TS") ? MPEGParser2.REMUX_TS : MPEGParser2.REMUX_PS;
-
-              if (mode.equals("AUTO"))
+              if (toker.countTokens() == 3)
               {
-                boolean isTV = toker.nextToken().equals("TRUE");
-                remuxer = new MediaServerRemuxer(fileChannel, outputFormat, isTV, this);
+                String mode = toker.nextToken();
+                int outputFormat = toker.nextToken().equalsIgnoreCase("TS") ? MPEGParser2.REMUX_TS : MPEGParser2.REMUX_PS;
+
+                if (mode.equalsIgnoreCase("AUTO"))
+                {
+                  boolean isTV = toker.nextToken().equalsIgnoreCase("TRUE");
+                  remuxer = new MediaServerRemuxer(fileChannel, outputFormat, isTV, this);
+                } else
+                {
+                  // If a client is trying to use a newer mode, that doesn't exist, this default
+                  // will be used since it should always work. This default is better than nothing
+                  // and will be logged so we know to tell the user to upgrade.
+                  if (Sage.DBG) System.out.println("MediaServer remux mode not supported;" +
+                      " defaulting to AUTO TRUE");
+                  remuxer = new MediaServerRemuxer(fileChannel, outputFormat, true, this);
+                }
               }
               else
               {
-                // If a client is trying to use a newer mode, that doesn't exist, this default will
-                // be used since it should always work. This default is better than nothing and will
-                // be logged so we know to tell the user to upgrade.
-                if (Sage.DBG) System.out.println("MediaServer remux mode not supported;" +
-                    " defaulting to AUTO TRUE");
-                remuxer = new MediaServerRemuxer(fileChannel, outputFormat, true, this);
+                commBufWrite.clear();
+                commBufWrite.put("PARAM_ERROR\r\n".getBytes()).flip();
               }
 
               commBufWrite.clear();
@@ -1292,7 +1300,7 @@ public class MediaServer implements Runnable
               {
                 commBufWrite.clear();
                 commBufWrite.put((remuxer.isInitialized() ?
-                    remuxer.getContainerFormat().getFullPropertyString() + "\r\n" : "NULL\r\n").getBytes()).flip();
+                    remuxer.getContainerFormat().getFullPropertyString(false) + "\r\n" : "NULL\r\n").getBytes()).flip();
               }
               else if (config.equals("FILE"))
               {
