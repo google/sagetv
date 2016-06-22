@@ -176,7 +176,7 @@ public class MediaServerRemuxer
     partialTransferIndex = 0;
     partialTransfer = new byte[MAX_TRANSFER];
 
-    writeBuffer = ByteBuffer.allocateDirect(16544);
+    writeBuffer = ByteBuffer.allocateDirect(16384);
 
     transferBuffer = new byte[initData];
     this.fileChannel = fileChannel;
