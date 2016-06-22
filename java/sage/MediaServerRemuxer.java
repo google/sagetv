@@ -32,12 +32,32 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class MediaServerRemuxer
 {
-  private static final int TS_ALIGN = 188;
-  // The transfers need to be 188 byte aligned.
-  private static final int MAX_TRANSFER = 176 * TS_ALIGN;
+  // This is only used in reference to incoming packets since it's possible that one day we will
+  // need to handle other sizes and this might be turned into a variable instead of a constant. The
+  // outgoing TS packets are always 188 and should not use this variable.
+  private static final int TS_ALIGN = 188; // Normal TS packet length.
+
+  // This value must be a multiple of 188. This value can be made higher, but this number is also
+  // used to align the bytes to be transferred into the remuxer and as a result is the only amount
+  // of bytes that will be transferred at one time unless we are closing. Significantly higher
+  // values could also result in unpredictable behavior since the remuxer does seem to have a limit
+  // on how much data it will take at one time. Increasing this value will directly increase
+  // latency. Decreasing this value will reduce the amount of byte copies, but will increase the
+  // frequency that JNI is called which can increase overall CPU usage. The total buffer size is
+  // used for alignment so we can avoid performing modulus with TS_ALIGN on every single bulk
+  // transfer to see if the last packet will come up short of a full packet.
+  private static final int MAX_TRANSFER = 176 * TS_ALIGN; // a little over 32K
+
   // Any max size that is not a multiple of 188 is a waste since the extra bytes will not be used.
-  private static final int MAX_INIT_BUFFER_SIZE = 111550 * TS_ALIGN;
-  private static final long SWITCH_BYTES_LIMIT = 8388608;
+  // This value is picked because I have not observed anything that actually needed 20MB, and we
+  // have to set a limit somewhere. Most detection needs less than 10MB, so based on the initial
+  // size being 1/4 of the max size, it might be resized once and at most twice, but it's rare. This
+  // value is also the most data that will be processed before the remuxer assumes you did something
+  // wrong and switches to full auto-detection.
+  private static final int MAX_INIT_BUFFER_SIZE = 111550 * TS_ALIGN; // 20MB
+
+  // Large random number.
+  private static final long SWITCH_BYTES_LIMIT = 8388608; // 8MB
 
   private static final Map<File, MediaServerRemuxer> remuxerMap =
       new ConcurrentHashMap<File, MediaServerRemuxer>();
@@ -97,7 +117,7 @@ public class MediaServerRemuxer
   {
     // Any initial size that is not a multiple of 188 is a waste since the extra bytes will not be used.
     this(fileChannel,
-        27888 * TS_ALIGN, outputFormat,
+        27888 * TS_ALIGN /* 5MB; one quarter the max size */, outputFormat,
         isTV ? MPEGParser2.StreamFormat.ATSC : MPEGParser2.StreamFormat.FREE,
         MPEGParser2.SubFormat.UNKNOWN,
         MPEGParser2.TuneStringType.CHANNEL,
@@ -176,6 +196,11 @@ public class MediaServerRemuxer
     partialTransferIndex = 0;
     partialTransfer = new byte[MAX_TRANSFER];
 
+    // This is the most that data that will be buffered before writing to disk. The output from the
+    // remuxer is typically around 5KB. When the next write from the remuxer is larger than the
+    // available space in this buffer, it will be written to disk. If this buffer is still too small
+    // to fit the requested write, this buffer will be expanded. Keep this number relatively small
+    // to keep latency down.
     writeBuffer = ByteBuffer.allocateDirect(16384);
 
     transferBuffer = new byte[initData];
