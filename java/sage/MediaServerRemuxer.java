@@ -835,7 +835,7 @@ public class MediaServerRemuxer
           int startingOffset = partialTransferOffset;
           if (Sage.DBG && tsSynced) System.out.println("Remuxer is buffering out of sync.");
 
-          while (partialTransferLength - (partialTransferOffset + 377) > 0)
+          while (partialTransferLength - (partialTransferOffset + 1 + 188 * 2) > 0)
           {
             partialTransferOffset++;
 
@@ -889,7 +889,7 @@ public class MediaServerRemuxer
         int startingOffset = offset;
         if (Sage.DBG && tsSynced) System.out.println("Remuxer is out of sync.");
 
-        while (length - (offset + (188 * 2)) > 0)
+        while (length - (offset + 1 + 188 * 2) > 0)
         {
           offset++;
 
