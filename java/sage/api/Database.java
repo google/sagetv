@@ -310,7 +310,7 @@ public class Database {
       private boolean filterTestChannelViewable(Object o)
       {
         Channel c = getChannelObj(o);
-        return (c != null && (c.getStationID() == 0 || c.isViewable()));
+        return (c != null && c.isViewable());
       }
       private boolean filterTestIsMovie(Object o)
       {
