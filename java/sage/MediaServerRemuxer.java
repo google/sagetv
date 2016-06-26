@@ -604,7 +604,7 @@ public class MediaServerRemuxer
         if (data.get(i) == 0x00 &&
             data.get(i + 1) == 0x00 &&
             data.get(i + 2) == 0x01 &&
-            data.get(i + 3) == 0xBA)
+            (data.get(i + 3) & 0xFF) == 0xBA)
         {
           psStart = i;
 
