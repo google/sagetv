@@ -64,7 +64,7 @@ public class NetworkEncoderManager implements CaptureDeviceManager
       }
     }
 
-    if (Sage.getBoolean("network_encoder_discovery", false))
+    if (Sage.getBoolean("network_encoder_discovery", true))
     {
       // Now do the broadcast discovery of new encoding servers on the network
       if (Sage.DBG) System.out.println("Doing broadcast discovery of new encoding servers on the network...");
