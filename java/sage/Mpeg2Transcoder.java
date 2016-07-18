@@ -15,11 +15,14 @@
  */
 package sage;
 
-import java.io.*;
+import sage.io.SageFileSource;
+
+import java.io.File;
+import java.io.IOException;
 
 public final class Mpeg2Transcoder
 {
-  private FastRandomFile ins;
+  private SageFileSource ins;
   private File mpegFile;
   private String hostname;
 

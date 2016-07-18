@@ -316,6 +316,7 @@ public class NetworkClient
     catch (Throwable e)
     {
       System.out.println("Error w/SageTV client connection:" + e);
+      e.printStackTrace(System.out);
       if (stvconn != null)
       {
         NetworkClient oldConn = (NetworkClient) clientMap.get(stvconn.getClientName());

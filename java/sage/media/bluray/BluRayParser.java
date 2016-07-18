@@ -15,9 +15,11 @@
  */
 package sage.media.bluray;
 
-import javax.xml.parsers.*;
-import org.xml.sax.*;
-import org.xml.sax.helpers.*;
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
+
+import javax.xml.parsers.SAXParserFactory;
 
 /**
  *
@@ -178,13 +180,13 @@ public class BluRayParser
 				usesShortFilenames = true;
 			String mplsId = mplsFilenames[i].substring(0, idx);
 			java.io.File mplsFile = new java.io.File(playlistDir, mplsFilenames[i]);
-			sage.FasterRandomFile dis = null;
+			sage.io.SageDataFile dis = null;
 			try
 			{
 				if (remoteHostname != null)
-					dis = new sage.NetworkRandomFile(remoteHostname, mplsFile, "r", BLURAY_CHARSET);
+					dis = new sage.io.SageDataFile(new sage.io.BufferedSageFile(new sage.io.RemoteSageFile(remoteHostname, mplsFile, true), 65536), BLURAY_CHARSET);
 				else
-					dis = new sage.FasterRandomFile(mplsFile, "r", BLURAY_CHARSET);
+					dis = new sage.io.SageDataFile(new sage.io.BufferedSageFile(new sage.io.LocalSageFile(mplsFile, true), 65536), BLURAY_CHARSET);;
 				MPLSObject mplsObj = new MPLSObject(dis);
 				playlistIDs[i] = mplsId;
 				playlists[i] = mplsObj;

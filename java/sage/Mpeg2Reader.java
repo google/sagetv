@@ -15,7 +15,14 @@
  */
 package sage;
 
-import java.io.*;
+import sage.io.BufferedSageFile;
+import sage.io.LocalSageFile;
+import sage.io.RemoteSageFile;
+import sage.io.SageFileSource;
+
+import java.io.EOFException;
+import java.io.File;
+import java.io.IOException;
 
 /**
  *
@@ -24,7 +31,7 @@ import java.io.*;
  */
 public final class Mpeg2Reader
 {
-  private FastRandomFile ins;
+  private SageFileSource ins;
   private File mpegFile;
   private String hostname; // for streamed network files
   private byte bfrag; // fragment of a byte that's remaining in the read
@@ -237,7 +244,11 @@ public final class Mpeg2Reader
   {
     parsedPES.pts = -1;
     durationMsec = finalPTS = firstPTS = -1;
-    ins = (hostname != null && hostname.length() > 0) ? new NetworkRandomFile(hostname, mpegFile, "r", null) : new FasterRandomFile(mpegFile, "r", null);
+    if (hostname != null && hostname.length() > 0)
+      ins = new BufferedSageFile(new RemoteSageFile(hostname, mpegFile, true), 65536);
+    else
+      ins = new BufferedSageFile(new LocalSageFile(mpegFile, true), 65536);
+
     // Check for 0x47 TS sync byte
     int syncByte = (int) readBits(8);
     if (syncByte == 0x47)
@@ -378,10 +389,10 @@ public final class Mpeg2Reader
 
   public long availableToRead()
   {
-    return Math.max(0, length() - ins.getFilePointer());
+    return Math.max(0, length() - ins.position());
   }
 
-  public long getReadPos() { return ins.getFilePointer(); }
+  public long getReadPos() { return ins.position(); }
 
   /*
    * NOTE NOTE NOTE
@@ -1658,7 +1669,7 @@ public final class Mpeg2Reader
     {
       bitsDone += numBytes*8;
       numBytes -= numPeeks;
-      ins.seek(ins.getFilePointer() + numBytes);
+      ins.seek(ins.position() + numBytes);
       rem = -1;
       numPeeks = 0;
     }

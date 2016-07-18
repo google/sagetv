@@ -21,7 +21,8 @@ package sage.media.bluray;
  */
 public interface BluRayStreamer
 {
-	public void setBufferSize(int x);
+	// We do this at initialization.
+	//public void setBufferSize(int x);
 	public long getBytesLeftInClip();
 	public int getCurrClipIndex();
 	public long getClipPtsOffset(int index);

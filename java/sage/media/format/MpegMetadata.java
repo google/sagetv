@@ -398,7 +398,7 @@ public class MpegMetadata
     int pos=0;
     // PRESERVE TIMESTAMP ON THE FILE!!!
     long fileTime = f.lastModified();
-    sage.FasterRandomFile ra = new sage.FasterRandomFile(f, "rw", sage.Sage.BYTE_CHARSET);
+    sage.io.SageDataFile ra = new sage.io.SageDataFile(new sage.io.BufferedSageFile(new sage.io.LocalSageFile(f, false)), sage.Sage.BYTE_CHARSET);
     try
     {
       // TODO: Verify which value that uses...
@@ -527,7 +527,7 @@ public class MpegMetadata
   public static String getFileMetadata(java.io.File f, int type) throws java.io.IOException
   {
     String metadataStr = null;
-    sage.FasterRandomFile ra = new sage.FasterRandomFile(f, "r", sage.Sage.BYTE_CHARSET);
+    sage.io.SageFileSource ra = new sage.io.BufferedSageFile(new sage.io.LocalSageFile(f, true));
     try
     {
       // Get the file length now in case its growing
@@ -546,7 +546,7 @@ public class MpegMetadata
         int b=0;
         while((b=ra.read())!=-1) // detect EOF
         {
-          if (ra.getFilePointer() >= orgFileLength)
+          if (ra.position() >= orgFileLength)
             return metadataStr;
           cur<<=8;
           cur|=b;
@@ -563,7 +563,7 @@ public class MpegMetadata
                 return metadataStr;
               }
               len=(lenhi<<8)|lenlo;
-              if((ra.length()-ra.getFilePointer())>=len)
+              if((ra.length()-ra.position())>=len)
               {
                 byte []data=new byte[len];
                 ra.readFully(data);
@@ -600,15 +600,15 @@ public class MpegMetadata
         int b=0;
         while((b=ra.read())!=-1) // detect EOF
         {
-          if (ra.getFilePointer() >= orgFileLength)
+          if (ra.position() >= orgFileLength)
             return metadataStr;
           if(b==0x47) // Sync byte
           {
             if(insync==false)
             {
               // Verify next packet is where it should be
-              long pos=ra.getFilePointer();
-              ra.seek(ra.getFilePointer()+((type==2) ? 191 : 187));
+              long pos=ra.position();
+              ra.seek(ra.position()+((type==2) ? 191 : 187));
               if(ra.read()==0x47)
               {
                 insync=true;
@@ -667,7 +667,7 @@ public class MpegMetadata
               }
             }
 
-            if(type==2) ra.skipBytes(4);
+            if(type==2) ra.skip(4);
           }
           else
           {

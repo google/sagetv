@@ -15,65 +15,33 @@
  */
 package sage;
 
-import static sage.SageConstants.LITE;
-
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
-import org.apache.lucene.index.CorruptIndexException;
-import org.apache.lucene.index.IndexCommit;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.*;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
-import org.apache.lucene.index.NoMergePolicy;
-import org.apache.lucene.index.NoMergeScheduler;
-import org.apache.lucene.index.SnapshotDeletionPolicy;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause.Occur;
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.PrefixQuery;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.TopDocs;
-import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.FSDirectory;
-import org.apache.lucene.store.LockObtainFailedException;
-import org.apache.lucene.store.MMapDirectory;
-import org.apache.lucene.store.NoLockFactory;
-import org.apache.lucene.store.RAMDirectory;
-
+import org.apache.lucene.search.*;
+import org.apache.lucene.store.*;
+import sage.io.BufferedSageFile;
+import sage.io.EncryptedSageFile;
+import sage.io.LocalSageFile;
+import sage.io.SageDataFile;
 import sage.media.format.ContainerFormat;
 import sage.media.format.FormatParser;
 import sage.msg.MsgManager;
 import sage.msg.SystemMessage;
 
-import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
+import java.io.*;
 import java.io.DataInput;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.net.Socket;
 import java.text.DateFormat;
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Properties;
-import java.util.Set;
-import java.util.Vector;
 import java.util.regex.Pattern;
+
+import static sage.SageConstants.LITE;
 
 /*
  * DB File Format:
@@ -748,7 +716,7 @@ public class Wizard implements EPGDBPublic2
           if (Sage.EMBEDDED)
             dbout.flush();
           else
-            dbout.fullFlush();
+            dbout.sync();
         }
         catch (Exception e){}
       }
@@ -2598,12 +2566,15 @@ public class Wizard implements EPGDBPublic2
       }
       else if (!Sage.client && dbFile != null)
       {
-        String mode = "rw";
-        if (!Sage.EMBEDDED)
-        {
-          mode = mode + "d";
-        }
-        dbout = new FasterRandomFile(dbFile, mode, Sage.I18N_CHARSET);
+        String mode = !Sage.EMBEDDED ? "rwd" : "rw";
+        // 128k was chosen from observing most random writes are typically less than this distance
+        // behind the actual write buffer. The original default of 64k would often miss even with
+        // the optimizer trying to compensate for the last miss since the misses were more than 64k
+        // behind the latest write.
+        dbout = new SageDataFile(new BufferedSageFile(
+            new LocalSageFile(dbFile, mode),
+            BufferedSageFile.READ_BUFFER_SIZE, 131072),
+            Sage.I18N_CHARSET);
         dbout.seek(dbout.length());
       }
       if (Sage.getBoolean("db_perf_analysis", false))
@@ -2613,7 +2584,7 @@ public class Wizard implements EPGDBPublic2
     catch (Throwable e)
     {
       System.out.println("thrown " + e);
-      e.printStackTrace();
+      e.printStackTrace(System.out);
       if (recover)
       {
         // There's an error in the file cause we quit too early last time, restore
@@ -7345,7 +7316,7 @@ public class Wizard implements EPGDBPublic2
     }
     else if (dbFile.isFile() && dbFile.length() > 0)
     {
-      FasterRandomFile in = null;
+      SageDataFile in = null;
       loading = true;
       boolean finishedAll = false;
       Map<Integer, Integer> idTranslation = null;
@@ -7381,9 +7352,19 @@ public class Wizard implements EPGDBPublic2
       {
         long fileLength = dbFile.length();
         // The SageTVLite Wiz DB files are not encrypted
-        in = new FasterRandomFile(dbFile, (SageTV.upgradeFromLite || LITE || Sage.EMBEDDED) ? "r" :"rc", Sage.I18N_CHARSET);
+        if (SageTV.upgradeFromLite || LITE || Sage.EMBEDDED)
+          in = new SageDataFile(new BufferedSageFile(
+              new LocalSageFile(dbFile, true),
+              BufferedSageFile.READ_BUFFER_SIZE),
+              Sage.I18N_CHARSET);
+        else
+          in = new SageDataFile(new EncryptedSageFile(new BufferedSageFile(
+              new LocalSageFile(dbFile, true),
+              BufferedSageFile.READ_BUFFER_SIZE)),
+              Sage.I18N_CHARSET);
+
         // Testing shows the DB loads 5% faster if this is false...not much of an optimization, but it helps
-        in.setOptimizeReadFully(false);
+        //in.setOptimizeReadFully(false);
         byte b1 = in.readUnencryptedByte();
         byte b2 = in.readUnencryptedByte();
         byte b3 = in.readUnencryptedByte();
@@ -7402,12 +7383,13 @@ public class Wizard implements EPGDBPublic2
         if (version < 0x2F || version >= 0x54)
         {
           // unencrypted DB file
-          in.close();
-          in = new FasterRandomFile(dbFile, "r", (version == 0x54) ? Sage.BYTE_CHARSET : Sage.I18N_CHARSET);
+          //Remove encryption filter.
+          in = new SageDataFile(in.getUnencryptedSource(), (version == 0x54) ? Sage.BYTE_CHARSET : Sage.I18N_CHARSET);
+          // We are already at the right position since we didn't re-open the file.
+          /*in.readUnencryptedByte();
           in.readUnencryptedByte();
           in.readUnencryptedByte();
-          in.readUnencryptedByte();
-          in.readUnencryptedByte();
+          in.readUnencryptedByte();*/
         }
         if (version < 0x35)
         {
@@ -7422,14 +7404,14 @@ public class Wizard implements EPGDBPublic2
         Table t = null;
         HashMap<Byte, Set<DBObject>> killMap = new HashMap<Byte, Set<DBObject>>();
         if (Sage.DBG) System.out.println("DBFile at version " + version + " FileSize=" + fileLength);
-        long fp = in.getFilePointer();
+        long fp = in.position();
         int cmdLength = 0;
         byte opcode = 0;
         byte typecode = 0;
         int numTransactionRecords = 0;
-        while (fileLength > in.getFilePointer())
+        while (fileLength > in.position())
         {
-          long newFp = in.getFilePointer();
+          long newFp = in.position();
           if (fp + cmdLength != newFp)
           {
             if (!finishedAll) {
@@ -7751,11 +7733,8 @@ public class Wizard implements EPGDBPublic2
           }
         }
       }
-      String fileMode = "rw";
-      if (!Sage.EMBEDDED)
-      {
-        fileMode += "d";
-      }
+      // Looks cleaner and creates one less string for !Sage.EMBEDDED.
+      String fileMode = !Sage.EMBEDDED ? "rwd" : "rw";
       if(!backupFailed) {
         int dbWriteFlags = 0;
         // I'm leaving this false for now as it introduces a DB incompatibility for downgrades, but
@@ -7771,23 +7750,31 @@ public class Wizard implements EPGDBPublic2
         dbFile = new File(dbFile.getAbsolutePath() + ".tmp");
         dbFile.createNewFile();
         if (Sage.DBG) System.out.println("Wizard compressing new file with version "+VERSION+"...");
-        dbout = new FasterRandomFile(dbFile, fileMode, Sage.I18N_CHARSET);
+        // 128k was chosen from observing most random writes are typically less than this distance
+        // behind the actual write buffer. The original default of 64k would often miss even with
+        // the optimizer trying to compensate for the last miss since the misses were more than 64k
+        // behind the latest write.
+        dbout = new SageDataFile(new BufferedSageFile(
+            new LocalSageFile(dbFile, fileMode),
+            BufferedSageFile.READ_BUFFER_SIZE, 131072),
+            Sage.I18N_CHARSET);
         dbout.writeUnencryptedByte((byte) 'W');
         dbout.writeUnencryptedByte((byte) 'I');
         dbout.writeUnencryptedByte((byte) 'Z');
         dbout.flush();
 
         // The BAD_VERSION marker is to signify incompletely saved DB files.
-        long verPos = dbout.getFilePointer();
+        long verPos = dbout.position();
         dbout.writeUnencryptedByte(BAD_VERSION);
-        dbout.fullFlush();
+        dbout.sync();
 
         for (int i = 0; i < WRITE_ORDER.length; i++)
         {
           if (Sage.DBG) System.out.println("Wizard writing out table info for " +
               getNameForCode(WRITE_ORDER[i]));
           Table currTable = getTable(WRITE_ORDER[i]);
-          long fp = dbout.getFilePointer();
+          // 7/14/2016 JS: Setting the variable here doesn't make any sense; it never gets used.
+          long fp;// = dbout.position();
           dbout.writeInt(10);
           dbout.writeByte(SIZE);
           try {
@@ -7796,7 +7783,7 @@ public class Wizard implements EPGDBPublic2
             dbout.writeInt(currTable.num);
             if (currTable.num > 0)
             {
-              fp = dbout.getFilePointer();
+              fp = dbout.position();
               dbout.writeInt(Integer.MAX_VALUE);
               dbout.writeByte(FULL_DATA);
               dbout.writeByte(currTable.primary.indexCode);
@@ -7843,19 +7830,29 @@ public class Wizard implements EPGDBPublic2
         long endSaveTime = Sage.eventTime();
         if (Sage.DBG) System.out.println("DB saveTime=" + ((endSaveTime - startSaveTime)/1000.0) + " sec");
         numUncompXcts = 0;
-        long fp = dbout.getFilePointer();
+        long fp = dbout.position();
         dbout.setLength(fp);
-        dbout.fullFlush();
+        dbout.sync();
         dbout.seek(verPos);
         dbout.writeUnencryptedByte(VERSION);
         dbout.close();
         dbFile.renameTo(realDBFile);
         dbFile = realDBFile;
-        dbout = new FasterRandomFile(dbFile, fileMode, Sage.I18N_CHARSET);
+        // 128k was chosen from observing most random writes are typically less than this distance
+        // behind the actual write buffer. The original default of 64k would often miss even with
+        // the optimizer trying to compensate for the last miss since the misses were more than 64k
+        // behind the latest write.
+        dbout = new SageDataFile(new BufferedSageFile(
+            new LocalSageFile(dbFile, fileMode),
+            BufferedSageFile.READ_BUFFER_SIZE, 131072),
+            Sage.I18N_CHARSET);
         dbout.seek(fp);
       } else {
         // backup failed to update; make sure we've got dbout set.
-        dbout = new FasterRandomFile(dbFile, fileMode, Sage.I18N_CHARSET);
+        dbout = new SageDataFile(new BufferedSageFile(
+            new LocalSageFile(dbFile, fileMode),
+            BufferedSageFile.READ_BUFFER_SIZE, 131072),
+            Sage.I18N_CHARSET);
         dbout.seek(dbout.length());
       }
       while (true)
@@ -7871,7 +7868,7 @@ public class Wizard implements EPGDBPublic2
           nextXct = pendingWriteXcts.remove(0);
         }
 
-        long fp = dbout.getFilePointer();
+        long fp = dbout.position();
         dbout.writeInt(Integer.MAX_VALUE);
         dbout.writeByte(nextXct.xctType);
         dbout.writeByte(nextXct.objectType);
@@ -7909,9 +7906,9 @@ public class Wizard implements EPGDBPublic2
       numUncompXcts++;
       synchronized (outLock)
       {
-        FastRandomFile frf = dbout;
+        SageDataFile frf = dbout;
         if (frf == null) return;
-        long fp = frf.getFilePointer();
+        long fp = frf.position();
         try
         {
           if (listeners.isEmpty())
@@ -7999,9 +7996,9 @@ public class Wizard implements EPGDBPublic2
       numUncompXcts++;
       synchronized (outLock)
       {
-        FastRandomFile frf = dbout;
+        SageDataFile frf = dbout;
         if (frf == null) return;
-        long fp = frf.getFilePointer();
+        long fp = frf.position();
         try
         {
           if (listeners.isEmpty())
@@ -8031,7 +8028,7 @@ public class Wizard implements EPGDBPublic2
           catch (IOException ioe)
           {
             System.out.println("IO Error updating DB file: " + ioe);
-            ioe.printStackTrace();
+            ioe.printStackTrace(System.out);
           }
         }
       }
@@ -8054,9 +8051,9 @@ public class Wizard implements EPGDBPublic2
       numUncompXcts++;
       synchronized (outLock)
       {
-        FastRandomFile frf = dbout;
+        SageDataFile frf = dbout;
         if (frf == null) return;
-        long fp = frf.getFilePointer();
+        long fp = frf.position();
         try
         {
           if (listeners.isEmpty())
@@ -8077,7 +8074,7 @@ public class Wizard implements EPGDBPublic2
         catch (Exception e)
         {
           if (Sage.DBG) System.out.println("Error updating DB file:" + e);
-          if (Sage.DBG) e.printStackTrace();
+          if (Sage.DBG) e.printStackTrace(System.out);
           try
           {
             frf.flush();
@@ -8086,16 +8083,16 @@ public class Wizard implements EPGDBPublic2
           catch (IOException ioe)
           {
             System.out.println("IO Error updating DB file: " + ioe);
-            ioe.printStackTrace();
+            ioe.printStackTrace(System.out);
           }
         }
       }
     }
   }
 
-  public static void logCmdLength(FastRandomFile frf, long fp) throws IOException
+  public static void logCmdLength(SageDataFile frf, long fp) throws IOException
   {
-    frf.writeIntAtOffset(fp, (int)(frf.getFilePointer() - fp));
+    frf.writeIntAtOffset(fp, (int)(frf.position() - fp));
   }
 
   /*
@@ -8538,7 +8535,7 @@ public class Wizard implements EPGDBPublic2
       if (Sage.DBG)
       {
         System.out.println("WIZARD TRANSACTION ERROR:" + e);
-        e.printStackTrace();
+        e.printStackTrace(System.out);
       }
     }
   }
@@ -8575,16 +8572,21 @@ public class Wizard implements EPGDBPublic2
           addXctListener(addMe);
           return;
         }
-        long startFP = dbout.getFilePointer();
+        long startFP = dbout.position();
         try
         {
-          dbout.seek(4); // skip version # & WIZ
+          dbout.seek(4); // skip version # & WIZ.
           byte[] netBuf = new byte[65536];
           long dbLeft = dbout.length() - 4;
           if (Sage.DBG) System.out.println("Sending DB to client of size:" + dbLeft);
           // Since we are just transferring the whole file like this it is faster to have this optimization on
           // at this point.
-          dbout.setOptimizeReadFully(true);
+          // 7-12-2016 JS: The newer implementation works out if a read could fit completely within
+          // the buffer and based on that will either do a partial buffer + direct read, no buffer +
+          // direct read or a fully buffered read. Since the default read buffer size is 32k and the
+          // read length here is mostly 256k, it will trigger the same kind of optimization that
+          // this enabled in the old class.
+          //dbout.setOptimizeReadFully(true);
           while (dbLeft > 0)
           {
             int currRead = Math.min(netBuf.length, (int)dbLeft);
@@ -8817,9 +8819,9 @@ public class Wizard implements EPGDBPublic2
 
   private byte version;
   private String prefsRoot;
-  private FasterRandomFile dbout;
+  private SageDataFile dbout;
   private Carny god;
-  private Object outLock = new Object();
+  private final Object outLock = new Object();
   private File dbFile;
   private File dbBackupFile;
   private File widgetDBFile;
@@ -8857,7 +8859,7 @@ public class Wizard implements EPGDBPublic2
 
   private Vector<XctSyncClient> listeners;
 
-  private Vector<XctObject> pendingWriteXcts;
+  private final Vector<XctObject> pendingWriteXcts;
   private boolean suspendWrite;
 
   private boolean clientIsSyncing;

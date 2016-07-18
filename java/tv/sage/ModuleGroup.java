@@ -293,19 +293,24 @@ public class ModuleGroup
         }
       }
       file.createNewFile();
-      sage.FastRandomFile widgetDBout = new sage.FasterRandomFile(file, cryptoKey == null ? "rwd" : "rwdc", sage.Sage.I18N_CHARSET);
-      if (cryptoKey != null) widgetDBout.setCrypto(cryptoKey);
+      sage.io.SageDataFile widgetDBout;
+
+      if (cryptoKey == null)
+        widgetDBout = new sage.io.SageDataFile(new sage.io.BufferedSageFile(new sage.io.LocalSageFile(file, "rwd")), sage.Sage.I18N_CHARSET);
+      else
+        widgetDBout = new sage.io.SageDataFile(new sage.io.EncryptedSageFile(new sage.io.BufferedSageFile(new sage.io.LocalSageFile(file, "rwd")), cryptoKey), sage.Sage.I18N_CHARSET);
+
       widgetDBout.writeUnencryptedByte((byte) 'W');
       widgetDBout.writeUnencryptedByte((byte) 'I');
       widgetDBout.writeUnencryptedByte((byte) (optimize ? 'X' : 'Z'));
       widgetDBout.flush();
 
       // The BAD_VERSION marker is to signify incompletely saved DB files.
-      long verPos = widgetDBout.getFilePointer();
+      long verPos = widgetDBout.position();
       widgetDBout.writeUnencryptedByte(sage.Wizard.BAD_VERSION);
       widgetDBout.flush();
 
-      fp = widgetDBout.getFilePointer();
+      fp = widgetDBout.position();
       widgetDBout.writeInt(Integer.MAX_VALUE);
       widgetDBout.writeByte(sage.Wizard.SIZE);
       widgetDBout.writeByte(sage.Wizard.WIDGET_CODE);
@@ -313,7 +318,7 @@ public class ModuleGroup
       sage.Wizard.logCmdLength(widgetDBout, fp);
       if (allWidgs.length > 0)
       {
-        fp = widgetDBout.getFilePointer();
+        fp = widgetDBout.position();
         widgetDBout.writeInt(Integer.MAX_VALUE);
         widgetDBout.writeByte(sage.Wizard.FULL_DATA);
         widgetDBout.writeByte(sage.Wizard.WIDGET_CODE);
@@ -358,7 +363,7 @@ public class ModuleGroup
         }
         sage.Wizard.logCmdLength(widgetDBout, fp);
       }
-      fp = widgetDBout.getFilePointer();
+      fp = widgetDBout.position();
       widgetDBout.setLength(fp);
       widgetDBout.seek(verPos);
       widgetDBout.writeUnencryptedByte(cryptoKey != null ? (byte) 0x36 : (byte)0x20); // < 0x2F to signify unencrypted

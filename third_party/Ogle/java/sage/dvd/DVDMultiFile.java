@@ -20,6 +20,10 @@
  */
 package sage.dvd;
 
+import sage.nio.BufferedFileChannel;
+import sage.nio.LocalFileChannel;
+import sage.nio.RemoteFileChannel;
+
 /**
  *
  * @author Narflex
@@ -33,22 +37,24 @@ public class DVDMultiFile implements DVDSource
   }
 
   private long fileOffset; // Block position within the block device/image file
-  private sage.FasterRandomFile[] files; // File object when in file mode
+  private BufferedFileChannel[] files; // File object when in file mode
   private long[] fileSizes;
 
   // We have two modes of operation either block device or files, each has its constructor
   DVDMultiFile(String[] filenames, String hostname)
   {
-    files = new sage.FasterRandomFile[filenames.length];
+    files = new sage.nio.BufferedFileChannel[filenames.length];
     fileSizes = new long[filenames.length];
     try
     {
       for (int i = 0; i < filenames.length; i++)
       {
-        files[i] = (hostname == null) ? new sage.FasterRandomFile(filenames[i], "r", sage.Sage.I18N_CHARSET) :
-          new sage.NetworkChannelFile(hostname, filenames[i], "r", sage.Sage.I18N_CHARSET, false);
-        files[i].setOptimizeReadFully(false); // since we always read 2k blocks
-        fileSizes[i] = files[i].length();
+        if (hostname == null)
+          files[i] = new BufferedFileChannel(new LocalFileChannel(filenames[i], true), 65536, false);
+        else
+          files[i] = new BufferedFileChannel(new RemoteFileChannel(hostname, filenames[i], true), 131072, false);
+
+        fileSizes[i] = files[i].size();
       }
     }
     catch(Exception e)
@@ -82,7 +88,7 @@ public class DVDMultiFile implements DVDSource
       {
         if (readOffset < fileSizes[i])
         {
-          files[i].seek(readOffset);
+          files[i].position(readOffset);
           int readThisTime = Math.min(count*2048, (int)(fileSizes[i] - readOffset));
           files[i].readFully(buf, offset, readThisTime);
           count -= readThisTime;

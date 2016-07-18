@@ -15,6 +15,10 @@
  */
 package sage;
 
+import sage.io.BufferedSageFile;
+import sage.io.LocalSageFile;
+import sage.io.SageFileSource;
+
 public class MPEGUtils
 {
 	private MPEGUtils()
@@ -30,11 +34,11 @@ public class MPEGUtils
 	{
 		if (file == null) return 0;
 		long firstPTS = 0;
-		FasterRandomFile frf = null;
+		SageFileSource frf = null;
 		try
 		{
 			if (Sage.DBG) System.out.println("Finding initial PTS for MPEG2 PS file:" + file);
-			frf = new FasterRandomFile(file, "r", Sage.I18N_CHARSET);
+			frf = new BufferedSageFile(new LocalSageFile(file, true));
 			// Find the first PTS to get a baseline
 			byte[] pbData = new byte[65536];
 			long dwLeft = Math.min(frf.length(), pbData.length);
@@ -119,11 +123,11 @@ public class MPEGUtils
 		// and use that, much more accurate.
 		long maxPTS = 0;
 		long firstPTS = 0;
-		FasterRandomFile frf = null;
+		SageFileSource frf = null;
 		try
 		{
 			if (Sage.DBG) System.out.println("Finding duration for MPEG2 PS file:" + file);
-			frf = new FasterRandomFile(file, "r", Sage.I18N_CHARSET);
+			frf = new BufferedSageFile(new LocalSageFile(file, true));
 			// Find the first PTS to get a baseline
 			byte[] pbData = new byte[65536];
 			long dwLeft = Math.min(pbData.length, frf.length());
@@ -179,16 +183,18 @@ public class MPEGUtils
 				}
 			}
 			long skipAmount = Math.max(0, filelen - 7*65536);
-			while (skipAmount > 0)
+			// 7/18/2016 JS: The newer implementation should have this issue addressed.
+			frf.skip(skipAmount);
+			/*while (skipAmount > 0)
 			{
 				// This gets around another 32 bit bug with Java and files on Linux....actually, it may be a Samba bug.
 				long currSkip = Math.min(skipAmount, Integer.MAX_VALUE/2);
-				currSkip = frf.skipBytes((int)currSkip);
+				currSkip = frf.skip((int)currSkip);
 				skipAmount -= currSkip;
-			}
+			}*/
 			for (int county = 8; county > 0; county--)
 			{
-				dwLeft = Math.min(pbData.length, frf.length() - frf.getFilePointer());
+				dwLeft = Math.min(pbData.length, frf.length() - frf.position());
 				frf.readFully(pbData, 0, (int)dwLeft);
 				off = 0;
 				while (dwLeft > 13)
