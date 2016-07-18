@@ -1362,6 +1362,44 @@ public class MediaServer implements Runnable
             int numWritten = s.write(commBufWrite);
             if (MEDIA_SERVER_DEBUG) System.out.println("MediaServer wrote out " + numWritten + " bytes");
           }
+          else if (tempString.indexOf("TRUNC ") == 0)
+          {
+            int idx = tempString.lastIndexOf(" ");
+
+            if (fileChannel != null)
+            {
+              fileChannel.truncate(Long.parseLong(tempString.substring(6, tempString.length())));
+              commBufWrite.clear();
+              commBufWrite.put(OK_BYTES).flip();
+            }
+            else
+            {
+              commBufWrite.clear();
+              commBufWrite.put("NON_MEDIA\r\n".getBytes()).flip();
+            }
+
+            int numWritten = s.write(commBufWrite);
+            if (MEDIA_SERVER_DEBUG) System.out.println("MediaServer wrote out " + numWritten + " bytes");
+          }
+          else if (tempString.indexOf("FORCE ") == 0)
+          {
+            int idx = tempString.lastIndexOf(" ");
+
+            if (fileChannel != null)
+            {
+              fileChannel.force(tempString.substring(6, tempString.length()).equalsIgnoreCase("TRUE"));
+              commBufWrite.clear();
+              commBufWrite.put(OK_BYTES).flip();
+            }
+            else
+            {
+              commBufWrite.clear();
+              commBufWrite.put("NON_MEDIA\r\n".getBytes()).flip();
+            }
+
+            int numWritten = s.write(commBufWrite);
+            if (MEDIA_SERVER_DEBUG) System.out.println("MediaServer wrote out " + numWritten + " bytes");
+          }
           else if (tempString.indexOf("QUIT") == 0)
           {
             break;
@@ -1387,10 +1425,9 @@ public class MediaServer implements Runnable
         clientDisconnected();
         try
         {
-          if (remuxer != null) {
+          if (remuxer != null)
             remuxer.close();
-            remuxer = null;
-          }
+          remuxer = null;
         }
         catch (Exception e)
         {}
