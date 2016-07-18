@@ -143,7 +143,7 @@ test {
 	useTestNG()
 	reports.html.destination = file("$sageBuildDir/reports/testng")
 	systemProperty 'io_test_file', "$sageBuildDir/delete-io-testng."
-	systemProperty 'nio_test_file', "$sageBuildDir/delete-sage.nio-testng."
+	systemProperty 'nio_test_file', "$sageBuildDir/delete-nio-testng."
 }
 
 /**
