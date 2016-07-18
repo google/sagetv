@@ -25,10 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.channels.FileLock;
-import java.nio.channels.ReadableByteChannel;
-import java.nio.channels.WritableByteChannel;
+import java.nio.channels.*;
 
 public class BluRayFile extends FileChannel implements BluRayStreamer, SageFileChannel
 {
@@ -299,7 +296,7 @@ public class BluRayFile extends FileChannel implements BluRayStreamer, SageFileC
   @Override
   public long transferFrom(ReadableByteChannel src, long position, long count) throws IOException
   {
-    throw new IOException("Channel is read only.");
+    throw new NonWritableChannelException();
   }
 
   /**
@@ -310,7 +307,7 @@ public class BluRayFile extends FileChannel implements BluRayStreamer, SageFileC
   @Override
   public long transferFrom(ReadableByteChannel src, long count) throws IOException
   {
-    throw new IOException("Channel is read only.");
+    throw new NonWritableChannelException();
   }
 
   /**
@@ -321,7 +318,7 @@ public class BluRayFile extends FileChannel implements BluRayStreamer, SageFileC
   @Override
   public int write(ByteBuffer src, long position) throws IOException
   {
-    throw new IOException("Channel is read only.");
+    throw new NonWritableChannelException();
   }
 
   /**
@@ -403,7 +400,7 @@ public class BluRayFile extends FileChannel implements BluRayStreamer, SageFileC
   @Override
   public int write(ByteBuffer src) throws IOException
   {
-    throw new IOException("Channel is read only.");
+    throw new NonWritableChannelException();
   }
 
   @Override
@@ -442,7 +439,7 @@ public class BluRayFile extends FileChannel implements BluRayStreamer, SageFileC
   @Override
   public FileChannel truncate(long size) throws IOException
   {
-    throw new IOException("Channel is read only.");
+    throw new NonWritableChannelException();
   }
 
   /**
@@ -453,7 +450,7 @@ public class BluRayFile extends FileChannel implements BluRayStreamer, SageFileC
   @Override
   public void force(boolean metaData) throws IOException
   {
-    throw new IOException("Channel is read only.");
+    throw new NonWritableChannelException();
   }
 
   /**
@@ -498,7 +495,7 @@ public class BluRayFile extends FileChannel implements BluRayStreamer, SageFileC
   @Override
   public long write(ByteBuffer[] srcs, int offset, int length) throws IOException
   {
-    throw new IOException("Channel is read only.");
+    throw new NonWritableChannelException();
   }
 
   @Override
