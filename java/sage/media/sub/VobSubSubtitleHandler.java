@@ -15,6 +15,14 @@
  */
 package sage.media.sub;
 
+import sage.Sage;
+import sage.io.BufferedSageFile;
+import sage.io.LocalSageFile;
+import sage.io.RemoteSageFile;
+import sage.io.SageDataFile;
+
+import java.util.ArrayList;
+
 /**
  *
  * @author Narflex
@@ -46,24 +54,25 @@ public class VobSubSubtitleHandler extends SubtitleHandler
     try
     {
       subFile = getLoadableSubtitleFile(sourceFile, new java.io.File(subs[0].getPath()));
-      inStream = sage.IOUtils.openReaderDetectCharset(subFile, sage.Sage.BYTE_CHARSET);
+      inStream = sage.IOUtils.openReaderDetectCharset(subFile, sage.Sage.BYTE_CHARSET, sourceFile.isLocalFile());
       String line = inStream.readLine();
-      if (line != null && line.indexOf("VobSub index file") == -1)
+      if (line != null && line.contains("VobSub index file"))
       {
         if (sage.Sage.DBG) System.out.println("Invalid VobSub IDX file, bad comment on first line: " + line);
         return;
       }
       String orgSubPath = subs[0].getPath();
-      bitmapFile = getLoadableSubtitleFile(sourceFile, new java.io.File(orgSubPath.substring(0, orgSubPath.length() - 3) + "sub"));
-      if (bitmapFile == null)
-      {
-        if (sage.Sage.DBG) System.out.println("Invalid VobSub; missing the .sub file for .idx file: " + orgSubPath);
-        return;
-      }
+      bitmapFile = new java.io.File(orgSubPath.substring(0, orgSubPath.length() - 3) + "sub");
       if (!sourceFile.isLocalFile())
-        cleanupBitmapFile = true;
-      frf = new sage.FasterRandomFile(bitmapFile, "r", sage.Sage.I18N_CHARSET);
-      frf.setBufferSize(32768);
+      {
+        sage.NetworkClient.getSN().requestMediaServerAccess(bitmapFile, true);
+        frf = new SageDataFile(new BufferedSageFile(new RemoteSageFile(Sage.preferredServer, bitmapFile, true), 32768), Sage.I18N_CHARSET);
+      }
+      else
+      {
+        frf = new SageDataFile(new BufferedSageFile(new LocalSageFile(bitmapFile, true), 32768), Sage.I18N_CHARSET);
+      }
+
       int idx;
       String currLang = null;
       byte alpha = (byte) 0xFF;
@@ -81,7 +90,7 @@ public class VobSubSubtitleHandler extends SubtitleHandler
               currLang = subLangs[langIdx];
             else
               currLang = line.substring(3, idx).trim();
-            subEntries = new java.util.Vector();
+            subEntries = new ArrayList<SubtitleEntry>();
             subLangEntryMap.put(currLang, subEntries);
             if (sage.Sage.DBG) System.out.println("VobSub IDX loading found language: " + currLang);
             idx = line.indexOf("index:");
@@ -145,15 +154,13 @@ public class VobSubSubtitleHandler extends SubtitleHandler
       }
 
       // Now go through the whole map of entries and figure out their proper sizes
-      Long[] offsetData = (Long[]) allFileOffsets.toArray(new Long[0]);
+      Long[] offsetData = (Long[]) allFileOffsets.toArray(new Long[allFileOffsets.size()]);
       java.util.Arrays.sort(offsetData);
-      java.util.Iterator langWalker = subLangEntryMap.values().iterator();
-      while (langWalker.hasNext())
+      for (java.util.List<SubtitleEntry> currSubSet : subLangEntryMap.values())
       {
-        java.util.Vector currSubSet = (java.util.Vector) langWalker.next();
         for (int i = 0; i < currSubSet.size(); i++)
         {
-          SubtitleEntry currEntry = (SubtitleEntry) currSubSet.get(i);
+          SubtitleEntry currEntry = currSubSet.get(i);
           int offsetIdx = java.util.Arrays.binarySearch(offsetData, new Long(currEntry.offset));
           if (offsetIdx >= 0)
           {
@@ -272,13 +279,16 @@ public class VobSubSubtitleHandler extends SubtitleHandler
     else
       currMediaTime += delay;
     int rv = 0;
-    synchronized (subEntries)
+
+    subtitleLock.writeLock();
+
+    try
     {
       boolean foundValid = false;
       for (int i = getSubEntryIndex(currMediaTime); i < subEntries.size(); i++)
       {
-        SubtitleEntry currEntry = (SubtitleEntry) subEntries.get(i);
-        SubtitleEntry nextEntry = (SubtitleEntry) ((i < subEntries.size() - 1) ? subEntries.get(i + 1) : null);
+        SubtitleEntry currEntry = subEntries.get(i);
+        SubtitleEntry nextEntry = ((i < subEntries.size() - 1) ? subEntries.get(i + 1) : null);
         if (currEntry.start <= currMediaTime)
         {
           if ((currEntry.duration > 0 && currEntry.start + currEntry.duration > currMediaTime) ||
@@ -295,16 +305,16 @@ public class VobSubSubtitleHandler extends SubtitleHandler
               if (stripHeaders)
               {
                 frf.seek(currEntry.offset);
-                while (frf.getFilePointer() < currEntry.offset + currEntry.size)
+                while (frf.position() < currEntry.offset + currEntry.size)
                 {
                   // Check for MPEG2 packs and PES packets and strip off the headers and only send back the payload
                   int nextHeader = frf.readInt();
                   if (nextHeader == 0x1BA)
                   {
-                    frf.skipBytes(9); // SCR + muxrate
+                    frf.skip(9); // SCR + muxrate
                     int stuffLength = frf.readByte() & 0x7;
                     if (stuffLength > 0)
-                      frf.skipBytes(stuffLength);
+                      frf.skip(stuffLength);
                     continue;
                   }
                   else if (nextHeader == 0x1BD || nextHeader == 0x1BE)
@@ -312,12 +322,12 @@ public class VobSubSubtitleHandler extends SubtitleHandler
                     int pesLength = frf.readUnsignedShort();
                     if (nextHeader == 0x1BE)
                     {
-                      frf.skipBytes(pesLength);
+                      frf.skip(pesLength);
                       continue;
                     }
-                    long packetEnd = frf.getFilePointer() + pesLength;
+                    long packetEnd = frf.position() + pesLength;
                     // Skip the first flags
-                    frf.skipBytes(1);
+                    frf.skip(1);
                     // Check the PTS/DTS flags
                     int flags = frf.readUnsignedByte();
                     int headerLength = frf.readUnsignedByte();
@@ -350,7 +360,7 @@ public class VobSubSubtitleHandler extends SubtitleHandler
 											frf.skipBytes(headerLength - 10 + 1);
 										}
 										else*/
-                    frf.skipBytes(headerLength + 1);
+                    frf.skip(headerLength + 1);
                     if (rv == 0)
                     {
                       // Put the 45k PTS in the first 4 bytes
@@ -361,7 +371,7 @@ public class VobSubSubtitleHandler extends SubtitleHandler
                       storage[3] = (byte)(pts45 & 0xFF);
                       rv = 4;
                     }
-                    int currSize = (int)(packetEnd - frf.getFilePointer());
+                    int currSize = (int)(packetEnd - frf.position());
                     int currRead = Math.min(currSize, storage.length - rv);
                     if (currRead > 0)
                       frf.readFully(storage, rv, currRead);
@@ -426,6 +436,10 @@ public class VobSubSubtitleHandler extends SubtitleHandler
           break;
         }
       }
+    }
+    finally
+    {
+      subtitleLock.writeLock().unlock();
     }
     //System.out.println("Got Subtitle bitmap subEntryPos=" + subEntryPos);
     return rv;
@@ -659,7 +673,7 @@ public class VobSubSubtitleHandler extends SubtitleHandler
 
   private boolean cleanupBitmapFile;
   private java.io.File bitmapFile;
-  private sage.FasterRandomFile frf;
+  private SageDataFile frf;
   private boolean didInitPalette;
   private byte[] paletteData;
   private int flags;
