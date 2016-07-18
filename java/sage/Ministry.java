@@ -825,6 +825,15 @@ public class Ministry implements Runnable
       return true;
   }
 
+  public boolean requiresPower()
+  {
+    // This is true if there's any transcode jobs are in the queue
+    synchronized (this)
+    {
+    	return (getTranscodeJobIDs().length > 0) ? true : false ;
+    }
+  }
+  
   private Object lock = new Object();
   private java.util.Vector waitingForConversion = new java.util.Vector();
   private java.util.Vector converting = new java.util.Vector();
