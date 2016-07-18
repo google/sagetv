@@ -243,7 +243,7 @@ public class SageFileSourceTest
   }
 
   // Verify FastRandomFile is still working correctly.
-  @Test(groups = {"io", "fastrandomfile" })
+  @Test(groups = {"io", "fastRandomFile" })
   public void testFastRandomFile() throws IOException
   {
     FastRandomFile fastRandomFile = new FastRandomFile(filename  + "FastRandomFile.rw", "rw", "UTF-8");
@@ -259,7 +259,7 @@ public class SageFileSourceTest
   }
 
   // Verify FasterRandomFile is still working correctly.
-  @Test(groups = {"io", "fasterrandomfile" })
+  @Test(groups = {"io", "fasterRandomFile" })
   public void testFasterRandomFile() throws IOException
   {
     FasterRandomFile fasterRandomFile = new FasterRandomFile(filename + "FasterRandomFile.rw", "rw", "UTF-8");

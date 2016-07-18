@@ -15,12 +15,13 @@
  */
 package sage;
 
+import java.nio.ByteBuffer;
 import java.util.Random;
 
 public class TestData
 {
-  // This class is here to keep testing times down by not forcing us to initialize 1.5MB of byte
-  // arrays for almost every single test.
+  // This class is here to keep testing times down by not forcing us to large amounts of data over
+  // and over again.
 
   // We don't need to write massive files to uncover bugs. The files just need to be at least 3
   // times the size of the read or write buffers.
@@ -29,6 +30,20 @@ public class TestData
   public final static byte[] cryptKey = new byte[128];
   // To verify the contents of the test files.
   public final static byte[] verifyBuffer = new byte[524288];
+
+  // We are using different sized byte buffers because this should expose any buffer overflow or
+  // underflow situations. We also test on heap and direct since there could be performance
+  // optimizations based on the difference.
+
+  // These should be bigger than the internal buffering.
+  public static ByteBuffer heapLarge = ByteBuffer.allocate(sage.nio.BufferedFileChannel.DEFAULT_READ_SIZE * 3);
+  public static ByteBuffer directLarge = ByteBuffer.allocateDirect(sage.nio.BufferedFileChannel.DEFAULT_READ_SIZE * 3);
+  // These should be the same size as the internal buffering.
+  public static ByteBuffer heap = ByteBuffer.allocate(sage.nio.BufferedFileChannel.DEFAULT_READ_SIZE);
+  public static ByteBuffer direct = ByteBuffer.allocateDirect(sage.nio.BufferedFileChannel.DEFAULT_READ_SIZE);
+  // These should be the half the size as the internal buffering.
+  public static ByteBuffer heapSmall = ByteBuffer.allocate(sage.nio.BufferedFileChannel.DEFAULT_READ_SIZE / 3);
+  public static ByteBuffer directSmall = ByteBuffer.allocateDirect(sage.nio.BufferedFileChannel.DEFAULT_READ_SIZE / 3);
 
   static
   {

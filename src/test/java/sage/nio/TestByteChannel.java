@@ -47,6 +47,10 @@ public class TestByteChannel implements ByteChannel
 
     int limit = buffer.limit();
     int length = buffer.remaining();
+
+    if (length == 0)
+      return -1;
+
     int dstRemains = dst.remaining();
 
     if (length > dstRemains)
