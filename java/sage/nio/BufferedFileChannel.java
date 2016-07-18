@@ -35,11 +35,12 @@ public class BufferedFileChannel extends FileChannel implements SageFileChannel
    * you can move the buffer to the new file saving initialization time.
    * <p/>
    * There are no buffer size sanity checks. If you pass a 0 length buffer, some methods might spin
-   * endlessly. If you pass a very small buffer (< 4096) you will see very poor performance.
+   * endlessly. If you pass a very small buffer (< 4096) you may see very poor performance.
    *
    * @param fileChannel The <code>SageFileChannel</code> to back this buffer layer.
    * @param readBuffer The read buffer to be used to back this buffer layer.
-   * @param writeBuffer The write buffer to be used to back this buffer layer.
+   * @param writeBuffer The write buffer to be used to back this buffer layer. This can be
+   *                    <code>null</code> if the buffer is being opened with a read only source.
    */
   public BufferedFileChannel(SageFileChannel fileChannel, ByteBuffer readBuffer, ByteBuffer writeBuffer)
   {

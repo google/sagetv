@@ -80,7 +80,7 @@ public class BufferedSageFile implements SageFileSource
    * buffer sizes.
    * <p/>
    * Do not attempt to use the underlying <code>SageFileSource</code> after writing without first
-   * calling <code>sync()</code> since otherwise the state of writing will be unknown.
+   * calling <code>flush()</code> since otherwise the state of writing will be unknown.
    *
    * @param sageFileSource The <code>SageFileSource</code> to add a buffering.
    */
@@ -94,7 +94,7 @@ public class BufferedSageFile implements SageFileSource
    * sizes.
    * <p/>
    * Do not attempt to use the underlying <code>SageFileSource</code> after writing without first
-   * calling <code>sync()</code> since otherwise the state of writing will be unknown.
+   * calling <code>flush()</code> since otherwise the state of writing will be unknown.
    *
    * @param sageFileSource The <code>SageFileSource</code> to add a buffering.
    * @param readBufferSize The read buffer size.
@@ -108,7 +108,7 @@ public class BufferedSageFile implements SageFileSource
    * Create a buffered <code>SageFileSource</code> with custom read and write buffer sizes.
    * <p/>
    * Do not attempt to use the underlying <code>SageFileSource</code> after writing without first
-   * calling <code>sync()</code> since otherwise the state of writing will be unknown.
+   * calling <code>flush()</code> since otherwise the state of writing will be unknown.
    *
    * @param sageFileSource The <code>SageFileSource</code> to add a buffering.
    * @param readBufferSize The read buffer size.
@@ -137,7 +137,8 @@ public class BufferedSageFile implements SageFileSource
       // We align to 8192 for the total buffer size so that half of the buffer will at least be
       // aligned to 4096 which is the multiple used for write buffer optimization. We care about
       // alignment with the filesystem more than usual since every write is synced to physical
-      // storage immediately.
+      // storage immediately. The position of the first write will actually determine if the write
+      // when flushed will be in alignment or not, but at least we're making an effort.
       if (writeBufferSize == 0)
         writeBufferSize = 8192;
       int remainder = writeBufferSize % 8192;
@@ -147,8 +148,6 @@ public class BufferedSageFile implements SageFileSource
       writeBuffer = new byte[writeBufferSize];
       writeWrap = null;
     }
-
-    //System.out.println("Opening buffered IO: readBuffer.length=" + readBuffer.length + " writeBuffer.length=" + writeBuffer.length);
   }
 
   private void fillReadBuffer() throws IOException
@@ -680,10 +679,10 @@ public class BufferedSageFile implements SageFileSource
           writePosition = 0;
         }
 
-        // The write is within the buffer and possible beyond it.
+        // The write is within the buffer and possibly beyond it.
 
-        // writePosition cannot be greater than writeBuffer.length. We checked that earlier, so
-        // this will never result in a negative number.
+        // writePosition cannot be greater than writeBuffer.length. Also writePosition cannot be a
+        // negative number. This will never result in a negative number.
         int copyLength = Math.min(len, (writeBuffer.length - (int) writePosition));
         System.arraycopy(b, off, writeBuffer, (int) writePosition, copyLength);
 

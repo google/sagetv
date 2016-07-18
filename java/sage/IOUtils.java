@@ -1122,7 +1122,7 @@ public class IOUtils
             }
             else
             {
-              //these bufs create the 'devnum', but you'll need to check endian in java.sage.nio.Buffer
+              //these bufs create the 'devnum', but you'll need to check endian in java.nio.Buffer
               int checkedDevNum = 0;
               if(java.nio.ByteOrder.nativeOrder() != java.nio.ByteOrder.BIG_ENDIAN)
                 checkedDevNum = ((buf1[3] & 0xFF) << 24) | ((buf1[2] & 0xFF) << 16) | ((buf1[1] & 0xFF) << 8) | (buf1[0] & 0xFF);
