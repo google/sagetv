@@ -328,35 +328,44 @@ public class BufferedFileChannel extends FileChannel implements SageFileChannel
     if (readBuffer.hasRemaining())
     {
       long returnValue = 0;
-      int readLimit = readBuffer.limit();
+      int readLimit;
       int readLength;
 
-      try
+      do
       {
-        do
+        readLimit = readBuffer.limit();
+        readLength = (int) Math.min((long) readBuffer.remaining(), count);
+        try
         {
-          readLength = (int) Math.min((long) readBuffer.remaining(), count);
-          readBuffer.limit(readLength);
+          if (readLength != readLimit)
+            readBuffer.limit(readBuffer.position() + readLength);
           do
           {
             target.write(readBuffer);
           }
           while (readBuffer.hasRemaining());
-          returnValue += readLength;
-          count -= readLength;
-
-          // If the buffer needs more than the next buffered read can hold, read directly.
-          if (count < readBuffer.capacity())
-            fillReadBuffer();
-          else
-            break;
         }
-        while (count > 0);
+        finally
+        {
+          if (readLength != readLimit)
+            readBuffer.limit(readLimit);
+        }
+        returnValue += readLength;
+        count -= readLength;
+
+        // If the buffer needs more than the next buffered read can hold, read directly.
+        if (!readBuffer.hasRemaining() && count < readBuffer.capacity())
+        {
+          fillReadBuffer();
+          if (!readBuffer.hasRemaining())
+            return returnValue;
+        }
+        else
+        {
+          break;
+        }
       }
-      finally
-      {
-        readBuffer.limit(readLimit);
-      }
+      while (count > 0);
 
       // Nothing left to read. We read everything from the buffer.
       if (count == 0)
@@ -374,7 +383,7 @@ public class BufferedFileChannel extends FileChannel implements SageFileChannel
     }
 
     // The buffer was not filled due to the count of the request. Read entirely directly. This
-    // should be faster than constant buffering since the values being read are small.
+    // should be faster than constant buffering since the count is large.
     long returnValue = fileChannel.transferTo(count, target);
     realFilePosition += returnValue;
     return returnValue;
