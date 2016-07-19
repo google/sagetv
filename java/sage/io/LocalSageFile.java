@@ -162,13 +162,6 @@ public class LocalSageFile extends RandomAccessFile implements SageFileSource
   }
 
   @Override
-  public boolean isActiveFile()
-  {
-    // TODO: Can we look this up somewhere?
-    return false;
-  }
-
-  @Override
   public boolean isReadOnly()
   {
     return readonly;

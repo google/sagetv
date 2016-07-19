@@ -425,12 +425,6 @@ public class RemoteSageFile implements SageFileSource
   }
 
   @Override
-  public boolean isActiveFile()
-  {
-    return activeFile;
-  }
-
-  @Override
   public boolean isReadOnly()
   {
     return readonly;

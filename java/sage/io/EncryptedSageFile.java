@@ -202,12 +202,6 @@ public class EncryptedSageFile implements SageFileSource
   }
 
   @Override
-  public boolean isActiveFile()
-  {
-    return sageFileSource.isActiveFile();
-  }
-
-  @Override
   public boolean isReadOnly()
   {
     return sageFileSource.isReadOnly();

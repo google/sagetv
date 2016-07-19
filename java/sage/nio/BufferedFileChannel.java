@@ -655,12 +655,6 @@ public class BufferedFileChannel extends FileChannel implements SageFileChannel
   }
 
   @Override
-  public boolean isActiveFile()
-  {
-    return fileChannel.isActiveFile();
-  }
-
-  @Override
   public boolean isReadOnly()
   {
     return readonly;

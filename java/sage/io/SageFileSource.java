@@ -231,13 +231,6 @@ public interface SageFileSource
   public void close() throws IOException;
 
   /**
-   * Is this file actively growing?
-   *
-   * @return <code>true</code> if the file is actively growing.
-   */
-  public boolean isActiveFile();
-
-  /**
    * Is this file opened as read only?
    *
    * @return <code>true</code> if the file is read only.

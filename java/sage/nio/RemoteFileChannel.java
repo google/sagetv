@@ -656,12 +656,6 @@ public class RemoteFileChannel extends FileChannel implements SageFileChannel
   }
 
   @Override
-  public boolean isActiveFile()
-  {
-    return activeFile;
-  }
-
-  @Override
   public boolean isReadOnly()
   {
     return readonly;

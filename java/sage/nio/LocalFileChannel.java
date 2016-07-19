@@ -189,13 +189,6 @@ public class LocalFileChannel extends FileChannel implements SageFileChannel
   }
 
   @Override
-  public boolean isActiveFile()
-  {
-    // TODO: Can we look this up somewhere?
-    return false;
-  }
-
-  @Override
   public boolean isReadOnly()
   {
     return readonly;

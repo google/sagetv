@@ -677,12 +677,6 @@ public class SageDataFile implements SageFileSource, DataInput, DataOutput
   }
 
   @Override
-  public boolean isActiveFile()
-  {
-    return sageFileSource.isActiveFile();
-  }
-
-  @Override
   public boolean isReadOnly()
   {
     return sageFileSource.isReadOnly();
