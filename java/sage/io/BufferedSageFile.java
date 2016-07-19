@@ -879,18 +879,6 @@ public class BufferedSageFile implements SageFileSource
   }
 
   @Override
-  public String executeCommand(String command) throws IOException
-  {
-    return sageFileSource.executeCommand(command);
-  }
-
-  @Override
-  public String executeCommand(byte[] command, int off, int len) throws IOException
-  {
-    return sageFileSource.executeCommand(command, off, len);
-  }
-
-  @Override
   public SageFileSource getSource()
   {
     return sageFileSource;

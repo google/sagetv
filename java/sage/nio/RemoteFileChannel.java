@@ -667,7 +667,6 @@ public class RemoteFileChannel extends FileChannel implements SageFileChannel
     return readonly;
   }
 
-  @Override
   public synchronized String executeCommand(String command) throws IOException
   {
     commBuf.clear();
@@ -677,7 +676,6 @@ public class RemoteFileChannel extends FileChannel implements SageFileChannel
     return executeCommand(commBuf);
   }
 
-  @Override
   public synchronized String executeCommand(ByteBuffer command) throws IOException
   {
     int position = command.position();

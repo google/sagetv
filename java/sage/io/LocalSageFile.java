@@ -174,33 +174,6 @@ public class LocalSageFile extends RandomAccessFile implements SageFileSource
     return readonly;
   }
 
-  /**
-   * There aren't any special commands for files opened locally.
-   *
-   * @param command The command to execute.
-   * @return <code>null</code>
-   */
-  @Override
-  public String executeCommand(String command)
-  {
-    // There aren't any special commands for files opened locally.
-    return null;
-  }
-
-  /**
-   * There aren't any special commands for files opened locally.
-   *
-   * @param command The byte encoded command to execute.
-   * @param off The offset in the byte array of the command to be sent.
-   * @param len The length of the command to be sent.
-   * @return <code>null</code>
-   */
-  @Override
-  public String executeCommand(byte[] command, int off, int len)
-  {
-    return null;
-  }
-
   @Override
   public SageFileSource getSource()
   {

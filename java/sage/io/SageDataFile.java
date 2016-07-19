@@ -688,18 +688,6 @@ public class SageDataFile implements SageFileSource, DataInput, DataOutput
     return sageFileSource.isReadOnly();
   }
 
-  @Override
-  public String executeCommand(String command) throws IOException
-  {
-    return sageFileSource.executeCommand(command);
-  }
-
-  @Override
-  public String executeCommand(byte[] command, int off, int len) throws IOException
-  {
-    return sageFileSource.executeCommand(command, off, len);
-  }
-
   public boolean isEncrypted()
   {
     // If these two are the same object, no encryption is in use.

@@ -667,18 +667,6 @@ public class BufferedFileChannel extends FileChannel implements SageFileChannel
   }
 
   @Override
-  public String executeCommand(String command) throws IOException
-  {
-    return fileChannel.executeCommand(command);
-  }
-
-  @Override
-  public String executeCommand(ByteBuffer command) throws IOException
-  {
-    return fileChannel.executeCommand(command);
-  }
-
-  @Override
   public long write(ByteBuffer[] srcs, int offset, int length) throws IOException
   {
     if (readonly)

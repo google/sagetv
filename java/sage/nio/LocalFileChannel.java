@@ -201,30 +201,6 @@ public class LocalFileChannel extends FileChannel implements SageFileChannel
     return readonly;
   }
 
-  /**
-   * There aren't any special commands for files opened locally.
-   *
-   * @param command The command to execute.
-   * @return <code>null</code>
-   */
-  @Override
-  public String executeCommand(String command) throws IOException
-  {
-    return null;
-  }
-
-  /**
-   * There aren't any special commands for files opened locally.
-   *
-   * @param command The command to execute.
-   * @return <code>null</code>
-   */
-  @Override
-  public String executeCommand(ByteBuffer command) throws IOException
-  {
-    return null;
-  }
-
   @Override
   public int read(ByteBuffer dst, long position) throws IOException
   {

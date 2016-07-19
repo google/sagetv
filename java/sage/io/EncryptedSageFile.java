@@ -213,18 +213,6 @@ public class EncryptedSageFile implements SageFileSource
     return sageFileSource.isReadOnly();
   }
 
-  @Override
-  public String executeCommand(String command) throws IOException
-  {
-    return sageFileSource.executeCommand(command);
-  }
-
-  @Override
-  public String executeCommand(byte[] command, int off, int len) throws IOException
-  {
-    return sageFileSource.executeCommand(command, off, len);
-  }
-
   /**
    * Decrypt a single byte.
    *

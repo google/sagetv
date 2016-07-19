@@ -245,28 +245,6 @@ public interface SageFileSource
   public boolean isReadOnly();
 
   /**
-   * Execute a command specific to this implementation.
-   *
-   * @param command The command to execute.
-   * @return The result from the command. This could be null. The response is implementation
-   *         specific.
-   * @throws IOException If there is an I/O related error.
-   */
-  public String executeCommand(String command) throws IOException;
-
-  /**
-   * Execute a byte encoded command specific to this implementation.
-   *
-   * @param command The byte encoded command to execute.
-   * @param off The offset in the byte array of the command to be sent.
-   * @param len The length of the command to be sent.
-   * @return The results from the command. This could be null. The response is implementation
-   *         specific.
-   * @throws IOException If there is an I/O related error.
-   */
-  public String executeCommand(byte command[], int off, int len) throws IOException;
-
-  /**
    * Get the underlying <code>SageFileSource</code>.
    * <p/>
    * If this is the actual data source, this will return <code>null</code>.

@@ -173,24 +173,4 @@ public interface SageFileChannel extends SeekableByteChannel, GatheringByteChann
    * @return <code>true</code> if the file is read only.
    */
   public boolean isReadOnly();
-
-  /**
-   * Execute a command specific to this implementation.
-   *
-   * @param command The command to execute.
-   * @return The result from the command. This could be null. The response is implementation
-   *         specific.
-   * @throws IOException If there is an I/O related error.
-   */
-  public String executeCommand(String command) throws IOException;
-
-  /**
-   * Execute a byte encoded command specific to this implementation.
-   *
-   * @param command A <code>ByteBuffer</code> already in "read" mode.
-   * @return The results from the command. This could be null. The response is implementation
-   *         specific.
-   * @throws IOException If there is an I/O related error.
-   */
-  public String executeCommand(ByteBuffer command) throws IOException;
 }

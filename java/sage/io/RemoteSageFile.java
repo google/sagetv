@@ -463,7 +463,6 @@ public class RemoteSageFile implements SageFileSource
    * @return The response received from the media server.
    * @throws IOException If there was an I/O error.
    */
-  @Override
   public synchronized String executeCommand(byte[] command, int off, int len) throws IOException
   {
     try
