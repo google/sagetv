@@ -454,17 +454,6 @@ public class BluRayFile extends FileChannel implements BluRayStreamer, SageFileC
   }
 
   /**
-   * A bluray cannot be a recording, so this always returns <code>false</code>.
-   *
-   * @return <code>false</code>
-   */
-  @Override
-  public boolean isActiveFile()
-  {
-    return false;
-  }
-
-  /**
    * A bluray is always read only, so this always returns <code>true</code>.
    *
    * @return <code>true</code>
@@ -473,18 +462,6 @@ public class BluRayFile extends FileChannel implements BluRayStreamer, SageFileC
   public boolean isReadOnly()
   {
     return true;
-  }
-
-  @Override
-  public String executeCommand(String command) throws IOException
-  {
-    return sageFileChannel.executeCommand(command);
-  }
-
-  @Override
-  public String executeCommand(ByteBuffer command) throws IOException
-  {
-    return sageFileChannel.executeCommand(command);
   }
 
   /**
