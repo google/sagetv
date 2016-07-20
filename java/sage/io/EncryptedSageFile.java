@@ -282,7 +282,7 @@ public class EncryptedSageFile implements SageFileSource
    * @return A shared byte array containing the now encrypted bytes at the same offset as the
    *         provided array.
    */
-  protected byte[] encryptWrite(byte[] b, int off, int len, long fp)
+  protected synchronized byte[] encryptWrite(byte[] b, int off, int len, long fp)
   {
     // Normally you would create a new buffer double the newly required size, but we are trying to
     // keep this buffer as small. We use the incoming array length since it's likely we are using
