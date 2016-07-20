@@ -51,8 +51,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 9,0,4,232
- PRODUCTVERSION 9,0,4,0
+ FILEVERSION 9,0,5,287
+ PRODUCTVERSION 9,0,5,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -69,12 +69,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "SageTV Open Source"
             VALUE "FileDescription", "SageTV"
-            VALUE "FileVersion", "9.0.4.232"
+            VALUE "FileVersion", "9.0.5.232"
             VALUE "InternalName", "SageTV"
-            VALUE "LegalCopyright", "Copyright © © 2015 The SageTV Authors"
+            VALUE "LegalCopyright", "Copyright ï¿½ ï¿½ 2015 The SageTV Authors"
             VALUE "OriginalFilename", "SageTV.exe"
             VALUE "ProductName", "SageTV"
-            VALUE "ProductVersion", "9.0.4.0"
+            VALUE "ProductVersion", "9.0.5.0"
         END
     END
     BLOCK "VarFileInfo"
