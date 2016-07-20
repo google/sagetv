@@ -52,7 +52,7 @@ public class DVDMultiFile implements DVDSource
         if (hostname == null)
           files[i] = new BufferedFileChannel(new LocalFileChannel(filenames[i], true), 65536, false);
         else
-          files[i] = new BufferedFileChannel(new RemoteFileChannel(hostname, filenames[i], true), 131072, false);
+          files[i] = new BufferedFileChannel(new RemoteFileChannel(hostname, filenames[i]), 131072, false);
 
         fileSizes[i] = files[i].size();
       }

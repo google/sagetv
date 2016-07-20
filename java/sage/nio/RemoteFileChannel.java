@@ -37,6 +37,7 @@ public class RemoteFileChannel extends FileChannel implements SageFileChannel
   private final String hostname;
   private String remoteFilename;
   private final boolean readonly;
+  private final int uploadId;
 
   private boolean activeFile = false;
   private long currTotalSize = 0;
@@ -49,31 +50,60 @@ public class RemoteFileChannel extends FileChannel implements SageFileChannel
   private boolean closed = false;
 
   /**
-   * Open a remote file as a <code>FileChannel</code>.
+   * Open a remote file as a <code>FileChannel</code> for read only access.
    *
    * @param hostname The hostname of the media server hosting the file.
    * @param file The file to be opened.
-   * @param readonly Open this file as read only.
    * @throws IOException If there is an I/O related error.
    */
-  public RemoteFileChannel(String hostname, File file, boolean readonly) throws IOException
+  public RemoteFileChannel(String hostname, File file) throws IOException
   {
-    this(hostname, file.getPath(), readonly);
+    this(hostname, file.getPath());
   }
 
   /**
-   * Open a remote file as a <code>FileChannel</code>.
+   * Open a remote file as a <code>FileChannel</code> for read only access.
    *
    * @param hostname The hostname of the media server hosting the file.
    * @param name The the full path and name of the file to be opened.
-   * @param readonly Open this file as read only.
    * @throws IOException If there is an I/O related error.
    */
-  public RemoteFileChannel(String hostname, String name, boolean readonly) throws IOException
+  public RemoteFileChannel(String hostname, String name) throws IOException
   {
     this.hostname = hostname;
     remoteFilename = name;
-    this.readonly = readonly;
+    this.readonly = true;
+    this.uploadId = -1;
+    connect();
+  }
+
+  /**
+   * Open a remote file as a <code>FileChannel</code> for read/write access.
+   *
+   * @param hostname The hostname of the media server hosting the file.
+   * @param file The file to be opened.
+   * @param uploadId The ID that authorizes write access.
+   * @throws IOException If there is an I/O related error.
+   */
+  public RemoteFileChannel(String hostname, File file, int uploadId) throws IOException
+  {
+    this(hostname, file.getPath(), uploadId);
+  }
+
+  /**
+   * Open a remote file as a <code>FileChannel</code> for read/write access.
+   *
+   * @param hostname The hostname of the media server hosting the file.
+   * @param name The the full path and name of the file to be opened.
+   * @param uploadId The ID that authorizes write access.
+   * @throws IOException If there is an I/O related error.
+   */
+  public RemoteFileChannel(String hostname, String name, int uploadId) throws IOException
+  {
+    this.hostname = hostname;
+    remoteFilename = name;
+    this.readonly = false;
+    this.uploadId = uploadId;
     connect();
   }
 
@@ -110,11 +140,17 @@ public class RemoteFileChannel extends FileChannel implements SageFileChannel
 
     commBuf.clear();
     if (readonly)
+    {
       commBuf.put("OPENW ".getBytes(Sage.BYTE_CHARSET));
+      commBuf.put(remoteFilename.getBytes(StandardCharsets.UTF_16BE));
+    }
     else
+    {
       commBuf.put("WRITEOPENW ".getBytes(Sage.BYTE_CHARSET));
+      commBuf.put(remoteFilename.getBytes(StandardCharsets.UTF_16BE));
+      commBuf.put((" " + Integer.toString(uploadId)).getBytes(Sage.BYTE_CHARSET));
+    }
 
-    commBuf.put(remoteFilename.getBytes(StandardCharsets.UTF_16BE));
     commBuf.put("\r\n".getBytes(Sage.BYTE_CHARSET));
     commBuf.flip();
     socket.write(commBuf);
@@ -676,7 +712,7 @@ public class RemoteFileChannel extends FileChannel implements SageFileChannel
   public synchronized String executeCommand(String command) throws IOException
   {
     commBuf.clear();
-    commBuf.put((command.endsWith("\r\n") ? command : command + "\r\n").getBytes(Sage.BYTE_CHARSET));
+    commBuf.put((command.endsWith("\r\n") ? command : (command + "\r\n")).getBytes(Sage.BYTE_CHARSET));
     commBuf.flip();
 
     return executeCommand(commBuf);

@@ -66,7 +66,7 @@ public class VobSubSubtitleHandler extends SubtitleHandler
       if (!sourceFile.isLocalFile())
       {
         sage.NetworkClient.getSN().requestMediaServerAccess(bitmapFile, true);
-        frf = new SageDataFile(new BufferedSageFile(new RemoteSageFile(Sage.preferredServer, bitmapFile, true), 32768), Sage.I18N_CHARSET);
+        frf = new SageDataFile(new BufferedSageFile(new RemoteSageFile(Sage.preferredServer, bitmapFile), 32768), Sage.I18N_CHARSET);
       }
       else
       {

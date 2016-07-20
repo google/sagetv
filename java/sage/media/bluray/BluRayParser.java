@@ -184,7 +184,7 @@ public class BluRayParser
 			try
 			{
 				if (remoteHostname != null)
-					dis = new sage.io.SageDataFile(new sage.io.BufferedSageFile(new sage.io.RemoteSageFile(remoteHostname, mplsFile, true), 65536), BLURAY_CHARSET);
+					dis = new sage.io.SageDataFile(new sage.io.BufferedSageFile(new sage.io.RemoteSageFile(remoteHostname, mplsFile), 65536), BLURAY_CHARSET);
 				else
 					dis = new sage.io.SageDataFile(new sage.io.BufferedSageFile(new sage.io.LocalSageFile(mplsFile, true), 65536), BLURAY_CHARSET);;
 				MPLSObject mplsObj = new MPLSObject(dis);

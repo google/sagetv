@@ -16,6 +16,7 @@
 package sage.io;
 
 import sage.Sage;
+import sage.SageTVConnection;
 
 import java.io.*;
 import java.net.InetSocketAddress;
@@ -28,6 +29,7 @@ public class RemoteSageFile implements SageFileSource
   private final String remoteFilename;
   private final String transcodeMode;
   private final boolean readonly;
+  private final int uploadId;
 
   private final boolean forceActive;
   private boolean activeFile = false;
@@ -39,87 +41,123 @@ public class RemoteSageFile implements SageFileSource
   private DataOutputStream outStream = null;
   private DataInputStream inStream = null;
 
-  public RemoteSageFile(String hostname, File file, boolean readonly) throws IOException
+  /**
+   * Open a file remotely via the media server for read/write.
+   *
+   * @param hostname The hostname of the media server hosting this file.
+   * @param file The full path and file to be opened.
+   * @param uploadId The ID that authorizes write access.
+   * @throws IOException If there is an I/O related error.
+   */
+  public RemoteSageFile(String hostname, File file, int uploadId) throws IOException
   {
-    this(hostname, file.getPath(), readonly, null);
+    this(hostname, file.getPath(), uploadId);
   }
 
   /**
-   * Open a file remotely via the media server.
+   * Open a file remotely via the media server for read/write.
    *
    * @param hostname The hostname of the media server hosting this file.
    * @param name The full path and file to be opened.
-   * @param readonly Set the channel to be read only.
-   * @throws IOException If there is an I/O related error
+   * @param uploadId The ID that authorizes write access.
+   * @throws IOException If there is an I/O related error.
    */
-  public RemoteSageFile(String hostname, String name, boolean readonly) throws IOException
-  {
-    this(hostname, name, readonly, null);
-  }
-
-  /**
-   * Open a file remotely via the media server.
-   *
-   * @param hostname The hostname of the media server hosting this file.
-   * @param file The file to be opened.
-   * @param readonly Set the channel to be read only.
-   * @param transcodeMode Set the transcode mode.
-   * @throws IOException If there is an I/O related error
-   */
-  public RemoteSageFile(String hostname, File file, boolean readonly, String transcodeMode) throws IOException
-  {
-    this(hostname, file.getPath(), readonly, transcodeMode);
-  }
-
-  /**
-   * Open a file remotely via the media server.
-   *
-   * @param hostname The hostname of the media server hosting this file.
-   * @param name The full path and file to be opened.
-   * @param readonly Set the channel to be read only.
-   * @param transcodeMode Set the transcode mode.
-   * @throws IOException If there is an I/O related error
-   */
-  public RemoteSageFile(String hostname, String name, boolean readonly, String transcodeMode) throws IOException
-  {
-    this.hostname = hostname;
-    remoteFilename = name;
-    this.transcodeMode = transcodeMode;
-    this.readonly = readonly;
-    this.forceActive = false;
-    connect();
-  }
-
-  /**
-   * Open a file remotely via the media server.
-   *
-   * @param hostname The hostname of the media server hosting this file.
-   * @param file The file to be opened.
-   * @param readonly Set the channel to be read only.
-   * @param forceActive Always assume the file is active. Use this with care.
-   * @throws IOException If there is an I/O related error
-   */
-  public RemoteSageFile(String hostname, File file, boolean readonly, boolean forceActive) throws IOException
-  {
-    this(hostname, file.getPath(), readonly, forceActive);
-  }
-
-  /**
-   * Open a file remotely via the media server.
-   *
-   * @param hostname The hostname of the media server hosting this file.
-   * @param name The full path and file to be opened.
-   * @param readonly Set the channel to be read only.
-   * @param forceActive Always assume the file is active. Use this with care.
-   * @throws IOException If there is an I/O related error
-   */
-  public RemoteSageFile(String hostname, String name, boolean readonly, boolean forceActive) throws IOException
+  public RemoteSageFile(String hostname, String name, int uploadId) throws IOException
   {
     this.hostname = hostname;
     remoteFilename = name;
     this.transcodeMode = null;
-    this.readonly = readonly;
+    this.readonly = false;
+    this.forceActive = false;
+    this.uploadId = uploadId;
+    connect();
+  }
+
+  /**
+   * Open a file remotely via the media server for read only.
+   *
+   * @param hostname The hostname of the media server hosting this file.
+   * @param file The file to be opened.
+   * @throws IOException If there is an I/O related error.
+   */
+  public RemoteSageFile(String hostname, File file) throws IOException
+  {
+    this(hostname, file, null);
+  }
+
+  /**
+   * Open a file remotely via the media server for read only.
+   *
+   * @param hostname The hostname of the media server hosting this file.
+   * @param name The full path and file to be opened.
+   * @throws IOException If there is an I/O related error.
+   */
+  public RemoteSageFile(String hostname, String name) throws IOException
+  {
+    this(hostname, name, null);
+  }
+
+  /**
+   * Open a file remotely via the media server to be transcoded.
+   *
+   * @param hostname The hostname of the media server hosting this file.
+   * @param file The file to be opened.
+   * @param transcodeMode Set the transcode mode.
+   * @throws IOException If there is an I/O related error.
+   */
+  public RemoteSageFile(String hostname, File file, String transcodeMode) throws IOException
+  {
+    this(hostname, file.getPath(), transcodeMode);
+  }
+
+  /**
+   * Open a file remotely via the media server to be transcoded.
+   *
+   * @param hostname The hostname of the media server hosting this file.
+   * @param name The full path and file to be opened.
+   * @param transcodeMode Set the transcode mode.
+   * @throws IOException If there is an I/O related error.
+   */
+  public RemoteSageFile(String hostname, String name, String transcodeMode) throws IOException
+  {
+    this.hostname = hostname;
+    remoteFilename = name;
+    this.transcodeMode = transcodeMode;
+    this.readonly = true;
+    this.forceActive = false;
+    this.uploadId = -1;
+    connect();
+  }
+
+  /**
+   * Open a file remotely via the media server for read only.
+   *
+   * @param hostname The hostname of the media server hosting this file.
+   * @param file The file to be opened.
+   * @param forceActive Always assume the file is active. Use this with care.
+   * @throws IOException If there is an I/O related error.
+   */
+  public RemoteSageFile(String hostname, File file, boolean forceActive) throws IOException
+  {
+    this(hostname, file.getPath(), forceActive);
+  }
+
+  /**
+   * Open a file remotely via the media server for read only.
+   *
+   * @param hostname The hostname of the media server hosting this file.
+   * @param name The full path and file to be opened.
+   * @param forceActive Always assume the file is active. Use this with care.
+   * @throws IOException If there is an I/O related error.
+   */
+  public RemoteSageFile(String hostname, String name, boolean forceActive) throws IOException
+  {
+    this.hostname = hostname;
+    remoteFilename = name;
+    this.transcodeMode = null;
+    this.readonly = true;
     this.forceActive = forceActive;
+    this.uploadId = -1;
     connect();
   }
 
@@ -147,11 +185,17 @@ public class RemoteSageFile implements SageFileSource
     }
 
     if (readonly)
+    {
       outStream.write("OPENW ".getBytes(Sage.BYTE_CHARSET));
+      outStream.write(remoteFilename.getBytes(StandardCharsets.UTF_16BE));
+    }
     else
+    {
       outStream.write("WRITEOPENW ".getBytes(Sage.BYTE_CHARSET));
+      outStream.write(remoteFilename.getBytes(StandardCharsets.UTF_16BE));
+      outStream.write((" " + Integer.toString(uploadId)).getBytes(Sage.BYTE_CHARSET));
+    }
 
-    outStream.write(remoteFilename.getBytes(StandardCharsets.UTF_16BE));
     outStream.write("\r\n".getBytes(Sage.BYTE_CHARSET));
     outStream.flush();
 
@@ -219,7 +263,7 @@ public class RemoteSageFile implements SageFileSource
         count);
 
     // If we are trying to read beyond the end of the file, don't read anything.
-    return (count == 0) ? 0 : count;
+    return count;
   }
 
   @Override
@@ -273,15 +317,15 @@ public class RemoteSageFile implements SageFileSource
     try
     {
       outStream.write(("READ " + remoteOffset + " " + len + "\r\n").getBytes(Sage.BYTE_CHARSET));
-      outStream.flush();
       inStream.readFully(b, off, len);
+      outStream.flush();
     }
     catch (IOException e)
     {
       reconnect();
       outStream.write(("READ " + remoteOffset + " " + len + "\r\n").getBytes(Sage.BYTE_CHARSET));
-      outStream.flush();
       inStream.readFully(b, off, len);
+      outStream.flush();
     }
 
     remoteOffset += len;
@@ -326,15 +370,15 @@ public class RemoteSageFile implements SageFileSource
     try
     {
       outStream.write(("WRITE " + remoteOffset + " 1\r\n").getBytes(Sage.BYTE_CHARSET));
-      outStream.flush();
       outStream.write(b);
+      outStream.flush();
     }
     catch (IOException e)
     {
       reconnect();
       outStream.write(("WRITE " + remoteOffset + " 1\r\n").getBytes(Sage.BYTE_CHARSET));
-      outStream.flush();
       outStream.write(b);
+      outStream.flush();
     }
 
     remoteOffset += 1;
@@ -358,22 +402,22 @@ public class RemoteSageFile implements SageFileSource
     try
     {
       outStream.write(("WRITE " + remoteOffset + " " + len + "\r\n").getBytes(Sage.BYTE_CHARSET));
-      outStream.flush();
       outStream.write(b, off, len);
+      outStream.flush();
     }
     catch (IOException e)
     {
       reconnect();
       outStream.write(("WRITE " + remoteOffset + " " + len + "\r\n").getBytes(Sage.BYTE_CHARSET));
-      outStream.flush();
       outStream.write(b, off, len);
+      outStream.flush();
     }
 
     remoteOffset += len;
   }
 
   @Override
-  public void randomWrite(long pos, byte[] b, int off, int len) throws IOException
+  public synchronized void randomWrite(long pos, byte[] b, int off, int len) throws IOException
   {
     if (readonly)
       throw new IOException("Remote file is read only.");
@@ -515,7 +559,7 @@ public class RemoteSageFile implements SageFileSource
    */
   public String executeCommand(String command) throws IOException
   {
-    command = command.endsWith("\r\n") ? command : command + "\r\n";
+    command = command.endsWith("\r\n") ? command : (command + "\r\n");
 
     byte b[] = command.getBytes(Sage.BYTE_CHARSET);
     return executeCommand(b, 0, b.length);

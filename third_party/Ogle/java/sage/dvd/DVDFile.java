@@ -47,7 +47,7 @@ public class DVDFile implements DVDSource
       if (hostname == null)
         file = new BufferedFileChannel(new LocalFileChannel(filename, true), 65536, false);
       else
-        file = new BufferedFileChannel(new RemoteFileChannel(hostname, filename, true), 131072, false);
+        file = new BufferedFileChannel(new RemoteFileChannel(hostname, filename), 131072, false);
     }
     catch(Exception e)
     {

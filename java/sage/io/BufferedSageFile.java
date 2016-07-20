@@ -421,7 +421,7 @@ public class BufferedSageFile implements SageFileSource
           // You must set writePending to true before seeking or the data will be appended to or
           // overwrite the wrong place in the file.
           if (writeOffset == writeBuffer.length)
-            flushForced();
+            flushOptimized();
           else
             writePending = true;
         }

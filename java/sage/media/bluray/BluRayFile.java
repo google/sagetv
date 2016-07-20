@@ -74,7 +74,7 @@ public class BluRayFile extends FileChannel implements BluRayStreamer, SageFileC
       sageFileChannel = new BufferedFileChannel(new LocalFileChannel((String)null, true), readBufferSize, directBuffer);
     else
       // Opens a socket, but not any files. We will do that with openFile().
-      sageFileChannel = new BufferedFileChannel(new RemoteFileChannel(hostname, (String)null, true), readBufferSize, directBuffer);
+      sageFileChannel = new BufferedFileChannel(new RemoteFileChannel(hostname, (String)null), readBufferSize, directBuffer);
 
     this.bdmvDir = bdmvDir;
     int targetTitleTmp = targetTitle;

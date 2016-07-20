@@ -307,7 +307,7 @@ public final class FastMpeg2Reader
       }
       else
       {
-        ins = new BufferedFileChannel(new RemoteFileChannel(hostname, mpegFile, true), 131072, true);
+        ins = new BufferedFileChannel(new RemoteFileChannel(hostname, mpegFile), 131072, true);
         // If we already know it's TS then set it that way.
         // This is MUCH more reliable then the TS detection we have below which simply checks the first byte for 0x47
         if (sourceFormat != null)

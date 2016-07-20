@@ -1461,7 +1461,7 @@ public class IOUtils
       {
         // This is crucial. If we don't do this step the file will almost certainly be inaccessible.
         sage.NetworkClient.getSN().requestMediaServerAccess(filePath, true);
-        fis = new SageInputStream(new RemoteSageFile(Sage.preferredServer, filePath, true, true));
+        fis = new SageInputStream(new RemoteSageFile(Sage.preferredServer, filePath, true));
       }
 
       if (fis.markSupported()) fis.mark(32768);

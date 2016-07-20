@@ -245,7 +245,7 @@ public final class Mpeg2Reader
     parsedPES.pts = -1;
     durationMsec = finalPTS = firstPTS = -1;
     if (hostname != null && hostname.length() > 0)
-      ins = new BufferedSageFile(new RemoteSageFile(hostname, mpegFile, true), 65536);
+      ins = new BufferedSageFile(new RemoteSageFile(hostname, mpegFile), 65536);
     else
       ins = new BufferedSageFile(new LocalSageFile(mpegFile, true), 65536);
 
