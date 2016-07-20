@@ -58,13 +58,11 @@ public class EncryptedSageFile implements SageFileSource
   public EncryptedSageFile(SageFileSource sageFileSource, byte crypt[]) throws IOException
   {
     // In case we try to make a file that's already using this "filter" use it twice in a row.
-    if (sageFileSource instanceof EncryptedSageFile)
+    if (getEncryptedRandomFile(sageFileSource) != null)
       throw new IOException("Cannot layer the same encryption on top of itself.");
 
     this.sageFileSource = sageFileSource;
     cryptoKeys = crypt;
-
-    System.out.println("Opening encrypted IO: crypt.length=" + crypt.length);
   }
 
   public SageFileSource getUnencryptedRandomFileSource()
@@ -305,5 +303,16 @@ public class EncryptedSageFile implements SageFileSource
   public SageFileSource getSource()
   {
     return sageFileSource;
+  }
+
+  public static SageFileSource getEncryptedRandomFile(SageFileSource sageFileSource)
+  {
+    if (sageFileSource == null)
+      return null;
+
+    if (sageFileSource instanceof EncryptedSageFile)
+      return sageFileSource;
+
+    return getEncryptedRandomFile(sageFileSource.getSource());
   }
 }
