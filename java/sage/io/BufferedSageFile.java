@@ -462,30 +462,16 @@ public class BufferedSageFile implements SageFileSource
   @Override
   public int read(byte[] b, int off, int len) throws IOException
   {
-    // readOffset and readLength will always be 0 when we have a write pending.
-    if (readOffset == readLength)
-    {
-      if (writePending)
-        flushForced();
+    long remaining = length() - position();
 
-      fillReadBuffer();
+    if (remaining == 0)
+      return -1;
+    else if (len > remaining)
+      len = (int)remaining;
 
-      if (readOffset == readLength)
-      {
-        return -1;
-      }
-    }
+    readFully(b, off, len);
 
-    int remains = len;
-
-    int transferLength = Math.min(readLength - readOffset, remains);
-    System.arraycopy(readBuffer, readOffset, b, off, transferLength);
-    readOffset += transferLength;
-
-    off += transferLength;
-    remains -= transferLength;
-
-    return len - remains;
+    return len;
   }
 
   @Override
@@ -821,13 +807,12 @@ public class BufferedSageFile implements SageFileSource
   {
     if (writePending)
       flushForced();
+    else if (readLength > 0)
+      clearReadBuffer();
 
     sageFileSource.setLength(newLength);
     realLastLength = newLength;
     realFilePosition = sageFileSource.position();
-
-    if (readLength > 0)
-      clearReadBuffer();
   }
 
   @Override
