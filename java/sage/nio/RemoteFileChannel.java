@@ -109,7 +109,11 @@ public class RemoteFileChannel extends FileChannel implements SageFileChannel
       return;
 
     commBuf.clear();
-    commBuf.put("OPENW ".getBytes(Sage.BYTE_CHARSET));
+    if (readonly)
+      commBuf.put("OPENW ".getBytes(Sage.BYTE_CHARSET));
+    else
+      commBuf.put("WRITEOPENW ".getBytes(Sage.BYTE_CHARSET));
+
     commBuf.put(remoteFilename.getBytes(StandardCharsets.UTF_16BE));
     commBuf.put("\r\n".getBytes(Sage.BYTE_CHARSET));
     commBuf.flip();
@@ -164,11 +168,13 @@ public class RemoteFileChannel extends FileChannel implements SageFileChannel
   {
     // We can't read more than what is in the file. The first part checks a cached variable, the
     // second part checks the file directly.
-    if (position + count > maxRemoteSize && position + count > size())
-      count = maxRemoteSize - position;
+    count = Math.min(
+        maxRemoteSize == 0 || (position + count >= maxRemoteSize && activeFile) ?
+            reallyGetSize() - position : maxRemoteSize - position,
+        count);
 
     // If we are trying to read beyond the end of the file, don't read anything.
-    return (count < 0) ? 0 : count;
+    return (count == 0) ? 0 : count;
   }
 
   // You must synchronize startRead and readMore in the method using these so no other
@@ -440,18 +446,24 @@ public class RemoteFileChannel extends FileChannel implements SageFileChannel
     return remoteOffset - oldOffset;
   }
 
-  @Override
-  public long size() throws IOException
+  private long reallyGetSize() throws IOException
   {
-    if (!activeFile && maxRemoteSize > 0)
-      return maxRemoteSize;
-
     String response = executeCommand("SIZE\r\n");
 
     long currAvailSize = Long.parseLong(response.substring(0, response.indexOf(' ')));
     currTotalSize = Long.parseLong(response.substring(response.indexOf(' ') + 1));
     maxRemoteSize = Math.max(maxRemoteSize, currAvailSize);
     activeFile = currAvailSize != currTotalSize;
+    return maxRemoteSize;
+  }
+
+  @Override
+  public long size() throws IOException
+  {
+    if (activeFile || maxRemoteSize == 0)
+    {
+      return reallyGetSize();
+    }
     return maxRemoteSize;
   }
 

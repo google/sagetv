@@ -29,6 +29,7 @@ public class RemoteSageFile implements SageFileSource
   private final String transcodeMode;
   private final boolean readonly;
 
+  private final boolean forceActive;
   private boolean activeFile = false;
   private long currTotalSize = 0;
   private long maxRemoteSize = 0;
@@ -43,24 +44,41 @@ public class RemoteSageFile implements SageFileSource
     this(hostname, file.getPath(), readonly, null);
   }
 
+  /**
+   * Open a file remotely via the media server.
+   *
+   * @param hostname The hostname of the media server hosting this file.
+   * @param name The full path and file to be opened.
+   * @param readonly Set the channel to be read only.
+   * @throws IOException If there is an I/O related error
+   */
   public RemoteSageFile(String hostname, String name, boolean readonly) throws IOException
   {
     this(hostname, name, readonly, null);
   }
 
+  /**
+   * Open a file remotely via the media server.
+   *
+   * @param hostname The hostname of the media server hosting this file.
+   * @param file The file to be opened.
+   * @param readonly Set the channel to be read only.
+   * @param transcodeMode Set the transcode mode.
+   * @throws IOException If there is an I/O related error
+   */
   public RemoteSageFile(String hostname, File file, boolean readonly, String transcodeMode) throws IOException
   {
     this(hostname, file.getPath(), readonly, transcodeMode);
   }
 
   /**
-   *
+   * Open a file remotely via the media server.
    *
    * @param hostname The hostname of the media server hosting this file.
    * @param name The full path and file to be opened.
    * @param readonly Set the channel to be read only.
    * @param transcodeMode Set the transcode mode.
-   * @throws IOException
+   * @throws IOException If there is an I/O related error
    */
   public RemoteSageFile(String hostname, String name, boolean readonly, String transcodeMode) throws IOException
   {
@@ -68,6 +86,40 @@ public class RemoteSageFile implements SageFileSource
     remoteFilename = name;
     this.transcodeMode = transcodeMode;
     this.readonly = readonly;
+    this.forceActive = false;
+    connect();
+  }
+
+  /**
+   * Open a file remotely via the media server.
+   *
+   * @param hostname The hostname of the media server hosting this file.
+   * @param file The file to be opened.
+   * @param readonly Set the channel to be read only.
+   * @param forceActive Always assume the file is active. Use this with care.
+   * @throws IOException If there is an I/O related error
+   */
+  public RemoteSageFile(String hostname, File file, boolean readonly, boolean forceActive) throws IOException
+  {
+    this(hostname, file.getPath(), readonly, forceActive);
+  }
+
+  /**
+   * Open a file remotely via the media server.
+   *
+   * @param hostname The hostname of the media server hosting this file.
+   * @param name The full path and file to be opened.
+   * @param readonly Set the channel to be read only.
+   * @param forceActive Always assume the file is active. Use this with care.
+   * @throws IOException If there is an I/O related error
+   */
+  public RemoteSageFile(String hostname, String name, boolean readonly, boolean forceActive) throws IOException
+  {
+    this.hostname = hostname;
+    remoteFilename = name;
+    this.transcodeMode = null;
+    this.readonly = readonly;
+    this.forceActive = forceActive;
     connect();
   }
 
@@ -94,7 +146,11 @@ public class RemoteSageFile implements SageFileSource
         throw new java.io.IOException("Error with remote transcode setup for " + transcodeMode + " of: " + response);
     }
 
-    outStream.write("OPENW ".getBytes(Sage.BYTE_CHARSET));
+    if (readonly)
+      outStream.write("OPENW ".getBytes(Sage.BYTE_CHARSET));
+    else
+      outStream.write("WRITEOPENW ".getBytes(Sage.BYTE_CHARSET));
+
     outStream.write(remoteFilename.getBytes(StandardCharsets.UTF_16BE));
     outStream.write("\r\n".getBytes(Sage.BYTE_CHARSET));
     outStream.flush();
@@ -152,20 +208,29 @@ public class RemoteSageFile implements SageFileSource
     connect();
   }
 
+  private long getMaxRead(long position, long count) throws IOException
+  {
+    // We can't read more than what is in the file. The first part checks a cached variable, the
+    // second part checks the file directly. Unless the stream really lingers trying to get a
+    // massive read towards the end, this should be a very minimal load on the media server.
+    count = Math.min(
+        maxRemoteSize == 0 || (position + count >= maxRemoteSize && activeFile) ?
+            reallyGetLength() - position : maxRemoteSize - position,
+        count);
+
+    // If we are trying to read beyond the end of the file, don't read anything.
+    return (count == 0) ? 0 : count;
+  }
+
   @Override
   public synchronized int read() throws IOException
   {
     int returnValue;
 
-    if (remoteOffset >= maxRemoteSize)
+    if (getMaxRead(remoteOffset, 1) == 0)
     {
-      // We don't positively know if we will get the next byte. This will update the file length to
-      // the latest size.
-      if (remoteOffset >= length())
-      {
-        // End of the file.
-        return -1;
-      }
+      // End of the file.
+      return -1;
     }
 
     try
@@ -196,21 +261,14 @@ public class RemoteSageFile implements SageFileSource
   public synchronized int read(byte[] b, int off, int len) throws IOException
   {
     if (len == 0)
-      return 0;
+      return len;
 
-    if (remoteOffset + len >= maxRemoteSize)
-    {
-      // We don't positively know if we will get the next byte. This will update the file length to
-      // the latest size.
-      if (remoteOffset >= length())
-      {
-        // End of the file.
-        return -1;
-      }
-    }
+    // This cannot return anything greater than len.
+    len = (int)getMaxRead(remoteOffset, len);
 
-    // len is an int, so that will keep us from exceeding Integer.MAX_VALUE
-    len = (int)Math.min((long)len, maxRemoteSize - remoteOffset);
+    // End of the file.
+    if (len == 0)
+      return -1;
 
     try
     {
@@ -252,7 +310,7 @@ public class RemoteSageFile implements SageFileSource
       len -= bytesRead;
       off += bytesRead;
 
-      if (len <= 0)
+      if (len == 0)
         break;
 
       bytesRead = read(b, off, len);
@@ -339,7 +397,7 @@ public class RemoteSageFile implements SageFileSource
       return 0;
 
     long pos = remoteOffset;
-    long seek = Math.min(pos + n, length());
+    long seek = Math.min(pos + n, getMaxRead(remoteOffset, n));
 
     remoteOffset = seek;
 
@@ -358,15 +416,14 @@ public class RemoteSageFile implements SageFileSource
     return remoteOffset;
   }
 
-  @Override
-  public long length() throws IOException
+  private long reallyGetLength() throws IOException
   {
     String response = executeCommand("SIZE\r\n");
 
     long currAvailSize = Long.parseLong(response.substring(0, response.indexOf(' ')));
     currTotalSize = Long.parseLong(response.substring(response.indexOf(' ') + 1));
     maxRemoteSize = Math.max(maxRemoteSize, currAvailSize);
-    if (currAvailSize != currTotalSize)
+    if (currAvailSize != currTotalSize || forceActive)
     {
       activeFile = true;
     }
@@ -374,9 +431,23 @@ public class RemoteSageFile implements SageFileSource
   }
 
   @Override
+  public long length() throws IOException
+  {
+    if (maxRemoteSize == 0 || activeFile)
+    {
+      return reallyGetLength();
+    }
+
+    return maxRemoteSize;
+  }
+
+  @Override
   public long available() throws IOException
   {
-    return length() - remoteOffset;
+    if (remoteOffset < maxRemoteSize)
+      return maxRemoteSize - remoteOffset;
+
+    return reallyGetLength() - remoteOffset;
   }
 
   @Override
@@ -393,6 +464,8 @@ public class RemoteSageFile implements SageFileSource
       disconnect();
       throw new IOException("Error truncating remote file of:" + response);
     }
+
+    maxRemoteSize = newLength;
   }
 
   /**
