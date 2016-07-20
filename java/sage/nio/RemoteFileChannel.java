@@ -351,6 +351,10 @@ public class RemoteFileChannel extends FileChannel implements SageFileChannel
     int limit = offset + length;
     for (int i = offset; i < limit; i++)
     {
+      // Don't continue if it's not going to matter.
+      if (totalLength > maxRemoteSize && totalLength > size())
+        break;
+
       remains = dsts[i].remaining();
 
       // Since we are iterating through the buffers either way, we might as well find the first one
@@ -364,15 +368,14 @@ public class RemoteFileChannel extends FileChannel implements SageFileChannel
       {
         offset += 1;
       }
-
-      // Don't continue if it's not going to matter.
-      if (totalLength > maxRemoteSize && totalLength > size())
-        break;
     }
 
     // All of the buffers do not have space available.
-    if (offset == length)
+    if (!bufferAvailable)
       return 0;
+
+    // When we break out of the loop, we are one too far ahead.
+    offset--;
 
     totalLength = getMaxRead(remoteOffset, totalLength);
     readBytes = startRead(remoteOffset, totalLength, dsts[offset++], true);
@@ -443,8 +446,11 @@ public class RemoteFileChannel extends FileChannel implements SageFileChannel
     }
 
     // All of the buffers do not have data available.
-    if (offset == length)
+    if (!bufferAvailable)
       return 0;
+
+    // When we break out of the loop, we are one too far ahead.
+    offset--;
 
     returnValue = startWrite(remoteOffset, totalLength, srcs[offset++], true);
 
