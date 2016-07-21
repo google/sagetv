@@ -268,6 +268,7 @@ public class BluRayFile extends FileChannel implements BluRayStreamer, SageFileC
   @Override
   public long transferTo(long count, WritableByteChannel target) throws IOException
   {
+    ensureProperFile(false);
     long bytesRead = sageFileChannel.transferTo(count, target);
 
     if (bytesRead < count)
@@ -382,6 +383,7 @@ public class BluRayFile extends FileChannel implements BluRayStreamer, SageFileC
   @Override
   public int read(ByteBuffer dst) throws IOException
   {
+    ensureProperFile(false);
     int readBytes = sageFileChannel.read(dst);
 
     if (dst.hasRemaining())
@@ -398,6 +400,7 @@ public class BluRayFile extends FileChannel implements BluRayStreamer, SageFileC
   @Override
   public int readUnsignedByte() throws IOException
   {
+    ensureProperFile(false);
     return sageFileChannel.readUnsignedByte();
   }
 
@@ -490,6 +493,7 @@ public class BluRayFile extends FileChannel implements BluRayStreamer, SageFileC
   @Override
   public long read(ByteBuffer[] dsts, int offset, int length) throws IOException
   {
+    ensureProperFile(false);
     long bytesRead = sageFileChannel.read(dsts, offset, length);
 
     if (bytesRead == -1)
