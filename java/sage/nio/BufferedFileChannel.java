@@ -174,7 +174,6 @@ public class BufferedFileChannel extends FileChannel implements SageFileChannel
       writeBuffer.position(writeLength);
 
     writeBuffer.flip();
-    //int writeBytes = writeBuffer.remaining();
     // We have at least one pending write, this means we might only need to evaluate if data is left
     // in the buffer once. Since we do not know what the underlying implementation will do, we need
     // to loop here to make sure the entire buffer is written out.
@@ -185,7 +184,7 @@ public class BufferedFileChannel extends FileChannel implements SageFileChannel
     while (writeBuffer.hasRemaining());
     writeBuffer.clear();
     realFilePosition += position;
-    if (position < writeLength)
+    if (writeLength > position)
       fileChannel.position(realFilePosition);
     writeLength =  0;
     writePending = false;
@@ -431,24 +430,33 @@ public class BufferedFileChannel extends FileChannel implements SageFileChannel
     long startPosition = position();
     long bytesWritten;
 
-    do
+    try
     {
-      // Don't allow more than what was requested to be written.
-      if (writeBuffer.limit() > count)
-        writeBuffer.limit((int)count);
+      do
+      {
+        // Don't allow more than what was requested to be written.
+        if (writeBuffer.limit() > count)
+          writeBuffer.limit((int) count);
 
-      bytesWritten = src.read(writeBuffer);
+        bytesWritten = src.read(writeBuffer);
 
-      if (bytesWritten == -1)
-        break;
+        if (bytesWritten == -1)
+          break;
 
-      count -= bytesWritten;
+        count -= bytesWritten;
 
-      if (!writeBuffer.hasRemaining())
-        flushWriteBuffer();
+        if (!writeBuffer.hasRemaining())
+        {
+          writeBuffer.limit(writeBuffer.capacity());
+          flushWriteBuffer();
+        }
+      }
+      while (count > 0);
     }
-    while (count > 0);
-    writeBuffer.limit(writeBuffer.capacity());
+    finally
+    {
+      writeBuffer.limit(writeBuffer.capacity());
+    }
 
     return position() - startPosition;
   }
@@ -541,7 +549,7 @@ public class BufferedFileChannel extends FileChannel implements SageFileChannel
       clearReadBuffer();
     else if (writePending)
     {
-      if (writeBuffer.position() < writeLength)
+      if (writeBuffer.position() > writeLength)
         writeLength = writeBuffer.position();
 
       long writePosition = position - realFilePosition;
@@ -599,9 +607,7 @@ public class BufferedFileChannel extends FileChannel implements SageFileChannel
 
           // If we wrote beyond the original position, update writeLength to ensure it will be written.
           if (writeBuffer.position() > writeLength)
-          {
             writeLength = writeBuffer.position();
-          }
         }
         finally
         {
