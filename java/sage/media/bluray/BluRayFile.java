@@ -83,7 +83,7 @@ public class BluRayFile extends FileChannel implements BluRayStreamer, SageFileC
     if (targetTitleTmp <= 0)
       targetTitleTmp = bdp.getMainPlaylistIndex() + 1;
     this.targetTitle = Math.max(1, Math.min(targetTitleTmp, bdp.getNumPlaylists()));
-    currPlaylist = bdp.getPlaylist(targetTitleTmp - 1);
+    currPlaylist = bdp.getPlaylist(this.targetTitle - 1);
 
     fileSequence = new java.io.File[currPlaylist.playlistItems.length];
     fileOffsets = new long[fileSequence.length];
@@ -241,14 +241,17 @@ public class BluRayFile extends FileChannel implements BluRayStreamer, SageFileC
   @Override
   public long transferTo(long position, long count, WritableByteChannel target) throws IOException
   {
+    // Because we are looping here, we need to be sure we won't do it endlessly; especially when new
+    // data is unlikely to present itself.
+    long remaining = size() - position;
+    if (remaining < count)
+      count = remaining;
+
     long bytesRead = 0;
 
     try
     {
-      ensureProperFile(false, position);
-      bytesRead = sageFileChannel.transferTo(position - fileOffsets[currFileIndex], count, target);
-
-      if (bytesRead < count)
+      while (bytesRead < count)
       {
         ensureProperFile(false, position);
         bytesRead += sageFileChannel.transferTo(position + bytesRead - fileOffsets[currFileIndex], count - bytesRead, target);
@@ -357,14 +360,20 @@ public class BluRayFile extends FileChannel implements BluRayStreamer, SageFileC
   @Override
   public int read(ByteBuffer dst, long position) throws IOException
   {
-    int readBytes = sageFileChannel.read(dst, position - fileOffsets[currFileIndex]);
+    int readBytes = 0;
+    int count = (int)Math.min(size() - position, (long)dst.remaining());
 
-    if (dst.hasRemaining())
+    try
+    {
+      while (count > readBytes)
+      {
+        ensureProperFile(false, position);
+        readBytes += sageFileChannel.read(dst, position  + readBytes - fileOffsets[currFileIndex]);
+      }
+    }
+    finally
     {
       ensureProperFile(false);
-      if (readBytes == -1)
-        readBytes = 0;
-      readBytes += sageFileChannel.read(dst, position + readBytes - fileOffsets[currFileIndex]);
     }
 
     return readBytes;
@@ -412,9 +421,12 @@ public class BluRayFile extends FileChannel implements BluRayStreamer, SageFileC
   @Override
   public long skip(long n) throws IOException
   {
+    if (n < 0)
+      return 0;
+
     long seek = Math.min(position() + n, totalSize);
-    ensureProperFile(false, seek);
-    return sageFileChannel.skip(n - fileOffsets[currFileIndex]);
+    position(seek);
+    return seek - position();
   }
 
   @Override
@@ -488,6 +500,7 @@ public class BluRayFile extends FileChannel implements BluRayStreamer, SageFileC
 
     return bytesRead;
   }
+
   @Override
   protected void implCloseChannel() throws IOException
   {
