@@ -430,13 +430,17 @@ public class BufferedFileChannel extends FileChannel implements SageFileChannel
     long startPosition = position();
     long bytesWritten;
 
+    long remaining = size() - startPosition;
+    if (count > remaining)
+      count = remaining;
+
     try
     {
       do
       {
         // Don't allow more than what was requested to be written.
-        if (writeBuffer.limit() > count)
-          writeBuffer.limit((int) count);
+        if (writeBuffer.capacity() - writeBuffer.position() > count)
+          writeBuffer.limit(writeBuffer.position() + (int)count);
 
         bytesWritten = src.read(writeBuffer);
 
@@ -445,11 +449,12 @@ public class BufferedFileChannel extends FileChannel implements SageFileChannel
 
         count -= bytesWritten;
 
-        if (!writeBuffer.hasRemaining())
-        {
-          writeBuffer.limit(writeBuffer.capacity());
+        // Because we changed the limit for writeBuffer, hasRemaining isn't a valid test if the
+        // buffer is full. We have to compare against capacity.
+        if (writeBuffer.position() == writeBuffer.capacity())
           flushWriteBuffer();
-        }
+        else
+          writePending = true;
       }
       while (count > 0);
     }
