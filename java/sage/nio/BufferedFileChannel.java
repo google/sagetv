@@ -937,12 +937,10 @@ public class BufferedFileChannel extends FileChannel implements SageFileChannel
   public long size() throws IOException
   {
     // Cache the last size so we don't always need to get it from the source if it doesn't matter.
-    if (readonly)
-      lastSize = fileChannel.size();
-    else
-      lastSize = fileChannel.size() + writeBuffer.position();
-
-    return lastSize;
+    lastSize = fileChannel.size();
+    // Just in case it's ahead due to seeking, we still distinguish between a pending write and no
+    // pending write so that we are returning the actual length after the write buffer is flushed.
+    return writePending ? Math.max(position(), lastSize) : lastSize;
   }
 
   @Override
