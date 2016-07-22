@@ -1430,7 +1430,7 @@ public class IOUtils
    *
    * @param filePath The file to be opened.
    * @param defaultCharset The charset to be used if the BOM is missing.
-   * @return A BufferedReader.
+   * @return A <code>BufferedReader</code>.
    * @throws java.io.IOException If an I/O error occurs.
    */
   public static java.io.BufferedReader openReaderDetectCharset(java.io.File filePath, String defaultCharset) throws java.io.IOException
@@ -1447,7 +1447,7 @@ public class IOUtils
    * @param defaultCharset The charset to be used if the BOM is missing.
    * @param local Pass true if the file is locally accessible. If this value is false, the
    *              BufferedReader will be backed by a MediaServerInputStream.
-   * @return A BufferedReader.
+   * @return A <code>BufferedReader</code>.
    * @throws java.io.IOException If an I/O error occurs.
    */
   public static java.io.BufferedReader openReaderDetectCharset(java.io.File filePath, String defaultCharset, boolean local) throws java.io.IOException
@@ -1555,6 +1555,14 @@ public class IOUtils
       if (fis != null)
         fis.close();
       throw e;
+    }
+    finally
+    {
+      // If the file isn't accessed in some way before the media server timeout, this will prevent
+      // the file from continuing to be accessed. Due to the nature of how we use the objects
+      // returned from this method, that scenario is extremely unlikely.
+      if (!local)
+        sage.NetworkClient.getSN().requestMediaServerAccess(filePath, false);
     }
   }
 
