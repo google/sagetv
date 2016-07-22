@@ -427,9 +427,10 @@ public class BluRayFile extends FileChannel implements BluRayStreamer, SageFileC
     if (n < 0)
       return 0;
 
-    long seek = Math.min(position() + n, totalSize);
+    long pos = position();
+    long seek = Math.min(pos + n, totalSize);
     position(seek);
-    return seek - position();
+    return seek - pos;
   }
 
   @Override
