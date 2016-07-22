@@ -269,36 +269,16 @@ public class ModuleGroup
 
   public void exportSTV(java.io.File file) throws tv.sage.SageException
   {
-    exportSTV(file, null);
-  }
-  public void exportSTV(java.io.File file, Object cryptoKeyObj) throws tv.sage.SageException
-  {
     sage.Widget[] allWidgs = getWidgets();
     if (sage.Sage.DBG) System.out.println("Compressing widgets to STV file: " + file);
     long fp;
     boolean optimize = file.toString().endsWith(".opt.stv");
     try
     {
-      byte[] cryptoKey = null;
-      if (cryptoKeyObj != null)
-      {
-        if (cryptoKeyObj instanceof byte[])
-          cryptoKey = (byte[]) cryptoKeyObj;
-        else if (cryptoKeyObj instanceof Object[])
-        {
-          Object[] objArr = (Object[]) cryptoKeyObj;
-          cryptoKey = new byte[objArr.length];
-          for (int i = 0; i < objArr.length; i++)
-            cryptoKey[i] = Byte.parseByte(objArr[i].toString());
-        }
-      }
       file.createNewFile();
       sage.io.SageDataFile widgetDBout;
 
-      if (cryptoKey == null)
-        widgetDBout = new sage.io.SageDataFile(new sage.io.BufferedSageFile(new sage.io.LocalSageFile(file, "rwd")), sage.Sage.I18N_CHARSET);
-      else
-        widgetDBout = new sage.io.SageDataFile(new sage.io.EncryptedSageFile(new sage.io.BufferedSageFile(new sage.io.LocalSageFile(file, "rwd")), cryptoKey), sage.Sage.I18N_CHARSET);
+      widgetDBout = new sage.io.SageDataFile(new sage.io.BufferedSageFile(new sage.io.LocalSageFile(file, "rwd")), sage.Sage.I18N_CHARSET);
 
       widgetDBout.writeUnencryptedByte((byte) 'W');
       widgetDBout.writeUnencryptedByte((byte) 'I');
@@ -366,7 +346,7 @@ public class ModuleGroup
       fp = widgetDBout.position();
       widgetDBout.setLength(fp);
       widgetDBout.seek(verPos);
-      widgetDBout.writeUnencryptedByte(cryptoKey != null ? (byte) 0x36 : (byte)0x20); // < 0x2F to signify unencrypted
+      widgetDBout.writeByte((byte)0x20); // < 0x2F to signify unencrypted
       widgetDBout.flush();
       widgetDBout.close();
     }
