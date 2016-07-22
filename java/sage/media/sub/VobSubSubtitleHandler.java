@@ -29,7 +29,6 @@ import java.util.ArrayList;
  */
 public class VobSubSubtitleHandler extends SubtitleHandler
 {
-
   /** Creates a new instance of VobSubSubtitleHandler */
   public VobSubSubtitleHandler(sage.VideoFrame vf, sage.media.format.ContainerFormat inFormat)
   {
@@ -64,15 +63,9 @@ public class VobSubSubtitleHandler extends SubtitleHandler
       bitmapFile = new java.io.File(orgSubPath.substring(0, orgSubPath.length() - 3) + "sub");
       if (!sourceFile.isLocalFile())
       {
-        try
-        {
-          sage.NetworkClient.getSN().requestMediaServerAccess(bitmapFile, true);
-          frf = new SageDataFile(new BufferedSageFile(new RemoteSageFile(Sage.preferredServer, bitmapFile), 32768), Sage.I18N_CHARSET);
-        }
-        finally
-        {
-          sage.NetworkClient.getSN().requestMediaServerAccess(bitmapFile, false);
-        }
+        cleanupBitmapFile = true;
+        sage.NetworkClient.getSN().requestMediaServerAccess(bitmapFile, true);
+        frf = new SageDataFile(new BufferedSageFile(new RemoteSageFile(Sage.preferredServer, bitmapFile), 32768), Sage.I18N_CHARSET);
       }
       else
       {
@@ -262,7 +255,7 @@ public class VobSubSubtitleHandler extends SubtitleHandler
     }
     if (bitmapFile != null && cleanupBitmapFile)
     {
-      bitmapFile.delete();
+      sage.NetworkClient.getSN().requestMediaServerAccess(bitmapFile, false);
       bitmapFile = null;
     }
   }
