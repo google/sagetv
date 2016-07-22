@@ -32,7 +32,7 @@ public class SageIOFileChannel extends FileChannel
   private final boolean alwaysFlush;
 
   /**
-   * Wrap a <code>SageIOFileChannel</code> into a <code>FileChannel</code> implementation.
+   * Wrap a <code>SageFileSource</code> into a <code>FileChannel</code> implementation.
    *
    * @param sageFileSource The <code>SageFileSource</code> to use for reading and writing.
    */

@@ -50,14 +50,18 @@ public class BufferedSageFile implements SageFileSource
   // Used for the transferFrom method, ensure this is made null if the writeBuffer is replaced.
   private ByteBuffer writeWrap;
   private byte writeBuffer[];
-  // The write offset is always ahead of the actual file offset by writeOffset.
+  // The write offset is always ahead of the actual file offset (realFilePosition) by writeOffset.
   private int writeOffset = 0;
   // This is used for random writes and seeking to indicate that we are actually ahead or the
-  // current write position for commits. If this value is not 0, we use this instead of writeOffset
-  // to determine how much to write.
+  // current write position for commits. If this value is greater than writeOffset, this is used
+  // instead to determine how much to write.
   private int writeLength = 0;
   // This value is used to determine how many bytes to leave in the write buffer to optimize random
   // writing. This value is adjusted dynamically based on how far behind the last random write was.
+  // The objective of this value is to get random writes re-aligned so that the will fall within the
+  // write buffer. This value will also gradually lower each time the last write was more than the
+  // value of writeOptimizerLimit behind the write buffer since if this isn't helping larger writes
+  // will be more beneficial.
   private int writeOptimizer = 0;
   // This is the limit on how high the value of writeOptimizer is allowed to be. If the file is
   // opened in read/write mode, this is set to writeBuffer.length / 2. If writeBuffer is replaced,
@@ -128,8 +132,8 @@ public class BufferedSageFile implements SageFileSource
     // Optimize loading time if we will not be able to write anyway.
     if (readonly)
     {
-      // Create an empty buffer so we don't need to add checking for null values and we are wasting
-      // less heap. This also has a smaller impact on initialization time.
+      // Create a 0 length buffer so we don't need to add checking for null values and we are
+      // wasting less heap. This also has a smaller impact on initialization time.
       writeBuffer = empty;
     }
     else
@@ -674,7 +678,7 @@ public class BufferedSageFile implements SageFileSource
 
         // If we are past the current write position, set writeLength to indicate that the current
         // write offset is behind what needs to be written. Since we can't get here without being
-        // at most right the write offset, it's safe to assume there will not be any unknown data
+        // at most right at the write offset, it's safe to assume there will not be any unknown data
         // being committed on the next write.
         if (writePosition > writeLength)
         {
