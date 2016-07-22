@@ -15,6 +15,8 @@
  */
 package sage.media.sub;
 
+import sage.Sage;
+
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -26,6 +28,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public abstract class SubtitleHandler
 {
+  public static final boolean SUB_DEBUG = Sage.DBG && Sage.getBoolean("debug_subtitles", false);
+  public static final long NO_MORE_SUBS_LONG_WAIT = sage.Sage.MILLIS_PER_WEEK;
   public static final int PTS_VALID_MASK = 0x1;
   public static final int FLUSH_SUBTITLE_QUEUE = 0x2;
   public static final int CC_SUBTITLE_MASK = 0x10;
@@ -138,7 +142,7 @@ public abstract class SubtitleHandler
     {
       subtitleLock.readLock().unlock();
     }
-    System.out.println("Got Subtitle text=" + rv + " subEntryPos=" + subEntryPos);
+    if (SUB_DEBUG) System.out.println("Got Subtitle text=" + rv + " subEntryPos=" + subEntryPos);
     return rv;
   }
 
@@ -223,7 +227,7 @@ public abstract class SubtitleHandler
     try
     {
       if (subEntries.isEmpty())
-        return sage.Sage.MILLIS_PER_WEEK;
+        return NO_MORE_SUBS_LONG_WAIT;
       if (subEntryPos < 0)
       {
         return Math.max(0, (subEntries.get(0)).start - currMediaTime);
@@ -245,7 +249,7 @@ public abstract class SubtitleHandler
       if (currEntry.duration > 0)
       {
         if (currEntry.start + currEntry.duration <= currMediaTime && nextEntry == null && currBlank)
-          waitTime = sage.Sage.MILLIS_PER_WEEK;
+          waitTime = NO_MORE_SUBS_LONG_WAIT;
         else if (currEntry.start >= currMediaTime || currBlank)
           waitTime = currEntry.start - currMediaTime;
         else if (currEntry.start + currEntry.duration > currMediaTime)
@@ -255,7 +259,7 @@ public abstract class SubtitleHandler
       }
       else
       {
-        waitTime = ((currEntry.start > currMediaTime || (currBlank && subEntryPos == 0)) ? (currEntry.start - currMediaTime) : sage.Sage.MILLIS_PER_WEEK);
+        waitTime = ((currEntry.start > currMediaTime || (currBlank && subEntryPos == 0)) ? (currEntry.start - currMediaTime) : NO_MORE_SUBS_LONG_WAIT);
       }
       if (nextEntry == null)
         return Math.max(0, waitTime);
@@ -372,22 +376,22 @@ public abstract class SubtitleHandler
   // Returns true if the timing delay for the next subtitle update has changed (i.e. VF needs a kick)
   public boolean postSubtitleInfo(long time, long dur, byte[] rawText, int flags)
   {
-    if ((flags & FLUSH_SUBTITLE_QUEUE) == FLUSH_SUBTITLE_QUEUE)
-    {
-      subtitleLock.writeLock().lock();
+    subtitleLock.writeLock().lock();
 
-      try
+    try
+    {
+      if ((flags & FLUSH_SUBTITLE_QUEUE) == FLUSH_SUBTITLE_QUEUE)
       {
         subEntries.clear();
         subEntryPos = -1;
       }
-      finally
-      {
-        subtitleLock.writeLock().unlock();
-      }
-    }
 
-    return insertEntryForPostedInfo(time, dur, rawText);
+      return insertEntryForPostedInfo(time, dur, rawText);
+    }
+    finally
+    {
+      subtitleLock.writeLock().unlock();
+    }
   }
 
   protected boolean insertEntryForPostedInfo(long time, long dur, byte[] rawText)
@@ -478,7 +482,7 @@ public abstract class SubtitleHandler
   }
 
   // This deals with resolving server references to external subtitle files and downloading them to temp storage to use ourself
-  protected static java.io.File getLoadableSubtitleFile(sage.MediaFile mf, java.io.File subFile) throws java.io.IOException
+  /*protected static java.io.File getLoadableSubtitleFile(sage.MediaFile mf, java.io.File subFile) throws java.io.IOException
   {
     if (mf.isLocalFile())
     {
@@ -489,7 +493,7 @@ public abstract class SubtitleHandler
       if (sage.Sage.EMBEDDED || sage.NetworkClient.getSN().requestMediaServerAccess(subFile, true))
       {
         java.io.File tmpFile = java.io.File.createTempFile("stv", ".sub");
-        if (sage.Sage.DBG) System.out.println("Downloading remote subtitle file from: " + subFile + " to local path: " + tmpFile);
+        if (SUB_DEBUG) System.out.println("Downloading remote subtitle file from: " + subFile + " to local path: " + tmpFile);
         tmpFile.deleteOnExit();
         mf.copyToLocalStorage(subFile, tmpFile);
         return tmpFile;
@@ -497,7 +501,7 @@ public abstract class SubtitleHandler
       else
         throw new java.io.IOException("Cannot get MediaServer access to remote subtitle file:" + subFile);
     }
-  }
+  }*/
 
   // This handles various formats for time range strings used in subtitle files.
   // This'll return {start, duration} for the array

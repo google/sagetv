@@ -33,7 +33,7 @@ public class MP4TextSubtitleHandler extends SubtitleHandler
   public void processHeaderInfo(byte[] configInfo)
   {
     // TODO: Get the real format information once we do stylized text
-    if (sage.Sage.DBG) System.out.println("MP4Text handler got config data");
+    if (SUB_DEBUG) System.out.println("MP4Text handler got config data");
 
     if (isTX3G)
     {

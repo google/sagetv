@@ -48,12 +48,11 @@ public class VobSubSubtitleHandler extends SubtitleHandler
     sage.media.format.SubpictureFormat[] subs = mediaFormat.getSubpictureFormats(sage.media.format.MediaFormat.VOBSUB);
     if (subs.length == 0)
       return;
-    java.io.File subFile = null;
+    java.io.File subFile = new java.io.File(subs[0].getPath());
     java.io.BufferedReader inStream = null;
     getLanguages();
     try
     {
-      subFile = getLoadableSubtitleFile(sourceFile, new java.io.File(subs[0].getPath()));
       inStream = sage.IOUtils.openReaderDetectCharset(subFile, sage.Sage.BYTE_CHARSET, sourceFile.isLocalFile());
       String line = inStream.readLine();
       if (line != null && line.contains("VobSub index file"))
@@ -65,8 +64,15 @@ public class VobSubSubtitleHandler extends SubtitleHandler
       bitmapFile = new java.io.File(orgSubPath.substring(0, orgSubPath.length() - 3) + "sub");
       if (!sourceFile.isLocalFile())
       {
-        sage.NetworkClient.getSN().requestMediaServerAccess(bitmapFile, true);
-        frf = new SageDataFile(new BufferedSageFile(new RemoteSageFile(Sage.preferredServer, bitmapFile), 32768), Sage.I18N_CHARSET);
+        try
+        {
+          sage.NetworkClient.getSN().requestMediaServerAccess(bitmapFile, true);
+          frf = new SageDataFile(new BufferedSageFile(new RemoteSageFile(Sage.preferredServer, bitmapFile), 32768), Sage.I18N_CHARSET);
+        }
+        finally
+        {
+          sage.NetworkClient.getSN().requestMediaServerAccess(bitmapFile, false);
+        }
       }
       else
       {
@@ -92,7 +98,7 @@ public class VobSubSubtitleHandler extends SubtitleHandler
               currLang = line.substring(3, idx).trim();
             subEntries = new ArrayList<SubtitleEntry>();
             subLangEntryMap.put(currLang, subEntries);
-            if (sage.Sage.DBG) System.out.println("VobSub IDX loading found language: " + currLang);
+            if (SUB_DEBUG) System.out.println("VobSub IDX loading found language: " + currLang);
             idx = line.indexOf("index:");
           }
         }
@@ -231,7 +237,7 @@ public class VobSubSubtitleHandler extends SubtitleHandler
           info.append(' ');
         }
       }
-      if (sage.Sage.DBG)
+      if (SUB_DEBUG)
       {
         System.out.println("Loaded VobSub palette of: " + info);
       }
@@ -536,7 +542,7 @@ public class VobSubSubtitleHandler extends SubtitleHandler
           // There's an extra 12 bytes a the end which I'm not sure what its for yet
           // NOTE: It's probably the first subtitle's data
           // Nothing to insert here
-          if (sage.Sage.DBG) System.out.println("Got the subpicture palette for embedded VobSub!");
+          if (SUB_DEBUG) System.out.println("Got the subpicture palette for embedded VobSub!");
           return false;
         }
       }
