@@ -317,15 +317,15 @@ public class RemoteSageFile implements SageFileSource
     try
     {
       outStream.write(("READ " + remoteOffset + " " + len + "\r\n").getBytes(Sage.BYTE_CHARSET));
-      inStream.readFully(b, off, len);
       outStream.flush();
+      inStream.readFully(b, off, len);
     }
     catch (IOException e)
     {
       reconnect();
       outStream.write(("READ " + remoteOffset + " " + len + "\r\n").getBytes(Sage.BYTE_CHARSET));
-      inStream.readFully(b, off, len);
       outStream.flush();
+      inStream.readFully(b, off, len);
     }
 
     remoteOffset += len;
@@ -341,23 +341,19 @@ public class RemoteSageFile implements SageFileSource
   @Override
   public void readFully(byte[] b, int off, int len) throws IOException
   {
-    if (len == 0)
-      return;
-
-    int bytesRead = read(b, off, len);
-
+    int bytesRead;
     while (len > 0)
     {
+      bytesRead = read(b, off, len);
+
       if (bytesRead == -1)
         throw new EOFException("End of file reached!");
 
-      len -= bytesRead;
-      off += bytesRead;
-
-      if (len == 0)
+      if (len == bytesRead)
         break;
 
-      bytesRead = read(b, off, len);
+      len -= bytesRead;
+      off += bytesRead;
     }
   }
 
