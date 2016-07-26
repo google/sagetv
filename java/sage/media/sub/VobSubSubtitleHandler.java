@@ -54,7 +54,7 @@ public class VobSubSubtitleHandler extends SubtitleHandler
     {
       inStream = sage.IOUtils.openReaderDetectCharset(subFile, sage.Sage.BYTE_CHARSET, sourceFile.isLocalFile());
       String line = inStream.readLine();
-      if (line != null && line.contains("VobSub index file"))
+      if (line != null && line.indexOf("VobSub index file") == -1)
       {
         if (sage.Sage.DBG) System.out.println("Invalid VobSub IDX file, bad comment on first line: " + line);
         return;
