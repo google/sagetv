@@ -23,7 +23,7 @@ public class PlaylistMark
 {
 
 	/** Creates a new instance of PlaylistMark */
-	public PlaylistMark(sage.FasterRandomFile inStream) throws java.io.IOException
+	public PlaylistMark(sage.io.SageDataFile inStream) throws java.io.IOException
 	{
 		inStream.skipBytes(1); // reserved
 		type = inStream.read();

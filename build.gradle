@@ -91,6 +91,14 @@ sourceSets {
             ]
         }
     }
+
+	test {
+		java {
+			srcDirs = [
+				'test/java'
+			]
+		}
+	}
 	
 	// Miniclient configuration only specifies the Minimal files and
 	// javac will find and compile all the dependencies based on the
@@ -111,6 +119,8 @@ sourceSets {
 }
 
 dependencies {
+	testCompile 'org.testng:testng:6.1.1'
+
 	compile files(
 		'third_party/UPnPLib/sbbi-upnplib-1.0.3.jar',
 
@@ -124,11 +134,17 @@ dependencies {
 	compile "org.jogamp.gluegen:gluegen-rt-main:$jogampVer"
 	
 	
-	// Miniclient dependendencies for compiling
+	// Miniclient dependencies for compiling
 	miniclientCompile "org.jogamp.gluegen:gluegen-rt-main:$jogampVer"
 	miniclientCompile "org.jogamp.jogl:jogl-all-main:$jogampVer"
 }
 
+test {
+	useTestNG()
+	reports.html.destination = file("$sageBuildDir/reports/testng")
+	systemProperty 'io_test_file', "$sageBuildDir/delete-io-testng."
+	systemProperty 'nio_test_file', "$sageBuildDir/delete-nio-testng."
+}
 
 /**
  * this is sort of a hack... normally we'd never set the -sourcepath on a java compile
@@ -344,7 +360,7 @@ task (restoreSageConstants) << {
 
 // task dependencies
 compileJava.dependsOn updateBuildNumber
-sageJar.dependsOn cleanSageJar, classes
+sageJar.dependsOn cleanSageJar, classes, test
 miniclientJar.dependsOn clean, miniclientClasses, cleanMiniJar
 linuxMiniClientRelease.dependsOn miniclientJar
 sageJar.finalizedBy restoreSageConstants

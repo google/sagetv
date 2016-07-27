@@ -313,7 +313,7 @@ public class FormatParser
     catch (Throwable t)
     {
       if (sage.Sage.DBG) System.out.println("ERROR parsing media file " + f + " of:" + t);
-      t.printStackTrace();
+      t.printStackTrace(System.out);
       return null;
     }
   }
@@ -547,7 +547,7 @@ public class FormatParser
     catch (Throwable t)
     {
       if (sage.Sage.DBG) System.out.println("ERROR parsing media file " + f + " of:" + t);
-      t.printStackTrace();
+      t.printStackTrace(System.out);
       return null;
     }
   }

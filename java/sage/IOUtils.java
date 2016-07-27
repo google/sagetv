@@ -15,6 +15,9 @@
  */
 package sage;
 
+import sage.io.RemoteSageFile;
+import sage.io.SageInputStream;
+
 public class IOUtils
 {
   private IOUtils()
@@ -1405,18 +1408,64 @@ public class IOUtils
     return sb.toString();
   }
 
-  // Creates a java.io.BufferedReader for the specified file and checks the first two bytes for the Unicode BOM and sets the
-  // charset accordingly; otherwise if there's no BOM it'll use the passed in defaultCharset
+  /**
+   * Creates a java.io.BufferedReader for the specified file and checks the first two bytes for the
+   * Unicode BOM and sets the charset accordingly; otherwise if there's no BOM it'll use the passed
+   * in defaultCharset
+   *
+   * @param filePath The file to be opened.
+   * @param defaultCharset The charset to be used if the BOM is missing.
+   * @return A BufferedReader.
+   * @throws java.io.IOException If an I/O error occurs.
+   */
   public static java.io.BufferedReader openReaderDetectCharset(String filePath, String defaultCharset) throws java.io.IOException
   {
-    return openReaderDetectCharset(new java.io.File(filePath), defaultCharset);
+    return openReaderDetectCharset(new java.io.File(filePath), defaultCharset, true);
   }
+
+  /**
+   * Creates a java.io.BufferedReader for the specified file and checks the first two bytes for the
+   * Unicode BOM and sets the charset accordingly; otherwise if there's no BOM it'll use the passed
+   * in defaultCharset
+   *
+   * @param filePath The file to be opened.
+   * @param defaultCharset The charset to be used if the BOM is missing.
+   * @return A <code>BufferedReader</code>.
+   * @throws java.io.IOException If an I/O error occurs.
+   */
   public static java.io.BufferedReader openReaderDetectCharset(java.io.File filePath, String defaultCharset) throws java.io.IOException
   {
-    java.io.FileInputStream fis = null;
+    return openReaderDetectCharset(filePath, defaultCharset, true);
+  }
+
+  /**
+   * Creates a java.io.BufferedReader for the specified file and checks the first two bytes for the
+   * Unicode BOM and sets the charset accordingly; otherwise if there's no BOM it'll use the passed
+   * in defaultCharset
+   *
+   * @param filePath The file to be opened.
+   * @param defaultCharset The charset to be used if the BOM is missing.
+   * @param local Pass true if the file is locally accessible. If this value is false, the
+   *              BufferedReader will be backed by a MediaServerInputStream.
+   * @return A <code>BufferedReader</code>.
+   * @throws java.io.IOException If an I/O error occurs.
+   */
+  public static java.io.BufferedReader openReaderDetectCharset(java.io.File filePath, String defaultCharset, boolean local) throws java.io.IOException
+  {
+    java.io.InputStream fis = null;
     try
     {
-      fis = new java.io.FileInputStream(filePath);
+      if (local)
+        fis = new java.io.FileInputStream(filePath);
+      else
+      {
+        // This is crucial. If we don't do this step the file will almost certainly be inaccessible.
+        sage.NetworkClient.getSN().requestMediaServerAccess(filePath, true);
+        fis = new SageInputStream(new RemoteSageFile(Sage.preferredServer, filePath, true));
+      }
+
+      if (fis.markSupported()) fis.mark(32768);
+
       int b1 = fis.read();
       int b2 = fis.read();
       // Check for big/little endian unicode marker; otherwise use the default charset to open
@@ -1480,11 +1529,26 @@ public class IOUtils
           targetCharset = Sage.EMBEDDED ? Sage.BYTE_CHARSET : null;
         }
       }
-      fis.close();
-      if (targetCharset == null)
-        return new java.io.BufferedReader(new java.io.InputStreamReader(new java.io.FileInputStream(filePath)));
+
+
+      if (fis.markSupported())
+      {
+        fis.reset();
+      }
       else
-        return new java.io.BufferedReader(new java.io.InputStreamReader(new java.io.FileInputStream(filePath), targetCharset));
+      {
+        fis.close();
+
+        if (local)
+          fis = new java.io.FileInputStream(filePath);
+        else
+          fis = new SageInputStream(new RemoteSageFile(Sage.preferredServer, filePath, true));
+      }
+
+      if (targetCharset == null)
+        return new java.io.BufferedReader(new java.io.InputStreamReader(fis));
+      else
+        return new java.io.BufferedReader(new java.io.InputStreamReader(fis, targetCharset));
     }
     catch (java.io.IOException e)
     {
@@ -1492,6 +1556,19 @@ public class IOUtils
         fis.close();
       throw e;
     }
+    finally
+    {
+      // If the file isn't accessed in some way before the media server timeout, this will prevent
+      // the file from continuing to be accessed. Due to the nature of how we use the objects
+      // returned from this method, that scenario is extremely unlikely.
+      if (!local)
+        sage.NetworkClient.getSN().requestMediaServerAccess(filePath, false);
+    }
+  }
+
+  public static byte[] getCryptoKeys()
+  {
+    return (byte[]) (SageConstants.LITE ? UIManager.a : Sage.q);
   }
 
   public static String calcMD5(java.io.File f)
