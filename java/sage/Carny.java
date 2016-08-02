@@ -30,6 +30,7 @@ import java.util.Vector;
 public final class Carny implements Runnable
 {
   private static final String GLOBAL_WATCH_COUNT = "global_watch_count";
+  private static final String LIMITED_CARNY_INIT = "limited_carny_init";
   static final String CARNY_KEY = "carny";
 
   private static final long LOOKAHEAD = Sage.EMBEDDED ? 10*24*60*60*1000L : 14*24*60*60*1000L;
@@ -115,6 +116,8 @@ public final class Carny implements Runnable
     if (!updateStatus) doneInit = true;
     stdProcessing();
     doneInit = true;
+    if (Sage.getBoolean(LIMITED_CARNY_INIT, Sage.EMBEDDED))
+      kick();
   }
 
   public void run()
@@ -1021,7 +1024,7 @@ public final class Carny implements Runnable
       if (currAgent == null || currAgent.testAgentFlag(Agent.DISABLED_FLAG))
         continue;
 
-      if ((!doneInit && Sage.getBoolean("limited_carny_init", Sage.EMBEDDED)) ||
+      if ((!doneInit && Sage.getBoolean(LIMITED_CARNY_INIT, Sage.EMBEDDED)) ||
           (Sage.EMBEDDED && Seeker.getInstance().getDisableProfilerRecording()))
       {
         if (!currAgent.isFavorite())
