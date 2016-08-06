@@ -19,6 +19,7 @@ package sage;
 import sage.media.format.MPEGParser2;
 
 import java.nio.channels.FileChannel;
+import java.nio.file.StandardOpenOption;
 import java.util.StringTokenizer;
 
 public class MediaServer implements Runnable
@@ -407,7 +408,7 @@ public class MediaServer implements Runnable
         }
       }
       catch (Exception e){}
-      try
+      /*try
       {
         if (uploadStream != null)
         {
@@ -415,7 +416,7 @@ public class MediaServer implements Runnable
           uploadStream = null;
         }
       }
-      catch (Exception e){}
+      catch (Exception e){}*/
       currFile = null;
     }
 
@@ -561,8 +562,8 @@ public class MediaServer implements Runnable
       }
       if (uploadOK)
       {
-        uploadStream = new java.io.FileOutputStream(currFile);
-        fileChannel = uploadStream.getChannel();
+        //uploadStream = new java.io.FileOutputStream(currFile);
+        fileChannel = FileChannel.open(currFile.toPath(), StandardOpenOption.CREATE, StandardOpenOption.READ, StandardOpenOption.WRITE);
         if (reply)
         {
           commBufWrite.clear();
@@ -1447,14 +1448,14 @@ public class MediaServer implements Runnable
         }
         catch (Exception e)
         {}
-        try
+        /*try
         {
           if (uploadStream != null)
             uploadStream.close();
           uploadStream = null;
         }
         catch (Exception e)
-        {}
+        {}*/
         try
         {
           s.close();
@@ -1496,7 +1497,7 @@ public class MediaServer implements Runnable
     protected MediaFile currMF;
     protected FileDownloader downer;
     protected java.io.FileInputStream fileStream;
-    protected java.io.FileOutputStream uploadStream;
+    //protected java.io.FileOutputStream uploadStream;
     protected java.nio.channels.FileChannel fileChannel;
     protected java.nio.ByteBuffer commBufWrite;
     protected java.nio.ByteBuffer commBufRead;

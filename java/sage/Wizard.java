@@ -15,33 +15,70 @@
  */
 package sage;
 
+import static sage.SageConstants.LITE;
+
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
-import org.apache.lucene.index.*;
+import org.apache.lucene.index.CorruptIndexException;
+import org.apache.lucene.index.IndexCommit;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
+import org.apache.lucene.index.NoMergePolicy;
+import org.apache.lucene.index.NoMergeScheduler;
+import org.apache.lucene.index.SnapshotDeletionPolicy;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause.Occur;
-import org.apache.lucene.search.*;
-import org.apache.lucene.store.*;
-import sage.io.BufferedSageFile;
-import sage.io.EncryptedSageFile;
-import sage.io.LocalSageFile;
-import sage.io.SageDataFile;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.PrefixQuery;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.store.LockObtainFailedException;
+import org.apache.lucene.store.MMapDirectory;
+import org.apache.lucene.store.NoLockFactory;
+import org.apache.lucene.store.RAMDirectory;
+
 import sage.media.format.ContainerFormat;
 import sage.media.format.FormatParser;
 import sage.msg.MsgManager;
 import sage.msg.SystemMessage;
 
-import java.io.*;
+import sage.io.BufferedSageFile;
+import sage.io.EncryptedSageFile;
+import sage.io.LocalSageFile;
+import sage.io.SageDataFile;
+
+import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.net.Socket;
 import java.text.DateFormat;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Properties;
+import java.util.Set;
+import java.util.Vector;
 import java.util.regex.Pattern;
-
-import static sage.SageConstants.LITE;
 
 /*
  * DB File Format:

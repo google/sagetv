@@ -79,7 +79,7 @@ public class SRTSubtitleHandler extends SubtitleHandler
     return sage.media.format.MediaFormat.SRT;
   }
 
-  public static long parseSRTTime(String s)
+  /*public static long parseSRTTime(String s)
   {
     if (s.length() != 12)
     {
@@ -100,7 +100,7 @@ public class SRTSubtitleHandler extends SubtitleHandler
       return -1;
     }
     return rv;
-  }
+  }*/
 
   @Override
   public void loadSubtitlesFromFiles(sage.MediaFile sourceFile)
@@ -137,7 +137,7 @@ public class SRTSubtitleHandler extends SubtitleHandler
         @Override
         public void run()
         {
-          if (sage.Sage.DBG) System.out.println("Monitoring for new SRT subtitles.");
+          if (SUB_DEBUG) System.out.println("Monitoring for new SRT subtitles.");
 
           try
           {
@@ -257,7 +257,7 @@ public class SRTSubtitleHandler extends SubtitleHandler
             // missing.
             if (!inStream.markSupported())
             {
-              if (sage.Sage.DBG) System.out.println("WARNING: mark is not supported. SRT subtitle retry is not available.");
+              if (SUB_DEBUG) System.out.println("WARNING: mark is not supported. SRT subtitle retry is not available.");
             }
           }
         }
@@ -270,7 +270,7 @@ public class SRTSubtitleHandler extends SubtitleHandler
           // sorted on insertion.
           if (lastSubtitle[i] == SUBTITLE_RETRY)
           {
-            if (sage.Sage.DBG) System.out.println("Retrying last SRT subtitle.");
+            if (SUB_DEBUG) System.out.println("Retrying last SRT subtitle.");
 
             subtitleLock.writeLock().lock();
 
@@ -365,7 +365,7 @@ public class SRTSubtitleHandler extends SubtitleHandler
             }
 
             // Add this new Subtitle Entry
-            if (sage.Sage.DBG) System.out.println("Found new SRT subtitle entry in=" + inTime + " dur=" + duration + " text=" + stringBuilder);
+            if (SUB_DEBUG) System.out.println("Found new SRT subtitle entry in=" + inTime + " dur=" + duration + " text=" + stringBuilder);
 
             // If the last line was null, it's possible that we have an incomplete subtitle. We
             // added the subtitle anyway, but on the next pass remove it and re-parse it one more
@@ -452,7 +452,7 @@ public class SRTSubtitleHandler extends SubtitleHandler
     if (monitorThread == null)
       return next;
 
-    if (next == sage.Sage.MILLIS_PER_WEEK)
+    if (next == NO_MORE_SUBS_LONG_WAIT)
     {
       // We need to set this flag outside of synchronization, so if the monitoring thread is
       // currently parsing subtitles, it will return quickly once it finds a subtitle that's past
@@ -477,7 +477,7 @@ public class SRTSubtitleHandler extends SubtitleHandler
         next = super.getTimeTillUpdate(currMediaTime);
       }
 
-      if (next == sage.Sage.MILLIS_PER_WEEK)
+      if (next == NO_MORE_SUBS_LONG_WAIT)
       {
         // This will cause VideoFrame to come back in a half second. Hopefully we have new subtitles
         // at this time. During commercial breaks there may not be any subtitles, so it's best to

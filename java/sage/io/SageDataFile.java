@@ -677,27 +677,9 @@ public class SageDataFile implements SageFileSource, DataInput, DataOutput
   }
 
   @Override
-  public boolean isActiveFile()
-  {
-    return sageFileSource.isActiveFile();
-  }
-
-  @Override
   public boolean isReadOnly()
   {
     return sageFileSource.isReadOnly();
-  }
-
-  @Override
-  public String executeCommand(String command) throws IOException
-  {
-    return sageFileSource.executeCommand(command);
-  }
-
-  @Override
-  public String executeCommand(byte[] command, int off, int len) throws IOException
-  {
-    return sageFileSource.executeCommand(command, off, len);
   }
 
   public boolean isEncrypted()

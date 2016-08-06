@@ -189,40 +189,9 @@ public class LocalFileChannel extends FileChannel implements SageFileChannel
   }
 
   @Override
-  public boolean isActiveFile()
-  {
-    // TODO: Can we look this up somewhere?
-    return false;
-  }
-
-  @Override
   public boolean isReadOnly()
   {
     return readonly;
-  }
-
-  /**
-   * There aren't any special commands for files opened locally.
-   *
-   * @param command The command to execute.
-   * @return <code>null</code>
-   */
-  @Override
-  public String executeCommand(String command) throws IOException
-  {
-    return null;
-  }
-
-  /**
-   * There aren't any special commands for files opened locally.
-   *
-   * @param command The command to execute.
-   * @return <code>null</code>
-   */
-  @Override
-  public String executeCommand(ByteBuffer command) throws IOException
-  {
-    return null;
   }
 
   @Override

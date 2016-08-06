@@ -111,7 +111,7 @@ public class SUBSubtitleHandler extends SubtitleHandler
                   catch (NumberFormatException nfe)
                   {
                   }
-                  if (sage.Sage.DBG) System.out.println("MicroDVD .sub format using fps=" + fps);
+                  if (SUB_DEBUG) System.out.println("MicroDVD .sub format using fps=" + fps);
                 }
                 if (addMe)
                 {
@@ -132,7 +132,7 @@ public class SUBSubtitleHandler extends SubtitleHandler
 
                   try
                   {
-                    if (sage.Sage.DBG) System.out.println("Added new MicroDVD Sub entry: " +
+                    if (SUB_DEBUG) System.out.println("Added new MicroDVD Sub entry: " +
                         (newSubLang.size() > 0 ? newSubLang.get(newSubLang.size() - 1) : ""));
                   }
                   finally
@@ -210,7 +210,7 @@ public class SUBSubtitleHandler extends SubtitleHandler
             if (sb.length() > 0)
             {
               // Add this new Subtitle Entry
-              if (sage.Sage.DBG) System.out.println("Found new SUB subtitle entry in=" + inTime + " dur=" + duration + " text=" + sb);
+              if (SUB_DEBUG) System.out.println("Found new SUB subtitle entry in=" + inTime + " dur=" + duration + " text=" + sb);
 
               subtitleLock.writeLock().lock();
 

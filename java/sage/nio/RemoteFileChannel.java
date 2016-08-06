@@ -37,6 +37,7 @@ public class RemoteFileChannel extends FileChannel implements SageFileChannel
   private final String hostname;
   private String remoteFilename;
   private final boolean readonly;
+  private final int uploadId;
 
   private boolean activeFile = false;
   private long currTotalSize = 0;
@@ -49,31 +50,60 @@ public class RemoteFileChannel extends FileChannel implements SageFileChannel
   private boolean closed = false;
 
   /**
-   * Open a remote file as a <code>FileChannel</code>.
+   * Open a remote file as a <code>FileChannel</code> for read only access.
    *
    * @param hostname The hostname of the media server hosting the file.
    * @param file The file to be opened.
-   * @param readonly Open this file as read only.
    * @throws IOException If there is an I/O related error.
    */
-  public RemoteFileChannel(String hostname, File file, boolean readonly) throws IOException
+  public RemoteFileChannel(String hostname, File file) throws IOException
   {
-    this(hostname, file.getPath(), readonly);
+    this(hostname, file.getPath());
   }
 
   /**
-   * Open a remote file as a <code>FileChannel</code>.
+   * Open a remote file as a <code>FileChannel</code> for read only access.
    *
    * @param hostname The hostname of the media server hosting the file.
    * @param name The the full path and name of the file to be opened.
-   * @param readonly Open this file as read only.
    * @throws IOException If there is an I/O related error.
    */
-  public RemoteFileChannel(String hostname, String name, boolean readonly) throws IOException
+  public RemoteFileChannel(String hostname, String name) throws IOException
   {
     this.hostname = hostname;
     remoteFilename = name;
-    this.readonly = readonly;
+    this.readonly = true;
+    this.uploadId = -1;
+    connect();
+  }
+
+  /**
+   * Open a remote file as a <code>FileChannel</code> for read/write access.
+   *
+   * @param hostname The hostname of the media server hosting the file.
+   * @param file The file to be opened.
+   * @param uploadId The ID that authorizes write access.
+   * @throws IOException If there is an I/O related error.
+   */
+  public RemoteFileChannel(String hostname, File file, int uploadId) throws IOException
+  {
+    this(hostname, file.getPath(), uploadId);
+  }
+
+  /**
+   * Open a remote file as a <code>FileChannel</code> for read/write access.
+   *
+   * @param hostname The hostname of the media server hosting the file.
+   * @param name The the full path and name of the file to be opened.
+   * @param uploadId The ID that authorizes write access.
+   * @throws IOException If there is an I/O related error.
+   */
+  public RemoteFileChannel(String hostname, String name, int uploadId) throws IOException
+  {
+    this.hostname = hostname;
+    remoteFilename = name;
+    this.readonly = false;
+    this.uploadId = uploadId;
     connect();
   }
 
@@ -109,8 +139,18 @@ public class RemoteFileChannel extends FileChannel implements SageFileChannel
       return;
 
     commBuf.clear();
-    commBuf.put("OPENW ".getBytes(Sage.BYTE_CHARSET));
-    commBuf.put(remoteFilename.getBytes(StandardCharsets.UTF_16BE));
+    if (readonly)
+    {
+      commBuf.put("OPENW ".getBytes(Sage.BYTE_CHARSET));
+      commBuf.put(remoteFilename.getBytes(StandardCharsets.UTF_16BE));
+    }
+    else
+    {
+      commBuf.put("WRITEOPENW ".getBytes(Sage.BYTE_CHARSET));
+      commBuf.put(remoteFilename.getBytes(StandardCharsets.UTF_16BE));
+      commBuf.put((" " + Integer.toString(uploadId)).getBytes(Sage.BYTE_CHARSET));
+    }
+
     commBuf.put("\r\n".getBytes(Sage.BYTE_CHARSET));
     commBuf.flip();
     socket.write(commBuf);
@@ -164,11 +204,13 @@ public class RemoteFileChannel extends FileChannel implements SageFileChannel
   {
     // We can't read more than what is in the file. The first part checks a cached variable, the
     // second part checks the file directly.
-    if (position + count > maxRemoteSize && position + count > size())
-      count = maxRemoteSize - position;
+    count = Math.min(
+        maxRemoteSize == 0 || (position + count >= maxRemoteSize && activeFile) ?
+            reallyGetSize() - position : maxRemoteSize - position,
+        count);
 
     // If we are trying to read beyond the end of the file, don't read anything.
-    return (count < 0) ? 0 : count;
+    return (count == 0) ? 0 : count;
   }
 
   // You must synchronize startRead and readMore in the method using these so no other
@@ -329,7 +371,7 @@ public class RemoteFileChannel extends FileChannel implements SageFileChannel
     }
 
     // All of the buffers do not have space available.
-    if (offset == length)
+    if (!bufferAvailable)
       return 0;
 
     totalLength = getMaxRead(remoteOffset, totalLength);
@@ -401,7 +443,7 @@ public class RemoteFileChannel extends FileChannel implements SageFileChannel
     }
 
     // All of the buffers do not have data available.
-    if (offset == length)
+    if (!bufferAvailable)
       return 0;
 
     returnValue = startWrite(remoteOffset, totalLength, srcs[offset++], true);
@@ -440,18 +482,24 @@ public class RemoteFileChannel extends FileChannel implements SageFileChannel
     return remoteOffset - oldOffset;
   }
 
-  @Override
-  public long size() throws IOException
+  private long reallyGetSize() throws IOException
   {
-    if (!activeFile && maxRemoteSize > 0)
-      return maxRemoteSize;
-
     String response = executeCommand("SIZE\r\n");
 
     long currAvailSize = Long.parseLong(response.substring(0, response.indexOf(' ')));
     currTotalSize = Long.parseLong(response.substring(response.indexOf(' ') + 1));
     maxRemoteSize = Math.max(maxRemoteSize, currAvailSize);
     activeFile = currAvailSize != currTotalSize;
+    return maxRemoteSize;
+  }
+
+  @Override
+  public long size() throws IOException
+  {
+    if (activeFile || maxRemoteSize == 0)
+    {
+      return reallyGetSize();
+    }
     return maxRemoteSize;
   }
 
@@ -656,28 +704,20 @@ public class RemoteFileChannel extends FileChannel implements SageFileChannel
   }
 
   @Override
-  public boolean isActiveFile()
-  {
-    return activeFile;
-  }
-
-  @Override
   public boolean isReadOnly()
   {
     return readonly;
   }
 
-  @Override
   public synchronized String executeCommand(String command) throws IOException
   {
     commBuf.clear();
-    commBuf.put((command.endsWith("\r\n") ? command : command + "\r\n").getBytes(Sage.BYTE_CHARSET));
+    commBuf.put((command.endsWith("\r\n") ? command : (command + "\r\n")).getBytes(Sage.BYTE_CHARSET));
     commBuf.flip();
 
     return executeCommand(commBuf);
   }
 
-  @Override
   public synchronized String executeCommand(ByteBuffer command) throws IOException
   {
     int position = command.position();

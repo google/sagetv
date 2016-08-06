@@ -15,7 +15,9 @@
  */
 package sage;
 
+import sage.io.BufferedSageFile;
 import sage.io.LocalSageFile;
+import sage.io.RemoteSageFile;
 
 public class FileDownloader extends SystemTask
 {
@@ -241,7 +243,7 @@ public class FileDownloader extends SystemTask
           }
           break;
         }
-        fileOut = new LocalSageFile(myDestFile, false);
+        fileOut = new BufferedSageFile(new LocalSageFile(myDestFile, false));
         if (captureMode)
           fileOut.seek(fileOut.length());
         else
@@ -320,7 +322,7 @@ public class FileDownloader extends SystemTask
         outStream.flush();
         str = Sage.readLineBytes(inStream);
         remoteSize = Long.parseLong(str.substring(0, str.indexOf(' ')));
-        fileOut = new LocalSageFile(myDestFile, false);
+        fileOut = new BufferedSageFile(new LocalSageFile(myDestFile, false));
         if (captureMode)
           fileOut.seek(fileOut.length());
         else

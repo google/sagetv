@@ -19,8 +19,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
-public class LocalSageFile extends RandomAccessFile implements SageFileSource
+public class LocalSageFile implements SageFileSource
 {
+  private final RandomAccessFile randomAccessFile;
   private final boolean readonly;
 
   /**
@@ -32,7 +33,7 @@ public class LocalSageFile extends RandomAccessFile implements SageFileSource
    */
   public LocalSageFile(File file, boolean readonly) throws IOException
   {
-    super(file.getPath(), readonly ? "r" : "rw");
+    randomAccessFile = new RandomAccessFile(file.getPath(), readonly ? "r" : "rw");
     this.readonly = readonly;
   }
 
@@ -45,7 +46,7 @@ public class LocalSageFile extends RandomAccessFile implements SageFileSource
    */
   public LocalSageFile(String name, boolean readonly) throws IOException
   {
-    super(name, readonly ? "r" : "rw");
+    randomAccessFile = new RandomAccessFile(name, readonly ? "r" : "rw");
     this.readonly = readonly;
   }
 
@@ -61,7 +62,7 @@ public class LocalSageFile extends RandomAccessFile implements SageFileSource
    */
   public LocalSageFile(File file, String mode) throws IOException
   {
-    super(file, mode);
+    randomAccessFile = new RandomAccessFile(file, mode);
     readonly = !mode.contains("w");
   }
 
@@ -77,24 +78,24 @@ public class LocalSageFile extends RandomAccessFile implements SageFileSource
    */
   public LocalSageFile(String name, String mode) throws IOException
   {
-    super(name, mode);
+    randomAccessFile = new RandomAccessFile(name, mode);
     readonly = !mode.contains("w");
   }
 
   @Override
   public void randomWrite(long pos, byte[] b, int off, int len) throws IOException
   {
-    long localFilePointer = super.getFilePointer();
+    long localFilePointer = randomAccessFile.getFilePointer();
     try
     {
       if (localFilePointer != pos)
-        super.seek(pos);
+        randomAccessFile.seek(pos);
 
-      super.write(b, off, len);
+      randomAccessFile.write(b, off, len);
     }
     finally
     {
-      super.seek(localFilePointer);
+      randomAccessFile.seek(localFilePointer);
     }
   }
 
@@ -104,11 +105,11 @@ public class LocalSageFile extends RandomAccessFile implements SageFileSource
     if (n <= 0)
       return 0;
 
-    long pos = super.getFilePointer();
-    long localFilePointer = Math.min(pos + n, super.length());
+    long pos = randomAccessFile.getFilePointer();
+    long localFilePointer = Math.min(pos + n, randomAccessFile.length());
 
     // skipBytes ultimately does this too, but it only takes int. This is more flexible.
-    super.seek(localFilePointer);
+    randomAccessFile.seek(localFilePointer);
 
     return localFilePointer - pos;
   }
@@ -118,7 +119,7 @@ public class LocalSageFile extends RandomAccessFile implements SageFileSource
   {
     try
     {
-      return super.getFilePointer();
+      return randomAccessFile.getFilePointer();
     } catch (IOException e)
     {
       System.out.println("Error: unable to get file pointer");
@@ -131,7 +132,7 @@ public class LocalSageFile extends RandomAccessFile implements SageFileSource
   @Override
   public long available() throws IOException
   {
-    return super.length() - super.getFilePointer();
+    return randomAccessFile.length() - randomAccessFile.getFilePointer();
   }
 
   @Override
@@ -139,7 +140,7 @@ public class LocalSageFile extends RandomAccessFile implements SageFileSource
   {
     // This is required for Wiz.bin to be read by the client code. The Wizard calls this in key
     // places. Otherwise you might get a lot of EOF exceptions.
-    super.getFD().sync();
+    randomAccessFile.getFD().sync();
   }
 
   @Override
@@ -154,18 +155,11 @@ public class LocalSageFile extends RandomAccessFile implements SageFileSource
     try
     {
       // This is only relevant when writing could have happened.
-      super.getFD().sync();
+      randomAccessFile.getFD().sync();
     }
     catch (IOException e) {}
 
-    super.close();
-  }
-
-  @Override
-  public boolean isActiveFile()
-  {
-    // TODO: Can we look this up somewhere?
-    return false;
+    randomAccessFile.close();
   }
 
   @Override
@@ -174,62 +168,75 @@ public class LocalSageFile extends RandomAccessFile implements SageFileSource
     return readonly;
   }
 
-  /**
-   * There aren't any special commands for files opened locally.
-   *
-   * @param command The command to execute.
-   * @return <code>null</code>
-   */
-  @Override
-  public String executeCommand(String command)
-  {
-    // There aren't any special commands for files opened locally.
-    return null;
-  }
-
-  /**
-   * There aren't any special commands for files opened locally.
-   *
-   * @param command The byte encoded command to execute.
-   * @param off The offset in the byte array of the command to be sent.
-   * @param len The length of the command to be sent.
-   * @return <code>null</code>
-   */
-  @Override
-  public String executeCommand(byte[] command, int off, int len)
-  {
-    return null;
-  }
-
   @Override
   public SageFileSource getSource()
   {
     return null;
   }
 
-  /**
-   * Unsupported method.
-   * <p/>
-   * This is <code>RandomAccessFile</code> specific. Use <code>skip()</code> instead.
-   *
-   * @throws IOException throws unsupported method.
-   */
   @Override
-  public final int skipBytes(int n) throws IOException
+  public int read() throws IOException
   {
-    throw new IOException("unsupported method");
+    return randomAccessFile.read();
   }
 
-  /**
-   * Unsupported method.
-   * <p/>
-   * This is <code>RandomAccessFile</code> specific. Use <code>position()</code> instead.
-   *
-   * @throws IOException throws unsupported method.
-   */
   @Override
-  public final long getFilePointer() throws IOException
+  public int read(byte[] b) throws IOException
   {
-    throw new IOException("unsupported method");
+    return randomAccessFile.read(b);
+  }
+
+  @Override
+  public int read(byte[] b, int off, int len) throws IOException
+  {
+    return randomAccessFile.read(b, off, len);
+  }
+
+  @Override
+  public void readFully(byte[] b) throws IOException
+  {
+    randomAccessFile.readFully(b);
+  }
+
+  @Override
+  public void readFully(byte[] b, int off, int len) throws IOException
+  {
+    randomAccessFile.readFully(b, off, len);
+  }
+
+  @Override
+  public void write(int b) throws IOException
+  {
+    randomAccessFile.write(b);
+  }
+
+  @Override
+  public void write(byte[] b) throws IOException
+  {
+    randomAccessFile.write(b);
+  }
+
+  @Override
+  public void write(byte[] b, int off, int len) throws IOException
+  {
+    randomAccessFile.write(b, off, len);
+  }
+
+  @Override
+  public void seek(long pos) throws IOException
+  {
+    randomAccessFile.seek(pos);
+  }
+
+  @Override
+  public long length() throws IOException
+  {
+    return randomAccessFile.length();
+  }
+
+  @Override
+  public void setLength(long newLength) throws IOException
+  {
+    randomAccessFile.setLength(newLength);
   }
 }

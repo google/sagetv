@@ -174,7 +174,6 @@ public class BufferedFileChannel extends FileChannel implements SageFileChannel
       writeBuffer.position(writeLength);
 
     writeBuffer.flip();
-    //int writeBytes = writeBuffer.remaining();
     // We have at least one pending write, this means we might only need to evaluate if data is left
     // in the buffer once. Since we do not know what the underlying implementation will do, we need
     // to loop here to make sure the entire buffer is written out.
@@ -185,7 +184,7 @@ public class BufferedFileChannel extends FileChannel implements SageFileChannel
     while (writeBuffer.hasRemaining());
     writeBuffer.clear();
     realFilePosition += position;
-    if (position < writeLength)
+    if (writeLength > position)
       fileChannel.position(realFilePosition);
     writeLength =  0;
     writePending = false;
@@ -431,24 +430,38 @@ public class BufferedFileChannel extends FileChannel implements SageFileChannel
     long startPosition = position();
     long bytesWritten;
 
-    do
+    long remaining = size() - startPosition;
+    if (count > remaining)
+      count = remaining;
+
+    try
     {
-      // Don't allow more than what was requested to be written.
-      if (writeBuffer.limit() > count)
-        writeBuffer.limit((int)count);
+      do
+      {
+        // Don't allow more than what was requested to be written.
+        if (writeBuffer.capacity() - writeBuffer.position() > count)
+          writeBuffer.limit(writeBuffer.position() + (int)count);
 
-      bytesWritten = src.read(writeBuffer);
+        bytesWritten = src.read(writeBuffer);
 
-      if (bytesWritten == -1)
-        break;
+        if (bytesWritten == -1)
+          break;
 
-      count -= bytesWritten;
+        count -= bytesWritten;
 
-      if (!writeBuffer.hasRemaining())
-        flushWriteBuffer();
+        // Because we changed the limit for writeBuffer, hasRemaining isn't a valid test if the
+        // buffer is full. We have to compare against capacity.
+        if (writeBuffer.position() == writeBuffer.capacity())
+          flushWriteBuffer();
+        else
+          writePending = true;
+      }
+      while (count > 0);
     }
-    while (count > 0);
-    writeBuffer.limit(writeBuffer.capacity());
+    finally
+    {
+      writeBuffer.limit(writeBuffer.capacity());
+    }
 
     return position() - startPosition;
   }
@@ -541,7 +554,7 @@ public class BufferedFileChannel extends FileChannel implements SageFileChannel
       clearReadBuffer();
     else if (writePending)
     {
-      if (writeBuffer.position() < writeLength)
+      if (writeBuffer.position() > writeLength)
         writeLength = writeBuffer.position();
 
       long writePosition = position - realFilePosition;
@@ -599,9 +612,7 @@ public class BufferedFileChannel extends FileChannel implements SageFileChannel
 
           // If we wrote beyond the original position, update writeLength to ensure it will be written.
           if (writeBuffer.position() > writeLength)
-          {
             writeLength = writeBuffer.position();
-          }
         }
         finally
         {
@@ -655,27 +666,9 @@ public class BufferedFileChannel extends FileChannel implements SageFileChannel
   }
 
   @Override
-  public boolean isActiveFile()
-  {
-    return fileChannel.isActiveFile();
-  }
-
-  @Override
   public boolean isReadOnly()
   {
     return readonly;
-  }
-
-  @Override
-  public String executeCommand(String command) throws IOException
-  {
-    return fileChannel.executeCommand(command);
-  }
-
-  @Override
-  public String executeCommand(ByteBuffer command) throws IOException
-  {
-    return fileChannel.executeCommand(command);
   }
 
   @Override
@@ -944,12 +937,10 @@ public class BufferedFileChannel extends FileChannel implements SageFileChannel
   public long size() throws IOException
   {
     // Cache the last size so we don't always need to get it from the source if it doesn't matter.
-    if (readonly)
-      lastSize = fileChannel.size();
-    else
-      lastSize = fileChannel.size() + writeBuffer.position();
-
-    return lastSize;
+    lastSize = fileChannel.size();
+    // Just in case it's ahead due to seeking, we still distinguish between a pending write and no
+    // pending write so that we are returning the actual length after the write buffer is flushed.
+    return writePending ? Math.max(position(), lastSize) : lastSize;
   }
 
   @Override
