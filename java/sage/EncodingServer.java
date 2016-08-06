@@ -287,6 +287,7 @@ public class EncodingServer implements Runnable
               else
                 capDevInput = MMC.getInstance().getCaptureDeviceInputNamed(toker.nextToken());
               String channel = toker.nextToken();
+              long bufferSize = Long.parseLong(toker.nextToken());
               String filename = toker.nextToken();
               String encoding = toker.nextToken();
               if (capDevInput != null)

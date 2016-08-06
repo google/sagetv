@@ -20,12 +20,16 @@
  */
 package sage.dvd;
 
+import sage.nio.BufferedFileChannel;
+import sage.nio.LocalFileChannel;
+import sage.nio.RemoteFileChannel;
+
 public class DVDFile implements DVDSource
 {
   private int fileOffset; // Block position within the block device/image file
   private DVDBlockReader reader; // block reader that contains this file
 
-  private sage.FasterRandomFile file; // File object when in file mode
+  private BufferedFileChannel file; // File object when in file mode
 
   private int filePosition; // Position for byte reads, only use for small files!
 
@@ -40,9 +44,10 @@ public class DVDFile implements DVDSource
   {
     try
     {
-      file = (hostname == null) ? new sage.FasterRandomFile(filename, "r", sage.Sage.I18N_CHARSET) :
-        new sage.NetworkChannelFile(hostname, filename, "r", sage.Sage.I18N_CHARSET, false);
-      file.setOptimizeReadFully(false); // since we always read 2k blocks
+      if (hostname == null)
+        file = new BufferedFileChannel(new LocalFileChannel(filename, true), 65536, false);
+      else
+        file = new BufferedFileChannel(new RemoteFileChannel(hostname, filename), 131072, false);
     }
     catch(Exception e)
     {
@@ -67,7 +72,7 @@ public class DVDFile implements DVDSource
   {
     try
     {
-      file.seek(block*2048L);
+      file.position(block*2048L);
       file.readFully(buf, offset, count*2048);
       return true;
     }
@@ -90,7 +95,7 @@ public class DVDFile implements DVDSource
     {
       try
       {
-        file.seek(filePosition);
+        file.position(filePosition);
         file.readFully(buf, 0, size);
         filePosition+=size;
         return size;

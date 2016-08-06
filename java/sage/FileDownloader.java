@@ -15,6 +15,10 @@
  */
 package sage;
 
+import sage.io.BufferedSageFile;
+import sage.io.LocalSageFile;
+import sage.io.RemoteSageFile;
+
 public class FileDownloader extends SystemTask
 {
   private static final int MP4_RESEEK_PREROLL_TIME = 1000;
@@ -239,7 +243,7 @@ public class FileDownloader extends SystemTask
           }
           break;
         }
-        fileOut = new FastRandomFile(myDestFile, "rw", Sage.I18N_CHARSET);
+        fileOut = new BufferedSageFile(new LocalSageFile(myDestFile, false));
         if (captureMode)
           fileOut.seek(fileOut.length());
         else
@@ -318,7 +322,7 @@ public class FileDownloader extends SystemTask
         outStream.flush();
         str = Sage.readLineBytes(inStream);
         remoteSize = Long.parseLong(str.substring(0, str.indexOf(' ')));
-        fileOut = new FastRandomFile(myDestFile, "rw", Sage.I18N_CHARSET);
+        fileOut = new BufferedSageFile(new LocalSageFile(myDestFile, false));
         if (captureMode)
           fileOut.seek(fileOut.length());
         else
@@ -616,11 +620,11 @@ public class FileDownloader extends SystemTask
                   waitForCircWrite(numRead);
                   synchronized (notifyRead)
                   {
-                    if (fileOut.getFilePointer() + numRead < circSize)
+                    if (fileOut.position() + numRead < circSize)
                       fileOut.write(decryptBuf, 0, numRead);
                     else
                     {
-                      int firstWrite = (int)(circSize - fileOut.getFilePointer());
+                      int firstWrite = (int)(circSize - fileOut.position());
                       fileOut.write(decryptBuf, 0, firstWrite);
                       fileOut.seek(0);
                       fileOut.write(decryptBuf, firstWrite, numRead - firstWrite);
@@ -648,11 +652,11 @@ public class FileDownloader extends SystemTask
             waitForCircWrite(numRead);
             synchronized (notifyRead)
             {
-              if (fileOut.getFilePointer() + numRead < circSize)
+              if (fileOut.position() + numRead < circSize)
                 fileOut.write(xferBuf, 0, numRead);
               else
               {
-                int firstWrite = (int)(circSize - fileOut.getFilePointer());
+                int firstWrite = (int)(circSize - fileOut.position());
                 fileOut.write(xferBuf, 0, firstWrite);
                 fileOut.seek(0);
                 fileOut.write(xferBuf, firstWrite, numRead - firstWrite);
@@ -1458,11 +1462,11 @@ public class FileDownloader extends SystemTask
         if (circSize > 0)
         {
           waitForCircWrite(currRead);
-          if (fileOut.getFilePointer() + currRead < circSize)
+          if (fileOut.position() + currRead < circSize)
             fileOut.write(xferBuf, 0, currRead);
           else
           {
-            int firstWrite = (int)(circSize - fileOut.getFilePointer());
+            int firstWrite = (int)(circSize - fileOut.position());
             fileOut.write(xferBuf, 0, firstWrite);
             fileOut.seek(0);
             fileOut.write(xferBuf, firstWrite, currRead - firstWrite);
@@ -1755,7 +1759,7 @@ public class FileDownloader extends SystemTask
   protected java.net.Socket sock = null;
   protected java.io.DataOutputStream outStream = null;
   protected java.io.DataInputStream inStream = null;
-  protected FastRandomFile fileOut = null;
+  protected sage.io.SageFileSource fileOut = null;
   protected long remoteSize;
   protected boolean isMP4Stream;
 

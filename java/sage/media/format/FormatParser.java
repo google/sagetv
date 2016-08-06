@@ -313,7 +313,7 @@ public class FormatParser
     catch (Throwable t)
     {
       if (sage.Sage.DBG) System.out.println("ERROR parsing media file " + f + " of:" + t);
-      t.printStackTrace();
+      t.printStackTrace(System.out);
       return null;
     }
   }
@@ -547,7 +547,7 @@ public class FormatParser
     catch (Throwable t)
     {
       if (sage.Sage.DBG) System.out.println("ERROR parsing media file " + f + " of:" + t);
-      t.printStackTrace();
+      t.printStackTrace(System.out);
       return null;
     }
   }
@@ -1443,8 +1443,10 @@ public class FormatParser
     int brack2 = currStreamInfo.indexOf(']');
     if (brack2 > commaIdx || brack2 == -1 || brack2 < brack1)
       return null;
-    if (brack2 - brack1 == 6 || brack2 - brack1 == 5)
+    if (brack2 - brack1 == 5)
       return currStreamInfo.substring(brack2 - 2, brack2);
+    if (brack2 - brack1 == 6)
+      return currStreamInfo.substring(brack2 - 3, brack2);
     if (brack2 - brack1 == 7)
       return currStreamInfo.substring(brack2 - 4, brack2);
     return null;

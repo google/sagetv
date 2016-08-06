@@ -56,6 +56,8 @@ public class ServerPowerManagement extends PowerManagement
     {
       if (Seeker.getInstance().requiresPower())
         return SYSTEM_POWER;
+      if (Ministry.getInstance().requiresPower())
+    	return SYSTEM_POWER;
       // Check for any streaming clients or non-locally connected SageTV Clients
       MediaServer ms = SageTV.getMediaServer();
       if ((ms != null && ms.areClientsConnected()) || NetworkClient.areNonLocalClientsConnected())

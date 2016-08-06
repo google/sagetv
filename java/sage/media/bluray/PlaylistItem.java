@@ -23,11 +23,11 @@ public class PlaylistItem
 {
 
 	/** Creates a new instance of PlaylistItem */
-	public PlaylistItem(sage.FasterRandomFile inStream) throws java.io.IOException
+	public PlaylistItem(sage.io.SageDataFile inStream) throws java.io.IOException
 	{
 		java.util.ArrayList angles = new java.util.ArrayList();
 		int dataLength = inStream.readUnsignedShort();
-		long startPos = inStream.getFilePointer();
+		long startPos = inStream.position();
 		byte[] strHolder = new byte[5];
 		inStream.readFully(strHolder);
 		clipInfoName = new String(strHolder, BluRayParser.BLURAY_CHARSET);
@@ -314,7 +314,7 @@ public class PlaylistItem
 		subtitleStreams = (sage.media.format.SubpictureFormat[]) subtitleVec.toArray(new sage.media.format.SubpictureFormat[0]);
 
 		// Now we're supposed to read the IG streams and also the secondary audio/video streams
-		inStream.skipBytes((int)(dataLength - (inStream.getFilePointer() - startPos)));
+		inStream.skipBytes((int)(dataLength - (inStream.position() - startPos)));
 	}
 
 	public void dumpInfo()

@@ -38,25 +38,24 @@ public class SAMISubtitleHandler extends SubtitleHandler
     sage.media.format.SubpictureFormat[] subs = mediaFormat.getSubpictureFormats(sage.media.format.MediaFormat.SAMI);
     if (subs.length == 0)
       return;
-    java.io.File subFile = null;
+    final java.io.File subFile = new java.io.File(subs[0].getPath());
     java.io.BufferedReader inStream = null;
     try
     {
-      subFile = getLoadableSubtitleFile(sourceFile, new java.io.File(subs[0].getPath()));
-      inStream = sage.IOUtils.openReaderDetectCharset(subFile, sage.Sage.BYTE_CHARSET);
+      inStream = sage.IOUtils.openReaderDetectCharset(subFile, sage.Sage.BYTE_CHARSET, sourceFile.isLocalFile());
       // We do this one char at a time so we can analyze tags along the way easier
       int c = inStream.read();
       String lastTagName = null;
       java.util.Map lastAttributes = new java.util.HashMap();
       String currLanguage = null;
       long currStart = 0;
-      StringBuffer tagName = new StringBuffer();
-      StringBuffer tagAttribute = new StringBuffer();
+      StringBuilder tagName = new StringBuilder();
+      StringBuilder tagAttribute = new StringBuilder();
       StringBuffer tagContent = new StringBuffer();
       boolean inTag = false;
       boolean inAttributeQuote = false;
       boolean tagNameComplete = false;
-      java.util.Map classToLangMap = new java.util.HashMap();
+      java.util.Map<String, String> classToLangMap = new java.util.HashMap<String, String>();
       while (c != -1)
       {
         if (inTag)
@@ -180,8 +179,6 @@ public class SAMISubtitleHandler extends SubtitleHandler
     }
     finally
     {
-      if (subFile != null && !sourceFile.isLocalFile())
-        subFile.delete();
       if (inStream != null)
       {
         try
@@ -197,9 +194,24 @@ public class SAMISubtitleHandler extends SubtitleHandler
   {
     if (currLanguage != null)
     {
-      subEntries = (java.util.Vector) subLangEntryMap.get(currLanguage);
-      if (subEntries == null)
-        subLangEntryMap.put(currLanguage, subEntries = new java.util.Vector());
+      java.util.List<SubtitleEntry> newSubLang = subLangEntryMap.get(currLanguage);
+
+      if (newSubLang == null)
+      {
+        subLangEntryMap.put(currLanguage, newSubLang = new java.util.ArrayList<SubtitleEntry>());
+      }
+
+      subtitleLock.writeLock().lock();
+
+      try
+      {
+        subEntries = newSubLang;
+      }
+      finally
+      {
+        subtitleLock.writeLock().unlock();
+      }
+
       SubtitleEntry newEntry = new SubtitleEntry(sage.media.rss.Translate.decode(tagContent).trim(), startTime, 0);
       insertSubtitleEntry(newEntry);
       if (sage.Sage.DBG) System.out.println("Inserted SAMI subtitle entry for lang=" + currLanguage + " " + newEntry);
@@ -211,9 +223,9 @@ public class SAMISubtitleHandler extends SubtitleHandler
   {
     return extractLanguagesFromStyleSection(style, null);
   }
-  public static String[] extractLanguagesFromStyleSection(String style, java.util.Map classMap)
+  public static String[] extractLanguagesFromStyleSection(String style, java.util.Map<String, String> classMap)
   {
-    java.util.Vector rv = new java.util.Vector();
+    java.util.List<String> rv = new java.util.ArrayList<String>();
     // Remove the outer style tags and the HTML comment
     int idx = style.indexOf("<!--");
     if (idx != -1)
@@ -221,7 +233,8 @@ public class SAMISubtitleHandler extends SubtitleHandler
     idx = style.lastIndexOf("-->");
     if (idx != -1)
       style = style.substring(0, idx).trim();
-    idx = 0;
+    //idx = 0;
+    //idx = 0; This value is never used because we set it again only two lines down.
     int lastEnd = -1;
     idx = style.indexOf('{');
     while (idx != -1)
@@ -250,6 +263,6 @@ public class SAMISubtitleHandler extends SubtitleHandler
       }
       idx = style.indexOf('{', lastEnd);
     }
-    return (String[]) rv.toArray(sage.Pooler.EMPTY_STRING_ARRAY);
+    return rv.toArray(new String[rv.size()]);
   }
 }

@@ -15,8 +15,6 @@
  */
 package sage.media.bluray;
 
-import sage.Sage;
-
 /**
  *
  * @author Narflex
@@ -25,7 +23,7 @@ public class MPLSObject
 {
 
 	/** Creates a new instance of MPLSObject */
-	public MPLSObject(sage.FasterRandomFile inStream) throws java.io.IOException
+	public MPLSObject(sage.io.SageDataFile inStream) throws java.io.IOException
 	{
 		byte[] strHolder = new byte[4];
 		inStream.readFully(strHolder);

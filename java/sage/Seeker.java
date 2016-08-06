@@ -2877,7 +2877,11 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
         // Check if we have low bitrate detection configured, and if it was too low...post a message about it.
         long bitrateThreshold = es.capDev.getBitrateThresholdForError();
         if (bitrateThreshold > 0) {
-          long actualBitrate = es.currRecordFile.getSize() * 8000 / es.currRecordFile.getRecordDuration();
+          // The 5000 is just a fudge factor because this was getting hit falsely for recordings with
+          // small durations, part of it was due to the tuning delay, but based on the examples, even accounting
+          // for that would have put us really close to the edge of detection.
+          long actualBitrate = es.currRecordFile.getSize() * 8000 / Math.max(1,
+              es.currRecordFile.getRecordDuration() - es.capDev.getPostTuningDelay() - 5000);
           if (actualBitrate < bitrateThreshold) {
             if (Sage.DBG) System.out.println("Seeker detected a bitrate of " + actualBitrate + " which is below the error threshold of " +
                 bitrateThreshold + " and will post a system message about this for: " + es.currRecordFile);
