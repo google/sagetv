@@ -618,6 +618,26 @@ public class IOUtils
     return sb.toString();
   }
 
+  public static boolean writeStringToFile(java.io.File file, String s) {
+    java.io.PrintWriter pw = null;
+    try {
+      pw = new java.io.PrintWriter(new java.io.FileWriter(file));
+      pw.print(s);
+    } catch (java.io.IOException e) {
+      System.out.println("Error writing file " + file + " of: " + e);
+      return false;
+    }
+    finally {
+      if (pw != null) {
+        try {
+          pw.close();
+        } catch (Exception e){}
+      pw = null;
+      }
+    }
+    return true;
+  }
+
   public static String convertPlatformPathChars(String str)
   {
     StringBuffer sb = null;

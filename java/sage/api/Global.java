@@ -340,24 +340,34 @@ public class Global {
     {
       /**
        * Gets a list of all the possible United States local broadcast markets from the EPG server
-       * @return a list of all the possible United States local broadcast markets from the EPG server
+       * @return a String[] of all the possible United States local broadcast markets from the EPG server or a String error message of "NO_KEY", "INVALID_KEY", or "CONNECTION_FAILURE"
        *
-       * @declaration public String[] GetLocalMarketsFromEPGServer();
+       * @declaration public Object GetLocalMarketsFromEPGServer();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return EPG.getInstance().getLocalMarketsAndCacheNames(null);
+        try {
+          return EPG.getInstance().getLocalMarketsAndCacheNames();
+        } catch (sage.EPGServerException e) {
+          System.out.println("ERROR communicating with EPG server of: " + e);
+          return e.getMessage();
+        }
       }});
     rft.put(new PredefinedJEPFunction("Global", "GetLineupsForZipCodeFromEPGServer", 1, new String[]{"ZipCode"}, true)
     {
       /**
        * Gets a list from the EPG server of all the possible EPG Lineups that are available in a given zip code
        * @param ZipCode the zip code to search for EPG lineups in
-       * @return a list from the EPG server of all the possible EPG lineups in the specified zip code
+       * @return a String[] from the EPG server of all the possible EPG lineups in the specified zip code or a String error message of "NO_KEY", "INVALID_KEY", or "CONNECTION_FAILURE"
        *
-       * @declaration public String[] GetLineupsForZipCodeFromEPGServer(String ZipCode);
+       * @declaration public Object GetLineupsForZipCodeFromEPGServer(String ZipCode);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return EPG.getInstance().getProvidersAndCacheNames(getString(stack), null);
+        try {
+          return EPG.getInstance().getProvidersAndCacheNames(getString(stack));
+        } catch (sage.EPGServerException e) {
+          System.out.println("ERROR communicating with EPG server of: " + e);
+          return e.getMessage();
+        }
       }});
     rft.put(new PredefinedJEPFunction("Global", "GetCurrentlyRecordingMediaFiles", true)
     {
