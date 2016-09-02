@@ -120,11 +120,11 @@ RawImage_t* LoadPNG(FILE* fp, int imgwidth, int imgheight)
     png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
        &interlace_type, int_p_NULL, int_p_NULL);
 
-	if (imgwidth == 0 || imgheight == 0)
-	{
-		imgwidth = width;
-		imgheight = height;
-	}
+    if (imgwidth == 0 || imgheight == 0) {
+      imgwidth = width;
+      imgheight = height;
+    }
+
     newimage=(RawImage_t *) malloc(sizeof(RawImage_t));
     if(newimage==NULL)
     {
@@ -133,13 +133,13 @@ RawImage_t* LoadPNG(FILE* fp, int imgwidth, int imgheight)
         png_destroy_read_struct(&png_ptr, &info_ptr, png_infopp_NULL);
         return 0;
     }
-	memset(newimage, 0, sizeof(RawImage_t));
+    memset(newimage, 0, sizeof(RawImage_t));
     // TODO: add checks for odd width
     newimage->hasAlpha=1; // jpeg don't have alpha
-	newimage->pPlane = (unsigned char*) malloc(imgwidth * imgheight * 4);
-	newimage->uWidth = imgwidth;
-	newimage->uHeight = imgheight;
-	newimage->uBytePerLine = imgwidth*4;
+    newimage->pPlane = (unsigned char*) malloc(imgwidth * imgheight * 4);
+    newimage->uWidth = imgwidth;
+    newimage->uHeight = imgheight;
+    newimage->uBytePerLine = imgwidth*4;
 
     if(!newimage->pPlane)
     {
@@ -159,6 +159,9 @@ RawImage_t* LoadPNG(FILE* fp, int imgwidth, int imgheight)
         png_set_gray_1_2_4_to_8(png_ptr);
     if(png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))
         png_set_tRNS_to_alpha(png_ptr);
+    if(color_type == PNG_COLOR_TYPE_GRAY ||
+       color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
+      png_set_gray_to_rgb(png_ptr);
     /* flip the RGB pixels to BGR (or RGBA to BGRA) */
 //    if(color_type & PNG_COLOR_MASK_COLOR)
 //        png_set_bgr(png_ptr);
