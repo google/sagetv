@@ -21,8 +21,15 @@ import org.xml.sax.*;
 import org.xml.sax.helpers.*;
 
 import java.io.File;
+import java.io.FilenameFilter;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * This class is responsible for managing the currently active plugins in the system
@@ -437,6 +444,8 @@ public class CorePluginManager implements Runnable
     // Use a SAX parser for this so we can reuse this code on the embedded systems
     if (repoHandler == null)
       repoHandler = new RepoSAXHandler();
+    if (devRepoHandler == null && isDevMode())
+      devRepoHandler = new DevRepoSAXHandler();
     if (allRepoPluginsTemp == null)
       allRepoPluginsTemp = new java.util.HashMap();
     else
@@ -466,7 +475,10 @@ public class CorePluginManager implements Runnable
       if (Sage.DBG) System.out.println("Analyzing plugin repository XML file: " + repoXmlFile);
       inStream = new java.io.BufferedInputStream(new java.io.FileInputStream(repoXmlFile));
       factory.setValidating(false);
-      factory.newSAXParser().parse(inStream, repoHandler);
+      if (devRepoHandler!=null && devRepoHandler.canHandleFile(repoXmlFile))
+        factory.newSAXParser().parse(inStream, devRepoHandler);
+      else
+        factory.newSAXParser().parse(inStream, repoHandler);
       if (Sage.DBG) System.out.println("Done processing plugin repository XML file["+repoXmlFile+"] " + " repositoryVersion=" + repoVer);
     }
     catch (Exception e)
@@ -810,12 +822,44 @@ public class CorePluginManager implements Runnable
       // lastly, add in the "SageTVPluginsDev.xml"
       localFiles.add(getLocalPluginFile("SageTVPluginsDev.xml"));
 
+      if (isDevMode()) {
+        // SageTV developer mode, find all .xml files in the SageTVPluginsDev.d folder and process them
+        // SageTVPluginsDev.d is a cleaner way to dynamically add new plugins to sagetv for development testing
+        // Useful especially when you are working several different plugins and you are trying to coordinate
+        // the dependencies between each, for test installing, etc.
+        File devPluginsDir = getDevPluginsDir();
+        if (devPluginsDir.exists() && devPluginsDir.isDirectory()) {
+          File plugins[] = devPluginsDir.listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File file, String s) {
+              return s.toLowerCase().endsWith(".xml");
+            }
+          });
+
+          if (plugins != null) {
+            localFiles.addAll(Arrays.asList(plugins));
+          }
+        }
+      }
+
       loadRepoPlugins(localFiles);
     }
 
     // Check if there's any new updates available and post system messages about them.
     postMessagesForAvailableUpdates();
     return true;
+  }
+
+  /**
+   * Returns the "devmode" Server property.  devmode is a special mode for running SageTV Server.  If Dev Mode is true
+   * then a few things might happen.
+   * 1. SageTV Plugins will look in the SageTVPluginsDev.d/ folder for plugin xmls and zip files
+   * 2. When installing a plugin, if the plugin filename is in the SageTVPluginsDev.d/ folder then it will be "downloaded" from that location.
+   * 3. MD5 will be ignored when installing from the SageTVPluginsDev.d/ folder
+   * @return
+     */
+  public static boolean isDevMode() {
+    return getServerBoolProperty("devmode", false);
   }
 
   private void postMessagesForAvailableUpdates()
@@ -2266,6 +2310,11 @@ public class CorePluginManager implements Runnable
     return needRestart ? "RESTART" : "OK";
   }
 
+  public static File getDevPluginsDir() {
+    // sagetv appears to assume we'll always be run from the SageTV home directory
+    return new File("SageTVPluginsDev.d");
+  }
+
   private boolean canModifyPath(java.io.File f)
   {
     if (pendingFilesystem.containsKey(f))
@@ -2624,6 +2673,7 @@ public class CorePluginManager implements Runnable
   private java.util.Map latestRepoPluginsTemp;
   private SAXParserFactory factory = SAXParserFactory.newInstance();
   private DefaultHandler repoHandler;
+  private DevRepoSAXHandler devRepoHandler;
   private String repoVer = "";
   private boolean needRestart;
   private int globalInstallCount;
@@ -2641,12 +2691,12 @@ public class CorePluginManager implements Runnable
 
   private class RepoSAXHandler extends DefaultHandler
   {
-    private String current_tag;
-    private StringBuffer buff = new StringBuffer();
-    private PluginWrapper currPlugin;
-    private PluginWrapper.Dependency currDependency;
-    private PluginWrapper.Package currPackage;
-    private boolean osRestrictions;
+    String current_tag;
+    StringBuffer buff = new StringBuffer();
+    PluginWrapper currPlugin;
+    PluginWrapper.Dependency currDependency;
+    PluginWrapper.Package currPackage;
+    boolean osRestrictions;
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException
     {
       if ("PluginRepository".equalsIgnoreCase(qName))
@@ -2885,6 +2935,81 @@ public class CorePluginManager implements Runnable
         }
       }
       return 0;
+    }
+  }
+
+  /**
+   * DevRepoSAXHandler upgrades the Location and Version tags for dev plugins in the SageTVPluginsDev.d directory
+   * ensuring that if there is a local package install, then the URL is set to a File url for it, and that the
+   * version of the plugin is updated so that sagetv will think it needs to install it every time.  This allows
+   * for continuous pushing of packages to the SageTVPluginDev.d directory without having to manually update the
+   * version field to get sagetv to install it.
+   */
+  public class DevRepoSAXHandler extends RepoSAXHandler
+  {
+    private String getFileName(String file)
+    {
+      URI uri = URI.create(file);
+      return new File(uri.getPath()).getName();
+    }
+
+    public void endElement(String uri, String localName, String qName)
+    {
+      boolean handled=false;
+
+      if (currPackage != null)
+      {
+        if ("Location".equalsIgnoreCase(qName))
+        {
+          String data = buff.toString().trim();
+          if (data.length()>0)
+          {
+            File localFile = new File(getDevPluginsDir(), getFileName(data));
+            if (localFile.exists())
+            {
+              try
+              {
+                // set the download url to be the local file
+                currPackage.url = localFile.toURI().toURL().toString();
+                // set the md5 automatically from the local file
+                currPackage.md5 = IOUtils.calcMD5(localFile);
+                // super will already populate the version, but in dev mode, we force an increment on the version
+                // so that sagetv will try to install it every time
+                // LIMITATION: can only update once a minute :)
+                SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmm");
+                currPlugin.setVersion(currPlugin.getVersion()+"."+sdf.format(new Date()));
+                if (Sage.DBG) System.out.println("Changed Package Url, MD5, and Version to " + currPackage.url + ", "+currPackage.md5+", " + currPlugin.getVersion() + " for " + currPlugin.getName() + "("+currPlugin.getId()+")");
+                handled=true;
+              }
+              catch (MalformedURLException e)
+              {
+                System.out.println("Failed to override package url with local url for " + localFile);
+              }
+            }
+          }
+        }
+        else if ("MD5".equalsIgnoreCase(qName))
+        {
+          // only set the MD5 from the xml if we haven't already calculated it
+          if (currPackage.md5!=null)
+            handled=true;
+        }
+      }
+
+      if (handled)
+      {
+        if (qName.equals(current_tag))
+          buff = new StringBuffer();
+      }
+      else
+      {
+        super.endElement(uri, localName, qName);
+      }
+    }
+
+    public boolean canHandleFile(File repoXmlFile)
+    {
+      return repoXmlFile!=null && repoXmlFile.getParentFile()!=null && repoXmlFile.getParentFile().getName().equals("SageTVPluginsDev.d");
     }
   }
 

@@ -17,7 +17,8 @@ package sage;
 
 import sage.io.BufferedSageFile;
 import sage.io.LocalSageFile;
-import sage.io.RemoteSageFile;
+import java.io.IOException;
+import java.net.URI;
 
 public class FileDownloader extends SystemTask
 {
@@ -152,7 +153,7 @@ public class FileDownloader extends SystemTask
     if (Sage.client && serverName == null)
       serverName = Sage.preferredServer;
     remoteUIXfer = uiMgr != null && uiMgr.getUIClientType() == UIClient.REMOTE_UI && uiMgr.hasRemoteFSSupport();
-    if (serverName != null && (serverName.startsWith("http:") || serverName.startsWith("https:") || serverName.startsWith("ftp:")))
+    if (serverName != null && (serverName.startsWith("http:") || serverName.startsWith("https:") || serverName.startsWith("ftp:") ||serverName.startsWith("file:")))
       remoteUIXfer = false;
     if (serverName == null && !remoteUIXfer)
       return Boolean.FALSE;
@@ -165,7 +166,11 @@ public class FileDownloader extends SystemTask
         return Boolean.FALSE;
       gotSMBAccess = true;
     }
-    mySrcFile = (srcFile == null) ? null : new java.io.File(srcFile);
+    if (myServerName!=null && myServerName.startsWith("file:"))
+      mySrcFile = new java.io.File(URI.create(myServerName));
+    else
+      mySrcFile = (srcFile == null) ? null : new java.io.File(srcFile);
+
     myDestFile = destFile;
     if (!remoteUIXfer)
     {
@@ -287,6 +292,16 @@ public class FileDownloader extends SystemTask
       }
       fsXferOpWeak = new java.lang.ref.WeakReference(fsXferOp);
     }
+    else if (myServerName!=null && mySrcFile!=null && mySrcFile.isFile() && myServerName.startsWith("file:"))
+    {
+      if (Sage.DBG) System.out.println("FileDownloader: Local File Copy: From: " + mySrcFile + " to " + destFile);
+      // file url passed as the url to download
+      if (!mySrcFile.exists())
+      {
+        cleanup();
+        return Boolean.FALSE;
+      }
+    }
     else
     {
       try
@@ -376,6 +391,10 @@ public class FileDownloader extends SystemTask
       {
         remoteUITaskRun();
       }
+      if (myServerName!=null && myServerName.startsWith("file:"))
+      {
+        fileTaskRun();
+      }
       else
       {
         stvTaskRun();
@@ -393,6 +412,27 @@ public class FileDownloader extends SystemTask
       {
         fileMap.remove(myDestFile);
       }
+    }
+  }
+
+  private void fileTaskRun() {
+    try {
+      downloadedBytes=myDestFile.length();
+      statusMessage="100%";
+
+      if (mySrcFile.equals(myDestFile)) {
+        succeeded();
+        return;
+      }
+
+      IOUtils.copyFile(mySrcFile, myDestFile);
+      succeeded();
+    }
+    catch (IOException e)
+    {
+      if (Sage.DBG) System.out.println("ERROR during file download/copy of:" + e);
+      Sage.printStackTrace(e);
+      statusMessage = "Error:" + e.toString();
     }
   }
 
