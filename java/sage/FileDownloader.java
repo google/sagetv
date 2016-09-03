@@ -153,7 +153,7 @@ public class FileDownloader extends SystemTask
     if (Sage.client && serverName == null)
       serverName = Sage.preferredServer;
     remoteUIXfer = uiMgr != null && uiMgr.getUIClientType() == UIClient.REMOTE_UI && uiMgr.hasRemoteFSSupport();
-    if (serverName != null && (serverName.startsWith("http:") || serverName.startsWith("https:") || serverName.startsWith("ftp:") ||serverName.startsWith("file:")))
+    if (serverName != null && (serverName.startsWith("http:") || serverName.startsWith("https:") || serverName.startsWith("ftp:") || serverName.startsWith("file:")))
       remoteUIXfer = false;
     if (serverName == null && !remoteUIXfer)
       return Boolean.FALSE;
@@ -391,7 +391,7 @@ public class FileDownloader extends SystemTask
       {
         remoteUITaskRun();
       }
-      if (myServerName!=null && myServerName.startsWith("file:"))
+      else if (myServerName!=null && myServerName.startsWith("file:"))
       {
         fileTaskRun();
       }
