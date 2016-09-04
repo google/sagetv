@@ -25,7 +25,7 @@ public class LinuxDVBCaptureManager implements CaptureDeviceManager
   /** Creates a new instance of LinuxDVBCaptureManager */
   public LinuxDVBCaptureManager()
   {
-    System.loadLibrary("DVBCapture");
+    sage.Native.loadLibrary("DVBCapture");
     prefs = MMC.MMC_KEY + '/';
     mmc = MMC.getInstance();
     encoderMap = new java.util.LinkedHashMap();

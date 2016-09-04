@@ -48,7 +48,7 @@ public final class Mpeg2Transcoder
     mpegFile = theFile;
     hostname = inHostname;
     System.out.println("Creating Mpeg2Transcoder");
-    System.loadLibrary("Mpeg2Transcoder");
+    sage.Native.loadLibrary("Mpeg2Transcoder");
   }
 
   public void setLogging(boolean x)

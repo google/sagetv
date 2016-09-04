@@ -54,7 +54,7 @@ public class OpenGLVideoRenderer
         initVideoServer();
       else if (MiniClient.WINDOWS_OS)
       {
-        System.loadLibrary("SageTVWin32");
+        sage.Native.loadLibrary("SageTVWin32");
         // For Windows we create the thread in Java
         Thread t = new Thread("OpenGLVideo")
         {

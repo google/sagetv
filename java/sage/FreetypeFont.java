@@ -32,7 +32,7 @@ public class FreetypeFont extends MetaFont
       synchronized (ftLock)
       {
         if (ftLibPtr != 0) return;
-        System.loadLibrary("FreetypeFontJNI");
+        sage.Native.loadLibrary("FreetypeFontJNI");
         ftLibPtr = loadFreetypeLib0();
         if (ftLibPtr == 0)
         {
