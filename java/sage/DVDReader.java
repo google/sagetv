@@ -54,7 +54,7 @@ public class DVDReader
 
   public DVDReader()
   {
-    System.loadLibrary("DVDReader");
+    sage.Native.loadLibrary("DVDReader");
   }
 
   public synchronized boolean open(String path)

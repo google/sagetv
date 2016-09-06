@@ -48,7 +48,7 @@ public class DirectX9GFXCMD extends GFXCMD2
 
     if (!loadedDX9Lib)
     {
-      System.loadLibrary("SageTVDX93D");
+      sage.Native.loadLibrary("SageTVDX93D");
       loadedDX9Lib = true;
       registerMiniClientNatives0();
     }

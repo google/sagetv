@@ -56,7 +56,7 @@ public class DShowCaptureManager implements CaptureDeviceManager
 
   public DShowCaptureManager()
   {
-    System.loadLibrary("DShowCapture");
+    sage.Native.loadLibrary("DShowCapture");
 
     prefs = MMC.MMC_KEY + '/';
     mmc = MMC.getInstance();

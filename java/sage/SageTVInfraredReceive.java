@@ -23,7 +23,7 @@ public abstract class SageTVInfraredReceive implements SageTVInputPlugin
   {
     if (!loadedLib)
     {
-      System.loadLibrary("SageTVInfraredReceive");
+      sage.Native.loadLibrary("SageTVInfraredReceive");
       loadedLib = true;
     }
   }

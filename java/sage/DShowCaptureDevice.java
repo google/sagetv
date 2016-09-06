@@ -49,7 +49,7 @@ public class DShowCaptureDevice extends CaptureDevice
   {
     // This library is also used for getting a list of the dshow filters, so we need it for players as well
     if (Sage.WINDOWS_OS)
-      System.loadLibrary("DShowCapture");
+      sage.Native.loadLibrary("DShowCapture");
   }
   public DShowCaptureDevice()
   {
