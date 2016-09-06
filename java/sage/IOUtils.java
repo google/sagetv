@@ -18,10 +18,63 @@ package sage;
 import sage.io.RemoteSageFile;
 import sage.io.SageInputStream;
 
+import java.io.BufferedReader;
+import java.io.Closeable;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URL;
+
 public class IOUtils
 {
   private IOUtils()
   {
+  }
+
+  /**
+   * Used to read a URL contents into String.  This operation blocks and the content is a string, so it should
+   * not be used on large files, and should not be used on binary files.
+   *
+   * @param urlStr URL to download
+   * @return String contents of the given URL
+     */
+  public static String getUrlAsString(String urlStr)
+  {
+    StringBuilder sb = new StringBuilder();
+    try
+    {
+      URL url = new URL(urlStr);
+      InputStream is = url.openStream();
+      BufferedReader br = new BufferedReader(new InputStreamReader(is));
+
+      String line;
+      while ( (line = br.readLine()) != null)
+        sb.append(line);
+
+      closeQuietly(br);
+      closeQuietly(is);
+    }
+    catch (Exception e)
+    {
+      if (Sage.DBG)
+      {
+        e.printStackTrace();
+      }
+    }
+    return sb.toString();
+  }
+
+  public static void closeQuietly(Closeable closeable)
+  {
+    if (closeable!=null)
+    {
+      try
+      {
+        closeable.close();
+      } catch (IOException e)
+      {
+      }
+    }
   }
 
   public static String getFileExtension(java.io.File f)
