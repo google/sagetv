@@ -15,13 +15,33 @@
  */
 package sage.plugin;
 
-import sage.*;
-import javax.xml.parsers.*;
-import org.xml.sax.*;
-import org.xml.sax.helpers.*;
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
+import sage.EPG;
+import sage.FileDownloader;
+import sage.IOUtils;
+import sage.MediaFile;
+import sage.MetaImage;
+import sage.Pooler;
+import sage.Sage;
+import sage.SageProperties;
+import sage.SageTV;
+import sage.SageTVPlugin;
+import sage.SageTVPluginRegistry;
+import sage.UIClient;
+import sage.UIManager;
+import sage.Version;
 
+import javax.xml.parsers.SAXParserFactory;
+import java.io.Closeable;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.text.SimpleDateFormat;
@@ -29,7 +49,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 /**
  * This class is responsible for managing the currently active plugins in the system
@@ -1787,7 +1808,7 @@ public class CorePluginManager implements Runnable
         if (Sage.DBG) System.out.println("Asset file exists in local cache....check the MD5 sum...");
         String localMD5 = IOUtils.calcMD5(assetFile);
         progressMsg = Sage.rez("Verifying install packages") + ": " + plug.getName() + " " + (i + 1) + "/" + packages.length;
-        if (localMD5 != null && localMD5.equalsIgnoreCase(packages[i].md5))
+        if (localMD5 != null && localMD5.equalsIgnoreCase(packages[i].getMD5()))
         {
           if (Sage.DBG) System.out.println("Local cache file is good...the MD5 sums match!");
           downloadNeeded = false;
@@ -1831,7 +1852,7 @@ public class CorePluginManager implements Runnable
           if (Sage.DBG) System.out.println("Download of package from " + packages[i].url + " is complete");
           // Now we check the MD5
           String localMd5 = IOUtils.calcMD5(assetFile);
-          if (!packages[i].md5.equalsIgnoreCase(localMd5))
+          if (!packages[i].getMD5().equalsIgnoreCase(localMd5))
           {
             if (Sage.DBG) System.out.println("ERROR Bad download from " + packages[i].url + " the MD5 sums do not match!!!");
             progressMsg = "";
@@ -1946,97 +1967,67 @@ public class CorePluginManager implements Runnable
           return "FAILED - Invalid Package Type " + packages[i].type;
         }
 
-        java.io.File currFile = (java.io.File) packageMap.get(packages[i]);
-        // We need to check for overwrite at each file if its OK or not; we also need to stage any failed extractions
-        // zip file source, extract and preserve directory structure, permissions and such
-        if (Sage.DBG) System.out.println("Beginning zip file extraction from cache file " + currFile + " to root dest dir of: " + destDir);
-        java.util.zip.ZipFile zippy = null;
-        java.io.InputStream inStream = null;
-        java.io.FileOutputStream outStream = null;
         byte[] buf = new byte[65536];
-        try
+
+        java.io.File currFile = (java.io.File) packageMap.get(packages[i]);
+        if ("JAR".equals(packages[i].type) && currFile.getName().endsWith("jar"))
         {
-          zippy = new java.util.zip.ZipFile(currFile);
-          int numFiles = zippy.size();
-          if (Sage.DBG) System.out.println("Zip archive contains " + numFiles + " entries");
-          java.util.Enumeration zipList = zippy.entries();
-          while (zipList.hasMoreElements())
+          // user has provided a direct jar file so we don't need to extract it, we just add it directly
+          // and track it.
+          if (Sage.DBG) System.out.println("Beginning copying jar from cache file " + currFile + " to root dest dir of: " + destDir);
+
+          String result = null;
+          try
           {
-            java.util.zip.ZipEntry entry = (java.util.zip.ZipEntry) zipList.nextElement();
-            if (Sage.DBG) System.out.println("Processing zip entry: " + entry.getName());
-            java.io.File localExtract = new java.io.File(destDir, entry.getName());
-            nameToFileMap.put(entry.getName(), localExtract);
-            if (entry.isDirectory())
+            // NOTE: Destination JAR file will have the same name as the JAR file as defined in the jar URL
+            java.io.File destFile = new java.io.File(destDir, new File(packages[i].url).getName());
+            result = installFile(packages[i], destFile, destDir, new FileInstallableItem(currFile, destFile.getName()), priorStateIndex, myInstallIndex, StagedRenameWriter.get(), buf);
+            if (result!=null) return result;
+          } catch (IOException e)
+          {
+            if (Sage.DBG || Sage.TESTING)
             {
-              if (!localExtract.isDirectory() && !localExtract.mkdirs())
-              {
-                if (Sage.DBG) System.out.println("ERROR Cannot create directory from zip archive: " + localExtract);
-                progressMsg = "";
-                return "FAILED - Cannot Create " + localExtract;
-              }
-              else
-              {
-                if (Sage.DBG) System.out.println("Created local directory: " + localExtract);
-                if (entry.getTime() > 0)
-                  localExtract.setLastModified(entry.getTime());
-                trackFile(localExtract, myInstallIndex, "0", false);
-                // Also track any parent directories that were automatically created
-                String dirName = entry.getName();
-                int dirIdx = dirName.lastIndexOf(java.io.File.separatorChar);
-                while (dirIdx != -1)
-                {
-                  dirName = dirName.substring(0, dirIdx);
-                  trackFile(new java.io.File(destDir, dirName), myInstallIndex, "0", false);
-                  dirIdx = dirName.lastIndexOf(java.io.File.separatorChar);
-                }
-              }
+              System.out.println("ERROR installing jar file " + currFile);
+              e.printStackTrace();
             }
-            else
+            progressMsg = "";
+            return "FAILED - Jar Installation of " + packages[i].url;
+          }
+        }
+        else
+        {
+          // We need to check for overwrite at each file if its OK or not; we also need to stage any failed extractions
+          // zip file source, extract and preserve directory structure, permissions and such
+          if (Sage.DBG)
+            System.out.println("Beginning zip file extraction from cache file " + currFile + " to root dest dir of: " + destDir);
+          java.util.zip.ZipFile zippy = null;
+          try
+          {
+            zippy = new java.util.zip.ZipFile(currFile);
+            ZipEntryInstallableItem zipEntryFacade = new ZipEntryInstallableItem(zippy);
+
+            int numFiles = zippy.size();
+            if (Sage.DBG) System.out.println("Zip archive contains " + numFiles + " entries");
+            java.util.Enumeration zipList = zippy.entries();
+            while (zipList.hasMoreElements())
             {
-              if (packages[i].overwrite || !localExtract.isFile())
+              java.util.zip.ZipEntry entry = (java.util.zip.ZipEntry) zipList.nextElement();
+              if (Sage.DBG) System.out.println("Processing zip entry: " + entry.getName());
+              java.io.File localExtract = new java.io.File(destDir, entry.getName());
+              nameToFileMap.put(entry.getName(), localExtract);
+              if (entry.isDirectory())
               {
-                boolean openFailed = false;
-                java.io.File orgLocalExtract = localExtract;
-                // Check to see if the local file is one that we know we shouldn't overwrite while we're running
-                String lcName = localExtract.getName();
-                if (localExtract.isFile() && !canModifyPath(localExtract))
+                if (!localExtract.isDirectory() && !localExtract.mkdirs())
                 {
-                  openFailed = true;
-                }
-                String orgMD5 = null;
-                if (Sage.DBG) System.out.println("Current extraction local target=" + localExtract);
-                if (localExtract.isFile())
+                  if (Sage.DBG) System.out.println("ERROR Cannot create directory from zip archive: " + localExtract);
+                  progressMsg = "";
+                  return "FAILED - Cannot Create " + localExtract;
+                } else
                 {
-                  if (pendingFilesystem.containsKey(localExtract))
-                  {
-                    orgMD5 = (String) pendingFilesystem.get(localExtract);
-                    if ("0".equals(orgMD5))
-                    {
-                      orgMD5 = null;
-                    }
-                    else
-                    {
-                      trackFile(localExtract, priorStateIndex, orgMD5, true);
-                    }
-                  }
-                  else
-                  {
-                    orgMD5 = IOUtils.calcMD5(localExtract);
-                    // Update the filetracker with the apriori state of this file
-                    // This will also store a backup of the file if needed
-                    trackFile(localExtract, priorStateIndex, orgMD5, true);
-                  }
-                }
-                else
-                {
-                  java.io.File dirParent = localExtract.getParentFile();
-                  if (!dirParent.isDirectory() && !dirParent.mkdirs())
-                  {
-                    if (Sage.DBG) System.out.println("ERROR Cannot create directory from zip archive: " + dirParent);
-                    progressMsg = "";
-                    return "FAILED - Cannot Create " + dirParent;
-                  }
-                  if (Sage.DBG) System.out.println("Ensured existence of parent directory " + dirParent + " isDir=" + dirParent.isDirectory());
+                  if (Sage.DBG) System.out.println("Created local directory: " + localExtract);
+                  if (entry.getTime() > 0)
+                    localExtract.setLastModified(entry.getTime());
+                  trackFile(localExtract, myInstallIndex, "0", false);
                   // Also track any parent directories that were automatically created
                   String dirName = entry.getName();
                   int dirIdx = dirName.lastIndexOf(java.io.File.separatorChar);
@@ -2047,128 +2038,21 @@ public class CorePluginManager implements Runnable
                     dirIdx = dirName.lastIndexOf(java.io.File.separatorChar);
                   }
                 }
-                if (!openFailed)
-                {
-                  try
-                  {
-                    outStream = new java.io.FileOutputStream(localExtract);
-                  }
-                  catch (java.io.IOException ioe)
-                  {
-                    if (localExtract.isFile())
-                    {
-                      if (Sage.DBG) System.out.println("ERROR opening local file to write to: " + localExtract);
-                      // Extract the file to a temporary location and check the MD5Sum of it to see if we even need to install it
-                      openFailed = true;
-                    }
-                    else
-                      throw ioe;
-                  }
-                }
-                if (openFailed)
-                {
-                  localExtract = new java.io.File(localExtract.getAbsolutePath() + "." + myInstallIndex);
-                  int x = 0;
-                  while (localExtract.isFile())
-                  {
-                    localExtract = new java.io.File(localExtract.getAbsolutePath() + "." + myInstallIndex + "." + x++);
-                  }
-                  outStream = new java.io.FileOutputStream(localExtract);
-                }
-                inStream = zippy.getInputStream(entry);
-                int numRead = inStream.read(buf);
-                while (numRead != -1)
-                {
-                  outStream.write(buf, 0, numRead);
-                  numRead = inStream.read(buf);
-                }
-                outStream.close();
-                outStream = null;
-                inStream.close();
-                inStream = null;
-                if (entry.getTime() > 0)
-                  localExtract.setLastModified(entry.getTime());
-                String finalMD5 = IOUtils.calcMD5(localExtract);
-                if (openFailed)
-                {
-                  if (Sage.DBG) System.out.println("Extracted file to temporary location " + localExtract + " to check MD5 to see if we even need to install it since we can't write to the current file: " + orgLocalExtract);
-                  if (orgMD5 != null && finalMD5.equals(orgMD5))
-                  {
-                    if (Sage.DBG) System.out.println("MD5 sums matched...we can safely skip this file as part of the install process: " + orgLocalExtract);
-                    // We may be skipping the file install; but we still need to log it with the tracker!
-                    localExtract.delete(); // delete the temp file
-                  }
-                  else
-                  {
-                    if (Sage.DBG) System.out.println("MD5 sums didn't match; the file will have to be installed after a SageTV restart...update the stagedrename.txt file!");
-                    needRestart = true;
-                    if (Sage.DBG) System.out.println("Staging file due to restart requirement: " + localExtract + " target=" + orgLocalExtract);
-                    if (stagedRenameWriter == null)
-                    {
-                      try
-                      {
-                        stagedRenameWriter = new java.io.PrintWriter(new java.io.BufferedWriter(new java.io.FileWriter(new java.io.File(System.getProperty("user.dir"),
-                            "stagedrenames.txt"), true)));
-                      }
-                      catch (java.io.IOException ioe)
-                      {
-                        if (Sage.DBG) System.out.println("ERROR cannot open stagedrenames.txt file for writing staging information: " + ioe);
-                        progressMsg = "";
-                        return "FAILED - Cannot Open " + new java.io.File(System.getProperty("user.dir"), "stagedrenames.txt");
-                      }
-                    }
-                    // Write the information for staging to the stagedrenames.txt file...we already have the staging file resource created
-                    stagedRenameWriter.println(localExtract.getAbsolutePath());
-                    stagedRenameWriter.println(orgLocalExtract.getAbsolutePath());
-                    pendingFilesystem.put(orgLocalExtract, finalMD5);
-                  }
-                }
-                else
-                {
-                  if (Sage.DBG) System.out.println("Extracted file from archive to: " + localExtract);
-                  // Remove this from the MetaImage cache in case it was an actual image file we had loaded (sizing information may have changed)
-                  MetaImage.clearFromCache(localExtract);
-                }
-                trackFile(orgLocalExtract, myInstallIndex, finalMD5, false);
-              }
-              else
+              } else
               {
-                if (Sage.DBG) System.out.println("Skipping zip entry because overwrite is disabled and the file exists: " + localExtract);
+                zipEntryFacade.setEntry(entry);
+                String result = installFile(packages[i], localExtract, destDir, zipEntryFacade, priorStateIndex, myInstallIndex, StagedRenameWriter.get(), buf);
+                if (result!=null) return result;
               }
             }
-          }
-        }
-        catch (java.io.IOException ze)
-        {
-          if (Sage.DBG) System.out.println("ERROR unzipping cache file " + currFile + " of " + ze);
-          progressMsg = "";
-          return "FAILED - Zip Extraction of " + packages[i].url;
-        }
-        finally
-        {
-          if (outStream != null)
+          } catch (java.io.IOException ze)
           {
-            try
-            {
-              outStream.close();
-            }
-            catch (Exception e){}
-          }
-          if (inStream != null)
+            if (Sage.DBG) System.out.println("ERROR unzipping cache file " + currFile + " of " + ze);
+            progressMsg = "";
+            return "FAILED - Zip Extraction of " + packages[i].url;
+          } finally
           {
-            try
-            {
-              inStream.close();
-            }
-            catch (Exception e){}
-          }
-          if (zippy != null)
-          {
-            try
-            {
-              zippy.close();
-            }
-            catch (Exception e){}
+            IOUtils.closeQuietly(zippy);
           }
         }
 
@@ -2182,14 +2066,7 @@ public class CorePluginManager implements Runnable
     }
     finally
     {
-      if (stagedRenameWriter != null)
-      {
-        try
-        {
-          stagedRenameWriter.close();
-        }
-        catch (Exception e){}
-      }
+      IOUtils.closeQuietly(stagedRenameWriter);
       fileTracker.savePrefs();
     }
 
@@ -2279,7 +2156,7 @@ public class CorePluginManager implements Runnable
     if (!needRestart)
     {
       PluginWrapper newWrap = (PluginWrapper) myPlugins.get(plug.getId());
-      SageTVPlugin realPlug = newWrap.getRealPlugin();
+      SageTVPlugin realPlug = (newWrap!=null) ? newWrap.getRealPlugin() : null;
       if (realPlug != null)
       {
         try
@@ -2313,6 +2190,268 @@ public class CorePluginManager implements Runnable
   public static File getDevPluginsDir() {
     // sagetv appears to assume we'll always be run from the SageTV home directory
     return new File("SageTVPluginsDev.d");
+  }
+
+  /**
+   * Encapsulates an installable item that might come various sources, such as a ZipFile or regular File
+   */
+  interface InstallableItem
+  {
+    String getName();
+    InputStream getInputStream() throws IOException;
+    long getTime();
+  }
+
+  /**
+   * Encapsulates java File as an installable item
+   */
+  private static class FileInstallableItem implements InstallableItem
+  {
+    private final File file;
+    private final String name;
+
+    FileInstallableItem(File file, String name)
+    {
+      this.file=file;
+      this.name=name;
+    }
+    public String getName()
+    {
+      return name;
+    }
+
+    public InputStream getInputStream() throws FileNotFoundException
+    {
+      return new FileInputStream(file);
+    }
+
+    public long getTime()
+    {
+      return file.lastModified();
+    }
+  }
+
+  /**
+   * Encapsulates a ZipEntry as an installable item
+   */
+  private static class ZipEntryInstallableItem implements InstallableItem
+  {
+    private final ZipFile file;
+    private ZipEntry entry;
+
+    ZipEntryInstallableItem(ZipFile file)
+    {
+      this.file=file;
+    }
+
+    public void setEntry(ZipEntry entry) {
+      this.entry=entry;
+    }
+
+    public String getName()
+    {
+      return entry.getName();
+    }
+
+    public InputStream getInputStream() throws IOException
+    {
+      return file.getInputStream(entry);
+    }
+
+    public long getTime()
+    {
+      return entry.getTime();
+    }
+  }
+
+  /**
+   * Provides a singleton access to the Staged Renamer writer
+   */
+  static class StagedRenameWriter implements Closeable
+  {
+    static StagedRenameWriter instance = new StagedRenameWriter();
+
+    public static final StagedRenameWriter get()
+    {
+      return instance;
+    }
+
+    java.io.PrintWriter stagedRenameWriter = null;
+
+    public void open() throws IOException
+    {
+      if (stagedRenameWriter!=null)
+      {
+        stagedRenameWriter = new java.io.PrintWriter(new java.io.BufferedWriter(new java.io.FileWriter(new java.io.File(System.getProperty("user.dir"),
+          "stagedrenames.txt"), true)));
+      }
+    }
+
+    public void close()
+    {
+      IOUtils.closeQuietly(stagedRenameWriter);
+      stagedRenameWriter=null;
+    }
+
+    public void println(String msg) throws IOException
+    {
+      open();
+      stagedRenameWriter.println(msg);
+    }
+  }
+
+  /**
+   * Installs an Installable Item to the localExtract file.
+   *
+   * @param pkg Plugin Package
+   * @param localExtract Local File
+   * @param destDir Destination Directory
+   * @param entry Installable Item form which the get the Name and Input Stream
+   * @param priorStateIndex
+   * @param myInstallIndex
+   * @param stagedRenameWriter writer for writing staged renames
+   * @param buf copy data buffer
+   * @return "OK" on success, or and error message if it failed
+   * @throws IOException for any IO related errors
+   */
+  String installFile(PluginWrapper.Package pkg, File localExtract, File destDir, InstallableItem entry, final int priorStateIndex, final int myInstallIndex, StagedRenameWriter stagedRenameWriter, final byte buf[]) throws IOException
+  {
+    if (pkg.overwrite || !localExtract.isFile())
+    {
+      boolean openFailed = false;
+      java.io.File orgLocalExtract = localExtract;
+      // Check to see if the local file is one that we know we shouldn't overwrite while we're running
+      if (localExtract.isFile() && !canModifyPath(localExtract))
+      {
+        openFailed = true;
+      }
+      String orgMD5 = null;
+      if (Sage.DBG) System.out.println("Current extraction local target=" + localExtract);
+      if (localExtract.isFile())
+      {
+        if (pendingFilesystem.containsKey(localExtract))
+        {
+          orgMD5 = (String) pendingFilesystem.get(localExtract);
+          if ("0".equals(orgMD5))
+          {
+            orgMD5 = null;
+          } else
+          {
+            trackFile(localExtract, priorStateIndex, orgMD5, true);
+          }
+        } else
+        {
+          orgMD5 = IOUtils.calcMD5(localExtract);
+          // Update the filetracker with the apriori state of this file
+          // This will also store a backup of the file if needed
+          trackFile(localExtract, priorStateIndex, orgMD5, true);
+        }
+      } else
+      {
+        java.io.File dirParent = localExtract.getParentFile();
+        if (!dirParent.isDirectory() && !dirParent.mkdirs())
+        {
+          if (Sage.DBG) System.out.println("ERROR Cannot create directory from zip archive: " + dirParent);
+          progressMsg = "";
+          return "FAILED - Cannot Create " + dirParent;
+        }
+        if (Sage.DBG)
+          System.out.println("Ensured existence of parent directory " + dirParent + " isDir=" + dirParent.isDirectory());
+        // Also track any parent directories that were automatically created
+        String dirName = entry.getName();
+        int dirIdx = dirName.lastIndexOf(java.io.File.separatorChar);
+        while (dirIdx != -1)
+        {
+          dirName = dirName.substring(0, dirIdx);
+          trackFile(new java.io.File(destDir, dirName), myInstallIndex, "0", false);
+          dirIdx = dirName.lastIndexOf(java.io.File.separatorChar);
+        }
+      }
+
+      FileOutputStream outStream=null;
+      if (!openFailed)
+      {
+        try
+        {
+          outStream = new java.io.FileOutputStream(localExtract);
+        } catch (java.io.IOException ioe)
+        {
+          if (localExtract.isFile())
+          {
+            if (Sage.DBG) System.out.println("ERROR opening local file to write to: " + localExtract);
+            // Extract the file to a temporary location and check the MD5Sum of it to see if we even need to install it
+            openFailed = true;
+          } else
+            throw ioe;
+        }
+      }
+      if (openFailed)
+      {
+        localExtract = new java.io.File(localExtract.getAbsolutePath() + "." + myInstallIndex);
+        int x = 0;
+        while (localExtract.isFile())
+        {
+          localExtract = new java.io.File(localExtract.getAbsolutePath() + "." + myInstallIndex + "." + x++);
+        }
+        outStream = new java.io.FileOutputStream(localExtract);
+      }
+      InputStream inStream = entry.getInputStream();
+      int numRead = inStream.read(buf);
+      while (numRead != -1)
+      {
+        outStream.write(buf, 0, numRead);
+        numRead = inStream.read(buf);
+      }
+      outStream.close();
+      inStream.close();
+      if (entry.getTime() > 0)
+        localExtract.setLastModified(entry.getTime());
+      String finalMD5 = IOUtils.calcMD5(localExtract);
+      if (openFailed)
+      {
+        if (Sage.DBG)
+          System.out.println("Extracted file to temporary location " + localExtract + " to check MD5 to see if we even need to install it since we can't write to the current file: " + orgLocalExtract);
+        if (orgMD5 != null && finalMD5.equals(orgMD5))
+        {
+          if (Sage.DBG)
+            System.out.println("MD5 sums matched...we can safely skip this file as part of the install process: " + orgLocalExtract);
+          // We may be skipping the file install; but we still need to log it with the tracker!
+          localExtract.delete(); // delete the temp file
+        } else
+        {
+          if (Sage.DBG)
+            System.out.println("MD5 sums didn't match; the file will have to be installed after a SageTV restart...update the stagedrename.txt file!");
+          needRestart = true;
+          if (Sage.DBG)
+            System.out.println("Staging file due to restart requirement: " + localExtract + " target=" + orgLocalExtract);
+            try
+            {
+              // Write the information for staging to the stagedrenames.txt file...we already have the staging file resource created
+              stagedRenameWriter.println(localExtract.getAbsolutePath());
+              stagedRenameWriter.println(orgLocalExtract.getAbsolutePath());
+            } catch (java.io.IOException ioe)
+            {
+              if (Sage.DBG)
+                System.out.println("ERROR cannot open stagedrenames.txt file for writing staging information: " + ioe);
+              progressMsg = "";
+              return "FAILED - Cannot Open " + new java.io.File(System.getProperty("user.dir"), "stagedrenames.txt");
+            }
+
+          pendingFilesystem.put(orgLocalExtract, finalMD5);
+        }
+      } else
+      {
+        if (Sage.DBG) System.out.println("Extracted file from archive to: " + localExtract);
+        // Remove this from the MetaImage cache in case it was an actual image file we had loaded (sizing information may have changed)
+        MetaImage.clearFromCache(localExtract);
+      }
+      trackFile(orgLocalExtract, myInstallIndex, finalMD5, false);
+    } else
+    {
+      if (Sage.DBG)
+        System.out.println("Skipping zip entry because overwrite is disabled and the file exists: " + localExtract);
+    }
+    return null;
   }
 
   private boolean canModifyPath(java.io.File f)
@@ -2808,7 +2947,7 @@ public class CorePluginManager implements Runnable
         }
         else if ("MD5".equalsIgnoreCase(qName))
         {
-          currPackage.md5 = data;
+          currPackage.setRawMD5(data);
         }
         else if ("Overwrite".equalsIgnoreCase(qName))
         {
@@ -2972,13 +3111,13 @@ public class CorePluginManager implements Runnable
                 // set the download url to be the local file
                 currPackage.url = localFile.toURI().toURL().toString();
                 // set the md5 automatically from the local file
-                currPackage.md5 = IOUtils.calcMD5(localFile);
+                currPackage.setRawMD5(IOUtils.calcMD5(localFile));
                 // super will already populate the version, but in dev mode, we force an increment on the version
                 // so that sagetv will try to install it every time
                 // LIMITATION: can only update once a minute :)
                 SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmm");
                 currPlugin.setVersion(currPlugin.getVersion()+"."+sdf.format(new Date()));
-                if (Sage.DBG) System.out.println("Changed Package Url, MD5, and Version to " + currPackage.url + ", "+currPackage.md5+", " + currPlugin.getVersion() + " for " + currPlugin.getName() + "("+currPlugin.getId()+")");
+                if (Sage.DBG) System.out.println("Changed Package Url, MD5, and Version to " + currPackage.url + ", "+currPackage.getRawMD5()+", " + currPlugin.getVersion() + " for " + currPlugin.getName() + "("+currPlugin.getId()+")");
                 handled=true;
               }
               catch (MalformedURLException e)
@@ -2991,7 +3130,7 @@ public class CorePluginManager implements Runnable
         else if ("MD5".equalsIgnoreCase(qName))
         {
           // only set the MD5 from the xml if we haven't already calculated it
-          if (currPackage.md5!=null)
+          if (currPackage.getRawMD5()!=null)
             handled=true;
         }
       }
