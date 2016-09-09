@@ -14,6 +14,13 @@ public class IOUtilsTest
   public void testGetUrlAsString() throws Exception
   {
     String md5 = IOUtils.getUrlAsString(file2url(getTestResource("test-jar-1.0.zip.md5")));
-    assertEquals(md5, "beec1608cf997d3acb42f0ab772b143f");
+    assertEquals(md5, "beec1608cf997d3acb42f0ab772b143f\n");
+  }
+
+  @Test
+  public void testReadFileAsString() throws Exception
+  {
+    String md5 = IOUtils.getFileAsString(getTestResource("test-jar-1.0.zip.md5"));
+    assertEquals(md5, "beec1608cf997d3acb42f0ab772b143f\n");
   }
 }

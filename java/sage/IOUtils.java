@@ -20,9 +20,11 @@ import sage.io.SageInputStream;
 
 import java.io.BufferedReader;
 import java.io.Closeable;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 
 public class IOUtils
@@ -44,20 +46,13 @@ public class IOUtils
     try
     {
       URL url = new URL(urlStr);
-      InputStream is = url.openStream();
-      BufferedReader br = new BufferedReader(new InputStreamReader(is));
-
-      String line;
-      while ( (line = br.readLine()) != null)
-        sb.append(line);
-
-      closeQuietly(br);
-      closeQuietly(is);
+      return getInputStreamAsString(url.openStream());
     }
     catch (Exception e)
     {
       if (Sage.DBG)
       {
+        System.out.println("Failed to read URL to string for " + urlStr);
         e.printStackTrace();
       }
     }
@@ -641,24 +636,32 @@ public class IOUtils
     return dir.delete() && rv;
   }
 
-  public static String getFileAsString(java.io.File file)
+  /**
+   * Reads an InputStream as a String and then closes the stream and returns the contents as a String
+   *
+   * @param is
+   * @return
+   * @throws IOException
+   */
+  public static String getInputStreamAsString(java.io.InputStream is) throws IOException
   {
     java.io.BufferedReader buffRead = null;
     StringBuffer sb = new StringBuffer();
     try
     {
-      buffRead = new java.io.BufferedReader(new java.io.FileReader(file));
-      char[] cbuf = new char[4096];
+      try
+      {
+        buffRead = new java.io.BufferedReader(new InputStreamReader(is, "UTF-8"));
+      } catch (UnsupportedEncodingException uee) {
+        buffRead = new java.io.BufferedReader(new InputStreamReader(is));
+      }
+      char[] cbuf = new char[8192];
       int numRead = buffRead.read(cbuf);
       while (numRead != -1)
       {
         sb.append(cbuf, 0, numRead);
         numRead = buffRead.read(cbuf);
       }
-    }
-    catch (java.io.IOException e)
-    {
-      System.out.println("Error reading file " + file + " of: " + e);
     }
     finally
     {
@@ -669,6 +672,19 @@ public class IOUtils
       }
     }
     return sb.toString();
+  }
+
+  public static String getFileAsString(java.io.File file)
+  {
+    try
+    {
+      return getInputStreamAsString(new FileInputStream(file));
+    }
+    catch (java.io.IOException e)
+    {
+      System.out.println("Error reading file " + file + " of: " + e);
+    }
+    return null;
   }
 
   public static boolean writeStringToFile(java.io.File file, String s) {

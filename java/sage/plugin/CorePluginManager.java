@@ -1903,7 +1903,6 @@ public class CorePluginManager implements Runnable
     }
 
     if (Sage.DBG) System.out.println("Plugin dependencies have been verified....proceeding with extraction and installation: " + plug.getId());
-    java.io.PrintWriter stagedRenameWriter = null;
 
     globalInstallCount++;
     int priorStateIndex = globalInstallCount;
@@ -2066,7 +2065,7 @@ public class CorePluginManager implements Runnable
     }
     finally
     {
-      IOUtils.closeQuietly(stagedRenameWriter);
+      IOUtils.closeQuietly(StagedRenameWriter.get());
       fileTracker.savePrefs();
     }
 
@@ -2369,41 +2368,51 @@ public class CorePluginManager implements Runnable
       }
 
       FileOutputStream outStream=null;
-      if (!openFailed)
+      try
       {
+        if (!openFailed)
+        {
+          try
+          {
+            outStream = new java.io.FileOutputStream(localExtract);
+          } catch (java.io.IOException ioe)
+          {
+            if (localExtract.isFile())
+            {
+              if (Sage.DBG) System.out.println("ERROR opening local file to write to: " + localExtract);
+              // Extract the file to a temporary location and check the MD5Sum of it to see if we even need to install it
+              openFailed = true;
+            } else
+              throw ioe;
+          }
+        }
+        if (openFailed)
+        {
+          localExtract = new java.io.File(localExtract.getAbsolutePath() + "." + myInstallIndex);
+          int x = 0;
+          while (localExtract.isFile())
+          {
+            localExtract = new java.io.File(localExtract.getAbsolutePath() + "." + myInstallIndex + "." + x++);
+          }
+          outStream = new java.io.FileOutputStream(localExtract);
+        }
+        InputStream inStream = entry.getInputStream();
         try
         {
-          outStream = new java.io.FileOutputStream(localExtract);
-        } catch (java.io.IOException ioe)
-        {
-          if (localExtract.isFile())
+          int numRead = inStream.read(buf);
+          while (numRead != -1)
           {
-            if (Sage.DBG) System.out.println("ERROR opening local file to write to: " + localExtract);
-            // Extract the file to a temporary location and check the MD5Sum of it to see if we even need to install it
-            openFailed = true;
-          } else
-            throw ioe;
-        }
-      }
-      if (openFailed)
-      {
-        localExtract = new java.io.File(localExtract.getAbsolutePath() + "." + myInstallIndex);
-        int x = 0;
-        while (localExtract.isFile())
+            outStream.write(buf, 0, numRead);
+            numRead = inStream.read(buf);
+          }
+        } finally
         {
-          localExtract = new java.io.File(localExtract.getAbsolutePath() + "." + myInstallIndex + "." + x++);
+          IOUtils.closeQuietly(inStream);
         }
-        outStream = new java.io.FileOutputStream(localExtract);
-      }
-      InputStream inStream = entry.getInputStream();
-      int numRead = inStream.read(buf);
-      while (numRead != -1)
+      } finally
       {
-        outStream.write(buf, 0, numRead);
-        numRead = inStream.read(buf);
+        IOUtils.closeQuietly(outStream);
       }
-      outStream.close();
-      inStream.close();
       if (entry.getTime() > 0)
         localExtract.setLastModified(entry.getTime());
       String finalMD5 = IOUtils.calcMD5(localExtract);
