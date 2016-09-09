@@ -120,6 +120,7 @@ sourceSets {
 
 dependencies {
 	testCompile 'org.testng:testng:6.1.1'
+	testCompile "org.mockito:mockito-core:1.9.5"
 
 	compile files(
 		'third_party/UPnPLib/sbbi-upnplib-1.0.3.jar',
@@ -142,8 +143,12 @@ dependencies {
 test {
 	useTestNG()
 	reports.html.destination = file("$sageBuildDir/reports/testng")
-	systemProperty 'io_test_file', "$sageBuildDir/delete-io-testng."
-	systemProperty 'nio_test_file', "$sageBuildDir/delete-nio-testng."
+	systemProperty 'io_test_file', "delete-io-testng."
+	systemProperty 'nio_test_file', "delete-nio-testng."
+	systemProperty 'sage.testing', "true"
+
+    workingDir = file("$sageBuildDir/sagetv_test/");
+    workingDir.mkdirs();
 }
 
 /**
