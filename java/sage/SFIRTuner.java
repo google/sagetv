@@ -22,7 +22,7 @@ public class SFIRTuner implements Runnable
 {
   static
   {
-    //System.loadLibrary("Sage");
+    //sage.Native.loadLibrary("Sage");
   }
   public static final String REMOTE_DIR = "remote_dir";
   public static final String IRTUNE_REPEAT_FACTOR = "irtune_repeat_factor";

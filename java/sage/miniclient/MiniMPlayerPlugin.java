@@ -433,7 +433,7 @@ public class MiniMPlayerPlugin implements Runnable
           {
             // Setup the color key parameter for the overlay
             cmdOpt2 += " -vo directx:colorkey=" + Integer.toString(getDesktopColorKey());
-            System.loadLibrary("SageTVWin32");
+            sage.Native.loadLibrary("SageTVWin32");
             cmdOpt2 += " -wid " + sage.UIUtils.getHWND(target);
           }
           cmdOpt2 += " -nokeepaspect";
@@ -497,7 +497,7 @@ public class MiniMPlayerPlugin implements Runnable
           if (!"true".equals(MiniClient.myProperties.getProperty("opengl", "true")))
           {
             try {
-              System.loadLibrary("Sage");
+              sage.Native.loadLibrary("Sage");
               cmdOpt2 += " -wid " + sage.UIUtils.getHWND(target);
             } catch (Throwable t) {}
           }

@@ -255,7 +255,7 @@ public class WindowsServiceControl implements ActionListener
 
   private WindowsServiceControl()
   {
-    System.loadLibrary("SageTVWin32");
+    sage.Native.loadLibrary("SageTVWin32");
     ptr = openServiceHandle0("SageTV");
     f = new JFrame(rez("SageTV_Service_Control"));
     f.addWindowListener(new WindowAdapter()

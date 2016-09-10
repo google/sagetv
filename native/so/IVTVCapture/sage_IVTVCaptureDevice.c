@@ -68,7 +68,7 @@ inline DWORD DWORD_SWAP(DWORD x)
 
 #define BOOL int
 
-inline BOOL IsNTSCVideoCode(int x)
+static inline BOOL IsNTSCVideoCode(int x)
 { 
 	return x<=1; 
 }

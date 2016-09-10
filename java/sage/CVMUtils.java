@@ -27,7 +27,7 @@ public class CVMUtils
     {
       try
       {
-        System.loadLibrary("CVMUtils");
+        sage.Native.loadLibrary("CVMUtils");
       }
       catch (Throwable t)
       {

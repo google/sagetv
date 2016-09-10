@@ -29,7 +29,7 @@ public class MPEGParser
     {
       try
       {
-        System.loadLibrary("MPEGParser");
+        sage.Native.loadLibrary("MPEGParser");
       }
       catch (Throwable t)
       {
