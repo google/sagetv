@@ -6,6 +6,10 @@ config*.log
 
 /java/sage/SageConstants.java.bak
 
+# sage logging
+/sagetv
+/sagetv_*.txt
+
 /native/**/*.o
 /native/**/*.map
 /native/**/*.a
