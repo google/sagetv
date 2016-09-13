@@ -4261,14 +4261,15 @@ public class MediaFile extends DBObject implements SegmentedFile
       // Stick with ASCII to prevent issues with the filesystem names unless a custom property is set
       if (Sage.getBoolean("allow_unicode_characters_in_generated_filenames", false))
       {
-        if (Character.isLetterOrDigit(c))
-          sb.append(c);
+        if (Character.isLetterOrDigit(c)
+          || (Sage.getBoolean("extended_filenames", false) && LEGAL_FILE_NAME_CHARACTERS.contains(String.valueOf(c))))
+            sb.append(c);
       } else if ((c >= 'a' && c <= 'z') ||
         (c >= '0' && c <= '9') ||
         (c >= 'A' && c <= 'Z') ||
         // Jeff Harrison - 09/10/2016
-     	// Keep spaces and other extra characters in filenames
-        (Sage.getBoolean("extended_filenames", false) && LEGAL_FILE_NAME_CHARACTERS.contains(c + "")))
+     	  // Keep spaces and other extra characters in filenames
+        (Sage.getBoolean("extended_filenames", false) && LEGAL_FILE_NAME_CHARACTERS.contains(String.valueOf(c))))
           sb.append(c);
     }
     return sb.toString();
