@@ -15,6 +15,12 @@
  */
 package sage;
 
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.JComponent;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
+import javax.swing.JWindow;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
@@ -34,12 +40,10 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
 import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -56,6 +60,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -73,13 +78,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Vector;
 
-import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
-import javax.swing.JComponent;
-import javax.swing.JMenuItem;
-import javax.swing.JPopupMenu;
-import javax.swing.JWindow;
-
 public final class Sage
 {
   // This makes the service fail if TRUE
@@ -91,6 +89,16 @@ public final class Sage
   public static boolean MAC_OS_X = false;
   public static boolean VISTA_OS = false; // if this is true, then WINDOWS_OS is also true
   public static boolean EMBEDDED = false;
+
+  /**
+   * Testing is set to true when the sage.testing System Property is set.  TESTING has a special meaning
+   * in that some function calls/behaviours will be different.  ie, Generally in TESTING the NATIVE parts fail
+   * to load, and as such we tend to avoid calling native methods.  Also STDOUT/STDERR are NOT redirected to a
+   * file when TESTING is enabled.
+   */
+  public static boolean TESTING = false;
+
+
   public static final boolean PERF_ANALYSIS = false;
   public static final long UI_BUILD_THRESHOLD_TIME = 1;
   public static final long EVALUATE_THRESHOLD_TIME = 1;
@@ -103,6 +111,7 @@ public final class Sage
   public static boolean USE_HIRES_TIME = true;
   static
   {
+    TESTING = "true".equalsIgnoreCase(System.getProperty("sage.testing"));
     EMBEDDED = System.getProperty("sage.embedded") != null;
     WINDOWS_OS = System.getProperty("os.name").toLowerCase().indexOf("windows") != -1;
     MAC_OS_X = System.getProperty("os.name").toLowerCase().indexOf("mac os x") != -1;
@@ -110,9 +119,9 @@ public final class Sage
     VISTA_OS = WINDOWS_OS && (System.getProperty("os.version").startsWith("6.") || System.getProperty("os.version").startsWith("7."));
 
     if (WINDOWS_OS)
-      System.loadLibrary("SageTVWin32");
+      sage.Native.loadLibrary("SageTVWin32");
     else
-      System.loadLibrary("Sage");
+      sage.Native.loadLibrary("Sage");
 
     if (EMBEDDED)
     {
@@ -121,9 +130,13 @@ public final class Sage
       USE_HIRES_TIME = false;
     }
     baseSystemTime = System.currentTimeMillis();
-    baseEventTime = getEventTime0();
-    baseCPUTime = getCpuTime();
-    cpuFreq = getCpuResolution();
+    // prevents SageTV initialization when the Native libraries are not loaded (or can't be loaded)
+    if (!Native.NATIVE_FAILED)
+    {
+      baseEventTime = getEventTime0();
+      baseCPUTime = getCpuTime();
+      cpuFreq = getCpuResolution();
+    }
     createDFFormats();
   }
 
@@ -192,7 +205,10 @@ public final class Sage
         return cputime;
     }
     else
-      return getEventTime0();
+      if (!Native.NATIVE_FAILED)
+        return getEventTime0();
+      else
+        return System.currentTimeMillis();
   }
 
   public static int getHKEYForName(String s)
@@ -754,9 +770,12 @@ public final class Sage
         redir = new MyPrinter(prefix, outputFile, new BufferedOutputStream(
             new FileOutputStream(outputFile)), false);
 
-        System.setOut(redir);
-        if (stdOutHandle != 0)
-          System.setErr(redir);
+        if (!TESTING)
+        {
+          System.setOut(redir);
+          if (stdOutHandle != 0)
+            System.setErr(redir);
+        }
       }
       catch (IOException e)
       {
@@ -791,10 +810,13 @@ public final class Sage
               }
             }
           };
-          System.out.close();
-          System.err.close();
-          System.setOut(redir);
-          System.setErr(redir);
+          if (!TESTING)
+          {
+            System.out.close();
+            System.err.close();
+            System.setOut(redir);
+            System.setErr(redir);
+          }
         }
         catch (IOException e)
         {
@@ -836,9 +858,12 @@ public final class Sage
               }
             }
           };
-          System.setOut(redir);
-          if (stdOutHandle != 0)
-            System.setErr(redir);
+          if (!TESTING)
+          {
+            System.setOut(redir);
+            if (stdOutHandle != 0)
+              System.setErr(redir);
+          }
         }
         catch (IOException e)
         {
@@ -928,8 +953,11 @@ public final class Sage
         }
       };
 
-      System.setOut(redir);
-      System.setErr(redir);
+      if (!TESTING)
+      {
+        System.setOut(redir);
+        System.setErr(redir);
+      }
     }
   }
 
@@ -960,6 +988,7 @@ public final class Sage
     if (!SageConstants.LITE)
       startup(args);
   }
+
   static void startup(String[] args) throws Throwable
   {
     try
@@ -1107,7 +1136,28 @@ public final class Sage
         userLocale = new Locale(preferredLanguage, preferredCountry);
       else
         userLocale = Locale.getDefault();
-      coreRez = ResourceBundle.getBundle("SageTVCoreTranslations", userLocale);
+      if (TESTING)
+      {
+        coreRez = new ResourceBundle()
+        {
+          Vector<String> keys = new Vector<String>();
+          @Override
+          protected Object handleGetObject(String s)
+          {
+            keys.add(s);
+            return s;
+          }
+
+          @Override
+          public Enumeration<String> getKeys()
+          {
+            return keys.elements();
+          }
+        };
+      } else
+      {
+        coreRez = ResourceBundle.getBundle("SageTVCoreTranslations", userLocale);
+      }
       createDFFormats();
       UserEvent.updateNameMaps();
 
@@ -1170,7 +1220,8 @@ public final class Sage
       {
         new ThreadMonitor(Sage.getLong("thread_cpu_monitor_interval", 5 * MILLIS_PER_MIN));
       }
-      new SageTV();
+      if (!TESTING)
+        new SageTV();
     }
     catch (Throwable t)
     {

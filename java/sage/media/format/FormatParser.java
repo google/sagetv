@@ -94,7 +94,6 @@ public class FormatParser
       String easyFormat = null;
       boolean foundEasy = false;
       ContainerFormat myFormat = null;
-      boolean setMyFormat = false;
       if (foundEasy = setContainerTypeEasy(f, format))
       {
         // If it's an image format, then just stop now.
@@ -110,16 +109,13 @@ public class FormatParser
         }
       }
       // Check for MP3 files since we can parse those fast in Java
-      //			if (!setMyFormat)
+      ContainerFormat mp3Format = MP3Parser.parseMP3File(f);
+      if (mp3Format != null)
       {
-        ContainerFormat mp3Format = MP3Parser.parseMP3File(f);
-        if (mp3Format != null)
-        {
-          // Our MP3 parser figured it out. :)
-          addAdditionalMetadata(f, mp3Format);
-          if (sage.Sage.DBG) System.out.println("File Format-MP3 parsed " + f + "=" + mp3Format);
-          return mp3Format;
-        }
+        // Our MP3 parser figured it out. :)
+        addAdditionalMetadata(f, mp3Format);
+        if (sage.Sage.DBG) System.out.println("File Format-MP3 parsed " + f + "=" + mp3Format);
+        return mp3Format;
       }
       if (DISABLE_FORMAT_DETECTION)
         return foundEasy ? format : null;
@@ -164,6 +160,7 @@ public class FormatParser
 
 
       // Only do our MPEG detection if we don't know the type yet; or we know it's MPEG
+      ContainerFormat internalParsedAudioOnlyFormat = null;
       if (!lcfname.endsWith(".evo") && !lcfname.endsWith(".tivo") && (!foundEasy || (MediaFormat.MPEG2_PS.equals(easyFormat) || MediaFormat.MPEG2_TS.equals(easyFormat) ||
           MediaFormat.MPEG1.equals(easyFormat) || MediaFormat.MPEG2_PES_VIDEO.equals(easyFormat) ||
           MediaFormat.MPEG2_PES_VIDEO.equals(easyFormat)))
@@ -177,14 +174,19 @@ public class FormatParser
             if (sage.Sage.DBG) System.out.println("File Format Parsed-2a " + f + "=" + myFormat);
             addAdditionalMetadata(f, myFormat);
             if (sage.Sage.DBG) System.out.println("File Format Parsed-2b " + f + "=" + myFormat);
-            return myFormat;
+            if (myFormat.hasAudioOnlyStream() && sage.Sage.getBoolean("double_check_audioonly_tv_formats", true)) {
+              internalParsedAudioOnlyFormat = myFormat;
+              myFormat = null;
+              if (sage.Sage.DBG) System.out.println("Using external format detector because we only detected audio on the internal format...");
+            } else {
+              return myFormat;
+            }
           }
           else
           {
             System.out.println("Re-detecting file format due to bad MPEG detection, file=" + f + " formatDetected=" + myFormat);
           }
         }
-        setMyFormat = true;
       }
 
       if (sage.Sage.EMBEDDED && f.getAbsolutePath().startsWith("/var/media/tv/"))
@@ -201,13 +203,12 @@ public class FormatParser
       if (formatName == null)
       {
         // This is not a format that FFMPEG understands. Maybe it's one that we do.
-        if (myFormat != null/* || (!setMyFormat && (myFormat = extractMyFormat(f)) != null)*/)
+        if (myFormat != null)
         {
           addAdditionalMetadata(f, myFormat);
           if (sage.Sage.DBG) System.out.println("File Format Parsed-1 " + f + "=" + myFormat);
           return myFormat;
         }
-        setMyFormat = true;
         if (!foundEasy)
         {
           System.out.println("FORMATERROR UNABLE TO PARSE FILE TYPE FOR FILE-1: "+ f);
@@ -222,34 +223,7 @@ public class FormatParser
       }
       else
       {
-        /*				if (("mpeg".equals(formatName) || "mpegts".equals(formatName)) &&
-					(!foundEasy || MediaFormat.MPEG2_PS.equals(easyFormat) || MediaFormat.MPEG2_TS.equals(easyFormat)))
-				{
-					// Only use our native detection for MPEG2 or if we couldn't tell (which is probably a corrupted TS file)
-					if (myFormat != null || (!setMyFormat && (myFormat = extractMyFormat(f)) != null))
-					{
-						if (myFormat.getNumberOfStreams() > 0)
-						{
-							if (sage.Sage.DBG) System.out.println("File Format Parsed-2 " + f + "=" + myFormat);
-							addAdditionalMetadata(f, myFormat);
-							return myFormat;
-						}
-						else
-						{
-							System.out.println("Re-detecting file format due to bad detection, file=" + f + " formatDetected=" + myFormat);
-						}
-					}
-					// Determine if it's MPEG1 or MPEG2PS
-					if (!foundEasy)
-					{
-						formatName = MediaFormat.MPEG2_TS; // If we can't tell, it's probably TS ;)
-						foundEasy = true;
-					}
-				}
-				else*/
-        {
-          format.setFormatName(substituteName(formatName));
-        }
+        format.setFormatName(substituteName(formatName));
         if (foundEasy && !"Audio".equals(easyFormat)) // don't allow the generic "Audio" type through, this just means ID3 tagged
           format.setFormatName(easyFormat);
         format.setDuration(extractDurationFromFFMPEGInfo(ffmpegInfo));
@@ -290,8 +264,16 @@ public class FormatParser
         {
           if (sage.Sage.DBG) System.out.println("WARNING: Native format detection failed for MPEG file " + f + " of format" +
               format);
-          if (sage.MMC.getInstance().isRecording(f) || sage.FileDownloader.isDownloading(f))
+          if ((sage.MMC.getInstance().isRecording(f) || sage.FileDownloader.isDownloading(f)) &&
+              (internalParsedAudioOnlyFormat == null || format.getNumVideoStreams() == 0))
           {
+            // If we had an audio-only detection, and FFMPEG also gave us audio only, then return that format. Revert to usual
+            // behavior of returning null format if we are not falling into this special case.
+            if (internalParsedAudioOnlyFormat != null) {
+              if (sage.Sage.DBG) System.out.println("Returning internally detected audio only format because FFMPEG also did not detect a video stream");
+              return internalParsedAudioOnlyFormat;
+            }
+
             // Return null here so we get another go at this...what likely happened was that we couldn't detect it due to not enough data,
             // and then we let FFMPEG take a crack at it and by then there was enough data in the file.
             if (sage.Sage.DBG) System.out.println("Returning NULL format due to internal detection failure since redoing it will likely fix it...");
@@ -331,7 +313,7 @@ public class FormatParser
     catch (Throwable t)
     {
       if (sage.Sage.DBG) System.out.println("ERROR parsing media file " + f + " of:" + t);
-      t.printStackTrace();
+      t.printStackTrace(System.out);
       return null;
     }
   }
@@ -565,7 +547,7 @@ public class FormatParser
     catch (Throwable t)
     {
       if (sage.Sage.DBG) System.out.println("ERROR parsing media file " + f + " of:" + t);
-      t.printStackTrace();
+      t.printStackTrace(System.out);
       return null;
     }
   }
@@ -1461,8 +1443,10 @@ public class FormatParser
     int brack2 = currStreamInfo.indexOf(']');
     if (brack2 > commaIdx || brack2 == -1 || brack2 < brack1)
       return null;
-    if (brack2 - brack1 == 6 || brack2 - brack1 == 5)
+    if (brack2 - brack1 == 5)
       return currStreamInfo.substring(brack2 - 2, brack2);
+    if (brack2 - brack1 == 6)
+      return currStreamInfo.substring(brack2 - 3, brack2);
     if (brack2 - brack1 == 7)
       return currStreamInfo.substring(brack2 - 4, brack2);
     return null;

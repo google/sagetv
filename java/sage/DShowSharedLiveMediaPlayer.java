@@ -21,7 +21,7 @@ public class DShowSharedLiveMediaPlayer implements MediaPlayer
   {
     if (Sage.WINDOWS_OS)
     {
-      System.loadLibrary("DShowPlayer");
+      sage.Native.loadLibrary("DShowPlayer");
     }
   }
 

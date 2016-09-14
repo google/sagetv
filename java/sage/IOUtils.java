@@ -15,10 +15,61 @@
  */
 package sage;
 
+import sage.io.RemoteSageFile;
+import sage.io.SageInputStream;
+
+import java.io.BufferedReader;
+import java.io.Closeable;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.URL;
+
 public class IOUtils
 {
   private IOUtils()
   {
+  }
+
+  /**
+   * Used to read a URL contents into String.  This operation blocks and the content is a string, so it should
+   * not be used on large files, and should not be used on binary files.
+   *
+   * @param urlStr URL to download
+   * @return String contents of the given URL
+     */
+  public static String getUrlAsString(String urlStr)
+  {
+    StringBuilder sb = new StringBuilder();
+    try
+    {
+      URL url = new URL(urlStr);
+      return getInputStreamAsString(url.openStream());
+    }
+    catch (Exception e)
+    {
+      if (Sage.DBG)
+      {
+        System.out.println("Failed to read URL to string for " + urlStr);
+        e.printStackTrace();
+      }
+    }
+    return sb.toString();
+  }
+
+  public static void closeQuietly(Closeable closeable)
+  {
+    if (closeable!=null)
+    {
+      try
+      {
+        closeable.close();
+      } catch (IOException e)
+      {
+      }
+    }
   }
 
   public static String getFileExtension(java.io.File f)
@@ -585,24 +636,32 @@ public class IOUtils
     return dir.delete() && rv;
   }
 
-  public static String getFileAsString(java.io.File file)
+  /**
+   * Reads an InputStream as a String and then closes the stream and returns the contents as a String
+   *
+   * @param is
+   * @return
+   * @throws IOException
+   */
+  public static String getInputStreamAsString(java.io.InputStream is) throws IOException
   {
     java.io.BufferedReader buffRead = null;
     StringBuffer sb = new StringBuffer();
     try
     {
-      buffRead = new java.io.BufferedReader(new java.io.FileReader(file));
-      char[] cbuf = new char[4096];
+      try
+      {
+        buffRead = new java.io.BufferedReader(new InputStreamReader(is, "UTF-8"));
+      } catch (UnsupportedEncodingException uee) {
+        buffRead = new java.io.BufferedReader(new InputStreamReader(is));
+      }
+      char[] cbuf = new char[8192];
       int numRead = buffRead.read(cbuf);
       while (numRead != -1)
       {
         sb.append(cbuf, 0, numRead);
         numRead = buffRead.read(cbuf);
       }
-    }
-    catch (java.io.IOException e)
-    {
-      System.out.println("Error reading file " + file + " of: " + e);
     }
     finally
     {
@@ -613,6 +672,39 @@ public class IOUtils
       }
     }
     return sb.toString();
+  }
+
+  public static String getFileAsString(java.io.File file)
+  {
+    try
+    {
+      return getInputStreamAsString(new FileInputStream(file));
+    }
+    catch (java.io.IOException e)
+    {
+      System.out.println("Error reading file " + file + " of: " + e);
+    }
+    return null;
+  }
+
+  public static boolean writeStringToFile(java.io.File file, String s) {
+    java.io.PrintWriter pw = null;
+    try {
+      pw = new java.io.PrintWriter(new java.io.FileWriter(file));
+      pw.print(s);
+    } catch (java.io.IOException e) {
+      System.out.println("Error writing file " + file + " of: " + e);
+      return false;
+    }
+    finally {
+      if (pw != null) {
+        try {
+          pw.close();
+        } catch (Exception e){}
+      pw = null;
+      }
+    }
+    return true;
   }
 
   public static String convertPlatformPathChars(String str)
@@ -1202,6 +1294,7 @@ public class IOUtils
   public static final int SMB_MOUNT_EXISTS = 0;
   public static final int SMB_MOUNT_SUCCEEDED = 1;
   public static final int SMB_MOUNT_FAILED = -1;
+  public static Boolean has_smbmount;
   public static int doSMBMount(String smbPath, String localPath)
   {
     if (smbPath.startsWith("smb://"))
@@ -1252,7 +1345,21 @@ public class IOUtils
           else
             smbOptions = "guest:";
         }
-        if (IOUtils.exec2(Sage.LINUX_OS ? new String[] { "smbmount", smbPath, localPath , "-o", smbOptions } :
+        // check to see if property exists if it doesn't check for smbmount with "which" command
+        if (IOUtils.has_smbmount == null)
+        {
+            String result = IOUtils.exec(new String[] {"which", "smbmount"});
+            // if nothing returned from "which" command then smbmount is not present so set property false
+            if (result == null || result.length() == 0)
+            {
+                IOUtils.has_smbmount = Boolean.FALSE;
+            } else {
+                IOUtils.has_smbmount = Boolean.TRUE;
+            }
+        }
+        // set execution variable based on static Boolean value
+        String execSMBMount = IOUtils.has_smbmount ? "smbmount" : "mount.cifs";
+        if (IOUtils.exec2(Sage.LINUX_OS ? new String[] { execSMBMount, smbPath, localPath , "-o", smbOptions } :
           new String[] { "mount_smbfs", "-N", "//" + smbOptions + "@" + smbPath.substring(2), localPath}) == 0)
         {
           if (Sage.DBG) System.out.println("SMB Mount Succeeded");
@@ -1390,18 +1497,64 @@ public class IOUtils
     return sb.toString();
   }
 
-  // Creates a java.io.BufferedReader for the specified file and checks the first two bytes for the Unicode BOM and sets the
-  // charset accordingly; otherwise if there's no BOM it'll use the passed in defaultCharset
+  /**
+   * Creates a java.io.BufferedReader for the specified file and checks the first two bytes for the
+   * Unicode BOM and sets the charset accordingly; otherwise if there's no BOM it'll use the passed
+   * in defaultCharset
+   *
+   * @param filePath The file to be opened.
+   * @param defaultCharset The charset to be used if the BOM is missing.
+   * @return A BufferedReader.
+   * @throws java.io.IOException If an I/O error occurs.
+   */
   public static java.io.BufferedReader openReaderDetectCharset(String filePath, String defaultCharset) throws java.io.IOException
   {
-    return openReaderDetectCharset(new java.io.File(filePath), defaultCharset);
+    return openReaderDetectCharset(new java.io.File(filePath), defaultCharset, true);
   }
+
+  /**
+   * Creates a java.io.BufferedReader for the specified file and checks the first two bytes for the
+   * Unicode BOM and sets the charset accordingly; otherwise if there's no BOM it'll use the passed
+   * in defaultCharset
+   *
+   * @param filePath The file to be opened.
+   * @param defaultCharset The charset to be used if the BOM is missing.
+   * @return A <code>BufferedReader</code>.
+   * @throws java.io.IOException If an I/O error occurs.
+   */
   public static java.io.BufferedReader openReaderDetectCharset(java.io.File filePath, String defaultCharset) throws java.io.IOException
   {
-    java.io.FileInputStream fis = null;
+    return openReaderDetectCharset(filePath, defaultCharset, true);
+  }
+
+  /**
+   * Creates a java.io.BufferedReader for the specified file and checks the first two bytes for the
+   * Unicode BOM and sets the charset accordingly; otherwise if there's no BOM it'll use the passed
+   * in defaultCharset
+   *
+   * @param filePath The file to be opened.
+   * @param defaultCharset The charset to be used if the BOM is missing.
+   * @param local Pass true if the file is locally accessible. If this value is false, the
+   *              BufferedReader will be backed by a MediaServerInputStream.
+   * @return A <code>BufferedReader</code>.
+   * @throws java.io.IOException If an I/O error occurs.
+   */
+  public static java.io.BufferedReader openReaderDetectCharset(java.io.File filePath, String defaultCharset, boolean local) throws java.io.IOException
+  {
+    java.io.InputStream fis = null;
     try
     {
-      fis = new java.io.FileInputStream(filePath);
+      if (local)
+        fis = new java.io.FileInputStream(filePath);
+      else
+      {
+        // This is crucial. If we don't do this step the file will almost certainly be inaccessible.
+        sage.NetworkClient.getSN().requestMediaServerAccess(filePath, true);
+        fis = new SageInputStream(new RemoteSageFile(Sage.preferredServer, filePath, true));
+      }
+
+      if (fis.markSupported()) fis.mark(32768);
+
       int b1 = fis.read();
       int b2 = fis.read();
       // Check for big/little endian unicode marker; otherwise use the default charset to open
@@ -1465,11 +1618,26 @@ public class IOUtils
           targetCharset = Sage.EMBEDDED ? Sage.BYTE_CHARSET : null;
         }
       }
-      fis.close();
-      if (targetCharset == null)
-        return new java.io.BufferedReader(new java.io.InputStreamReader(new java.io.FileInputStream(filePath)));
+
+
+      if (fis.markSupported())
+      {
+        fis.reset();
+      }
       else
-        return new java.io.BufferedReader(new java.io.InputStreamReader(new java.io.FileInputStream(filePath), targetCharset));
+      {
+        fis.close();
+
+        if (local)
+          fis = new java.io.FileInputStream(filePath);
+        else
+          fis = new SageInputStream(new RemoteSageFile(Sage.preferredServer, filePath, true));
+      }
+
+      if (targetCharset == null)
+        return new java.io.BufferedReader(new java.io.InputStreamReader(fis));
+      else
+        return new java.io.BufferedReader(new java.io.InputStreamReader(fis, targetCharset));
     }
     catch (java.io.IOException e)
     {
@@ -1477,6 +1645,19 @@ public class IOUtils
         fis.close();
       throw e;
     }
+    finally
+    {
+      // If the file isn't accessed in some way before the media server timeout, this will prevent
+      // the file from continuing to be accessed. Due to the nature of how we use the objects
+      // returned from this method, that scenario is extremely unlikely.
+      if (!local)
+        sage.NetworkClient.getSN().requestMediaServerAccess(filePath, false);
+    }
+  }
+
+  public static byte[] getCryptoKeys()
+  {
+    return (byte[]) (SageConstants.LITE ? UIManager.a : Sage.q);
   }
 
   public static String calcMD5(java.io.File f)

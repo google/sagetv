@@ -24,7 +24,7 @@ public class HDHomeRunCaptureManager implements CaptureDeviceManager
   public HDHomeRunCaptureManager() throws Throwable
   {
     try {
-      System.loadLibrary("HDHomeRunCapture");
+      sage.Native.loadLibrary("HDHomeRunCapture");
       hdhrEnabled = true;
     } catch (Throwable t) {
       System.out.println("Unable to load HDHomeRun capture manager: " + t);

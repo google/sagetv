@@ -310,7 +310,7 @@ public class Database {
       private boolean filterTestChannelViewable(Object o)
       {
         Channel c = getChannelObj(o);
-        return (c != null && (c.getStationID() == 0 || c.isViewable()));
+        return (c != null && c.isViewable());
       }
       private boolean filterTestIsMovie(Object o)
       {
@@ -1797,11 +1797,11 @@ public class Database {
             {
               MediaFile c1 = getMediaFileObj(o1);
               MediaFile c2 = getMediaFileObj(o2);
-              if (o1 == o2)
+              if (c1 == c2)
                 return 0;
-              if (o1 == null)
+              if (c1 == null)
                 return invertOrder ? -1 : 1;
-              if (o2 == null)
+              if (c2 == null)
                 return invertOrder ? 1 : -1;
               return (invertOrder ? -1 : 1) *
                   (USE_COLLATOR_SORTING ? collie.compare(trimPronouns(c1.getMediaTitle()), trimPronouns(c2.getMediaTitle())) :
@@ -1825,11 +1825,11 @@ public class Database {
             {
               Show c1 = getShowObj(o1);
               Show c2 = getShowObj(o2);
-              if (o1 == o2)
+              if (c1 == c2)
                 return 0;
-              if (o1 == null)
+              if (c1 == null)
                 return invertOrder ? -1 : 1;
-              if (o2 == null)
+              if (c2 == null)
                 return invertOrder ? 1 : -1;
               return (invertOrder ? -1 : 1) *
                   (USE_COLLATOR_SORTING ? collie.compare(trimPronouns(c1.getTitle()), trimPronouns(c2.getTitle())) :
@@ -1853,11 +1853,11 @@ public class Database {
             {
               Album c1 = getAlbumObj(o1);
               Album c2 = getAlbumObj(o2);
-              if (o1 == o2)
+              if (c1 == c2)
                 return 0;
-              if (o1 == null)
+              if (c1 == null)
                 return invertOrder ? -1 : 1;
-              if (o2 == null)
+              if (c2 == null)
                 return invertOrder ? 1 : -1;
               return (invertOrder ? -1 : 1) *
                   (USE_COLLATOR_SORTING ? collie.compare(trimPronouns(c1.getArtist()), trimPronouns(c2.getArtist())) :
@@ -1881,11 +1881,11 @@ public class Database {
             {
               Album c1 = getAlbumObj(o1);
               Album c2 = getAlbumObj(o2);
-              if (o1 == o2)
+              if (c1 == c2)
                 return 0;
-              if (o1 == null)
+              if (c1 == null)
                 return invertOrder ? -1 : 1;
-              if (o2 == null)
+              if (c2 == null)
                 return invertOrder ? 1 : -1;
               return (invertOrder ? -1 : 1) *
                   (USE_COLLATOR_SORTING ? collie.compare(trimPronouns(c1.getTitle()), trimPronouns(c2.getTitle())) :
@@ -1909,11 +1909,11 @@ public class Database {
             {
               Channel c1 = getChannelObj(o1);
               Channel c2 = getChannelObj(o2);
-              if (o1 == o2)
+              if (c1 == c2)
                 return 0;
-              if (o1 == null)
+              if (c1 == null)
                 return invertOrder ? -1 : 1;
-              if (o2 == null)
+              if (c2 == null)
                 return invertOrder ? 1 : -1;
               return (invertOrder ? -1 : 1) *
                   (USE_COLLATOR_SORTING ? collie.compare(trimPronouns(c1.getName()), trimPronouns(c2.getName())) :
@@ -1937,11 +1937,11 @@ public class Database {
             {
               Show c1 = getShowObj(o1);
               Show c2 = getShowObj(o2);
-              if (o1 == o2)
+              if (c1 == c2)
                 return 0;
-              if (o1 == null)
+              if (c1 == null)
                 return invertOrder ? -1 : 1;
-              if (o2 == null)
+              if (c2 == null)
                 return invertOrder ? 1 : -1;
               return (invertOrder ? -1 : 1) *
                   (USE_COLLATOR_SORTING ? collie.compare(trimPronouns(c1.getEpisodeName()), trimPronouns(c2.getEpisodeName())) :

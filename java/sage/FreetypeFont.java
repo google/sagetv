@@ -15,6 +15,10 @@
  */
 package sage;
 
+import sage.io.BufferedSageFile;
+import sage.io.LocalSageFile;
+import sage.io.SageDataFile;
+
 public class FreetypeFont extends MetaFont
 {
   // Freetype is NOT designed for multi-threading so we need to ensure not more than a single thread goes into the native freetype code at one time
@@ -28,7 +32,7 @@ public class FreetypeFont extends MetaFont
       synchronized (ftLock)
       {
         if (ftLibPtr != 0) return;
-        System.loadLibrary("FreetypeFontJNI");
+        sage.Native.loadLibrary("FreetypeFontJNI");
         ftLibPtr = loadFreetypeLib0();
         if (ftLibPtr == 0)
         {
@@ -460,10 +464,10 @@ public class FreetypeFont extends MetaFont
     if (cacheFile.isFile())
     {
       // Verify the number of glyph
-      FasterRandomFile cacheIn = null;
+      SageDataFile cacheIn = null;
       try
       {
-        cacheIn = new FasterRandomFile(cacheFile, "r", Sage.I18N_CHARSET);
+        cacheIn = new SageDataFile(new BufferedSageFile(new LocalSageFile(cacheFile, true)), Sage.I18N_CHARSET);
         if(numGlyphs==cacheIn.readInt())
         {
           imageCount=cacheIn.readInt()-1;
@@ -494,7 +498,7 @@ public class FreetypeFont extends MetaFont
       catch (Exception e)
       {
         System.out.println("Error reading font cache : " + e);
-        e.printStackTrace();
+        e.printStackTrace(System.out);
       }
       finally
       {
@@ -575,11 +579,11 @@ public class FreetypeFont extends MetaFont
     {
       if (Sage.DBG) System.out.println("Saving cache version");
       cacheFile.getParentFile().mkdirs();
-      FasterRandomFile cacheOut = null;
+      SageDataFile cacheOut = null;
       try
       {
         // assumes font name is valid file string
-        cacheOut = new FasterRandomFile(cacheFile, "rw", Sage.I18N_CHARSET);
+        cacheOut = new SageDataFile(new BufferedSageFile(new LocalSageFile(cacheFile, false)), Sage.I18N_CHARSET);
         cacheOut.writeInt(numGlyphs);
         cacheOut.writeInt(imageCount+1);
         int j;

@@ -2969,6 +2969,39 @@ public class Utility {
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         return IOUtils.getFileAsString(getFile(stack));
       }});
+    rft.put(new PredefinedJEPFunction("Utility", "WriteStringToFile", new String[] { "FilePath", "Data" }, true)
+    {
+      /**
+       * Opens the file at the specified path and writes out the specified String as its contents.
+       * This will use the server's filesystem if executed on SageTVClient.
+       * @param FilePath the file path
+       * @param Data the contents to write to the file
+       * @return true if successful, false if there was an error writing to the file
+       * @since 9.0
+       *
+       * @declaration public boolean WriteStringToFile(java.io.File FilePath, String Data);
+       */
+      public Object runSafely(Catbert.FastStack stack) throws Exception{
+        String s = getString(stack);
+        java.io.File f = getFile(stack);
+        return IOUtils.writeStringToFile(f, s);
+      }});
+    rft.put(new PredefinedJEPFunction("Utility", "WriteStringToLocalFile", new String[] { "FilePath", "Data" })
+    {
+      /**
+       * Opens the file at the specified path and writes out the specified String as its contents.
+       * @param FilePath the file path
+       * @param Data the contents to write to the file
+       * @return true if successful, false if there was an error writing to the file
+       * @since 9.0
+       *
+       * @declaration public boolean WriteStringToLocalFile(java.io.File FilePath, String Data);
+       */
+      public Object runSafely(Catbert.FastStack stack) throws Exception{
+        String s = getString(stack);
+        java.io.File f = getFile(stack);
+        return IOUtils.writeStringToFile(f, s);
+      }});
     rft.put(new PredefinedJEPFunction("Utility", "IsLocalRestartNeeded")
     {
       /**

@@ -29,7 +29,7 @@ public class MPEGParser
     {
       try
       {
-        System.loadLibrary("MPEGParser");
+        sage.Native.loadLibrary("MPEGParser");
       }
       catch (Throwable t)
       {
@@ -124,20 +124,52 @@ public class MPEGParser
       this.channel = channel;
       this.outStream = outStream;
     }
+
+    /**
+     * Close the remuxer.
+     * <p/>
+     * When you close the remuxer, it does NOT close the OutputStream. This needs to be done by the
+     * caller.
+     */
     public void close()
     {
       long temp = ptr;
       ptr = 0;
-      if ( temp != 0)
+      if (temp != 0)
         closeRemuxer0(temp);
     }
 
+    /**
+     * Push data to the remuxer.
+     * <p/>
+     * pushInitData must return a non-null object before this method can be used.
+     *
+     * @param buf The data to be pushed to the remuxer. For TS output, this data must be fed in 188
+     *            byte chunks. For PS output, this should work up to 1MB.
+     * @param offset The offset to start from.
+     * @param length The number of bytes to read from offset.
+     */
     public void pushData(byte[] buf, int offset, int length)
     {
       if (ptr != 0)
         lastPTS = pushRemuxData0(ptr, buf, offset, length);
       pushedBytes += length;
     }
+
+    /**
+     * Push initialization data to the remuxer.
+     * <p/>
+     * Data pushed into this method is cumulative. You do not need to push all of the data from the
+     * start every time you call this method.
+     * <p/>
+     * This data is not automatically fed into pushData, so you will need to retain it for pushData
+     * after detection has succeeded.
+     *
+     * @param buf The data to be pushed to the remuxer for initialization.
+     * @param offset The offset to start from.
+     * @param length The number of bytes to read from offset.
+     * @return The detected format of the container or null if no format has been detected.
+     */
     public ContainerFormat pushInitData(byte[] buf, int offset, int length)
     {
       if (ptr != 0)

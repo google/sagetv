@@ -33,6 +33,8 @@ public class SystemMessage extends SageMsg
   public static final int CHANNEL_SCAN_NEEDED_MSG = 1003;
   public static final int EPG_UPDATE_FAILURE_MSG = 1004;
   public static final int EPG_LINKAGE_FOR_MR_CHANGED_MSG = 1005;
+  public static final int EPG_SERVER_NO_KEY_MSG = 1006;
+  public static final int EPG_SERVER_INVALID_KEY_MSG = 1007;
   // Scheduler related
   public static final int MISSED_RECORDING_FROM_CONFLICT_MSG = 1050;
   public static final int CAPTURE_DEVICE_LOAD_ERROR_MSG = 1051;
@@ -68,6 +70,10 @@ public class SystemMessage extends SageMsg
         return sage.Sage.rez("EPG_UPDATE_FAILURE");
       case EPG_LINKAGE_FOR_MR_CHANGED_MSG:
         return sage.Sage.rez("EPG_LINKAGE_FOR_MR_CHANGED");
+      case EPG_SERVER_NO_KEY_MSG:
+        return sage.Sage.rez("EPG_SERVER_NO_KEY");
+      case EPG_SERVER_INVALID_KEY_MSG:
+        return sage.Sage.rez("EPG_SERVER_INVALID_KEY");
       case MISSED_RECORDING_FROM_CONFLICT_MSG:
         return sage.Sage.rez("MISSED_RECORDING_FROM_CONFLICT");
       case CAPTURE_DEVICE_LOAD_ERROR_MSG:
@@ -253,6 +259,16 @@ public class SystemMessage extends SageMsg
   public static SystemMessage createEPGUpdateFailureMsg()
   {
     return new SystemMessage(EPG_UPDATE_FAILURE_MSG, WARNING_PRIORITY, sage.Sage.rez("EPG_UPDATE_FAILURE_MSG"), null);
+  }
+
+  public static SystemMessage createEPGServerNoKeyMsg()
+  {
+    return new SystemMessage(EPG_SERVER_NO_KEY_MSG, ERROR_PRIORITY, sage.Sage.rez("EPG_SERVER_NO_KEY_MSG"), null);
+  }
+
+  public static SystemMessage createEPGServerInvalidKeyMsg()
+  {
+    return new SystemMessage(EPG_SERVER_INVALID_KEY_MSG, ERROR_PRIORITY, sage.Sage.rez("EPG_SERVER_INVALID_KEY_MSG"), null);
   }
 
   public static SystemMessage createOOMMsg()

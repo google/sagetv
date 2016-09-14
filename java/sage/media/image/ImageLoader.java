@@ -29,7 +29,7 @@ public class ImageLoader
     EMBEDDED = System.getProperty("sage.embedded") != null;
     try
     {
-      System.loadLibrary("ImageLoader");
+      sage.Native.loadLibrary("ImageLoader");
     }
     catch (Throwable t)
     {

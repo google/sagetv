@@ -15,6 +15,13 @@
  */
 package sage;
 
+
+import sage.media.format.MPEGParser2;
+
+import java.nio.channels.FileChannel;
+import java.nio.file.StandardOpenOption;
+import java.util.StringTokenizer;
+
 public class MediaServer implements Runnable
 {
   private static final int DOS_BYTE_LIMIT = 1000000;
@@ -357,8 +364,32 @@ public class MediaServer implements Runnable
       }
     }
 
+    /**
+     * Close the currently open file.
+     * <p/>
+     * This will also close the remuxer if it is in use.
+     */
     protected void closeFile()
     {
+      closeFile(true);
+    }
+
+    /**
+     * Close the currently open file.
+     *
+     * @param closeRemux Close the remuxer too if it is in use.
+       */
+    protected void closeFile(boolean closeRemux)
+    {
+      if (closeRemux) {
+        try {
+          if (remuxer != null) {
+            remuxer.close();
+            remuxer = null;
+          }
+        } catch (Exception e) {
+        }
+      }
       try
       {
         if (fileChannel != null)
@@ -377,7 +408,7 @@ public class MediaServer implements Runnable
         }
       }
       catch (Exception e){}
-      try
+      /*try
       {
         if (uploadStream != null)
         {
@@ -385,7 +416,7 @@ public class MediaServer implements Runnable
           uploadStream = null;
         }
       }
-      catch (Exception e){}
+      catch (Exception e){}*/
       currFile = null;
     }
 
@@ -498,7 +529,7 @@ public class MediaServer implements Runnable
       }
     }
 
-    protected void openWriteFile(String filename, int uploadKey) throws java.io.IOException
+    protected void openWriteFile(String filename, int uploadKey, boolean reply) throws java.io.IOException
     {
       currFile = new java.io.File(filename);
       currFile = currFile.getCanonicalFile(); // any relative path hacking is removed here
@@ -531,12 +562,16 @@ public class MediaServer implements Runnable
       }
       if (uploadOK)
       {
-        uploadStream = new java.io.FileOutputStream(currFile);
-        fileChannel = uploadStream.getChannel();
-        commBufWrite.clear();
-        commBufWrite.put("OK\r\n".getBytes()).flip();
-        int numWritten = s.write(commBufWrite);
-        if (MEDIA_SERVER_DEBUG) System.out.println("MediaServer wrote out " + numWritten + " bytes");
+        //uploadStream = new java.io.FileOutputStream(currFile);
+        fileChannel = FileChannel.open(currFile.toPath(), StandardOpenOption.CREATE, StandardOpenOption.READ, StandardOpenOption.WRITE);
+        if (reply)
+        {
+          commBufWrite.clear();
+          commBufWrite.put("OK\r\n".getBytes()).flip();
+          int numWritten = s.write(commBufWrite);
+          if (MEDIA_SERVER_DEBUG)
+            System.out.println("MediaServer wrote out " + numWritten + " bytes");
+        }
       }
       else
       {
@@ -559,6 +594,11 @@ public class MediaServer implements Runnable
         {
           availSize = xcoder.getVirtualTranscodeSize();
           totalSize = xcoder.isTranscodeDone() ? availSize : getLargeFileSize(currFile.toString());
+        }
+        if (remuxer != null)
+        {
+          availSize = remuxer.getFileSize();
+          totalSize = getLargeFileSize(currFile.toString());
         }
         else if (currMF != null)
         {
@@ -883,7 +923,16 @@ public class MediaServer implements Runnable
         length -= currWrite;
         int oldLimit = commBufRead.limit();
         commBufRead.limit(commBufRead.position() + currWrite);
-        fileChannel.write(commBufRead, offset);
+
+        if (remuxer != null)
+        {
+          remuxer.writeRemuxer(commBufRead);
+        }
+        else
+        {
+          fileChannel.write(commBufRead, offset);
+        }
+
         offset += currWrite;
         commBufRead.limit(oldLimit);
       }
@@ -893,7 +942,7 @@ public class MediaServer implements Runnable
           TimeoutHandler.registerTimeout(TIMEOUT, s);
         while (length > 0)
         {
-          if (!useNioTransfers || (!Sage.EMBEDDED && Sage.LINUX_OS && offset +length >= Integer.MAX_VALUE))
+          if (!useNioTransfers || (!Sage.EMBEDDED && Sage.LINUX_OS && offset +length >= Integer.MAX_VALUE) || remuxer != null)
           {
             // NOTE: Due to Java using the sendfile kernel API call to do the transfer,
             // there's a 32-bit limitation here. This is very unfortunate. But since it's
@@ -907,7 +956,16 @@ public class MediaServer implements Runnable
             hackBuf.limit((int)Math.min(length, hackBuf.capacity()));
             int currRead = s.read(hackBuf);
             hackBuf.flip();
-            fileChannel.write(hackBuf, offset);
+
+            if (remuxer != null)
+            {
+              remuxer.writeRemuxer(hackBuf);
+            }
+            else
+            {
+              fileChannel.write(hackBuf, offset);
+            }
+
             offset += currRead;
             length -= currRead;
           }
@@ -985,7 +1043,7 @@ public class MediaServer implements Runnable
             fname = IOUtils.convertPlatformPathChars(fname);
             int uploadKey = Integer.parseInt(tempString.substring(idx + 1));
             if (MEDIA_SERVER_DEBUG) System.out.println("Converted pathname to:" + fname);
-            openWriteFile(fname, uploadKey);
+            openWriteFile(fname, uploadKey, true);
           }
           else if (tempString.indexOf("WRITEOPENW ") == 0)
           {
@@ -997,7 +1055,7 @@ public class MediaServer implements Runnable
             fname = IOUtils.convertPlatformPathChars(fname);
             int uploadKey = Integer.parseInt(tempString.substring(idx + 1));
             if (MEDIA_SERVER_DEBUG) System.out.println("Converted pathname to:" + fname);
-            openWriteFile(fname, uploadKey);
+            openWriteFile(fname, uploadKey, true);
           }
           else if (tempString.indexOf("LISTW ") == 0)
           {
@@ -1157,6 +1215,192 @@ public class MediaServer implements Runnable
             int numWritten = s.write(commBufWrite);
             if (MEDIA_SERVER_DEBUG) System.out.println("MediaServer wrote out " + numWritten + " bytes");
           }
+          else if (tempString.indexOf("REMUX_SETUP ") == 0)
+          {
+            // REMUX_SETUP Mode OutputFormat Parameters...
+            // Auto:
+            // REMUX_SETUP AUTO OutputFormat IsTV
+            // Ex. REMUX_SETUP AUTO PS TRUE
+
+            // The file must be closed to turn this mode off.
+            if (remuxer != null)
+            {
+              commBufWrite.clear();
+              commBufWrite.put("INIT_ERROR\r\n".getBytes()).flip();
+
+              if (Sage.DBG) System.out.println("MediaServer is already in remux mode ignoring: " +
+                  tempString.substring(tempString.indexOf(" ") + 1));
+            }
+            else
+            {
+              if (Sage.DBG) System.out.println("MediaServer is writing in remux mode: " +
+                  tempString.substring(tempString.indexOf(" ") + 1));
+
+              StringTokenizer toker = new StringTokenizer(tempString.substring(12), " ");
+
+              if (toker.countTokens() == 3)
+              {
+                String mode = toker.nextToken();
+                int outputFormat = toker.nextToken().equalsIgnoreCase("TS") ? MPEGParser2.REMUX_TS : MPEGParser2.REMUX_PS;
+
+                if (mode.equalsIgnoreCase("AUTO"))
+                {
+                  boolean isTV = toker.nextToken().equalsIgnoreCase("TRUE");
+                  remuxer = new MediaServerRemuxer(fileChannel, outputFormat, isTV, this);
+                } else
+                {
+                  // If a client is trying to use a newer mode, that doesn't exist, this default
+                  // will be used since it should always work. This default is better than nothing
+                  // and will be logged so we know to tell the user to upgrade.
+                  if (Sage.DBG) System.out.println("MediaServer remux mode not supported;" +
+                      " defaulting to AUTO TRUE");
+                  remuxer = new MediaServerRemuxer(fileChannel, outputFormat, true, this);
+                }
+              }
+              else
+              {
+                commBufWrite.clear();
+                commBufWrite.put("PARAM_ERROR\r\n".getBytes()).flip();
+              }
+
+              commBufWrite.clear();
+              commBufWrite.put(OK_BYTES).flip();
+            }
+
+            int numWritten = s.write(commBufWrite);
+            if (MEDIA_SERVER_DEBUG) System.out.println("MediaServer wrote out " + numWritten + " bytes");
+          }
+          else if (tempString.indexOf("REMUX_CONFIG ") == 0)
+          {
+            if (remuxer != null)
+            {
+              String config = tempString.substring(13);
+              if (config.equals("INIT"))
+              {
+                commBufWrite.clear();
+                commBufWrite.put((remuxer.isInitialized() ? "TRUE\r\n" : "FALSE\r\n").getBytes()).flip();
+              }
+              else if (config.equals("SWITCHED"))
+              {
+                commBufWrite.clear();
+                commBufWrite.put((remuxer.isSwitched() ? "TRUE\r\n" : "FALSE\r\n").getBytes()).flip();
+              }
+              else if (config.equals("FORCE_SWITCHED"))
+              {
+                remuxer.forceSwitched();
+                commBufWrite.clear();
+                commBufWrite.put(OK_BYTES).flip();
+              }
+              else if (config.equals("DISABLE_ASSIST"))
+              {
+                remuxer.disableInterAssist();
+                commBufWrite.clear();
+                commBufWrite.put(OK_BYTES).flip();
+              }
+              else if (config.equals("FORMAT"))
+              {
+                commBufWrite.clear();
+                commBufWrite.put((remuxer.isInitialized() ?
+                    remuxer.getContainerFormat().getFullPropertyString(false) + "\r\n" : "NULL\r\n").getBytes()).flip();
+              }
+              else if (config.equals("FILE"))
+              {
+                commBufWrite.clear();
+                commBufWrite.put((currFile != null ?
+                    currFile.getAbsoluteFile() + "\r\n" : "NULL\r\n").getBytes()).flip();
+              }
+              else if (config.equals("MODE"))
+              {
+                commBufWrite.clear();
+                commBufWrite.put((remuxer.getOutputFormat() == MPEGParser2.REMUX_TS ?
+                    "TS\r\n" : "PS\r\n").getBytes()).flip();
+              }
+              else if (config.startsWith("BUFFER "))
+              {
+                remuxer.setBufferLimit(Long.parseLong(config.substring(7)));
+                fileChannel.position(0);
+                commBufWrite.clear();
+                commBufWrite.put(OK_BYTES).flip();
+              }
+              else
+              {
+                commBufWrite.clear();
+                commBufWrite.put("ERROR\r\n".getBytes()).flip();
+              }
+            }
+            else
+            {
+              commBufWrite.clear();
+              commBufWrite.put("NO_INIT\r\n".getBytes()).flip();
+            }
+
+            int numWritten = s.write(commBufWrite);
+            if (MEDIA_SERVER_DEBUG) System.out.println("MediaServer wrote out " + numWritten + " bytes");
+          }
+          else if (tempString.indexOf("REMUX_SWITCH ") == 0)
+          {
+            if (remuxer != null)
+            {
+              int idx = tempString.lastIndexOf(" ");
+              String fname = tempString.substring(13, idx);
+              // Do the platform path character conversion
+              fname = IOUtils.convertPlatformPathChars(fname);
+              int uploadKey = Integer.parseInt(tempString.substring(idx + 1));
+              if (MEDIA_SERVER_DEBUG) System.out.println("Converted pathname to:" + fname);
+
+              remuxer.startSwitch(fname, uploadKey);
+              //Later we will call openWriteFile(fname, uploadKey);
+
+              commBufWrite.clear();
+              commBufWrite.put("OK\r\n".getBytes()).flip();
+            }
+            else
+            {
+              commBufWrite.clear();
+              commBufWrite.put("NO_INIT\r\n".getBytes()).flip();
+            }
+
+            int numWritten = s.write(commBufWrite);
+            if (MEDIA_SERVER_DEBUG) System.out.println("MediaServer wrote out " + numWritten + " bytes");
+          }
+          else if (tempString.indexOf("TRUNC ") == 0)
+          {
+            int idx = tempString.lastIndexOf(" ");
+
+            if (fileChannel != null)
+            {
+              fileChannel.truncate(Long.parseLong(tempString.substring(6, tempString.length())));
+              commBufWrite.clear();
+              commBufWrite.put(OK_BYTES).flip();
+            }
+            else
+            {
+              commBufWrite.clear();
+              commBufWrite.put("NON_MEDIA\r\n".getBytes()).flip();
+            }
+
+            int numWritten = s.write(commBufWrite);
+            if (MEDIA_SERVER_DEBUG) System.out.println("MediaServer wrote out " + numWritten + " bytes");
+          }
+          else if (tempString.indexOf("FORCE ") == 0)
+          {
+            int idx = tempString.lastIndexOf(" ");
+
+            if (fileChannel != null)
+            {
+              fileChannel.force(tempString.substring(6, tempString.length()).equalsIgnoreCase("TRUE"));
+              commBufWrite.clear();
+              commBufWrite.put(OK_BYTES).flip();
+            }
+            else
+            {
+              commBufWrite.clear();
+              commBufWrite.put("NON_MEDIA\r\n".getBytes()).flip();
+            }
+
+            int numWritten = s.write(commBufWrite);
+            if (MEDIA_SERVER_DEBUG) System.out.println("MediaServer wrote out " + numWritten + " bytes");
+          }
           else if (tempString.indexOf("QUIT") == 0)
           {
             break;
@@ -1175,11 +1419,19 @@ public class MediaServer implements Runnable
       catch (Exception e)
       {
         System.out.println("Error in MediaServerConnection of :" + e);
-        e.printStackTrace();
+        e.printStackTrace(System.out);
       }
       finally
       {
         clientDisconnected();
+        try
+        {
+          if (remuxer != null)
+            remuxer.close();
+          remuxer = null;
+        }
+        catch (Exception e)
+        {}
         try
         {
           if (fileChannel != null)
@@ -1196,14 +1448,14 @@ public class MediaServer implements Runnable
         }
         catch (Exception e)
         {}
-        try
+        /*try
         {
           if (uploadStream != null)
             uploadStream.close();
           uploadStream = null;
         }
         catch (Exception e)
-        {}
+        {}*/
         try
         {
           s.close();
@@ -1228,13 +1480,24 @@ public class MediaServer implements Runnable
         }
       }
     }
+
+    public FileChannel getFileChannel()
+    {
+      return fileChannel;
+    }
+
+    public java.io.File getFile()
+    {
+      return currFile;
+    }
+
     protected java.nio.channels.SocketChannel s;
 
     protected java.io.File currFile;
     protected MediaFile currMF;
     protected FileDownloader downer;
     protected java.io.FileInputStream fileStream;
-    protected java.io.FileOutputStream uploadStream;
+    //protected java.io.FileOutputStream uploadStream;
     protected java.nio.channels.FileChannel fileChannel;
     protected java.nio.ByteBuffer commBufWrite;
     protected java.nio.ByteBuffer commBufRead;
@@ -1244,6 +1507,8 @@ public class MediaServer implements Runnable
     protected boolean blocking;
     protected long lastRecFileSize;
     protected boolean circFileRec;
+
+    protected MediaServerRemuxer remuxer;
 
     protected boolean readAhead;
 

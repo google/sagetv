@@ -100,7 +100,7 @@ public class MiniClient
   {
     if(MAC_OS_X) {
       try {
-        System.loadLibrary("MiniClient");
+        sage.Native.loadLibrary("MiniClient");
       } catch (Throwable t) {
         System.out.println("Exception occured loading MiniClient library: "+t);
       }

@@ -46,6 +46,10 @@ public final class EPG implements Runnable
   private static final long ERROR_SLEEP = 1800000L;
   static final long MAINTENANCE_FREQ = Sage.MILLIS_PER_DAY;
 
+  public static final String EPG_SERVER_INVALID_KEY = "INVALID_KEY";
+  public static final String EPG_SERVER_NO_KEY = "NO_KEY";
+  public static final String EPG_SERVER_CONNECTION_FAILURE = "CONNECTION_FAILURE";
+
   /**
    * EPG state Enum
    */
@@ -1523,27 +1527,25 @@ public final class EPG implements Runnable
 		return false;
 	}*/
 
-  public String[][] getProviders(String zipCode, boolean[] didConnect)
+  public String[][] getProviders(String zipCode) throws EPGServerException
   {
     if (hasEPGPlugin())
     {
       updateEPGPluginObj();
       if (epgImportPlugin != null)
       {
-        if (didConnect != null && didConnect.length > 0)
-          didConnect[0] = true;
         return epgImportPlugin.getProviders(zipCode);
       }
       else
         return new String[0][0];
     }
     else
-      return WarlockRipper.getProviders(zipCode, didConnect);
+      return WarlockRipper.getProviders(zipCode);
   }
 
-  public String[] getProvidersAndCacheNames(String zipCode, boolean[] didConnect)
+  public String[] getProvidersAndCacheNames(String zipCode) throws EPGServerException
   {
-    String[][] temprv = getProviders(zipCode, didConnect);
+    String[][] temprv = getProviders(zipCode);
     if (temprv == null)
       return null;
     String[] rv = new String[temprv.length];
@@ -1555,27 +1557,25 @@ public final class EPG implements Runnable
     return rv;
   }
 
-  public String[][] getLocalMarkets(boolean[] didConnect)
+  public String[][] getLocalMarkets() throws EPGServerException
   {
     if (hasEPGPlugin())
     {
       updateEPGPluginObj();
       if (epgImportPlugin != null)
       {
-        if (didConnect != null && didConnect.length > 0)
-          didConnect[0] = true;
         return epgImportPlugin.getLocalMarkets();
       }
       else
         return new String[0][0];
     }
     else
-      return WarlockRipper.getLocalMarkets(didConnect);
+      return WarlockRipper.getLocalMarkets();
   }
 
-  public String[] getLocalMarketsAndCacheNames(boolean[] didConnect)
+  public String[] getLocalMarketsAndCacheNames() throws EPGServerException
   {
-    String[][] temprv = getLocalMarkets(didConnect);
+    String[][] temprv = getLocalMarkets();
     if (temprv == null)
       return null;
     String[] rv = new String[temprv.length];

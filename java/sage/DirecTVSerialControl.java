@@ -59,7 +59,7 @@ public class DirecTVSerialControl
       if (!loadedLib)
       {
         if(!Sage.MAC_OS_X) // included libSage...
-          System.loadLibrary("DirecTVSerialControl");
+          sage.Native.loadLibrary("DirecTVSerialControl");
         loadedLib = true;
       }
     }

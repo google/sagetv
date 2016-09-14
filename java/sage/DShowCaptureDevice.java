@@ -49,7 +49,7 @@ public class DShowCaptureDevice extends CaptureDevice
   {
     // This library is also used for getting a list of the dshow filters, so we need it for players as well
     if (Sage.WINDOWS_OS)
-      System.loadLibrary("DShowCapture");
+      sage.Native.loadLibrary("DShowCapture");
   }
   public DShowCaptureDevice()
   {
@@ -544,22 +544,6 @@ public class DShowCaptureDevice extends CaptureDevice
       return Sage.autoScanChannelInfo(this, tuneString);
     }
 
-  }
-
-
-  private void doPluginTune(String tuneString)
-  {
-    if (!DirecTVSerialControl.DIRECTV_SERIAL_CONTROL.equals(activeSource.getTuningPlugin()))
-    {
-      SFIRTuner tunePlug = ExternalTuningManager.getIRTunerPlugin(activeSource.getTuningPlugin(),
-          activeSource.getTuningPluginPort());
-      if (tunePlug != null)
-        tunePlug.playTuneString(activeSource.getDevice(), tuneString,
-            isCaptureFeatureSupported(HDPVR_ENCODER_MASK));
-    }
-    else
-      ExternalTuningManager.getDirecTVSerialControl().tune(activeSource.getTuningPluginPort() == 0 ?
-          activeSource.getDevice() : ("COM" + activeSource.getTuningPluginPort()) , tuneString);
   }
 
   public String getChannel()

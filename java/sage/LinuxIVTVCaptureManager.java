@@ -37,7 +37,7 @@ public class LinuxIVTVCaptureManager implements CaptureDeviceManager
 
   {
 
-    System.loadLibrary("IVTVCapture");
+    sage.Native.loadLibrary("IVTVCapture");
 
     prefs = MMC.MMC_KEY + '/';
 

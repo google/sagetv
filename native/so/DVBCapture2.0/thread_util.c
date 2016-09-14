@@ -68,7 +68,7 @@ int ACL_UnlockMutex(ACL_mutex *mutex)
     return 0;
 }
 
-ACL_Thread * ACL_CreateThread(int (*threadfunc)(void *), void *data)
+ACL_Thread * ACL_CreateThread(void * (*threadfunc)(void *), void *data)
 {
     ACL_Thread *thread;
     pthread_attr_t attr;
@@ -97,9 +97,9 @@ int ACL_RemoveThread(ACL_Thread *t)
     return 0;
 }
 
-int ACL_ThreadJoin(ACL_Thread *thread)
+void * ACL_ThreadJoin(ACL_Thread *thread)
 {
-    int retval;
+    void * retval;
     pthread_join(thread->t, &retval);
     return retval;
 }
