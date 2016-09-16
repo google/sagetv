@@ -16,12 +16,12 @@ public class MediaFileTest
   public void testCreateValidFilename() throws Throwable
   {
     TestUtils.initializeSageTVForTesting();
-    String fname="\u2019Test99: Namé\u2019";
+    String fname="\u2019Test99: Nam\u00E9\u2019"; // \u00E9 = é
     boolean allowUnicode,extendedFileName;
 
     // test with unicode
-    validateFile(fname, "Test99Namé", allowUnicode=true, extendedFileName=false);
-    validateFile(fname, "Test99 Namé", allowUnicode=true, extendedFileName=true);
+    validateFile(fname, "Test99Nam\u00E9", allowUnicode=true, extendedFileName=false);
+    validateFile(fname, "Test99 Nam\u00E9", allowUnicode=true, extendedFileName=true);
 
     // test no unicode
     validateFile(fname, "Test99Nam", allowUnicode=false, extendedFileName=false);
