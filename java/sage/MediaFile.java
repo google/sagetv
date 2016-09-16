@@ -73,7 +73,7 @@ public class MediaFile extends DBObject implements SegmentedFile
   private static final boolean VIDEO_THUMBNAIL_FILE_GEN = Sage.getBoolean("video_thumbnail_generation", true);
   private static final String THUMB_FOLDER_NAME = Sage.get("ui/thumbnail_folder", "GeneratedThumbnails");
   public static final File THUMB_FOLDER = new File(Sage.getPath("cache"), THUMB_FOLDER_NAME);
-  public static final String ILLEGAL_FILE_NAME_CHARACTERS = "\\/:*?<>|\"";  // Jeff Harrison - 10/2/2015
+  public static final String LEGAL_FILE_NAME_CHARACTERS = " `!@#$%^&()-_+={}[];',";		// Jeff Harrison - 09/10/2016
 
   // Ensure this directory is created, we rely on this in a few places
   static
@@ -4261,14 +4261,15 @@ public class MediaFile extends DBObject implements SegmentedFile
       // Stick with ASCII to prevent issues with the filesystem names unless a custom property is set
       if (Sage.getBoolean("allow_unicode_characters_in_generated_filenames", false))
       {
-        if (Character.isLetterOrDigit(c))
-          sb.append(c);
+        if (Character.isLetterOrDigit(c)
+          || (Sage.getBoolean("extended_filenames", false) && LEGAL_FILE_NAME_CHARACTERS.contains(String.valueOf(c))))
+            sb.append(c);
       } else if ((c >= 'a' && c <= 'z') ||
         (c >= '0' && c <= '9') ||
         (c >= 'A' && c <= 'Z') ||
-        // Jeff Harrison - 10/2/2015
-        // Keep spaces and other extra characters in filenames excluding illegal characters
-        (Sage.getBoolean("extended_filenames", false) && !ILLEGAL_FILE_NAME_CHARACTERS.contains(c + "")))
+        // Jeff Harrison - 09/10/2016
+     	  // Keep spaces and other extra characters in filenames
+        (Sage.getBoolean("extended_filenames", false) && LEGAL_FILE_NAME_CHARACTERS.contains(String.valueOf(c))))
           sb.append(c);
     }
     return sb.toString();
