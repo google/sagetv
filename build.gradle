@@ -80,7 +80,8 @@ sourceSets {
             	'third_party/MetadataExtractor/java',
             	'third_party/Ogle/java',
             	'third_party/RSSLIB4J/java',
-            	'third_party/SingularSys/java'
+            	'third_party/SingularSys/java',
+				'third_party/GSON/java'
             ]
             excludes = [
 				// mac files, need to be on a Mac to build these
