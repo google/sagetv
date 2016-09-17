@@ -530,6 +530,10 @@ public class BufferedSageFile implements SageFileSource
     if (len > readBuffer.length)
     {
       sageFileSource.readFully(b, off, len);
+      // Narflex 9/16/2016: We moved the position of the real file pointer
+      // since we are having it read directly and bypassing the buffering logic
+      // so be sure to update that here as well.
+      realFilePosition += len;
       return;
     }
 
