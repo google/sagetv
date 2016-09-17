@@ -58,9 +58,9 @@ configurations {
 	miniclient.extendsFrom compile
 }
 
-// Maybe someday we'll target >1.5 (hopefully)
-targetCompatibility = 1.5
-sourceCompatibility = 1.5
+// Maybe someday we'll target >1.7 (hopefully)
+targetCompatibility = 1.7
+sourceCompatibility = 1.7
 
 compileJava {
 	options.warnings = false
