@@ -54,7 +54,7 @@ int NeedBitrate(void);
 int NeedCarrierFrequency(void);
 const char* DeviceName();
 int OpenDevice(int ComPort);
-void CloseDevice(int);
+void CloseDevice(void*);
 unsigned long FindBitRate(int);
 unsigned long FindCarrierFrequency(int);
 struct remote *CreateRemote(char *Name);
