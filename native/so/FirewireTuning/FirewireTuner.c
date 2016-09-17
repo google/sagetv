@@ -299,18 +299,12 @@ const char* DeviceName()
 
 int OpenDevice(int ComPort) 
 {
-    FirewireData *irb = malloc(sizeof(FirewireData));
-    if(irb==NULL) return (int) irb;
     DebugLogging("Opening with comport %d\n",ComPort);
-    irb->devicenum=ComPort;
-    return (int) irb; 
+    return 1; 
 }
 
-void CloseDevice(int devHandle) 
+void CloseDevice(void* devHandle) 
 {
-    if(devHandle==0) return;
-    FirewireData *irb=(FirewireData *) devHandle;
-    free(irb);
 }
 
 unsigned long FindBitRate(int devhandle)
@@ -503,10 +497,8 @@ int CanMacroTune(void)
 void MacroTune(int devHandle, int channel)
 {
     FirewireTunerDev *CDev;
-    FirewireData *irb=(FirewireData *) devHandle;
     DebugLogging("MacroTune %d\n", channel);
     DebugLogging("devHandle %d\n", devHandle);
-    if(devHandle==NULL) return;
 
 #ifdef RemoteInterface
     CDev = createTuner(tunerguid);
