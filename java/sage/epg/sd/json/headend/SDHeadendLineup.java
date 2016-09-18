@@ -28,7 +28,7 @@ public class SDHeadendLineup
   {
     // There's a consistency problem whereby look ups show the name as Antenna, but the account name
     // is Local Over the Air Broadcast. We are normalizing to Local Over the Air Broadcast.
-    if (name.equals("Antenna"))
+    if ("Antenna".equals(name))
       return "Local Over the Air Broadcast";
 
     return name;
