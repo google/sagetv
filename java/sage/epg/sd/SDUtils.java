@@ -92,12 +92,12 @@ public class SDUtils
     }
     else
     {
-      // Use a buffered input stream so we can check the first few bytes for encoding so we can
-      // select an appropriate input stream.
+      // Use a buffered input stream so we can check the first few bytes for encoding so to help
+      // select an appropriate decoder for the input stream.
       inputStream = new BufferedInputStream(connection.getInputStream());
 
-      // Schedules Direct does not appear to provide any indication in the header of when the data is
-      // gzipped, so we need to check for the magic bytes.
+      // Schedules Direct does not appear to provide any indication in the header of when the data
+      // is gzipped, so we need to check for the magic bytes.
       inputStream.mark(3);
       int testBytes = inputStream.read() & 0xff;
 
@@ -332,35 +332,52 @@ public class SDUtils
     }
   }
 
-  private final static Object removeZerosBufferLock = new Object();
-  private static StringBuilder removeZerosBuffer;
   public static String removeLeadingZeros(String channelNumber)
   {
-    synchronized (removeZerosBufferLock)
+    char channel[] = channelNumber.toCharArray();
+    int writeFrom = -1;
+
+    for (int i = 0; i < channel.length; i++)
     {
-      if (removeZerosBuffer == null)
-        removeZerosBuffer = new StringBuilder();
-      else
-        removeZerosBuffer.setLength(0);
-
-      boolean startWriting = false;
-      char channels[] = channelNumber.toCharArray();
-
-      for (char channel : channels)
-      {
-        if (!startWriting && channel == '0')
-          continue;
-
-        startWriting = true;
-
-        removeZerosBuffer.append(channel);
-      }
-
-      if (removeZerosBuffer.length() == 0)
-        removeZerosBuffer.append('0');
-
-      return removeZerosBuffer.toString();
+      if (channel[i] == '0')
+        continue;
+      writeFrom = i;
+      break;
     }
+
+    if (writeFrom == -1)
+      return "0";
+    if (writeFrom == 0)
+      return channelNumber;
+
+    return new String(channel, writeFrom, channel.length - writeFrom);
+  }
+
+  public static String fromSageTVtoProgram(String program)
+  {
+    if (program.length() == 12)
+    {
+      char returnValue[] = new char[14];
+      program.getChars(0, 2, returnValue, 0);
+      returnValue[2] = '0';
+      returnValue[3] = '0';
+      program.getChars(2, 12, returnValue, 4);
+      return new String(returnValue);
+    }
+
+    return program;
+  }
+
+  public static String fromProgramToSageTV(String program)
+  {
+    if (program.length() == 14 && program.startsWith("00", 2))
+    {
+      char programChar[] = program.toCharArray();
+      System.arraycopy(programChar, 4, programChar, 2, 10);
+      return new String(programChar, 0, 12);
+    }
+
+    return program;
   }
 
   /**
