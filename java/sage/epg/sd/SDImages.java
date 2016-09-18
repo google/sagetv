@@ -45,8 +45,8 @@ public class SDImages
   public static final short IMAGE_TYPE_POSTER_FLAG = 0x06;
   public static final short IMAGE_TYPE_BOXART_FLAG = 0x05;
 
+  public static final byte SERIES_THUMB_INDEX = 0;
   public static final byte SERIES_FULL_INDEX = 1;
-  public static final byte SERIES_THUMB_INDEX = 2;
 
   public static final byte SHOW_PHOTO_TALL_INDEX = 1;
   public static final byte SHOW_PHOTO_WIDE_INDEX = 3;
