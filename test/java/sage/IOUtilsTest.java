@@ -23,4 +23,11 @@ public class IOUtilsTest
     String md5 = IOUtils.getFileAsString(getTestResource("test-jar-1.0.zip.md5"));
     assertEquals(md5, "beec1608cf997d3acb42f0ab772b143f" + System.lineSeparator());
   }
+
+  @Test
+  public void testCalcSHA1()
+  {
+    String sha1 = IOUtils.calcSHA1("test-hash-test-hash-test-hash");
+    assertEquals(sha1, "1930681a53ff9ee8af4dcb1354d0d205027cbb73");
+  }
 }

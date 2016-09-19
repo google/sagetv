@@ -18,14 +18,14 @@ package sage;
 import sage.io.RemoteSageFile;
 import sage.io.SageInputStream;
 
-import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.security.NoSuchAlgorithmException;
 
 public class IOUtils
 {
@@ -1679,7 +1679,7 @@ public class IOUtils
           numRead = fis.read(buf);
         }
         byte[] digest = algorithm.digest();
-        StringBuffer finalSum = new StringBuffer();
+        StringBuilder finalSum = new StringBuilder(32); // The hash will always be 32 characters.
         for (int i = 0; i < digest.length; i++)
         {
           if (((int) (digest[i] & 0xFF)) <= 0x0F)
@@ -1712,6 +1712,49 @@ public class IOUtils
       return null;
 
   }
+
+  /**
+   * Encode a <code>String</code> into a SHA-1 hash and return it represented as a
+   * <code>String</code> formatted as hexadecimal.
+   *
+   * @param encodeValue The <code>String</code> to be encoded. The charset must be UTF-8.
+   * @return The hexadecimal representation of the calculated hash or <code>null</code> if a
+   *         <code>null</code> <code>String</code> is provided or the SHA-1 message digest doesn't
+   *         exist on this platform.
+   */
+  public static String calcSHA1(String encodeValue)
+  {
+    if (encodeValue == null)
+      return null;
+
+    java.security.MessageDigest messageDigest;
+    try
+    {
+      messageDigest = java.security.MessageDigest.getInstance("SHA");
+    }
+    catch (NoSuchAlgorithmException e)
+    {
+      System.out.println("Unable to get SHA-1 message digest algorithm!");
+      return null;
+    }
+
+    messageDigest.reset();
+    messageDigest.update(encodeValue.getBytes(StandardCharsets.UTF_8));
+    byte shaBytes[] = messageDigest.digest();
+    StringBuilder returnValue = new StringBuilder(40); // The hash will always be 40 characters.
+
+    for (int i = 0; i < shaBytes.length; i++)
+    {
+      if ((shaBytes[i] & 0xFF) <= 0x0F)
+      {
+        returnValue.append('0');
+      }
+      returnValue.append(Integer.toHexString((shaBytes[i] & 0xFF)));
+    }
+
+    return returnValue.toString();
+  }
+
   public static final String[] VFAT_MOUNTABLE_PARTITION_TYPES = { "6", "b", "c", "e", "f" };
   public static final String[] NTFS_MOUNTABLE_PARTITION_TYPES = { "7" };
   public static boolean isExternalDriveMounted(String devPath, String mountPath)

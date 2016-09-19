@@ -2910,6 +2910,20 @@ public class Utility {
         java.io.File f = getFile(stack);
         return IOUtils.calcMD5(f);
       }});
+    rft.put(new PredefinedJEPFunction("Utility", "CalculateSHA1Hash", new String[] { "EncodeString"})
+    {
+      /**
+       * Calculates the SHA1 hash of a String
+       * @param EncodeString the String to be converted into a SHA1 hash
+       * @return the SHA1 sum of the provided String or null if the string was null
+       * @since 9.0
+       *
+       * @declaration public String CalculateSHA1Hash(String EncodeString);
+       */
+      public Object runSafely(Catbert.FastStack stack) throws Exception{
+        String encodeString = getString(stack);
+        return IOUtils.calcSHA1(encodeString);
+      }});
     rft.put(new PredefinedJEPFunction("Utility", "ReloadNameserverCache")
     {
       /**
