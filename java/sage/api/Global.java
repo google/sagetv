@@ -30,7 +30,6 @@ import sage.LinuxUtils;
 import sage.MMC;
 import sage.ManualRecord;
 import sage.MediaFile;
-import sage.MetaImage;
 import sage.MiniClientSageRenderer;
 import sage.NetworkClient;
 import sage.NewStorageDeviceDetector;
@@ -335,6 +334,58 @@ public class Global {
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         String lineup = getString(stack);
         return Boolean.valueOf(EPG.getInstance().getEPGDSForEPGDSName(lineup).isChanDownloadComplete());
+      }});
+    rft.put(new PredefinedJEPFunction("Global", "GetEPGProperty", new String[]{"EPGDataSource", "Property", "Parameter"}, true)
+    {
+      /**
+       * Gets a property from a specific EPG data source with an optional parameter
+       * @param EPGDataSource the name of the EPG data source
+       * @param Property the property name to get
+       * @param Parameter optional parameter
+       * @return the value of the requested property
+       * @since 9.0
+       *
+       * @declaration public Object GetEPGProperty(String EPGDataSource, String Property, String Parameter);
+       */
+      public Object runSafely(Catbert.FastStack stack) throws Exception{
+        String parameter = getString(stack);
+        String property = getString(stack);
+        String dataSource = getString(stack);
+
+        try
+        {
+          return EPG.getProperty(dataSource, property, parameter);
+        }
+        catch (sage.EPGServerException e)
+        {
+          return e.getMessage();
+        }
+      }});
+    rft.put(new PredefinedJEPFunction("Global", "SetEPGProperty", new String[]{"EPGDataSource", "Property", "Value"}, true)
+    {
+      /**
+       * Sets a property for a specific EPG data source to the provided value
+       * @param EPGDataSource the name of the EPG data source
+       * @param Property the property name to set
+       * @param Value the value to set
+       * @return result of setting the property
+       * @since 9.0
+       *
+       * @declaration public Object SetEPGProperty(String EPGDataSource, String Property, String Value);
+       */
+      public Object runSafely(Catbert.FastStack stack) throws Exception{
+        String value = getString(stack);
+        String property = getString(stack);
+        String dataSource = getString(stack);
+
+        try
+        {
+          return EPG.setProperty(dataSource, property, value);
+        }
+        catch (sage.EPGServerException e)
+        {
+          return e.getMessage();
+        }
       }});
     rft.put(new PredefinedJEPFunction("Global", "GetLocalMarketsFromEPGServer", true)
     {
