@@ -17,6 +17,8 @@ package sage;
 
 import sage.Wizard.MaintenanceType;
 
+import java.util.List;
+
 public class EPGDataSource
 {
   public static final long MILLIS_PER_HOUR = 1000L * 60L * 60L;
@@ -110,7 +112,7 @@ public class EPGDataSource
       {
         if (canViewStation(allStations[i]) && doesStationIDWantScan(allStations[i]))
         {
-          Long stationUpdateTime = (Long) updateIDMap.get(new Integer(allStations[i]));
+          Long stationUpdateTime = updateIDMap.get(new Integer(allStations[i]));
           if (stationUpdateTime != null)
           {
             scannedUntil = Math.min(stationUpdateTime.longValue(), scannedUntil);
@@ -164,13 +166,13 @@ public class EPGDataSource
       // Now we need to find the actual stations we want to scan for and go to it!
       int[] allStations = EPG.getInstance().getAllStations(providerID);
       long newScannedUntil = Long.MAX_VALUE;
-      java.util.HashMap majorToChannelMap = new java.util.HashMap();
+      java.util.Map<String, List<Integer>> majorToChannelMap = new java.util.HashMap<String, List<Integer>>();
       for (int i = 0; i < allStations.length; i++)
       {
         if (abort || !enabled) return;
         if (canViewStation(allStations[i]) && doesStationIDWantScan(allStations[i]))
         {
-          Long stationUpdateTime = (Long) updateIDMap.get(new Integer(allStations[i]));
+          Long stationUpdateTime = updateIDMap.get(new Integer(allStations[i]));
           if (stationUpdateTime != null)
           {
             if (stationUpdateTime.longValue() > Sage.time())
@@ -182,7 +184,7 @@ public class EPGDataSource
           String currChan = EPG.getInstance().getPhysicalChannel(providerID, allStations[i]);
           java.util.StringTokenizer toker = new java.util.StringTokenizer(currChan, "-");
           String majChan = currChan;
-          java.util.ArrayList currStatList = null;
+          java.util.List<Integer> currStatList = null;
           if (toker.countTokens() > 1)
           {
             if (toker.countTokens() > 2)
@@ -196,30 +198,30 @@ public class EPGDataSource
 						// This could also be a channel which doesn't have a major-minor identifier!!
 						continue;
 					}*/
-          currStatList = (java.util.ArrayList) majorToChannelMap.get(majChan);
+          currStatList = majorToChannelMap.get(majChan);
           if (currStatList == null)
           {
-            currStatList = new java.util.ArrayList();
+            currStatList = new java.util.ArrayList<Integer>();
             majorToChannelMap.put(majChan, currStatList);
           }
           currStatList.add(new Integer(allStations[i]));
         }
       }
 
-      java.util.Iterator walker = majorToChannelMap.entrySet().iterator();
+      java.util.Iterator<java.util.Map.Entry<String, List<Integer>>> walker = majorToChannelMap.entrySet().iterator();
       while (walker.hasNext())
       {
         if (abort || !enabled) return;
-        java.util.Map.Entry ent = (java.util.Map.Entry) walker.next();
-        String currMajor = (String) ent.getKey();
-        java.util.ArrayList currStatList = (java.util.ArrayList) ent.getValue();
+        java.util.Map.Entry<String, List<Integer>> ent = walker.next();
+        String currMajor = ent.getKey();
+        java.util.List<Integer> currStatList = ent.getValue();
 
         // If we're here then we want to scan!
         synchronized (Seeker.getInstance())
         {
           if (cdi.getCaptureDevice().isDataScanning())
           {
-            cdi.tuneToChannel(EPG.getInstance().getPhysicalChannel(providerID, ((Integer)currStatList.get(0)).intValue()));
+            cdi.tuneToChannel(EPG.getInstance().getPhysicalChannel(providerID, currStatList.get(0).intValue()));
           }
           else // our data scanning has been stopped, so just return
             return;
@@ -636,8 +638,8 @@ public class EPGDataSource
     {
       // We still need to put empty maps in there so it thinks there's actually lineup
       // data for this source...and there is in the overrides.
-      EPG.getInstance().setLineup(providerID, new java.util.HashMap());
-      EPG.getInstance().setServiceLevels(providerID, new java.util.HashMap());
+      EPG.getInstance().setLineup(providerID, new java.util.HashMap<Integer, String[]>());
+      EPG.getInstance().setServiceLevels(providerID, new java.util.HashMap<Long, Integer>());
       return true;
     }
     int minChan = cdi.getMinChannel();
@@ -647,7 +649,7 @@ public class EPGDataSource
       // Not a tv tuner, so just set the min and max equal so it only creates a single channel
       maxChan = minChan;
     }
-    java.util.HashMap lineMap = new java.util.HashMap();
+    java.util.HashMap<Integer, String[]> lineMap = new java.util.HashMap<Integer, String[]>();
     for (int i = minChan; i <= maxChan; i++)
     {
       wiz.addChannel(cdi.getCrossName(), name, null, defaultStationID + i, 0, didAdd);
@@ -656,7 +658,7 @@ public class EPGDataSource
       lineMap.put(new Integer(defaultStationID + i), new String[] { Integer.toString(i) });
     }
     EPG.getInstance().setLineup(providerID, lineMap);
-    EPG.getInstance().setServiceLevels(providerID, new java.util.HashMap());
+    EPG.getInstance().setServiceLevels(providerID, new java.util.HashMap<Long, Integer>());
     return true;
   }
 
@@ -928,7 +930,7 @@ public class EPGDataSource
     if (appliedServiceLevel == newLevel)
       return;
 
-    java.util.Set badStations = new java.util.HashSet();
+    java.util.Set<Integer> badStations = new java.util.HashSet<Integer>();
     EPG epg = EPG.getInstance();
     int[] stations = epg.getAllStations(providerID);
     for (int i = 0; i < stations.length; i++)
@@ -953,8 +955,8 @@ public class EPGDataSource
 
   protected void saveUpdateMap()
   {
-    java.util.Iterator walker = updateIDMap.entrySet().iterator();
-    StringBuffer sb = new StringBuffer();
+    java.util.Iterator<java.util.Map.Entry<Integer, Long>> walker = updateIDMap.entrySet().iterator();
+    StringBuilder sb = new StringBuilder();
     while (walker.hasNext())
     {
       java.util.Map.Entry ent = (java.util.Map.Entry) walker.next();
@@ -990,9 +992,9 @@ public class EPGDataSource
 
   protected int appliedServiceLevel;
   protected boolean chanDownloadComplete;
-  protected java.util.Set unavailStations;
-  protected java.util.Set unavailChanNums;
-  protected java.util.Map updateIDMap;
+  protected java.util.Set<Integer> unavailStations;
+  protected java.util.Set<String> unavailChanNums;
+  protected java.util.Map<Integer, Long> updateIDMap;
   protected boolean dataScanAllowed;
   protected boolean dataScanRequested;
   /**

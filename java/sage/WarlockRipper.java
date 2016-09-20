@@ -15,10 +15,14 @@
  */
 package sage;
 
+import sage.epg.sd.SDRipper;
+
 public class WarlockRipper extends EPGDataSource
 {
   // 601 debug epg raw data to file:epg.log
   static final boolean EPG_DEBUG = false;
+
+  public static final String SOURCE_NAME = "WarlockRipper";
 
   private static final String SERVER_ADDRESS = "server_address";
   public static final int STANDARD_TIMEOUT = 120000; // two minutes
@@ -33,9 +37,10 @@ public class WarlockRipper extends EPGDataSource
   {
     super(inID);
 
-    Sage.put(prefsRoot + EPG.EPG_CLASS, "WarlockRipper");
+    Sage.put(prefsRoot + EPG.EPG_CLASS, SOURCE_NAME);
   }
 
+  @Override
   public void reset()
   {
     super.reset();
@@ -49,7 +54,7 @@ public class WarlockRipper extends EPGDataSource
       zipProviderCache.clear();
     else if (zipProviderCache.containsKey(zipCode))
     {
-      String[][] rv = (String[][]) zipProviderCache.get(zipCode);
+      String[][] rv = zipProviderCache.get(zipCode);
       if (rv != null && rv.length > 0)
         return rv;
     }
@@ -135,6 +140,33 @@ public class WarlockRipper extends EPGDataSource
       }
       throw e;
     }
+  }
+
+  /**
+   * Get a property specific to this EPG source instance.
+   * <p/>
+   * This does not strictly need to be a saved property. This can also be used to return
+   * specialized status information, etc.
+   *
+   * @param property The name of the property to get.
+   * @param parameter An optional parameter related to the property.
+   * @return The value for the given property.
+   */
+  public static Object getProperty(String property, String parameter)
+  {
+    return "OK";
+  }
+
+  /**
+   * Set a property specific to this EPG source instance.
+   *
+   * @param property The name of the property to set.
+   * @param value The value to set the property to.
+   * @return The result of setting the property.
+   */
+  public static Object setProperty(String property, String value)
+  {
+    return "OK";
   }
 
   public static String[][] getLocalMarkets() throws EPGServerException
@@ -253,7 +285,7 @@ public class WarlockRipper extends EPGDataSource
   // This may take some time due to the diskspace calculation so do it before we connect to the server
   public static String getSubmitInfo(Wizard wiz, String providerID)
   {
-    StringBuffer sb = new StringBuffer();
+    StringBuilder sb = new StringBuilder();
     sb.append("SUBMIT_INFO ");
     sb.append(Carny.getInstance().getWatchCount());
     sb.append(' ');
@@ -319,6 +351,7 @@ public class WarlockRipper extends EPGDataSource
 
   // This is so we can track everything from everywhere since it can't be disabled (unless they override the
   // resolution of warlock.freytechnologies.com)
+  @Override
   protected boolean extractGuide(long inGuideTime)
   {
     if (!doesHaveEpgLicense()) {
@@ -404,7 +437,7 @@ public class WarlockRipper extends EPGDataSource
       // Include any additional stations the the user has added to their lineup
       // NOTE: If the EPG server decides we have no channels then we fill this with
       // all of our channels
-      java.util.Map overrideMap;
+      java.util.Map<Integer, String[]> overrideMap;
       if (numChans > 0)
         overrideMap = EPG.getInstance().getOverrideMap(getProviderID());
       else
@@ -414,16 +447,16 @@ public class WarlockRipper extends EPGDataSource
         sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createLineupLostMsg(this));
       }
       if (overrideMap == null)
-        overrideMap = new java.util.HashMap();
+        overrideMap = new java.util.HashMap<Integer, String[]>();
       int numExtraChans = overrideMap.size();
 
       int[] stations = new int[numChans + numExtraChans];
 
-      java.util.Iterator walker = overrideMap.keySet().iterator();
+      java.util.Iterator<Integer> walker = overrideMap.keySet().iterator();
       int extraChanNum = 0;
       while (walker.hasNext())
       {
-        Integer val = (Integer) walker.next();
+        Integer val = walker.next();
         if (val != null && (!Sage.getBoolean("wizard/remove_airings_on_unviewable_channels2", true) || EPG.getInstance().canViewStation(val.intValue())))
         {
           stations[numChans + extraChanNum++] = val.intValue();
@@ -433,6 +466,7 @@ public class WarlockRipper extends EPGDataSource
       // Also include all channels from any other lineups that are not Zap2it lineups so they get downloaded somewhere.
       // This may end up being redundant...but so is our channel downloading across lineups anyways.
       // On embedded we also need to find any other channels that may have been enabled on other lineups and do them in our update here
+      // JS 8/22/2016: Added skipping SDRipper since Schedules Direct will take care of it's own lineups.
       CaptureDeviceInput[] conInputs = MMC.getInstance().getConfiguredInputs();
       for (int i = 0; i < conInputs.length; i++)
       {
@@ -440,7 +474,7 @@ public class WarlockRipper extends EPGDataSource
         {
           // Check if this is a non-Zap2it lineup
           EPGDataSource otherDS = EPG.getInstance().getSourceForProviderID(conInputs[i].getProviderID());
-          if (!(otherDS instanceof WarlockRipper))
+          if (!(otherDS instanceof WarlockRipper) && !(otherDS instanceof SDRipper))
           {
             int[] altStations = EPG.getInstance().getAllStations(conInputs[i].getProviderID());
             for (int j = 0; j < altStations.length; j++)
@@ -457,9 +491,9 @@ public class WarlockRipper extends EPGDataSource
       }
 
       java.util.Set logosToDownload = new java.util.HashSet();
-      java.util.Map lineMap = new java.util.HashMap();
-      java.util.Map serviceMap = new java.util.HashMap();
-      java.util.Map physicalMap = null;
+      java.util.Map<Integer, String[]> lineMap = new java.util.HashMap<Integer, String[]>();
+      java.util.Map<Long, Integer> serviceMap = new java.util.HashMap<Long, Integer>();
+      java.util.Map<Integer, String[]> physicalMap = null;
       boolean[] caddrv = new boolean[1];
       for (int i = 0; i < numChans; i++)
       {
@@ -510,7 +544,7 @@ public class WarlockRipper extends EPGDataSource
         }
 
         lineMap.put(new Integer(stationID), chanNums);
-        serviceMap.put(new Integer(stationID), new Integer(serviceLevel));
+        serviceMap.put(new Long(stationID), new Integer(serviceLevel));
         /*
                 if ((networkName != null) && (networkName.length() > 0) &&
                     (EPG.getInstance().getLogo(networkName) == null))
@@ -557,7 +591,7 @@ public class WarlockRipper extends EPGDataSource
         {
           // We were not even using this information; so now we put the physical channel string here instead, if parsing fails we just continue on and ignore it
           if (physicalMap == null)
-            physicalMap = new java.util.HashMap();
+            physicalMap = new java.util.HashMap<Integer, String[]>();
           physicalMap.put(new Integer(stationID), new String[] { dtvChan});
 
           // See if we already had this channel in our lineup through an auto-generated channel, and that channel was enabled. If it was,
@@ -632,7 +666,7 @@ public class WarlockRipper extends EPGDataSource
           Sage.time() - 2*Sage.MILLIS_PER_DAY)
             numAirsInDBForStation++;
         }
-        Long currUpdateID = (Long) updateIDMap.get(new Integer(stationID));
+        Long currUpdateID = updateIDMap.get(new Integer(stationID));
         long serverUpdateID = (currUpdateID != null) ? currUpdateID.longValue() : 0;
         sci.outStream.write(("GET_UPDATED_SHOWS3 " + stationID + " " + guideTime + " " +
             14*Sage.MILLIS_PER_DAY + " " + serverUpdateID + " " + numAirsInDBForStation + "\r\n").getBytes());
@@ -828,13 +862,14 @@ public class WarlockRipper extends EPGDataSource
         updateIDMap.put(new Integer(stationID), new Long(newUpdateID));
 
         // Do this after each station; so then next time we don't redo stuff we've already done
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
+        java.util.Iterator<java.util.Map.Entry<Integer, Long>> walker2;
         synchronized (updateIDMap)
         {
-          walker = updateIDMap.entrySet().iterator();
+          walker2 = updateIDMap.entrySet().iterator();
           while (walker.hasNext())
           {
-            java.util.Map.Entry ent = (java.util.Map.Entry) walker.next();
+            java.util.Map.Entry ent = walker2.next();
             sb.append(ent.getKey());
             sb.append(',');
             sb.append(ent.getValue());
@@ -1019,6 +1054,7 @@ public class WarlockRipper extends EPGDataSource
     }
   }
 
+  @Override
   protected long getGuideWidth() { return 24*MILLIS_PER_HOUR; }
 
   private long guideTime;
@@ -1027,7 +1063,7 @@ public class WarlockRipper extends EPGDataSource
   private int currDataPos;
 
   private static long zipLocalCacheTime;
-  private static java.util.Map zipProviderCache = new java.util.HashMap();
+  private static java.util.Map<String, String[][]> zipProviderCache = new java.util.HashMap<String, String[][]>();
   private static String[][] localMarketCache;
 
   private static class ServerConnectInfo
