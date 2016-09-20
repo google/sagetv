@@ -208,7 +208,8 @@ public class Wizard implements EPGDBPublic2
   // 83 added support for writing out index orders; this is backwards compatible since older versions will skip this section and create their own indices
   // 84 open sourced initial version
   // 85 fixed Wizard bug where we were loading using BYTE_CHARSET instead of I18N_CHARSET
-  public static byte VERSION = SageConstants.PVR ? 0x55 : 0x46;
+  // 86 added support for encoded Schedules Direct image URLs for Channel, Show and SeriesInfo objects.
+  public static byte VERSION = SageConstants.PVR ? 0x56 : 0x46;
   public static final byte BAD_VERSION = 0x00;
 
   // This flag is to deal with the problem where we used 32-bit ints for Airing durations in compact DB mode. For PVR
@@ -2858,18 +2859,22 @@ public class Wizard implements EPGDBPublic2
       resetAirings(stationID);
     return (c != null);
   }
+  public Channel addChannel(String name, String longName, String network, int stationID, int logoMask, byte[] logoURL, boolean [] didAdd)
+  {
+    return addChannel(name, longName, network, stationID, logoMask, Pooler.EMPTY_INT_ARRAY, logoURL, didAdd);
+  }
   // 601 Channel addChannel(...
   public Channel addChannel(String name, String longName, String network, int stationID, int logoMask, boolean [] didAdd)
   {
-    return addChannel(name, longName, network, stationID, logoMask, Pooler.EMPTY_INT_ARRAY, didAdd);
+    return addChannel(name, longName, network, stationID, logoMask, Pooler.EMPTY_INT_ARRAY, Pooler.EMPTY_BYTE_ARRAY, didAdd);
   }
-  public Channel addChannel(String name, String longName, String network, int stationID, int logoMask, int[] imageList,
+  public Channel addChannel(String name, String longName, String network, int stationID, int logoMask, int[] imageList, byte[] logoURL,
       boolean [] didAdd)
   {
     if (stationID == 0 && (name == null || name.length() > 0 || longName == null || longName.length() > 0))
     {
       // Do allow our own internal adding of the zero station ID channel, we use a zero length string for the names in that case
-      if (Sage.DBG) System.out.println("ERROR Invalid request to add a channel with a zero stationID: name=" + name + " desc=" + longName + " newtwork=" + network);
+      if (Sage.DBG) System.out.println("ERROR Invalid request to add a channel with a zero stationID: name=" + name + " desc=" + longName + " network=" + network);
       return null;
     }
     // Check if the channel already exists
@@ -2887,6 +2892,7 @@ public class Wizard implements EPGDBPublic2
         c.network = getNetworkForName(network);
         c.logoMask = logoMask;
         c.logoImages = (imageList == null) ? Pooler.EMPTY_INT_ARRAY : imageList;
+        c.logoURL = (logoURL == null || logoURL.length == 0) ? Pooler.EMPTY_BYTE_ARRAY : logoURL;
         getTable(CHANNEL_CODE).add(c, true);
         updateLastModified(DBObject.MEDIA_MASK_TV);
         if (Sage.DBG) System.out.println("Added:" + c);
@@ -2930,6 +2936,12 @@ public class Wizard implements EPGDBPublic2
           if (newC == null)
             newC = (Channel) c.clone();
           newC.logoImages = imageList;
+        }
+        if (c.logoURL != logoURL && !Arrays.equals(logoURL, c.logoURL))
+        {
+          if (newC == null)
+            newC = (Channel) c.clone();
+          newC.logoURL = logoURL;
         }
         if (newC != null)
         {
@@ -3102,6 +3114,15 @@ public class Wizard implements EPGDBPublic2
   {
     return addSeriesInfo(legacySeriesID, title, network, description, history, premiereDate, finaleDate, airDOW, airHrMin, imageURL, people, characters) != null;
   }
+  public SeriesInfo addSeriesInfo(int legacySeriesID, int showcardID, String title, String network, String description, String history, String premiereDate,
+      String finaleDate, String airDOW, String airHrMin, String[] people, String[] characters, byte[][] imageURLs)
+  {
+    Person[] peeps = (people == null || people.length == 0) ? Pooler.EMPTY_PERSON_ARRAY : new Person[people.length];
+    for (int i = 0; i < peeps.length; i++)
+      peeps[i] = getPersonForName(people[i]);
+    return addSeriesInfo(legacySeriesID, showcardID, title, network, description, history, premiereDate, finaleDate, airDOW, airHrMin,
+        "", peeps, characters, Pooler.EMPTY_INT_ARRAY, Pooler.EMPTY_LONG_ARRAY, imageURLs);
+  }
   public SeriesInfo addSeriesInfo(int legacySeriesID, String title, String network, String description, String history, String premiereDate,
       String finaleDate, String airDOW, String airHrMin, String imageURL, String[] people, String[] characters)
   {
@@ -3109,10 +3130,10 @@ public class Wizard implements EPGDBPublic2
     for (int i = 0; i < peeps.length; i++)
       peeps[i] = getPersonForName(people[i]);
     return addSeriesInfo(legacySeriesID, 0, title, network, description, history, premiereDate, finaleDate, airDOW, airHrMin,
-        imageURL, peeps, characters, Pooler.EMPTY_INT_ARRAY, Pooler.EMPTY_LONG_ARRAY);
+        imageURL, peeps, characters, Pooler.EMPTY_INT_ARRAY, Pooler.EMPTY_LONG_ARRAY, Pooler.EMPTY_2D_BYTE_ARRAY);
   }
   public SeriesInfo addSeriesInfo(int legacySeriesID, int showcardID, String title, String network, String description, String history, String premiereDate,
-      String finaleDate, String airDOW, String airHrMin, String imageUrl, Person[] people, String[] characters, int[] seriesImages, long[] castImages)
+      String finaleDate, String airDOW, String airHrMin, String imageUrl, Person[] people, String[] characters, int[] seriesImages, long[] castImages, byte[][] imageURLs)
   {
     SeriesInfo oldSeries = (showcardID == 0) ? getSeriesInfoForLegacySeriesID(legacySeriesID) : getSeriesInfoForShowcardID(showcardID);
     SeriesInfo series;
@@ -3156,6 +3177,11 @@ public class Wizard implements EPGDBPublic2
         series.seriesImages = Pooler.EMPTY_INT_ARRAY;
       else
         series.seriesImages = seriesImages.clone();
+      if (imageURLs == null || imageURLs.length == 0)
+        series.imageURLs = Pooler.EMPTY_2D_BYTE_ARRAY;
+      else
+        series.imageURLs = imageURLs;
+      series.imageURLs = (imageURLs == null) ? Pooler.EMPTY_2D_BYTE_ARRAY : imageURLs.clone();
       if (castImages == null || castImages.length == 0)
         series.castImages = Pooler.EMPTY_LONG_ARRAY;
       else
@@ -4513,7 +4539,7 @@ public class Wizard implements EPGDBPublic2
   {
     return (addShow(title, episodeName, desc, duration, new String[] {category, subCategory}, getPeopleArray(people), roles, rated,
         expandedRatings, year, parentalRating, bonus, extID, language, originalAirDate, true, 0, (short)0, (short)0,
-        (short)0, false, 0, 0, Pooler.EMPTY_SHORT_ARRAY) != null);
+        (short)0, false, 0, 0, Pooler.EMPTY_SHORT_ARRAY, Pooler.EMPTY_2D_BYTE_ARRAY) != null);
   }
 
   public boolean addShowPublic2(String title, String episodeName, String desc, long duration, String[] categories,
@@ -4523,7 +4549,7 @@ public class Wizard implements EPGDBPublic2
   {
     return (addShow(title, episodeName, desc, duration, categories, getPeopleArray(people), roles, rated,
         expandedRatings, year, parentalRating, bonus, extID, language, originalAirDate, true, 0, seasonNum, episodeNum,
-        (short)0, forcedUnique, 0, 0, Pooler.EMPTY_SHORT_ARRAY) != null);
+        (short)0, forcedUnique, 0, 0, Pooler.EMPTY_SHORT_ARRAY, Pooler.EMPTY_2D_BYTE_ARRAY) != null);
   }
 
   public Show addShow(String title, String primeTitle, String episodeName, String desc, long duration, String[] categories,
@@ -4534,7 +4560,18 @@ public class Wizard implements EPGDBPublic2
   {
     return addShow(title, episodeName, desc, duration, categories, getPeopleArray(people), roles, rated, expandedRatings,
         year, parentalRating, bonus, extID, language, originalAirDate, false, mediaMask, seasonNum, episodeNum, (short)0,
-        forcedUnique, 0, 0, Show.convertLegacyShowImageData(photoCountTall, photoCountWide, posterCountTall, posterCountWide));
+        forcedUnique, 0, 0, Show.convertLegacyShowImageData(photoCountTall, photoCountWide, posterCountTall, posterCountWide),
+        Pooler.EMPTY_2D_BYTE_ARRAY);
+  }
+
+  public Show addShow(String title, String episodeName, String desc, long duration, String[] categories,
+                      String[] people, byte[] roles, String rated, String[] expandedRatings,
+                      String year, String parentalRating, String[] bonus, String extID, String language, long originalAirDate,
+                      int mediaMask, short seasonNum, short episodeNum, boolean forcedUnique, int showcardID, byte urls[][])
+  {
+    return addShow(title, episodeName, desc, duration, categories, getPeopleArray(people), roles, rated, expandedRatings,
+        year, parentalRating, bonus, extID, language, originalAirDate, false, mediaMask, seasonNum, episodeNum, (short)0,
+        forcedUnique, showcardID, 0, Pooler.EMPTY_SHORT_ARRAY, urls);
   }
 
   public Show addShow(String title, String episodeName, String desc, long duration, String[] categories,
@@ -4545,14 +4582,14 @@ public class Wizard implements EPGDBPublic2
   {
     return addShow(title, episodeName, desc, duration, categories, people, roles, rated, expandedRatings, year, parentalRating,
         bonus, extID, language, originalAirDate, false, mediaMask, seasonNum, episodeNum, altEpisodeNum, forcedUnique, showcardID,
-        seriesID, imageIDs);
+        seriesID, imageIDs, Pooler.EMPTY_2D_BYTE_ARRAY);
   }
 
   private Show addShow(String title, String episodeName, String desc, long duration, String[] categories,
       Person[] people, byte[] roles, String rated, String[] expandedRatings,
       String year, String parentalRating, String[] bonus, String extID, String language, long originalAirDate, boolean fromAPlugin,
       int mediaMask, short seasonNum, short episodeNum, short altEpisodeNum, boolean forcedUnique, int showcardID, int seriesID,
-      short[] imageIDs)
+      short[] imageIDs, byte[][] imageURLs)
   {
     // Double check this first because clients can't synchronize on our structure
     Show oldShow = getShowForExternalID(extID);
@@ -4636,6 +4673,11 @@ public class Wizard implements EPGDBPublic2
       s.seriesID = seriesID;
       s.showcardID = showcardID;
       s.imageIDs = (imageIDs == null ? Pooler.EMPTY_SHORT_ARRAY : ((short[]) imageIDs.clone()));
+      if (imageURLs == null || imageURLs.length == 0)
+        s.imageURLs = Pooler.EMPTY_2D_BYTE_ARRAY;
+      else
+        s.imageURLs = imageURLs.clone();
+
       if (forcedUnique)
         s.cachedUnique = Show.FORCED_UNIQUE;
 
