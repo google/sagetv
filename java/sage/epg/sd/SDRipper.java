@@ -1662,9 +1662,6 @@ public class SDRipper extends EPGDataSource
                     continue;
                   }
 
-                  // Adjust for local timezone.
-                  startTime += currentTimeZone.getRawOffset() + currentTimeZone.getDSTSavings();
-
                   long duration = airing.getDuration();
                   byte partsByte;
                   partsByte = airing.getMultipartByte();

@@ -19,6 +19,7 @@ import org.testng.annotations.Test;
 import sage.epg.sd.SDUtils;
 
 import java.text.ParseException;
+import java.util.TimeZone;
 
 public class SDUtilsTest
 {
@@ -42,13 +43,15 @@ public class SDUtilsTest
   public void testDateTimeConversion()
   {
     long date = SDUtils.SDFullUTCToMillis("2014-06-28T05:16:29Z");
-    assert date == 1403946989000L : "Expected 1403946989000, got " + date;
+    date -= TimeZone.getDefault().getRawOffset() + TimeZone.getDefault().getDSTSavings();
+    assert date == 1403946989000L : "Expected 1403932589000, got " + date;
   }
 
   @Test(groups = {"gson", "schedulesDirect", "dateTime", "conversion" })
   public void testDateConversion()
   {
     long date = SDUtils.SDDateUTCToMillis("2014-06-28");
+    date -= TimeZone.getDefault().getRawOffset() + TimeZone.getDefault().getDSTSavings();
     assert date == 1403928000000L : "Expected 1403928000000, got " + date;
   }
 

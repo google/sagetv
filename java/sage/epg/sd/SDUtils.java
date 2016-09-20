@@ -296,7 +296,7 @@ public class SDUtils
       if (sdfFull == null)
       {
         sdfFull = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        sdfFull.setTimeZone(TimeZone.getTimeZone("UTC"));
+        sdfFull.setTimeZone(TimeZone.getTimeZone("GMT"));
       }
 
       // 2014-06-28T05:16:29Z
@@ -306,7 +306,7 @@ public class SDUtils
       }
       catch (ParseException e)
       {
-        System.out.println("Unable to parse full " + utcTime);
+        System.out.println("Unable to parse full date " + utcTime);
         return 0;
       }
     }
@@ -324,16 +324,17 @@ public class SDUtils
       if (sdfDate == null)
       {
         sdfDate = new SimpleDateFormat("yyyy-MM-dd");
-        sdfFull.setTimeZone(TimeZone.getTimeZone("UTC"));
+        sdfDate.setTimeZone(TimeZone.getTimeZone("GMT"));
       }
 
       // 2014-06-28
       try
       {
         return sdfDate.parse(utcDate).getTime();
-      } catch (ParseException e)
+      }
+      catch (ParseException e)
       {
-        if (Sage.DBG) System.out.println("Unable to parse date " + utcDate);
+        System.out.println("Unable to parse date " + utcDate);
         return 0;
       }
     }
