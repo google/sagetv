@@ -904,7 +904,7 @@ public class MetaImage
 
   private static boolean isURLString(String s)
   {
-    return s != null && (s.startsWith("http:") || s.startsWith("ftp:") || (!Sage.EMBEDDED && s.startsWith("smb:")));
+    return s != null && (s.startsWith("http:") || s.startsWith("https:") || s.startsWith("ftp:") || (!Sage.EMBEDDED && s.startsWith("smb:")));
   }
 
   private static URL getURLForString(String s)
@@ -947,7 +947,7 @@ public class MetaImage
       MetaImage rv = globalImageCache.get(srcStr);
       // Check to make sure we've got this locally cached already; otherwise
       // return a waiter while we download the image
-      if (src == null || loadNotifier == null || !loadNotifier.needsLoadCallback(src) || !ASYNC_LOAD_URL_IMAGES || (!"http".equals(src.getProtocol()) && !"ftp".equals(src.getProtocol())) ||
+      if (src == null || loadNotifier == null || !loadNotifier.needsLoadCallback(src) || !ASYNC_LOAD_URL_IMAGES || (!"http".equals(src.getProtocol()) && !"https".equals(src.getProtocol()) && !"ftp".equals(src.getProtocol())) ||
           (rv.localCacheFile != null && rv.localCacheFile.isFile()) || rv.loadFailed ||
           rv.mightLoadFast(loadNotifier.getUIMgr()))
         // found a valid cached MI
@@ -964,7 +964,7 @@ public class MetaImage
         }
     }
 
-    if (loadNotifier != null && loadNotifier.needsLoadCallback(src) && ASYNC_LOAD_URL_IMAGES && ("http".equals(src.getProtocol()) || "ftp".equals(src.getProtocol())))
+    if (loadNotifier != null && loadNotifier.needsLoadCallback(src) && ASYNC_LOAD_URL_IMAGES && ("http".equals(src.getProtocol()) || "https".equals(src.getProtocol()) || "ftp".equals(src.getProtocol())))
     {
       getAsyncLoader(loadNotifier.getUIMgr()).loadImage(srcStr, loadNotifier);
       return new Waiter(getMetaImage((String)null), src);
