@@ -47,6 +47,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.TimeZone;
 import java.util.zip.GZIPInputStream;
 
 public class SDUtils
@@ -293,7 +294,10 @@ public class SDUtils
         return 0;
 
       if (sdfFull == null)
+      {
         sdfFull = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        sdfFull.setTimeZone(TimeZone.getTimeZone("UTC"));
+      }
 
       // 2014-06-28T05:16:29Z
       try
@@ -302,7 +306,7 @@ public class SDUtils
       }
       catch (ParseException e)
       {
-        if (Sage.DBG) System.out.println("Unable to parse full " + utcTime);
+        System.out.println("Unable to parse full " + utcTime);
         return 0;
       }
     }
@@ -318,7 +322,10 @@ public class SDUtils
         return 0;
 
       if (sdfDate == null)
+      {
         sdfDate = new SimpleDateFormat("yyyy-MM-dd");
+        sdfFull.setTimeZone(TimeZone.getTimeZone("UTC"));
+      }
 
       // 2014-06-28
       try

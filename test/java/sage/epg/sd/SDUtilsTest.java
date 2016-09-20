@@ -33,23 +33,23 @@ public class SDUtilsTest
     String nzString = SDUtils.fromSageTVtoStationID(nz);
     String normalString = SDUtils.fromSageTVtoStationID(normal);
 
-    assert "AU99999999".equals(auString);
-    assert "NZ99999999".equals(nzString);
-    assert "99999999".equals(normalString);
+    assert "AU99999999".equals(auString) : "Expected AU99999999, got " + auString;
+    assert "NZ99999999".equals(nzString) : "Expected NZ99999999, got " + nzString;
+    assert "99999999".equals(normalString) : "Expected 99999999, got " + normalString;
   }
 
   @Test(groups = {"gson", "schedulesDirect", "dateTime", "conversion" })
   public void testDateTimeConversion()
   {
     long date = SDUtils.SDFullUTCToMillis("2014-06-28T05:16:29Z");
-    assert date == 1403946989000L;
+    assert date == 1403946989000L : "Expected 1403946989000, got " + date;
   }
 
   @Test(groups = {"gson", "schedulesDirect", "dateTime", "conversion" })
   public void testDateConversion()
   {
     long date = SDUtils.SDDateUTCToMillis("2014-06-28");
-    assert date == 1403928000000L;
+    assert date == 1403928000000L : "Expected 1403928000000, got " + date;
   }
 
   @Test(groups = {"gson", "schedulesDirect", "removeLeadingZeros", "conversion" })
