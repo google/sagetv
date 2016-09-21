@@ -1050,7 +1050,7 @@ public class SDRipper extends EPGDataSource
           SDStatus status = ensureSession().getStatus();
           try
           {
-            long sysTime = SDUtils.SDFullUTCToMillis(status.getDatetime()) + currentTimeZone.getRawOffset() + currentTimeZone.getDSTSavings();
+            long sysTime = SDUtils.SDFullUTCToMillis(status.getDatetime());
             long afterRequestTime = Sage.time();
             sysTime += (afterRequestTime - beforeRequestTime) / 2;
             if (Math.abs(Sage.time() - sysTime) > 100)

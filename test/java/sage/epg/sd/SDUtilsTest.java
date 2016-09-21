@@ -43,16 +43,14 @@ public class SDUtilsTest
   public void testDateTimeConversion()
   {
     long date = SDUtils.SDFullUTCToMillis("2014-06-28T05:16:29Z");
-    date -= TimeZone.getDefault().getRawOffset() + TimeZone.getDefault().getDSTSavings();
-    assert date == 1403946989000L : "Expected 1403932589000, got " + date;
+    assert date == 1403932589000L : "Expected 1403932589000, got " + date;
   }
 
   @Test(groups = {"gson", "schedulesDirect", "dateTime", "conversion" })
   public void testDateConversion()
   {
     long date = SDUtils.SDDateUTCToMillis("2014-06-28");
-    date -= TimeZone.getDefault().getRawOffset() + TimeZone.getDefault().getDSTSavings();
-    assert date == 1403928000000L : "Expected 1403928000000, got " + date;
+    assert date == 1403913600000L : "Expected 1403913600000, got " + date;
   }
 
   @Test(groups = {"gson", "schedulesDirect", "removeLeadingZeros", "conversion" })
