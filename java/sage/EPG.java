@@ -100,7 +100,7 @@ public final class EPG implements Runnable
     buildSourcesFromPrefs();
 
     lineups = new java.util.HashMap<Long, java.util.Map<Integer, String[]>>();
-    serviceLevels = new java.util.HashMap<Long, java.util.Map<Long, Integer>>();
+    serviceLevels = new java.util.HashMap<Long, java.util.Map<Integer, Integer>>();
     lineupOverrides = new java.util.HashMap<Long, java.util.Map<Integer, String[]>>();
     providerNameToIDCache = new java.util.HashMap<String, String>();
     physicalLineups = new java.util.HashMap<Long, java.util.Map<Integer, String[]>>();
@@ -110,7 +110,7 @@ public final class EPG implements Runnable
     String[] slKeys = Sage.keys(prefs + SERVICE_LEVELS + '/');
     for (int i = 0; i < slKeys.length; i++)
     {
-      java.util.Map<Long, Integer> currMap = parseChanMapString(Sage.get(prefs + SERVICE_LEVELS + '/' + slKeys[i], ""));
+      java.util.Map<Integer, Integer> currMap = parseChanMapString(Sage.get(prefs + SERVICE_LEVELS + '/' + slKeys[i], ""));
       if (!currMap.isEmpty())
       {
         try
@@ -1254,14 +1254,14 @@ public final class EPG implements Runnable
     return overrideMap != null && overrideMap.get(new Integer(stationID)) != null;
   }
 
-  public void setServiceLevels(long providerID, java.util.Map<Long, Integer> newMap)
+  public void setServiceLevels(long providerID, java.util.Map<Integer, Integer> newMap)
   {
     serviceLevels.put(new Long(providerID), newMap);
     Sage.put(prefs + SERVICE_LEVELS + '/' + providerID, createChanMapString(newMap));
     NetworkClient.distributePropertyChange(prefs + SERVICE_LEVELS + '/' + providerID);
   }
 
-  public java.util.Map<Long, Integer> getServiceLevels(long providerID)
+  public java.util.Map<Integer, Integer> getServiceLevels(long providerID)
   {
     return serviceLevels.get(new Long(providerID));
   }
@@ -1318,7 +1318,7 @@ public final class EPG implements Runnable
 
   public int getServiceLevel(long providerID, int stationID)
   {
-    java.util.Map<Long, Integer> slMap = serviceLevels.get(new Long(providerID));
+    java.util.Map<Integer, Integer> slMap = serviceLevels.get(new Long(providerID));
     if (slMap == null) return 0;
     Integer inty = slMap.get(new Integer(stationID));
     if (inty == null) return 0;
@@ -1340,10 +1340,10 @@ public final class EPG implements Runnable
     }
   }
 
-  private static java.util.Map<Long, Integer> parseChanMapString(String str)
+  private static java.util.Map<Integer, Integer> parseChanMapString(String str)
   {
     java.util.StringTokenizer toker = new java.util.StringTokenizer(str, ";");
-    java.util.Map<Long, Integer> rv = new java.util.HashMap<Long, Integer>();
+    java.util.Map<Integer, Integer> rv = new java.util.HashMap<Integer, Integer>();
     while (toker.hasMoreTokens())
     {
       String sub = toker.nextToken();
@@ -1351,7 +1351,7 @@ public final class EPG implements Runnable
       if (idx == -1 || idx == 0 || idx == sub.length() - 1) continue;
       try
       {
-        rv.put(new Long(sub.substring(0, idx)), new Integer(sub.substring(idx + 1)));
+        rv.put(new Integer(sub.substring(0, idx)), new Integer(sub.substring(idx + 1)));
       }catch (NumberFormatException e){}
     }
     return rv;
@@ -1382,7 +1382,7 @@ public final class EPG implements Runnable
     return rv;
   }
 
-  private static String createChanMapString(java.util.Map<Long, Integer> chanMap)
+  private static String createChanMapString(java.util.Map<Integer, Integer> chanMap)
   {
     StringBuilder sb = new StringBuilder();
     java.util.Iterator walker = chanMap.entrySet().iterator();
@@ -1670,7 +1670,7 @@ public final class EPG implements Runnable
 
   private final java.util.Map<Long, java.util.Map<Integer, String[]>> lineups;
   private final java.util.Map<Long, java.util.Map<Integer, String[]>> lineupOverrides;
-  private final java.util.Map<Long, java.util.Map<Long, Integer>> serviceLevels;
+  private final java.util.Map<Long, java.util.Map<Integer, Integer>> serviceLevels;
 
   private final java.util.Map<Long, java.util.Map<Integer, String[]>> physicalLineups;
   private final java.util.Map<Long, java.util.Map<Integer, String[]>> physicalLineupOverrides;

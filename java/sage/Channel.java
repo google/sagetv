@@ -31,6 +31,7 @@ public final class Channel extends DBObject
     super(inID);
     wiz = Wizard.getInstance();
     logoImages = Pooler.EMPTY_INT_ARRAY;
+    logoURL = Pooler.EMPTY_BYTE_ARRAY;
   }
   Channel(DataInput in, byte ver, Map<Integer, Integer> idMap) throws IOException
   {
@@ -79,8 +80,15 @@ public final class Channel extends DBObject
     if (ver >= 0x56)
     {
       int urlLen = in.readShort();
-      logoURL = new byte[urlLen];
-      in.readFully(logoURL, 0, urlLen);
+      if (urlLen == 0)
+      {
+        logoURL = Pooler.EMPTY_BYTE_ARRAY;
+      }
+      else
+      {
+        logoURL = new byte[urlLen];
+        in.readFully(logoURL, 0, urlLen);
+      }
     }
     else
       logoURL = Pooler.EMPTY_BYTE_ARRAY;

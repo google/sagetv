@@ -492,7 +492,7 @@ public class WarlockRipper extends EPGDataSource
 
       java.util.Set logosToDownload = new java.util.HashSet();
       java.util.Map<Integer, String[]> lineMap = new java.util.HashMap<Integer, String[]>();
-      java.util.Map<Long, Integer> serviceMap = new java.util.HashMap<Long, Integer>();
+      java.util.Map<Integer, Integer> serviceMap = new java.util.HashMap<Integer, Integer>();
       java.util.Map<Integer, String[]> physicalMap = null;
       boolean[] caddrv = new boolean[1];
       for (int i = 0; i < numChans; i++)
@@ -544,7 +544,7 @@ public class WarlockRipper extends EPGDataSource
         }
 
         lineMap.put(new Integer(stationID), chanNums);
-        serviceMap.put(new Long(stationID), new Integer(serviceLevel));
+        serviceMap.put(new Integer(stationID), new Integer(serviceLevel));
         /*
                 if ((networkName != null) && (networkName.length() > 0) &&
                     (EPG.getInstance().getLogo(networkName) == null))

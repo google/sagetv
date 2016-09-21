@@ -639,7 +639,7 @@ public class EPGDataSource
       // We still need to put empty maps in there so it thinks there's actually lineup
       // data for this source...and there is in the overrides.
       EPG.getInstance().setLineup(providerID, new java.util.HashMap<Integer, String[]>());
-      EPG.getInstance().setServiceLevels(providerID, new java.util.HashMap<Long, Integer>());
+      EPG.getInstance().setServiceLevels(providerID, new java.util.HashMap<Integer, Integer>());
       return true;
     }
     int minChan = cdi.getMinChannel();
@@ -658,7 +658,7 @@ public class EPGDataSource
       lineMap.put(new Integer(defaultStationID + i), new String[] { Integer.toString(i) });
     }
     EPG.getInstance().setLineup(providerID, lineMap);
-    EPG.getInstance().setServiceLevels(providerID, new java.util.HashMap<Long, Integer>());
+    EPG.getInstance().setServiceLevels(providerID, new java.util.HashMap<Integer, Integer>());
     return true;
   }
 
