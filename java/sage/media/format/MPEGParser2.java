@@ -70,7 +70,7 @@ public class MPEGParser2
     {
       try
       {
-        System.loadLibrary("JavaRemuxer2");
+        sage.Native.loadLibrary("JavaRemuxer2");
       }
       catch (Throwable t)
       {

@@ -80,7 +80,7 @@ public class DShowMediaPlayer implements DVDMediaPlayer
   {
     if (Sage.WINDOWS_OS)
     {
-      System.loadLibrary("DShowPlayer");
+      sage.Native.loadLibrary("DShowPlayer");
       java.util.ArrayList videoFilters = new java.util.ArrayList();
       java.util.ArrayList audioFilters = new java.util.ArrayList();
       audioFilters.add("Cyberlink Audio Decoder");

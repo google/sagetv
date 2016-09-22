@@ -18,10 +18,58 @@ package sage;
 import sage.io.RemoteSageFile;
 import sage.io.SageInputStream;
 
+import java.io.Closeable;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.security.NoSuchAlgorithmException;
+
 public class IOUtils
 {
   private IOUtils()
   {
+  }
+
+  /**
+   * Used to read a URL contents into String.  This operation blocks and the content is a string, so it should
+   * not be used on large files, and should not be used on binary files.
+   *
+   * @param urlStr URL to download
+   * @return String contents of the given URL
+     */
+  public static String getUrlAsString(String urlStr)
+  {
+    StringBuilder sb = new StringBuilder();
+    try
+    {
+      URL url = new URL(urlStr);
+      return getInputStreamAsString(url.openStream());
+    }
+    catch (Exception e)
+    {
+      if (Sage.DBG)
+      {
+        System.out.println("Failed to read URL to string for " + urlStr);
+        e.printStackTrace();
+      }
+    }
+    return sb.toString();
+  }
+
+  public static void closeQuietly(Closeable closeable)
+  {
+    if (closeable!=null)
+    {
+      try
+      {
+        closeable.close();
+      } catch (IOException e)
+      {
+      }
+    }
   }
 
   public static String getFileExtension(java.io.File f)
@@ -588,24 +636,32 @@ public class IOUtils
     return dir.delete() && rv;
   }
 
-  public static String getFileAsString(java.io.File file)
+  /**
+   * Reads an InputStream as a String and then closes the stream and returns the contents as a String
+   *
+   * @param is
+   * @return
+   * @throws IOException
+   */
+  public static String getInputStreamAsString(java.io.InputStream is) throws IOException
   {
     java.io.BufferedReader buffRead = null;
     StringBuffer sb = new StringBuffer();
     try
     {
-      buffRead = new java.io.BufferedReader(new java.io.FileReader(file));
-      char[] cbuf = new char[4096];
+      try
+      {
+        buffRead = new java.io.BufferedReader(new InputStreamReader(is, "UTF-8"));
+      } catch (UnsupportedEncodingException uee) {
+        buffRead = new java.io.BufferedReader(new InputStreamReader(is));
+      }
+      char[] cbuf = new char[8192];
       int numRead = buffRead.read(cbuf);
       while (numRead != -1)
       {
         sb.append(cbuf, 0, numRead);
         numRead = buffRead.read(cbuf);
       }
-    }
-    catch (java.io.IOException e)
-    {
-      System.out.println("Error reading file " + file + " of: " + e);
     }
     finally
     {
@@ -616,6 +672,39 @@ public class IOUtils
       }
     }
     return sb.toString();
+  }
+
+  public static String getFileAsString(java.io.File file)
+  {
+    try
+    {
+      return getInputStreamAsString(new FileInputStream(file));
+    }
+    catch (java.io.IOException e)
+    {
+      System.out.println("Error reading file " + file + " of: " + e);
+    }
+    return null;
+  }
+
+  public static boolean writeStringToFile(java.io.File file, String s) {
+    java.io.PrintWriter pw = null;
+    try {
+      pw = new java.io.PrintWriter(new java.io.FileWriter(file));
+      pw.print(s);
+    } catch (java.io.IOException e) {
+      System.out.println("Error writing file " + file + " of: " + e);
+      return false;
+    }
+    finally {
+      if (pw != null) {
+        try {
+          pw.close();
+        } catch (Exception e){}
+      pw = null;
+      }
+    }
+    return true;
   }
 
   public static String convertPlatformPathChars(String str)
@@ -1590,7 +1679,7 @@ public class IOUtils
           numRead = fis.read(buf);
         }
         byte[] digest = algorithm.digest();
-        StringBuffer finalSum = new StringBuffer();
+        StringBuilder finalSum = new StringBuilder(32); // The hash will always be 32 characters.
         for (int i = 0; i < digest.length; i++)
         {
           if (((int) (digest[i] & 0xFF)) <= 0x0F)
@@ -1623,6 +1712,49 @@ public class IOUtils
       return null;
 
   }
+
+  /**
+   * Encode a <code>String</code> into a SHA-1 hash and return it represented as a
+   * <code>String</code> formatted as hexadecimal.
+   *
+   * @param encodeValue The <code>String</code> to be encoded. The charset must be UTF-8.
+   * @return The hexadecimal representation of the calculated hash or <code>null</code> if a
+   *         <code>null</code> <code>String</code> is provided or the SHA-1 message digest doesn't
+   *         exist on this platform.
+   */
+  public static String calcSHA1(String encodeValue)
+  {
+    if (encodeValue == null)
+      return null;
+
+    java.security.MessageDigest messageDigest;
+    try
+    {
+      messageDigest = java.security.MessageDigest.getInstance("SHA");
+    }
+    catch (NoSuchAlgorithmException e)
+    {
+      System.out.println("Unable to get SHA-1 message digest algorithm!");
+      return null;
+    }
+
+    messageDigest.reset();
+    messageDigest.update(encodeValue.getBytes(StandardCharsets.UTF_8));
+    byte shaBytes[] = messageDigest.digest();
+    StringBuilder returnValue = new StringBuilder(40); // The hash will always be 40 characters.
+
+    for (int i = 0; i < shaBytes.length; i++)
+    {
+      if ((shaBytes[i] & 0xFF) <= 0x0F)
+      {
+        returnValue.append('0');
+      }
+      returnValue.append(Integer.toHexString((shaBytes[i] & 0xFF)));
+    }
+
+    return returnValue.toString();
+  }
+
   public static final String[] VFAT_MOUNTABLE_PARTITION_TYPES = { "6", "b", "c", "e", "f" };
   public static final String[] NTFS_MOUNTABLE_PARTITION_TYPES = { "7" };
   public static boolean isExternalDriveMounted(String devPath, String mountPath)

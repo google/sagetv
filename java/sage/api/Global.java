@@ -30,7 +30,6 @@ import sage.LinuxUtils;
 import sage.MMC;
 import sage.ManualRecord;
 import sage.MediaFile;
-import sage.MetaImage;
 import sage.MiniClientSageRenderer;
 import sage.NetworkClient;
 import sage.NewStorageDeviceDetector;
@@ -336,28 +335,90 @@ public class Global {
         String lineup = getString(stack);
         return Boolean.valueOf(EPG.getInstance().getEPGDSForEPGDSName(lineup).isChanDownloadComplete());
       }});
+    rft.put(new PredefinedJEPFunction("Global", "GetEPGProperty", new String[]{"EPGDataSource", "Property", "Parameter"}, true)
+    {
+      /**
+       * Gets a property from a specific EPG data source with an optional parameter
+       * @param EPGDataSource the name of the EPG data source
+       * @param Property the property name to get
+       * @param Parameter optional parameter
+       * @return the value of the requested property
+       * @since 9.0
+       *
+       * @declaration public Object GetEPGProperty(String EPGDataSource, String Property, String Parameter);
+       */
+      public Object runSafely(Catbert.FastStack stack) throws Exception{
+        String parameter = getString(stack);
+        String property = getString(stack);
+        String dataSource = getString(stack);
+
+        try
+        {
+          return EPG.getProperty(dataSource, property, parameter);
+        }
+        catch (sage.EPGServerException e)
+        {
+          return e.getMessage();
+        }
+      }});
+    rft.put(new PredefinedJEPFunction("Global", "SetEPGProperty", new String[]{"EPGDataSource", "Property", "Value"}, true)
+    {
+      /**
+       * Sets a property for a specific EPG data source to the provided value
+       * @param EPGDataSource the name of the EPG data source
+       * @param Property the property name to set
+       * @param Value the value to set
+       * @return result of setting the property
+       * @since 9.0
+       *
+       * @declaration public Object SetEPGProperty(String EPGDataSource, String Property, String Value);
+       */
+      public Object runSafely(Catbert.FastStack stack) throws Exception{
+        String value = getString(stack);
+        String property = getString(stack);
+        String dataSource = getString(stack);
+
+        try
+        {
+          return EPG.setProperty(dataSource, property, value);
+        }
+        catch (sage.EPGServerException e)
+        {
+          return e.getMessage();
+        }
+      }});
     rft.put(new PredefinedJEPFunction("Global", "GetLocalMarketsFromEPGServer", true)
     {
       /**
        * Gets a list of all the possible United States local broadcast markets from the EPG server
-       * @return a list of all the possible United States local broadcast markets from the EPG server
+       * @return a String[] of all the possible United States local broadcast markets from the EPG server or a String error message of "NO_KEY", "INVALID_KEY", or "CONNECTION_FAILURE"
        *
-       * @declaration public String[] GetLocalMarketsFromEPGServer();
+       * @declaration public Object GetLocalMarketsFromEPGServer();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return EPG.getInstance().getLocalMarketsAndCacheNames(null);
+        try {
+          return EPG.getInstance().getLocalMarketsAndCacheNames();
+        } catch (sage.EPGServerException e) {
+          System.out.println("ERROR communicating with EPG server of: " + e);
+          return e.getMessage();
+        }
       }});
     rft.put(new PredefinedJEPFunction("Global", "GetLineupsForZipCodeFromEPGServer", 1, new String[]{"ZipCode"}, true)
     {
       /**
        * Gets a list from the EPG server of all the possible EPG Lineups that are available in a given zip code
        * @param ZipCode the zip code to search for EPG lineups in
-       * @return a list from the EPG server of all the possible EPG lineups in the specified zip code
+       * @return a String[] from the EPG server of all the possible EPG lineups in the specified zip code or a String error message of "NO_KEY", "INVALID_KEY", or "CONNECTION_FAILURE"
        *
-       * @declaration public String[] GetLineupsForZipCodeFromEPGServer(String ZipCode);
+       * @declaration public Object GetLineupsForZipCodeFromEPGServer(String ZipCode);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return EPG.getInstance().getProvidersAndCacheNames(getString(stack), null);
+        try {
+          return EPG.getInstance().getProvidersAndCacheNames(getString(stack));
+        } catch (sage.EPGServerException e) {
+          System.out.println("ERROR communicating with EPG server of: " + e);
+          return e.getMessage();
+        }
       }});
     rft.put(new PredefinedJEPFunction("Global", "GetCurrentlyRecordingMediaFiles", true)
     {

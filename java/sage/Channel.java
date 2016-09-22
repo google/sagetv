@@ -15,6 +15,8 @@
  */
 package sage;
 
+import sage.epg.sd.SDImages;
+
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -29,6 +31,7 @@ public final class Channel extends DBObject
     super(inID);
     wiz = Wizard.getInstance();
     logoImages = Pooler.EMPTY_INT_ARRAY;
+    logoURL = Pooler.EMPTY_BYTE_ARRAY;
   }
   Channel(DataInput in, byte ver, Map<Integer, Integer> idMap) throws IOException
   {
@@ -74,6 +77,21 @@ public final class Channel extends DBObject
     }
     else
       logoImages = Pooler.EMPTY_INT_ARRAY;
+    if (ver >= 0x56)
+    {
+      int urlLen = in.readShort();
+      if (urlLen == 0)
+      {
+        logoURL = Pooler.EMPTY_BYTE_ARRAY;
+      }
+      else
+      {
+        logoURL = new byte[urlLen];
+        in.readFully(logoURL, 0, urlLen);
+      }
+    }
+    else
+      logoURL = Pooler.EMPTY_BYTE_ARRAY;
   }
 
   private static final int SMALL_PRIMARY_LOGO_MASK = 0x01000000;
@@ -82,6 +100,7 @@ public final class Channel extends DBObject
   private static final int SMALL_SECONDARY_LOGO_MASK = 0x08000000;
   private static final int MED_SECONDARY_LOGO_MASK = 0x10000000;
   private static final int LARGE_SECONDARY_LOGO_MASK = 0x20000000;
+  public static final int SD_LOGO_MASK = 0x40000000;
   public static final int LOGO_SMALL = 1;
   public static final int LOGO_MED = 2;
   public static final int LOGO_LARGE = 3;
@@ -115,6 +134,8 @@ public final class Channel extends DBObject
     out.writeShort(logoImages.length);
     for (int i = 0; i < logoImages.length; i++)
       out.writeInt(logoImages[i]);
+    out.writeShort(logoURL.length);
+    out.write(logoURL, 0, logoURL.length);
   }
 
   public String getNetwork() { return (network == null) ? null : network.name; }
@@ -174,7 +195,9 @@ public final class Channel extends DBObject
         if (nums[j].length() > 0)
         {
           rv = nums[j];
-          if (epg.getSourceForProviderID(provIDs[i]).canViewStationOnChannel(stationID, nums[j]))
+          // This can return a null value.
+          EPGDataSource source = epg.getSourceForProviderID(provIDs[i]);
+          if (source != null && source.canViewStationOnChannel(stationID, nums[j]))
             return rv;
         }
       }
@@ -206,6 +229,7 @@ public final class Channel extends DBObject
     stationID = fromMe.stationID;
     logoMask = fromMe.logoMask;
     logoImages = (fromMe.logoImages.length == 0) ? Pooler.EMPTY_INT_ARRAY : fromMe.logoImages.clone();
+    logoURL = (fromMe.logoURL.length == 0) ? Pooler.EMPTY_BYTE_ARRAY : fromMe.logoURL.clone();
     super.update(fromMe);
   }
 
@@ -225,6 +249,10 @@ public final class Channel extends DBObject
   {
     if (logoImages.length > 0)
       return logoImages.length;
+
+    // Schedules Direct
+    if ((logoMask & SD_LOGO_MASK) != 0)
+      return 1;
 
     switch (imageType)
     {
@@ -247,7 +275,14 @@ public final class Channel extends DBObject
       } else {
         return null; // index out of range, should not happen...
       }
-    } else {
+    }
+    else if ((logoMask & SD_LOGO_MASK) != 0)
+    {
+      // Schedules Direct
+      return SDImages.decodeLogoURL(logoURL, logoMask & LOGO_STATION_MASK);
+    }
+    else
+    {
       // use classic logo locations.
 
       if ((logoMask & LOGO_STATION_MASK) == 0) return null;
@@ -322,6 +357,7 @@ public final class Channel extends DBObject
   Stringer network;
   int logoMask;
   int[] logoImages;
+  byte[] logoURL;
   private Wizard wiz;
 
   public static final Comparator<Channel> STATION_ID_COMPARATOR =

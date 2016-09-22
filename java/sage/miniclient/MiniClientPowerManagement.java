@@ -36,7 +36,7 @@ public class MiniClientPowerManagement extends sage.PowerManagement
   {
     super();
     if (MiniClient.WINDOWS_OS)
-      System.loadLibrary("SageTVWin32");
+      sage.Native.loadLibrary("SageTVWin32");
   }
 
   // Determine the current power state

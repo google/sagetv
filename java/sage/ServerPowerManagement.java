@@ -36,9 +36,9 @@ public class ServerPowerManagement extends PowerManagement
   {
     super();
     if (Sage.WINDOWS_OS)
-      System.loadLibrary("SageTVWin32");
+      sage.Native.loadLibrary("SageTVWin32");
     else if (Sage.MAC_OS_X)
-      System.loadLibrary("Sage");
+      sage.Native.loadLibrary("Sage");
     extendersKeepServerOn = Sage.getBoolean("extender_power_keeps_server_out_of_standby", false);
   }
 

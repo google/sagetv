@@ -117,7 +117,7 @@ public abstract class PredefinedJEPFunction extends sage.jep.function.PostfixMat
       }
       catch (Exception e)
       {
-        e.printStackTrace();
+        e.printStackTrace(System.out);
         throw new sage.jep.ParseException("Error in method reflection of " + methodName + " of " + e, e);
       }
     }

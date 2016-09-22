@@ -25,7 +25,7 @@ public class LinuxFirewireCaptureManager implements CaptureDeviceManager
   /** Creates a new instance of LinuxFirewireCaptureManager */
   public LinuxFirewireCaptureManager()
   {
-    System.loadLibrary("FirewireCapture");
+    sage.Native.loadLibrary("FirewireCapture");
     prefs = MMC.MMC_KEY + '/';
     mmc = MMC.getInstance();
     encoderMap = new java.util.LinkedHashMap();

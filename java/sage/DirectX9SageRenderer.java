@@ -56,12 +56,12 @@ public class DirectX9SageRenderer extends SageRenderer implements NativeImageAll
     {
       if (Sage.WINDOWS_OS)
       {
-        System.loadLibrary("SageTVDX93D");
+        sage.Native.loadLibrary("SageTVDX93D");
         loadedDX9Lib = true;
       }
       else
       {
-        System.loadLibrary("SageTVOGL");
+        sage.Native.loadLibrary("SageTVOGL");
         loadedDX9Lib = true;
       }
     }

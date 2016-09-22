@@ -294,7 +294,7 @@ public class BigBrother
 
   public static long getWatchIgnoreTime(Airing a)
   {
-    return (a == null || !a.getShow().isMovie()) ? WATCH_IGNORE_TIME : WATCH_IGNORE_TIME_MOVIE;
+    return (a == null || a.getShow() == null || !a.getShow().isMovie()) ? WATCH_IGNORE_TIME : WATCH_IGNORE_TIME_MOVIE;
   }
 
   public static boolean areSameShow(Airing a1, Airing a2, boolean matchFavs)

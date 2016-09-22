@@ -22,7 +22,7 @@ public class PVR350OSDRenderingPlugin implements OSDRenderingPlugin
 	{
 		if (!loadedLib && !SageConstants.LITE)
 		{
-			System.loadLibrary("PVR350OSDPlugin");
+			sage.Native.loadLibrary("PVR350OSDPlugin");
 			loadedLib = true;
 			Sage.writeDwordValue(Sage.HKEY_LOCAL_MACHINE,
 				"SYSTEM\\CurrentControlSet\\Services\\Globespan\\Parameters\\ivac15\\Driver",
