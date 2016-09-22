@@ -1582,6 +1582,7 @@ public class SDRipper extends EPGDataSource
                     SDKeyWords keyWords = programDetail.getKeyWords();
                     String[] bonus = keyWords != null ? keyWords.getAllKeywords() : Pooler.EMPTY_STRING_ARRAY;
                     String extID = programDetail.getProgramID();
+                    boolean uniqueShow = !extID.startsWith("SH");
                     // Observation has shown this to be reasonably accurate when the show
                     // description is not in English, but is not the correct way to get this kind
                     // of information.
@@ -1590,7 +1591,20 @@ public class SDRipper extends EPGDataSource
                     short seasonNum = programDetail.getSeason();
                     short episodeNum = programDetail.getEpisode();
                     String[] categories = programDetail.getGenres();
-                    if (categories == null) categories = Pooler.EMPTY_STRING_ARRAY;
+                    // If this is a sports event, the first category needs to be Sports event or Sports non-event.
+                    if ("Sports".equals(programDetail.getEntityType()))
+                    {
+                      // This will return Sports event or Sports non-event
+                      String sportShowType = programDetail.getShowType();
+                      if (sportShowType != null) // Just in case.
+                      {
+                        String newCategories[] = new String[categories.length + 1];
+                        newCategories[0] = sportShowType;
+                        System.arraycopy(categories, 0, newCategories, 1, categories.length);
+                        categories = newCategories;
+                      }
+                    }
+                    if (categories == null || categories.length == 0) categories = Pooler.EMPTY_STRING_ARRAY;
                     int showcardID = 0;
                     byte imageURLs[][] = null;
 
@@ -1626,7 +1640,7 @@ public class SDRipper extends EPGDataSource
                     downloadedPrograms++;
                     wiz.addShow(title, episodeName, desc, showDuration, categories, people,
                       roles, rated, expandedRatings, year, parentalRating, bonus, extID, language,
-                      originalAirDate, DBObject.MEDIA_MASK_TV, seasonNum, episodeNum, true,
+                      originalAirDate, DBObject.MEDIA_MASK_TV, seasonNum, episodeNum, uniqueShow,
                       showcardID, imageURLs);
                   }
                 }
