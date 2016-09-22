@@ -3180,8 +3180,7 @@ public class Wizard implements EPGDBPublic2
       if (imageURLs == null || imageURLs.length == 0)
         series.imageURLs = Pooler.EMPTY_2D_BYTE_ARRAY;
       else
-        series.imageURLs = imageURLs;
-      series.imageURLs = (imageURLs == null) ? Pooler.EMPTY_2D_BYTE_ARRAY : imageURLs.clone();
+        series.imageURLs = imageURLs.clone();
       if (castImages == null || castImages.length == 0)
         series.castImages = Pooler.EMPTY_LONG_ARRAY;
       else
