@@ -15,8 +15,6 @@
  */
 package sage.epg.sd.json.programs;
 
-import sage.epg.sd.gson.annotations.SerializedName;
-
 public class SDEventDetails
 {
   private static final Teams[] EMPTY_TEAMS = new Teams[0];

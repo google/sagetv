@@ -15,6 +15,8 @@
  */
 package sage;
 
+import sage.epg.sd.SDImages;
+
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -337,6 +339,7 @@ public final class Show extends DBObject
     seriesID = fromMe.seriesID;
     showcardID = fromMe.showcardID;
     imageIDs = fromMe.imageIDs;
+    imageURLs = fromMe.imageURLs;
     super.update(fromMe);
   }
   @Override
@@ -349,6 +352,8 @@ public final class Show extends DBObject
       if (ers[i] == null) return false;
     for (int i = 0; i < bonuses.length; i++)
       if (bonuses[i] == null) return false;
+    for (int i = 0; i < imageURLs.length; i++)
+      if (imageURLs[i] == null) return false;
     return true;
   }
 
@@ -374,7 +379,8 @@ public final class Show extends DBObject
         (seriesID == other.seriesID) &&
         (showcardID == other.showcardID) &&
         (altEpisodeNum == other.altEpisodeNum) &&
-        (imageIDs.length == other.imageIDs.length))
+        (imageIDs.length == other.imageIDs.length) &&
+        (imageURLs.length == other.imageURLs.length))
     {
       for (int i = 0; i < people.length; i++)
         if (people[i] != other.people[i] ||	roles[i] != other.roles[i]) return false;
@@ -386,6 +392,14 @@ public final class Show extends DBObject
         if (categories[i] != other.categories[i]) return false;
       for (int i = 0; i < imageIDs.length; i++)
         if (imageIDs[i] != other.imageIDs[i]) return false;
+      for (int i = 0; i < imageURLs.length; i++)
+      {
+        if (imageURLs[i].length != other.imageURLs[i].length)
+          return false;
+        for (int j = 0; j < imageURLs[i].length; j++)
+          if (imageURLs[i][j] != other.imageURLs[i][j])
+            return false;
+      }
 
       return true;
     }
@@ -564,6 +578,24 @@ public final class Show extends DBObject
     else if (imageIDs == null)
       imageIDs = Pooler.EMPTY_SHORT_ARRAY;
 
+    if (ver >= 0x56)
+    {
+      int numURLs = in.readShort();
+      if (numURLs > Wizard.STUPID_SIZE)
+        throw new IOException("Stupid array size:" + numURLs);
+      imageURLs = (numURLs == 0) ? Pooler.EMPTY_2D_BYTE_ARRAY : new byte[numURLs][];
+      for (int i = 0; i < numURLs; i++)
+      {
+        int numURLLength = in.readShort();
+        if (numURLLength > Wizard.STUPID_SIZE)
+          throw new IOException("Stupid array size:" + numURLLength);
+        imageURLs[i] = new byte[numURLLength];
+        in.readFully(imageURLs[i], 0, numURLLength);
+      }
+    }
+    else if (imageURLs == null)
+      imageURLs = Pooler.EMPTY_2D_BYTE_ARRAY;
+
     // Fix anything wrong with the category arrays due to legacy issues
     int numValidCats = 0;
     for (int i = 0; i < categories.length; i++)
@@ -667,6 +699,12 @@ public final class Show extends DBObject
     out.writeShort(imageIDs.length);
     for (int i = 0; i < imageIDs.length; i++)
       out.writeShort(imageIDs[i]);
+    out.writeShort(imageURLs.length);
+    for (int i = 0; i < imageURLs.length; i++)
+    {
+      out.writeShort(imageURLs[i].length);
+      out.write(imageURLs[i]);
+    }
   }
 
   public String toString()
@@ -1079,6 +1117,12 @@ public final class Show extends DBObject
 
   public int getImageCount()
   {
+    // This first index is the image type indexes, so it doesn't count towards the total.
+    if (imageURLs.length > 1)
+    {
+      return imageURLs.length - 1;
+    }
+
     if (imageIDs == null || imageIDs.length == 0) return 0;
     if ((imageIDs[0] & 0x8000) != 0)
       return (imageIDs[0] & 0xFFF) + (imageIDs[1] & 0xFFF) + (imageIDs[2] & 0xFFF) + (imageIDs[3] & 0xFFF);
@@ -1088,6 +1132,12 @@ public final class Show extends DBObject
 
   public int getImageCount(int imageType)
   {
+    // The first index is the indexes of the image types.
+    if (imageURLs.length > 1)
+    {
+      int count = SDImages.getShowImageCount(imageType, imageURLs);
+      return count;
+    }
     int imageMask = getImageMaskForImageType(imageType) << 12;
     int count = 0;
     for (int i = 0; i < imageIDs.length; i++)
@@ -1108,7 +1158,8 @@ public final class Show extends DBObject
 
   public boolean hasAnyImages()
   {
-    return imageIDs.length > 0;
+    // The first index is the indexes of the image types.
+    return imageIDs.length > 0 || imageURLs.length > 1;
   }
 
   public String getImageMetaStorageString()
@@ -1127,6 +1178,8 @@ public final class Show extends DBObject
 
   public String getImageUrl(int index, int imageType)
   {
+    if (imageURLs.length > 1) return SDImages.getShowImageUrl(showcardID, imageURLs, index, imageType);
+
     int imageMask = getImageMaskForImageType(imageType) << 12;
     int count = 0;
     for (int i = 0; i < imageIDs.length; i++)
@@ -1175,6 +1228,38 @@ public final class Show extends DBObject
 
   public String getAnyImageUrl(int prefIndex)
   {
+    if (imageURLs.length > 1)
+    {
+      // Thumbnails are even numbers and full images are odd.
+      // Try to get preferred image URL.
+      int i = 1;
+      while (i < imageURLs[0].length)
+      {
+        if (SDImages.getImageCount(i, imageURLs) > prefIndex)
+        {
+          int realIndex = imageURLs[0][i] + prefIndex;
+          return SDImages.decodeImageUrl(showcardID, imageURLs[realIndex]);
+        }
+
+        i += 2;
+      }
+
+      // Get any image URL.
+      i = 1;
+      while (i < imageURLs[0].length)
+      {
+        if (SDImages.getImageCount(i, imageURLs) > 0)
+        {
+          int realIndex = imageURLs[0][i];
+          return SDImages.decodeImageUrl(showcardID, imageURLs[realIndex]);
+        }
+
+        i += 2;
+      }
+
+      return null;
+    }
+
     if (imageIDs.length == 0) return null;
     if ((imageIDs[0] & 0x8000) != 0)
     {
@@ -1205,6 +1290,38 @@ public final class Show extends DBObject
 
   public String getAnyImageUrl(int prefIndex, boolean thumb)
   {
+    if (imageURLs.length > 1)
+    {
+      // Thumbnails are even numbers and full images are odd.
+      // Try to get preferred image URL.
+      int i = thumb ? 0 : 1;
+      while (i < imageURLs[0].length)
+      {
+        if (SDImages.getImageCount(i, imageURLs) > prefIndex)
+        {
+          int realIndex = imageURLs[0][i] + prefIndex;
+          return SDImages.decodeImageUrl(showcardID, imageURLs[realIndex]);
+        }
+
+        i += 2;
+      }
+
+      // Get any image URL.
+      i = thumb ? 0 : 1;
+      while (i < imageURLs[0].length)
+      {
+        if (SDImages.getImageCount(i, imageURLs) > 0)
+        {
+          int realIndex = imageURLs[0][i];
+          return SDImages.decodeImageUrl(showcardID, imageURLs[realIndex]);
+        }
+
+        i += 2;
+      }
+
+      return null;
+    }
+
     if (imageIDs.length == 0) return null;
     if ((imageIDs[0] & 0x8000) != 0)
     {
@@ -1235,6 +1352,26 @@ public final class Show extends DBObject
 
   public String getImageUrlForIndex(int idx, boolean thumb)
   {
+    if (imageURLs.length > 1)
+    {
+      // Thumbnails are even numbers and full images are odd.
+      int i = thumb ? 0 : 1;
+      while (i < imageURLs[0].length)
+      {
+        int currentCount = SDImages.getImageCount(i, imageURLs);
+        if (currentCount > idx)
+        {
+          int realIndex = imageURLs[0][i] + idx;
+          return SDImages.decodeImageUrl(showcardID, imageURLs[realIndex]);
+        }
+
+        idx -= currentCount;
+        i += 2;
+      }
+
+      return null;
+    }
+
     if (imageIDs == null || imageIDs.length == 0)
       return null;
     if ((imageIDs[0] & 0x8000) != 0)
@@ -1398,6 +1535,7 @@ public final class Show extends DBObject
   int showcardID; // links to the SeriesInfo object for this Show, or the film ID for movies
   int seriesID; // links to the id that represents this actual TV show
   short[] imageIDs; // identifiers to resolve what all the images are
+  byte[][] imageURLs; // partial URL's for Schedules Direct images
 
   public static final Comparator<Show> EXTID_COMPARATOR =
       new Comparator<Show>()
