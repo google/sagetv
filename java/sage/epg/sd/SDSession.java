@@ -284,7 +284,7 @@ public abstract class SDSession
     {
       debugWriter.write(line, offset, length);
       debugBytes += length;
-      // Don't perform a rollower in this method because we could cut a String of JSON in half.
+      // Don't perform a rollover in this method because we could cut a String of JSON in half.
     }
     catch (Exception e)
     {
