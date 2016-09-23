@@ -1,0 +1,9 @@
+{
+  "SH000000060000": {
+    "response": "INVALID_PROGRAMID",
+    "code": 6000,
+    "serverID": "20140530.1",
+    "message": "Invalid programID:ZZ01234567891234",
+    "datetime": "2014-11-14T19:17:54Z"
+  }
+}

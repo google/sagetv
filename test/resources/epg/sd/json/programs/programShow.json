@@ -1,0 +1,218 @@
+{
+  "programID": "SH012599310000",
+  "resourceID": "8100033",
+  "titles": [
+    {
+      "title120": "Hot in Cleveland"
+    }
+  ],
+  "descriptions": {
+    "description100": [
+      {
+        "descriptionLanguage": "en",
+        "description": "Best friends rediscover themselves in Ohio."
+      }
+    ],
+    "description1000": [
+      {
+        "descriptionLanguage": "en",
+        "description": "When their plane has trouble while on a flight to Paris, three glamorous LA women find themselves in a completely new and unexpected place. Feeling the need for a girls-only, once-in-a-lifetime trip, Melanie cashes in her airline miles to finance a trip to the city of light for herself and her two best friends, Joy and Victoria, all \"of a certain age\" and feeling less than desirable. They never make it to Paris, though -- when the stricken plane lands in Cleveland, the women suddenly find they're popular with the men there. Realizing that while they may be lukewarm in LA, they're hot in Cleveland, the women decide to relocate. They immediately fall in love with their rental house. It takes a little longer, however, for them to warm up to the house's longtime caretaker (Betty White)."
+      }
+    ]
+  },
+  "originalAirDate": "2010-06-16",
+  "genres": [
+    "Sitcom"
+  ],
+  "metadata": [
+    {
+      "Gracenote": {
+        "totalEpisodes": 153,
+        "totalSeasons": 6,
+        "season": 0,
+        "episode": 0
+      }
+    }
+  ],
+  "keyWords": {
+    "Mood": [
+      "Hilarious",
+      "Charming",
+      "Spirited"
+    ],
+    "Time Period": [
+      "2010s"
+    ],
+    "Character": [
+      "Middle-aged woman",
+      "Friend",
+      "Caretaker",
+      "Actress",
+      "Beautician",
+      "Neighbor"
+    ],
+    "Setting": [
+      "Cleveland",
+      "House"
+    ],
+    "Subject": [
+      "Midlife crisis",
+      "Relocation",
+      "Female bonding",
+      "Dating"
+    ]
+  },
+  "contentRating": [
+    {
+      "body": "Australian Classification Board",
+      "code": "PG",
+      "country": "AUS"
+    },
+    {
+      "body": "Canadian Parental Rating",
+      "code": "PG",
+      "country": "CAN"
+    },
+    {
+      "body": "USA Parental Rating",
+      "code": "TVPG",
+      "country": "USA"
+    }
+  ],
+  "cast": [
+    {
+      "billingOrder": "01",
+      "role": "Actor",
+      "nameId": "154",
+      "personId": "154",
+      "name": "Valerie Bertinelli",
+      "characterName": "Melanie Moretti"
+    },
+    {
+      "billingOrder": "02",
+      "role": "Actor",
+      "nameId": "1918",
+      "personId": "1918",
+      "name": "Betty White",
+      "characterName": "Elka Ostrovsky"
+    },
+    {
+      "billingOrder": "03",
+      "role": "Actor",
+      "nameId": "65675",
+      "personId": "65675",
+      "name": "Wendie Malick",
+      "characterName": "Victoria Chase"
+    },
+    {
+      "billingOrder": "04",
+      "role": "Actor",
+      "nameId": "71516",
+      "personId": "71516",
+      "name": "Jane Leeves",
+      "characterName": "Joy Scroggs"
+    }
+  ],
+  "crew": [
+    {
+      "billingOrder": "01",
+      "role": "Executive Producer",
+      "nameId": "153066",
+      "personId": "86955",
+      "name": "Sean Hayes"
+    },
+    {
+      "billingOrder": "02",
+      "role": "Executive Producer",
+      "nameId": "646590",
+      "personId": "624973",
+      "name": "Todd Milliner"
+    }
+  ],
+  "entityType": "Show",
+  "showType": "Series",
+  "recommendations": [
+    {
+      "programID": "SH007633980000",
+      "title120": "The New Adventures of Old Christine"
+    },
+    {
+      "programID": "SH011580820000",
+      "title120": "Cougar Town"
+    },
+    {
+      "programID": "SH014076210000",
+      "title120": "Happily Divorced"
+    }
+  ],
+  "awards": [
+    {
+      "recipient": "Betty White",
+      "name": "Screen Actors Guild Awards",
+      "awardName": "Screen Actors Guild Awards",
+      "personId": "1918",
+      "year": "2011",
+      "category": "Outstanding Performance by an Ensemble in a Comedy Series"
+    },
+    {
+      "recipient": "Betty White",
+      "name": "Screen Actors Guild Awards",
+      "awardName": "Screen Actors Guild Awards",
+      "personId": "1918",
+      "won": true,
+      "year": "2011",
+      "category": "Outstanding Performance by a Female Actor in a Comedy Series"
+    },
+    {
+      "recipient": "Wendie Malick",
+      "name": "Screen Actors Guild Awards",
+      "awardName": "Screen Actors Guild Awards",
+      "personId": "65675",
+      "year": "2011",
+      "category": "Outstanding Performance by an Ensemble in a Comedy Series"
+    },
+    {
+      "recipient": "Valerie Bertinelli",
+      "name": "Screen Actors Guild Awards",
+      "awardName": "Screen Actors Guild Awards",
+      "personId": "154",
+      "year": "2011",
+      "category": "Outstanding Performance by an Ensemble in a Comedy Series"
+    },
+    {
+      "recipient": "Jane Leeves",
+      "name": "Screen Actors Guild Awards",
+      "awardName": "Screen Actors Guild Awards",
+      "personId": "71516",
+      "year": "2011",
+      "category": "Outstanding Performance by an Ensemble in a Comedy Series"
+    },
+    {
+      "recipient": "Betty White",
+      "name": "Emmy (Primetime)",
+      "awardName": "Emmy (Primetime)",
+      "personId": "1918",
+      "year": "2011",
+      "category": "Outstanding Supporting Actress in a Comedy Series"
+    },
+    {
+      "recipient": "Betty White",
+      "name": "Screen Actors Guild Awards",
+      "awardName": "Screen Actors Guild Awards",
+      "personId": "1918",
+      "won": true,
+      "year": "2012",
+      "category": "Outstanding Performance by a Female Actor in a Comedy Series"
+    },
+    {
+      "recipient": "Betty White",
+      "name": "Screen Actors Guild Awards",
+      "awardName": "Screen Actors Guild Awards",
+      "personId": "1918",
+      "year": "2013",
+      "category": "Outstanding Performance by a Female Actor in a Comedy Series"
+    }
+  ],
+  "hasImageArtwork": true,
+  "md5": "PnWUFzR6ALnKk0y9jkTlIw"
+}

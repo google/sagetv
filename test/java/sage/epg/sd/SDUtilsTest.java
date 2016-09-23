@@ -57,27 +57,27 @@ public class SDUtilsTest
   public void testRemoveLeadingZeros()
   {
     String cleaned = SDUtils.removeLeadingZeros("000");
-    assert "0".equals(cleaned);
+    assert "0".equals(cleaned) : "Expected 0, got " + cleaned;
     cleaned = SDUtils.removeLeadingZeros("001");
-    assert "1".equals(cleaned);
+    assert "1".equals(cleaned) : "Expected 1, got " + cleaned;
     cleaned = SDUtils.removeLeadingZeros("010");
-    assert "10".equals(cleaned);
+    assert "10".equals(cleaned) : "Expected 10, got " + cleaned;
     cleaned = SDUtils.removeLeadingZeros("100");
-    assert "100".equals(cleaned);
+    assert "100".equals(cleaned) : "Expected 100, got " + cleaned;
     cleaned = SDUtils.removeLeadingZeros("1000");
-    assert "1000".equals(cleaned);
+    assert "1000".equals(cleaned) : "Expected 1000, got " + cleaned;
   }
 
   @Test(groups = {"gson", "schedulesDirect", "program", "conversion" })
   public void testProgramIDConversion()
   {
     String cleaned = SDUtils.fromProgramToSageTV("EP003829350004");
-    assert "EP3829350004".equals(cleaned);
+    assert "EP3829350004".equals(cleaned) : "Expected EP3829350004, got " + cleaned;
     cleaned = SDUtils.fromSageTVtoProgram(cleaned);
-    assert "EP003829350004".equals(cleaned);
+    assert "EP003829350004".equals(cleaned) : "Expected EP003829350004, got " + cleaned;
     cleaned = SDUtils.fromProgramToSageTV("EP013829350004");
-    assert "EP013829350004".equals(cleaned);
+    assert "EP013829350004".equals(cleaned) : "Expected EP013829350004, got " + cleaned;
     cleaned = SDUtils.fromSageTVtoProgram(cleaned);
-    assert "EP013829350004".equals(cleaned);
+    assert "EP013829350004".equals(cleaned) : "Expected EP013829350004, got " + cleaned;
   }
 }

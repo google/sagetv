@@ -1,0 +1,45 @@
+{
+  "programID": "EP005544683862",
+  "resourceID": "191273",
+  "titles": [
+    {
+      "title120": "MLB Baseball"
+    }
+  ],
+  "eventDetails": {
+    "venue100": "Busch Stadium",
+    "teams": [
+      {
+        "name": "St. Louis Cardinals",
+        "isHome": true
+      },
+      {
+        "name": "Chicago Cubs"
+      }
+    ],
+    "gameDate": "2015-10-10"
+  },
+  "descriptions": {
+    "description1000": [
+      {
+        "descriptionLanguage": "en",
+        "description": "The Cubs, led by young sluggers Anthony Rizzo and Kris Bryant, look to bounce back from a shutout loss when they visit Matt Carpenter and the Cardinals in Game 2 of the National League Division Series."
+      }
+    ],
+    "description100": [
+      {
+        "descriptionLanguage": "en",
+        "description": "From Busch Stadium."
+      }
+    ]
+  },
+  "genres": [
+    "Baseball",
+    "Playoff sports"
+  ],
+  "episodeTitle150": "Chicago Cubs at St. Louis Cardinals",
+  "entityType": "Sports",
+  "showType": "Sports event",
+  "hasImageArtwork": true,
+  "md5": "TU8iBnHEgUh5RozFIWvHrw"
+}

@@ -13,19 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package sage.epg.sd.service;
+package sage.epg.sd.json.service;
 
 import org.testng.annotations.Test;
 import sage.epg.sd.DeserializeTest;
-import sage.epg.sd.json.service.SDAvailableService;
+
+import java.io.IOException;
 
 public class SDAvailableServiceTest extends DeserializeTest
 {
   @Test(groups = {"gson", "schedulesDirect", "availableService" })
-  public void deserialize()
+  public void deserialize() throws IOException
   {
     // Source: https://json.schedulesdirect.org/20141201/available
-    String languageJson = "[{\"type\":\"COUNTRIES\",\"description\":\"List of countries which are available.\",\"uri\":\"\\/20141201\\/available\\/countries\"},{\"type\":\"LANGUAGES\",\"description\":\"List of language digraphs and their language names.\",\"uri\":\"\\/20141201\\/available\\/languages\"},{\"type\":\"DVB-S\",\"description\":\"List of satellites which are available.\",\"uri\":\"\\/20141201\\/available\\/dvb-s\"},{\"type\":\"DVB-T\",\"description\":\"List of Freeview transmitters in a country. Country options: AUS, GBR, NZL\",\"uri\":\"\\/20141201\\/transmitters\\/{ISO 3166-1 alpha-3}\"}]";
+    String languageJson = "epg/sd/json/services/services.json";
     SDAvailableService availableServices[] = deserialize(languageJson, SDAvailableService[].class);
+    assert availableServices.length == 4;
   }
 }
