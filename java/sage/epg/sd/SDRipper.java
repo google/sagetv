@@ -1355,10 +1355,8 @@ public class SDRipper extends EPGDataSource
             if (abort || !enabled) return false;
 
             int stationID = stations[i++];
-            if (stationID < 10000)
-              continue; // non-SD station ID
-
-            lookupIds.add(stationID);
+            if (stationID >= 10000) // Numbers below this are non-SD station ID
+              lookupIds.add(stationID);
 
             // We likely have less than 1000 stations for most lineups, there is a 5000 station
             // limit, and a 10 minute timeout from the server, so we do need to make sure we don't
