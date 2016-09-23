@@ -1,6 +1,6 @@
 # Change Log
 
-## Version 9.0.8 (--)
+## Version 9.0.8 (2016-09-22)
 * New: Added Schedules Direct EPG support as a core BETA feature.
 
 ## Version 9.0.7 (2016-08-10)
