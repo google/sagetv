@@ -1,0 +1,133 @@
+{
+  "programID": "EP012599310061",
+  "resourceID": "8100033",
+  "titles": [
+    {
+      "title120": "Hot in Cleveland"
+    }
+  ],
+  "descriptions": {
+    "description100": [
+      {
+        "descriptionLanguage": "en",
+        "description": "Melanie's hair blow out lasts unusually long; tensions rise among the ladies."
+      }
+    ],
+    "description1000": [
+      {
+        "descriptionLanguage": "en",
+        "description": "Melanie's hair blow out lasts unusually long; tensions rise among the ladies and the two rival hairdressers at Elka's favorite salon."
+      }
+    ]
+  },
+  "originalAirDate": "2012-06-06",
+  "genres": [
+    "Sitcom"
+  ],
+  "episodeTitle150": "Blow Outs",
+  "metadata": [
+    {
+      "Gracenote": {
+        "season": 3,
+        "episode": 24,
+        "totalEpisodes": 24
+      }
+    }
+  ],
+  "contentRating": [
+    {
+      "body": "Australian Classification Board",
+      "code": "PG",
+      "country": "AUS"
+    },
+    {
+      "body": "Canadian Parental Rating",
+      "code": "PG",
+      "country": "CAN"
+    },
+    {
+      "body": "USA Parental Rating",
+      "code": "TVPG",
+      "country": "USA"
+    }
+  ],
+  "duration": 1320,
+  "cast": [
+    {
+      "billingOrder": "01",
+      "role": "Actor",
+      "nameId": "154",
+      "personId": "154",
+      "name": "Valerie Bertinelli",
+      "characterName": "Melanie Moretti"
+    },
+    {
+      "billingOrder": "02",
+      "role": "Actor",
+      "nameId": "1918",
+      "personId": "1918",
+      "name": "Betty White",
+      "characterName": "Elka Ostrovsky"
+    },
+    {
+      "billingOrder": "03",
+      "role": "Actor",
+      "nameId": "65675",
+      "personId": "65675",
+      "name": "Wendie Malick",
+      "characterName": "Victoria Chase"
+    },
+    {
+      "billingOrder": "04",
+      "role": "Actor",
+      "nameId": "71516",
+      "personId": "71516",
+      "name": "Jane Leeves",
+      "characterName": "Joy Scroggs"
+    },
+    {
+      "billingOrder": "05",
+      "role": "Guest Star",
+      "nameId": "639710",
+      "personId": "618197",
+      "name": "Elizabeth J. Carlisle",
+      "characterName": "Shamed Woman"
+    },
+    {
+      "billingOrder": "06",
+      "role": "Guest Star",
+      "nameId": "691245",
+      "personId": "664581",
+      "name": "Carol Herman",
+      "characterName": "Mrs. Magee"
+    },
+    {
+      "billingOrder": "07",
+      "role": "Guest Star",
+      "nameId": "1345",
+      "personId": "1345",
+      "name": "Regis Philbin",
+      "characterName": "Pierre"
+    },
+    {
+      "billingOrder": "08",
+      "role": "Guest Star",
+      "nameId": "15748",
+      "personId": "15748",
+      "name": "David Spade",
+      "characterName": "Christopher"
+    }
+  ],
+  "entityType": "Episode",
+  "showType": "Series",
+  "hasImageArtwork": true,
+  "episodeImage": {
+    "width": "240",
+    "height": "360",
+    "uri": "assets/p9094920_e_v5_ab.jpg",
+    "category": "Iconic",
+    "primary": "true",
+    "tier": "Episode"
+  },
+  "md5": "+I8UiR6+vP7kO3qRmQZ60w"
+}

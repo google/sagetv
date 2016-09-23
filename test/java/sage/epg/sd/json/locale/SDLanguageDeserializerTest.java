@@ -18,13 +18,15 @@ package sage.epg.sd.json.locale;
 import org.testng.annotations.Test;
 import sage.epg.sd.DeserializeTest;
 
+import java.io.IOException;
+
 public class SDLanguageDeserializerTest extends DeserializeTest
 {
   @Test(groups = {"gson", "schedulesDirect", "language" })
-  public void deserialize()
+  public void deserialize() throws IOException
   {
     // Source: https://json.schedulesdirect.org/20141201/available/languages
-    String languageJson = "{\"af\":\"Afrikaans\",\"ar\":\"Arabic\",\"ca\":\"Catalan\",\"cy\":\"Welsh\",\"da\":\"Danish\",\"de\":\"German\",\"el\":\"Greek\",\"en\":\"English\",\"en-GB\":\"English - United Kingdom\",\"es\":\"Spanish\",\"es-ES\":\"Spanish - Spain\",\"et\":\"Estonian\",\"eu\":\"Basque\",\"fa\":\"Persian - Farsi\",\"fi\":\"Finnish\",\"fr\":\"French\",\"fr-CA\":\"French - Canada\",\"gd\":\"Scottish Gaelic\",\"he\":\"Hebrew\",\"hi\":\"Hindi\",\"hr\":\"Croatian\",\"hu\":\"Hungarian\",\"hy\":\"Armenian\",\"it\":\"Italian\",\"iu\":\"Inuktitut\",\"ja\":\"Japanese\",\"ko\":\"Korean\",\"la\":\"Latin\",\"lv\":\"Latvian\",\"ml\":\"Malayalam\",\"nl\":\"Dutch\",\"no\":\"Norwegian\",\"pa\":\"Panjabi\",\"pl\":\"Polish\",\"pt\":\"Portuguese\",\"pt-BR\":\"Portuguese - Brazil\",\"ro\":\"Romanian\",\"ru\":\"Russian\",\"sr\":\"Serbian\",\"sv\":\"Swedish\",\"ta\":\"Tamil\",\"te\":\"Telugu\",\"th\":\"Thai\",\"tl\":\"Tagalog\",\"tr\":\"Turkish\",\"und\":\"English\",\"ur\":\"Urdu\",\"vi\":\"Vietnamese\",\"zh\":\"Chinese\"}";
+    String languageJson = "epg/sd/json/locale/languageDigraphs.json";
     SDLanguage languages[] = deserialize(languageJson, SDLanguage[].class);
   }
 }

@@ -1,0 +1,9 @@
+{
+  "SH000000060000": {
+    "response": "PROGRAMID_QUEUED",
+    "code": 6001,
+    "serverID": "20141201.1",
+    "message": "Fetching programID:SH012423280000  Retry.",
+    "datetime": "2014-11-14T19:15:54Z"
+  }
+}

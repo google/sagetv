@@ -18,20 +18,14 @@ package sage.epg.sd.json.programs;
 import org.testng.annotations.Test;
 import sage.epg.sd.DeserializeTest;
 
+import java.io.IOException;
+
 public class SDProgramMetadataDeserializerTest extends DeserializeTest
 {
   @Test(groups = {"gson", "schedulesDirect", "program", "metadata" })
-  public void deserialize()
+  public void deserialize() throws IOException
   {
-    String metadataJson = "{\n" +
-        "            \"Gracenote\": {\n" +
-        "                \"season\": 1,\n" +
-        "                \"episode\": 13,\n" +
-        "                \"totalEpisodes\": 49,\n" +
-        "                \"totalSeasons\": 4\n" +
-        "            }\n" +
-        "        }";
-
+    String metadataJson = "epg/sd/json/programs/programMetadata.json";
     SDProgramMetadata metadata = deserialize(metadataJson, SDProgramMetadata.class);
     assert metadata.getProvider() != null;
     assert metadata.getEpisode() != 0;

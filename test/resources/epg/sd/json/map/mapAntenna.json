@@ -1,0 +1,763 @@
+{
+  "map": [
+    {
+      "stationID": "79329",
+      "uhfVhf": 49,
+      "atscMajor": 8,
+      "atscMinor": 1
+    },
+    {
+      "stationID": "25544",
+      "uhfVhf": 8,
+      "atscMajor": 8,
+      "atscMinor": 1
+    },
+    {
+      "stationID": "79331",
+      "uhfVhf": 49,
+      "atscMajor": 8,
+      "atscMinor": 2
+    },
+    {
+      "stationID": "50843",
+      "uhfVhf": 8,
+      "atscMajor": 8,
+      "atscMinor": 2
+    },
+    {
+      "stationID": "31768",
+      "uhfVhf": 23,
+      "atscMajor": 15,
+      "atscMinor": 1
+    },
+    {
+      "stationID": "65600",
+      "uhfVhf": 23,
+      "atscMajor": 15,
+      "atscMinor": 2
+    },
+    {
+      "stationID": "97104",
+      "uhfVhf": 23,
+      "atscMajor": 15,
+      "atscMinor": 3
+    },
+    {
+      "stationID": "30783",
+      "uhfVhf": 21,
+      "atscMajor": 21,
+      "atscMinor": 1
+    },
+    {
+      "stationID": "52278",
+      "uhfVhf": 21,
+      "atscMajor": 21,
+      "atscMinor": 2
+    },
+    {
+      "stationID": "97889",
+      "uhfVhf": 21,
+      "atscMajor": 21,
+      "atscMinor": 3
+    },
+    {
+      "stationID": "35305",
+      "uhfVhf": 13,
+      "atscMajor": 22,
+      "atscMinor": 1
+    },
+    {
+      "stationID": "44627",
+      "uhfVhf": 10,
+      "atscMajor": 27,
+      "atscMinor": 1
+    },
+    {
+      "stationID": "44629",
+      "uhfVhf": 10,
+      "atscMajor": 27,
+      "atscMinor": 2
+    },
+    {
+      "stationID": "63391",
+      "uhfVhf": 10,
+      "atscMajor": 27,
+      "atscMinor": 3
+    },
+    {
+      "stationID": "34976",
+      "uhfVhf": 11,
+      "atscMajor": 28,
+      "atscMinor": 1
+    },
+    {
+      "stationID": "19610",
+      "uhfVhf": 36,
+      "atscMajor": 33,
+      "atscMinor": 1
+    },
+    {
+      "stationID": "35511",
+      "uhfVhf": 36,
+      "atscMajor": 33,
+      "atscMinor": 3
+    },
+    {
+      "stationID": "59670",
+      "uhfVhf": 35
+    },
+    {
+      "stationID": "67550",
+      "uhfVhf": 7,
+      "atscMajor": 35,
+      "atscMinor": 1
+    },
+    {
+      "stationID": "32629",
+      "uhfVhf": 47,
+      "atscMajor": 43,
+      "atscMinor": 1
+    },
+    {
+      "stationID": "51514",
+      "uhfVhf": 47,
+      "atscMajor": 43,
+      "atscMinor": 2
+    },
+    {
+      "stationID": "70546",
+      "uhfVhf": 47,
+      "atscMajor": 43,
+      "atscMinor": 3
+    },
+    {
+      "stationID": "34967",
+      "uhfVhf": 30,
+      "atscMajor": 49,
+      "atscMinor": 1
+    },
+    {
+      "stationID": "63356",
+      "uhfVhf": 30,
+      "atscMajor": 49,
+      "atscMinor": 2
+    },
+    {
+      "stationID": "91324",
+      "uhfVhf": 30,
+      "atscMajor": 49,
+      "atscMinor": 3
+    },
+    {
+      "stationID": "99909",
+      "uhfVhf": 30,
+      "atscMajor": 49,
+      "atscMinor": 4
+    }
+  ],
+  "stations": [
+    {
+      "stationID": "79329",
+      "name": "WGALLD (WGAL-LD)",
+      "callsign": "WGALLD",
+      "affiliate": "NBC",
+      "broadcastLanguage": [
+        "en"
+      ],
+      "descriptionLanguage": [
+        "en"
+      ],
+      "broadcaster": {
+        "city": "Lancaster",
+        "state": "PA",
+        "postalcode": "17604",
+        "country": "United States"
+      },
+      "logo": {
+        "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s28717_h3_aa.png",
+        "height": 270,
+        "width": 360,
+        "md5": "6c7554a4b7f6d83bcacf39"
+      }
+    },
+    {
+      "stationID": "25544",
+      "name": "WGALDT (WGAL-DT)",
+      "callsign": "WGALDT",
+      "affiliate": "NBC",
+      "broadcastLanguage": [
+        "en"
+      ],
+      "descriptionLanguage": [
+        "en"
+      ],
+      "broadcaster": {
+        "city": "Lancaster",
+        "state": "PA",
+        "postalcode": "17604",
+        "country": "United States"
+      },
+      "logo": {
+        "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s28717_h3_aa.png",
+        "height": 270,
+        "width": 360,
+        "md5": "6c7554a4b7f6d83bcacf39"
+      }
+    },
+    {
+      "stationID": "79331",
+      "name": "WGALLD2 (WGAL-LD2)",
+      "callsign": "WGALLD2",
+      "broadcastLanguage": [
+        "en"
+      ],
+      "descriptionLanguage": [
+        "en"
+      ],
+      "broadcaster": {
+        "city": "Lancaster",
+        "state": "PA",
+        "postalcode": "17604",
+        "country": "United States"
+      }
+    },
+    {
+      "stationID": "50843",
+      "name": "WGALDT2 (WGAL-DT2)",
+      "callsign": "WGALDT2",
+      "affiliate": "METVN",
+      "broadcastLanguage": [
+        "en"
+      ],
+      "descriptionLanguage": [
+        "en"
+      ],
+      "broadcaster": {
+        "city": "Lancaster",
+        "state": "PA",
+        "postalcode": "17604",
+        "country": "United States"
+      },
+      "logo": {
+        "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s70436_h3_aa.png",
+        "height": 270,
+        "width": 360,
+        "md5": "999ad5c3ce121bba5cf6b1"
+      }
+    },
+    {
+      "stationID": "31768",
+      "name": "WXBUDT (WXBU-DT)",
+      "callsign": "WXBUDT",
+      "affiliate": "GRIT",
+      "broadcastLanguage": [
+        "en"
+      ],
+      "descriptionLanguage": [
+        "en"
+      ],
+      "broadcaster": {
+        "city": "Harrisburg",
+        "state": "PA",
+        "postalcode": "17110",
+        "country": "United States"
+      },
+      "logo": {
+        "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s53098_h3_aa.png",
+        "height": 270,
+        "width": 360,
+        "md5": "a48c6cc6e461e993bb38f5"
+      }
+    },
+    {
+      "stationID": "65600",
+      "name": "WXBUDT2 (WXBU-DT2)",
+      "callsign": "WXBUDT2",
+      "affiliate": "COMET",
+      "broadcastLanguage": [
+        "en"
+      ],
+      "descriptionLanguage": [
+        "en"
+      ],
+      "broadcaster": {
+        "city": "Harrisburg",
+        "state": "PA",
+        "postalcode": "17110",
+        "country": "United States"
+      },
+      "logo": {
+        "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s97051_h3_aa.png",
+        "height": 270,
+        "width": 360,
+        "md5": "5fa23ea9f65e3a772b747f"
+      }
+    },
+    {
+      "stationID": "97104",
+      "name": "WXBUDT3 (WXBU-DT3)",
+      "callsign": "WXBUDT3",
+      "affiliate": "COMET",
+      "broadcastLanguage": [
+        "en"
+      ],
+      "descriptionLanguage": [
+        "en"
+      ],
+      "broadcaster": {
+        "city": "Harrisburg",
+        "state": "PA",
+        "postalcode": "17110",
+        "country": "United States"
+      },
+      "logo": {
+        "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s97051_h3_aa.png",
+        "height": 270,
+        "width": 360,
+        "md5": "5fa23ea9f65e3a772b747f"
+      }
+    },
+    {
+      "stationID": "30783",
+      "name": "WHPDT (WHP-DT)",
+      "callsign": "WHPDT",
+      "affiliate": "CBS",
+      "broadcastLanguage": [
+        "en"
+      ],
+      "descriptionLanguage": [
+        "en"
+      ],
+      "broadcaster": {
+        "city": "Harrisburg",
+        "state": "PA",
+        "postalcode": "17110",
+        "country": "United States"
+      },
+      "logo": {
+        "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s28711_h3_aa.png",
+        "height": 270,
+        "width": 360,
+        "md5": "cd39083eddabbf918d0372"
+      }
+    },
+    {
+      "stationID": "52278",
+      "name": "WHPDT2 (WHP-DT2)",
+      "callsign": "WHPDT2",
+      "affiliate": "JTV",
+      "broadcastLanguage": [
+        "en"
+      ],
+      "descriptionLanguage": [
+        "en"
+      ],
+      "broadcaster": {
+        "city": "Harrisburg",
+        "state": "PA",
+        "postalcode": "17110",
+        "country": "United States"
+      },
+      "logo": {
+        "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s16604_h3_aa.png",
+        "height": 270,
+        "width": 360,
+        "md5": "c834727ffd24fdf9d21d11"
+      }
+    },
+    {
+      "stationID": "97889",
+      "name": "WHPDT3 (WHP-DT3)",
+      "callsign": "WHPDT3",
+      "affiliate": "CW",
+      "broadcastLanguage": [
+        "en"
+      ],
+      "descriptionLanguage": [
+        "en"
+      ],
+      "broadcaster": {
+        "city": "Harrisburg",
+        "state": "PA",
+        "postalcode": "17110",
+        "country": "United States"
+      },
+      "logo": {
+        "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s51306_h3_aa.png",
+        "height": 270,
+        "width": 360,
+        "md5": "79444f6040f9b1d0924504"
+      }
+    },
+    {
+      "stationID": "35305",
+      "name": "WYOUDT (WYOU-DT)",
+      "callsign": "WYOUDT",
+      "affiliate": "CBS",
+      "broadcastLanguage": [
+        "en"
+      ],
+      "descriptionLanguage": [
+        "en"
+      ],
+      "broadcaster": {
+        "city": "Scranton",
+        "state": "PA",
+        "postalcode": "18503",
+        "country": "United States"
+      },
+      "logo": {
+        "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s28711_h3_aa.png",
+        "height": 270,
+        "width": 360,
+        "md5": "cd39083eddabbf918d0372"
+      }
+    },
+    {
+      "stationID": "44627",
+      "name": "WHTMDT (WHTM-DT)",
+      "callsign": "WHTMDT",
+      "affiliate": "ABC",
+      "broadcastLanguage": [
+        "en"
+      ],
+      "descriptionLanguage": [
+        "en"
+      ],
+      "broadcaster": {
+        "city": "Harrisburg",
+        "state": "PA",
+        "postalcode": "17110",
+        "country": "United States"
+      },
+      "logo": {
+        "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s28708_h3_aa.png",
+        "height": 270,
+        "width": 360,
+        "md5": "39987b0849d402b3f112b7"
+      }
+    },
+    {
+      "stationID": "44629",
+      "name": "WHTMDT2 (WHTM-DT2)",
+      "callsign": "WHTMDT2",
+      "affiliate": "ION",
+      "broadcastLanguage": [
+        "en"
+      ],
+      "descriptionLanguage": [
+        "en"
+      ],
+      "broadcaster": {
+        "city": "Harrisburg",
+        "state": "PA",
+        "postalcode": "17110",
+        "country": "United States"
+      },
+      "logo": {
+        "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s18633_h3_aa.png",
+        "height": 270,
+        "width": 360,
+        "md5": "7791fd59b59f86c19ba7aa"
+      }
+    },
+    {
+      "stationID": "63391",
+      "name": "WHTMDT3 (WHTM-DT3)",
+      "callsign": "WHTMDT3",
+      "broadcastLanguage": [
+        "en"
+      ],
+      "descriptionLanguage": [
+        "en"
+      ],
+      "broadcaster": {
+        "city": "Harrisburg",
+        "state": "PA",
+        "postalcode": "17110",
+        "country": "United States"
+      }
+    },
+    {
+      "stationID": "34976",
+      "name": "WBREDT (WBRE-DT)",
+      "callsign": "WBREDT",
+      "affiliate": "NBC",
+      "broadcastLanguage": [
+        "en"
+      ],
+      "descriptionLanguage": [
+        "en"
+      ],
+      "broadcaster": {
+        "city": "Wilkes Barre",
+        "state": "PA",
+        "postalcode": "18701",
+        "country": "United States"
+      },
+      "logo": {
+        "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s28717_h3_aa.png",
+        "height": 270,
+        "width": 360,
+        "md5": "6c7554a4b7f6d83bcacf39"
+      }
+    },
+    {
+      "stationID": "19610",
+      "name": "WITFDT (WITF-DT)",
+      "callsign": "WITFDT",
+      "affiliate": "PBS",
+      "broadcastLanguage": [
+        "en"
+      ],
+      "descriptionLanguage": [
+        "en"
+      ],
+      "broadcaster": {
+        "city": "Harrisburg",
+        "state": "PA",
+        "postalcode": "17111",
+        "country": "United States"
+      },
+      "isCommercialFree": true,
+      "logo": {
+        "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s32356_h3_aa.png",
+        "height": 270,
+        "width": 360,
+        "md5": "4aa5ae639a1dfcf4811398"
+      }
+    },
+    {
+      "stationID": "35511",
+      "name": "WITFDT3 (WITF-DT3)",
+      "callsign": "WITFDT3",
+      "affiliate": "PBS",
+      "broadcastLanguage": [
+        "en"
+      ],
+      "descriptionLanguage": [
+        "en"
+      ],
+      "broadcaster": {
+        "city": "Harrisburg",
+        "state": "PA",
+        "postalcode": "17111",
+        "country": "United States"
+      },
+      "isCommercialFree": true,
+      "logo": {
+        "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s32356_h3_aa.png",
+        "height": 270,
+        "width": 360,
+        "md5": "4aa5ae639a1dfcf4811398"
+      }
+    },
+    {
+      "stationID": "59670",
+      "name": "W35BT",
+      "callsign": "W35BT",
+      "broadcastLanguage": [
+        "en"
+      ],
+      "descriptionLanguage": [
+        "en"
+      ],
+      "broadcaster": {
+        "city": "Altoona",
+        "state": "PA",
+        "postalcode": "16602",
+        "country": "United States"
+      }
+    },
+    {
+      "stationID": "67550",
+      "name": "W07DPLP (W07DP-LP)",
+      "callsign": "W07DPLP",
+      "broadcastLanguage": [
+        "en"
+      ],
+      "descriptionLanguage": [
+        "en"
+      ],
+      "broadcaster": {
+        "city": "Wall",
+        "state": "PA",
+        "postalcode": "15148",
+        "country": "United States"
+      }
+    },
+    {
+      "stationID": "32629",
+      "name": "WPMTDT (WPMT-DT)",
+      "callsign": "WPMTDT",
+      "affiliate": "FOX",
+      "broadcastLanguage": [
+        "en"
+      ],
+      "descriptionLanguage": [
+        "en"
+      ],
+      "broadcaster": {
+        "city": "York",
+        "state": "PA",
+        "postalcode": "17403",
+        "country": "United States"
+      },
+      "logo": {
+        "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s28719_h3_aa.png",
+        "height": 270,
+        "width": 360,
+        "md5": "ced2c1ac9983b74d6fccb3"
+      }
+    },
+    {
+      "stationID": "51514",
+      "name": "WPMTDT2 (WPMT-DT2)",
+      "callsign": "WPMTDT2",
+      "affiliate": "ANTENNA",
+      "broadcastLanguage": [
+        "en"
+      ],
+      "descriptionLanguage": [
+        "en"
+      ],
+      "broadcaster": {
+        "city": "York",
+        "state": "PA",
+        "postalcode": "17403",
+        "country": "United States"
+      },
+      "logo": {
+        "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s70248_h3_aa.png",
+        "height": 270,
+        "width": 360,
+        "md5": "6a2b597e34a88ba05dde8c"
+      }
+    },
+    {
+      "stationID": "70546",
+      "name": "WPMTDT3 (WPMT-DT3)",
+      "callsign": "WPMTDT3",
+      "affiliate": "THIS",
+      "broadcastLanguage": [
+        "en"
+      ],
+      "descriptionLanguage": [
+        "en"
+      ],
+      "broadcaster": {
+        "city": "York",
+        "state": "PA",
+        "postalcode": "17403",
+        "country": "United States"
+      },
+      "logo": {
+        "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s61775_h3_aa.png",
+        "height": 270,
+        "width": 360,
+        "md5": "d537e6877bbec4c4ed44c8"
+      }
+    },
+    {
+      "stationID": "34967",
+      "name": "WGCBDT (WGCB-DT)",
+      "callsign": "WGCBDT",
+      "affiliate": "COZITV",
+      "broadcastLanguage": [
+        "en"
+      ],
+      "descriptionLanguage": [
+        "en"
+      ],
+      "broadcaster": {
+        "city": "Red Lion",
+        "state": "PA",
+        "postalcode": "17356",
+        "country": "United States"
+      },
+      "logo": {
+        "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s78851_h3_aa.png",
+        "height": 270,
+        "width": 360,
+        "md5": "d4a1ac8485c79aa0d8eb11"
+      }
+    },
+    {
+      "stationID": "63356",
+      "name": "WGCBDT2 (WGCB-DT2)",
+      "callsign": "WGCBDT2",
+      "affiliate": "COZITV",
+      "broadcastLanguage": [
+        "en"
+      ],
+      "descriptionLanguage": [
+        "en"
+      ],
+      "broadcaster": {
+        "city": "Red Lion",
+        "state": "PA",
+        "postalcode": "17356",
+        "country": "United States"
+      },
+      "logo": {
+        "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s78851_h3_aa.png",
+        "height": 270,
+        "width": 360,
+        "md5": "d4a1ac8485c79aa0d8eb11"
+      }
+    },
+    {
+      "stationID": "91324",
+      "name": "WGCBDT3 (WGCB-DT3)",
+      "callsign": "WGCBDT3",
+      "affiliate": "WORKS",
+      "broadcastLanguage": [
+        "en"
+      ],
+      "descriptionLanguage": [
+        "en"
+      ],
+      "broadcaster": {
+        "city": "Red Lion",
+        "state": "PA",
+        "postalcode": "17356",
+        "country": "United States"
+      },
+      "logo": {
+        "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s88461_h3_aa.png",
+        "height": 270,
+        "width": 360,
+        "md5": "a7fbe9fb4e239347cc18a1"
+      }
+    },
+    {
+      "stationID": "99909",
+      "name": "WGCBDT4 (WGCB-DT4)",
+      "callsign": "WGCBDT4",
+      "affiliate": "ESCAPE",
+      "broadcastLanguage": [
+        "en"
+      ],
+      "descriptionLanguage": [
+        "en"
+      ],
+      "broadcaster": {
+        "city": "Red Lion",
+        "state": "PA",
+        "postalcode": "17356",
+        "country": "United States"
+      },
+      "logo": {
+        "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s89923_h3_aa.png",
+        "height": 270,
+        "width": 360,
+        "md5": "007cfed3f0b365e8737b86"
+      }
+    }
+  ],
+  "metadata": {
+    "lineup": "USA-OTA-17112",
+    "modified": "2016-07-21T21:19:48Z",
+    "transport": "Antenna"
+  }
+}
