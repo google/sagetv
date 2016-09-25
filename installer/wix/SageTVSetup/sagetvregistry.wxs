@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    <Fragment>
+        <DirectoryRef Id="TARGETDIR">
+            <Component Id="cmpRegFrey" Guid="{7325C945-AADD-45A1-97D8-8B0C91BE00D0}" KeyPath="yes">
+              <RegistryKey ForceCreateOnInstall="yes" Key="SOFTWARE\Frey Technologies" Root="HKLM">
+                <Permission GenericAll="yes" User="Everyone"/>
+              </RegistryKey>  
+            </Component>
+            <Component Id="cmpRegFreyCommon" Guid="{A5DB5DD7-0180-4F56-8126-E200FA1EB7FB}" KeyPath="yes">
+                <RegistryKey ForceCreateOnInstall="yes" Key="SOFTWARE\Frey Technologies\Common" Root="HKLM" />
+            </Component>
+            <Component Id="cmpRegFreyCommonAddCapture" Guid="{4327A234-FFFD-4392-9AC1-948A601E8907}" KeyPath="yes">
+                <RegistryKey ForceCreateOnInstall="yes" Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups" Root="HKLM" />
+            </Component>
+            <Component Id="cmpRegFreyCommonAddCapture7162BDAAnalogCapture" Guid="{19666470-B830-4E39-89C5-C2E489BA38B7}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups\7162 BDA Analog Capture" Root="HKLM">
+                    <RegistryValue Name="ChipsetMask" Value="0" Type="integer" />
+                    <RegistryValue Name="CaptureMask" Value="2048" Type="integer" />
+                </RegistryKey>
+            </Component>
+            <Component Id="cmpRegFreyCommonAddCapture7162BDAAnalogCapture0" Guid="{4316AEE6-FDB9-4B98-B9C4-822CB2876602}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups\7162 BDA Analog Capture0" Root="HKLM">
+                    <RegistryValue Name="CaptureMask" Value="2048" Type="integer" />
+                    <RegistryValue Name="ChipsetMask" Value="0" Type="integer" />
+                </RegistryKey>
+            </Component>
+            <Component Id="cmpRegFreyCommonAddCapture7162BDAAnalogCapture1" Guid="{9D8F893E-4607-45D1-8645-0E2C3DB6CE1C}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups\7162 BDA Analog Capture1" Root="HKLM">
+                    <RegistryValue Name="CaptureMask" Value="2048" Type="integer" />
+                    <RegistryValue Name="ChipsetMask" Value="0" Type="integer" />
+                </RegistryKey>
+            </Component>
+            <Component Id="cmpRegFreyCommonAddCaptureATIeHomeWonderCapture" Guid="{31F90069-D122-4819-AB85-E6AB6F7647C9}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups\ATI eHomeWonder Capture" Root="HKLM">
+                    <RegistryValue Name="CaptureMask" Value="2048" Type="integer" />
+                    <RegistryValue Name="ChipsetMask" Value="2" Type="integer" />
+                </RegistryKey>
+            </Component>
+            <Component Id="cmpRegFreyCommonAddCaptureAVerMediaAVerTVMPEGVideoCapture" Guid="{E1C4FE43-4FF3-4162-AC61-1D64425373C7}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups\AVerMedia AVerTV MPEG Video Capture" Root="HKLM">
+                    <RegistryValue Name="CaptureMask" Value="2048" Type="integer" />
+                    <RegistryValue Name="ChipsetMask" Value="34" Type="integer" />
+                </RegistryKey>
+            </Component>
+            <Component Id="cmpRegFreyCommonAddCaptureAVerMediaAVerTVVideeCaptureAF2" Guid="{142E6556-B4D5-4EA1-BAD9-9794E7E9C29B}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups\AVerMedia AVerTV Video Capture (AF2)" Root="HKLM">
+                    <RegistryValue Name="ChipsetMask" Value="2" Type="integer" />
+                    <RegistryValue Name="CaptureMask" Value="2048" Type="integer" />
+                </RegistryKey>
+            </Component>
+            <Component Id="cmpRegFreyCommonAddCaptureAverMediaM780PCIeAudioVideoCapture1" Guid="{441B4F81-4260-439F-A564-4C5A33503F60}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups\AverMedia M780 PCIe Audio/Video Capture 1" Root="HKLM">
+                    <RegistryValue Name="hybrid" Value="AverMedia M780 PCIe Digital Video Capture 2" Type="string" />
+                    <RegistryValue Name="CaptureMask" Value="2048" Type="integer" />
+                    <RegistryValue Name="ChipsetMask" Value="0" Type="integer" />
+                </RegistryKey>
+            </Component>
+            <Component Id="cmpRegFreyCommonAddCaptureAVerMediaUSBCapture" Guid="{06F424B9-880F-4439-81FF-E989136F39C2}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups\AVerMedia USB Capture" Root="HKLM">
+                    <RegistryValue Name="CaptureMask" Value="2048" Type="integer" />
+                </RegistryKey>
+            </Component>
+            <Component Id="cmpRegFreyCommonAddCaptureAVerMediaXCMPEGCapture1" Guid="{73828836-4B0B-4CD7-B221-7A7EEA6C6847}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups\AVerMedia XC-MPEG Capture 1" Root="HKLM">
+                    <RegistryValue Name="CaptureMask" Value="2048" Type="integer" />
+                </RegistryKey>
+            </Component>
+            <Component Id="cmpRegFreyCommonAddCaptureAVerMediaXCMPEGCapture2" Guid="{58F9C1B2-8EDF-4AF4-941E-33FB359E47C6}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups\AVerMedia XC-MPEG Capture 2" Root="HKLM">
+                    <RegistryValue Name="CaptureMask" Value="2048" Type="integer" />
+                </RegistryKey>
+            </Component>
+            <Component Id="cmpRegFreyCommonAddCaptureAVerMediaMPEGVideoCapture88x" Guid="{2AEBA5F3-E938-4B7C-BD2F-A941B5633B11}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups\AVerMedia, MPEG Video Capture (88x)" Root="HKLM">
+                    <RegistryValue Name="ChipsetMask" Value="64" Type="integer" />
+                    <RegistryValue Name="CaptureMask" Value="2048" Type="integer" />
+                </RegistryKey>
+            </Component>
+            <Component Id="cmpRegFreyCommonAddCaptureConexant2388xVideoCapture" Guid="{5682724D-8E98-4733-A1C7-4BCE8EF69B7F}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups\Conexant 2388x Video Capture" Root="HKLM">
+                    <RegistryValue Name="CaptureMask" Value="2048" Type="integer" />
+                    <RegistryValue Name="ChipsetMask" Value="34" Type="integer" />
+                </RegistryKey>
+            </Component>
+            <Component Id="cmpRegFreyCommonAddCaptureConexantFalconVideoCapture" Guid="{2319FE88-1540-4E49-BAD2-FE0209CCFB6E}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups\Conexant Falcon Video Capture" Root="HKLM">
+                    <RegistryValue Name="ChipsetMask" Value="0" Type="integer" />
+                    <RegistryValue Name="CaptureMask" Value="2048" Type="integer" />
+                </RegistryKey>
+            </Component>
+            <Component Id="cmpRegFreyCommonAddCaptureGenesisVideoCapture" Guid="{E0697AD5-8DFA-4716-9C7C-96D5DF400418}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups\Genesis Video Capture" Root="HKLM">
+                    <RegistryValue Name="CaptureMask" Value="2048" Type="integer" />
+                    <RegistryValue Name="ChipsetMask" Value="34" Type="integer" />
+                </RegistryKey>
+            </Component>
+            <Component Id="cmpRegFreyCommonAddCaptureHauppaugeColossusCapture0" Guid="{30DE817A-0AFB-4788-AF83-AD43BA262991}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups\Hauppauge Colossus Capture 0" Root="HKLM">
+                    <RegistryValue Name="CaptureMask" Value="2048" Type="integer" />
+                    <RegistryValue Name="ChipsetMask" Value="1048576" Type="integer" />
+                </RegistryKey>
+            </Component>
+            <Component Id="cmpRegFreyCommonAddCaptureHauppaugeColossusCapture1" Guid="{D94A5A8F-215E-4D90-96BF-C8A0AEFF0CC0}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups\Hauppauge Colossus Capture 1" Root="HKLM">
+                    <RegistryValue Name="ChipsetMask" Value="1048576" Type="integer" />
+                    <RegistryValue Name="CaptureMask" Value="2048" Type="integer" />
+                </RegistryKey>
+            </Component>
+            <Component Id="cmpRegFreyCommonAddCaptureHauppaugeColossusCapture2" Guid="{C99A3803-AEB1-49D2-8B48-6DB41711A8E1}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups\Hauppauge Colossus Capture 2" Root="HKLM">
+                    <RegistryValue Name="ChipsetMask" Value="1048576" Type="integer" />
+                    <RegistryValue Name="CaptureMask" Value="2048" Type="integer" />
+                </RegistryKey>
+            </Component>
+            <Component Id="cmpRegFreyCommonAddCaptureHauppaugeColossusCapture3" Guid="{77D0A410-DAC3-44B6-8861-99B524F8F8D0}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups\Hauppauge Colossus Capture 3" Root="HKLM">
+                    <RegistryValue Name="CaptureMask" Value="2048" Type="integer" />
+                    <RegistryValue Name="ChipsetMask" Value="1048576" Type="integer" />
+                </RegistryKey>
+            </Component>
+            <Component Id="cmpRegFreyCommonAddCaptureHauppaugeColossusCapture4" Guid="{AACE8185-8C13-42B5-921A-5E7A46298F15}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups\Hauppauge Colossus Capture 4" Root="HKLM">
+                    <RegistryValue Name="CaptureMask" Value="2048" Type="integer" />
+                    <RegistryValue Name="ChipsetMask" Value="1048576" Type="integer" />
+                </RegistryKey>
+            </Component>
+            <Component Id="cmpRegFreyCommonAddCaptureHauppaugeColossusCapture5" Guid="{286671B2-BD9C-4C86-A423-2ACE3EDB50E5}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups\Hauppauge Colossus Capture 5" Root="HKLM">
+                    <RegistryValue Name="ChipsetMask" Value="1048576" Type="integer" />
+                    <RegistryValue Name="CaptureMask" Value="2048" Type="integer" />
+                </RegistryKey>
+            </Component>
+            <Component Id="cmpRegFreyCommonAddCaptureHauppaugeColossusCapture6" Guid="{A9B151B4-1F72-47C5-BEA7-D4921CF385BF}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups\Hauppauge Colossus Capture 6" Root="HKLM">
+                    <RegistryValue Name="CaptureMask" Value="2048" Type="integer" />
+                    <RegistryValue Name="ChipsetMask" Value="1048576" Type="integer" />
+                </RegistryKey>
+            </Component>
+            <Component Id="cmpRegFreyCommonAddCaptureHauppaugeColossusCapture7" Guid="{22CCDF38-FDEE-4F81-A974-54A4B11D2B14}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups\Hauppauge Colossus Capture 7" Root="HKLM">
+                    <RegistryValue Name="ChipsetMask" Value="1048576" Type="integer" />
+                    <RegistryValue Name="CaptureMask" Value="2048" Type="integer" />
+                </RegistryKey>
+            </Component>
+            <Component Id="cmpRegFreyCommonAddCaptureHauppaugeHDPVRCaptureDevice" Guid="{95B20473-E69C-467F-B116-5B338644264F}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups\Hauppauge HD PVR Capture Device" Root="HKLM">
+                    <RegistryValue Name="ChipsetMask" Value="1048576" Type="integer" />
+                    <RegistryValue Name="CaptureMask" Value="2048" Type="integer" />
+                </RegistryKey>
+            </Component>
+            <Component Id="cmpRegFreyCommonAddCaptureHauppaugeHVRUSB2VideoCapture" Guid="{96A01E13-A24E-4724-B173-593F6FC94F01}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups\Hauppauge HVR USB2 Video Capture" Root="HKLM">
+                    <RegistryValue Name="CaptureMask" Value="34816" Type="integer" />
+                    <RegistryValue Name="ChipsetMask" Value="16" Type="integer" />
+                </RegistryKey>
+            </Component>
+            <Component Id="cmpRegFreyCommonAddCaptureHauppaugeWinTV418VideoCapture" Guid="{173199F1-404F-4835-9EA5-400E1B2358A5}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups\Hauppauge WinTV 418 Video Capture" Root="HKLM">
+                    <RegistryValue Name="ChipsetMask" Value="0" Type="integer" />
+                    <RegistryValue Name="CaptureMask" Value="34816" Type="integer" />
+                    <RegistryValue Name="hybrid" Value="Hauppauge WinTV 418 TS Capture" Type="string" />
+                </RegistryKey>
+            </Component>
+            <Component Id="cmpRegFreyCommonAddCaptureHauppaugeWinTV885VideoCapture" Guid="{1AD881F4-B85A-4173-8A8E-819E4F404C22}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups\Hauppauge WinTV 885 Video Capture" Root="HKLM">
+                    <RegistryValue Name="CaptureMask" Value="34816" Type="integer" />
+                    <RegistryValue Name="hybrid" Value="Hauppauge WinTV 885 TS Capture" Type="string" />
+                    <RegistryValue Name="ChipsetMask" Value="16" Type="integer" />
+                </RegistryKey>
+            </Component>
+            <Component Id="cmpRegFreyCommonAddCaptureHauppaugeWinTV88xVideoCapture" Guid="{2844C8A4-BE6B-4484-BF39-497AF41BE269}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups\Hauppauge WinTV 88x Video Capture" Root="HKLM">
+                    <RegistryValue Name="ChipsetMask" Value="16" Type="integer" />
+                    <RegistryValue Name="CaptureMask" Value="20480" Type="integer" />
+                    <RegistryValue Name="hybrid" Value="Hauppauge WinTV 88x TS Capture" Type="string" />
+                </RegistryKey>
+            </Component>
+            <Component Id="cmpRegFreyCommonAddCaptureHauppaugeWinTV7164AnalogCapture" Guid="{6C9F9DEF-7946-4749-8A49-D724A4B70D39}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups\Hauppauge WinTV-7164 Analog Capture" Root="HKLM">
+                    <RegistryValue Name="ChipsetMask" Value="16" Type="integer" />
+                    <RegistryValue Name="CaptureMask" Value="34816" Type="integer" />
+                </RegistryKey>
+            </Component>
+            <Component Id="cmpRegFreyCommonAddCaptureHavaVideoDevice" Guid="{335B434B-B84F-4EF3-B5BF-0BE750282EF0}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups\Hava Video Device" Root="HKLM">
+                    <RegistryValue Name="CaptureMask" Value="2048" Type="integer" />
+                </RegistryKey>
+            </Component>
+            <Component Id="cmpRegFreyCommonAddCaptureNVIDIADualTVCapture" Guid="{ED71A42E-83FD-454F-9139-15B5051D9CA6}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups\NVIDIA DualTV Capture" Root="HKLM">
+                    <RegistryValue Name="ChipsetMask" Value="0" Type="integer" />
+                    <RegistryValue Name="CaptureMask" Value="2048" Type="integer" />
+                </RegistryKey>
+            </Component>
+            <Component Id="cmpRegFreyCommonAddCaptureNVIDIADualTVCapture2" Guid="{9525E401-E072-49AB-9274-EEE56914480A}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups\NVIDIA DualTV Capture 2" Root="HKLM">
+                    <RegistryValue Name="ChipsetMask" Value="0" Type="integer" />
+                    <RegistryValue Name="CaptureMask" Value="2048" Type="integer" />
+                </RegistryKey>
+            </Component>
+            <Component Id="cmpRegFreyCommonAddCapturePlextorConvertXM402UAVCapture" Guid="{CBAD5260-0AD7-4E7C-9E91-E63EC491DB13}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups\Plextor ConvertX M402U A/V Capture" Root="HKLM">
+                    <RegistryValue Name="CaptureMask" Value="1024" Type="integer" />
+                    <RegistryValue Name="ChipsetMask" Value="128" Type="integer" />
+                </RegistryKey>
+            </Component>
+            <Component Id="cmpRegFreyCommonAddCapturePlextorConvertXTV402UAVCapture" Guid="{30327170-9978-4DA7-A17D-422A15BB5F05}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups\Plextor ConvertX TV402U A/V Capture" Root="HKLM">
+                    <RegistryValue Name="CaptureMask" Value="1024" Type="integer" />
+                    <RegistryValue Name="ChipsetMask" Value="128" Type="integer" />
+                </RegistryKey>
+            </Component>
+            <Component Id="cmpRegFreyCommonAddCaptureProVideo2388xVideoCapture" Guid="{56A106DD-A9F6-43E1-AA83-2C345FE3CA3F}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups\ProVideo 2388x Video Capture" Root="HKLM">
+                    <RegistryValue Name="ChipsetMask" Value="34" Type="integer" />
+                    <RegistryValue Name="CaptureMask" Value="2048" Type="integer" />
+                </RegistryKey>
+            </Component>
+            <Component Id="cmpRegFreyCommonAddCaptureProvideoPV358TAVCapture" Guid="{7CA7EE26-8DC0-4B8A-9FA4-41F29E84E76D}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups\Provideo PV-358T A/V Capture" Root="HKLM">
+                    <RegistryValue Name="ChipsetMask" Value="128" Type="integer" />
+                    <RegistryValue Name="CaptureMask" Value="1024" Type="integer" />
+                </RegistryKey>
+            </Component>
+            <Component Id="cmpRegFreyCommonAddCaptureTBS6980VideoCapture" Guid="{A95F9F70-0FF5-4DA1-8395-1E76BA129B5D}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups\TBS 6980 Video Capture" Root="HKLM">
+                    <RegistryValue Name="DeviceType" Value="digital" Type="string" />
+                </RegistryKey>
+            </Component>
+            <Component Id="cmpRegFreyCommonAddCaptureViXSPureTVCapture" Guid="{E695CA55-607C-4A37-8D4A-66CAE0976C3F}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups\ViXS PureTV Capture" Root="HKLM">
+                    <RegistryValue Name="CaptureMask" Value="2048" Type="integer" />
+                </RegistryKey>
+            </Component>
+            <Component Id="cmpRegFreyCommonAddCaptureXtremeTVPCITVTuner" Guid="{BD5CBD33-05FA-44F8-A370-DD36679F7A84}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups\XtremeTV PCI TV Tuner" Root="HKLM">
+                    <RegistryValue Name="ChipsetMask" Value="0" Type="integer" />
+                    <RegistryValue Name="CaptureMask" Value="2048" Type="integer" />
+                </RegistryKey>
+            </Component>
+            <Component Id="cmpRegFreyCommonAddCaptureHauppaugeSienaVideoCapture" Guid="{BF8F6662-5941-423E-8265-E17F7A723497}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups\Hauppauge Siena Video Capture" Root="HKLM">
+                    <RegistryValue Name="CaptureMask" Value="2048" Type="integer" />
+                    <RegistryValue Name="ChipsetMask" Value="1048576" Type="integer" />
+                </RegistryKey>
+            </Component>
+            <Component Id="cmpRegFreyCommonDSFilters" Guid="{6E0BEF6D-3033-46DF-A5E1-9C92C72793B0}" KeyPath="yes">
+                <RegistryKey ForceCreateOnInstall="yes" Key="SOFTWARE\Frey Technologies\Common\DSFilters" Root="HKLM" />
+            </Component>
+            <Component Id="cmpRegFreyCommonDSFiltersMpegDeMux" Guid="{792A603E-6E72-4A09-BC89-A2EC904E8439}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\DSFilters\MpegDeMux" Root="HKLM">
+                    <RegistryValue Name="NumBuffers" Value="64" Type="integer" />
+                    <RegistryValue Name="BufferSize" Value="65536" Type="integer" />
+                    <RegistryValue Name="AudioDelay" Value="0" Type="integer" />
+                    <RegistryValue Name="MPEG2PackSeekModulus" Value="2048" Type="integer" />
+                    <RegistryValue Name="RemuxOptimize" Value="0" Type="integer" />
+                </RegistryKey>
+            </Component>
+            <Component Id="cmpRegFreyCommonDSFiltersMpegMux" Guid="{5831CC5D-DC20-438C-9555-0210BBEB94E3}" KeyPath="yes">
+                <RegistryKey Key="SOFTWARE\Frey Technologies\Common\DSFilters\MpegMux" Root="HKLM">
+                    <RegistryValue Name="SynchronizeAV" Value="1" Type="integer" />
+                    <RegistryValue Name="InitialAudioPTS" Value="20000" Type="integer" />
+                    <RegistryValue Name="InitialVideoDTS" Value="19000" Type="integer" />
+                    <RegistryValue Name="BoostThreadPriorities" Value="1" Type="integer" />
+                </RegistryKey>
+            </Component>
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <ComponentGroup Id="HarvestedRegistryComponents">
+            <ComponentRef Id="cmpRegFrey" />
+            <ComponentRef Id="cmpRegFreyCommon" />
+            <ComponentRef Id="cmpRegFreyCommonAddCapture" />
+            <ComponentRef Id="cmpRegFreyCommonAddCapture7162BDAAnalogCapture" />
+            <ComponentRef Id="cmpRegFreyCommonAddCapture7162BDAAnalogCapture0" />
+            <ComponentRef Id="cmpRegFreyCommonAddCapture7162BDAAnalogCapture1" />
+            <ComponentRef Id="cmpRegFreyCommonAddCaptureATIeHomeWonderCapture" />
+            <ComponentRef Id="cmpRegFreyCommonAddCaptureAVerMediaAVerTVMPEGVideoCapture" />
+            <ComponentRef Id="cmpRegFreyCommonAddCaptureAVerMediaAVerTVVideeCaptureAF2" />
+            <ComponentRef Id="cmpRegFreyCommonAddCaptureAverMediaM780PCIeAudioVideoCapture1" />
+            <ComponentRef Id="cmpRegFreyCommonAddCaptureAVerMediaUSBCapture" />
+            <ComponentRef Id="cmpRegFreyCommonAddCaptureAVerMediaXCMPEGCapture1" />
+            <ComponentRef Id="cmpRegFreyCommonAddCaptureAVerMediaXCMPEGCapture2" />
+            <ComponentRef Id="cmpRegFreyCommonAddCaptureAVerMediaMPEGVideoCapture88x" />
+            <ComponentRef Id="cmpRegFreyCommonAddCaptureConexant2388xVideoCapture" />
+            <ComponentRef Id="cmpRegFreyCommonAddCaptureConexantFalconVideoCapture" />
+            <ComponentRef Id="cmpRegFreyCommonAddCaptureGenesisVideoCapture" />
+            <ComponentRef Id="cmpRegFreyCommonAddCaptureHauppaugeColossusCapture0" />
+            <ComponentRef Id="cmpRegFreyCommonAddCaptureHauppaugeColossusCapture1" />
+            <ComponentRef Id="cmpRegFreyCommonAddCaptureHauppaugeColossusCapture2" />
+            <ComponentRef Id="cmpRegFreyCommonAddCaptureHauppaugeColossusCapture3" />
+            <ComponentRef Id="cmpRegFreyCommonAddCaptureHauppaugeColossusCapture4" />
+            <ComponentRef Id="cmpRegFreyCommonAddCaptureHauppaugeColossusCapture5" />
+            <ComponentRef Id="cmpRegFreyCommonAddCaptureHauppaugeColossusCapture6" />
+            <ComponentRef Id="cmpRegFreyCommonAddCaptureHauppaugeColossusCapture7" />
+            <ComponentRef Id="cmpRegFreyCommonAddCaptureHauppaugeHDPVRCaptureDevice" />
+            <ComponentRef Id="cmpRegFreyCommonAddCaptureHauppaugeHVRUSB2VideoCapture" />
+            <ComponentRef Id="cmpRegFreyCommonAddCaptureHauppaugeWinTV418VideoCapture" />
+            <ComponentRef Id="cmpRegFreyCommonAddCaptureHauppaugeWinTV885VideoCapture" />
+            <ComponentRef Id="cmpRegFreyCommonAddCaptureHauppaugeWinTV88xVideoCapture" />
+            <ComponentRef Id="cmpRegFreyCommonAddCaptureHauppaugeWinTV7164AnalogCapture" />
+            <ComponentRef Id="cmpRegFreyCommonAddCaptureHavaVideoDevice" />
+            <ComponentRef Id="cmpRegFreyCommonAddCaptureNVIDIADualTVCapture" />
+            <ComponentRef Id="cmpRegFreyCommonAddCaptureNVIDIADualTVCapture2" />
+            <ComponentRef Id="cmpRegFreyCommonAddCapturePlextorConvertXM402UAVCapture" />
+            <ComponentRef Id="cmpRegFreyCommonAddCapturePlextorConvertXTV402UAVCapture" />
+            <ComponentRef Id="cmpRegFreyCommonAddCaptureProVideo2388xVideoCapture" />
+            <ComponentRef Id="cmpRegFreyCommonAddCaptureProvideoPV358TAVCapture" />
+            <ComponentRef Id="cmpRegFreyCommonAddCaptureTBS6980VideoCapture" />
+            <ComponentRef Id="cmpRegFreyCommonAddCaptureViXSPureTVCapture" />
+            <ComponentRef Id="cmpRegFreyCommonAddCaptureXtremeTVPCITVTuner" />
+            <ComponentRef Id="cmpRegFreyCommonAddCaptureHauppaugeSienaVideoCapture" />
+            <ComponentRef Id="cmpRegFreyCommonDSFilters" />
+            <ComponentRef Id="cmpRegFreyCommonDSFiltersMpegDeMux" />
+            <ComponentRef Id="cmpRegFreyCommonDSFiltersMpegMux" />
+        </ComponentGroup>
+    </Fragment>
+</Wix>

@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.25123.0
+VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PVR350OSDPlugin", "dll\PVR350OSDPlugin\PVR350OSDPlugin.vcxproj", "{877FD7FD-055F-4D19-BF71-69BFF733B158}"
 EndProject
@@ -136,6 +136,7 @@ Global
 		{877FD7FD-055F-4D19-BF71-69BFF733B158}.Client Debug|Win32.ActiveCfg = Debug|Win32
 		{877FD7FD-055F-4D19-BF71-69BFF733B158}.Client Debug|x64.ActiveCfg = Debug|Win32
 		{877FD7FD-055F-4D19-BF71-69BFF733B158}.Client Release|Win32.ActiveCfg = Release|Win32
+		{877FD7FD-055F-4D19-BF71-69BFF733B158}.Client Release|Win32.Build.0 = Release|Win32
 		{877FD7FD-055F-4D19-BF71-69BFF733B158}.Client Release|x64.ActiveCfg = Release|Win32
 		{877FD7FD-055F-4D19-BF71-69BFF733B158}.Debug_MBCS|Win32.ActiveCfg = Debug|Win32
 		{877FD7FD-055F-4D19-BF71-69BFF733B158}.Debug_MBCS|Win32.Build.0 = Debug|Win32
@@ -221,6 +222,7 @@ Global
 		{2CFD97EA-5EB6-4A84-AEA2-57A70D87B132}.Client Debug|Win32.ActiveCfg = Debug|Win32
 		{2CFD97EA-5EB6-4A84-AEA2-57A70D87B132}.Client Debug|x64.ActiveCfg = Debug|Win32
 		{2CFD97EA-5EB6-4A84-AEA2-57A70D87B132}.Client Release|Win32.ActiveCfg = Release|Win32
+		{2CFD97EA-5EB6-4A84-AEA2-57A70D87B132}.Client Release|Win32.Build.0 = Release|Win32
 		{2CFD97EA-5EB6-4A84-AEA2-57A70D87B132}.Client Release|x64.ActiveCfg = Release|Win32
 		{2CFD97EA-5EB6-4A84-AEA2-57A70D87B132}.Debug_MBCS|Win32.ActiveCfg = Debug|Win32
 		{2CFD97EA-5EB6-4A84-AEA2-57A70D87B132}.Debug_MBCS|Win32.Build.0 = Debug|Win32
@@ -258,6 +260,7 @@ Global
 		{EA851EED-B3BB-438E-B8CA-413EF9E90622}.Client Debug|Win32.ActiveCfg = Debug|Win32
 		{EA851EED-B3BB-438E-B8CA-413EF9E90622}.Client Debug|x64.ActiveCfg = Debug|Win32
 		{EA851EED-B3BB-438E-B8CA-413EF9E90622}.Client Release|Win32.ActiveCfg = Release|Win32
+		{EA851EED-B3BB-438E-B8CA-413EF9E90622}.Client Release|Win32.Build.0 = Release|Win32
 		{EA851EED-B3BB-438E-B8CA-413EF9E90622}.Client Release|x64.ActiveCfg = Release|Win32
 		{EA851EED-B3BB-438E-B8CA-413EF9E90622}.Debug_MBCS|Win32.ActiveCfg = Debug|Win32
 		{EA851EED-B3BB-438E-B8CA-413EF9E90622}.Debug_MBCS|Win32.Build.0 = Debug|Win32
@@ -295,6 +298,7 @@ Global
 		{0F01F153-4951-4FFF-9C06-11C448E5AC63}.Client Debug|Win32.ActiveCfg = Debug|Win32
 		{0F01F153-4951-4FFF-9C06-11C448E5AC63}.Client Debug|x64.ActiveCfg = Debug|Win32
 		{0F01F153-4951-4FFF-9C06-11C448E5AC63}.Client Release|Win32.ActiveCfg = Release|Win32
+		{0F01F153-4951-4FFF-9C06-11C448E5AC63}.Client Release|Win32.Build.0 = Release|Win32
 		{0F01F153-4951-4FFF-9C06-11C448E5AC63}.Client Release|x64.ActiveCfg = Release|Win32
 		{0F01F153-4951-4FFF-9C06-11C448E5AC63}.Debug_MBCS|Win32.ActiveCfg = Debug|Win32
 		{0F01F153-4951-4FFF-9C06-11C448E5AC63}.Debug_MBCS|Win32.Build.0 = Debug|Win32
@@ -370,6 +374,7 @@ Global
 		{86B000F6-63F5-4041-BA33-74235002C84F}.Client Debug|Win32.ActiveCfg = Debug|Win32
 		{86B000F6-63F5-4041-BA33-74235002C84F}.Client Debug|x64.ActiveCfg = Debug|Win32
 		{86B000F6-63F5-4041-BA33-74235002C84F}.Client Release|Win32.ActiveCfg = Release|Win32
+		{86B000F6-63F5-4041-BA33-74235002C84F}.Client Release|Win32.Build.0 = Release|Win32
 		{86B000F6-63F5-4041-BA33-74235002C84F}.Client Release|x64.ActiveCfg = Release|Win32
 		{86B000F6-63F5-4041-BA33-74235002C84F}.Debug_MBCS|Win32.ActiveCfg = Debug|Win32
 		{86B000F6-63F5-4041-BA33-74235002C84F}.Debug_MBCS|Win32.Build.0 = Debug|Win32
@@ -407,6 +412,7 @@ Global
 		{444FDF3B-831C-4015-BD92-765AC317A685}.Client Debug|Win32.ActiveCfg = Debug|Win32
 		{444FDF3B-831C-4015-BD92-765AC317A685}.Client Debug|x64.ActiveCfg = Debug|Win32
 		{444FDF3B-831C-4015-BD92-765AC317A685}.Client Release|Win32.ActiveCfg = Release|Win32
+		{444FDF3B-831C-4015-BD92-765AC317A685}.Client Release|Win32.Build.0 = Release|Win32
 		{444FDF3B-831C-4015-BD92-765AC317A685}.Client Release|x64.ActiveCfg = Release|Win32
 		{444FDF3B-831C-4015-BD92-765AC317A685}.Debug_MBCS|Win32.ActiveCfg = Debug|Win32
 		{444FDF3B-831C-4015-BD92-765AC317A685}.Debug_MBCS|Win32.Build.0 = Debug|Win32
@@ -526,7 +532,6 @@ Global
 		{0976713C-8CFB-4E2F-85F9-E0B4CE8FA3F0}.Service Debug|Win32.ActiveCfg = Debug|Win32
 		{0976713C-8CFB-4E2F-85F9-E0B4CE8FA3F0}.Service Debug|x64.ActiveCfg = Debug|Win32
 		{0976713C-8CFB-4E2F-85F9-E0B4CE8FA3F0}.Service Release|Win32.ActiveCfg = Release|Win32
-		{0976713C-8CFB-4E2F-85F9-E0B4CE8FA3F0}.Service Release|Win32.Build.0 = Release|Win32
 		{0976713C-8CFB-4E2F-85F9-E0B4CE8FA3F0}.Service Release|x64.ActiveCfg = Release|Win32
 		{0976713C-8CFB-4E2F-85F9-E0B4CE8FA3F0}.Studio Release|Win32.ActiveCfg = Release|Win32
 		{0976713C-8CFB-4E2F-85F9-E0B4CE8FA3F0}.Studio Release|Win32.Build.0 = Release|Win32

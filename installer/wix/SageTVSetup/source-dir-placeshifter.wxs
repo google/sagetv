@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    <Fragment>
+        <DirectoryRef Id="INSTALLFOLDER">
+            <Directory Id="dirF37E2EC1502372472A20CE7D0597B145" Name="Placeshifter">
+                <Component Id="cmpDE84CCDFF624E01E824FBD377ED5910B" Guid="{EC9CC210-D7F6-4386-A9F9-18781C408042}">
+                    <File Id="fil6B9ED385C5DC02CF21AE00C5C9FC17D3" KeyPath="yes" Source="$(var.SourcePlaceshifterSource)\ImageLoader.dll" />
+                </Component>
+                <Component Id="cmpFBB347B0B4C33BAD1FD8240CAC054BE1" Guid="{05B197F7-F804-4DCC-83DB-90EEBEC0B04D}">
+                    <File Id="fil86EC9D5EF3C1AD36CA87A000A6DFFD01" KeyPath="yes" Source="$(var.SourcePlaceshifterSource)\pthreadGC2.dll" />
+                </Component>
+                <Component Id="cmp6ED9027D08EE680D93D804E20098CA18" Guid="{DCB36BCA-FAF0-4926-B6A6-809335D39F58}">
+                    <File Id="filA2079F0D558AA127B368C9654581DEFE" KeyPath="yes" Source="$(var.SourcePlaceshifterSource)\SageTVPlayer.exe" />
+                </Component>
+                <Component Id="cmpF43E0FCDF7D95A109EDBA0EE6B914981" Guid="{8AF4ECF2-EB54-481F-86D8-E2468A55A972}">
+                    <File Id="fil33165F41585BBF100177AFFFEB3C2DFD" KeyPath="yes" Source="$(var.SourcePlaceshifterSource)\swscale.dll" />
+                </Component>
+                <Component Id="cmp2AD77EA28EF5868F9444D254532F294B" Guid="{2CA62CD3-F4BA-45F0-82CC-6D3DDE8E364D}">
+                    <File Id="filF3FDD61DBD6D647B97BD5635BC218AC2" KeyPath="yes" Source="$(var.SourcePlaceshifterSource)\ThirdPartyLicense.txt" />
+                </Component>
+            </Directory>
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <ComponentGroup Id="PlaceshifterSourceComponents">
+            <ComponentRef Id="cmpDE84CCDFF624E01E824FBD377ED5910B" />
+            <ComponentRef Id="cmpFBB347B0B4C33BAD1FD8240CAC054BE1" />
+            <ComponentRef Id="cmp6ED9027D08EE680D93D804E20098CA18" />
+            <ComponentRef Id="cmpF43E0FCDF7D95A109EDBA0EE6B914981" />
+            <ComponentRef Id="cmp2AD77EA28EF5868F9444D254532F294B" />
+        </ComponentGroup>
+    </Fragment>
+</Wix>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+  <Fragment>
+
+    <PackageGroup Id="redist_ac3filter">
+      <ExePackage Id="ac3filter" 
+                  DisplayName="AC3 Filter"
+                  Cache="yes" 
+                  PerMachine="yes" 
+                  Permanent="yes" 
+                  Vital="yes" 
+                  Compressed="yes"
+                  SourceFile="redist\ac3filter_2_6_0b_lite.exe"
+                  Name="Redist\ac3filter_2_6_0b_lite.exe"
+                  InstallCommand="/VERYSILENT /NORESTART /NOICONS"
+                  />
+
+    </PackageGroup>
+  </Fragment>
+</Wix>
