@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+  <Fragment>
+
+    <util:FileSearch Id="MFC100_Version_x86"
+                 Variable="MFC100_Version_x86" Path="[SystemFolder]mfc100.dll"
+                 Result="version"/>
+
+    <PackageGroup Id="redist_vc100">
+      <ExePackage Id="vc100" 
+                  DisplayName="Visual C++ 2010 Redistributable Package (x86)"
+                  Cache="yes" 
+                  PerMachine="yes" 
+                  Permanent="yes" 
+                  Vital="yes" 
+                  Compressed="yes"
+                  SourceFile="redist\vcredist_x86.exe"
+                  Name="Redist\vcredist_x86.exe"
+                  InstallCommand="/q /norestart"
+                  InstallCondition="(NOT MFC100_Version_x86 >= v10.0.40000.0) OR NOT MFC100_Version_x86"
+                  />
+
+    </PackageGroup>
+  </Fragment>
+</Wix>

@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:bal="http://schemas.microsoft.com/wix/BalExtension"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+  <?include SageTVInclude.wxi ?>
+  <Bundle Name="$(var.ProductName)" Version="$(var.VersionNumber)" Manufacturer="$(var.Manufacturer)" UpgradeCode="$(var.UpgradeCodeMSI)"
+          IconSourceFile='Resource\SageIcon.ico'>
+		<BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.HyperlinkLicense" >
+      <Payload SourceFile="Resource\LogoSide.png" />
+      <Payload SourceFile="Resource\Logo.png" />
+      <Payload SourceFile="Resource\License.htm" />
+      <bal:WixStandardBootstrapperApplication
+           LicenseUrl="License.htm"/>
+    </BootstrapperApplicationRef>
+    <!--  The following removed from <bal:WixStandardBootstrapperApplication for the launcher button functions
+          As the buttons do not work if the user uses an install folder other than ProgramFilesFolder then this is removed for now
+           LaunchTargetElevatedId="LaunchElevatedApplicationTarget"
+           LaunchTarget="$(var.LaunchTargetEXE)" 
+    -->
+    
+    <WixVariable Id="WixStdbaLogo" Value="Resource\Logo.png" />
+    <WixVariable Id="WixStdbaLogoSide" Value="Resource\LogoSide.png" />
+    
+    <!-- Use a different theme xml/wxl file as the client does not need the EPG license key textbox -->
+    <?if $(var.Configuration) = SetupServer ?>
+      <WixVariable Id="WixStdbaThemeXml" Value="Resource\SageTVTheme.xml" />
+      <WixVariable Id="WixStdbaThemeWxl" Value="Resource\SageTVTheme.wxl" />
+    <?elseif $(var.Configuration) = SetupClient?>
+      <WixVariable Id="WixStdbaThemeXml" Value="Resource\SageTVClientTheme.xml" />
+      <WixVariable Id="WixStdbaThemeWxl" Value="Resource\SageTVClientTheme.wxl" />
+    <?elseif $(var.Configuration) = SetupPlaceshifter?>
+      <WixVariable Id="WixStdbaThemeXml" Value="Resource\SageTVPlaceshifterTheme.xml" />
+      <WixVariable Id="WixStdbaThemeWxl" Value="Resource\SageTVPlaceshifterTheme.wxl" />
+    <?endif?>
+
+    <!-- Set the value of variable to be used on the UI forms -->
+    <Variable Name="InstallFolder" Type="string" Value="[ProgramFilesFolder]$(var.DefaultInstallFolder)" />
+    <Variable Name="SageInstallerVersion" Type="string" Value="$(var.SageInstallerVersion)" />
+    <!-- Get the existing value for the EPGLicenseKey from the environment through the registry -->
+    <Variable Name="EPGLicenseKey" Hidden="yes" />
+    <util:RegistrySearchRef Id='SearchForSageTVLicenseKey' />
+
+    <!-- The following removed related to the launcher buttons
+    <?if $(var.Configuration) = SetupServer ?>
+      <ApprovedExeForElevation
+          Id="LaunchElevatedApplicationTarget"
+          Key="SOFTWARE\Frey Technologies\SageTV"
+          Value="SageTVServerServiceControlPath" />
+    <?elseif $(var.Configuration) = SetupClient?>
+      <ApprovedExeForElevation
+          Id="LaunchElevatedApplicationTarget"
+          Key="SOFTWARE\Frey Technologies\SageTV"
+          Value="SageTVClientPath" />
+    <?elseif $(var.Configuration) = SetupPlaceshifter?>
+      <ApprovedExeForElevation
+          Id="LaunchElevatedApplicationTarget"
+          Key="SOFTWARE\Frey Technologies\SageTV"
+          Value="SageTVPlaceshifterPath" />
+    <?endif?>
+    -->
+    
+    <Chain>
+			<!-- TODO: Define the list of chained packages. -->
+			<!-- <MsiPackage SourceFile="path\to\your.msi" /> -->
+      <PackageGroupRef Id="Java7Runtime"/>
+      <PackageGroupRef Id="redist_vc100"/>
+      <PackageGroupRef Id="redist_vc140"/>
+
+      <?if $(var.Configuration) = SetupServer ?>
+        <MsiPackage Id="SageTVSetupMSI"
+                SourceFile="release\bin\SetupServer\SageTVSetupMSI.msi"
+                DisplayInternalUI="no"
+                EnableFeatureSelection="no"
+                
+                Compressed="yes">
+          <MsiProperty Name="INSTALLFOLDER" Value="[InstallFolder]" />
+          <MsiProperty Name="EPGLICENSEKEY" Value="[EPGLicenseKey]" />
+        </MsiPackage>
+      <?elseif $(var.Configuration) = SetupClient?>
+        <MsiPackage Id="SageTVSetupMSI"
+                  SourceFile="release\bin\SetupClient\SageTVClientSetupMSI.msi"
+                  DisplayInternalUI="no"
+                  EnableFeatureSelection="no"
+                  Compressed="yes">
+          <MsiProperty Name="INSTALLFOLDER" Value="[InstallFolder]" />
+        </MsiPackage>
+      <?elseif $(var.Configuration) = SetupPlaceshifter?>
+        <MsiPackage Id="SageTVPlaceshifterSetupMSI"
+                  SourceFile="release\bin\SetupPlaceshifter\SageTVPlaceshifterSetupMSI.msi"
+                  DisplayInternalUI="no"
+                  EnableFeatureSelection="no"
+                  Compressed="yes">
+          <MsiProperty Name="INSTALLFOLDER" Value="[InstallFolder]" />
+        </MsiPackage>
+      <?endif?>
+      
+      <?if ($(var.Configuration) = SetupServer) Or ($(var.Configuration) = SetupClient) ?>
+        <PackageGroupRef Id="redist_ac3filter" After="SageTVSetupMSI"/>
+      <?endif?>
+
+    </Chain>
+
+  </Bundle>
+
+  <Fragment>
+    <util:RegistrySearch
+           Id='SearchForSageTVLicenseKey'
+           Variable="EPGLicenseKey"
+           Result="value"
+           Root="HKLM"
+           Format="raw"
+           Value="SAGETVUSERKEY"
+           Key="SYSTEM\CurrentControlSet\Control\Session Manager\Environment"/>
+    
+  </Fragment>
+
+</Wix>

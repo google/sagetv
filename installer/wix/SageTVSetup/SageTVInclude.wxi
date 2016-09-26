@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Include>
+
+  <!-- Installer (not the application) Version needs updating here. -->
+  <?define SageInstallerVersion="1.002" ?>
+
+  <!-- Version needs updating here. -->
+  <?define MajorVersion="9" ?>
+  <?define MinorVersion="0" ?>
+  <?define BuildVersion="8" ?>
+  <?define Revision="423" ?>
+  <!-- Full version number to display -->
+  <?define VersionNumber="$(var.MajorVersion).$(var.MinorVersion).$(var.BuildVersion).$(var.Revision)" ?>
+
+  <!-- Set the product name -->
+  <?if $(var.Configuration) = SetupServer ?>
+    <?define ProductName="SageTV" ?>
+    <?define LaunchTargetEXE="SageTVServiceControl.exe" ?>
+  <?elseif $(var.Configuration) = SetupClient ?>
+    <?define ProductName="SageTV Client" ?>
+    <?define LaunchTargetEXE="SageTVClient.exe" ?>
+  <?elseif $(var.Configuration) = SetupPlaceshifter ?>
+    <?define ProductName="SageTV Placeshifter" ?>
+    <?define LaunchTargetEXE="SageTVPlaceshifter.exe" ?>
+  <?endif?>
+
+  <!-- Set the default install folder under programfiles -->
+  <?define DefaultInstallFolder="SageTV" ?>
+
+  <!-- Upgrade code HAS to be the same for all updates to the same product -->
+  <?if $(var.Configuration) = SetupServer ?>
+  <!-- <?define UpgradeCodeMSI="{43225CBF-80C8-446C-9F4D-7765A591F1C1}" ?> -->
+    <?define UpgradeCodeMSI="{2E558C75-7E26-4438-820A-C03710626B48}" ?>
+    <?define UpgradeCodeEXE="{E1F7C8EF-809C-4060-993F-C15D14B9AFA5}" ?>
+  <?elseif $(var.Configuration) = SetupClient ?>
+    <!-- <?define UpgradeCodeMSI="{5D70C396-3511-40DF-8EAB-0ECD3AE22400}" ?> -->
+    <?define UpgradeCodeMSI="{2E558C75-7E26-4438-820A-C03710626B48}" ?>
+    <?define UpgradeCodeEXE="{95102090-9A0B-4488-856B-0541EFD99D3A}" ?>
+  <?elseif $(var.Configuration) = SetupPlaceshifter ?>
+    <!-- <?define UpgradeCodeMSI="{093BB04A-DEC7-4FA3-8574-41705F692967}" ?> -->
+    <?define UpgradeCodeMSI="{020CD8D6-72AB-4395-B727-D539FBCF4A09}" ?>
+    <?define UpgradeCodeEXE="{F1C16FCF-3953-47CA-8131-6D0164F04680}" ?>
+  <?endif?>
+  <?define Manufacturer="TheSageTVAuthors" ?>
+
+</Include>
