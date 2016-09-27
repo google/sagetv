@@ -2279,7 +2279,7 @@ public class CorePluginManager implements Runnable
 
     public void open() throws IOException
     {
-      if (stagedRenameWriter!=null)
+      if (stagedRenameWriter==null)
       {
         stagedRenameWriter = new java.io.PrintWriter(new java.io.BufferedWriter(new java.io.FileWriter(new java.io.File(System.getProperty("user.dir"),
           "stagedrenames.txt"), true)));

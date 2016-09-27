@@ -6,6 +6,7 @@ import sage.*;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
 import static org.testng.Assert.*;
 
@@ -83,5 +84,14 @@ public class CorePluginManagerTest
     assertEquals("72972c8c2c463de655de1a03cbc78a10", IOUtils.calcMD5(dest).toLowerCase());
   }
 
+  @Test
+  public void testStagedRenamerWriter() throws IOException
+  {
+    CorePluginManager.StagedRenameWriter writer = CorePluginManager.StagedRenameWriter.get();
+    // was throwing NPE here
+    writer.println("file1");
+    writer.println("file2");
+    writer.close();
+  }
 
 }
