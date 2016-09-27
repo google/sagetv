@@ -279,7 +279,7 @@ public class WarlockRipper extends EPGDataSource
     // NOTE: This of course is not the only way EPG clients are being validated...we're not that
     // dumb, ya know?  This is just to avoid people hitting the server who don't have a license.
     String key = getEPGLicenseKey();
-    return (key != null && key.length() > 0);
+    return (key != null && key.length() > 0 && !key.equals("NOKEY"));
   }
 
   // This may take some time due to the diskspace calculation so do it before we connect to the server
