@@ -790,7 +790,7 @@ public class EventRouter implements	java.awt.event.MouseListener,
   private void processUserEvent(UserEvent ue)
   {
     lastEventTime = Sage.eventTime();
-    if (Sage.DBG && uiMgr.getBoolean("debug_input_events", false)) System.out.println("processUserEvent-" + ue + " evtTime=" + Sage.df(ue.getWhen()));
+    if (Sage.DBG) System.out.println("processUserEvent-" + ue + " evtTime=" + Sage.df(ue.getWhen()));
     if (Sage.WINDOWS_OS || Sage.MAC_OS_X)
       ServerPowerManagement.getInstance().kick();
 

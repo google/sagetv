@@ -1084,7 +1084,7 @@ public final class Sage
       prefs = new SageProperties(client);
       prefs.setupPrefs(prefFilename, Sage.getPath("core","Sage.properties.defaults"));
       alwaysUseCPUTime = Sage.getBoolean("always_use_cpu_time", false);
-      DBG = getBoolean("debug_logging", false);
+      DBG = getBoolean("debug_logging", true);
 
       if(DBG) dl = 1; // NOTE: exposed to native code to enable excessive debug logging
       setupRedirections(client ? "sagetvclient" : appName);
