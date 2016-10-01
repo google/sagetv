@@ -324,3 +324,5 @@ third_party/swscale/libswscale.so
 /installer/wix/SageTVSetup/obj
 /installer/wix/SageTVSetup/release
 /installer/wix/SageTVSetup/source
+/installer/wix/SageTVSetup/source-dir-placeshifter.wxs
+/installer/wix/SageTVSetup/source-dir-placeshifter.wxs

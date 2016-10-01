@@ -35,14 +35,27 @@
     <DefineSolutionProperties>false</DefineSolutionProperties>
     <SuppressIces>ICE60;ICE61</SuppressIces>
   </PropertyGroup>
-  <ItemGroup>
+  <ItemGroup Condition=" '$(Configuration)' == 'SetupServer' ">
     <Compile Include="Directx9.wxs" />
     <Compile Include="Product.wxs" />
     <Compile Include="sagetvregistry.wxs" />
     <Compile Include="source-dir-common.wxs" />
-    <Compile Include="source-dir-placeshifter.wxs" />
     <Compile Include="source-dir-sagetv.wxs" />
     <Compile Include="stvs-dir-sagetv7.wxs" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(Configuration)' == 'SetupClient' ">
+    <Compile Include="Directx9.wxs" />
+    <Compile Include="Product.wxs" />
+    <Compile Include="sagetvregistry.wxs" />
+    <Compile Include="source-dir-common.wxs" />
+    <Compile Include="source-dir-sagetv.wxs" />
+    <Compile Include="stvs-dir-sagetv7.wxs" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(Configuration)' == 'SetupPlaceshifter' ">
+    <Compile Include="Directx9.wxs" />
+    <Compile Include="Product.wxs" />
+    <Compile Include="sagetvregistry.wxs" />
+    <Compile Include="source-dir-placeshifter.wxs" />
   </ItemGroup>
   <ItemGroup>
     <WixExtension Include="WixFirewallExtension">
