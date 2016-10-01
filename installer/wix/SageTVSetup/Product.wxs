@@ -275,6 +275,9 @@
       <Component Id="cmpWinRawInput.dll" Guid="{1D454346-C404-42BD-B83A-2975D7F8B5BE}">
           <File Id="filWinRawInput.dll" KeyPath="yes" Source="..\..\..\native\Build\Release\WinRawInput.dll" />
       </Component>
+      <Component Id="cmpJavaRemuxer2.dll" Guid="{36C4D588-28C2-42A7-94A1-E8378FEF0C1A}">
+          <File Id="filJavaRemuxer2.dll" KeyPath="yes" Source="..\..\..\native\Build\Release\JavaRemuxer2.dll" />
+      </Component>
     </ComponentGroup>
 	</Fragment>
 
