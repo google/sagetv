@@ -1,507 +1,11 @@
 [
   {
-    "programID": "SH01915214",
+    "programID": "SH01966829",
     "data": [
       {
-        "width": "720",
-        "height": "540",
-        "uri": "https://s3.amazonaws.com/schedulesdirect/assets/p184072_l_h6_ab.jpg",
-        "size": "Lg",
-        "aspect": "4x3",
-        "category": "Logo",
-        "text": "yes",
-        "primary": "true",
-        "tier": "Series"
-      },
-      {
-        "width": "270",
-        "height": "360",
-        "caption": {
-          "content": "Hoda Kotb",
-          "lang": "en"
-        },
-        "uri": "assets/p184072_n395437_cc_v3_aa.jpg",
-        "size": "Md",
-        "aspect": "3x4",
-        "category": "Cast in Character",
-        "text": "no",
-        "primary": "true",
-        "tier": "Series"
-      },
-      {
-        "width": "540",
-        "height": "720",
-        "caption": {
-          "content": "Hoda Kotb",
-          "lang": "en"
-        },
-        "uri": "assets/p184072_n395437_cc_v4_aa.jpg",
-        "size": "Lg",
-        "aspect": "3x4",
-        "category": "Cast in Character",
-        "text": "no",
-        "primary": "true",
-        "tier": "Series"
-      },
-      {
-        "width": "135",
-        "height": "180",
-        "caption": {
-          "content": "Natalie Morales",
-          "lang": "en"
-        },
-        "uri": "assets/p184072_n510264_cc_v2_aa.jpg",
-        "size": "Sm",
-        "aspect": "3x4",
-        "category": "Cast in Character",
-        "text": "no",
-        "primary": "true",
-        "tier": "Series"
-      },
-      {
-        "width": "540",
-        "height": "720",
-        "caption": {
-          "content": "Kathie Lee Gifford",
-          "lang": "en"
-        },
-        "uri": "assets/p184072_n634_cc_v4_aa.jpg",
-        "size": "Lg",
-        "aspect": "3x4",
-        "category": "Cast in Character",
-        "text": "no",
-        "primary": "true",
-        "tier": "Series"
-      },
-      {
-        "width": "540",
-        "height": "720",
-        "caption": {
-          "content": "Matt Lauer",
-          "lang": "en"
-        },
-        "uri": "assets/p184072_n70280_cc_v4_aa.jpg",
-        "size": "Lg",
-        "aspect": "3x4",
-        "category": "Cast in Character",
-        "text": "no",
-        "primary": "true",
-        "tier": "Series"
-      },
-      {
-        "width": "540",
-        "height": "720",
-        "caption": {
-          "content": "Willie Geist",
-          "lang": "en"
-        },
-        "uri": "assets/p184072_n554890_cc_v4_aa.jpg",
-        "size": "Lg",
-        "aspect": "3x4",
-        "category": "Cast in Character",
-        "text": "no",
-        "primary": "true",
-        "tier": "Series"
-      },
-      {
-        "width": "270",
-        "height": "360",
-        "caption": {
-          "content": "Carson Daly",
-          "lang": "en"
-        },
-        "uri": "assets/p184072_n173491_cc_v3_aa.jpg",
-        "size": "Md",
-        "aspect": "3x4",
-        "category": "Cast in Character",
-        "text": "no",
-        "primary": "true",
-        "tier": "Series"
-      },
-      {
-        "width": "180",
-        "height": "135",
-        "caption": {
-          "content": "Al Roker, Savannah Guthrie, Matt Lauer and Natalie Morales (from left)",
-          "lang": "en"
-        },
-        "uri": "https://s3.amazonaws.com/schedulesdirect/assets/p184072_ce_h5_aa.jpg",
-        "size": "Sm",
-        "aspect": "4x3",
-        "category": "Cast Ensemble",
-        "text": "no",
-        "primary": "true",
-        "tier": "Series"
-      },
-      {
-        "width": "135",
-        "height": "180",
-        "caption": {
-          "content": "Hoda Kotb",
-          "lang": "en"
-        },
-        "uri": "assets/p184072_n395437_cc_v2_aa.jpg",
-        "size": "Sm",
-        "aspect": "3x4",
-        "category": "Cast in Character",
-        "text": "no",
-        "primary": "true",
-        "tier": "Series"
-      },
-      {
-        "width": "360",
-        "height": "270",
-        "caption": {
-          "content": "Al Roker, Savannah Guthrie, Matt Lauer and Natalie Morales (from left)",
-          "lang": "en"
-        },
-        "uri": "https://s3.amazonaws.com/schedulesdirect/assets/p184072_ce_h3_aa.jpg",
-        "size": "Md",
-        "aspect": "4x3",
-        "category": "Cast Ensemble",
-        "text": "no",
-        "primary": "true",
-        "tier": "Series"
-      },
-      {
-        "width": "267",
-        "height": "200",
-        "caption": {
-          "content": "Al Roker, Savannah Guthrie, Matt Lauer and Natalie Morales (from left)",
-          "lang": "en"
-        },
-        "uri": "assets/p184072_ce_h7_aa.jpg",
-        "category": "Cast Ensemble",
-        "text": "no",
-        "primary": "true",
-        "tier": "Series"
-      },
-      {
-        "width": "270",
-        "height": "360",
-        "caption": {
-          "content": "Natalie Morales",
-          "lang": "en"
-        },
-        "uri": "assets/p184072_n510264_cc_v3_aa.jpg",
-        "size": "Md",
-        "aspect": "3x4",
-        "category": "Cast in Character",
-        "text": "no",
-        "primary": "true",
-        "tier": "Series"
-      },
-      {
-        "width": "135",
-        "height": "180",
-        "caption": {
-          "content": "Tamron Hall",
-          "lang": "en"
-        },
-        "uri": "assets/p184072_n611305_cc_v2_aa.jpg",
-        "size": "Sm",
-        "aspect": "3x4",
-        "category": "Cast in Character",
-        "text": "no",
-        "primary": "true",
-        "tier": "Series"
-      },
-      {
-        "width": "135",
-        "height": "180",
-        "caption": {
-          "content": "Kathie Lee Gifford",
-          "lang": "en"
-        },
-        "uri": "assets/p184072_n634_cc_v2_aa.jpg",
-        "size": "Sm",
-        "aspect": "3x4",
-        "category": "Cast in Character",
-        "text": "no",
-        "primary": "true",
-        "tier": "Series"
-      },
-      {
-        "width": "270",
-        "height": "360",
-        "caption": {
-          "content": "Kathie Lee Gifford",
-          "lang": "en"
-        },
-        "uri": "assets/p184072_n634_cc_v3_aa.jpg",
-        "size": "Md",
-        "aspect": "3x4",
-        "category": "Cast in Character",
-        "text": "no",
-        "primary": "true",
-        "tier": "Series"
-      },
-      {
-        "width": "540",
-        "height": "720",
-        "caption": {
-          "content": "Savannah Guthrie",
-          "lang": "en"
-        },
-        "uri": "assets/p184072_n589857_cc_v4_aa.jpg",
-        "size": "Lg",
-        "aspect": "3x4",
-        "category": "Cast in Character",
-        "text": "no",
-        "primary": "true",
-        "tier": "Series"
-      },
-      {
-        "width": "135",
-        "height": "180",
-        "caption": {
-          "content": "Al Roker",
-          "lang": "en"
-        },
-        "uri": "assets/p184072_n69061_cc_v2_aa.jpg",
-        "size": "Sm",
-        "aspect": "3x4",
-        "category": "Cast in Character",
-        "text": "no",
-        "primary": "true",
-        "tier": "Series"
-      },
-      {
-        "width": "270",
-        "height": "360",
-        "caption": {
-          "content": "Matt Lauer",
-          "lang": "en"
-        },
-        "uri": "assets/p184072_n70280_cc_v3_aa.jpg",
-        "size": "Md",
-        "aspect": "3x4",
-        "category": "Cast in Character",
-        "text": "no",
-        "primary": "true",
-        "tier": "Series"
-      },
-      {
-        "width": "540",
-        "height": "720",
-        "caption": {
-          "content": "Tamron Hall",
-          "lang": "en"
-        },
-        "uri": "assets/p184072_n611305_cc_v4_aa.jpg",
-        "size": "Lg",
-        "aspect": "3x4",
-        "category": "Cast in Character",
-        "text": "no",
-        "primary": "true",
-        "tier": "Series"
-      },
-      {
-        "width": "540",
-        "height": "720",
-        "caption": {
-          "content": "Natalie Morales",
-          "lang": "en"
-        },
-        "uri": "assets/p184072_n510264_cc_v4_aa.jpg",
-        "size": "Lg",
-        "aspect": "3x4",
-        "category": "Cast in Character",
-        "text": "no",
-        "primary": "true",
-        "tier": "Series"
-      },
-      {
-        "width": "270",
-        "height": "360",
-        "caption": {
-          "content": "Savannah Guthrie",
-          "lang": "en"
-        },
-        "uri": "assets/p184072_n589857_cc_v3_aa.jpg",
-        "size": "Md",
-        "aspect": "3x4",
-        "category": "Cast in Character",
-        "text": "no",
-        "primary": "true",
-        "tier": "Series"
-      },
-      {
-        "width": "270",
-        "height": "360",
-        "caption": {
-          "content": "Willie Geist",
-          "lang": "en"
-        },
-        "uri": "assets/p184072_n554890_cc_v3_aa.jpg",
-        "size": "Md",
-        "aspect": "3x4",
-        "category": "Cast in Character",
-        "text": "no",
-        "primary": "true",
-        "tier": "Series"
-      },
-      {
-        "width": "540",
-        "height": "720",
-        "caption": {
-          "content": "Al Roker",
-          "lang": "en"
-        },
-        "uri": "assets/p184072_n69061_cc_v4_aa.jpg",
-        "size": "Lg",
-        "aspect": "3x4",
-        "category": "Cast in Character",
-        "text": "no",
-        "primary": "true",
-        "tier": "Series"
-      },
-      {
-        "width": "135",
-        "height": "180",
-        "caption": {
-          "content": "Willie Geist",
-          "lang": "en"
-        },
-        "uri": "assets/p184072_n554890_cc_v2_aa.jpg",
-        "size": "Sm",
-        "aspect": "3x4",
-        "category": "Cast in Character",
-        "text": "no",
-        "primary": "true",
-        "tier": "Series"
-      },
-      {
-        "width": "540",
-        "height": "720",
-        "caption": {
-          "content": "Carson Daly",
-          "lang": "en"
-        },
-        "uri": "assets/p184072_n173491_cc_v4_aa.jpg",
-        "size": "Lg",
-        "aspect": "3x4",
-        "category": "Cast in Character",
-        "text": "no",
-        "primary": "true",
-        "tier": "Series"
-      },
-      {
-        "width": "720",
-        "height": "540",
-        "caption": {
-          "content": "Al Roker, Savannah Guthrie, Matt Lauer and Natalie Morales (from left)",
-          "lang": "en"
-        },
-        "uri": "assets/p184072_ce_h6_aa.jpg",
-        "size": "Lg",
-        "aspect": "4x3",
-        "category": "Cast Ensemble",
-        "text": "no",
-        "primary": "true",
-        "tier": "Series"
-      },
-      {
-        "width": "135",
-        "height": "180",
-        "caption": {
-          "content": "Savannah Guthrie",
-          "lang": "en"
-        },
-        "uri": "assets/p184072_n589857_cc_v2_aa.jpg",
-        "size": "Sm",
-        "aspect": "3x4",
-        "category": "Cast in Character",
-        "text": "no",
-        "primary": "true",
-        "tier": "Series"
-      },
-      {
-        "width": "270",
-        "height": "360",
-        "caption": {
-          "content": "Tamron Hall",
-          "lang": "en"
-        },
-        "uri": "assets/p184072_n611305_cc_v3_aa.jpg",
-        "size": "Md",
-        "aspect": "3x4",
-        "category": "Cast in Character",
-        "text": "no",
-        "primary": "true",
-        "tier": "Series"
-      },
-      {
-        "width": "135",
-        "height": "180",
-        "caption": {
-          "content": "Matt Lauer",
-          "lang": "en"
-        },
-        "uri": "assets/p184072_n70280_cc_v2_aa.jpg",
-        "size": "Sm",
-        "aspect": "3x4",
-        "category": "Cast in Character",
-        "text": "no",
-        "primary": "true",
-        "tier": "Series"
-      },
-      {
-        "width": "270",
-        "height": "360",
-        "caption": {
-          "content": "Al Roker",
-          "lang": "en"
-        },
-        "uri": "assets/p184072_n69061_cc_v3_aa.jpg",
-        "size": "Md",
-        "aspect": "3x4",
-        "category": "Cast in Character",
-        "text": "no",
-        "primary": "true",
-        "tier": "Series"
-      },
-      {
-        "width": "135",
-        "height": "180",
-        "caption": {
-          "content": "Carson Daly",
-          "lang": "en"
-        },
-        "uri": "assets/p184072_n173491_cc_v2_aa.jpg",
-        "size": "Sm",
-        "aspect": "3x4",
-        "category": "Cast in Character",
-        "text": "no",
-        "primary": "true",
-        "tier": "Series"
-      },
-      {
-        "width": "360",
-        "height": "270",
-        "uri": "https://s3.amazonaws.com/schedulesdirect/assets/p184072_l_h3_ab.jpg",
-        "size": "Md",
-        "aspect": "4x3",
-        "category": "Logo",
-        "text": "yes",
-        "primary": "true",
-        "tier": "Series"
-      },
-      {
-        "width": "180",
-        "height": "135",
-        "uri": "https://s3.amazonaws.com/schedulesdirect/assets/p184072_l_h5_ab.jpg",
-        "size": "Sm",
-        "aspect": "4x3",
-        "category": "Logo",
-        "text": "yes",
-        "primary": "true",
-        "tier": "Series"
-      },
-      {
         "width": "1920",
         "height": "1080",
-        "uri": "https://s3.amazonaws.com/schedulesdirect/assets/p184072_b_h10_ad.jpg",
+        "uri": "assets/p10949089_b_h10_aa.jpg",
         "size": "Ms",
         "aspect": "16x9",
         "category": "Banner-L1",
@@ -512,7 +16,7 @@
       {
         "width": "1280",
         "height": "720",
-        "uri": "assets/p184072_b_h11_ad.jpg",
+        "uri": "assets/p10949089_b_h11_aa.jpg",
         "size": "Lg",
         "aspect": "16x9",
         "category": "Banner-L1",
@@ -523,7 +27,7 @@
       {
         "width": "960",
         "height": "540",
-        "uri": "https://s3.amazonaws.com/schedulesdirect/assets/p184072_b_h12_ad.jpg",
+        "uri": "assets/p10949089_b_h12_aa.jpg",
         "size": "Md",
         "aspect": "16x9",
         "category": "Banner-L1",
@@ -534,7 +38,7 @@
       {
         "width": "480",
         "height": "270",
-        "uri": "assets/p184072_b_h13_ad.jpg",
+        "uri": "https://s3.amazonaws.com/schedulesdirect/assets/p10949089_b_h13_aa.jpg",
         "size": "Sm",
         "aspect": "16x9",
         "category": "Banner-L1",
@@ -545,7 +49,7 @@
       {
         "width": "240",
         "height": "135",
-        "uri": "assets/p184072_b_h14_ad.jpg",
+        "uri": "assets/p10949089_b_h14_aa.jpg",
         "size": "Xs",
         "aspect": "16x9",
         "category": "Banner-L1",
@@ -556,7 +60,7 @@
       {
         "width": "360",
         "height": "270",
-        "uri": "https://s3.amazonaws.com/schedulesdirect/assets/p184072_b_h3_ad.jpg",
+        "uri": "https://s3.amazonaws.com/schedulesdirect/assets/p10949089_b_h3_aa.jpg",
         "size": "Md",
         "aspect": "4x3",
         "category": "Banner-L1",
@@ -567,7 +71,7 @@
       {
         "width": "180",
         "height": "135",
-        "uri": "https://s3.amazonaws.com/schedulesdirect/assets/p184072_b_h5_ad.jpg",
+        "uri": "assets/p10949089_b_h5_aa.jpg",
         "size": "Sm",
         "aspect": "4x3",
         "category": "Banner-L1",
@@ -578,7 +82,7 @@
       {
         "width": "720",
         "height": "540",
-        "uri": "https://s3.amazonaws.com/schedulesdirect/assets/p184072_b_h6_ad.jpg",
+        "uri": "assets/p10949089_b_h6_aa.jpg",
         "size": "Lg",
         "aspect": "4x3",
         "category": "Banner-L1",
@@ -589,7 +93,7 @@
       {
         "width": "1440",
         "height": "1080",
-        "uri": "assets/p184072_b_h9_ad.jpg",
+        "uri": "assets/p10949089_b_h9_aa.jpg",
         "size": "Ms",
         "aspect": "4x3",
         "category": "Banner-L1",
@@ -600,7 +104,7 @@
       {
         "width": "135",
         "height": "180",
-        "uri": "assets/p184072_b_v2_ad.jpg",
+        "uri": "assets/p10949089_b_v2_aa.jpg",
         "size": "Sm",
         "aspect": "3x4",
         "category": "Banner-L1",
@@ -611,7 +115,7 @@
       {
         "width": "270",
         "height": "360",
-        "uri": "https://s3.amazonaws.com/schedulesdirect/assets/p184072_b_v3_ad.jpg",
+        "uri": "assets/p10949089_b_v3_aa.jpg",
         "size": "Md",
         "aspect": "3x4",
         "category": "Banner-L1",
@@ -622,7 +126,7 @@
       {
         "width": "540",
         "height": "720",
-        "uri": "assets/p184072_b_v4_ad.jpg",
+        "uri": "assets/p10949089_b_v4_aa.jpg",
         "size": "Lg",
         "aspect": "3x4",
         "category": "Banner-L1",
@@ -633,7 +137,7 @@
       {
         "width": "240",
         "height": "360",
-        "uri": "https://s3.amazonaws.com/schedulesdirect/assets/p184072_b_v5_ad.jpg",
+        "uri": "assets/p10949089_b_v5_aa.jpg",
         "size": "Md",
         "aspect": "2x3",
         "category": "Banner-L1",
@@ -644,7 +148,7 @@
       {
         "width": "120",
         "height": "180",
-        "uri": "https://s3.amazonaws.com/schedulesdirect/assets/p184072_b_v6_ad.jpg",
+        "uri": "assets/p10949089_b_v6_aa.jpg",
         "size": "Sm",
         "aspect": "2x3",
         "category": "Banner-L1",
@@ -655,7 +159,7 @@
       {
         "width": "480",
         "height": "720",
-        "uri": "https://s3.amazonaws.com/schedulesdirect/assets/p184072_b_v7_ad.jpg",
+        "uri": "assets/p10949089_b_v7_aa.jpg",
         "size": "Lg",
         "aspect": "2x3",
         "category": "Banner-L1",
@@ -666,7 +170,7 @@
       {
         "width": "960",
         "height": "1440",
-        "uri": "assets/p184072_b_v8_ad.jpg",
+        "uri": "assets/p10949089_b_v8_aa.jpg",
         "size": "Ms",
         "aspect": "2x3",
         "category": "Banner-L1",
@@ -677,7 +181,7 @@
       {
         "width": "1080",
         "height": "1440",
-        "uri": "assets/p184072_b_v9_ad.jpg",
+        "uri": "assets/p10949089_b_v9_aa.jpg",
         "size": "Ms",
         "aspect": "3x4",
         "category": "Banner-L1",
@@ -688,7 +192,7 @@
       {
         "width": "1920",
         "height": "1080",
-        "uri": "https://s3.amazonaws.com/schedulesdirect/assets/p184072_i_h10_ab.jpg",
+        "uri": "assets/p10949089_i_h10_aa.jpg",
         "size": "Ms",
         "aspect": "16x9",
         "category": "Iconic",
@@ -699,7 +203,7 @@
       {
         "width": "1280",
         "height": "720",
-        "uri": "assets/p184072_i_h11_ab.jpg",
+        "uri": "assets/p10949089_i_h11_aa.jpg",
         "size": "Lg",
         "aspect": "16x9",
         "category": "Iconic",
@@ -710,7 +214,7 @@
       {
         "width": "960",
         "height": "540",
-        "uri": "https://s3.amazonaws.com/schedulesdirect/assets/p184072_i_h12_ab.jpg",
+        "uri": "assets/p10949089_i_h12_aa.jpg",
         "size": "Md",
         "aspect": "16x9",
         "category": "Iconic",
@@ -721,7 +225,7 @@
       {
         "width": "480",
         "height": "270",
-        "uri": "https://s3.amazonaws.com/schedulesdirect/assets/p184072_i_h13_ab.jpg",
+        "uri": "assets/p10949089_i_h13_aa.jpg",
         "size": "Sm",
         "aspect": "16x9",
         "category": "Iconic",
@@ -732,7 +236,7 @@
       {
         "width": "240",
         "height": "135",
-        "uri": "assets/p184072_i_h14_ab.jpg",
+        "uri": "assets/p10949089_i_h14_aa.jpg",
         "size": "Xs",
         "aspect": "16x9",
         "category": "Iconic",
@@ -743,7 +247,7 @@
       {
         "width": "360",
         "height": "270",
-        "uri": "https://s3.amazonaws.com/schedulesdirect/assets/p184072_i_h3_ab.jpg",
+        "uri": "assets/p10949089_i_h3_aa.jpg",
         "size": "Md",
         "aspect": "4x3",
         "category": "Iconic",
@@ -754,7 +258,7 @@
       {
         "width": "180",
         "height": "135",
-        "uri": "https://s3.amazonaws.com/schedulesdirect/assets/p184072_i_h5_ab.jpg",
+        "uri": "assets/p10949089_i_h5_aa.jpg",
         "size": "Sm",
         "aspect": "4x3",
         "category": "Iconic",
@@ -765,7 +269,7 @@
       {
         "width": "720",
         "height": "540",
-        "uri": "assets/p184072_i_h6_ab.jpg",
+        "uri": "assets/p10949089_i_h6_aa.jpg",
         "size": "Lg",
         "aspect": "4x3",
         "category": "Iconic",
@@ -776,7 +280,7 @@
       {
         "width": "1440",
         "height": "1080",
-        "uri": "assets/p184072_i_h9_ab.jpg",
+        "uri": "assets/p10949089_i_h9_aa.jpg",
         "size": "Ms",
         "aspect": "4x3",
         "category": "Iconic",
@@ -787,7 +291,7 @@
       {
         "width": "135",
         "height": "180",
-        "uri": "assets/p184072_i_v2_ab.jpg",
+        "uri": "assets/p10949089_i_v2_aa.jpg",
         "size": "Sm",
         "aspect": "3x4",
         "category": "Iconic",
@@ -798,7 +302,7 @@
       {
         "width": "270",
         "height": "360",
-        "uri": "assets/p184072_i_v3_ab.jpg",
+        "uri": "assets/p10949089_i_v3_aa.jpg",
         "size": "Md",
         "aspect": "3x4",
         "category": "Iconic",
@@ -809,7 +313,7 @@
       {
         "width": "540",
         "height": "720",
-        "uri": "assets/p184072_i_v4_ab.jpg",
+        "uri": "assets/p10949089_i_v4_aa.jpg",
         "size": "Lg",
         "aspect": "3x4",
         "category": "Iconic",
@@ -820,7 +324,7 @@
       {
         "width": "240",
         "height": "360",
-        "uri": "assets/p184072_i_v5_ab.jpg",
+        "uri": "assets/p10949089_i_v5_aa.jpg",
         "size": "Md",
         "aspect": "2x3",
         "category": "Iconic",
@@ -831,7 +335,7 @@
       {
         "width": "120",
         "height": "180",
-        "uri": "https://s3.amazonaws.com/schedulesdirect/assets/p184072_i_v6_ab.jpg",
+        "uri": "assets/p10949089_i_v6_aa.jpg",
         "size": "Sm",
         "aspect": "2x3",
         "category": "Iconic",
@@ -842,7 +346,7 @@
       {
         "width": "480",
         "height": "720",
-        "uri": "https://s3.amazonaws.com/schedulesdirect/assets/p184072_i_v7_ab.jpg",
+        "uri": "assets/p10949089_i_v7_aa.jpg",
         "size": "Lg",
         "aspect": "2x3",
         "category": "Iconic",
@@ -853,7 +357,7 @@
       {
         "width": "960",
         "height": "1440",
-        "uri": "assets/p184072_i_v8_ab.jpg",
+        "uri": "assets/p10949089_i_v8_aa.jpg",
         "size": "Ms",
         "aspect": "2x3",
         "category": "Iconic",
@@ -864,7 +368,7 @@
       {
         "width": "1080",
         "height": "1440",
-        "uri": "assets/p184072_i_v9_ab.jpg",
+        "uri": "assets/p10949089_i_v9_aa.jpg",
         "size": "Ms",
         "aspect": "3x4",
         "category": "Iconic",

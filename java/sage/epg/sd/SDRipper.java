@@ -29,6 +29,7 @@ import sage.WarlockRipper;
 import sage.Wizard;
 import sage.epg.sd.json.headend.SDHeadend;
 import sage.epg.sd.json.headend.SDHeadendLineup;
+import sage.epg.sd.json.images.SDImage;
 import sage.epg.sd.json.images.SDProgramImages;
 import sage.epg.sd.json.lineup.SDAccountLineup;
 import sage.epg.sd.json.lineup.SDAccountLineups;
@@ -98,7 +99,8 @@ public class SDRipper extends EPGDataSource
 
   // This is the preferred rating body. You would only be interested in changing this if you live in
   // another country and want to see a more familiar rating system.
-  private static final String ratingBody = Sage.get(PROP_RATING_BODY, "USA Parental Rating");
+  // JS 9/28/2016: This information is not used in regards to anything other than movies.
+  //private static final String ratingBody = Sage.get(PROP_RATING_BODY, "USA Parental Rating");
   // This is the preferred rating body for movies. You would only be interested in changing this if
   // you live in another country and want to see a more familiar rating system.
   private static final String movieRatingBody = Sage.get(PROP_MOVIE_RATING_BODY, "Motion Picture Association of America");
@@ -996,9 +998,22 @@ public class SDRipper extends EPGDataSource
   @Override
   protected boolean extractGuide(long inGuideTime)
   {
-    if (Sage.time() < SDRipper.retryWait)
+    // retryWait is volatile, so we need to create a local reference first before we do anything or
+    // we might end up confusing the reason we immediately failed this method.
+    long localWait = SDRipper.retryWait;
+    if (Sage.time() < Math.abs(localWait))
     {
-      if (Sage.DBG) System.out.println("SDEPG Warning: Username and/or password are incorrect or missing. Returning failure.");
+      if (Sage.DBG)
+      {
+        if (localWait <= 0)
+        {
+          System.out.println("SDEPG Warning: Schedules Direct servers are currently offline. Returning failure.");
+        }
+        else
+        {
+          System.out.println("SDEPG Error: Username and/or password are incorrect or missing. Returning failure.");
+        }
+      }
       return false;
     }
 
@@ -1543,10 +1558,17 @@ public class SDRipper extends EPGDataSource
                       noProgramDetails.add(programDetail.getProgramID());
                       continue;
                     }
+                    String extID = programDetail.getProgramID();
+                    String showType = programDetail.getShowType();
+                    String entityType = programDetail.getEntityType();
+                    boolean isSports = "Sports".equals(entityType);
+                    boolean canGetSeries = SDUtils.canGetSeries(extID);
+                    boolean isSeries = "Series".equals(showType);
+                    boolean isMovie = extID.startsWith("MV");
 
                     // Add/update the series info any time an episode of a series is updated. This
                     // is a Set, so we will not create duplicates.
-                    if ("Series".equals(programDetail.getShowType()) && SDUtils.canGetSeries(programDetail.getProgramID()))
+                    if (isSeries && canGetSeries)
                     {
                       needSeriesDetails.add(SDUtils.getSeriesForEpisode(programDetail.getProgramID()));
                     }
@@ -1572,13 +1594,12 @@ public class SDRipper extends EPGDataSource
                     }
                     String[] expandedRatings = programDetail.getContentAdvisory();
                     SDMovie movie = programDetail.getMovie();
-                    String rated = movie != null ? programDetail.getContentRating(movieRatingBody) : programDetail.getContentRating(ratingBody);
+                    // Is only set when the program is a movie.
+                    String rated = movie != null ? programDetail.getContentRating(movieRatingBody) : ""; // programDetail.getContentRating(ratingBody);
                     String year = movie != null ? movie.getYear() : "";
                     String parentalRating = null; //not used programDetail.getContentRating(ratingBody);
                     SDKeyWords keyWords = programDetail.getKeyWords();
                     String[] bonus = keyWords != null ? keyWords.getAllKeywords() : Pooler.EMPTY_STRING_ARRAY;
-                    String extID = programDetail.getProgramID();
-                    String showType = programDetail.getShowType();
                     boolean uniqueShow = !extID.startsWith("SH") || "Special".equals(showType);
                     // Observation has shown this to be reasonably accurate when the show
                     // description is not in English, but is not the correct way to get this kind
@@ -1590,19 +1611,52 @@ public class SDRipper extends EPGDataSource
                     String[] categories = programDetail.getGenres();
                     // If this is a sports event, the first category needs to be Sports event or
                     // Sports non-event.
-                    if ("Sports".equals(programDetail.getEntityType()) && showType != null)
+                    if (isSports && showType != null)
                     {
-                      // This will be 'Sports event' or 'Sports non-event'
                       String newCategories[] = new String[categories.length + 1];
+                      // This will be 'Sports event' or 'Sports non-event'
                       newCategories[0] = showType;
                       System.arraycopy(categories, 0, newCategories, 1, categories.length);
                       categories = newCategories;
+                    }
+                    // Ensure Movie is first if the ID starts with MV and if it doesn't, add it.
+                    else if (isMovie)
+                    {
+                      if (categories.length == 0)
+                      {
+                        categories = new String[1];
+                        categories[0] = "Movie";
+                      }
+                      else
+                      {
+                        if (!"Movie".equals(categories[0]))
+                        {
+                          boolean addMovie = true;
+                          for (int k = 0; k < categories.length; k++)
+                          {
+                            if ("Movie".equals(categories[k]))
+                            {
+                              categories[k] = categories[0];
+                              categories[0] = "Movie";
+                              addMovie = false;
+                              break;
+                            }
+                          }
+                          if (addMovie)
+                          {
+                            String newCategories[] = new String[categories.length + 1];
+                            newCategories[0] = "Movie";
+                            System.arraycopy(categories, 0, newCategories, 1, categories.length);
+                            categories = newCategories;
+                          }
+                        }
+                      }
                     }
                     if (categories == null || categories.length == 0) categories = Pooler.EMPTY_STRING_ARRAY;
                     int showcardID = 0;
                     byte imageURLs[][] = null;
 
-                    if (programDetail.hasImageArtwork())
+                    if (!canGetSeries && programDetail.hasImageArtwork())
                     {
                       // Don't fail the show entry if there's an issue parsing the JSON for images.
                       try
@@ -1615,8 +1669,7 @@ public class SDRipper extends EPGDataSource
                         {
                           int showcardIdRef[] = new int[1];
                           imageURLs = SDImages.encodeImages(
-                            images[0].getImages(), showcardIdRef,
-                            SDUtils.canGetSeries(extID) ? SDImages.ENCODE_NON_SERIES_ONLY : SDImages.ENCODE_ALL);
+                            images[0].getImages(), showcardIdRef, SDImages.ENCODE_ALL);
                           showcardID = showcardIdRef[0];
                         }
                       }
@@ -1624,6 +1677,19 @@ public class SDRipper extends EPGDataSource
                       {
                         SDSession.writeDebugException(e);
                       }
+                    }
+
+                    // The episode images appear to always be tall images that look rather awkward
+                    // in the UI because they are photos from the specific episode that do not fit
+                    // the dimensions of any normal recording, so we are only using them
+                    // when the program is a movie and this is the only image available.
+                    SDImage episodeImage;
+                    if ((imageURLs == null || imageURLs.length == 0) && isMovie &&
+                      (episodeImage = programDetail.getEpisodeImage()) != null)
+                    {
+                      int showcardIdRef[] = new int[1];
+                      imageURLs = SDImages.encodeEpisodeImage(episodeImage, showcardIdRef);
+                      showcardID = showcardIdRef[0];
                     }
 
                     if (imageURLs == null) imageURLs = Pooler.EMPTY_2D_BYTE_ARRAY;
@@ -1937,7 +2003,7 @@ public class SDRipper extends EPGDataSource
         case SERVICE_OFFLINE:
           // When the service is offline, we should only check every 30 minutes to see if it's back.
           // This might generate EPG warnings in the UI if it goes on for a while.
-          SDRipper.retryWait = Sage.time() + Sage.MILLIS_PER_MIN * 30;
+          SDRipper.retryWait = -(Sage.time() + Sage.MILLIS_PER_MIN * 30);
           break;
         case NO_LINEUPS:
         case LINEUP_NOT_FOUND:
