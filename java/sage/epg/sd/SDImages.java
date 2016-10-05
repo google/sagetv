@@ -152,7 +152,14 @@ public class SDImages
       switch (category)
       {
         case SDImage.CAT_BANNER_L1:
+          if (tall || mode != ENCODE_SERIES_ONLY)
+            continue;
+          attributes |= IMAGE_TYPE_POSTER_FLAG;
+          imageType = thumbnail ? Show.IMAGE_POSTER_THUMB_WIDE : Show.IMAGE_POSTER_WIDE;
+          break;
         case SDImage.CAT_POSTER_ART:
+          if (mode == ENCODE_SERIES_ONLY)
+            continue;
           attributes |= IMAGE_TYPE_POSTER_FLAG;
           imageType = thumbnail ?
               (tall ? Show.IMAGE_POSTER_THUMB_TALL : Show.IMAGE_POSTER_THUMB_WIDE) :
@@ -255,6 +262,82 @@ public class SDImages
     return returnValue;
   }
 
+  public static byte[][] encodeEpisodeImage(SDImage image, int showcardID[])
+  {
+    if (showcardID == null || showcardID.length == 0 || image == null) return Pooler.EMPTY_2D_BYTE_ARRAY;
+    byte[] counts = new byte[10];
+    byte[][] encodedImage = new byte[2][];
+    encodedImage[0] = counts;
+    byte attributes = IMAGE_TYPE_PHOTO_FLAG | IS_THUMB_FLAG | IS_TALL_FLAG;
+    String showcardString = "";
+    StringBuilder urlBuilder = new StringBuilder(128);
+    image.getUri(urlBuilder);
+
+    int startingChar = -1;
+    if (urlBuilder.indexOf(SOURCE_REDIRECT_STRING) == 0)
+    {
+      startingChar = SOURCE_REDIRECT_STRING.length();
+    }
+    else if (urlBuilder.indexOf(SOURCE_S3_AWS_STRING) == 0)
+    {
+      startingChar = SOURCE_S3_AWS_STRING.length();
+    }
+
+    if (startingChar != -1 && urlBuilder.charAt(startingChar) == 'p' && urlBuilder.charAt(startingChar + 1) != '0')
+    {
+      int underscore = urlBuilder.indexOf("_", startingChar);
+      if (underscore != -1)
+      {
+        try
+        {
+          showcardString = urlBuilder.substring(startingChar + 1, underscore);
+          showcardID[0] = Integer.parseInt(showcardString);
+          showcardString = 'p' + showcardString + '_';
+        }
+        catch (NumberFormatException e)
+        {
+          showcardString = "";
+        }
+      }
+    }
+
+    // Remove known URL prefixes.
+    if (urlBuilder.indexOf(SOURCE_REDIRECT_STRING) == 0)
+    {
+      urlBuilder.delete(0, SOURCE_REDIRECT_STRING.length());
+      attributes |= SOURCE_REDIRECT;
+    }
+    else if (urlBuilder.indexOf(SOURCE_S3_AWS_STRING) == 0)
+    {
+      urlBuilder.delete(0, SOURCE_S3_AWS_STRING.length());
+      attributes |= SOURCE_S3_AWS;
+    }
+    else
+    {
+      urlBuilder.delete(0, 8); // Remove https://
+    }
+
+    // Remove .jpg file extension.
+    urlBuilder.delete(urlBuilder.length() - 4, urlBuilder.length());
+
+    if (showcardID[0] > 0 && urlBuilder.indexOf(showcardString) == 0)
+    {
+      // Remove p + showcardID + _
+      urlBuilder.delete(0, showcardString.length());
+      attributes |= HAS_SHOWCARD_FLAG;
+    }
+
+    int imageTypeIndex = getSDIndexForShowType(Show.IMAGE_PHOTO_THUMB_TALL);
+    counts[imageTypeIndex]++; // We only have one index, so this is ok.
+
+    byte[] newBytes = urlBuilder.toString().getBytes(StandardCharsets.UTF_8);
+    encodedImage[1] = new byte[newBytes.length + 1];
+    encodedImage[1][0] = attributes;
+    System.arraycopy(newBytes , 0, encodedImage[1], 1, newBytes.length);
+
+    return encodedImage;
+  }
+
   public static byte[] encodeLogoURL(String url, int logoID[])
   {
     if (url == null || url.length() == 0 || logoID == null || logoID.length == 0)
@@ -346,7 +429,7 @@ public class SDImages
     }
   }
 
-  private static int getSDIndexForShowType(int imageType)
+  protected static int getSDIndexForShowType(int imageType)
   {
     switch (imageType)
     {
