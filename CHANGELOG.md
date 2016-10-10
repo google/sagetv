@@ -1,6 +1,10 @@
 # Change Log
 
-## Version 9.0.9 (2016-10-04)
+## Version 9.0.10 (??)
+* (Placeholder for .10 release)
+
+## Version 9.0.9 (2016-10-10)
+* Fix: GetSeriesID wasn't always returning a valid series ID
 * New: Added logic to Schedules Direct program categories to ensure Movie is the first category for programs that start with MV
 * Fix: Cleaned up the logic for determining when images from Schedules Direct should be in a Show or SeriesInfo object
 * Fix: Clarified in logging when we can't process anything currently because Schedules Direct is offline
