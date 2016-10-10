@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.URL;
+import java.util.Random;
 
 public class SDSageSession extends SDSession
 {
@@ -140,6 +141,16 @@ public class SDSageSession extends SDSession
       if (retry && connection.getResponseCode() == 403)
       {
         token = null;
+
+        try
+        {
+          // Wait a random interval between 1 and 30000 milliseconds in case more than one SageTV
+          // server is updating at the same time. This should effectively get them out of sync each
+          // time they overlap and potentially give the other server a chance to complete it's most
+          // recent communication before we get a new token.
+          Thread.sleep((new Random()).nextInt(30000) + 1);
+        } catch (InterruptedException e) {}
+
         authenticate();
         return post(url, sendBytes, off, len, false);
       }
@@ -183,6 +194,16 @@ public class SDSageSession extends SDSession
     if (retry && connection.getResponseCode() == 403)
     {
       token = null;
+
+      try
+      {
+        // Wait a random interval between 1 and 30000 milliseconds in case more than one SageTV
+        // server is updating at the same time. This should effectively get them out of sync each
+        // time they overlap and potentially give the other server a chance to complete it's most
+        // recent communication before we get a new token.
+        Thread.sleep((new Random()).nextInt(30000) + 1);
+      } catch (InterruptedException e) {}
+
       authenticate();
       return get(url, false);
     }

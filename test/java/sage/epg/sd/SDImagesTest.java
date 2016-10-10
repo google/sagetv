@@ -16,11 +16,13 @@
 package sage.epg.sd;
 
 import org.testng.annotations.Test;
+import sage.Show;
 import sage.epg.sd.json.images.SDImage;
 import sage.epg.sd.json.images.SDProgramImages;
 import sage.epg.sd.json.map.SDLineupMap;
 import sage.epg.sd.json.map.station.SDLogo;
 import sage.epg.sd.json.map.station.SDStation;
+import sage.epg.sd.json.programs.SDProgram;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -80,15 +82,15 @@ public class SDImagesTest extends DeserializeTest
   @Test(groups = {"gson", "schedulesDirect", "images", "series" })
   public void seriesEncodingTest() throws IOException
   {
-    String programImages = "epg/sd/json/images/programImagesEpisode.json";
+    String programImages = "epg/sd/json/images/programImagesShow.json";
     SDProgramImages images[] = deserialize(programImages, SDProgramImages[].class);
     int[] showcardID = new int[1];
-    byte[][] packedImages = SDImages.encodeImages(images[0].getImages(), showcardID, SDImages.ENCODE_NON_SERIES_ONLY);
-    verifyImages(images[0].getImages(), packedImages, showcardID[0], 7);
+    byte[][] packedImages = SDImages.encodeImages(images[0].getImages(), showcardID, SDImages.ENCODE_SERIES_ONLY);
+    verifyImages(images[0].getImages(), packedImages, showcardID[0], 5);
 
     showcardID[0] = 0;
     packedImages = SDImages.encodeImages(images[0].getImages(), showcardID, SDImages.ENCODE_ALL);
-    verifyImages(images[0].getImages(), packedImages, showcardID[0], 15);
+    assert packedImages.length == 0;
   }
 
   @Test(groups = {"gson", "schedulesDirect", "images", "movie" })
@@ -99,6 +101,17 @@ public class SDImagesTest extends DeserializeTest
     int[] showcardID = new int[1];
     byte[][] packedImages = SDImages.encodeImages(images[0].getImages(), showcardID, SDImages.ENCODE_ALL);
     verifyImages(images[0].getImages(), packedImages, showcardID[0], 22);
+  }
+
+  @Test(groups = {"gson", "schedulesDirect", "images", "episode" })
+  public void episodeEncodingTest() throws IOException
+  {
+    String episode = "epg/sd/json/programs/programEpisode.json";
+    SDProgram program = deserialize(episode, SDProgram.class);
+    int[] showcardID = new int[1];
+    byte[][] packedImages = SDImages.encodeEpisodeImage(program.getEpisodeImage(), showcardID);
+    assert packedImages.length == 2;
+    assert SDImages.getImageCount(SDImages.getSDIndexForShowType(Show.IMAGE_PHOTO_THUMB_TALL), packedImages) == 1;
   }
 
   @Test(groups = {"gson", "schedulesDirect", "images", "channelLogo" })

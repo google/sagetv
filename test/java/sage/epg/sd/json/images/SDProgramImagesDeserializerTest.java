@@ -33,7 +33,6 @@ public class SDProgramImagesDeserializerTest extends DeserializeTest
   @Test(groups = {"gson", "schedulesDirect", "program", "images", "error" })
   public void deserializeTMSError() throws IOException
   {
-    //[{"programID":"SH02468914","data":{"errorCode":1013,"errorMessage":"invalid_tms_id"}}]
     String error = "epg/sd/json/errors/tms1013.json";
     SDProgramImages program[] = deserialize(error, SDProgramImages[].class);
     assert program[0].getCode() == 6000;
@@ -47,7 +46,7 @@ public class SDProgramImagesDeserializerTest extends DeserializeTest
 
     assert images[0].getCode() == 0;
     assert images[0].getImages() != null;
-    assert "SH01915214".equals(images[0].getProgramID());
+    assert "SH01966829".equals(images[0].getProgramID());
     for (SDImage image : images[0].getImages())
     {
       assert image.getHeight() != 0;
