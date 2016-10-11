@@ -10,7 +10,6 @@
 		<MediaTemplate EmbedCab="yes" />
 
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
-    <Property Id="EPGLICENSEKEY" Hidden="yes" />
 
     <Property Id="MPEGDecoderMoved" Value="0" />
     <Binary Id="KeepMPEGDecoder.vbs" SourceFile="redist\KeepMPEGDecoder.vbs" />
@@ -44,7 +43,6 @@
         <ComponentGroupRef Id="ProductSageTVServerComponents" />
         <ComponentGroupRef Id="SageTVServerShortcuts" />
         <ComponentGroupRef Id="SageTVServerDesktopShortcuts" />
-        <ComponentRef Id="EPGEnvironmentVariableComponent" />
       <?elseif $(var.Configuration) = SetupClient?>
         <ComponentGroupRef Id="ProductSageTVClientComponents" />
         <ComponentGroupRef Id="SageTVClientShortcuts" />
@@ -135,24 +133,6 @@
       </Component>
     </DirectoryRef>    
   </Fragment>
-
-  
-  <!-- Fragment for EPGEnvironmentVariable-->
-  <?if $(var.Configuration) = SetupServer ?>
-    <Fragment>
-      <DirectoryRef Id="TARGETDIR">
-        <Component Id="EPGEnvironmentVariableComponent" Guid="{3A6AF4B9-371A-4CE3-B7BF-9559F9AB3B2E}">
-        <Environment Id="TestMinVar"
-                     Action="set"
-                     Part="all"
-                     Name="SAGETVUSERKEY"
-                     Permanent="yes"
-                     System="yes"
-                     Value="[EPGLICENSEKEY]" />
-        </Component>
-      </DirectoryRef>
-    </Fragment>
-  <?endif?>
 
   <!-- Fragment for ProductSageTVJAR-->
 	<Fragment>
