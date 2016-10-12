@@ -457,7 +457,7 @@ int AnylyzeAVElement( AV_ELEMENT *pAVElmnt, ES_ELEMENT *pESElmnt, TS_ELEMENT *pT
 	//process audio
 	if ( pTSElmnt != NULL )
 	{
-		if (  pTSElmnt->content_type == AUDIO_DATA )
+		if ( pTSElmnt->content_type == AUDIO_DATA || pTSElmnt->content_type == PRIVAITE_DATA)
 		{
 			int ret = AnylyzeAudioFormat( pAVElmnt,  pTSElmnt->format_fourcc, pData, nBytes, nMediaType );
 			if ( ret )

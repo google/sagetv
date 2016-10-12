@@ -939,9 +939,12 @@ int PushDataTSParser( TS_PARSER *pTSParser, uint8_t* pData, int nSize )//, int *
 	}
 	if ( pTSParser->status == PARSER_RUNNING )
 	{
-		//if there is no PAT PMT aavaliable in stream (naked stream), we use PIDs histogram information to setup TSFilter
-		if ( !(pTSParser->state & (PAT_PRESENT|PMT_PRESENT|TS_FILTER_READY) ) && 
-			  ( pTSParser->rebuild_stream_ctrl && pTSParser->input_packets > pTSParser->naked_stream_threshold ) )  
+		// JS 10/11/2016: Some providers are not creating valid PMT packets. The same stream often
+		// has a valid PAT packet. Because of this, we cannot use the presence of the PAT packet
+		// as an indicator that the stream is normal.
+		// If there is no PAT PMT avaliable in stream (naked stream), we use PIDs histogram information to setup TSFilter
+		if ( !(pTSParser->state & (/*PAT_PRESENT|*/PMT_PRESENT|TS_FILTER_READY) ) &&
+			  ( pTSParser->rebuild_stream_ctrl && pTSParser->input_packets > pTSParser->naked_stream_threshold) )
 		{
 			if (  SetupNakeStreamTSFilter( pTSParser ) > 0 )
 				pTSParser->state |= TS_FILTER_READY;
