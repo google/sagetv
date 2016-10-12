@@ -17,10 +17,7 @@ public class IOUtilsTest
     assertNotNull(md5);
     // Depending on how git is configured on an OS, the line endings on normal text files might
     // be manipulated which means this test needs to be able to handle either one.
-    if (md5.length() == 34)
-      assertEquals(md5, "beec1608cf997d3acb42f0ab772b143f\r\n");
-    else
-      assertEquals(md5, "beec1608cf997d3acb42f0ab772b143f\n");
+    assertEquals(md5.trim(), "beec1608cf997d3acb42f0ab772b143f");
   }
 
   @Test
@@ -30,10 +27,7 @@ public class IOUtilsTest
     assertNotNull(md5);
     // Depending on how git is configured on an OS, the line endings on normal text files might
     // be manipulated which means this test needs to be able to handle either one.
-    if (md5.length() == 34)
-      assertEquals(md5, "beec1608cf997d3acb42f0ab772b143f\r\n");
-    else
-      assertEquals(md5, "beec1608cf997d3acb42f0ab772b143f\n");
+    assertEquals(md5.trim(), "beec1608cf997d3acb42f0ab772b143f");
   }
 
   @Test
