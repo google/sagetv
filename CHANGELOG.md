@@ -1,7 +1,7 @@
 # Change Log
 
 ## Version 9.0.10 (??)
-* (Placeholder for .10 release)
+* Fix: Enable streams with valid PAT packets and invalid PMT packets to be able to be detected by the built in remuxer.
 
 ## Version 9.0.9 (2016-10-10)
 * Fix: GetSeriesID wasn't always returning a valid series ID
