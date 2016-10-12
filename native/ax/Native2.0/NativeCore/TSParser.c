@@ -1833,7 +1833,7 @@ static int CheckTSParseDone( TS_PARSER *pTSParser )
 					break;
 				case TELETEXT_DATA:
 					break;
-				case PRIVAITE_DATA:
+				case PRIVATE_DATA:
 					break;
 				case UNIDENTIFIED:
 					av_processing++;
