@@ -4231,7 +4231,7 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
 
         // If we don't have a default, get one if there's one available and we want a default
         if (defaultRecord == null && es.lastStationID != 0 &&
-            (!autopilot || !disableProfilerRecs || es.capDev.shouldNotStopDevice()))
+            (!autopilot || !disableProfilerRecs || es.capDev.shouldNotStopDevice()) && es.stationSet.contains(es.lastStationID))
         {
           Airing[] nextOnChan = wiz.getAirings(es.lastStationID,
               currTime, currTime + 1, false);
