@@ -42,7 +42,7 @@ while [ $restartApp -eq 1 ]; do
 	fi
 	done
 	echo Starting server mode
-	java -Djava.awt.headless=$HEADLESS $JAVAMEM -XX:+UseAdaptiveSizePolicy -XX:MaxGCPauseMillis=25 -XX:GCTimeRatio=24 -XX:ThreadPriorityPolicy=1 $JAVAOPTS -cp Sage.jar:.:/:$(echo JARs/*.jar | sed 's/  */:/g') sage.Sage 0 0 x "sagetv Sage.properties" <&- &
+	java -Djava.awt.headless=$HEADLESS $JAVAMEM -XX:+UseAdaptiveSizePolicy -XX:MaxGCPauseMillis=25 -XX:GCTimeRatio=24 $(if [[ $EUID -eq 0 ]]; then echo '-XX:ThreadPriorityPolicy=1'; fi) $JAVAOPTS -cp Sage.jar:.:/:$(echo JARs/*.jar | sed 's/  */:/g') sage.Sage 0 0 x "sagetv Sage.properties" <&- &
 	javapid=$!
 	echo -n $javapid > $PIDFILE
 	wait $javapid
