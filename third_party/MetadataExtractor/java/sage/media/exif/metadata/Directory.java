@@ -56,14 +56,14 @@ public abstract class Directory implements Serializable {
     /**
      * Provides the name of the directory, for display purposes. E.g.
      * <code>Exif</code>
-     * 
+     *
      * @return the name of the directory
      */
     public abstract String getName();
 
     /**
      * Provides the map of tag names, hashed by tag type identifier.
-     * 
+     *
      * @return the map of tag names
      */
     protected abstract HashMap getTagNameMap();
@@ -82,7 +82,7 @@ public abstract class Directory implements Serializable {
 
     /**
      * Indicates whether the specified tag type has been set.
-     * 
+     *
      * @param tagType
      *            the tag type to check for
      * @return true if a value exists for the specified tag type, false if not
@@ -94,7 +94,7 @@ public abstract class Directory implements Serializable {
     /**
      * Returns an Iterator of Tag instances that have been set in this
      * Directory.
-     * 
+     *
      * @return an Iterator of Tag instances
      */
     public Iterator getTagIterator() {
@@ -103,7 +103,7 @@ public abstract class Directory implements Serializable {
 
     /**
      * Returns the number of tags set in this Directory.
-     * 
+     *
      * @return the number of tags set in this Directory
      */
     public int getTagCount() {
@@ -112,7 +112,7 @@ public abstract class Directory implements Serializable {
 
     /**
      * Sets the descriptor used to interperet tag values.
-     * 
+     *
      * @param descriptor
      *            the descriptor used to interperet tag values
      */
@@ -125,7 +125,7 @@ public abstract class Directory implements Serializable {
 
     /**
      * Registers an error message with this directory.
-     * 
+     *
      * @param message
      *            an error message.
      */
@@ -138,7 +138,7 @@ public abstract class Directory implements Serializable {
 
     /**
      * Gets a value indicating whether this directory has any error messages.
-     * 
+     *
      * @return true if the directory contains errors, otherwise false
      */
     public boolean hasErrors() {
@@ -147,7 +147,7 @@ public abstract class Directory implements Serializable {
 
     /**
      * Used to iterate over any error messages contained in this directory.
-     * 
+     *
      * @return an iterator over the error message strings.
      */
     public Iterator getErrors() {
@@ -167,7 +167,7 @@ public abstract class Directory implements Serializable {
 
     /**
      * Sets an <code>int</code> value for the specified tag.
-     * 
+     *
      * @param tagType
      *            the tag's value as an int
      * @param value
@@ -179,7 +179,7 @@ public abstract class Directory implements Serializable {
 
     /**
      * Sets a <code>double</code> value for the specified tag.
-     * 
+     *
      * @param tagType
      *            the tag's value as an int
      * @param value
@@ -191,7 +191,7 @@ public abstract class Directory implements Serializable {
 
     /**
      * Sets a <code>float</code> value for the specified tag.
-     * 
+     *
      * @param tagType
      *            the tag's value as an int
      * @param value
@@ -203,7 +203,7 @@ public abstract class Directory implements Serializable {
 
     /**
      * Sets a <code>String</code> value for the specified tag.
-     * 
+     *
      * @param tagType
      *            the tag's value as an int
      * @param value
@@ -215,7 +215,7 @@ public abstract class Directory implements Serializable {
 
     /**
      * Sets a <code>boolean</code> value for the specified tag.
-     * 
+     *
      * @param tagType
      *            the tag's value as an int
      * @param value
@@ -227,7 +227,7 @@ public abstract class Directory implements Serializable {
 
     /**
      * Sets a <code>long</code> value for the specified tag.
-     * 
+     *
      * @param tagType
      *            the tag's value as an int
      * @param value
@@ -239,7 +239,7 @@ public abstract class Directory implements Serializable {
 
     /**
      * Sets a <code>java.util.Date</code> value for the specified tag.
-     * 
+     *
      * @param tagType
      *            the tag's value as an int
      * @param value
@@ -251,7 +251,7 @@ public abstract class Directory implements Serializable {
 
     /**
      * Sets a <code>Rational</code> value for the specified tag.
-     * 
+     *
      * @param tagType
      *            the tag's value as an int
      * @param rational
@@ -263,7 +263,7 @@ public abstract class Directory implements Serializable {
 
     /**
      * Sets a <code>Rational[]</code> (array) for the specified tag.
-     * 
+     *
      * @param tagType
      *            the tag identifier
      * @param rationals
@@ -275,7 +275,7 @@ public abstract class Directory implements Serializable {
 
     /**
      * Sets an <code>int[]</code> (array) for the specified tag.
-     * 
+     *
      * @param tagType
      *            the tag identifier
      * @param ints
@@ -287,7 +287,7 @@ public abstract class Directory implements Serializable {
 
     /**
      * Sets a <code>byte[]</code> (array) for the specified tag.
-     * 
+     *
      * @param tagType
      *            the tag identifier
      * @param bytes
@@ -299,7 +299,7 @@ public abstract class Directory implements Serializable {
 
     /**
      * Sets a <code>String[]</code> (array) for the specified tag.
-     * 
+     *
      * @param tagType
      *            the tag identifier
      * @param strings
@@ -311,7 +311,7 @@ public abstract class Directory implements Serializable {
 
     /**
      * Sets a <code>Object</code> for the specified tag.
-     * 
+     *
      * @param tagType
      *            the tag's value as an int
      * @param value
@@ -326,12 +326,18 @@ public abstract class Directory implements Serializable {
         Integer key = new Integer(tagType);
         if (!_tagMap.containsKey(key))
             _definedTagList.add(new Tag(tagType, this));
+        if (_tagMap.containsKey(key)) {
+          if (tagType == sage.media.exif.metadata.exif.ExifDirectory.TAG_ORIENTATION) {
+            System.out.println("IGNORING duplicate orientation tags in EXIF data, original value: " + _tagMap.get(key) + " new value: " + value);
+            return;
+          }
+        }
         _tagMap.put(key, value);
     }
 
     /**
      * Sets an array <code>Object</code> for the specified tag.
-     * 
+     *
      * @param tagType
      *            the tag's value as an int
      * @param array
@@ -359,7 +365,7 @@ public abstract class Directory implements Serializable {
      * <li> byte[] - Return int value of first item in array.
      * <li> int[] - Return int value of first item in array.
      * </ul>
-     * 
+     *
      * @throws MetadataException
      *             if no value exists for tagType or if it cannot be cast to an
      *             int.
@@ -410,7 +416,7 @@ public abstract class Directory implements Serializable {
      * Gets the specified tag's value as a String array, if possible. Only
      * supported where the tag is set as String[], String, int[], byte[] or
      * Rational[].
-     * 
+     *
      * @param tagType
      *            the tag identifier
      * @return the tag's value as an array of Strings
@@ -458,7 +464,7 @@ public abstract class Directory implements Serializable {
     /**
      * Gets the specified tag's value as an int array, if possible. Only
      * supported where the tag is set as String, int[], byte[] or Rational[].
-     * 
+     *
      * @param tagType
      *            the tag identifier
      * @return the tag's value as an int array
@@ -504,7 +510,7 @@ public abstract class Directory implements Serializable {
     /**
      * Gets the specified tag's value as an byte array, if possible. Only
      * supported where the tag is set as String, int[], byte[] or Rational[].
-     * 
+     *
      * @param tagType
      *            the tag identifier
      * @return the tag's value as a byte array
@@ -706,7 +712,7 @@ public abstract class Directory implements Serializable {
      * Returns the specified tag's value as a String. This value is the 'raw'
      * value. A more presentable decoding of this value may be obtained from the
      * corresponding Descriptor.
-     * 
+     *
      * @return the String reprensentation of the tag's value, or
      *         <code>null</code> if the tag hasn't been defined.
      */
@@ -742,7 +748,7 @@ public abstract class Directory implements Serializable {
     /**
      * Returns the object hashed for the particular tag type specified, if
      * available.
-     * 
+     *
      * @param tagType
      *            the tag type identifier
      * @return the tag's value as an Object if available, else null
@@ -755,7 +761,7 @@ public abstract class Directory implements Serializable {
 
     /**
      * Returns the name of a specified tag as a String.
-     * 
+     *
      * @param tagType
      *            the tag type identifier
      * @return the tag's name as a String
@@ -776,7 +782,7 @@ public abstract class Directory implements Serializable {
     /**
      * Provides a description of a tag's value using the descriptor set by
      * <code>setDescriptor(Descriptor)</code>.
-     * 
+     *
      * @param tagType
      *            the tag type identifier
      * @return the tag value's description as a String

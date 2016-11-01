@@ -70,9 +70,9 @@ public class JpegMetadataReader {
 
             if (ExifReader.isExifSegment(segmentBytes))
                 new ExifReader(segmentBytes).extract(metadata);
-            if (XmpReader.isXmpSegment(segmentBytes))
+            else if (XmpReader.isXmpSegment(segmentBytes))
                 new XmpReader(segmentBytes).extract(metadata);
-            else 
+            else
             	// try exif anyway so that errors are logged
             	new ExifReader(segmentBytes).extract(metadata);
         }
