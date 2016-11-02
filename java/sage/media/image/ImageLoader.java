@@ -208,7 +208,7 @@ public class ImageLoader
   // NOTE: These are native methods for desktop & embedded
   // NOTE: These are native methods for desktop & embedded
   public static native boolean createThumbnail(String imageFilePath,
-      String thumbnailPath, int thumbWidth, int thumbHeight) throws java.io.IOException;
+      String thumbnailPath, int thumbWidth, int thumbHeight, int rotateAmount) throws java.io.IOException;
 
   // Creates a RawImage object with just the width & height set in it.
   public static native RawImage loadImageDimensionsFromFile(String filePath) throws java.io.IOException;

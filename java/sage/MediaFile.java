@@ -4150,7 +4150,7 @@ public class MediaFile extends DBObject implements SegmentedFile
         Show s = getShow();
         // Jeff Harrison - 10/5/2015
         // Add spaces around SxxExx and Episode Name
-        String sectionDivider = (Sage.getBoolean("extended_filenames", false) ? " - " : "-");				
+        String sectionDivider = (Sage.getBoolean("extended_filenames", false) ? " - " : "-");
         String namePart = (forcedStringName != null ? forcedStringName :
           (createValidFilename(s.getTitle()) +
             ((Sage.getBoolean("use_season_episode_nums_in_filenames", false) && s.getSeasonNumber() > 0 && s.getEpisodeNumber() > 0) ?
@@ -5207,7 +5207,7 @@ public class MediaFile extends DBObject implements SegmentedFile
                 if (isLocalFile() || !Sage.client/*isTrueClient()*/) // optimize for pseudo-clients
                 {
                   if (ImageLoader.createThumbnail(getFile(0).toString(),
-                      imageThumbFile.toString(), finalThumbWidth, finalThumbHeight))
+                      imageThumbFile.toString(), finalThumbWidth, finalThumbHeight, MetaImage.getMetaImage(MediaFile.this).getRotation()))
                   {
                     thumbnailLoadState = 2;
                   }
@@ -5223,7 +5223,7 @@ public class MediaFile extends DBObject implements SegmentedFile
                   tempFile.deleteOnExit();
                   copyToLocalStorage(tempFile);
                   if (ImageLoader.createThumbnail(tempFile.toString(),
-                      imageThumbFile.toString(), finalThumbWidth, finalThumbHeight))
+                      imageThumbFile.toString(), finalThumbWidth, finalThumbHeight, MetaImage.getMetaImage(MediaFile.this).getRotation()))
                   {
                     thumbnailLoadState = 2;
                   }

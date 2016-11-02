@@ -10,10 +10,10 @@ extern "C" {
 /*
  * Class:     sage_media_image_ImageLoader
  * Method:    createThumbnail
- * Signature: (Ljava/lang/String;Ljava/lang/String;II)Z
+ * Signature: (Ljava/lang/String;Ljava/lang/String;III)Z
  */
 JNIEXPORT jboolean JNICALL Java_sage_media_image_ImageLoader_createThumbnail
-  (JNIEnv *, jclass, jstring, jstring, jint, jint);
+  (JNIEnv *, jclass, jstring, jstring, jint, jint, jint);
 
 /*
  * Class:     sage_media_image_ImageLoader

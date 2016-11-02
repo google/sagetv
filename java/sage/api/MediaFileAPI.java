@@ -1147,7 +1147,7 @@ public class MediaFileAPI {
               tmpFile = new java.io.File(srcFile.getParentFile(), "TEMP" + (x++) + srcFile.getName());
             String tmpPath = tmpFile.toString();
             if (sage.media.image.ImageLoader.createThumbnail(srcFile.toString(),
-                tmpPath, finalThumbWidth, finalThumbHeight))
+                tmpPath, finalThumbWidth, finalThumbHeight, 0))
             {
               // Backup the original file first if we haven't already
               if (Sage.getBoolean("temp_backup_picture_file_before_rotateflip", true) &&
