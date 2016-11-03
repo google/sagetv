@@ -2873,7 +2873,7 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
         sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createFailedRecordingMsg(es.capDev.getActiveInput(), es.currRecord,
 					es.currRecord.getChannel(), EPG.getInstance().getPhysicalChannel(es.capDev.getActiveInput() != null ?
                 es.capDev.getActiveInput().getProviderID() : 0, es.currRecord.getStationID())));
-      } else {
+      } else if (!es.currRecordFile.isAnyLiveStream()) {
         // Check if we have low bitrate detection configured, and if it was too low...post a message about it.
         long bitrateThreshold = es.capDev.getBitrateThresholdForError();
         if (bitrateThreshold > 0) {
