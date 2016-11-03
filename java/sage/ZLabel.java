@@ -978,6 +978,7 @@ public class ZLabel extends ZComp
               setText(theString.substring(0, insertionPoint) + insStr + theString.substring(insertionPoint));
               insertionPoint += insStr.length();
               lastCursorChangeTime = Sage.time();
+              return true;
             }
           }
         }
