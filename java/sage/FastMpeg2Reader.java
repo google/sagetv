@@ -1659,6 +1659,7 @@ public final class FastMpeg2Reader
 
   public void seek(long seekTime) throws IOException
   {
+    seekTime = Math.max(0, seekTime);
     if (seekTime == 0)
     {
       seekToBeginning(); // this avoids reloading the transcoder
@@ -1688,6 +1689,7 @@ public final class FastMpeg2Reader
   }
   private void seek(long seekTime, int minReadRequired) throws IOException
   {
+    seekTime = Math.max(0, seekTime);
     if (ins != null)
     {
       long targetPTS = seekTime*90 + firstPTS;
