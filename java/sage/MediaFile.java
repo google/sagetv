@@ -46,6 +46,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -4255,21 +4256,29 @@ public class MediaFile extends DBObject implements SegmentedFile
     if (tryMe == null) return "null";
     int len = tryMe.length();
     StringBuffer sb = new StringBuffer(len);
+    boolean allowUnicode = Sage.getBoolean("allow_unicode_characters_in_generated_filenames", false);
+    boolean extendedFilenames = Sage.getBoolean("extended_filenames", false);
+    if (!allowUnicode) {
+      // Normalize any accented characters by decomposing them into their
+      // ascii value and the accent. The accent will be stripped out in the loop
+      // below.
+      tryMe = Normalizer.normalize(tryMe, Normalizer.Form.NFD);
+    }
     for (int i = 0; i < len; i++)
     {
       char c = tryMe.charAt(i);
       // Stick with ASCII to prevent issues with the filesystem names unless a custom property is set
-      if (Sage.getBoolean("allow_unicode_characters_in_generated_filenames", false))
+      if (allowUnicode)
       {
-        if (Character.isLetterOrDigit(c)
-          || (Sage.getBoolean("extended_filenames", false) && LEGAL_FILE_NAME_CHARACTERS.contains(String.valueOf(c))))
+        if (Character.isLetterOrDigit(c) ||
+                (extendedFilenames && LEGAL_FILE_NAME_CHARACTERS.contains(String.valueOf(c))))
             sb.append(c);
       } else if ((c >= 'a' && c <= 'z') ||
         (c >= '0' && c <= '9') ||
         (c >= 'A' && c <= 'Z') ||
         // Jeff Harrison - 09/10/2016
      	  // Keep spaces and other extra characters in filenames
-        (Sage.getBoolean("extended_filenames", false) && LEGAL_FILE_NAME_CHARACTERS.contains(String.valueOf(c))))
+        (extendedFilenames && LEGAL_FILE_NAME_CHARACTERS.contains(String.valueOf(c))))
           sb.append(c);
     }
     return sb.toString();
