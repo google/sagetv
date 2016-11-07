@@ -24,8 +24,8 @@ public class MediaFileTest
     validateFile(fname, "Test99 Nam\u00E9", allowUnicode=true, extendedFileName=true);
 
     // test no unicode
-    validateFile(fname, "Test99Nam", allowUnicode=false, extendedFileName=false);
-    validateFile(fname, "Test99 Nam", allowUnicode=false, extendedFileName=true);
+    validateFile(fname, "Test99Name", allowUnicode=false, extendedFileName=false);
+    validateFile(fname, "Test99 Name", allowUnicode=false, extendedFileName=true);
 
     // test filename with all LEGAL Characters (will test if file creation fails - lets hope not)
     validateFile(
