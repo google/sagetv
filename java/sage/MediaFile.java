@@ -4254,8 +4254,6 @@ public class MediaFile extends DBObject implements SegmentedFile
   public static String createValidFilename(String tryMe)
   {
     if (tryMe == null) return "null";
-    int len = tryMe.length();
-    StringBuffer sb = new StringBuffer(len);
     boolean allowUnicode = Sage.getBoolean("allow_unicode_characters_in_generated_filenames", false);
     boolean extendedFilenames = Sage.getBoolean("extended_filenames", false);
     if (!allowUnicode) {
@@ -4264,6 +4262,8 @@ public class MediaFile extends DBObject implements SegmentedFile
       // below.
       tryMe = Normalizer.normalize(tryMe, Normalizer.Form.NFD);
     }
+    int len = tryMe.length();
+    StringBuffer sb = new StringBuffer(len);
     for (int i = 0; i < len; i++)
     {
       char c = tryMe.charAt(i);
