@@ -1766,7 +1766,7 @@ int tuneDVBCFrequency( DVBCaptureDev *CDev, DVB_C_FREQ* dvbc, int dryTune )
 		//close( CDev->dvrFd );
 		//CDev->dvrFd = -1;
 
-		if ( ioctl( CDev->frontendFd, FE_SET_PROPERTY, &feparams ) < 0)
+		if ( ioctl( CDev->frontendFd, FE_SET_FRONTEND, &feparams ) < 0)
 		{
 			flog(( "Native.log", "tuneDVBC failed\r\n" ));
 			return -1;
