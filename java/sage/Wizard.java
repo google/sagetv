@@ -3133,6 +3133,12 @@ public class Wizard implements EPGDBPublic2
         imageURL, peeps, characters, Pooler.EMPTY_INT_ARRAY, Pooler.EMPTY_LONG_ARRAY, Pooler.EMPTY_2D_BYTE_ARRAY);
   }
   public SeriesInfo addSeriesInfo(int legacySeriesID, int showcardID, String title, String network, String description, String history, String premiereDate,
+      String finaleDate, String airDOW, String airHrMin, String imageUrl, Person[] people, String[] characters, int[] seriesImages, long[] castImages)
+  {
+    return addSeriesInfo(legacySeriesID, showcardID, title, network, description, history, premiereDate, finaleDate, airDOW, airHrMin, imageUrl, people,
+        characters, seriesImages, castImages, Pooler.EMPTY_2D_BYTE_ARRAY);
+  }
+  public SeriesInfo addSeriesInfo(int legacySeriesID, int showcardID, String title, String network, String description, String history, String premiereDate,
       String finaleDate, String airDOW, String airHrMin, String imageUrl, Person[] people, String[] characters, int[] seriesImages, long[] castImages, byte[][] imageURLs)
   {
     SeriesInfo oldSeries = (showcardID == 0) ? getSeriesInfoForLegacySeriesID(legacySeriesID) : getSeriesInfoForShowcardID(showcardID);
