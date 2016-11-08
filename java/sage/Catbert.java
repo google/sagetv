@@ -2187,6 +2187,7 @@ public class Catbert
       sage.api.CaptureDeviceAPI.init(this);
       sage.api.CaptureDeviceInputAPI.init(this);
       sage.api.AiringAPI.init(this);
+      sage.api.PersonAPI.init(this);
       sage.api.FavoriteAPI.init(this);
       sage.api.MediaFileAPI.init(this);
       sage.api.MediaPlayerAPI.init(this);

@@ -43,9 +43,6 @@ public abstract class PredefinedJEPFunction extends sage.jep.function.PostfixMat
 
     categoryDescriptions.put("MediaFile",
         "Represents a file or sequence of files (if the recording is in pieces) that correspond to a Recorded Television Airing, Video File, Music Track, DVD Drive, Ripped DVD or Picture.");
-
-    // Meta???? What are we going to do about it???? ManualRecord needs it for now
-
     categoryDescriptions.put("Playlist", "Represents a list of any kind of MediaFile, Airing, Album or Playlist to playback in sequence.");
     categoryDescriptions.put("Utility", "Utility methods");
     categoryDescriptions.put("Widget", "Widget reflection API");
@@ -59,6 +56,7 @@ public abstract class PredefinedJEPFunction extends sage.jep.function.PostfixMat
     categoryDescriptions.put("Plugin", "API calls to be used for downloading, enabling and disabling of SageTV Plugins from the central repository. Also contains methods for configuring them and for interacting with the SageTV Plugin Event system.");
     categoryDescriptions.put("UserRecord", "API for custom data storage in the SageTV database. Uses simple String-based keys for records, and then name-value pairs within those records of type String.");
     categoryDescriptions.put("Security", "API for managing security profiles and their associated permissions");
+    categoryDescriptions.put("Person", "API for Person objects");
   }
   public PredefinedJEPFunction(String inGroup, String inName)
   {
