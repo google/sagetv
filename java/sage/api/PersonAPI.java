@@ -155,6 +155,22 @@ public class PersonAPI {
         int i = getInt(stack);
         return Wizard.getInstance().getPersonForID(i);
       }});
+    rft.put(new PredefinedJEPFunction("Person", "IsPersonObject", 1, new String[] { "Object" })
+    {
+      /**
+       * Returns true if the specified object is a Person object. No automatic type conversion will be performed on the argument.
+       * @param Object the object to test to see if it is a Person object
+       * @return true if the argument is a Person object, false otherwise
+       * @since 9.0
+       *
+       * @declaration public boolean IsPersonObject(Object Object);
+       */
+      public Object runSafely(Catbert.FastStack stack) throws Exception{
+        Object o = stack.pop();
+        if (o instanceof sage.vfs.MediaNode)
+          o = ((sage.vfs.MediaNode) o).getDataObject();
+        return Boolean.valueOf(o instanceof Person);
+      }});
 
 
     /*
