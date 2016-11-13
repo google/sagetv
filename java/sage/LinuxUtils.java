@@ -561,7 +561,7 @@ public class LinuxUtils
     "inet addr\\:(\\p{Digit}\\p{Digit}?\\p{Digit}?\\.\\p{Digit}\\p{Digit}?\\p{Digit}?\\.\\p{Digit}\\p{Digit}?\\p{Digit}?\\.\\p{Digit}\\p{Digit}?\\p{Digit}?) ");
 
   static String getIPAddressFromInetInfo(String inetInfo) {
-    if (inetInfo.contains("UP"))
+    if (inetInfo!=null && inetInfo.contains("UP"))
     {
       java.util.regex.Matcher mat = INETINFO_IP_PATTERN.matcher(inetInfo);
       // Go with eth1

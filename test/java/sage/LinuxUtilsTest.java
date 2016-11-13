@@ -40,5 +40,8 @@ public class LinuxUtilsTest
       "          collisions:0 txqueuelen:1000 \n" +
       "          RX bytes:3960802559 (3.9 GB)  TX bytes:23567094632 (23.5 GB)\n";
     assertNull(LinuxUtils.getIPAddressFromInetInfo(inetinfo3));
+
+    // null should not fail with NPE but return null
+    assertNull(LinuxUtils.getIPAddressFromInetInfo(null));
   }
 }
