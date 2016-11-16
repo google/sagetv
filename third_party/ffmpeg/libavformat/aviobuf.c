@@ -110,7 +110,7 @@ void put_buffer(ByteIOContext *s, const unsigned char *buf, int size)
 {
     while (size > 0) {
         int len = FFMIN(s->buf_end - s->buf_ptr, size);
-        av_memcpy(s->buf_ptr, buf, len);
+        memcpy(s->buf_ptr, buf, len);
         s->buf_ptr += len;
 
         if (s->buf_ptr >= s->buf_end)
@@ -440,7 +440,7 @@ int get_buffer(ByteIOContext *s, unsigned char *buf, int size)
                     break;
             }
         } else {
-            av_memcpy(buf, s->buf_ptr, len);
+            memcpy(buf, s->buf_ptr, len);
             buf += len;
             s->buf_ptr += len;
             size -= len;
@@ -467,7 +467,7 @@ int get_partial_buffer(ByteIOContext *s, unsigned char *buf, int size)
     }
     if (len > size)
         len = size;
-    av_memcpy(buf, s->buf_ptr, len);
+    memcpy(buf, s->buf_ptr, len);
     s->buf_ptr += len;
     if (!len) {
         if (url_ferror(s)) return url_ferror(s);
@@ -576,7 +576,7 @@ int url_fdopen(ByteIOContext **s, URLContext *h)
     } else {
         buffer_size = IO_BUFFER_SIZE;
     }
-    buffer = av_mallocUncached(buffer_size);
+    buffer = av_malloc(buffer_size);
     if (!buffer)
         return AVERROR(ENOMEM);
 
@@ -605,7 +605,7 @@ int url_fdopen(ByteIOContext **s, URLContext *h)
 int url_setbufsize(ByteIOContext *s, int buf_size)
 {
     uint8_t *buffer;
-    buffer = av_mallocUncached(buf_size);
+    buffer = av_malloc(buf_size);
     if (!buffer)
         return AVERROR(ENOMEM);
 
@@ -830,7 +830,7 @@ static int dyn_buf_write(void *opaque, uint8_t *buf, int buf_size)
              return AVERROR(ENOMEM);
         d->allocated_size = new_allocated_size;
     }
-    av_memcpy(d->buffer + d->pos, buf, buf_size);
+    memcpy(d->buffer + d->pos, buf, buf_size);
     d->pos = new_size;
     if (d->pos > d->size)
         d->size = d->pos;

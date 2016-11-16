@@ -26,7 +26,6 @@
 #include <limits.h>
 
 //#define DEBUG
-//#define DEBUG8622
 //#define DEBUG_METADATA
 //#define MOV_EXPORT_ALL_METADATA
 
@@ -1606,14 +1605,12 @@ static void mov_build_index(MOVContext *mov, AVStream *st)
                 sample_size = sc->sample_size > 0 ? sc->sample_size : sc->sample_sizes[current_sample];
                 if(sc->pseudo_stream_id == -1 ||
                    sc->stsc_data[stsc_index].id - 1 == sc->pseudo_stream_id) {
-#ifndef EM8622
                     AVIndexEntry *e = &st->index_entries[st->nb_index_entries++];
                     e->pos = current_offset;
                     e->timestamp = current_dts;
                     e->size = sample_size;
                     e->min_distance = distance;
                     e->flags = keyframe ? AVINDEX_KEYFRAME : 0;
-#endif
                     dprintf(mov->fc, "AVIndex stream %d, sample %d, offset %"PRIx64", dts %"PRId64", "
                             "size %d, distance %d, keyframe %d\n", st->index, current_sample,
                             current_offset, current_dts, sample_size, distance, keyframe);
@@ -1700,14 +1697,12 @@ static void mov_build_index(MOVContext *mov, AVStream *st)
                     av_log(mov->fc, AV_LOG_ERROR, "wrong chunk count %d\n", total);
                     return;
                 }
-#ifndef EM8622
                 e = &st->index_entries[st->nb_index_entries++];
                 e->pos = current_offset;
                 e->timestamp = current_dts;
                 e->size = size;
                 e->min_distance = 0;
                 e->flags = AVINDEX_KEYFRAME;
-#endif
                 dprintf(mov->fc, "AVIndex stream %d, chunk %d, offset %"PRIx64", dts %"PRId64", "
                         "size %d, duration %d\n", st->index, i, current_offset, current_dts,
                         size, samples);
@@ -1847,7 +1842,6 @@ static int mov_read_trak(MOVContext *c, ByteIOContext *pb, MOVAtom atom)
         break;
     }
 
-#ifndef EM8622
     /* Do not need those anymore. */
     av_freep(&sc->chunk_offsets);
     av_freep(&sc->stsc_data);
@@ -1855,45 +1849,6 @@ static int mov_read_trak(MOVContext *c, ByteIOContext *pb, MOVAtom atom)
     av_freep(&sc->keyframes);
     av_freep(&sc->stts_data);
     av_freep(&sc->stps_data);
-#else
-    sc->current_sample = 0;
-    sc->index_chunk=0;
-    sc->index_chunk_sample=0;
-    sc->index_stts_sample=0;
-    sc->index_current_dts=0;
-    sc->index_current_offset = sc->chunk_offsets[sc->index_chunk];
-    sc->index_stts_index=0;
-    sc->index_stsc_index=0;
-    sc->index_stss_index=0;
-    if (sc->sample_sizes || st->codec->codec_type == CODEC_TYPE_VIDEO || sc->dv_audio_container)
-    {
-        sc->index_sample_size=sc->sample_size > 0 ? sc->sample_size : sc->sample_sizes[sc->current_sample];
-    }
-    else
-    {
-        unsigned int chunk_samples, chunk_size;
-        unsigned int frames = 1;
-        chunk_samples = sc->stsc_data[sc->index_stsc_index].count;
-        if (sc->samples_per_frame > 0 &&
-            (chunk_samples * sc->bytes_per_frame % sc->samples_per_frame == 0)) {
-            if (sc->samples_per_frame < 160)
-                chunk_size = chunk_samples * sc->bytes_per_frame / sc->samples_per_frame;
-            else {
-                chunk_size = sc->bytes_per_frame;
-                frames = chunk_samples / sc->samples_per_frame;
-                chunk_samples = sc->samples_per_frame;
-            }
-        } else
-            chunk_size = chunk_samples * sc->sample_size;
-        sc->index_sample_size = chunk_size;
-    }
-    sc->index_keyframe= !sc->keyframe_count ||
-        sc->current_sample + 1 == sc->keyframes[sc->index_stss_index];;
-    if (sc->index_keyframe) {
-        if (sc->index_stss_index + 1 < sc->keyframe_count)
-            sc->index_stss_index++;
-    }
-#endif
 
     return 0;
 }
@@ -2552,122 +2507,6 @@ static int mov_read_header(AVFormatContext *s, AVFormatParameters *ap)
 
 extern int av_get_packet_nobuf(ByteIOContext *s, AVPacket *pkt, int size, int64_t pos);
 
-#ifdef EM8622
-static int UpdateIndex(MOVStreamContext *sc, AVStream *st)
-{
-//    av_log(NULL, AV_LOG_ERROR, "UpdateIndex(%X) at %d %d %d (sample_size %d)\n", st, sc->current_sample,
-//        sc->index_chunk, sc->index_chunk_sample, sc->sample_size);
-    if (sc->sample_sizes || st->codec->codec_type == CODEC_TYPE_VIDEO || sc->dv_audio_container) 
-    {
-        sc->index_current_offset += sc->index_sample_size;
-        assert(sc->stts_data[sc->index_stts_index].duration % sc->time_rate == 0);
-        sc->index_current_dts += sc->stts_data[sc->index_stts_index].duration / sc->time_rate;
-        sc->index_stts_sample++;
-        if (sc->index_stts_index + 1 < sc->stts_count && 
-            sc->index_stts_sample == sc->stts_data[sc->index_stts_index].count) {
-            sc->index_stts_sample = 0;
-            sc->index_stts_index++;
-        }
-        sc->current_sample++;
-        // Increase sample from chunk
-        sc->index_chunk_sample++;
-        if(sc->index_chunk_sample == sc->stsc_data[sc->index_stsc_index].count)
-        {
-            // We have reached end of current chunk, need to go to next chunk
-            sc->index_chunk++;
-            sc->index_chunk_sample=0;
-            if(sc->index_chunk==sc->chunk_count)
-            {
-                // We have reached end of all chunks..
-                // TODO: update state so end will be detected properly
-                return -1;
-            }
-            sc->index_current_offset = sc->chunk_offsets[sc->index_chunk];
-            if (sc->index_stsc_index + 1 < sc->stsc_count && 
-                sc->index_chunk + 1 == sc->stsc_data[sc->index_stsc_index + 1].first)
-                sc->index_stsc_index++;
-        }
-        if (sc->current_sample >= sc->sample_count) {
-            av_log(NULL, AV_LOG_ERROR, "wrong sample count\n");
-            goto out;
-        }
-        sc->index_keyframe = !sc->keyframe_count || 
-            sc->current_sample + 1 == sc->keyframes[sc->index_stss_index];
-        if (sc->index_keyframe) {
-            if (sc->index_stss_index + 1 < sc->keyframe_count)
-                sc->index_stss_index++;
-        }
-        sc->index_sample_size = 
-            sc->sample_size > 0 ? sc->sample_size : sc->sample_sizes[sc->current_sample];
-    }
-    else
-    {
-        unsigned int chunk_samples, chunk_size;
-        unsigned int frames = 1;
-        /* get chunk duration */
-        int64_t chunk_duration = 0;
-        while (sc->index_chunk_sample < sc->stsc_data[sc->index_stsc_index].count)
-        {
-            chunk_duration += sc->stts_data[sc->index_stts_index].duration / sc->time_rate;
-            sc->index_stts_sample++;
-            if (sc->index_stts_index + 1 < sc->stts_count && 
-                sc->index_stts_sample == sc->stts_data[sc->index_stts_index].count) {
-                sc->index_stts_sample = 0;
-                sc->index_stts_index++;
-            }
-            sc->current_sample++;
-            sc->index_chunk_sample++;
-        }
-        sc->index_current_dts += chunk_duration;
-
-        // Should always be true in index 2 mode...
-        if(sc->index_chunk_sample == sc->stsc_data[sc->index_stsc_index].count)
-        {
-            // We have reached end of current chunk, need to go to next chunk
-            sc->index_chunk++;
-            sc->index_chunk_sample=0;
-            if(sc->index_chunk==sc->chunk_count)
-            {
-                // We have reached end of all chunks..
-                // TODO: update state so end will be detected properly
-                return -1;
-            }
-            sc->index_current_offset = sc->chunk_offsets[sc->index_chunk];
-            if (sc->index_stsc_index + 1 < sc->stsc_count && 
-                sc->index_chunk + 1 == sc->stsc_data[sc->index_stsc_index + 1].first)
-                sc->index_stsc_index++;
-        }
-        if (sc->current_sample >= sc->sample_count) {
-            av_log(NULL, AV_LOG_ERROR, "wrong sample count\n");
-            goto out;
-        }
-        sc->index_keyframe = !sc->keyframe_count || 
-            sc->current_sample + 1 == sc->keyframes[sc->index_stss_index];
-        if (sc->index_keyframe) {
-            if (sc->index_stss_index + 1 < sc->keyframe_count)
-                sc->index_stss_index++;
-        }
-        // Use the chunk size instead
-        chunk_samples = sc->stsc_data[sc->index_stsc_index].count;
-        if (sc->samples_per_frame > 0 &&
-            (chunk_samples * sc->bytes_per_frame % sc->samples_per_frame == 0)) {
-            if (sc->samples_per_frame < 160)
-                chunk_size = chunk_samples * sc->bytes_per_frame / sc->samples_per_frame;
-            else {
-                chunk_size = sc->bytes_per_frame;
-                frames = chunk_samples / sc->samples_per_frame;
-                chunk_samples = sc->samples_per_frame;
-            }
-        } else
-            chunk_size = chunk_samples * sc->sample_size;
-
-        sc->index_sample_size = chunk_size;
-    }
-out:
-    return 0;
-}
-#endif
-
 static AVIndexEntry *mov_find_next_sample(AVFormatContext *s, AVStream **st)
 {
     AVIndexEntry *sample = NULL;
@@ -2701,38 +2540,9 @@ static int mov_read_packet(AVFormatContext *s, AVPacket *pkt)
     AVIndexEntry *sample;
     AVStream *st = NULL;
 	int activeWaitsLeft = 600;
-#ifdef EM8622
-    AVIndexEntry indexsample;
-    int64_t best_dts = INT64_MAX;
-#endif
     int ret;
  retry:
-#ifndef EM8622
     sample = mov_find_next_sample(s, &st);
-#else
-    for (i = 0; i < s->nb_streams; i++) {
-        *st = s->streams[i];
-        // Don't read those for now because it had issue with streaming
-        if (st->codec->codec_type == CODEC_TYPE_DATA)
-            continue;
-        MOVStreamContext *msc = st->priv_data;
-        if (st->discard != AVDISCARD_ALL && msc->pb && msc->current_sample < msc->sample_count) {
-            int64_t dts = av_rescale(msc->index_current_dts * (int64_t)msc->time_rate, AV_TIME_BASE, msc->time_scale);
-#ifdef DEBUG
-//            av_log(NULL, AV_LOG_ERROR, "stream %d, sample %ld, dts %"PRId64"\n", i, msc->current_sample, dts);
-#endif
-            if (dts < best_dts) {
-                best_dts = dts;
-                indexsample.pos=msc->index_current_offset;
-                indexsample.timestamp=msc->index_current_dts;
-                indexsample.flags=msc->index_keyframe!=0 ? AVINDEX_KEYFRAME : 0;
-                indexsample.size=msc->index_sample_size;
-                sample=&indexsample;
-                sc = msc;
-            }
-		}
-	}
-#endif
     if (!sample) {
         mov->found_mdat = 0;
         if (!url_is_streamed(s->pb) ||
@@ -2744,16 +2554,7 @@ static int mov_read_packet(AVFormatContext *s, AVPacket *pkt)
     }
     sc = st->priv_data;
     /* must be done just before reading, to avoid infinite loop on sample */
-#ifndef EM8622
     sc->current_sample++;
-#else
-    {
-//        AVStream *st = s->streams[sc->ffindex];
-//        av_log(NULL, AV_LOG_ERROR, "before update index\n");
-        UpdateIndex(sc, st);
-//        av_log(NULL, AV_LOG_ERROR, "after update index\n");
-    }
-#endif
 
     if (st->discard != AVDISCARD_ALL) {
 	    while (sample->pos >= url_fsize(s->pb)) 
@@ -2776,13 +2577,6 @@ static int mov_read_packet(AVFormatContext *s, AVPacket *pkt)
 	        av_log(mov->fc, AV_LOG_ERROR, "stream %d, offset 0x%"PRIx64": partial file\n", sc->ffindex, sample->pos);
 	        return -1;
 	    }
-#ifdef DEBUG8622
-//    av_log(mov->fc, AV_LOG_ERROR, "stream %d, offset 0x%"PRIx64" timestamp 0x%"PRIx64"\n", 
-//        sc->ffindex, sample->pos, sample->timestamp);
-#endif
-//    av_log(NULL, AV_LOG_ERROR, "before get_packet_nobuf 0x%"PRIx64" size %d\n",sample->pos, sample->size);
-//    fflush(stderr);
-//    usleep(50000);
 	    ret = av_get_packet_nobuf(s->pb, pkt, sample->size, sample->pos);
         if (ret < 0)
     	{
@@ -2816,21 +2610,9 @@ static int mov_read_packet(AVFormatContext *s, AVPacket *pkt)
         if (sc->wrong_dts)
             pkt->dts = AV_NOPTS_VALUE;
     } else {
-#ifdef EM8622
-        // JFT verify that's right in all cases...
-        if (sc->sample_sizes || st->codec->codec_type == CODEC_TYPE_VIDEO || sc->dv_audio_container)
-        {
-            pkt->duration = sc->stts_data[sc->index_stts_index].duration / sc->time_rate;
-        }
-        else
-        {
-            pkt->duration = 0;
-        }
-#else
         int64_t next_dts = (sc->current_sample < st->nb_index_entries) ?
             st->index_entries[sc->current_sample].timestamp : st->duration;
         pkt->duration = next_dts - pkt->dts;
-#endif
         pkt->pts = pkt->dts;
     }
     if (st->discard == AVDISCARD_ALL)
@@ -2848,213 +2630,7 @@ static int mov_seek_stream(AVFormatContext *s, AVStream *st, int64_t timestamp, 
     int sample, time_sample;
     int i;
 
-#ifdef DEBUG8622
-    av_log(NULL, AV_LOG_ERROR, "mov_seek_stream %lld\n", timestamp);
-#endif
-
-#ifndef EM8622
     sample = av_index_search_timestamp(st, timestamp, flags);
-#else
-    /* We use lower memory usage tables instead of index */
-    // First we need to find which sample is at the time timestamp with the ctts
-    sample = 0; // TODO: add algorithm to go through chunks time and find right sample
-    sc->index_current_dts=0;
-    sc->index_stts_index=0;
-    sc->index_stsc_index=0;
-    sc->index_stss_index=0;
-    sc->index_stts_sample=0;
-#ifdef DEBUG8622
-    av_log(NULL, AV_LOG_ERROR, "finding sample\n");
-#endif
-    while(sample<sc->sample_count && sc->index_current_dts<timestamp)
-    {
-        int64_t blockduration = ((int64_t)sc->stts_data[sc->index_stts_index].duration) *
-            ((int64_t)sc->stts_data[sc->index_stts_index].count)/sc->time_rate;
-#ifdef DEBUG8622
-        av_log(NULL, AV_LOG_ERROR, "current sample %d time %lld (block %lld) %d %d\n",
-            sample,sc->index_current_dts, blockduration, 
-            sc->stts_data[sc->index_stts_index].duration,
-            sc->stts_data[sc->index_stts_index].count);
-#endif
-        if(sc->index_current_dts+blockduration <= timestamp)
-        {
-            sample+=sc->stts_data[sc->index_stts_index].count;
-            sc->index_current_dts += blockduration;
-            if (sc->index_stts_index + 1 < sc->stts_count)
-            {
-                sc->index_stts_index+=1;
-            }
-        }
-        else // the time is in this stts block
-        {
-            int64_t samplecount = (timestamp-sc->index_current_dts)/
-                (sc->stts_data[sc->index_stts_index].duration/sc->time_rate);
-            sc->index_stts_sample=samplecount;
-            sample+=samplecount;
-            sc->index_current_dts += sc->stts_data[sc->index_stts_index].duration *
-            samplecount/sc->time_rate;
-            break;
-        }
-    }
-    sc->current_sample = sample;
-    // Find the previous keyframe if the stream contains keyframe/not keyframe samples
-    if(sc->keyframe_count>0)
-    {
-        while(sc->keyframes[sc->index_stss_index]<(sc->current_sample+1) && 
-            sc->index_stss_index < sc->keyframe_count)
-        {
-            sc->index_stss_index++;
-        }
-        if(sc->index_stss_index>0) sc->index_stss_index-=1;
-        sample=sc->keyframes[sc->index_stss_index]-1;
-        sc->current_sample = sample;
-        // Update the current dts with the frame count
-        sample=0;
-        sc->index_stts_sample=0;
-        sc->index_stts_index=0;
-        sc->index_current_dts=0;
-        while(sample<sc->current_sample)
-        {
-            int64_t blockduration = ((int64_t)sc->stts_data[sc->index_stts_index].duration) *
-                ((int64_t)sc->stts_data[sc->index_stts_index].count)/sc->time_rate;
-            //av_log(NULL, AV_LOG_ERROR, "current sample %d time %lld (block %lld)\n",
-            //    sample,sc->index_current_dts, blockduration);
-            if(sample+sc->stts_data[sc->index_stts_index].count <= sc->current_sample)
-            {
-                sample+=sc->stts_data[sc->index_stts_index].count;
-                sc->index_current_dts += blockduration;
-                if (sc->index_stts_index + 1 < sc->stts_count)
-                {
-                    sc->index_stts_index+=1;
-                }
-            }
-            else // the sample is in this stts block
-            {
-                int64_t samplecount = sc->current_sample-sample;
-                sc->index_stts_sample=samplecount;
-                sample+=samplecount;
-                sc->index_current_dts += sc->stts_data[sc->index_stts_index].duration *
-                samplecount/sc->time_rate;
-                break;
-            }
-        }
-    }
-    // Find the chunk in which the current sample is located
-    sc->index_chunk=0;
-    sc->index_chunk_sample=0;
-#ifdef DEBUG8622
-    av_log(NULL, AV_LOG_ERROR, "finding chunk for sample %d (%d %d %d)\n",sample, sc->current_sample,
-        sc->index_stsc_index, sc->stsc_data[sc->index_stsc_index].count);
-#endif
-    while(sc->current_sample && sc->current_sample >= sc->stsc_data[sc->index_stsc_index].count)
-    {
-        sc->index_chunk+=1;
-        sc->current_sample-=sc->stsc_data[sc->index_stsc_index].count;
-        if (sc->index_stsc_index + 1 < sc->stsc_count && 
-            sc->index_chunk + 1 == sc->stsc_data[sc->index_stsc_index + 1].first)
-            sc->index_stsc_index++;
-    }
-
-    if(sc->sample_size==0)
-    {
-        sc->index_chunk_sample=sc->current_sample;
-        sc->current_sample=sample;
-        sc->index_sample_size=sc->sample_size > 0 ? sc->sample_size : sc->sample_sizes[sc->current_sample];
-    }
-    else
-    {
-        // Index mode 2
-        sc->index_sample_size= sc->stsc_data[sc->index_stsc_index].count*sc->sample_size;
-        // Align to start of chunk
-        sc->index_chunk_sample=0;
-        sc->current_sample=sample-sc->current_sample;
-        // Update the current dts with the frame count
-        sample=0;
-        sc->index_stts_sample=0;
-        sc->index_stts_index=0;
-        sc->index_current_dts=0;
-        while(sample<sc->current_sample)
-        {
-            int64_t blockduration = ((int64_t)sc->stts_data[sc->index_stts_index].duration) *
-                ((int64_t)sc->stts_data[sc->index_stts_index].count)/sc->time_rate;
-            //av_log(NULL, AV_LOG_ERROR, "current sample %d time %lld (block %lld)\n",
-            //    sample,sc->index_current_dts, blockduration);
-            if(sample+sc->stts_data[sc->index_stts_index].count <= sc->current_sample)
-            {
-                sample+=sc->stts_data[sc->index_stts_index].count;
-                sc->index_current_dts += blockduration;
-                if (sc->index_stts_index + 1 < sc->stts_count)
-                {
-                    sc->index_stts_index+=1;
-                }
-            }
-            else // the sample is in this stts block
-            {
-                int64_t samplecount = sc->current_sample-sample;
-                sc->index_stts_sample=samplecount;
-                sample+=samplecount;
-                sc->index_current_dts += sc->stts_data[sc->index_stts_index].duration *
-                samplecount/sc->time_rate;
-                break;
-            }
-        }
-    }
-    sc->index_current_offset = sc->chunk_offsets[sc->index_chunk];
-    // Add sizes of samples in current chunk previous to current one to get current offset
-#ifdef DEBUG8622
-    av_log(NULL, AV_LOG_ERROR, "finding offset\n");
-#endif
-    if(sc->index_chunk_sample!=0)
-    {
-        for(i=0;i<sc->index_chunk_sample;i++)
-        {
-            sc->index_current_offset+= 
-                (sc->sample_size > 0 ? 
-                 sc->sample_size :
-                 sc->sample_sizes[sc->current_sample-sc->index_chunk_sample+i]);
-        }
-    }
-    // Find if current_sample is a keyframe and update stss index with next keyframe
-#ifdef DEBUG8622
-    av_log(NULL, AV_LOG_ERROR, "finding keyframe\n");
-#endif
-    if(!sc->keyframe_count)
-    {
-        sc->index_keyframe=1;
-    }
-    else
-    {
-        while(sc->keyframes[sc->index_stss_index]<(sc->current_sample+1) && 
-            sc->index_stss_index < sc->keyframe_count)
-        {
-            sc->index_stss_index++;
-        }
-        sc->index_keyframe= !sc->keyframe_count || 
-            sc->current_sample + 1 == sc->keyframes[sc->index_stss_index];
-        if (sc->index_keyframe) {
-            if (sc->index_stss_index + 1 < sc->keyframe_count)
-                sc->index_stss_index++;
-        }
-    }
-
-#ifdef DEBUG8622
-    av_log(NULL, AV_LOG_ERROR, "seek results\n"
-    "index_chunk %d "
-    "index_chunk_sample %d "
-    "index_stts_sample %d "
-    "index_sample_size %d "
-    "index_current_dts %lld "
-    "index_current_offset %lld "
-    "index_stts_index %d "
-    "index_stsc_index %d "
-    "index_stss_index %d "
-    "index_keyframe %d\n", 
-    sc->index_chunk, sc->index_chunk_sample, sc->index_stts_sample, sc->index_sample_size,
-    sc->index_current_dts, sc->index_current_offset, sc->index_stts_index,
-    sc->index_stsc_index, sc->index_stss_index, sc->index_keyframe);
-#endif
-
-#endif
     dprintf(s, "stream %d, timestamp %"PRId64", sample %d\n", st->index, timestamp, sample);
     if (sample < 0 && st->nb_index_entries && timestamp < st->index_entries[0].timestamp)
         sample = 0;
@@ -3062,7 +2638,6 @@ static int mov_seek_stream(AVFormatContext *s, AVStream *st, int64_t timestamp, 
         return -1;
     sc->current_sample = sample;
     dprintf(s, "stream %d, found sample %d\n", st->index, sc->current_sample);
-//    fprintf(stderr, "stream %d, found sample %ld has ctts %d\n", st->index, sc->current_sample, sc->ctts_data!=0);
     /* adjust ctts index */
     if (sc->ctts_data) {
         time_sample = 0;
@@ -3075,9 +2650,6 @@ static int mov_seek_stream(AVFormatContext *s, AVStream *st, int64_t timestamp, 
             }
             time_sample = next;
         }
-/*        fprintf(stderr, "ctts %d %d\n", 
-            sc->sample_to_ctime_index,
-            sc->sample_to_ctime_sample);*/
     }
     return sample;
 }
@@ -3085,7 +2657,6 @@ static int mov_seek_stream(AVFormatContext *s, AVStream *st, int64_t timestamp, 
 static int mov_read_seek(AVFormatContext *s, int stream_index, int64_t sample_time, int flags)
 {
     AVStream *st;
-    MOVStreamContext *sc;
     int64_t seek_timestamp, timestamp;
     int sample;
     int i;
@@ -3096,18 +2667,12 @@ static int mov_read_seek(AVFormatContext *s, int stream_index, int64_t sample_ti
         sample_time = 0;
 
     st = s->streams[stream_index];
-    sc = st->priv_data;
     sample = mov_seek_stream(s, st, sample_time, flags);
     if (sample < 0)
         return -1;
 
-#ifndef EM8622
     /* adjust seek timestamp to found sample timestamp */
     seek_timestamp = st->index_entries[sample].timestamp;
-#else
-    /* We use lower memory usage tables instead of index */
-    seek_timestamp=sc->index_current_dts;
-#endif
 
     for (i = 0; i < s->nb_streams; i++) {
         st = s->streams[i];
@@ -3137,13 +2702,6 @@ static int mov_read_close(AVFormatContext *s)
         av_freep(&sc->drefs);
         if (sc->pb && sc->pb != s->pb)
             url_fclose(sc->pb);
-#ifdef EM8622
-        av_freep(&sc->chunk_offsets);
-        av_freep(&sc->stsc_data);
-        av_freep(&sc->sample_sizes);
-        av_freep(&sc->keyframes);
-        av_freep(&sc->stts_data);
-#endif
 
         av_freep(&st->codec->palctrl);
     }

@@ -123,18 +123,6 @@ typedef struct MOVStreamContext {
     int width;            ///< tkhd width
     int height;           ///< tkhd height
     int dts_shift;        ///< dts shift when ctts is negative
-#ifdef EM8622
-    unsigned int index_chunk;
-    unsigned int index_chunk_sample;
-    unsigned int index_stts_sample;
-    unsigned int index_sample_size;
-    int64_t index_current_dts;
-    int64_t index_current_offset;
-    unsigned int index_stts_index;
-    unsigned int index_stsc_index;
-    unsigned int index_stss_index;
-    unsigned int index_keyframe;
-#endif
 } MOVStreamContext;
 
 typedef struct MOVContext {

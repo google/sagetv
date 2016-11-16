@@ -390,14 +390,12 @@ AVInputFormat *av_probe_input_format2(AVProbeData *pd, int is_opened, int *score
                 score = 50;
             }
         }
-		//if(score) av_log(NULL, AV_LOG_DEBUG, "format %s probe scored %d\n", fmt1->name, score);
         if (score > *score_max) {
             *score_max = score;
             fmt = fmt1;
         }else if (score == *score_max)
             fmt = NULL;
     }
-    //if(fmt) av_log(NULL, AV_LOG_DEBUG, " ------------  Found format: %s\n", fmt->name);
     return fmt;
 }
 
@@ -2108,9 +2106,6 @@ static int try_decode_frame(AVStream *st, AVPacket *avpkt)
     if(!has_codec_parameters(st->codec) || !has_decode_delay_been_guessed(st)){
         switch(st->codec->codec_type) {
         case AVMEDIA_TYPE_VIDEO:
-#ifdef EM8622
-        st->codec->skip_frame=AVDISCARD_ALL;
-#endif
             avcodec_get_frame_defaults(&picture);
             ret = avcodec_decode_video2(st->codec, &picture,
                                         &got_picture, avpkt);
@@ -2358,7 +2353,6 @@ int av_find_stream_info(AVFormatContext *ic)
             }
             codec_info_duration[st->index] += pkt->duration;
         }
-#ifndef EM8622
         {
             int index= pkt->stream_index;
             int64_t last= last_dts[index];
@@ -2388,7 +2382,6 @@ int av_find_stream_info(AVFormatContext *ic)
             if(last == AV_NOPTS_VALUE || duration_count[index]<=1)
                 last_dts[pkt->stream_index]= pkt->dts;
         }
-#endif
         if(st->parser && st->parser->parser->split && !st->codec->extradata){
             int i= st->parser->parser->split(st->codec, pkt->data, pkt->size);
             if(i){
@@ -3121,14 +3114,12 @@ void ff_program_add_stream_index(AVFormatContext *ac, int progid, unsigned int i
     }
 }
 
-#if 1
 static void print_fps(double d, const char *postfix){
     uint64_t v= lrintf(d*100);
     if     (v% 100      ) av_log(NULL, AV_LOG_INFO, ", %3.2f %s", d, postfix);
     else if(v%(100*1000)) av_log(NULL, AV_LOG_INFO, ", %1.0f %s", d, postfix);
     else                  av_log(NULL, AV_LOG_INFO, ", %1.0fk %s", d/1000, postfix);
 }
-#endif
 
 static void dump_metadata(void *ctx, AVMetadata *m, const char *indent)
 {
@@ -3173,19 +3164,6 @@ static void dump_stream_format(AVFormatContext *ic, int i, int index, int is_out
                  display_aspect_ratio.num, display_aspect_ratio.den);
     }
     if(st->codec->codec_type == AVMEDIA_TYPE_VIDEO){
-#if 0
-		double rate = 0.0;
-		
-		if(st->r_frame_rate.den && st->r_frame_rate.num)
-			rate = av_q2d(st->r_frame_rate);
-		else
-			rate = 1/av_q2d(st->codec->time_base);
-		
-//		if (st->codec->interlaced && st->codec->codec_id == CODEC_ID_H264)
-//			rate /= 2; // interlaced H.264 shows as double frame rate (field rate)
-		
-		av_log(NULL, AV_LOG_INFO, ", %5.2f fps", rate);
-#else
         if(st->avg_frame_rate.den && st->avg_frame_rate.num)
             print_fps(av_q2d(st->avg_frame_rate), "fps");
         if(st->r_frame_rate.den && st->r_frame_rate.num)
@@ -3194,7 +3172,6 @@ static void dump_stream_format(AVFormatContext *ic, int i, int index, int is_out
             print_fps(1/av_q2d(st->time_base), "tbn");
         if(st->codec->time_base.den && st->codec->time_base.num)
             print_fps(1/av_q2d(st->codec->time_base), "tbc");
-#endif
     }
     av_log(NULL, AV_LOG_INFO, "\n");
     dump_metadata(NULL, st->metadata, "    ");

@@ -209,7 +209,6 @@ ReSampleContext *av_audio_resample_init(int output_channels, int input_channels,
     if(input_channels!=output_channels && s->filter_channels>2)
       s->filter_channels = 2;
 
-//    av_log(NULL, AV_LOG_ERROR, "s->filter_channels %d\n", s->filter_channels);
 #define TAPS 16
     s->resample_context= av_resample_init(output_rate, input_rate,
                          filter_length, log2_phase_count, linear, cutoff);

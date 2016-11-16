@@ -2670,8 +2670,6 @@ enabled libx264    && require  libx264 x264.h x264_encoder_encode -lx264 -lm &&
 enabled libxvid    && require  libxvid xvid.h xvid_global -lxvidcore -lm
 enabled mlib       && require  mediaLib mlib_types.h mlib_VectorSub_S16_U8_Mod -lmlib
 
-# disable oggivorbis decoder if it's not available
-disabled oggivorbis_decoder || check_header ivorbiscodec.h || disable oggivorbis_decoder
 
 # libdc1394 check
 if enabled libdc1394; then

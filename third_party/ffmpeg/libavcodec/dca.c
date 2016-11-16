@@ -956,7 +956,7 @@ static int decode_blockcode(int code, int levels, int *values)
     if (code == 0)
         return 0;
     else {
-//        av_log(NULL, AV_LOG_ERROR, "ERROR: block code look-up failed\n");
+        av_log(NULL, AV_LOG_ERROR, "ERROR: block code look-up failed\n");
         return -1;
     }
 }

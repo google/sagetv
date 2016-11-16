@@ -656,7 +656,7 @@ static int ebml_read_ascii(ByteIOContext *pb, int size, char **str)
 static int ebml_read_binary(ByteIOContext *pb, int length, EbmlBin *bin)
 {
     av_free(bin->data);
-    if (!(bin->data = av_mallocUncached(length)))
+    if (!(bin->data = av_malloc(length)))
         return AVERROR(ENOMEM);
 
     bin->size = length;
@@ -695,7 +695,7 @@ static int ebml_read_binary_block(MatroskaDemuxContext *matroska, ByteIOContext 
     length-=3;
 
     // Pad the data because it could be used for decode in a packet...
-    if (!(bin->data = av_mallocUncached(length+FF_INPUT_BUFFER_PADDING_SIZE)))
+    if (!(bin->data = av_malloc(length+FF_INPUT_BUFFER_PADDING_SIZE)))
         return AVERROR(ENOMEM);
     memset(bin->data + length, 0, FF_INPUT_BUFFER_PADDING_SIZE);
 
@@ -1472,7 +1472,7 @@ static int matroska_read_header(AVFormatContext *s, AVFormatParameters *ap)
                 if(st->codec->extradata == NULL)
                     return AVERROR(ENOMEM);
                 st->codec->extradata_size = track->codec_priv.size;
-                av_memcpy(st->codec->extradata,
+                memcpy(st->codec->extradata,
                        track->codec_priv.data + extradata_offset,
                        track->codec_priv.size);
             }
@@ -1519,7 +1519,7 @@ static int matroska_read_header(AVFormatContext *s, AVFormatParameters *ap)
             if(st->codec->extradata == NULL)
                 break;
             st->codec->extradata_size = attachements[j].bin.size;
-            av_memcpy(st->codec->extradata, attachements[j].bin.data, attachements[j].bin.size);
+            memcpy(st->codec->extradata, attachements[j].bin.data, attachements[j].bin.size);
 
             for (i=0; ff_mkv_mime_tags[i].id != CODEC_ID_NONE; i++) {
                 if (!strncmp(ff_mkv_mime_tags[i].str, attachements[j].mime,
@@ -1587,19 +1587,6 @@ static int matroska_read_header(AVFormatContext *s, AVFormatParameters *ap)
     // Do we have an index per 30 seconds
     matroska->skip_index = 0;
 
-#ifdef EM8622
-    if(matroska->duration && indexcount &&
-        matroska->ctx->duration/indexcount<30LL*AV_TIME_BASE)
-    {
-        matroska->skip_index = 1;
-    }
-
-/*    #undef fprintf
-    fprintf(stderr, "Matroska skip index %d (%d %lld %lld)\n",
-        matroska->skip_index, indexcount, matroska->ctx->duration,
-        matroska->ctx->duration/indexcount);
-*/
-#endif
 
     matroska_convert_tags(s);
 
@@ -1614,7 +1601,7 @@ static int matroska_deliver_packet(MatroskaDemuxContext *matroska,
                                    AVPacket *pkt)
 {
     if (matroska->num_packets > 0) {
-        av_memcpy(pkt, matroska->packets[0], sizeof(AVPacket));
+        memcpy(pkt, matroska->packets[0], sizeof(AVPacket));
         av_free(matroska->packets[0]);
         if (matroska->num_packets > 1) {
             memmove(&matroska->packets[0], &matroska->packets[1],
@@ -1705,10 +1692,6 @@ static int matroska_parse_block(MatroskaDemuxContext *matroska, uint8_t *data,
             is_keyframe = 0;  /* overlapping subtitles are not key frame */
         if (is_keyframe && matroska->skip_index==0)
         {
-#ifdef EM8622
-            // We can't use much memory for our index, (set to 128K per stream)
-            ff_reduce_index(matroska->ctx, st->index);
-#endif
             av_add_index_entry(st, cluster_pos, timecode, 0,0,AVINDEX_KEYFRAME);
         }
         track->end_timecode = FFMAX(track->end_timecode, timecode+duration);

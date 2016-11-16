@@ -1979,8 +1979,7 @@ static int output_packet(AVInputStream *ist, int ist_index,
 
                     ret = avcodec_decode_video2(ist->st->codec,
                                                 &picture, &got_picture, &avpkt);
- //if (got_picture) fprintf(stderr, "   -- got picture, pts = %lld\n", picture.pts);
-                   ist->st->quality= picture.quality;
+                    ist->st->quality= picture.quality;
                     if (ret < 0)
                         goto fail_decode;
                     if (!got_picture) {
@@ -2083,16 +2082,6 @@ static int output_packet(AVInputStream *ist, int ist_index,
                 if (ost->source_index == ist_index) {
                     os = output_files[ost->file_index];
 
-#if 0
-if (ost->st->codec->codec_type == CODEC_TYPE_VIDEO && pkt && ist)
-	fprintf(stderr, "  -- video pts = %lld, picture pts = %lld, pkt pts = %lld\n", av_rescale(ist->pts, 90000, AV_TIME_BASE), picture.pts, pkt->pts);
-if (ost->st->codec->codec_type == CODEC_TYPE_AUDIO && pkt && ist)
-	fprintf(stderr, "  -- audio pts = %lld, pkt pts = %lld\n", av_rescale(ist->pts, 90000, AV_TIME_BASE), pkt->pts);
-                    printf("%d: got pts=%0.3f %0.3f\n", i,
-                           (double)pkt->pts / AV_TIME_BASE,
-                           ((double)ist->pts / AV_TIME_BASE) -
-                           ((double)ost->st->pts.val * ost->st->time_base.num / ost->st->time_base.den));
-#endif
                     /* set the input output pts pairs */
                     //ost->sync_ipts = (double)(ist->pts + input_files_ts_offset[ist->file_index] - start_time)/ AV_TIME_BASE;
 
