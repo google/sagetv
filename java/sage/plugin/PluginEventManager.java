@@ -15,7 +15,7 @@
  */
 package sage.plugin;
 
-import sage.Sage;
+import java.util.Collections;
 
 /**
  * @author Narflex
@@ -225,35 +225,61 @@ public class PluginEventManager implements sage.SageTVPluginRegistry, Runnable
         }
         processMe = (EventData) eventQueue.firstElement();
       }
-      processMe.vars = java.util.Collections.unmodifiableMap(processMe.vars);
-      java.util.Vector listeners = (java.util.Vector) listenerMap.get(processMe.name);
-      boolean debugEvents = sage.Sage.getBoolean("debug_core_events", false);
-      if (sage.Sage.DBG && debugEvents) System.out.println("Core is about to process the event " + processMe.name + " vars=" + processMe.vars);
-      if (listeners != null && !listeners.isEmpty())
+      // wrap the plugin processing code in a try/finally to avoid a deadlock
+      // In the event that encounter an issue we need to make sure to remove this event from the queue
+      // or else if we are set to wait, then we'll never complete
+      try
       {
-        // We convert this to an array to avoid issues where the listeners are changed while we're sending out the event
-        sage.SageTVEventListener[] listies = (sage.SageTVEventListener[]) listeners.toArray(new sage.SageTVEventListener[0]);
-        for (int i = 0; i < listies.length; i++)
+        // set vars to a default empty map if it's not there or else NPE
+        // previously, without the above try/finally any event posted without a Map causes the plugin
+        // system to deadlock
+        if (processMe.vars==null)
+          processMe.vars = Collections.emptyMap();
+        processMe.vars = java.util.Collections.unmodifiableMap(processMe.vars);
+        java.util.Vector listeners = (java.util.Vector) listenerMap.get(processMe.name);
+        boolean debugEvents = sage.Sage.getBoolean("debug_core_events", false);
+        if (sage.Sage.DBG && debugEvents)
+          System.out.println("Core is about to process the event " + processMe.name + " vars=" + processMe.vars);
+        if (listeners != null && !listeners.isEmpty())
         {
-          try
+          // We convert this to an array to avoid issues where the listeners are changed while we're sending out the event
+          sage.SageTVEventListener[] listies = (sage.SageTVEventListener[]) listeners.toArray(new sage.SageTVEventListener[0]);
+          for (int i = 0; i < listies.length; i++)
           {
-            if (debugEvents && sage.Sage.DBG) System.out.println("Core sending event " + processMe.name + " to " + listies[i] + " vars=" + processMe.vars);
-            listies[i].sageEvent(processMe.name, processMe.vars);
-            if (debugEvents && sage.Sage.DBG) System.out.println("DONE Core sending event " + processMe.name + " to " + listies[i]);
-          }
-          catch (Throwable t)
-          {
-            if (sage.Sage.DBG) System.out.println("Exception error in plugin event listener of: " + t);
-            if (sage.Sage.DBG) t.printStackTrace();
+            try
+            {
+              if (debugEvents && sage.Sage.DBG)
+                System.out.println("Core sending event " + processMe.name + " to " + listies[i] + " vars=" + processMe.vars);
+              // NOTE: This blocks this thread until the plugin event completes.
+              // This has a side effect of a Plugin disabling the entire event system, if it misbehaves.
+              // We should probably rewrite the Plugin Event handling to use the Java 1.5 Executor Servic
+              // so that we can publish events and then get a Future on which we can call
+              // .get(timeout) to wait at most for the event to complete.
+              listies[i].sageEvent(processMe.name, processMe.vars);
+              if (debugEvents && sage.Sage.DBG)
+                System.out.println("DONE Core sending event " + processMe.name + " to " + listies[i]);
+            } catch (Throwable t)
+            {
+              if (sage.Sage.DBG) System.out.println("Exception error in plugin event listener of: " + t);
+              if (sage.Sage.DBG) t.printStackTrace();
+            }
           }
         }
-      }
-      synchronized (eventQueue)
+      } finally
       {
-        eventQueue.remove(0);
-        eventQueue.notifyAll();
+        synchronized (eventQueue)
+        {
+          eventQueue.remove(0);
+          eventQueue.notifyAll();
+        }
       }
     }
+  }
+
+  // used internally for unit testing
+  void reset() {
+    if (listenerMap!=null) listenerMap.clear();
+    if (eventQueue!=null) eventQueue.clear();
   }
 
   private java.util.Map listenerMap;
