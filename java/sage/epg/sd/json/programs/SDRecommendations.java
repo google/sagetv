@@ -35,4 +35,13 @@ public class SDRecommendations
   {
     return title120;
   }
+
+  @Override
+  public String toString()
+  {
+    return "SDRecommendations{" +
+      "programID='" + programID + '\'' +
+      ", title120='" + title120 + '\'' +
+      '}';
+  }
 }

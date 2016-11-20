@@ -27,6 +27,21 @@ public class SDPerson
   private String characterName;
   private String billingOrder;
 
+  // Used for deserialization
+  public SDPerson()
+  {
+
+  }
+
+  // Convert team to person.
+  protected SDPerson(String name, String role, int billingOrder)
+  {
+    this.name = name;
+    this.role = role;
+    // Mandatory field
+    this.billingOrder = Integer.toString(billingOrder);
+  }
+
   /**
    * string for this person. Used to retrieve images. Optional.
    */
@@ -152,5 +167,18 @@ public class SDPerson
       return "";
 
     return billingOrder;
+  }
+
+  @Override
+  public String toString()
+  {
+    return "SDPerson{" +
+      "personId='" + personId + '\'' +
+      ", nameId='" + nameId + '\'' +
+      ", name='" + name + '\'' +
+      ", role='" + role + '\'' +
+      ", characterName='" + characterName + '\'' +
+      ", billingOrder='" + billingOrder + '\'' +
+      '}';
   }
 }

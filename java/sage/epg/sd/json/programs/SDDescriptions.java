@@ -15,6 +15,8 @@
  */
 package sage.epg.sd.json.programs;
 
+import java.util.Arrays;
+
 public class SDDescriptions
 {
   private static final Description[] EMPTY_DESCRIPTIONS = new Description[0];
@@ -94,6 +96,15 @@ public class SDDescriptions
     return BLANK_DESCRIPTION;
   }
 
+  @Override
+  public String toString()
+  {
+    return "SDDescriptions{" +
+      "description100=" + Arrays.toString(description100) +
+      ", description1000=" + Arrays.toString(description1000) +
+      '}';
+  }
+
   public static class Description
   {
     private String descriptionLanguage;
@@ -124,6 +135,15 @@ public class SDDescriptions
         return "";
 
       return description;
+    }
+
+    @Override
+    public String toString()
+    {
+      return "Description{" +
+        "descriptionLanguage='" + descriptionLanguage + '\'' +
+        ", description='" + description + '\'' +
+        '}';
     }
   }
 }

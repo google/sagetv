@@ -19,6 +19,8 @@ import sage.Pooler;
 import sage.epg.sd.json.SDError;
 import sage.epg.sd.json.images.SDImage;
 
+import java.util.Arrays;
+
 public class SDProgram implements SDError
 {
   private static final Title[] EMPTY_TITLES = new Title[0];
@@ -232,6 +234,24 @@ public class SDProgram implements SDError
   }
 
   /**
+   * array of teams. Optional.
+   */
+  public SDPerson[] getTeams()
+  {
+    if (eventDetails == null)
+      return EMPTY_PEOPLE;
+    SDEventDetails.Teams teams[] = eventDetails.getTeams();
+    if (teams.length == 0)
+      return EMPTY_PEOPLE;
+    SDPerson[] returnValue = new SDPerson[teams.length];
+    for (int i = 0; i < returnValue.length; i++)
+    {
+      returnValue[i] = new SDPerson(teams[i].getName(), "Team", i + 1);
+    }
+    return returnValue;
+  }
+
+  /**
    * array of programs similar to this one that you may also enjoy. Optional.
    */
   public SDRecommendations[] getRecommendations()
@@ -370,5 +390,36 @@ public class SDProgram implements SDError
     }
 
     return 0;
+  }
+
+  @Override
+  public String toString()
+  {
+    return "SDProgram{" +
+      "code=" + code +
+      ", message='" + message + '\'' +
+      ", programID='" + programID + '\'' +
+      ", titles=" + Arrays.toString(titles) +
+      ", eventDetails=" + eventDetails +
+      ", descriptions=" + descriptions +
+      ", originalAirDate='" + originalAirDate + '\'' +
+      ", genres=" + Arrays.toString(genres) +
+      ", officialURL='" + officialURL + '\'' +
+      ", keyWords=" + keyWords +
+      ", episodeTitle150='" + episodeTitle150 + '\'' +
+      ", metadata=" + Arrays.toString(metadata) +
+      ", entityType='" + entityType + '\'' +
+      ", contentAdvisory=" + Arrays.toString(contentAdvisory) +
+      ", contentRating=" + Arrays.toString(contentRating) +
+      ", movie=" + movie +
+      ", cast=" + Arrays.toString(cast) +
+      ", crew=" + Arrays.toString(crew) +
+      ", recommendations=" + Arrays.toString(recommendations) +
+      ", duration=" + duration +
+      ", episodeImage=" + episodeImage +
+      ", showType='" + showType + '\'' +
+      ", hasImageArtwork=" + hasImageArtwork +
+      ", md5='" + md5 + '\'' +
+      '}';
   }
 }
