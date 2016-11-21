@@ -1577,17 +1577,23 @@ public class SDRipper extends EPGDataSource
                     String episodeName = programDetail.getEpisodeTitle150();
                     String desc = programDetail.getDescriptions().getDescription(preferedDescDigraph).getDescription();
                     long showDuration = programDetail.getDuration();
-                    int castLen = programDetail.getCast().length;
-                    int numPeople = castLen + programDetail.getCrew().length;
-                    String[] people = new String[numPeople];
-                    byte[] roles = new byte[numPeople];
+                    SDPerson cast[] = programDetail.getCast();
+                    SDPerson crew[] = programDetail.getCrew();
+                    SDPerson teams[] = programDetail.getTeams();
+                    int castLen = cast.length;
+                    int castCrewLen = castLen + crew.length;
+                    int totalPeople = castCrewLen + teams.length;
+                    String[] people = new String[totalPeople];
+                    byte[] roles = new byte[totalPeople];
                     SDPerson person;
-                    for (int k = 0; k < numPeople; k++)
+                    for (int k = 0; k < totalPeople; k++)
                     {
                       if (k < castLen)
-                        person = programDetail.getCast()[k];
+                        person = cast[k];
+                      else if (k < castCrewLen)
+                        person = crew[k - castLen];
                       else
-                        person = programDetail.getCrew()[k - castLen];
+                        person = teams[k - castCrewLen];
 
                       people[k] = person.getName();
                       roles[k] = person.getRoleID();

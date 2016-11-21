@@ -41,4 +41,14 @@ public class SDContentRating
   {
     return country;
   }
+
+  @Override
+  public String toString()
+  {
+    return "SDContentRating{" +
+      "body='" + body + '\'' +
+      ", code='" + code + '\'' +
+      ", country='" + country + '\'' +
+      '}';
+  }
 }

@@ -15,6 +15,8 @@
  */
 package sage.epg.sd.json.programs;
 
+import java.util.Arrays;
+
 public class SDMovie
 {
   private static final QualityRating[] EMPTY_QUALITY_RATING = new QualityRating[0];
@@ -82,6 +84,15 @@ public class SDMovie
     return "";
   }
 
+  @Override
+  public String toString()
+  {
+    return "SDMovie{" +
+      "year='" + year + '\'' +
+      ", qualityRating=" + Arrays.toString(qualityRating) +
+      '}';
+  }
+
   public static class QualityRating
   {
     private String ratingsBody;
@@ -128,6 +139,18 @@ public class SDMovie
     public String getIncrement()
     {
       return increment;
+    }
+
+    @Override
+    public String toString()
+    {
+      return "QualityRating{" +
+        "ratingsBody='" + ratingsBody + '\'' +
+        ", rating='" + rating + '\'' +
+        ", minRating='" + minRating + '\'' +
+        ", maxRating='" + maxRating + '\'' +
+        ", increment='" + increment + '\'' +
+        '}';
     }
   }
 }

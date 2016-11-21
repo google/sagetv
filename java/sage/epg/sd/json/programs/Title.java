@@ -26,4 +26,12 @@ public class Title
   {
     return title120;
   }
+
+  @Override
+  public String toString()
+  {
+    return "Title{" +
+      "title120='" + title120 + '\'' +
+      '}';
+  }
 }

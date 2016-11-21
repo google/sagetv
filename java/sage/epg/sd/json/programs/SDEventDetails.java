@@ -15,6 +15,8 @@
  */
 package sage.epg.sd.json.programs;
 
+import java.util.Arrays;
+
 public class SDEventDetails
 {
   private static final Teams[] EMPTY_TEAMS = new Teams[0];
@@ -40,6 +42,15 @@ public class SDEventDetails
       return EMPTY_TEAMS;
 
     return teams;
+  }
+
+  @Override
+  public String toString()
+  {
+    return "SDEventDetails{" +
+      "venue100='" + venue100 + '\'' +
+      ", teams=" + Arrays.toString(teams) +
+      '}';
   }
 
   public static class Teams
@@ -70,6 +81,16 @@ public class SDEventDetails
     public String gameDate()
     {
       return gameDate;
+    }
+
+    @Override
+    public String toString()
+    {
+      return "Teams{" +
+        "name='" + name + '\'' +
+        ", isHome=" + isHome +
+        ", gameDate='" + gameDate + '\'' +
+        '}';
     }
   }
 }
