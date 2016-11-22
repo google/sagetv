@@ -123,12 +123,5 @@ char *av_strdup(const char *s) av_malloc_attrib;
  */
 void av_freep(void *ptr);
 
-void *av_memcpy(void *dest, const void *src, unsigned int size);
-
-#ifdef EM8622UNCACHED
-void *av_mallocUncached(unsigned int size);
-#else
-#define av_mallocUncached av_malloc
-#endif
 
 #endif /* AVUTIL_MEM_H */

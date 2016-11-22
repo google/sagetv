@@ -1,0 +1,381 @@
+[
+  {
+    "programID": "SH01966829",
+    "data": [
+      {
+        "width": "1920",
+        "height": "1080",
+        "uri": "assets/p10949089_b_h10_aa.jpg",
+        "size": "Ms",
+        "aspect": "16x9",
+        "category": "Banner-L1",
+        "text": "yes",
+        "primary": "true",
+        "tier": "Series"
+      },
+      {
+        "width": "1280",
+        "height": "720",
+        "uri": "assets/p10949089_b_h11_aa.jpg",
+        "size": "Lg",
+        "aspect": "16x9",
+        "category": "Banner-L1",
+        "text": "yes",
+        "primary": "true",
+        "tier": "Series"
+      },
+      {
+        "width": "960",
+        "height": "540",
+        "uri": "assets/p10949089_b_h12_aa.jpg",
+        "size": "Md",
+        "aspect": "16x9",
+        "category": "Banner-L1",
+        "text": "yes",
+        "primary": "true",
+        "tier": "Series"
+      },
+      {
+        "width": "480",
+        "height": "270",
+        "uri": "https://s3.amazonaws.com/schedulesdirect/assets/p10949089_b_h13_aa.jpg",
+        "size": "Sm",
+        "aspect": "16x9",
+        "category": "Banner-L1",
+        "text": "yes",
+        "primary": "true",
+        "tier": "Series"
+      },
+      {
+        "width": "240",
+        "height": "135",
+        "uri": "assets/p10949089_b_h14_aa.jpg",
+        "size": "Xs",
+        "aspect": "16x9",
+        "category": "Banner-L1",
+        "text": "yes",
+        "primary": "true",
+        "tier": "Series"
+      },
+      {
+        "width": "360",
+        "height": "270",
+        "uri": "https://s3.amazonaws.com/schedulesdirect/assets/p10949089_b_h3_aa.jpg",
+        "size": "Md",
+        "aspect": "4x3",
+        "category": "Banner-L1",
+        "text": "yes",
+        "primary": "true",
+        "tier": "Series"
+      },
+      {
+        "width": "180",
+        "height": "135",
+        "uri": "assets/p10949089_b_h5_aa.jpg",
+        "size": "Sm",
+        "aspect": "4x3",
+        "category": "Banner-L1",
+        "text": "yes",
+        "primary": "true",
+        "tier": "Series"
+      },
+      {
+        "width": "720",
+        "height": "540",
+        "uri": "assets/p10949089_b_h6_aa.jpg",
+        "size": "Lg",
+        "aspect": "4x3",
+        "category": "Banner-L1",
+        "text": "yes",
+        "primary": "true",
+        "tier": "Series"
+      },
+      {
+        "width": "1440",
+        "height": "1080",
+        "uri": "assets/p10949089_b_h9_aa.jpg",
+        "size": "Ms",
+        "aspect": "4x3",
+        "category": "Banner-L1",
+        "text": "yes",
+        "primary": "true",
+        "tier": "Series"
+      },
+      {
+        "width": "135",
+        "height": "180",
+        "uri": "assets/p10949089_b_v2_aa.jpg",
+        "size": "Sm",
+        "aspect": "3x4",
+        "category": "Banner-L1",
+        "text": "yes",
+        "primary": "true",
+        "tier": "Series"
+      },
+      {
+        "width": "270",
+        "height": "360",
+        "uri": "assets/p10949089_b_v3_aa.jpg",
+        "size": "Md",
+        "aspect": "3x4",
+        "category": "Banner-L1",
+        "text": "yes",
+        "primary": "true",
+        "tier": "Series"
+      },
+      {
+        "width": "540",
+        "height": "720",
+        "uri": "assets/p10949089_b_v4_aa.jpg",
+        "size": "Lg",
+        "aspect": "3x4",
+        "category": "Banner-L1",
+        "text": "yes",
+        "primary": "true",
+        "tier": "Series"
+      },
+      {
+        "width": "240",
+        "height": "360",
+        "uri": "assets/p10949089_b_v5_aa.jpg",
+        "size": "Md",
+        "aspect": "2x3",
+        "category": "Banner-L1",
+        "text": "yes",
+        "primary": "true",
+        "tier": "Series"
+      },
+      {
+        "width": "120",
+        "height": "180",
+        "uri": "assets/p10949089_b_v6_aa.jpg",
+        "size": "Sm",
+        "aspect": "2x3",
+        "category": "Banner-L1",
+        "text": "yes",
+        "primary": "true",
+        "tier": "Series"
+      },
+      {
+        "width": "480",
+        "height": "720",
+        "uri": "assets/p10949089_b_v7_aa.jpg",
+        "size": "Lg",
+        "aspect": "2x3",
+        "category": "Banner-L1",
+        "text": "yes",
+        "primary": "true",
+        "tier": "Series"
+      },
+      {
+        "width": "960",
+        "height": "1440",
+        "uri": "assets/p10949089_b_v8_aa.jpg",
+        "size": "Ms",
+        "aspect": "2x3",
+        "category": "Banner-L1",
+        "text": "yes",
+        "primary": "true",
+        "tier": "Series"
+      },
+      {
+        "width": "1080",
+        "height": "1440",
+        "uri": "assets/p10949089_b_v9_aa.jpg",
+        "size": "Ms",
+        "aspect": "3x4",
+        "category": "Banner-L1",
+        "text": "yes",
+        "primary": "true",
+        "tier": "Series"
+      },
+      {
+        "width": "1920",
+        "height": "1080",
+        "uri": "assets/p10949089_i_h10_aa.jpg",
+        "size": "Ms",
+        "aspect": "16x9",
+        "category": "Iconic",
+        "text": "no",
+        "primary": "true",
+        "tier": "Series"
+      },
+      {
+        "width": "1280",
+        "height": "720",
+        "uri": "assets/p10949089_i_h11_aa.jpg",
+        "size": "Lg",
+        "aspect": "16x9",
+        "category": "Iconic",
+        "text": "no",
+        "primary": "true",
+        "tier": "Series"
+      },
+      {
+        "width": "960",
+        "height": "540",
+        "uri": "assets/p10949089_i_h12_aa.jpg",
+        "size": "Md",
+        "aspect": "16x9",
+        "category": "Iconic",
+        "text": "no",
+        "primary": "true",
+        "tier": "Series"
+      },
+      {
+        "width": "480",
+        "height": "270",
+        "uri": "assets/p10949089_i_h13_aa.jpg",
+        "size": "Sm",
+        "aspect": "16x9",
+        "category": "Iconic",
+        "text": "no",
+        "primary": "true",
+        "tier": "Series"
+      },
+      {
+        "width": "240",
+        "height": "135",
+        "uri": "assets/p10949089_i_h14_aa.jpg",
+        "size": "Xs",
+        "aspect": "16x9",
+        "category": "Iconic",
+        "text": "no",
+        "primary": "true",
+        "tier": "Series"
+      },
+      {
+        "width": "360",
+        "height": "270",
+        "uri": "assets/p10949089_i_h3_aa.jpg",
+        "size": "Md",
+        "aspect": "4x3",
+        "category": "Iconic",
+        "text": "no",
+        "primary": "true",
+        "tier": "Series"
+      },
+      {
+        "width": "180",
+        "height": "135",
+        "uri": "assets/p10949089_i_h5_aa.jpg",
+        "size": "Sm",
+        "aspect": "4x3",
+        "category": "Iconic",
+        "text": "no",
+        "primary": "true",
+        "tier": "Series"
+      },
+      {
+        "width": "720",
+        "height": "540",
+        "uri": "assets/p10949089_i_h6_aa.jpg",
+        "size": "Lg",
+        "aspect": "4x3",
+        "category": "Iconic",
+        "text": "no",
+        "primary": "true",
+        "tier": "Series"
+      },
+      {
+        "width": "1440",
+        "height": "1080",
+        "uri": "assets/p10949089_i_h9_aa.jpg",
+        "size": "Ms",
+        "aspect": "4x3",
+        "category": "Iconic",
+        "text": "no",
+        "primary": "true",
+        "tier": "Series"
+      },
+      {
+        "width": "135",
+        "height": "180",
+        "uri": "assets/p10949089_i_v2_aa.jpg",
+        "size": "Sm",
+        "aspect": "3x4",
+        "category": "Iconic",
+        "text": "no",
+        "primary": "true",
+        "tier": "Series"
+      },
+      {
+        "width": "270",
+        "height": "360",
+        "uri": "assets/p10949089_i_v3_aa.jpg",
+        "size": "Md",
+        "aspect": "3x4",
+        "category": "Iconic",
+        "text": "no",
+        "primary": "true",
+        "tier": "Series"
+      },
+      {
+        "width": "540",
+        "height": "720",
+        "uri": "assets/p10949089_i_v4_aa.jpg",
+        "size": "Lg",
+        "aspect": "3x4",
+        "category": "Iconic",
+        "text": "no",
+        "primary": "true",
+        "tier": "Series"
+      },
+      {
+        "width": "240",
+        "height": "360",
+        "uri": "assets/p10949089_i_v5_aa.jpg",
+        "size": "Md",
+        "aspect": "2x3",
+        "category": "Iconic",
+        "text": "no",
+        "primary": "true",
+        "tier": "Series"
+      },
+      {
+        "width": "120",
+        "height": "180",
+        "uri": "assets/p10949089_i_v6_aa.jpg",
+        "size": "Sm",
+        "aspect": "2x3",
+        "category": "Iconic",
+        "text": "no",
+        "primary": "true",
+        "tier": "Series"
+      },
+      {
+        "width": "480",
+        "height": "720",
+        "uri": "assets/p10949089_i_v7_aa.jpg",
+        "size": "Lg",
+        "aspect": "2x3",
+        "category": "Iconic",
+        "text": "no",
+        "primary": "true",
+        "tier": "Series"
+      },
+      {
+        "width": "960",
+        "height": "1440",
+        "uri": "assets/p10949089_i_v8_aa.jpg",
+        "size": "Ms",
+        "aspect": "2x3",
+        "category": "Iconic",
+        "text": "no",
+        "primary": "true",
+        "tier": "Series"
+      },
+      {
+        "width": "1080",
+        "height": "1440",
+        "uri": "assets/p10949089_i_v9_aa.jpg",
+        "size": "Ms",
+        "aspect": "3x4",
+        "category": "Iconic",
+        "text": "no",
+        "primary": "true",
+        "tier": "Series"
+      }
+    ]
+  }
+]

@@ -46,6 +46,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -4150,7 +4151,7 @@ public class MediaFile extends DBObject implements SegmentedFile
         Show s = getShow();
         // Jeff Harrison - 10/5/2015
         // Add spaces around SxxExx and Episode Name
-        String sectionDivider = (Sage.getBoolean("extended_filenames", false) ? " - " : "-");				
+        String sectionDivider = (Sage.getBoolean("extended_filenames", false) ? " - " : "-");
         String namePart = (forcedStringName != null ? forcedStringName :
           (createValidFilename(s.getTitle()) +
             ((Sage.getBoolean("use_season_episode_nums_in_filenames", false) && s.getSeasonNumber() > 0 && s.getEpisodeNumber() > 0) ?
@@ -4253,23 +4254,31 @@ public class MediaFile extends DBObject implements SegmentedFile
   public static String createValidFilename(String tryMe)
   {
     if (tryMe == null) return "null";
+    boolean allowUnicode = Sage.getBoolean("allow_unicode_characters_in_generated_filenames", false);
+    boolean extendedFilenames = Sage.getBoolean("extended_filenames", false);
+    if (!allowUnicode) {
+      // Normalize any accented characters by decomposing them into their
+      // ascii value and the accent. The accent will be stripped out in the loop
+      // below.
+      tryMe = Normalizer.normalize(tryMe, Normalizer.Form.NFD);
+    }
     int len = tryMe.length();
     StringBuffer sb = new StringBuffer(len);
     for (int i = 0; i < len; i++)
     {
       char c = tryMe.charAt(i);
       // Stick with ASCII to prevent issues with the filesystem names unless a custom property is set
-      if (Sage.getBoolean("allow_unicode_characters_in_generated_filenames", false))
+      if (allowUnicode)
       {
-        if (Character.isLetterOrDigit(c)
-          || (Sage.getBoolean("extended_filenames", false) && LEGAL_FILE_NAME_CHARACTERS.contains(String.valueOf(c))))
+        if (Character.isLetterOrDigit(c) ||
+                (extendedFilenames && LEGAL_FILE_NAME_CHARACTERS.contains(String.valueOf(c))))
             sb.append(c);
       } else if ((c >= 'a' && c <= 'z') ||
         (c >= '0' && c <= '9') ||
         (c >= 'A' && c <= 'Z') ||
         // Jeff Harrison - 09/10/2016
      	  // Keep spaces and other extra characters in filenames
-        (Sage.getBoolean("extended_filenames", false) && LEGAL_FILE_NAME_CHARACTERS.contains(String.valueOf(c))))
+        (extendedFilenames && LEGAL_FILE_NAME_CHARACTERS.contains(String.valueOf(c))))
           sb.append(c);
     }
     return sb.toString();
@@ -5207,7 +5216,7 @@ public class MediaFile extends DBObject implements SegmentedFile
                 if (isLocalFile() || !Sage.client/*isTrueClient()*/) // optimize for pseudo-clients
                 {
                   if (ImageLoader.createThumbnail(getFile(0).toString(),
-                      imageThumbFile.toString(), finalThumbWidth, finalThumbHeight))
+                      imageThumbFile.toString(), finalThumbWidth, finalThumbHeight, MetaImage.getMetaImage(MediaFile.this).getRotation()))
                   {
                     thumbnailLoadState = 2;
                   }
@@ -5223,7 +5232,7 @@ public class MediaFile extends DBObject implements SegmentedFile
                   tempFile.deleteOnExit();
                   copyToLocalStorage(tempFile);
                   if (ImageLoader.createThumbnail(tempFile.toString(),
-                      imageThumbFile.toString(), finalThumbWidth, finalThumbHeight))
+                      imageThumbFile.toString(), finalThumbWidth, finalThumbHeight, MetaImage.getMetaImage(MediaFile.this).getRotation()))
                   {
                     thumbnailLoadState = 2;
                   }

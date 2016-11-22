@@ -621,7 +621,7 @@ int AVPtsDataDumper( void* pContext, void* pData, int nSize )
 	if ( pTrack->es_elmnt->content_type == VIDEO_DATA || 
 		 pTrack->es_elmnt->content_type == AUDIO_DATA ||
 		 pTrack->es_elmnt->content_type == SUBTITLE_DATA ||
-		 pTrack->es_elmnt->content_type == PRIVAITE_DATA )
+		 pTrack->es_elmnt->content_type == PRIVATE_DATA )
 	{
 		buf1[0] = 0x0;
 		buf2[0] = 0x0;
@@ -634,7 +634,7 @@ int AVPtsDataDumper( void* pContext, void* pData, int nSize )
 			if ( pTrack->es_elmnt->content_type == AUDIO_DATA )		data_type = " A"; else
 			if ( pTrack->es_elmnt->content_type == VIDEO_DATA )		data_type = "V"; else
 			if ( pTrack->es_elmnt->content_type == SUBTITLE_DATA )	data_type = " S"; else
-			if ( pTrack->es_elmnt->content_type == PRIVAITE_DATA )	data_type = " P"; else
+			if ( pTrack->es_elmnt->content_type == PRIVATE_DATA )	data_type = " P"; else
 				data_type = "  ";
 
 			pos1  += long_long( pts, buf1+pos1, buf_size1-pos1 );
@@ -654,7 +654,7 @@ int AVPtsDataDumper( void* pContext, void* pData, int nSize )
 			if ( pTrack->es_elmnt->content_type == AUDIO_DATA )		data_type = " A"; else
 			if ( pTrack->es_elmnt->content_type == VIDEO_DATA )		data_type = "V"; else
 			if ( pTrack->es_elmnt->content_type == SUBTITLE_DATA )	data_type = " S"; else
-			if ( pTrack->es_elmnt->content_type == PRIVAITE_DATA )	data_type = " P"; else
+			if ( pTrack->es_elmnt->content_type == PRIVATE_DATA )	data_type = " P"; else
 				data_type = "  ";
 
 			pos2  += long_long( pts, buf2+pos2, buf_size2-pos2 );

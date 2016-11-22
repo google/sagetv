@@ -501,7 +501,7 @@ int  AVElmntInfo( AV_ELEMENT *pAVElmnt, char* pBuffer, int nSize )
 	{
 		pos += snprintf( p+pos, nSize-pos, "bf=tex;" );
 	} else
-	if ( pAVElmnt->content_type == PRIVAITE_DATA )
+	if ( pAVElmnt->content_type == PRIVATE_DATA )
 	{
 		pos += snprintf( p+pos, nSize-pos, "bf=prv;" );
 	} else

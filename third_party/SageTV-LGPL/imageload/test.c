@@ -82,12 +82,18 @@ int main_scaler(int argc, char **argv){
 
 int main(int argc, char** argv)
 {
-	if (argc != 5)
+	if (argc != 5 && argc != 6 && argc != 7)
 	{
-		printf("Usage: program SourceJPEG DestJPEG DestWidth DestHeight\r\n");
+		printf("Usage: program SourceJPEG DestJPEG DestWidth DestHeight [bpp] [rotation]\r\n");
 		return -1;
 	}
 	RawImage_t* myImage;
+  int bpp = 32;
+  int rotation = 0;
+  if (argc > 5)
+    bpp = atoi(argv[5]);
+  if (argc > 6)
+    rotation = atoi(argv[6]);
 	char* lastDot = strrchr(argv[1], '.');
 	if (lastDot && !strcasecmp(lastDot, ".png"))
 	{
@@ -110,7 +116,7 @@ int main(int argc, char** argv)
 	else
 	{
 		FILE* fp = fopen(argv[1], "rb");
-		myImage = LoadJPEG(fp, atoi(argv[3]), atoi(argv[4]), 32);
+		myImage = LoadJPEG(fp, atoi(argv[3]), atoi(argv[4]), bpp, rotation);
 		fclose(fp);
 	}
 	printf("Finished loading image\r\n");fflush(stdout);

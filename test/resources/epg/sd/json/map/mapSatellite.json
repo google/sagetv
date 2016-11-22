@@ -1,0 +1,95 @@
+{
+  "map": [
+    {
+      "stationID": "32046",
+      "channel": "001"
+    },
+    {
+      "stationID": "11458",
+      "channel": "008"
+    },
+    {
+      "stationID": "25544",
+      "channel": "008"
+    }
+  ],
+  "stations": [
+    {
+      "stationID": "11458",
+      "name": "WGAL",
+      "callsign": "WGAL",
+      "affiliate": "NBC",
+      "broadcastLanguage": [
+        "en"
+      ],
+      "descriptionLanguage": [
+        "en"
+      ],
+      "broadcaster": {
+        "city": "Lancaster",
+        "state": "PA",
+        "postalcode": "17604",
+        "country": "United States"
+      },
+      "logo": {
+        "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s10991_h3_aa.png",
+        "height": 270,
+        "width": 360,
+        "md5": "28bb365cb84b75bb4eaae2"
+      }
+    },
+    {
+      "stationID": "25544",
+      "name": "WGALDT (WGAL-DT)",
+      "callsign": "WGALDT",
+      "affiliate": "NBC",
+      "broadcastLanguage": [
+        "en"
+      ],
+      "descriptionLanguage": [
+        "en"
+      ],
+      "broadcaster": {
+        "city": "Lancaster",
+        "state": "PA",
+        "postalcode": "17604",
+        "country": "United States"
+      },
+      "logo": {
+        "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s28717_h3_aa.png",
+        "height": 270,
+        "width": 360,
+        "md5": "6c7554a4b7f6d83bcacf39"
+      }
+    },
+    {
+      "stationID": "11663",
+      "name": "WXBU",
+      "callsign": "WXBU",
+      "affiliate": "GRIT",
+      "broadcastLanguage": [
+        "en"
+      ],
+      "descriptionLanguage": [
+        "en"
+      ],
+      "broadcaster": {
+        "city": "Harrisburg",
+        "state": "PA",
+        "postalcode": "17110",
+        "country": "United States"
+      },
+      "logo": {
+        "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s89922_h3_aa.png",
+        "height": 270,
+        "width": 360,
+        "md5": "a97c64d14a5f1eff15c3e6"
+      }
+    }
+  ],
+  "metadata": {
+    "lineup": "USA-DISH566-DEFAULT",
+    "modified": "2016-07-29T19:01:03Z",
+    "transport": "Satellite"
+  }
+}

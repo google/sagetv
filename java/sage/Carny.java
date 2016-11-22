@@ -116,7 +116,7 @@ public final class Carny implements Runnable
     if (!updateStatus) doneInit = true;
     stdProcessing();
     doneInit = true;
-    if (Sage.getBoolean(LIMITED_CARNY_INIT, Sage.EMBEDDED))
+    if (Sage.getBoolean(LIMITED_CARNY_INIT, true))
       kick();
   }
 
@@ -1024,7 +1024,7 @@ public final class Carny implements Runnable
       if (currAgent == null || currAgent.testAgentFlag(Agent.DISABLED_FLAG))
         continue;
 
-      if ((!doneInit && Sage.getBoolean(LIMITED_CARNY_INIT, Sage.EMBEDDED)) ||
+      if ((!doneInit && Sage.getBoolean(LIMITED_CARNY_INIT, true)) ||
           (Sage.EMBEDDED && Seeker.getInstance().getDisableProfilerRecording()))
       {
         if (!currAgent.isFavorite())

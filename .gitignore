@@ -316,3 +316,13 @@ third_party/mplayer/tremor/libvorbisidec.a
 third_party/mplayer/version.h
 third_party/mplayer/vidix/libvidix.a
 third_party/swscale/libswscale.so
+/installer/wix/SageTVSetup/redist
+/installer/SageSupportFiles
+/installer/wix/SageTVSetup/stvs-dir-sagetv7.wxs
+/installer/wix/SageTVSetup/source-dir-common.wxs
+/installer/wix/SageTVSetup/source-dir-sagetv.wxs
+/installer/wix/SageTVSetup/obj
+/installer/wix/SageTVSetup/release
+/installer/wix/SageTVSetup/source
+/installer/wix/SageTVSetup/source-dir-placeshifter.wxs
+

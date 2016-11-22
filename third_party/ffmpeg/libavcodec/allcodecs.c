@@ -217,9 +217,6 @@ void avcodec_register_all(void)
     /* audio codecs */
     REGISTER_ENCDEC  (AAC, aac);
     REGISTER_ENCDEC  (AC3, ac3);
-#ifdef EM8622
-    REGISTER_DECODER  (AC3DUMMY, ac3);
-#endif
     REGISTER_ENCDEC  (ALAC, alac);
     REGISTER_DECODER (ALS, als);
     REGISTER_DECODER (AMRNB, amrnb);
@@ -361,9 +358,6 @@ void avcodec_register_all(void)
     REGISTER_DECODER (LIBSPEEX, libspeex);
     REGISTER_ENCODER (LIBTHEORA, libtheora);
     REGISTER_ENCODER (LIBVORBIS, libvorbis);
-#ifdef EM8622
-	REGISTER_DECODER (OGGIVORBIS, oggivorbis);
-#endif
     REGISTER_ENCDEC  (LIBVPX, libvpx);
     REGISTER_ENCODER (LIBX264, libx264);
     REGISTER_ENCODER (LIBXVID, libxvid);

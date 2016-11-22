@@ -21,9 +21,6 @@
 
 //#define DEBUG
 //#define DEBUG_SEEK
-//#define EM8622DEBUG
-//#define DEBUGAVIDEMUX
-//#define DEBUGAVINOINTER
 
 #include "libavutil/intreadwrite.h"
 #include "libavutil/bswap.h"
@@ -52,9 +49,6 @@ typedef struct AVIStream {
     uint32_t pal[256];
     int has_pal;
     int dshow_block_align;            ///< block align variable used to emulate bugs in the MS dshow demuxer
-#ifdef EM8622
-    int64_t INDXoffset;
-#endif
 } AVIStream;
 
 typedef struct {
@@ -144,12 +138,6 @@ static int read_braindead_odml_indx(AVFormatContext *s, int frame_num){
     int i;
     int64_t last_pos= -1;
     int64_t filesize= url_fsize(s->pb);
-#ifdef EM8622
-    int j,k=0;
-    int64_t nextpos=0;
-    AVStream *st2=NULL;
-    AVIStream *ast2=NULL;
-#endif
 
 #ifdef DEBUG_SEEK
     av_log(s, AV_LOG_ERROR, "longs_pre_entry:%d index_type:%d entries_in_use:%d chunk_id:%X base:%16"PRIX64"\n",
@@ -171,9 +159,6 @@ static int read_braindead_odml_indx(AVFormatContext *s, int frame_num){
     if(index_type>1)
         return -1;
 
-#ifdef EM8622DEBUG
-    av_log(s, AV_LOG_ERROR, "Starting to parse ODML index\n");
-#endif
 
     if(filesize > 0 && base >= filesize){
         av_log(s, AV_LOG_ERROR, "ODML index invalid\n");
@@ -183,33 +168,6 @@ static int read_braindead_odml_indx(AVFormatContext *s, int frame_num){
             return -1;
     }
 
-#ifdef EM8622
-    // Find position of last data from this stream
-    {
-        nextpos=0;
-        if(st->nb_index_entries>=1)
-            nextpos = st->index_entries[st->nb_index_entries-1].pos;
-    }
-    // Find position of video keyframe after this pos
-    for(j=0;j<s->nb_streams;j++)
-    {
-        st2= s->streams[j];
-        ast2 = st->priv_data;
-        if(st2->codec->codec_type == CODEC_TYPE_VIDEO)
-        {
-            for(k=0;k<st2->nb_index_entries;k++)
-            {
-                if(st2->index_entries[k].pos>nextpos)
-                {
-                    nextpos=st2->index_entries[k].pos;
-                    break;
-                }
-            }
-            break;
-        }
-    }
-    av_log(s, AV_LOG_ERROR, "nextpos k=%d %lld\n", k, nextpos);
-#endif
 
     for(i=0; i<entries_in_use; i++){
         if(index_type){
@@ -227,38 +185,7 @@ static int read_braindead_odml_indx(AVFormatContext *s, int frame_num){
             if(last_pos == pos || pos == base - 8)
                 avi->non_interleaved= 1;
             if(last_pos != pos && (len || !ast->sample_size))
-            {
-#ifdef EM8622
-            if(key && st->codec->codec_type == CODEC_TYPE_VIDEO)
-            {
-                av_add_index_entry(st, pos, ast->cum_len, len, 0, (key) ? AVINDEX_KEYFRAME : 0);
-            }
-            if(st->codec->codec_type != CODEC_TYPE_VIDEO)
-            {
-                if(pos>=nextpos)
-                {
-                    //av_log(s, AV_LOG_ERROR, "adding keyframe %lld\n", pos);
-                    av_add_index_entry(st, pos, ast->cum_len, len, 0, (key) ? AVINDEX_KEYFRAME : 0);
-                    if(st2!=NULL)
-                    {
-                        for(;k<st2->nb_index_entries;k++)
-                        {
-                            if(st2->index_entries[k].pos>nextpos)
-                            {
-                                nextpos=st2->index_entries[k].pos;
-                                break;
-                            }
-                        }
-                        if(k==st2->nb_index_entries)
-                            nextpos=0x7FFFFFFFFFFFFFFFLL;
-                        //av_log(s, AV_LOG_ERROR, "nextpos k=%d %lld\n", k, nextpos);
-                    }
-                }
-            }
-#else
                 av_add_index_entry(st, pos, ast->cum_len, len, 0, key ? AVINDEX_KEYFRAME : 0);
-#endif
-            }
 
             ast->cum_len += get_duration(ast, len);
             last_pos= pos;
@@ -288,9 +215,6 @@ static int read_braindead_odml_indx(AVFormatContext *s, int frame_num){
             url_fseek(pb, pos, SEEK_SET);
         }
     }
-#ifdef EM8622DEBUG
-    av_log(s, AV_LOG_ERROR, "Done parsing ODML index\n");
-#endif
     avi->index_loaded=1;
     return 0;
 }
@@ -554,10 +478,6 @@ static int avi_read_header(AVFormatContext *s, AVFormatParameters *ap)
                 av_log(s, AV_LOG_ERROR, "unknown stream type %X\n", tag1);
                 goto fail;
             }
-#ifdef EM8622DEBUG
-            av_log(s, AV_LOG_ERROR, "setting frame_offset to %"PRId64"\n", 
-                ast->cum_len);
-#endif
             if(ast->sample_size == 0)
                 st->duration = st->nb_frames;
             ast->frame_offset= ast->cum_len;
@@ -691,20 +611,8 @@ static int avi_read_header(AVFormatContext *s, AVFormatParameters *ap)
             break;
         case MKTAG('i', 'n', 'd', 'x'):
             i= url_ftell(pb);
-            if(!url_is_streamed(pb) && !(s->flags & AVFMT_FLAG_IGNIDX))
-            {
-#ifdef EM8622
-				if(st->codec->codec_type == CODEC_TYPE_VIDEO)
-				{
-					read_braindead_odml_indx(s, 0);
-				}
-				else
-				{
-					ast->INDXoffset=i;
-				}
-#else
-                read_braindead_odml_indx(s, 0);
-#endif
+            if(!url_is_streamed(pb) && !(s->flags & AVFMT_FLAG_IGNIDX)){
+			      		read_braindead_odml_indx(s, 0);
             }
             url_fseek(pb, i+size, SEEK_SET);
             break;
@@ -759,21 +667,6 @@ static int avi_read_header(AVFormatContext *s, AVFormatParameters *ap)
         return -1;
     }
 
-#ifdef EM8622
-    for(i=0;i<s->nb_streams; i++)
-    {
-        int64_t oldoffset;
-        st= s->streams[i];
-        ast = st->priv_data;
-        if(ast->INDXoffset!=0)
-        {
-            oldoffset=url_ftell(pb);
-            url_fseek(pb, ast->INDXoffset, SEEK_SET);
-            read_braindead_odml_indx(s, 0);
-            url_fseek(pb, oldoffset, SEEK_SET);
-        }
-    }
-#endif
     if(!avi->index_loaded && !url_is_streamed(pb))
         avi_load_index(s);
     avi->index_loaded = 1;
@@ -842,10 +735,6 @@ static int avi_read_packet(AVFormatContext *s, AVPacket *pkt)
 
             ts = av_rescale_q(ts, st->time_base, (AVRational){FFMAX(1, ast->sample_size), AV_TIME_BASE});
 
-#ifdef DEBUGAVINOINTER
-            #undef fprintf
-            fprintf(stderr, "%"PRId64" %d/%d %"PRId64" %d\n", ts, st->time_base.num, st->time_base.den, ast->frame_offset, st->nb_index_entries);
-#endif
 //            av_log(s, AV_LOG_DEBUG, "%"PRId64" %d/%d %"PRId64"\n", ts, st->time_base.num, st->time_base.den, ast->frame_offset);
             if(ts < best_ts){
                 best_ts= ts;
@@ -853,9 +742,6 @@ static int avi_read_packet(AVFormatContext *s, AVPacket *pkt)
                 best_stream_index= i;
             }
         }
-#ifdef DEBUGAVINOINTER
-            fprintf(stderr, "best_st %X\n", best_st);
-#endif
         if(!best_st)
         {
             // JFT, we don't have a start point, try going where we found MOVI
@@ -873,10 +759,6 @@ static int avi_read_packet(AVFormatContext *s, AVPacket *pkt)
             i= av_index_search_timestamp(best_st, best_ts, AVSEEK_FLAG_ANY);
             if(i>=0)
                 best_ast->frame_offset= best_st->index_entries[i].timestamp;
-#ifdef EM8622DEBUG
-            av_log(s, AV_LOG_ERROR, "setting frame_offset to %"PRId64"\n", 
-                best_ast->frame_offset);
-#endif
         }
 
 //        av_log(s, AV_LOG_DEBUG, "%d\n", i);
@@ -940,12 +822,7 @@ resync:
 //                pkt->dts += ast->start;
             if(ast->sample_size)
                 pkt->dts /= ast->sample_size;
-#ifdef DEBUGAVIDEMUX
-            av_log(NULL, AV_LOG_ERROR, 
-                "dts:%"PRId64" offset:%"PRId64" %d/%d smpl_siz:%d base:%d st:%d size:%d\n",
-                pkt->dts, ast->frame_offset, ast->scale, ast->rate, 
-                ast->sample_size, AV_TIME_BASE, avi->stream_index, size);
-#endif
+//av_log(s, AV_LOG_DEBUG, "dts:%"PRId64" offset:%"PRId64" %d/%d smpl_siz:%d base:%d st:%d size:%d\n", pkt->dts, ast->frame_offset, ast->scale, ast->rate, ast->sample_size, AV_TIME_BASE, avi->stream_index, size);
             pkt->stream_index = avi->stream_index;
 
             if (st->codec->codec_type == AVMEDIA_TYPE_VIDEO) {
@@ -964,23 +841,10 @@ resync:
                 pkt->flags |= AV_PKT_FLAG_KEY;
             }
             ast->frame_offset += get_duration(ast, pkt->size);
-#ifdef EM8622DEBUG
-            av_log(s, AV_LOG_ERROR, "setting frame_offset to %"PRId64"\n", 
-                ast->frame_offset);
-#endif
         }
         ast->remaining -= size;
         if(!ast->remaining){
             avi->stream_index= -1;
-#if 0
-            // NOTE: This was incorrectly comparing the size of the sample instead of the size of the chunk
-			// to determine if we need to eat another byte to align on a WORD
-			// Narflex - but they've changed this in the latest version of FFMPEG so I no longer am sure this is needed
-            if (ast->packet_size & 1) {
-				get_byte(pb);
-				size++;
-			}
-#endif
             ast->packet_size= 0;
         }
 
@@ -1008,9 +872,7 @@ resync:
            ||(d[0] == 'J' && d[1] == 'U' && d[2] == 'N' && d[3] == 'K')
            ||(d[0] == 'i' && d[1] == 'd' && d[2] == 'x' && d[3] == '1')){
             url_fskip(pb, size);
-#ifdef DEBUGAVIDEMUX
-av_log(s, AV_LOG_DEBUG, "SKIP\n");
-#endif
+//av_log(s, AV_LOG_DEBUG, "SKIP\n");
             goto resync;
         }
 
@@ -1060,13 +922,7 @@ av_log(s, AV_LOG_DEBUG, "SKIP\n");
             if(   (st->discard >= AVDISCARD_DEFAULT && size==0)
                /*|| (st->discard >= AVDISCARD_NONKEY && !(pkt->flags & AV_PKT_FLAG_KEY))*/ //FIXME needs a little reordering
                || st->discard >= AVDISCARD_ALL){
-                // JFT, when discarding use size not packet size
-               // If it is 0 should we increase the frame_offset?
                 ast->frame_offset += get_duration(ast, size);
-#ifdef EM8622DEBUG
-                av_log(s, AV_LOG_ERROR, "size==0 setting frame_offset to %"PRId64" with %d on stream %d\n",
-                    ast->frame_offset, ast->sample_size, n);
-#endif
                 url_fskip(pb, size);
                 goto resync;
             }
@@ -1123,9 +979,6 @@ static int avi_read_idx1(AVFormatContext *s, int size)
     AVIStream *ast;
     unsigned int index, tag, flags, pos, len;
     unsigned last_pos= -1;
-#ifdef EM8622
-    int secondarystreams=0xFFFFFFFF;
-#endif
 
     nb_index_entries = size / 16;
     if (nb_index_entries <= 0)
@@ -1161,22 +1014,7 @@ static int avi_read_idx1(AVFormatContext *s, int size)
         if(last_pos == pos)
             avi->non_interleaved= 1;
         else if(len || !ast->sample_size)
-       {
-#ifdef EM8622
-			if(flags&AVIIF_INDEX && st->codec->codec_type == CODEC_TYPE_VIDEO)
-			{
             av_add_index_entry(st, pos, ast->cum_len, len, 0, (flags&AVIIF_INDEX) ? AVINDEX_KEYFRAME : 0);
-				secondarystreams=1<<index;
-			}
-			if(index<32 && st->codec->codec_type != CODEC_TYPE_VIDEO && !(secondarystreams&(1<<index)))
-			{
-				av_add_index_entry(st, pos, ast->cum_len, len, 0, (flags&AVIIF_INDEX) ? AVINDEX_KEYFRAME : 0);
-				secondarystreams|=1<<index;
-			}
-#else
-            av_add_index_entry(st, pos, ast->cum_len, len, 0, (flags&AVIIF_INDEX) ? AVINDEX_KEYFRAME : 0);
-#endif
-        }
         ast->cum_len += get_duration(ast, len);
         last_pos= pos;
     }
@@ -1328,9 +1166,7 @@ static int avi_read_seek(AVFormatContext *s, int stream_index, int64_t timestamp
                 index++;
         }
 
-#ifdef EM8622DEBUG
-        av_log(s, AV_LOG_ERROR, "readseek %"PRId64" %d %"PRId64"\n", timestamp, index, st2->index_entries[index].timestamp);
-#endif
+//        av_log(s, AV_LOG_DEBUG, "%"PRId64" %d %"PRId64"\n", timestamp, index, st2->index_entries[index].timestamp);
         /* extract the current frame number */
         ast2->frame_offset = st2->index_entries[index].timestamp;
     }

@@ -239,11 +239,11 @@ int AnylyzeTSESElement( ES_ELEMENT *pESElmnt )
 	} else
 	if ( IS_OTHER_STREAM_ID( pESElmnt->pes.stream_id ) )
 	{
-		pESElmnt->content_type = PRIVAITE_DATA;
+		pESElmnt->content_type = PRIVATE_DATA;
 	} else
 	if ( IS_PRIVATE_STREAM_ID( pESElmnt->pes.stream_id ) )
 	{
-		pESElmnt->content_type = PRIVAITE_DATA;
+		pESElmnt->content_type = PRIVATE_DATA;
 	} else
 	{
 		SageLog(( _LOG_TRACE, 2, TEXT("ERROR: unknown stream id:%02x in PES" ), pESElmnt->pes.stream_id ));

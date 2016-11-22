@@ -2168,7 +2168,7 @@ char*  _data_content_( uint8_t content_type )
 	if ( content_type == AUDIO_DATA )	 return "audio   ";
 	if ( content_type == SUBTITLE_DATA ) return "subtitle";
 	if ( content_type == TELETEXT_DATA ) return "teletext";
-	if ( content_type == PRIVAITE_DATA ) return "private ";
+	if ( content_type == PRIVATE_DATA ) return "private ";
 	if ( content_type == VBI_DATA )		 return "vbi     ";
 	if ( content_type == UNIDENTIFIED  ) return "unidentified";
 	if ( content_type == UNKNOWN_DATA   ) return "unknown  ";

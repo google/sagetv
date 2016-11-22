@@ -94,12 +94,7 @@ static const int huff_quad_vlc_tables_sizes[2] = {
 };
 /* computed from band_size_long */
 static uint16_t band_index_long[9][23];
-#ifdef EM8622
-#define TABLE_4_3_SIZE (8191 + 16)*4
-#include "mp3table.h"
-#else
 #include "mpegaudio_tablegen.h"
-#endif
 /* intensity stereo coef table */
 static INTFLOAT is_table[2][16];
 static INTFLOAT is_table_lsf[2][2][16];
@@ -318,18 +313,6 @@ static int int_pow(int i, int *exp_ptr)
 }
 #endif
 
-#ifdef EM8622
-#include <sys/time.h>
-
-static long long inittime=0;
-
-static long long get_timebase()
-{
-  struct timeval tm;
-  gettimeofday(&tm, 0);
-  return tm.tv_sec * 1000000LL + (tm.tv_usec);
-}
-#endif
 
 static av_cold int decode_init(AVCodecContext * avctx)
 {
@@ -337,9 +320,6 @@ static av_cold int decode_init(AVCodecContext * avctx)
     static int init=0;
     int i, j, k;
 
-#ifdef EM8622
-    long long startinittime = get_timebase();
-#endif
 
     s->avctx = avctx;
     s->apply_window_mp3 = apply_window_mp3_c;
@@ -437,7 +417,6 @@ static av_cold int decode_init(AVCodecContext * avctx)
         /* compute n ^ (4/3) and store it in mantissa/exp format */
 
         int_pow_init();
-#ifndef EM8622
         mpegaudio_tableinit();
 
         for (i = 0; i < 4; i++)
@@ -453,15 +432,6 @@ static av_cold int decode_init(AVCodecContext * avctx)
                     division_tabs[i][j] = val1 + (val2 << 4) + (val3 << 8);
                 }
 
-#else
-		// Linking problem...
-		{
-			double f, fm;
-			int e, m;
-			f=1.0f;
-			fm = frexp(f, &e);
-		}
-#endif
 
         for(i=0;i<7;i++) {
             float f;
@@ -547,10 +517,6 @@ static av_cold int decode_init(AVCodecContext * avctx)
         }
 
         init = 1;
-#ifdef EM8622
-#undef fprintf
-	    fprintf(stderr,"mp3 init time %lld\n",get_timebase()-startinittime);
-#endif
     }
 
     if (avctx->codec_id == CODEC_ID_MP3ADU)

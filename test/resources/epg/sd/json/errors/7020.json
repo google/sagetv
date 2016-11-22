@@ -1,0 +1,10 @@
+{
+  "stationID": "92371",
+  "serverID": "20141201.web.1",
+  "code": 7020,
+  "response": "SCHEDULE_RANGE_EXCEEDED",
+  "minDate": "2015-06-21",
+  "maxDate": "2015-07-12",
+  "requestedDate": "2015-07-20",
+  "message": "Date requested (2015-07-20) not within 2015-06-21 -> 2015-07-12 for stationID 92371."
+}

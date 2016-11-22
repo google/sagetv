@@ -59,10 +59,11 @@ void sysOutPrint(JNIEnv* env, const char* cstr, ...)
 /*
  * Class:     sage_media_image_ImageLoader
  * Method:    createThumbnail
- * Signature: (Ljava/lang/String;Ljava/lang/String;II)Z
+ * Signature: (Ljava/lang/String;Ljava/lang/String;III)Z
  */
 JNIEXPORT jboolean JNICALL Java_sage_media_image_ImageLoader_createThumbnail
-  (JNIEnv *env, jclass jc, jstring jfilename, jstring joutfilename, jint imagewidth, jint imageheight)
+  (JNIEnv *env, jclass jc, jstring jfilename, jstring joutfilename, jint imagewidth, jint imageheight,
+   jint rotateAmount)
 {
 	// The scaler can't deal with a width smaller than 8
 	if (imagewidth > 0 && imagewidth < 8)
@@ -101,7 +102,7 @@ JNIEXPORT jboolean JNICALL Java_sage_media_image_ImageLoader_createThumbnail
 	if (header[0] == 0xFF && header[1] == 0xD8 && header[2] == 0xFF)
 	{
 		// JPEG file
-		myImage = LoadJPEG(infile, imagewidth, imageheight, 24, 0);
+		myImage = LoadJPEG(infile, imagewidth, imageheight, 32, rotateAmount);
 	}
 	else if (header[0] == 'G' && header[1] == 'I' && header[2] == 'F' && header[3] == '8')
 	{

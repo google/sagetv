@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:bal="http://schemas.microsoft.com/wix/BalExtension"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+  <?include SageTVInclude.wxi ?>
+  <Bundle Name="$(var.ProductName)" Version="$(var.VersionNumber)" Manufacturer="$(var.Manufacturer)" UpgradeCode="$(var.UpgradeCodeMSI)"
+          IconSourceFile='Resource\SageIcon.ico'>
+		<BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.HyperlinkLicense" >
+      <Payload SourceFile="Resource\LogoSide.png" />
+      <Payload SourceFile="Resource\Logo.png" />
+      <Payload SourceFile="Resource\License.htm" />
+      <bal:WixStandardBootstrapperApplication
+           LicenseUrl="License.htm"/>
+    </BootstrapperApplicationRef>
+    
+    <WixVariable Id="WixStdbaLogo" Value="Resource\Logo.png" />
+    <WixVariable Id="WixStdbaLogoSide" Value="Resource\LogoSide.png" />
+    <WixVariable Id="WixStdbaThemeXml" Value="Resource\SageTVTheme.xml" />
+    <WixVariable Id="WixStdbaThemeWxl" Value="Resource\SageTVTheme.wxl" />
+
+    <!-- Set the value of variable to be used on the UI forms -->
+    <Variable Name="InstallFolder" Type="string" Value="[ProgramFilesFolder]$(var.DefaultInstallFolder)" />
+    <Variable Name="SageInstallerVersion" Type="string" Value="$(var.SageInstallerVersion)" />
+
+    <Chain>
+			<!-- TODO: Define the list of chained packages. -->
+			<!-- <MsiPackage SourceFile="path\to\your.msi" /> -->
+      <PackageGroupRef Id="Java7Runtime"/>
+      <PackageGroupRef Id="redist_vc100"/>
+      <PackageGroupRef Id="redist_vc140"/>
+
+      <?if $(var.Configuration) = SetupServer ?>
+        <MsiPackage Id="SageTVSetupMSI"
+                SourceFile="release\bin\SetupServer\SageTVSetupMSI.msi"
+                DisplayInternalUI="no"
+                EnableFeatureSelection="no"
+                
+                Compressed="yes">
+          <MsiProperty Name="INSTALLFOLDER" Value="[InstallFolder]" />
+        </MsiPackage>
+      <?elseif $(var.Configuration) = SetupClient?>
+        <MsiPackage Id="SageTVSetupMSI"
+                  SourceFile="release\bin\SetupClient\SageTVClientSetupMSI.msi"
+                  DisplayInternalUI="no"
+                  EnableFeatureSelection="no"
+                  Compressed="yes">
+          <MsiProperty Name="INSTALLFOLDER" Value="[InstallFolder]" />
+        </MsiPackage>
+      <?elseif $(var.Configuration) = SetupPlaceshifter?>
+        <MsiPackage Id="SageTVPlaceshifterSetupMSI"
+                  SourceFile="release\bin\SetupPlaceshifter\SageTVPlaceshifterSetupMSI.msi"
+                  DisplayInternalUI="no"
+                  EnableFeatureSelection="no"
+                  Compressed="yes">
+          <MsiProperty Name="INSTALLFOLDER" Value="[InstallFolder]" />
+        </MsiPackage>
+      <?endif?>
+      
+      <?if ($(var.Configuration) = SetupServer) Or ($(var.Configuration) = SetupClient) ?>
+        <PackageGroupRef Id="redist_ac3filter" After="SageTVSetupMSI"/>
+      <?endif?>
+
+    </Chain>
+
+  </Bundle>
+
+</Wix>

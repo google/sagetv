@@ -1,0 +1,13 @@
+{
+  "stationID": "10489",
+  "serverID": "20141201.web.1",
+  "code": 2201,
+  "response": "STATIONID_DELETED",
+  "programs": [],
+  "metadata": {
+    "code": 2201,
+    "modified": "1970-01-01",
+    "md5": "CAFEDEADBEEFCAFEDEADBE",
+    "isDeleted": true
+  }
+}

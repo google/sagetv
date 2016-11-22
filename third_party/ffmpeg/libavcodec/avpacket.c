@@ -49,7 +49,7 @@ int av_new_packet(AVPacket *pkt, int size)
 {
     uint8_t *data= NULL;
     if((unsigned)size < (unsigned)size + FF_INPUT_BUFFER_PADDING_SIZE)
-        data = av_mallocUncached(size + FF_INPUT_BUFFER_PADDING_SIZE);
+        data = av_malloc(size + FF_INPUT_BUFFER_PADDING_SIZE);
     if (data){
         memset(data + size, 0, FF_INPUT_BUFFER_PADDING_SIZE);
     }else
@@ -78,11 +78,11 @@ int av_dup_packet(AVPacket *pkt)
         /* We duplicate the packet and don't forget to add the padding again. */
         if((unsigned)pkt->size > (unsigned)pkt->size + FF_INPUT_BUFFER_PADDING_SIZE)
             return AVERROR(ENOMEM);
-        data = av_mallocUncached(pkt->size + FF_INPUT_BUFFER_PADDING_SIZE);
+        data = av_malloc(pkt->size + FF_INPUT_BUFFER_PADDING_SIZE);
         if (!data) {
             return AVERROR(ENOMEM);
         }
-        av_memcpy(data, pkt->data, pkt->size);
+        memcpy(data, pkt->data, pkt->size);
         memset(data + pkt->size, 0, FF_INPUT_BUFFER_PADDING_SIZE);
         pkt->data = data;
         pkt->destruct = av_destruct_packet;
