@@ -5345,9 +5345,8 @@ Germany-Duesseldorf/Ruhrgebiet"
 	frq:658000000;band:8;
 	{tune:1;pat:6;sdt:16;}	
 	
-
-
 "New Zealand"
+	frq:514000000;band:8;
 	frq:522000000;band:8;
 	frq:530000000;band:8;
 	frq:538000000;band:8;
@@ -5369,34 +5368,26 @@ Germany-Duesseldorf/Ruhrgebiet"
 	frq:666000000;band:8;
 	frq:674000000;band:8;
 	frq:682000000;band:8;
-	frq:690000000;band:8;
-	frq:698000000;band:8;
-	frq:706000000;band:8;
-	frq:714000000;band:8;
-	frq:722000000;band:8;
-	frq:730000000;band:8;
-	frq:738000000;band:8;
-	frq:746000000;band:8;
-	frq:754000000;band:8;
-	frq:762000000;band:8;
-	frq:770000000;band:8;
-	frq:778000000;band:8;
-	frq:786000000;band:8;
-	frq:794000000;band:8;
 	{tune:1;pat:6;sdt:16;}
 
 "New Zealand-Auckland@Waiatarua"
+	frq:522000000;band:8;
 	frq:538000000;band:8;
+	frq:554000000;band:8;
 	frq:570000000;band:8;
-	frq:666000000;band:8;
-	frq:698000000;band:8;
+	frq:586000000;band:8;
+	frq:602000000;band:8;
+	frq:618000000;band:8;
 	{tune:1;pat:6;sdt:16;}
 
 "New Zealand-Auckland@Infill"
+	frq:514000000;band:8;
 	frq:530000000;band:8;
+	frq:546000000;band:8;
 	frq:562000000;band:8;
-	frq:626000000;band:8;
-	frq:722000000;band:8;
+	frq:578000000;band:8;
+	frq:594000000;band:8;
+	frq:610000000;band:8;
 	{tune:1;pat:6;sdt:16;}
 
 "New Zealand-Waikato@Te Aroha"
@@ -5468,11 +5459,14 @@ Germany-Duesseldorf/Ruhrgebiet"
 	{tune:1;pat:6;sdt:16;}
 
 "New Zealand-Christchurch@Sugarloaf"
-	frq:682000000;band:8;
-	frq:698000000;band:8;
-	frq:706000000;band:8;
-	frq:778000000;band:8;
-	frq:690000000;band:8;
+	frq:514000000;band:8;
+	frq:530000000;band:8;
+	frq:546000000;band:8;
+	frq:562000000;band:8;
+	frq:578000000;band:8;
+	frq:594000000;band:8;
+	frq:610000000;band:8;
+	frq:626000000;band:8;
 	{tune:1;pat:6;sdt:16;}
 
 "New Zealand-Christchurch@Infill"
