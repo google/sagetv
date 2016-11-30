@@ -830,7 +830,7 @@ public class Ministry implements Runnable
     // This is true if there's any transcode jobs are in the queue
     synchronized (this)
     {
-    	return (getTranscodeJobIDs().length > 0) ? true : false ;
+    	return (converting.size() > 0 || waitingForConversion.size() > 0);
     }
   }
   
