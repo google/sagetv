@@ -86,6 +86,7 @@ public final class Sage
   static final boolean DISABLE_MSG_LOOP_FOR_JPROFILER = false;
   public static boolean WINDOWS_OS = false;
   public static boolean LINUX_OS = false;
+  public static boolean LINUX_IS_ROOT = false; // will be true if SageTV Linux is running as 'root'
   public static boolean MAC_OS_X = false;
   public static boolean VISTA_OS = false; // if this is true, then WINDOWS_OS is also true
   public static boolean EMBEDDED = false;
@@ -117,7 +118,7 @@ public final class Sage
     MAC_OS_X = System.getProperty("os.name").toLowerCase().indexOf("mac os x") != -1;
     LINUX_OS = !WINDOWS_OS && !MAC_OS_X;
     VISTA_OS = WINDOWS_OS && (System.getProperty("os.version").startsWith("6.") || System.getProperty("os.version").startsWith("7."));
-
+    LINUX_IS_ROOT = "root".equals(System.getProperty("user.name"));
     if (WINDOWS_OS)
       sage.Native.loadLibrary("SageTVWin32");
     else
