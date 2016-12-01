@@ -416,7 +416,7 @@ public class FSManager implements Runnable
           // mount requires root permissions
           // the sagetv user needs to be in the sudoers list
           // NOTE mount command is NOT resolved in properties because sudo is being used
-          if (IOUtils.exec2(new String[]{"sudo","mount", isoFile.getAbsolutePath(), mountDir.getAbsolutePath(), "-o", "loop,ro"}, true) != 0)
+          if (IOUtils.exec2(new String[]{"sudo","-n", "mount", isoFile.getAbsolutePath(), mountDir.getAbsolutePath(), "-o", "loop,ro"}, true) != 0)
           {
             if (Sage.DBG) System.out.println("FAILED mounting ISO image " + isoFile + " to " + mountDir);
             return null;
@@ -496,7 +496,7 @@ public class FSManager implements Runnable
         if (Sage.LINUX_IS_ROOT)
           IOUtils.exec2(new String[]{"umount", mountDir.getAbsolutePath()}, false);
         else
-          IOUtils.exec2(new String[]{"sudo","umount", mountDir.getAbsolutePath()}, false);
+          IOUtils.exec2(new String[]{"sudo", "-n", "umount", mountDir.getAbsolutePath()}, false);
       }
       mountDir.delete();
     }
