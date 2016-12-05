@@ -1,9 +1,14 @@
 # Change Log
 
-## Version 9.0.10 (??)
-* Fix: Enable streams with valid PAT packets and invalid PMT packets to be able to be detected by the built in remuxer.
+## Version 9.0.12 (??)
 * New: Schedules Direct now includes teams as people for favorite scheduling.
 * New: SageTV server will no longer allow the server to go to sleep until video conversions are complete.
+* Fix: Schedules Direct was not returning the saved country in some cases.
+* Fix: Removed asterisks from password field when entering the password for Schedules Direct.
+
+## Version 9.0.11 (2016-11-20)
+* Fix: Enable streams with valid PAT packets and invalid PMT packets to be able to be detected by the built in remuxer.
+* Fix: Linux tries a few more adapters when trying to get the primary server IP address.
 
 ## Version 9.0.9 (2016-10-10)
 * Fix: GetSeriesID wasn't always returning a valid series ID
