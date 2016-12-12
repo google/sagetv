@@ -1730,7 +1730,7 @@ public class MetaImage
     if (!(option instanceof Shape)) return false;
     Shape s2 = (Shape) option;
     if (s1 == null || s2 == null) return false;
-    if (s2.getClass() != s2.getClass()) return false;
+    if (s1.getClass() != s2.getClass()) return false;
     if (s1 instanceof RoundRectangle2D)
     {
       return s1.getBounds2D().equals(s2.getBounds2D()) &&
