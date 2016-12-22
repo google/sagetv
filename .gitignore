@@ -326,9 +326,6 @@ third_party/swscale/libswscale.so
 /installer/wix/SageTVSetup/source
 /installer/wix/SageTVSetup/source-dir-placeshifter.wxs
 
-GeneratedThumbnails/
-JARs/
-STVs/
 native/lib/
 native/so/HDHomeRun2.0/build/
 native/so/HDHomeRun2.0/stage/
@@ -483,8 +480,7 @@ third_party/ffmpeg/libavcodec/h264_mp4toannexb_bsf.d
 third_party/ffmpeg/libavcodec/h264_parser.d
 third_party/ffmpeg/libavcodec/h264_ps.d
 third_party/ffmpeg/libavcodec/h264_refs.d
-third_party/ffmpeg/libavcodec/h
-264_sei.d
+third_party/ffmpeg/libavcodec/h264_sei.d
 third_party/ffmpeg/libavcodec/h264dsp.d
 third_party/ffmpeg/libavcodec/h264idct.d
 third_party/ffmpeg/libavcodec/h264pred.d
@@ -636,8 +632,7 @@ third_party/ffmpeg/libavcodec/rv30.d
 third_party/ffmpeg/libavcodec/rv30dsp.d
 third_party/ffmpeg/libavcodec/rv34.d
 third_party/ffmpeg/libavcodec/rv40.d
-third_party/f
-fmpeg/libavcodec/rv40dsp.d
+third_party/ffmpeg/libavcodec/rv40dsp.d
 third_party/ffmpeg/libavcodec/s3tc.d
 third_party/ffmpeg/libavcodec/sgidec.d
 third_party/ffmpeg/libavcodec/sgienc.d
@@ -787,8 +782,7 @@ third_party/ffmpeg/libavformat/anm.d
 third_party/ffmpeg/libavformat/apc.d
 third_party/ffmpeg/libavformat/ape.d
 third_party/ffmpeg/libavformat/apetag.d
-third_p
-arty/ffmpeg/libavformat/asf.d
+third_party/ffmpeg/libavformat/asf.d
 third_party/ffmpeg/libavformat/asfcrypt.d
 third_party/ffmpeg/libavformat/asfdec.d
 third_party/ffmpeg/libavformat/asfenc.d
@@ -997,8 +991,5 @@ third_party/ffmpeg/libswscale/x86/yuv2rgb_mmx.d
 third_party/ffmpeg/libswscale/yuv2rgb.d
 third_party/ffmpeg/vhook/
 third_party/mplayer/liba52/liba52.a
-third_party/ffmpeg/libavcodec/h264_sei.d
-third_party/ffmpeg/libavcodec/rv40dsp.d
-third_party/ffmpeg/libavformat/asf.d
 third_party/ffmpeg/libavformat/thp.d
 
