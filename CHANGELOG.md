@@ -1,10 +1,15 @@
 # Change Log
 
-## Version 9.0.12 (??)
+## Version 9.0.12 (2016-12-22)
 * New: Schedules Direct now includes teams as people for favorite scheduling.
 * New: SageTV server will no longer allow the server to go to sleep until video conversions are complete.
+* New: Updated DVB-S & DVB-T frequencies for New Zealand
+* New: Add STV support for enabling and disabling favorites
 * Fix: Schedules Direct was not returning the saved country in some cases.
 * Fix: Removed asterisks from password field when entering the password for Schedules Direct.
+* Fix: Fixed so that Ministry will not allow sleep while converting.
+* Fix: Allow mounting DVD iso images as non-root
+* Linux Placeshifter: Added AC3 support
 
 ## Version 9.0.11 (2016-11-20)
 * Fix: Enable streams with valid PAT packets and invalid PMT packets to be able to be detected by the built in remuxer.
