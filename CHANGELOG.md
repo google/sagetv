@@ -1,5 +1,9 @@
 # Change Log
 
+## Version 9.0.13 (??)
+* Fix: Schedules Direct was unable to distinguish between two lineups with the exact same name.
+* Fix: Schedules Direct was using an unknown regular expression for the postal code. The code also now skips the check if it does not recognize the regex formatting.
+
 ## Version 9.0.12 (2016-12-22)
 * New: Schedules Direct now includes teams as people for favorite scheduling.
 * New: SageTV server will no longer allow the server to go to sleep until video conversions are complete.
