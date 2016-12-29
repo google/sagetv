@@ -601,10 +601,11 @@ public class SDRipper extends EPGDataSource
         int firstIndex = match.indexOf("/");
         int lastIndex = match.lastIndexOf("/");
         // The regular expressions are enclosed in /'s, but just in case the format changes, we make
-        // sure we aren't breaking the regex.
-        if (firstIndex == 0 && lastIndex == match.length() - 1)
+        // sure we aren't breaking the regex. +1 so we know we have at least one character between
+        // the forward slashes.
+        if (firstIndex == 0 && lastIndex > firstIndex + 1)
         {
-          match = match.substring(1, match.length() - 1);
+          match = match.substring(1, lastIndex);
           if (Sage.DBG) System.out.println("SDEPG Converted regex from '" + country.getPostalCode() + "' to '" + match + "'");
         }
 
@@ -646,13 +647,13 @@ public class SDRipper extends EPGDataSource
       throw new SDException(SDErrors.INVALID_COUNTRY);
 
     SDHeadend headends[] = ensureSession().getHeadends(country.getShortName(), postalCode);
-    String accountLineups[];
+    SDAccountLineups accountLineups;
 
     // This could throw an exception just because the account is empty and while it's nice to have
     // lineups already in the account removed, it's not required for this to be functional.
     try
     {
-      accountLineups = getLineupsForAccount();
+      accountLineups = ensureSession().getAccountLineups();
     }
     catch (Exception e)
     {
@@ -663,7 +664,8 @@ public class SDRipper extends EPGDataSource
         e.printStackTrace(System.out);
       }
 
-      accountLineups = Pooler.EMPTY_STRING_ARRAY;
+      // An empty array will be returned from this object by default.
+      accountLineups = new SDAccountLineups();
     }
 
     if (Sage.DBG)
@@ -679,6 +681,7 @@ public class SDRipper extends EPGDataSource
     // internal array, but sometimes we have more than one lineup per headend, so we combine them
     // into the a List first.
     List<String> lineups = new ArrayList<>(headends.length);
+    Set<String> processed = new HashSet<>();
 
     String lineupName;
 
@@ -688,13 +691,17 @@ public class SDRipper extends EPGDataSource
       {
         lineupName = screenFormatHeadendLineup(headend, lineup);
 
-        // Remove any lineups we already have added to the account.
-        for (String accountLineup : accountLineups)
+        // If the name is a duplicate, append the lineup ID. The ID is always unique.
+        if (!processed.add(lineupName))
         {
-          // Technically we shouldn't get a match for a deleted lineup in the lineups we can add,
-          // but just in case, let's make sure we filter it out.
-          if (accountLineup.equals(lineupName))
-          {
+          lineupName = lineupName + " - " + lineup.getLineup();
+          processed.add(lineupName);
+        }
+
+        // Remove any lineups we already have added to the account.
+        for (SDAccountLineup accountLineup : accountLineups.getLineups())
+        {
+          if (accountLineup.getUri().equals(lineup.getUri())) {
             lineupName = null;
             break;
           }
@@ -735,11 +742,18 @@ public class SDRipper extends EPGDataSource
     int firstIndex = match.indexOf("/");
     int lastIndex = match.lastIndexOf("/");
     // The regular expressions are enclosed in /'s, but just in case the format changes, we make
-    // sure we aren't breaking the regex.
-    if (firstIndex == 0 && lastIndex == match.length() - 1)
+    // sure we aren't breaking the regex. +1 so we know we have at least one character between
+    // the forward slashes.
+    if (firstIndex == 0 && lastIndex > firstIndex + 1)
     {
-      match = match.substring(1, match.length() - 1);
+      match = match.substring(1, lastIndex);
       if (Sage.DBG) System.out.println("SDEPG Converted regex from '" + country.getPostalCode() + "' to '" + match + "'");
+    }
+    else
+    {
+      // Return true when we don't recognize the regular expression.
+      if (Sage.DBG) System.out.println("SDEPG Unknown regex '" + country.getPostalCode() + "' returning true.");
+      return;
     }
     Pattern pattern = Pattern.compile(match);
     Matcher matcher = pattern.matcher(postalCode);
@@ -764,6 +778,7 @@ public class SDRipper extends EPGDataSource
    */
   public static String[] getLineupsForAccount() throws IOException, SDException
   {
+    Set<String> processed = new HashSet<>();
     SDAccountLineups getLineups = ensureSession().getAccountLineups();
 
     SDAccountLineup lineups[] = getLineups.getLineups();
@@ -772,6 +787,11 @@ public class SDRipper extends EPGDataSource
     for (int i = 0; i < lineups.length; i++)
     {
       returnValue[i] = screenFormatAccountLineup(lineups[i]);
+      // If this name has already been used, we append the lineup ID because it is unique.
+      if (!processed.add(returnValue[i]))
+      {
+        returnValue[i] = returnValue[i] + " - " + lineups[i].getLineup();
+      }
     }
 
     if (Sage.DBG) System.out.println("SDEPG Returning account lineups: " + Arrays.toString(returnValue));
@@ -861,8 +881,10 @@ public class SDRipper extends EPGDataSource
 
     for (SDAccountLineup lineup : session.getAccountLineups().getLineups())
     {
-      // This ensures
-      if ((screenFormatAccountLineup(lineup)).equals(lineupName))
+      String compareLineupName = screenFormatAccountLineup(lineup);
+      // If there's more than one lineup with the same name added to the account, it could be listed
+      // either way.
+      if (lineupName.equals(compareLineupName + " - " + lineup.getLineup()) || compareLineupName.equals(lineupName))
       {
         int returnValue = session.deleteLineup(lineup.getUri());
         if (Sage.DBG) System.out.println("SDEPG Deleted lineup '" + lineupName + "' with " + returnValue + " changes remaining.");
@@ -930,7 +952,10 @@ public class SDRipper extends EPGDataSource
 
     for (SDAccountLineup lineup : lineups)
     {
-      if (lineupName.equals(screenFormatAccountLineup(lineup)))
+      String compareLineupName = screenFormatAccountLineup(lineup);
+      // If there's more than one lineup with the same name added to the account, it could be listed
+      // either way.
+      if (lineupName.equals(compareLineupName) || lineupName.equals(compareLineupName + " - " + lineup.getLineup()))
       {
         return lineup;
       }
