@@ -265,7 +265,8 @@ public class FormatParser
           if (sage.Sage.DBG) System.out.println("WARNING: Native format detection failed for MPEG file " + f + " of format" +
               format);
           if ((sage.MMC.getInstance().isRecording(f) || sage.FileDownloader.isDownloading(f)) &&
-              (internalParsedAudioOnlyFormat == null || format.getNumVideoStreams() == 0))
+              (internalParsedAudioOnlyFormat == null || format.getNumVideoStreams() == 0) &&
+              !sage.Sage.getBoolean("skip_internal_format_parser",false))
           {
             // If we had an audio-only detection, and FFMPEG also gave us audio only, then return that format. Revert to usual
             // behavior of returning null format if we are not falling into this special case.
