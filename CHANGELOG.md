@@ -3,6 +3,7 @@
 ## Version 9.0.13 (??)
 * Fix: Schedules Direct was unable to distinguish between two lineups with the exact same name.
 * Fix: Added handling for an unknown regular expression Schedules Direct was providing for the postal code for a few countries. The code also now skips the check if it does not recognize the regex formatting.
+* Fix: Added better handling to Seeker when starting a recording and no directories are selectable for the desired encoder.
 
 ## Version 9.0.12 (2016-12-22)
 * New: Schedules Direct now includes teams as people for favorite scheduling.
