@@ -3120,7 +3120,6 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
   {
     synchronized (videoStore)
     {
-      if (videoStore.size() == 1) return videoStore.firstElement();
       long maxFree = 0;
       int minSimWrites = Integer.MAX_VALUE;
       boolean perfBalance = Sage.getBoolean("seeker/recording_disk_balance_maxbw", false);
@@ -3168,6 +3167,8 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
           freeMap.put(vs, currUnres);
         }
       }
+
+      if (videoStore.size() == 1) return videoStore.firstElement();
 
       // Return the video drive with the most free space, not just the first drive with enough space
       // That way we balance the disks if they're not keeping them full.
