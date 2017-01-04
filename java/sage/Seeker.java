@@ -2357,6 +2357,10 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
     {
       VideoStorage bestStore = findBestStorageForSize(spaceMaybeNeeded, encState.capDev.getForcedVideoStoragePrefix());
       if (Sage.DBG) System.out.println("VideoStorage for new file: " + bestStore);
+      if (bestStore == null) {
+        encState.doingStartup = false;
+        throw new IllegalArgumentException(Sage.rez("CAPTURE_ERROR_NO_RECORDING_DIRECTORY"));
+      }
 			sage.media.format.ContainerFormat cf = mmcConn.getEncoderMediaFormat();
       encState.currRecordFile = wiz.addMediaFile(encState.currRecord, currTime, bestStore.videoDir.toString(),
           fileQualityName, mmcConn.getProviderID(),
@@ -4540,8 +4544,14 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
       {
         Object[] currStartData = pendingStarts.elementAt(i);
         if (Sage.DBG) System.out.println("Change in record to another show. Entering device record mode. - NOW");
-        startRecord((EncoderState) currStartData[0], (Airing) currStartData[1],
+        try
+        {
+          startRecord((EncoderState) currStartData[0], (Airing) currStartData[1],
             (Long) currStartData[2], (Boolean) currStartData[3]);
+        } catch (Throwable e) {
+          Catbert.distributeHookToAll(
+            "MediaPlayerError", new Object[] { Sage.rez("Capture"), e.getMessage() });
+        }
       }
     }
 
