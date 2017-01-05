@@ -162,7 +162,8 @@ public final class Sage
   public static final String BYTE_CHARSET = "ISO8859_1";
   public static final String I18N_CHARSET = "UTF-8";
 
-  public static boolean DBG = false;
+  // Force debug logging on always...this will be so helpful for troubleshooting.
+  public static final boolean DBG = true;
   public static long dl = 0; // debugging level, right now used for HDHR driver, reflects above flag (is not obfuscated)
 
   private static long globalTimeOffset = 0;
@@ -1085,7 +1086,7 @@ public final class Sage
       prefs = new SageProperties(client);
       prefs.setupPrefs(prefFilename, Sage.getPath("core","Sage.properties.defaults"));
       alwaysUseCPUTime = Sage.getBoolean("always_use_cpu_time", false);
-      DBG = getBoolean("debug_logging", true);
+      //DBG = getBoolean("debug_logging", true);
 
       if(DBG) dl = 1; // NOTE: exposed to native code to enable excessive debug logging
       setupRedirections(client ? "sagetvclient" : appName);
