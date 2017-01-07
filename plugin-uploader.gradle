@@ -1,0 +1,73 @@
+/**
+ * NOTE: To use this uploader you should use the command
+ * ./gradlew -b plugin-uploader.gradle -Dstv.name=STVNAME bintrayUpload
+ *
+ * Before doing an upload, make sure you actually build the STV package
+ * cd build/pluginfiles/
+ * ant -Dstv.name=STVNAME
+ *
+ */
+plugins {
+	id "com.jfrog.bintray" version "1.7.3"
+}
+
+// Note this the version the Plugins, not sagetv
+version = '9.0'
+
+// Globals
+ext {
+    stv_name = System.getProperty("stv.name")
+    stv_version = version;
+}
+
+if (stv_name == null) {
+    throw new Exception("must pass -Dstv.name on the command line")
+}
+
+if (!file("build/pluginrelease/${stv_name}-${stv_version}.zip").exists()) {
+    throw new Exception("must run the build.xml in build/pluginfiles/ before uploading")
+}
+
+repositories {
+    mavenCentral()
+    jcenter()
+}
+
+// Upload tasks
+// use ./gradlew bintrayUpload
+// make sure your BINTRAY_API is set in the environment
+// 
+bintray {
+	user = System.getenv("BINTRAY_USER")
+	key = System.getenv("BINTRAY_API");
+	filesSpec {
+		// from 'build/release'
+		from ('build/pluginrelease') {
+			include "${stv_name}*"
+		}
+		into "sagetv-themes/${stv_version}"
+	}
+	dryRun = false //Whether to run this as dry-run, without deploying
+	publish = true //If version should be auto published after an upload
+	pkg {
+		repo = 'sagetv'
+		name = "sagev-themes"
+		userOrg = 'opensagetv'
+		desc = "SageTV Theme Release"
+		licenses = ['Apache-2.0']
+		vcsUrl = 'https://github.com/google/sagetv'
+		labels = ['sagetv','theme']
+		publicDownloadNumbers = true
+		version {
+			name = "${stv_version}"
+			released  = new Date()
+			desc = "SageTV Themes ${stv_version}"
+			//vcsTag = "V${version}"
+			//attributes = ['gradle-plugin': 'com.use.less:com.use.less.gradle:gradle-useless-plugin']
+		}
+	}
+}
+
+// This get run when you call ./gradlew without any targets
+// defaultTasks 'sageJar'
+
