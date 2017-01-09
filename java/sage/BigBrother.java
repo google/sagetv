@@ -22,6 +22,11 @@ public class BigBrother
   static final long WATCH_IGNORE_TIME = 5*60000L;
   static final long WATCH_IGNORE_TIME_MOVIE = 10*60000L;
   static final long MIN_WATCH_TIME = 5000L;
+  // The duration of the Show cannot be more than this less than the Airing
+  // duration in order to use the Show duration. This is to account for channels
+  // that have commercials in movies as alignment on commercial free movie
+  // channels is generally never this much padding.
+  static final long MAX_DURATION_DIFF_TO_USE_SHOW = 20*Sage.MILLIS_PER_MIN;
   static final double COMPLETE_WATCH_FRACTION = 0.66;
 
   public static final int NO_ALIGN = 0;
@@ -236,7 +241,8 @@ public class BigBrother
       // See if we want to apply this to the show or not
       // as being completely seen.
       long validDuration = (a.isDVD() && !a.isBluRay()) ? Long.MAX_VALUE : a.duration;
-      if (s != null && s.duration > 10000 && s.duration < a.duration) // ignore running times that are in the wrong units
+      if (s != null && s.duration > 10000 && s.duration < a.duration && // ignore running times that are in the wrong units
+          a.duration - s.duration < MAX_DURATION_DIFF_TO_USE_SHOW)
         validDuration = s.duration;
       if (priorWatch != null) {
         // Include prior watched data in calculating whether or not this new one
