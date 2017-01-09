@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SageTVPlugin>
+    <Name>SageTV 3 UI</Name>
+    <Identifier>SageTV3</Identifier>
+    <Description><![CDATA[
+    SageTV V3 UI
+  ]]></Description>
+    <Screenshot></Screenshot>
+    <Author>sagetv</Author>
+    <CreationDate>2016.01.07</CreationDate>
+    <ModificationDate>@@last-modified@@</ModificationDate>
+    <Version>@@stv-version@@</Version>
+    <Webpage><![CDATA[https://forums.sagetv.com/]]></Webpage>
+
+    <PluginType>STV</PluginType>
+
+    <Package>
+        <PackageType>STV</PackageType>
+        <Location><![CDATA[http://dl.bintray.com/opensagetv/sagetv/sagetv-themes/@@stv-version@@/@@stv-name@@-@@stv-version@@.zip]]></Location>
+        <MD5>@@stv-checksum@@</MD5>
+    </Package>
+
+    <ReleaseNotes><![CDATA[
+  ]]></ReleaseNotes>
+</SageTVPlugin>

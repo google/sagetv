@@ -31,7 +31,8 @@ cp elf/jpegtran ./serverrelease/
 cp ../install/config/RemoteClients.properties.defaults ./serverrelease
 cp ../install/config/Sage.properties.defaults ./serverrelease
 mkdir ./serverrelease/STVs
-cp -R ../stvs/SageTV3 ./serverrelease/STVs/
+# SageTV3 is now a plugin
+#cp -R ../stvs/SageTV3 ./serverrelease/STVs/
 cp -R ../stvs/SageTV7 ./serverrelease/STVs/
 rm ./serverrelease/STVs/SageTV7/*.stv
 mkdir ./serverrelease/fonts
