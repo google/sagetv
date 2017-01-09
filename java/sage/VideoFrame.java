@@ -886,9 +886,12 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
             // the server had actually pushed the EOS data because the current media time was within 250msec of the calculated duration.
             // So I added a '!liveControl' to the below conditional to prevent us from moving to the next airing if we have live control
             // and we have no hit the EOS yet.
+            // Narflex - 1/9/17 - Conditionalize the !liveControl so it doesn't apply on Windows DShow playback because there's
+            // some other bug which is preventing the demux EOS message from coming back which is there in V7 as well. Ideally,
+            // that issue gets fixed...but for the meantime, in order to match V7 behavior...do this instead.
             if (eos || (waitTime <= 0 && (!currFile.isMusic() ||
                 (sage.media.format.MediaFormat.DTS.equals(currFile.getContainerFormat()) && uiMgr.getUIClientType() == UIClient.LOCAL && Sage.WINDOWS_OS)) &&
-                getRealDurMillis() > 1 && !currFile.isDVD() && !liveControl))
+                getRealDurMillis() > 1 && !currFile.isDVD() && (!liveControl || player instanceof DShowMediaPlayer)))
             {
               if (processingWatchRequest)
               {

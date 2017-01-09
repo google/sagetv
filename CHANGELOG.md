@@ -5,6 +5,8 @@
 * Fix: Added handling for an unknown regular expression Schedules Direct was providing for the postal code for a few countries. The code also now skips the check if it does not recognize the regex formatting.
 * Fix: Added better handling to Seeker when starting a recording and no directories are selectable for the desired encoder.
 * Force debug logging to always be on.
+* Fix: Watched calculation for movies with commercials is improved
+* Fix: Prevent freezing between programs when playing back on Windows (matches V7 behavior, although not ideal, avoids freezing)
 
 ## Version 9.0.12 (2016-12-22)
 * New: Schedules Direct now includes teams as people for favorite scheduling.
