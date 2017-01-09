@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project basedir="." default="dist-plugins" name="SageTV3">
+	<tstamp/>
+	
+	<property name="dist.dir" value="${basedir}/../pluginrelease/" />
+
+	<!--<property name="stv.name" value="SageTV3" />-->
+	<fail unless="stv.name" message="nedd to pass -Dstv.name=SageTV2|SageTV3"></fail>
+
+	<property name="stv.version" value="9.0" />
+	<property name="stv.dir" value="${basedir}/../../stvs/${stv.name}" />
+
+	<target name="init" depends="clean">
+		<mkdir dir="${dist.dir}" />
+	</target>
+	
+	<target name="clean">
+		<delete dir="${dist.dir}" includes="${stv.name}*"/>
+	</target>
+
+    <target name="realclean">
+        <delete dir="${dist.dir}"/>
+    </target>
+
+    <target name="dist-plugins" description="Create the STV Plugin" depends="init">
+		<!-- zip stv -->
+		<zip destfile="${dist.dir}/${stv.name}-${stv.version}.zip">
+			<zipfileset dir="${stv.dir}" prefix="${stv.name}/" excludes="**/${stv.name}Patch*"></zipfileset>
+		</zip>
+		<checksum file="${dist.dir}/${stv.name}-${stv.version}.zip" property="md5.stv" />
+
+		<tstamp>
+			<format property="last-modified" pattern="yyyy.MM.dd" />
+		</tstamp>
+
+		<copy tofile="${dist.dir}/${stv.name}-${stv.version}.xml" file="${stv.name}.plugin.xml"/>
+		<replace file="${dist.dir}/${stv.name}-${stv.version}.xml" summary="yes">
+			<replacefilter token="@@last-modified@@" value="${last-modified}" />
+			<replacefilter token="@@stv-version@@" value="${stv.version}" />
+			<replacefilter token="@@stv-checksum@@" value="${md5.stv}" />
+            <replacefilter token="@@stv-name@@" value="${stv.name}" />
+		</replace>
+	</target>
+</project>
