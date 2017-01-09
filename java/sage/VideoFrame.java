@@ -5313,11 +5313,19 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
     return nowPlayingPlaylist;
   }
 
-  public static boolean areMediaFileFormatsSwitchable(MediaFile previousFile, MediaFile file)
+  public boolean areMediaFileFormatsSwitchable(MediaFile previousFile, MediaFile file)
   {
     if (previousFile == null || file == null)
     {
       if (Sage.DBG) System.out.println("No fast switching due to NULL file previous=" + previousFile + " file=" + file);
+      return false;
+    }
+
+    // Narflex - 1/9/17 - I've seen various issues happen when we try to fast switch during playlist playback
+    // so I'm just going to disallow it. It gets confused because you're not necessarily live, but the other checks
+    // here pass for the files being fast switchable.
+    if (!playlistChain.isEmpty()) {
+      System.out.println("No fast switching because we are executing a playlist");
       return false;
     }
 
