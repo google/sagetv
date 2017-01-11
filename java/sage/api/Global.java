@@ -1716,6 +1716,22 @@ public class Global {
         }
         return Boolean.FALSE; // this means we're a full SageTV UI running under Linux
       }});
+    rft.put(new PredefinedJEPFunction("Global", "IsLocalConnection")
+    {
+      /**
+       * Returns true if this UI is on the server's subnet.
+       * @return true if this UI is on the server's subnet, false otherwise.
+       *
+       * @since 9.0.13
+       * @declaration public boolean IsLocalConnection();
+       */
+      public Object runSafely(Catbert.FastStack stack) throws Exception{
+        UIManager uiMgr = stack.getUIMgr();
+        if (uiMgr.getUIClientType() == UIClient.REMOTE_UI)
+          if (uiMgr.getRootPanel().getRenderEngine() instanceof MiniClientSageRenderer)
+            return ((MiniClientSageRenderer) uiMgr.getRootPanel().getRenderEngine()).isLocalConnection();
+        return Boolean.TRUE;
+      }});
     rft.put(new PredefinedJEPFunction("Global", "IsTouchUI")
     {
       /**

@@ -7,6 +7,8 @@
 * Force debug logging to always be on.
 * Fix: Watched calculation for movies with commercials is improved
 * Fix: Prevent freezing between programs when playing back on Windows (matches V7 behavior, although not ideal, avoids freezing)
+* New: Add new API function Global.IsLocalConnection() to identify UI's running within the server's subnet
+* Fix: Allow any locally connected client to configure the placeshifter (locator, UPnP, routing) options
 
 ## Version 9.0.12 (2016-12-22)
 * New: Schedules Direct now includes teams as people for favorite scheduling.
