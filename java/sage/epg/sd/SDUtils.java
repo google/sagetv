@@ -15,7 +15,10 @@
  */
 package sage.epg.sd;
 
-import sage.Sage;
+import sage.DBObject;
+import sage.Person;
+import sage.Pooler;
+import sage.Wizard;
 import sage.epg.sd.gson.Gson;
 import sage.epg.sd.gson.GsonBuilder;
 import sage.epg.sd.gson.JsonElement;
@@ -30,6 +33,7 @@ import sage.epg.sd.json.locale.SDRegion;
 import sage.epg.sd.json.locale.SDRegionDeserializer;
 import sage.epg.sd.json.map.SDLineupMap;
 import sage.epg.sd.json.map.SDLineupMapDeserializer;
+import sage.epg.sd.json.programs.SDPerson;
 import sage.epg.sd.json.programs.SDSeriesDescArrayDeserializer;
 import sage.epg.sd.json.programs.SDProgramMetadata;
 import sage.epg.sd.json.programs.SDMetadataDeserializer;
@@ -47,6 +51,9 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.TimeZone;
 import java.util.zip.GZIPInputStream;
 
@@ -142,7 +149,14 @@ public class SDUtils
 
     if (SDSession.debugEnabled())
     {
-      SDSession.writeDebugLine("(received): ");
+      try
+      {
+        SDSession.writeDebugLine(connection.getURL() + " (received): ");
+      }
+      catch (Exception e)
+      {
+        SDSession.writeDebugLine("(received): ");
+      }
 
       char[] transferBuffer = new char[32768];
       ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -174,7 +188,8 @@ public class SDUtils
    * @param object The Json object to check. A Json object is the only element that can contain an
    *               error message.
    * @return An error if one is present or <code>null</code> if no error is present.
-   * @throws JsonParseException
+   * @throws JsonParseException This exception is raised if there is a serious issue that occurs
+   *                            during parsing of a Json string.
    */
   public static SDError getError(JsonObject object) throws JsonParseException
   {
@@ -427,5 +442,72 @@ public class SDUtils
     }
 
     return null;
+  }
+
+  /**
+   * Removes people that do not have an associated role or character.
+   *
+   * @param people An array of people to check.
+   * @return An array less people without any associated role or character.
+   */
+  public static SDPerson[] removeNoCharacterPeople(SDPerson people[])
+  {
+    List<SDPerson> returnList = new ArrayList<>();
+
+    for (SDPerson person : people) {
+      if (person.getCharacterName() == null || person.getCharacterName().trim().length() == 0)
+      {
+        continue;
+      }
+      returnList.add(person);
+    }
+
+    return returnList.size() == people.length ? people : returnList.toArray(new SDPerson[returnList.size()]);
+  }
+
+  /**
+   * Gets a person from the Wizard.
+   * <p/>
+   * If a person does not already exist in the Wizard, that person will be added. The purpose of
+   * this function is to ensure that we do not clobber additional person data with a new person that
+   * only has a name and person ID.
+   *
+   * @param person The Schedules Direct person to get from the Wizard.
+   * @param wiz The Wizard instance to be used to check for and add new people.
+   * @return <code>null</code> if the person could not be added or a person from the Wizard.
+   */
+  public static Person getPerson(SDPerson person, Wizard wiz)
+  {
+    String personName = person.getName();
+    // This should never happen because the name is mandatory.
+    if (personName == null || personName.length() == 0)
+      return null;
+
+    // We are using the person ID as our ext ID.
+    int personId = person.getPersonIdAsInt();
+    if (personId == 0)
+      return null;
+
+    if (person.isAlias())
+      personId *= -1;
+
+    Person newPersion = wiz.getPersonForExtID(personId);
+    if (newPersion == null)
+    {
+      newPersion = wiz.addPerson(personName, personId, 0, 0, "", Pooler.EMPTY_SHORT_ARRAY,
+        Pooler.EMPTY_STRING_ARRAY, Pooler.EMPTY_2D_BYTE_ARRAY, DBObject.MEDIA_MASK_TV);
+    }
+    return newPersion;
+  }
+
+  public static byte[] byteCollectionToByteArrayPrimitive(Collection<Byte> collection)
+  {
+    byte returnValue[] = new byte[collection.size()];
+    int i = 0;
+    for (Byte byteObject : collection)
+    {
+      returnValue[i++] = byteObject;
+    }
+    return returnValue;
   }
 }

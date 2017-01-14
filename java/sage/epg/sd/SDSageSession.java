@@ -109,7 +109,9 @@ public class SDSageSession extends SDSession
 
   private InputStreamReader post(URL url, byte sendBytes[], int off, int len, boolean retry) throws IOException, SDException
   {
-    if (SDSession.debugEnabled())
+    // Log everything but the authentication POST since that has a reusable password hash in it. The
+    // reply is a token that is only valid for at most 24 hours, so there's no reason to not log it.
+    if (SDSession.debugEnabled() && !SDSession.GET_TOKEN.equals(url))
     {
       SDSession.writeDebugLine("POST " + url.toString() + " (send): " + System.lineSeparator() + new String(sendBytes, off, len));
     }
@@ -165,7 +167,7 @@ public class SDSageSession extends SDSession
   }
 
   @Override
-  public synchronized InputStreamReader get(URL url) throws IOException, SDException
+  public InputStreamReader get(URL url) throws IOException, SDException
   {
     return get(url, true);
   }
@@ -220,7 +222,7 @@ public class SDSageSession extends SDSession
   }
 
   @Override
-  public synchronized InputStreamReader delete(URL url) throws IOException, SDException
+  public InputStreamReader delete(URL url) throws IOException, SDException
   {
     return delete(url, true);
   }
