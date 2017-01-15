@@ -7,6 +7,11 @@
 * Force debug logging to always be on.
 * Fix: Watched calculation for movies with commercials is improved
 * Fix: Prevent freezing between programs when playing back on Windows (matches V7 behavior, although not ideal, avoids freezing)
+* New: Added more roles for Person objects.
+* New: Schedules Direct Person images are now imported.
+* New: Schedules Direct movie quality ratings are now a part of the bonus data.
+* Fix: Schedules Direct movie images are now prioritized to use box art first.
+* Fix: Schedules Direct now updates channels with No Data with previously saved hashes that happen to still be valid.
 
 ## Version 9.0.12 (2016-12-22)
 * New: Schedules Direct now includes teams as people for favorite scheduling.
