@@ -96,7 +96,6 @@ public class SDRipper extends EPGDataSource
   private static final String PROP_MOVIE_RATING_BODY = PROP_PREFIX + "/movie_rating_body";
   private static final String PROP_DIGRAPH = PROP_PREFIX + "/preferred_desc_digraph";
   private static final String PROP_SAGETV_COMPAT = PROP_PREFIX + "/sagetv_compat";
-  private static final String PROP_DISABLE_SCHEDULE_CLEANUP = PROP_PREFIX + "/disable_schedule_cleanup";
   private static final String FILE_PROGRAM_MD5 = "sdmd5prog";
   private static final String FILE_SCHEDULE_MD5 = "sdmd5sched";
 
@@ -120,10 +119,6 @@ public class SDRipper extends EPGDataSource
   // Enables conversion of 14 character program IDs into 12 character IDs when the indexes 2 and 3
   // are zero.
   private static final boolean enableSageTVCompat = Sage.getBoolean(PROP_SAGETV_COMPAT, true);
-  // This disables removal of hashes for schedule data for stations that might be missing airings
-  // because there is less than 7 days worth of actual guide data. This does not disable removal of
-  // hashes for schedule data for stations that have no airings associated with them in the Wizard.
-  private static final boolean disableScheduleCleanup = Sage.getBoolean(PROP_DISABLE_SCHEDULE_CLEANUP, false);
 
   private static long postalCodeCacheTime;
   private static SDRegion regions[] = new SDRegion[0];
