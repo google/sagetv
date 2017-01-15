@@ -1641,6 +1641,19 @@ public class SDRipper extends EPGDataSource
                       Person newPerson = SDUtils.getPerson(person, wiz);
                       if (newPerson != null)
                       {
+                        // Remove duplicates of the same person with the same role.
+                        boolean addPerson = true;
+                        for (int l = 0; l < people.size(); l++)
+                        {
+                          if (people.get(l).getID() == newPerson.getID() && roles.get(l) == role)
+                          {
+                            addPerson = false;
+                            break;
+                          }
+                        }
+                        if (!addPerson)
+                          continue;
+
                         people.add(newPerson);
                         roles.add(role);
                         if (person.isAlias())
@@ -1962,8 +1975,22 @@ public class SDRipper extends EPGDataSource
                     Person newPerson = SDUtils.getPerson(person, wiz);
                     if (newPerson != null)
                     {
+                      String newCharacter = person.getCharacterName();
+                      // Remove duplicates of the same person with the same character.
+                      boolean addPerson = true;
+                      for (int k = 0; k < people.size(); k++)
+                      {
+                        if (people.get(k).getID() == newPerson.getID() && characters.get(k).equals(newCharacter))
+                        {
+                          addPerson = false;
+                          break;
+                        }
+                      }
+                      if (!addPerson)
+                        continue;
+
                       people.add(newPerson);
-                      characters.add(person.getCharacterName());
+                      characters.add(newCharacter);
 
                       if (person.isAlias())
                         addedPeople.add(person);
