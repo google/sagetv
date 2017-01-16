@@ -21,6 +21,7 @@ import sage.DBObject;
 import sage.EPG;
 import sage.EPGDataSource;
 import sage.MMC;
+import sage.Person;
 import sage.Pooler;
 import sage.Sage;
 import sage.SageTV;
@@ -60,7 +61,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -69,8 +69,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
-import java.util.TimeZone;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.regex.Matcher;
@@ -87,7 +92,7 @@ public class SDRipper extends EPGDataSource
   private static final String PROP_POSTAL_CODE = PROP_PREFIX + "/locale/postal_code";
   private static final String PROP_DISABLE_REGEX = PROP_PREFIX + "/disable_regex";
   private static final String PROP_REMOVE_LEADING_ZEROS = PROP_PREFIX + "/remove_leading_zeros";
-  private static final String PROP_RATING_BODY = PROP_PREFIX + "/rating_body";
+  //private static final String PROP_RATING_BODY = PROP_PREFIX + "/rating_body";
   private static final String PROP_MOVIE_RATING_BODY = PROP_PREFIX + "/movie_rating_body";
   private static final String PROP_DIGRAPH = PROP_PREFIX + "/preferred_desc_digraph";
   private static final String PROP_SAGETV_COMPAT = PROP_PREFIX + "/sagetv_compat";
@@ -1064,9 +1069,6 @@ public class SDRipper extends EPGDataSource
         throw new SDException(SDErrors.LINEUP_NOT_FOUND);
       }
 
-      TimeZone currentTimeZone = TimeZone.getDefault();
-      Calendar calendar = Calendar.getInstance();
-
       if (SageTV.getSyncSystemClock())
       {
         EPGDataSource[] dataSources = EPG.getInstance().getDataSources();
@@ -1377,6 +1379,10 @@ public class SDRipper extends EPGDataSource
       Set<String> needSeriesDetails = new HashSet<String>();
       // String array used for various lookups that only contain one item.
       String singleLookup[] = new String[1];
+      // All people added to the database are placed in this Set to be looked up after all guide
+      // data has been populated. We are using a Set to remove duplicates for each pass.
+      Set<SDPerson> addedPeople = new HashSet<>();
+      Set<SDPerson> addedAliases = new HashSet<>();
 
       int downloadedPrograms = 0;
       int importAirings = 0;
@@ -1602,14 +1608,16 @@ public class SDRipper extends EPGDataSource
                     String episodeName = programDetail.getEpisodeTitle150();
                     String desc = programDetail.getDescriptions().getDescription(preferedDescDigraph).getDescription();
                     long showDuration = programDetail.getDuration();
+
                     SDPerson cast[] = programDetail.getCast();
                     SDPerson crew[] = programDetail.getCrew();
                     SDPerson teams[] = programDetail.getTeams();
                     int castLen = cast.length;
                     int castCrewLen = castLen + crew.length;
                     int totalPeople = castCrewLen + teams.length;
-                    String[] people = new String[totalPeople];
-                    byte[] roles = new byte[totalPeople];
+                    List<Person> people = new ArrayList<>(totalPeople);
+                    List<Byte> roles = new ArrayList<>(totalPeople);
+
                     SDPerson person;
                     for (int k = 0; k < totalPeople; k++)
                     {
@@ -1620,17 +1628,54 @@ public class SDRipper extends EPGDataSource
                       else
                         person = teams[k - castCrewLen];
 
-                      people[k] = person.getName();
-                      roles[k] = person.getRoleID();
+                      // Skip all unknown roles.
+                      byte role = person.getRoleID();
+                      if (role == 0)
+                        continue;
+
+                      Person newPerson = SDUtils.getPerson(person, wiz);
+                      if (newPerson != null)
+                      {
+                        // Remove duplicates of the same person with the same role.
+                        boolean addPerson = true;
+                        for (int l = 0; l < people.size(); l++)
+                        {
+                          if (people.get(l).getID() == newPerson.getID() && roles.get(l) == role)
+                          {
+                            addPerson = false;
+                            break;
+                          }
+                        }
+                        if (!addPerson)
+                          continue;
+
+                        people.add(newPerson);
+                        roles.add(role);
+                        if (person.isAlias())
+                          addedPeople.add(person);
+                        else
+                          addedAliases.add(person);
+                      }
                     }
                     String[] expandedRatings = programDetail.getContentAdvisory();
-                    SDMovie movie = programDetail.getMovie();
+                    SDMovie movie = isMovie ? programDetail.getMovie() : null;
                     // Is only set when the program is a movie.
                     String rated = movie != null ? programDetail.getContentRating(movieRatingBody) : ""; // programDetail.getContentRating(ratingBody);
                     String year = movie != null ? movie.getYear() : "";
                     String parentalRating = null; //not used programDetail.getContentRating(ratingBody);
                     SDKeyWords keyWords = programDetail.getKeyWords();
                     String[] bonus = keyWords != null ? keyWords.getAllKeywords() : Pooler.EMPTY_STRING_ARRAY;
+                    if (movie != null)
+                    {
+                      String qualityRating = movie.getFormattedQualityRating();
+                      if (qualityRating.length() > 0)
+                      {
+                        String newBonus[] = new String[bonus.length + 1];
+                        newBonus[0] = qualityRating;
+                        System.arraycopy(bonus, 0, newBonus, 1, bonus.length);
+                        bonus = newBonus;
+                      }
+                    }
                     boolean uniqueShow = !extID.startsWith("SH") || "Special".equals(showType);
                     // Observation has shown this to be reasonably accurate when the show
                     // description is not in English, but is not the correct way to get this kind
@@ -1728,9 +1773,14 @@ public class SDRipper extends EPGDataSource
                     if (enableSageTVCompat)
                       extID = SDUtils.fromProgramToSageTV(extID);
 
+                    Person addPeople[] = people.size() == 0 ?
+                      Pooler.EMPTY_PERSON_ARRAY : people.toArray(new Person[people.size()]);
+                    byte addRoles[] = roles.size() == 0 ?
+                      Pooler.EMPTY_BYTE_ARRAY : SDUtils.byteCollectionToByteArrayPrimitive(roles);
+
                     downloadedPrograms++;
-                    wiz.addShow(title, episodeName, desc, showDuration, categories, people,
-                      roles, rated, expandedRatings, year, parentalRating, bonus, extID, language,
+                    wiz.addShow(title, episodeName, desc, showDuration, categories, addPeople,
+                      addRoles, rated, expandedRatings, year, parentalRating, bonus, extID, language,
                       originalAirDate, DBObject.MEDIA_MASK_TV, seasonNum, episodeNum, uniqueShow,
                       showcardID, imageURLs);
                   }
@@ -1892,7 +1942,7 @@ public class SDRipper extends EPGDataSource
                     }
                   }
 
-                  // We don't have a description and we don't have any
+                  // We don't have a description and we don't have any images.
                   if (seriesURLs == null || seriesURLs.length <= 1)
                     seriesURLs = Pooler.EMPTY_2D_BYTE_ARRAY;
 
@@ -1901,29 +1951,60 @@ public class SDRipper extends EPGDataSource
                   if (seriesDesc.length() == 0 && seriesURLs.length == 0)
                     continue;
 
-                  int castLen = seriesDetail.getCast().length;
-                  int numPeople = castLen + seriesDetail.getCrew().length;
+                  // Sometimes we will get cast without a character name.
+                  SDPerson seriesPeople[] = SDUtils.removeNoCharacterPeople(seriesDetail.getCast());
+                  SDPerson seriesCrew[] = SDUtils.removeNoCharacterPeople(seriesDetail.getCrew());
+                  int seriesPeopleLen = seriesPeople.length;
+                  int seriesPeopleCrewLen = seriesPeople.length + seriesCrew.length;
+                  List<Person> people = new ArrayList<>(seriesPeopleCrewLen);
+                  List<String> characters = new ArrayList<>(seriesPeopleCrewLen);
 
-                  String[] people = new String[numPeople];
-                  String characters[] = new String[numPeople];
-                  SDPerson person;
-                  for (int j = 0; j < numPeople; j++)
+                  for (int j = 0; j < seriesPeopleCrewLen; j++)
                   {
-                    if (j < castLen)
-                      person = seriesDetail.getCast()[j];
+                    SDPerson person;
+                    if (j < seriesPeopleLen)
+                      person = seriesPeople[j];
                     else
-                      person = seriesDetail.getCrew()[j - castLen];
+                      person = seriesCrew[j - seriesPeopleLen];
 
-                    people[j] = person.getName();
-                    characters[j] = person.getCharacterName();
+                    Person newPerson = SDUtils.getPerson(person, wiz);
+                    if (newPerson != null)
+                    {
+                      String newCharacter = person.getCharacterName();
+                      // Remove duplicates of the same person with the same character.
+                      boolean addPerson = true;
+                      for (int k = 0; k < people.size(); k++)
+                      {
+                        if (people.get(k).getID() == newPerson.getID() && characters.get(k).equals(newCharacter))
+                        {
+                          addPerson = false;
+                          break;
+                        }
+                      }
+                      if (!addPerson)
+                        continue;
+
+                      people.add(newPerson);
+                      characters.add(newCharacter);
+
+                      if (person.isAlias())
+                        addedPeople.add(person);
+                      else
+                        addedAliases.add(person);
+                    }
                   }
+
+                  Person addPeople[] = people.size() == 0 ?
+                    Pooler.EMPTY_PERSON_ARRAY : people.toArray(new Person[people.size()]);
+                  String addCharacters[] = characters.size() == 0 ?
+                    Pooler.EMPTY_STRING_ARRAY : characters.toArray(new String[characters.size()]);
 
                   downloadedPrograms++;
                   wiz.addSeriesInfo(legacySeriesID, showcardID, seriesTitle, "" /*Network*/,
                     seriesDesc, "" /*Historical description*/, "" /*Premiere date*/,
                     "" /*Finale date*/, "" /*Day of week*/,
                     showDuration == 0 ? "" : Sage.durFormatPretty(showDuration),
-                    people, characters, seriesURLs);
+                    addPeople, addCharacters, seriesURLs);
                 }
               }
               catch (Exception e)
@@ -1940,8 +2021,123 @@ public class SDRipper extends EPGDataSource
           }
         }
 
+        // This value is -1 if all content was processed. If this is set to 0, that means that some
+        // content was not processed, but that content did not provide a specific time in the future
+        // to check again. Set the next pass to start immediately.
         if (nextUpdate == 0)
           nextUpdate = Sage.time();
+
+        // Overwrite all aliases that match original names. The alias is not used for images unless
+        // the alias is the only entry.
+        for (SDPerson person : addedPeople)
+        {
+          addedAliases.add(person);
+        }
+        addedPeople.clear();
+
+        // Import Person object image URLs (and maybe other information one day). We are doing this
+        // at a time when we might potentially need to wait for data that was not available on the
+        // first pass, so this makes the waiting a little more productive.
+        int peopleSize = addedAliases.size();
+        if (peopleSize > 0)
+        {
+          if (Sage.DBG) System.out.println("SDEPG Attempting to import images for " +
+            peopleSize + " pe" + (peopleSize == 1 ? "rson" : "ople") + "...");
+
+          int remainingThreads = 0;
+          final AtomicInteger totalPeople = new AtomicInteger(0);
+          BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(30);
+          ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 15, 5000, TimeUnit.MILLISECONDS, queue);
+
+          for (SDPerson nextPerson : addedAliases)
+          {
+            final SDPerson person = nextPerson;
+            final Wizard threadWiz = wiz;
+
+            Runnable runnable = new Runnable()
+            {
+              @Override
+              public void run()
+              {
+                String personName = person.getName();
+                int personId = person.getPersonIdAsInt();
+                int nameId = person.getNameIdAsInt();
+                String lookupPersonId = person.getPersonId();
+
+                // If these don't match, this is an alias.
+                if (personId != 0 && personId == nameId)
+                  personId *= -1;
+
+                // We don't have any sources for these at the moment. It might not be a bad idea to see
+                // if we can hook into well-established free sources reliably for this extra data
+                // (e.g. TheTVDB.com).
+                int personDob = 0;
+                int personDod = 0;
+                String birthPlace = "";
+                short yearList[] = Pooler.EMPTY_SHORT_ARRAY;
+                String awardList[] = Pooler.EMPTY_STRING_ARRAY;
+
+                byte headShotUrls[][];
+                if (lookupPersonId.length() > 0)
+                {
+                  try
+                  {
+                    headShotUrls = SDImages.encodeHeadShots(ensureSession().getCelebrityImages(lookupPersonId));
+                  }
+                  catch (Exception e)
+                  {
+                    // Issues in getting head-shots should not be considered a significant
+                    // issue, but we will report it in case it becomes the source of a major
+                    // issue.
+                    SDSageSession.writeDebugException(e);
+                    if (Sage.DBG)
+                    {
+                      System.out.println("SDEPG Unable to get head-shots for: " + person);
+                      e.printStackTrace(System.out);
+                    }
+                    headShotUrls = Pooler.EMPTY_2D_BYTE_ARRAY;
+                  }
+                }
+                else
+                {
+                  headShotUrls = Pooler.EMPTY_2D_BYTE_ARRAY;
+                }
+
+                // Since no other details would be updated, we can just skip this update completely.
+                // This should be removed or expanded if more data becomes available in the future.
+                if (headShotUrls.length == 0)
+                  return;
+
+                totalPeople.incrementAndGet();
+
+                //System.out.println("SDEPG added head-shots for: " + person);
+                threadWiz.addPerson(personName, personId, personDob, personDod, birthPlace,
+                  yearList, awardList, headShotUrls, DBObject.MEDIA_MASK_TV);
+              }
+            };
+
+            try
+            {
+              executor.execute(runnable);
+            }
+            catch (RejectedExecutionException e)
+            {
+              // If the queue is currently full, do the lookup on this thread.
+              runnable.run();
+            }
+          }
+
+          executor.shutdown();
+          executor.awaitTermination(5000, TimeUnit.MILLISECONDS);
+          // It's not a problem to not wait for the potentially remaining threads to complete. The
+          // operation is thread-safe.
+          addedAliases.clear();
+          remainingThreads = queue.size();
+          peopleSize = totalPeople.get();
+          if (Sage.DBG) System.out.println("SDEPG Imported images for " +
+            peopleSize + " pe" + (peopleSize == 1 ? "rson" : "ople") +
+            " (+" + remainingThreads + ")");
+        }
 
         // If the value isn't -1, that means some data was not able to be received immediately.
         if (nextUpdate != -1)
@@ -1975,16 +2171,8 @@ public class SDRipper extends EPGDataSource
             break;
           }
 
-
-          if (Sage.DBG) {
-            String updateTime = Long.toString(nextUpdate / 60000);
-            System.out.println("SDEPG Some programs and/or schedules are still" +
-              " needed. Waiting " + updateTime + " minutes to get the remaining data.");
-          }
-
           if (abort || !enabled) return false;
           long currentTime = Sage.time();
-
           // Wait at least 5 seconds.
           long totalWait = Math.max(5000, nextUpdate - currentTime);
           // Don't wait longer than 30 minutes.
@@ -1992,6 +2180,12 @@ public class SDRipper extends EPGDataSource
           {
             totalWait = Sage.MILLIS_PER_MIN * 30;
             nextUpdate = currentTime + totalWait;
+          }
+
+          if (Sage.DBG) {
+            String updateTime = Long.toString(totalWait / 60000);
+            System.out.println("SDEPG Some programs and/or schedules are still" +
+              " needed. Waiting " + updateTime + " minutes to get the remaining data.");
           }
 
           int loops = (int)Math.min(totalWait / 5000, Integer.MAX_VALUE);
@@ -2141,7 +2335,39 @@ public class SDRipper extends EPGDataSource
         try
         {
           reader = new BufferedReader(new FileReader(programFile));
-          return deserializeStationDayMd5Map(reader);
+          Map<Integer, Map<String, String>> returnValue = deserializeStationDayMd5Map(reader);
+
+          // Check for stations without any airing data and if we have saved hashes for that
+          // station, remove them so the station will update.
+          int lookupAirings[] = new int[returnValue.size()];
+          int i = 0;
+          for (Integer key : returnValue.keySet())
+          {
+            lookupAirings[i++] = key;
+          }
+
+          long latestAirings[] = Wizard.getInstance().getLatestTvAiringTime(lookupAirings);
+          if (latestAirings != null)
+          {
+            for (i = 0; i < latestAirings.length; i++)
+            {
+              // If there are no airings, update the whole station.
+              if (latestAirings[i] == -1)
+              {
+                if (Sage.DBG) System.out.println("SDEPG Removed hashes for station " + lookupAirings[i]);
+                returnValue.remove(lookupAirings[i]);
+              }
+            }
+
+            // If we have made changes, save them so if we shutdown in the middle of any update, we
+            // won't be left with only partial data.
+            if (returnValue.size() != lookupAirings.length)
+            {
+              saveStationDayMd5Map(returnValue);
+            }
+          }
+
+          return returnValue;
         }
         catch (IOException e)
         {

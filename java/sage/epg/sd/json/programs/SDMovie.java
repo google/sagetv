@@ -15,6 +15,8 @@
  */
 package sage.epg.sd.json.programs;
 
+import sage.Sage;
+
 import java.util.Arrays;
 
 public class SDMovie
@@ -82,6 +84,44 @@ public class SDMovie
     }
 
     return "";
+  }
+
+  public String getFormattedQualityRating()
+  {
+    String quality = getQualityRating("Gracenote");
+    if (quality.length() == 0)
+      return quality;
+    StringBuilder returnValue = new StringBuilder(5);
+    char chars[] = quality.toCharArray();
+    boolean decimal = false;
+    for (char number : chars)
+    {
+      if (number >= '0' && number <= '9')
+      {
+        if (decimal)
+        {
+          if (number > '0')
+            returnValue.append("+");
+          break;
+        }
+
+        int stars = number - '0';
+        for (int i = 0; i < stars; i++)
+        {
+          returnValue.append("*");
+        }
+      }
+      else if (returnValue.length() > 0)
+      {
+        decimal = number == '.';
+        if (!decimal)
+        {
+          if (Sage.DBG) System.out.println("SDEPG Unexpected movie quality format: " + quality);
+          returnValue.setLength(0);
+        }
+      }
+    }
+    return returnValue.toString();
   }
 
   @Override

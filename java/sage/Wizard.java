@@ -208,8 +208,9 @@ public class Wizard implements EPGDBPublic2
   // 83 added support for writing out index orders; this is backwards compatible since older versions will skip this section and create their own indices
   // 84 open sourced initial version
   // 85 fixed Wizard bug where we were loading using BYTE_CHARSET instead of I18N_CHARSET
-  // 86 added support for encoded Schedules Direct image URLs for Channel, Show and SeriesInfo objects.
-  public static byte VERSION = SageConstants.PVR ? 0x56 : 0x46;
+  // 86 added support for encoded Schedules Direct image URLs for Channel, Show and SeriesInfo objects
+  // 87 added support for encoded Schedules Direct image URLs for Person
+  public static byte VERSION = SageConstants.PVR ? 0x57 : 0x46;
   public static final byte BAD_VERSION = 0x00;
 
   // This flag is to deal with the problem where we used 32-bit ints for Airing durations in compact DB mode. For PVR
@@ -3115,6 +3116,12 @@ public class Wizard implements EPGDBPublic2
     return addSeriesInfo(legacySeriesID, title, network, description, history, premiereDate, finaleDate, airDOW, airHrMin, imageURL, people, characters) != null;
   }
   public SeriesInfo addSeriesInfo(int legacySeriesID, int showcardID, String title, String network, String description, String history, String premiereDate,
+      String finaleDate, String airDOW, String airHrMin, Person[] people, String[] characters, byte[][] imageURLs)
+  {
+    return addSeriesInfo(legacySeriesID, showcardID, title, network, description, history, premiereDate, finaleDate, airDOW, airHrMin,
+      "", people, characters, Pooler.EMPTY_INT_ARRAY, Pooler.EMPTY_LONG_ARRAY, imageURLs);
+  }
+  public SeriesInfo addSeriesInfo(int legacySeriesID, int showcardID, String title, String network, String description, String history, String premiereDate,
       String finaleDate, String airDOW, String airHrMin, String[] people, String[] characters, byte[][] imageURLs)
   {
     Person[] peeps = (people == null || people.length == 0) ? Pooler.EMPTY_PERSON_ARRAY : new Person[people.length];
@@ -4570,6 +4577,16 @@ public class Wizard implements EPGDBPublic2
   }
 
   public Show addShow(String title, String episodeName, String desc, long duration, String[] categories,
+                      Person[] people, byte[] roles, String rated, String[] expandedRatings,
+                      String year, String parentalRating, String[] bonus, String extID, String language, long originalAirDate,
+                      int mediaMask, short seasonNum, short episodeNum, boolean forcedUnique, int showcardID, byte urls[][])
+  {
+    return addShow(title, episodeName, desc, duration, categories, people, roles, rated, expandedRatings,
+        year, parentalRating, bonus, extID, language, originalAirDate, false, mediaMask, seasonNum, episodeNum, (short)0,
+        forcedUnique, showcardID, 0, Pooler.EMPTY_SHORT_ARRAY, urls);
+  }
+
+  public Show addShow(String title, String episodeName, String desc, long duration, String[] categories,
                       String[] people, byte[] roles, String rated, String[] expandedRatings,
                       String year, String parentalRating, String[] bonus, String extID, String language, long originalAirDate,
                       int mediaMask, short seasonNum, short episodeNum, boolean forcedUnique, int showcardID, byte urls[][])
@@ -5270,6 +5287,114 @@ public class Wizard implements EPGDBPublic2
     return lastAiringTime;
   }
 
+  /**
+   * Get the time of the last non-NoShow airing in the database
+   *
+   * @param lookupIDs An array of station ID's to look up the latest airing for.
+   * @return <code>null</code> when database is not yet ready, an empty array if lookupIDs is
+   *         <code>null</code> or empty or the millisecond time (or -1 if there are no airings) of
+   *         the last airing for each lookupID
+   */
+  public long[] getLatestTvAiringTime(int lookupIDs[]) {
+    if (loading) return null;
+    if (lookupIDs == null || lookupIDs.length == 0) return Pooler.EMPTY_LONG_ARRAY;
+    long returnValues[] = new long[lookupIDs.length];
+    Arrays.fill(returnValues, -1);
+
+    // Get all channels
+    Channel[] channels=getChannels();
+
+    Table t = getTable(AIRING_CODE);
+    Index indy = t.getIndex(AIRINGS_BY_CT_CODE);
+
+    int lastIndex=0;
+    try {
+      t.acquireReadLock();
+      // for each channel
+      for ( int chanIndex = 0; chanIndex < channels.length; chanIndex++)
+      {
+        int stationID = channels[chanIndex].getStationID();
+
+        if ( stationID > 0 )
+        {
+          // Only check station IDs that match the channels we are looking for.
+          boolean skip = true;
+          for (int i = 0; i < lookupIDs.length; i++)
+          {
+            if (stationID == lookupIDs[i])
+            {
+              skip = false;
+              break;
+            }
+          }
+          if (skip) continue;
+
+          int index=-1;
+          int low = lastIndex; // use lastIndex as a hint of where to start looking
+          int high = t.num - 1;
+          int mid =-1;
+          Airing air=null;
+
+          // binary search for last airing on channel
+          while ( low < high )
+          {
+            mid = ( low + high ) >> 1;
+            air = (Airing) indy.data[mid];
+            if ( mid == low )
+              // cannot go deeper
+              break;
+
+            long cmp = air.stationID - stationID;
+            if ( cmp == 0 ) {
+              // use negative comparison to get last airing on this channel
+              cmp = -1 ;
+            }
+
+            if ( cmp < 0 )
+              low = mid;
+            else if ( cmp > 0 )
+              high = mid;
+            else {
+              break;
+            }
+          }
+          // check that we did actually find an airing on the
+          // station we want...
+          if ( air != null && air.stationID == stationID )
+          {
+            index=mid;
+            // last airing for channel found
+            // store index for next iteration of binary search loop
+            lastIndex = index;
+
+            // skip noshows by moving back
+            while ( index >0  && air != null && isNoShow(air.showID) && air.stationID == stationID )
+            {
+              index--;
+              air =(Airing) indy.data[index];
+            }
+
+            if ( air != null && air.stationID == stationID && ! isNoShow(air.showID) )
+            {
+              // We could have saved the index earlier, but if there is more than one entry for the
+              // same station ID, it would not get get updated.
+              for (int i = 0; i < lookupIDs.length; i++)
+              {
+                if (stationID == lookupIDs[i])
+                {
+                  // got valid show on this channel
+                  returnValues[i] = Math.max(returnValues[i], air.getEndTime());
+                }
+              }
+            }
+          }
+        } // if non-zero Station ID
+      } // for each channel
+    } finally {
+      t.releaseReadLock();
+    }
+    return returnValues;
+  }
 
   Watched addWatched(Airing watchAir, long watchStart, long watchEnd,
       long realStart, long realEnd)
@@ -5473,11 +5598,19 @@ public class Wizard implements EPGDBPublic2
     t.remove(removeMe, true);
   }
 
+  public Person addPerson(String name, int extID, int dob, int dod, String birthPlace, short[] yearList, String[] awardList, byte[][] headshotUrls, int mediaMask)
+  {
+    return addPerson(name, extID, dob, dod, birthPlace, yearList, awardList, (short)-1, headshotUrls, mediaMask);
+  }
   public Person addPerson(String name, int extID, int dob, int dod, String birthPlace, short[] yearList, String[] awardList, short headshotImageID)
   {
     return addPerson(name, extID, dob, dod, birthPlace, yearList, awardList, headshotImageID, DBObject.MEDIA_MASK_TV);
   }
   public Person addPerson(String name, int extID, int dob, int dod, String birthPlace, short[] yearList, String[] awardList, short headshotImageID, int mediaMask)
+  {
+    return addPerson(name, extID, dob, dod, birthPlace, yearList, awardList, headshotImageID, Pooler.EMPTY_2D_BYTE_ARRAY, mediaMask);
+  }
+  public Person addPerson(String name, int extID, int dob, int dod, String birthPlace, short[] yearList, String[] awardList, short headshotImageID, byte[][] headshotUrls, int mediaMask)
   {
     name = name.trim();
     Person oldPerson = getPersonForNameAndExtID(name, extID, false);
@@ -5495,6 +5628,7 @@ public class Wizard implements EPGDBPublic2
       for (int i = 0; i < person.awardNames.length; i++)
         person.awardNames[i] = getBonusForName(awardList[i], DBObject.MEDIA_MASK_TV);
       person.headshotImageId = headshotImageID;
+      person.headshotUrls = (headshotUrls == null || headshotUrls.length != 2) ? Pooler.EMPTY_2D_BYTE_ARRAY : headshotUrls;
 
       person.setMediaMask(mediaMask);
 

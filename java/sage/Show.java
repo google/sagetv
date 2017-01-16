@@ -56,7 +56,24 @@ public final class Show extends DBObject
   public static final byte ANCHOR_ROLE = 26;
   public static final byte VOICE_ROLE = 27;
   public static final byte MUSICAL_GUEST_ROLE = 28;
-  public static final byte MAX_ROLE_NUM = 28;
+  public static final byte FILM_EDITOR_ROLE = 29;
+  public static final byte MUSIC_ROLE = 30;
+  public static final byte CASTING_ROLE = 31;
+  public static final byte CINEMATOGRAPHER_ROLE = 32;
+  public static final byte COSTUME_DESIGNER_ROLE = 33;
+  public static final byte PRODUCTION_DESIGN_ROLE = 34;
+  public static final byte CREATOR_ROLE = 35;
+  public static final byte CO_PRODUCER_ROLE = 36;
+  public static final byte ASSOCIATE_PRODUCER_ROLE = 37;
+  public static final byte FIRST_ASSISTANT_DIRECTOR_ROLE = 38;
+  public static final byte SUPERVISING_ART_DIRECTION_ROLE = 39;
+  public static final byte CO_EXECUTIVE_PRODUCER_ROLE = 40;
+  public static final byte DIRECTOR_OF_PHOTOGRAPHY_ROLE = 41;
+  public static final byte UNIT_PRODUCTION_MANAGER_ROLE = 42;
+  public static final byte MAKEUP_ARTIST_ROLE = 43;
+  public static final byte ASSISTANT_DIRECTOR_ROLE = 44;
+  public static final byte MUSIC_SUPERVISOR_ROLE = 45;
+  public static final byte MAX_ROLE_NUM = 45;
   public static final byte ALL_ROLES = 127;
 
   public static String[] getRoleNames()
@@ -69,8 +86,15 @@ public final class Show extends DBObject
         Sage.rez("Coach"), Sage.rez("Host"), Sage.rez("Executive_Producer"),
         Sage.rez("Artist"), Sage.rez("Album_Artist"), Sage.rez("Composer"),
         Sage.rez("Judge"), Sage.rez("Narrator"), Sage.rez("Contestant"),
-        Sage.rez("Correspondent"), Sage.rez("Team"), Sage.rez("Guest Voice"),
-        Sage.rez("Anchor"), Sage.rez("Voice"), Sage.rez("Musical Guest")
+        Sage.rez("Correspondent"), Sage.rez("Team"), Sage.rez("Guest_Voice"),
+        Sage.rez("Anchor"), Sage.rez("Voice"), Sage.rez("Musical_Guest"),
+        Sage.rez("Film_Editor"), Sage.rez("Music"), Sage.rez("Casting"),
+        Sage.rez("Cinematographer"), Sage.rez("Costume_Designer"), Sage.rez("Production_Design"),
+        Sage.rez("Creator"), Sage.rez("CoProducer"), Sage.rez("Associate_Producer"),
+        Sage.rez("First_Assistant_Director"), Sage.rez("Supervising_Art_Direction"),
+        Sage.rez("CoExecutive_Producer"), Sage.rez("Director_of_Photography"),
+        Sage.rez("Unit_Production_Manager"), Sage.rez("Makeup_Artist"),
+        Sage.rez("Assistant_Director"), Sage.rez("Music_Supervisor")
     };
   }
 
@@ -1238,7 +1262,7 @@ public final class Show extends DBObject
         if (SDImages.getImageCount(i, imageURLs) > prefIndex)
         {
           int realIndex = imageURLs[0][i] + prefIndex;
-          return SDImages.decodeImageUrl(showcardID, imageURLs[realIndex]);
+          return SDImages.decodeShowImageUrl(showcardID, imageURLs[realIndex]);
         }
 
         i += 2;
@@ -1251,7 +1275,7 @@ public final class Show extends DBObject
         if (SDImages.getImageCount(i, imageURLs) > 0)
         {
           int realIndex = imageURLs[0][i];
-          return SDImages.decodeImageUrl(showcardID, imageURLs[realIndex]);
+          return SDImages.decodeShowImageUrl(showcardID, imageURLs[realIndex]);
         }
 
         i += 2;
@@ -1288,35 +1312,47 @@ public final class Show extends DBObject
       return getImageIdUrl(imageIDs[0], seriesID, showcardID, getExternalID(), false);
   }
 
+  /**
+   * Returns an image URL that's representative of this Movie
+   * <p/>
+   * If no images are available with the preferred index, any image will be returned.
+   *
+   * @param prefIndex The preferred image index.
+   * @param thumb Request thumbnail size image.
+   * @return A URL if an image was available or <code>null</code> if no images are available.
+   */
   public String getAnyImageUrl(int prefIndex, boolean thumb)
   {
     if (imageURLs.length > 1)
     {
-      // Thumbnails are even numbers and full images are odd.
+      // Thumbnails are even numbers and full images are odd. We are indexing in reverse because
+      // this will get us box art, then poster and last photo which is generally preferred for
+      // movies.
+
       // Try to get preferred image URL.
-      int i = thumb ? 0 : 1;
-      while (i < imageURLs[0].length)
+      int i = thumb ? imageURLs[0].length - 2 : imageURLs[0].length - 1;
+      while (i > 0)
       {
         if (SDImages.getImageCount(i, imageURLs) > prefIndex)
         {
           int realIndex = imageURLs[0][i] + prefIndex;
-          return SDImages.decodeImageUrl(showcardID, imageURLs[realIndex]);
+          return SDImages.decodeShowImageUrl(showcardID, imageURLs[realIndex]);
         }
 
-        i += 2;
+        i -= 2;
       }
 
       // Get any image URL.
-      i = thumb ? 0 : 1;
-      while (i < imageURLs[0].length)
+      i = thumb ? imageURLs[0].length - 2 : imageURLs[0].length - 1;
+      while (i > 0)
       {
         if (SDImages.getImageCount(i, imageURLs) > 0)
         {
           int realIndex = imageURLs[0][i];
-          return SDImages.decodeImageUrl(showcardID, imageURLs[realIndex]);
+          return SDImages.decodeShowImageUrl(showcardID, imageURLs[realIndex]);
         }
 
-        i += 2;
+        i -= 2;
       }
 
       return null;
@@ -1362,7 +1398,7 @@ public final class Show extends DBObject
         if (currentCount > idx)
         {
           int realIndex = imageURLs[0][i] + idx;
-          return SDImages.decodeImageUrl(showcardID, imageURLs[realIndex]);
+          return SDImages.decodeShowImageUrl(showcardID, imageURLs[realIndex]);
         }
 
         idx -= currentCount;

@@ -19,7 +19,7 @@ import sage.epg.sd.json.SDError;
 
 public class SDProgramImages implements SDError
 {
-  protected static final SDImage[] EMPTY_IMAGES = new SDImage[0];
+  public static final SDImage[] EMPTY_IMAGES = new SDImage[0];
 
   private int code;
   private String message;

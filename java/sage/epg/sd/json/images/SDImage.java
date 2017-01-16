@@ -126,6 +126,11 @@ public class SDImage
     return height;
   }
 
+  public boolean isPortrait()
+  {
+    return height > width;
+  }
+
   public String getUri()
   {
     // This also means we will end up with a 303 redirect.
@@ -269,6 +274,7 @@ public class SDImage
       case "Photo":
         return CAT_PHOTO;
       case "Photo-headshot":
+      case "Photo - headshot":
         return CAT_PHOTO_HEADSHOT;
       default:
         return CAT_UNKNOWN;

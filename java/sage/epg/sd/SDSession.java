@@ -21,13 +21,16 @@ import sage.epg.sd.gson.Gson;
 import sage.epg.sd.gson.JsonArray;
 import sage.epg.sd.gson.JsonElement;
 import sage.epg.sd.gson.JsonObject;
+import sage.epg.sd.gson.JsonSyntaxException;
 import sage.epg.sd.gson.stream.JsonWriter;
 import sage.epg.sd.json.headend.SDHeadend;
+import sage.epg.sd.json.images.SDImage;
 import sage.epg.sd.json.images.SDProgramImages;
 import sage.epg.sd.json.lineup.SDAccountLineups;
 import sage.epg.sd.json.locale.SDLanguage;
 import sage.epg.sd.json.locale.SDRegion;
 import sage.epg.sd.json.map.SDLineupMap;
+import sage.epg.sd.json.programs.SDPerson;
 import sage.epg.sd.json.programs.SDProgram;
 import sage.epg.sd.json.programs.SDSeriesDesc;
 import sage.epg.sd.json.programs.SDSeriesDescArray;
@@ -50,11 +53,10 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidParameterException;
 import java.util.Collection;
-import java.util.List;
-import java.util.Set;
 
 public abstract class SDSession
 {
+  private static final Object debugLock = new Object();
   private static PrintWriter debugWriter = null;
   private static int debugBytes = 0;
   protected static final Gson gson = SDUtils.GSON;
@@ -64,6 +66,8 @@ public abstract class SDSession
   public static final String USER_AGENT = "Open Source SageTV " + Version.VERSION;
   private static final String URL_BASE = "https://json.schedulesdirect.org";
   public static final String URL_VERSIONED = URL_BASE + "/20141201";
+  // Get images for celebrities. Cast/Crew must have a nameId to use this.
+  private static final String GET_CELEBRITY_IMAGES = URL_VERSIONED + "/metadata/celebrity/";
 
   // The character set to be used for outgoing communications.
   protected static final Charset OUT_CHARSET = StandardCharsets.UTF_8;
@@ -72,7 +76,7 @@ public abstract class SDSession
 
   // These are set in the static constructor because they can throw format exceptions.
   // Returns a token if the credentials are valid.
-  private static final URL GET_TOKEN;
+  protected static final URL GET_TOKEN;
   // Get the current account status/saved lineups.
   private static final URL GET_STATUS;
   // Get a list of available services.
@@ -194,25 +198,28 @@ public abstract class SDSession
   /**
    * Enable debug logging for all JSON in and out.
    */
-  public synchronized static void enableDebug()
+  public static void enableDebug()
   {
     try
     {
-      File debugFile = new File("sd_epg.log");
-      long fileSize = debugFile.exists()? debugFile.length() : 0;
-      if (fileSize > 67108864)
+      synchronized (debugLock)
       {
-        File oldFile = new File("sd_epg.log.old");
-        if (oldFile.exists()) oldFile.delete();
-        debugFile.renameTo(new File("sd_epg.log.old"));
-        debugWriter = new PrintWriter(new BufferedWriter(new FileWriter("sd_epg.log")));
-      }
-      else
-      {
-        debugWriter = new PrintWriter(new BufferedWriter(new FileWriter("sd_epg.log", true)));
-      }
+        File debugFile = new File("sd_epg.log");
+        long fileSize = debugFile.exists() ? debugFile.length() : 0;
+        if (fileSize > 67108864)
+        {
+          File oldFile = new File("sd_epg.log.old");
+          if (oldFile.exists()) oldFile.delete();
+          debugFile.renameTo(new File("sd_epg.log.old"));
+          debugWriter = new PrintWriter(new BufferedWriter(new FileWriter("sd_epg.log")));
+        }
+        else
+        {
+          debugWriter = new PrintWriter(new BufferedWriter(new FileWriter("sd_epg.log", true)));
+        }
 
-      debugBytes = (int)fileSize;
+        debugBytes = (int) fileSize;
+      }
     }
     catch (IOException e)
     {
@@ -221,31 +228,34 @@ public abstract class SDSession
     }
   }
 
-  public synchronized static boolean debugEnabled()
+  public static boolean debugEnabled()
   {
     return debugWriter != null;
   }
 
-  public synchronized static void writeDebugException(Throwable line)
+  public static void writeDebugException(Throwable line)
   {
     if (debugWriter == null)
       return;
 
     try
     {
-      String message = line.getMessage();
-      if (message == null) message = "null";
-      debugWriter.write("#### Exception Start ####");
-      debugWriter.write(message);
-      debugWriter.write(System.lineSeparator());
-      line.printStackTrace(debugWriter);
-      debugWriter.write(System.lineSeparator());
-      debugWriter.write("#### Exception End ####");
-      debugWriter.write(System.lineSeparator());
-      debugWriter.flush();
-      // Close enough; we really don't need precise math here.
-      debugBytes += 512;
-      debugRollover();
+      synchronized (debugLock)
+      {
+        String message = line.getMessage();
+        if (message == null) message = "null";
+        debugWriter.write("#### Exception Start ####");
+        debugWriter.write(message);
+        debugWriter.write(System.lineSeparator());
+        line.printStackTrace(debugWriter);
+        debugWriter.write(System.lineSeparator());
+        debugWriter.write("#### Exception End ####");
+        debugWriter.write(System.lineSeparator());
+        debugWriter.flush();
+        // Close enough; we really don't need precise math here.
+        debugBytes += 512;
+        debugRollover();
+      }
     }
     catch (Exception e)
     {
@@ -254,19 +264,22 @@ public abstract class SDSession
     }
   }
 
-  public synchronized static void writeDebugLine(String line)
+  public static void writeDebugLine(String line)
   {
     if (debugWriter == null)
       return;
 
     try
     {
-      if (line == null) line = "null";
-      debugWriter.write(line);
-      debugWriter.write(System.lineSeparator());
-      debugWriter.flush();
-      debugBytes += line.length() + 2;
-      debugRollover();
+      synchronized (debugLock)
+      {
+        if (line == null) line = "null";
+        debugWriter.write(line);
+        debugWriter.write(System.lineSeparator());
+        debugWriter.flush();
+        debugBytes += line.length() + 2;
+        debugRollover();
+      }
     }
     catch (Exception e)
     {
@@ -275,16 +288,19 @@ public abstract class SDSession
     }
   }
 
-  public synchronized static void writeDebug(char[] line, int offset, int length)
+  public static void writeDebug(char[] line, int offset, int length)
   {
     if (debugWriter == null)
       return;
 
     try
     {
-      debugWriter.write(line, offset, length);
-      debugBytes += length;
-      // Don't perform a rollover in this method because we could cut a String of JSON in half.
+      synchronized (debugLock)
+      {
+        debugWriter.write(line, offset, length);
+        debugBytes += length;
+        // Don't perform a rollover in this method because we could cut a String of JSON in half.
+      }
     }
     catch (Exception e)
     {
@@ -302,7 +318,6 @@ public abstract class SDSession
       try
       {
         debugWriter.close();
-        debugWriter = null;
       } catch (Exception e) {}
       enableDebug();
     }
@@ -985,6 +1000,41 @@ public abstract class SDSession
 
     SDProgramImages[] returnValues = postJson(GET_PROGRAMS_IMAGES, SDProgramImages[].class, submit);
     return returnValues;
+  }
+
+  /**
+   * Get celebrity images for a specific celebrity.
+   *
+   * @param personId The person ID as provided by {@link SDPerson#getNameId()}. If this is null,
+   *                 blank or 0, an empty array will be returned.
+   * @return The available images of the provided celebrity as provided by Schedules Direct.
+   * @throws IOException If there is an I/O related error.
+   * @throws SDException If there is a problem working with Schedules Direct.
+   */
+  public SDImage[] getCelebrityImages(String personId) throws IOException, SDException
+  {
+    if (personId == null || personId.length() == 0 || personId.equals("0"))
+      return SDProgramImages.EMPTY_IMAGES;
+
+    try
+    {
+      // A token is not required to perform this lookup.
+      return getJson(new URL(GET_CELEBRITY_IMAGES + personId), SDImage[].class);
+    }
+    catch (JsonSyntaxException e)
+    {
+      // These lookups can return undocumented JSON that can throw exceptions when images do not
+      // exist. If this happens, we assume there aren't any images.
+      return SDProgramImages.EMPTY_IMAGES;
+    }
+    catch (SDException e)
+    {
+      // This error is expected from time to time.
+      if (e.ERROR == SDErrors.HCF)
+        return SDProgramImages.EMPTY_IMAGES;
+      // Anything else, throw the exception.
+      throw e;
+    }
   }
 
   /**

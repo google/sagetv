@@ -50,7 +50,7 @@ public class SDUtilsTest
   public void testDateConversion()
   {
     long date = SDUtils.SDDateUTCToMillis("2014-06-28");
-    assert date == 1403913600000L : "Expected 1403913600000, got " + date;
+    assert date == 1403956800000L : "Expected 1403956800000, got " + date;
   }
 
   @Test(groups = {"gson", "schedulesDirect", "removeLeadingZeros", "conversion" })
