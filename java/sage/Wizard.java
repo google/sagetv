@@ -3119,7 +3119,16 @@ public class Wizard implements EPGDBPublic2
       String finaleDate, String airDOW, String airHrMin, Person[] people, String[] characters, byte[][] imageURLs)
   {
     return addSeriesInfo(legacySeriesID, showcardID, title, network, description, history, premiereDate, finaleDate, airDOW, airHrMin,
-        "", people, characters, Pooler.EMPTY_INT_ARRAY, Pooler.EMPTY_LONG_ARRAY, imageURLs);
+      "", people, characters, Pooler.EMPTY_INT_ARRAY, Pooler.EMPTY_LONG_ARRAY, imageURLs);
+  }
+  public SeriesInfo addSeriesInfo(int legacySeriesID, int showcardID, String title, String network, String description, String history, String premiereDate,
+      String finaleDate, String airDOW, String airHrMin, String[] people, String[] characters, byte[][] imageURLs)
+  {
+    Person[] peeps = (people == null || people.length == 0) ? Pooler.EMPTY_PERSON_ARRAY : new Person[people.length];
+    for (int i = 0; i < peeps.length; i++)
+      peeps[i] = getPersonForName(people[i]);
+    return addSeriesInfo(legacySeriesID, showcardID, title, network, description, history, premiereDate, finaleDate, airDOW, airHrMin,
+        "", peeps, characters, Pooler.EMPTY_INT_ARRAY, Pooler.EMPTY_LONG_ARRAY, imageURLs);
   }
   public SeriesInfo addSeriesInfo(int legacySeriesID, String title, String network, String description, String history, String premiereDate,
       String finaleDate, String airDOW, String airHrMin, String imageURL, String[] people, String[] characters)
@@ -4578,6 +4587,16 @@ public class Wizard implements EPGDBPublic2
   }
 
   public Show addShow(String title, String episodeName, String desc, long duration, String[] categories,
+                      String[] people, byte[] roles, String rated, String[] expandedRatings,
+                      String year, String parentalRating, String[] bonus, String extID, String language, long originalAirDate,
+                      int mediaMask, short seasonNum, short episodeNum, boolean forcedUnique, int showcardID, byte urls[][])
+  {
+    return addShow(title, episodeName, desc, duration, categories, getPeopleArray(people), roles, rated, expandedRatings,
+        year, parentalRating, bonus, extID, language, originalAirDate, false, mediaMask, seasonNum, episodeNum, (short)0,
+        forcedUnique, showcardID, 0, Pooler.EMPTY_SHORT_ARRAY, urls);
+  }
+
+  public Show addShow(String title, String episodeName, String desc, long duration, String[] categories,
       Person[] people, byte[] roles, String rated, String[] expandedRatings,
       String year, String parentalRating, String[] bonus, String extID, String language, long originalAirDate,
       int mediaMask, short seasonNum, short episodeNum, short altEpisodeNum, boolean forcedUnique, int showcardID, int seriesID,
@@ -5582,6 +5601,10 @@ public class Wizard implements EPGDBPublic2
   public Person addPerson(String name, int extID, int dob, int dod, String birthPlace, short[] yearList, String[] awardList, byte[][] headshotUrls, int mediaMask)
   {
     return addPerson(name, extID, dob, dod, birthPlace, yearList, awardList, (short)-1, headshotUrls, mediaMask);
+  }
+  public Person addPerson(String name, int extID, int dob, int dod, String birthPlace, short[] yearList, String[] awardList, short headshotImageID)
+  {
+    return addPerson(name, extID, dob, dod, birthPlace, yearList, awardList, headshotImageID, DBObject.MEDIA_MASK_TV);
   }
   public Person addPerson(String name, int extID, int dob, int dod, String birthPlace, short[] yearList, String[] awardList, short headshotImageID, int mediaMask)
   {

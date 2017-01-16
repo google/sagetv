@@ -18,6 +18,7 @@ package sage.epg.sd;
 import sage.DBObject;
 import sage.Person;
 import sage.Pooler;
+import sage.Sage;
 import sage.Wizard;
 import sage.epg.sd.gson.Gson;
 import sage.epg.sd.gson.GsonBuilder;
@@ -345,7 +346,8 @@ public class SDUtils
       // 2014-06-28
       try
       {
-        return sdfDate.parse(utcDate).getTime();
+        // Add 12 hours so that the date doesn't change when GMT is converted to the local time zone.
+        return sdfDate.parse(utcDate).getTime() + Sage.MILLIS_PER_HR * 12;
       }
       catch (ParseException e)
       {
