@@ -16,6 +16,9 @@
 package sage.api;
 
 import sage.*;
+import sage.epg.sd.SDErrors;
+import sage.epg.sd.SDRipper;
+import sage.epg.sd.json.programs.SDInProgressSport;
 
 /**
  * Show represents detailed information about content. This is where the actual metadata information is stored.
@@ -1162,8 +1165,129 @@ public class ShowAPI {
         }
         return new Float(f);
       }});
+    rft.put(new PredefinedJEPFunction("Show", "IsSDEPGInProgressSport", 1, new String[] { "ExternalIDs" }, true)
+    {
+      /**
+       * Returns if the provided external ID's can be tracked when in progress through Schedules Direct.
+       * Note that if the Schedules Direct service is not available, this will always return false
+       * for all requested ID's.
+       * @param ExternalIDs Array of external ID's to look up
+       * @return true for the corresponding index of each external ID that can be tracked, otherwise false on the same index
+       * @since 9.0
+       *
+       * @declaration public boolean[] IsSDEPGInProgressSport(String[] ExternalIDs);
+       */
+      public Object runSafely(Catbert.FastStack stack) throws Exception{
+        String externalIDs[] = getStringList(stack);
+        SDInProgressSport sports[] = SDRipper.getInProgressSport(externalIDs);
+        boolean returnValues[] = new boolean[sports.length];
+        for (int i = 0; i < sports.length; i++)
+        {
+          if (sports[i] == null)
+            continue;
 
+          int code = sports[i].getCode();
+          // All 3 of these codes indicate that the program can be tracked when it is in progress.
+          returnValues[i] = code == SDErrors.OK.CODE ||
+              code == SDErrors.FUTURE_PROGRAM.CODE ||
+              code == SDErrors.PROGRAMID_QUEUED.CODE;
 
+          Show show = Wizard.getInstance().getShowForExternalID(externalIDs[i]);
+          String bonuses[] = show.getBonuses();
+          boolean hasInProgressBonus = false;
+          for (String bonus : bonuses)
+          {
+            if (bonus.equals(SDRipper.IN_PROGRESS_BONUS))
+            {
+              hasInProgressBonus = true;
+              break;
+            }
+          }
+
+          if (returnValues[i])
+          {
+            if (!hasInProgressBonus)
+            {
+              String newBonuses[] = java.util.Arrays.copyOf(bonuses, bonuses.length + 1);
+              newBonuses[newBonuses.length - 1] = SDRipper.IN_PROGRESS_BONUS;
+              Wizard.getInstance().updateShowBonus(show, newBonuses);
+            }
+          }
+          else if (hasInProgressBonus)
+          {
+            // This shouldn't happen, but if this does happen, we should remove the bonus because
+            // that means we can't track this sport and we don't want to return true in the future
+            // if the EPG service is unavailable.
+            if (code == SDErrors.INVALID_PROGRAMID.CODE)
+            {
+              java.util.List<String> rebuild = new java.util.ArrayList<>(bonuses.length - 1);
+              for (String bonus : bonuses)
+              {
+                if (bonus.equals(SDRipper.IN_PROGRESS_BONUS))
+                {
+                  rebuild.add(bonus);
+                }
+              }
+              Wizard.getInstance().updateShowBonus(show, rebuild.toArray(new String[rebuild.size()]));
+            }
+            // Maybe the service is unavailable at this time, but we know the last time we checked
+            // in progress was available for this program.
+            else
+            {
+              returnValues[i] = true;
+            }
+          }
+        }
+        return returnValues;
+      }});
+    rft.put(new PredefinedJEPFunction("Show", "GetSDEPGInProgressSportStatus", 1, new String[] { "ExternalIDs" }, true)
+    {
+      /**
+       * Returns the current Schedules Direct provided in progress status for each of the provided external ID's.
+       * The status will be one of the following:
+       * 0 = Complete
+       * 1 = In progress
+       * 2 = Status is not available at the moment (try again in 30 seconds)
+       * 3 = Program is in the future and will be able to be tracked
+       * 4 = Program is not trackable
+       * 5 = Schedules Direct is offline/not available right now (try again in an hour)
+       * 6 = Schedules Direct authentication failure
+       * 7 = General failure
+       * @param ExternalIDs Array of external ID's to look up
+       * @return int for each corresponding index representing the current status of the requested external ID's
+       * @since 9.0
+       *
+       * @declaration public int[] GetSDEPGInProgressSportStatus(String[] ExternalIDs);
+       */
+      public Object runSafely(Catbert.FastStack stack) throws Exception{
+        String externalIDs[] = getStringList(stack);
+        SDInProgressSport sports[] = SDRipper.getInProgressSport(externalIDs);
+        int returnValues[] = new int[sports.length];
+        for (int i = 0; i < sports.length; i++)
+        {
+          SDInProgressSport sport = sports[i];
+          if (sport == null)
+          {
+            returnValues[i] = 7;
+            continue;
+          }
+
+          int code = sport.getCode();
+          if (code == SDErrors.OK.CODE)
+            returnValues[i] = sport.isComplete() ? 0 : 1;
+          else if (code == SDErrors.FUTURE_PROGRAM.CODE)
+            returnValues[i] = 3;
+          else if (code == SDErrors.INVALID_PROGRAMID.CODE)
+            returnValues[i] = 4;
+          else if (code == SDErrors.SERVICE_OFFLINE.CODE)
+            returnValues[i] = 5;
+          else if (code == SDErrors.SAGETV_NO_PASSWORD.CODE)
+            returnValues[i] = 6;
+          else
+            returnValues[i] = 7;
+        }
+        return returnValues;
+      }});
     /*
 		rft.put(new PredefinedJEPFunction("Show", "", 1, new String[] { "Show" })
 		{public Object runSafely(Catbert.FastStack stack) throws Exception{

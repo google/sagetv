@@ -3171,6 +3171,21 @@ public class Global {
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         return EPG.getInstance().getEpgStateString();
       }});
+    rft.put(new PredefinedJEPFunction("Global", "IsSDEPGServiceAvailable", true)
+    {
+      /**
+       * Returns true if the Schedules Direct EPG service is available.
+       * This is determined by trying to communicate with Schedules Direct if an unexpired token is
+       * present. If no token currently exists or it is expired, a new token will be acquired. If
+       * the token is unable to be obtained for any reason, the service is considered unavailable.
+       * @return true if the Schedules Direct EPG service is configured and able to authenticate, false otherwise
+       * @since 9.0
+       *
+       * @declaration public boolean IsSDEPGServiceAvailable();
+       */
+      public Object runSafely(Catbert.FastStack stack) throws Exception{
+        return sage.epg.sd.SDRipper.isAvailable();
+      }});
     /*
 		rft.put(new PredefinedJEPFunction("Global", "", -1)
 		{public Object runSafely(Catbert.FastStack stack) throws Exception{

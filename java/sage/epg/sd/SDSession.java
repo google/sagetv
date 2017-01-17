@@ -30,6 +30,7 @@ import sage.epg.sd.json.lineup.SDAccountLineups;
 import sage.epg.sd.json.locale.SDLanguage;
 import sage.epg.sd.json.locale.SDRegion;
 import sage.epg.sd.json.map.SDLineupMap;
+import sage.epg.sd.json.programs.SDInProgressSport;
 import sage.epg.sd.json.programs.SDPerson;
 import sage.epg.sd.json.programs.SDProgram;
 import sage.epg.sd.json.programs.SDSeriesDesc;
@@ -68,6 +69,8 @@ public abstract class SDSession
   public static final String URL_VERSIONED = URL_BASE + "/20141201";
   // Get images for celebrities. Cast/Crew must have a nameId to use this.
   private static final String GET_CELEBRITY_IMAGES = URL_VERSIONED + "/metadata/celebrity/";
+  // Get supported sports that are in progress.
+  private static final String GET_IN_PROGRESS_SPORT = URL_VERSIONED + "/metadata/stillRunning/";
 
   // The character set to be used for outgoing communications.
   protected static final Charset OUT_CHARSET = StandardCharsets.UTF_8;
@@ -1118,5 +1121,25 @@ public abstract class SDSession
 
     SDScheduleMd5Array returnValues = postAuthJson(GET_SCHEDULES_MD5, SDScheduleMd5Array.class, submit);
     return returnValues.getMd5s();
+  }
+
+  /**
+   * Get the status of an in progress sport.
+   *
+   * @param programId The program ID of the sport
+   * @return <code>null</code> if the program ID is invalid or an SDInProgressSport object.
+   * @throws IOException If there is an I/O related error.
+   * @throws SDException If there is a problem working with Schedules Direct.
+   */
+  public SDInProgressSport getInProgressSport(String programId) throws IOException, SDException
+  {
+    if (programId == null || programId.length() == 0)
+      return null;
+
+    if (programId.length() == 12)
+      programId = SDUtils.fromSageTVtoProgram(programId);
+
+    // A token is not required to perform this lookup.
+    return getAuthJson(new URL(GET_IN_PROGRESS_SPORT + programId), SDInProgressSport.class);
   }
 }

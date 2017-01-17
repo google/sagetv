@@ -1,0 +1,19 @@
+{
+  "code": 0,
+  "message": "OK",
+  "programID": "SP003190160000",
+  "response": "OK",
+  "isComplete": true,
+  "serverID": "Test1",
+  "datetime": "2015-11-27T01:39:28Z",
+  "result": {
+    "homeTeam": {
+      "name": "Detroit",
+      "score": "45"
+    },
+    "awayTeam": {
+      "name": "Philadelphia",
+      "score": "14"
+    }
+  }
+}

@@ -12,6 +12,10 @@
 * New: Schedules Direct movie quality ratings are now a part of the bonus data.
 * Fix: Schedules Direct movie images are now prioritized to use box art first.
 * Fix: Schedules Direct now updates channels with No Data with previously saved hashes that happen to still be valid.
+* New: Added new API methods for in progress sports tracking using Schedules Direct.
+  * public boolean IsSDEPGServiceAvailable();
+  * public boolean[] IsSDEPGInProgressSport(String[] ExternalIDs);
+  * public int[] GetSDEPGInProgressSportStatus(String[] ExternalIDs);
 
 ## Version 9.0.12 (2016-12-22)
 * New: Schedules Direct now includes teams as people for favorite scheduling.
