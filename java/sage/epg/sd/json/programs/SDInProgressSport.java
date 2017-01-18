@@ -19,8 +19,6 @@ import sage.epg.sd.json.SDError;
 
 public class SDInProgressSport implements SDError
 {
-  private static final TeamResult EMPTY_TEAM_RESULTS[] = new TeamResult[0];
-
   private int code;
   private String message;
 
