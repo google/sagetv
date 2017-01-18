@@ -1691,6 +1691,11 @@ public class SDRipper extends EPGDataSource
                     short seasonNum = programDetail.getSeason();
                     short episodeNum = programDetail.getEpisode();
                     String[] categories = programDetail.getGenres();
+                    if ("Children".equals(programDetail.getAudience()))
+                    {
+                      categories = Arrays.copyOf(categories, categories.length + 1);
+                      categories[categories.length - 1] = "Children target audience";
+                    }
                     // If this is a sports event, the first category needs to be Sports event or
                     // Sports non-event.
                     if (isSports && showType != null)

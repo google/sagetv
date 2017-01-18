@@ -55,6 +55,9 @@ public class SDProgram implements SDError
   private int duration;
   private SDImage episodeImage;
   private String showType;
+  private String audience;
+  private String holiday;
+  private String animation;
   private boolean hasImageArtwork;
   private String md5;
 
@@ -263,7 +266,8 @@ public class SDProgram implements SDError
   }
 
   /**
-   * Duration of the program without commercials (in integer seconds). Optional.
+   * Duration of the program without commercials (provided as in integer seconds and converted to
+   * long milliseconds before returning). Optional.
    */
   public long getDuration()
   {
@@ -284,6 +288,50 @@ public class SDProgram implements SDError
   public String getShowType()
   {
     return showType;
+  }
+
+  /**
+   * The intended audience. Optional.
+   * <p/>
+   * Possible values:<br/>
+   * Children
+   * Adults only
+   */
+  public String getAudience()
+  {
+    return audience;
+  }
+
+  /**
+   * Free-form string containing the holiday associated with the program. Optional.
+   * Known values:
+   * Christmas<br/>
+   * Halloween<br/>
+   * Thanksgiving<br/>
+   * Valentine's Day<br/>
+   * Easter<br/>
+   * New Year<br/>
+   * St. Patrick's Day<br/>
+   * 20 de noviembre<br/>
+   * Cinco de Mayo<br/>
+   */
+  public String getHoliday()
+  {
+    return holiday;
+  }
+
+  /**
+   * Optional.
+   * <p/>
+   * Possible values:<br/>
+   * Animated<br/>
+   * Anime<br/>
+   * Live action/animated<br/>
+   * Live action/anime
+   */
+  public String getAnimation()
+  {
+    return animation;
   }
 
   /**
@@ -418,6 +466,9 @@ public class SDProgram implements SDError
       ", duration=" + duration +
       ", episodeImage=" + episodeImage +
       ", showType='" + showType + '\'' +
+      ", audience='" + audience + '\'' +
+      ", holiday='" + holiday + '\'' +
+      ", animation='" + animation + '\'' +
       ", hasImageArtwork=" + hasImageArtwork +
       ", md5='" + md5 + '\'' +
       '}';

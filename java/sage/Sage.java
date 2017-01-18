@@ -1436,6 +1436,7 @@ public final class Sage
       userLocale = new Locale(userLocale.getLanguage(), userLocale.getCountry());
 
       createDFFormats();
+      sage.epg.sd.SDUtils.resetTimeZoneOffset();
 
       // We need to re-thread this because otherwise we could deadlock on the server side waiting
       // for the quanta update to return from an API request made in the UI as part of refreshing this
