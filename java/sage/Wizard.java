@@ -4545,15 +4545,6 @@ public class Wizard implements EPGDBPublic2
     return rv;
   }
 
-  public Show updateShowBonus(Show show, String[] bonus)
-  {
-    return addShow(show.getTitle(), show.getEpisodeName(), show.getDesc(), show.getDuration(), show.getCategories(),
-      show.people, show.roles, show.getRated(), show.getExpandedRatings(), show.getYear(), show.getParentalRating(),
-      bonus, show.getExternalID(), show.getLanguage(), show.getOriginalAirDate(), false, show.getMediaMask(),
-      show.seasonNum, show.episodeNum, show.altEpisodeNum, show.isForcedUnique(),
-      show.getShowcardID(), show.getSeriesID(), show.imageIDs, show.imageURLs);
-  }
-
   public boolean addShowPublic(String title, String primeTitle, String episodeName, String desc, long duration, String category,
       String subCategory, String[] people, byte[] roles, String rated, String[] expandedRatings,
       String year, String parentalRating, String[] bonus, String extID, String language, long originalAirDate)

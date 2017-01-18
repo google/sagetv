@@ -1189,55 +1189,10 @@ public class ShowAPI {
           int code = sports[i].getCode();
           // All 3 of these codes indicate that the program can be tracked when it is in progress.
           returnValues[i] = code == SDErrors.OK.CODE ||
-              code == SDErrors.FUTURE_PROGRAM.CODE ||
-              code == SDErrors.PROGRAMID_QUEUED.CODE;
-
-          Show show = Wizard.getInstance().getShowForExternalID(externalIDs[i]);
-          String bonuses[] = show.getBonuses();
-          boolean hasInProgressBonus = false;
-          for (String bonus : bonuses)
-          {
-            if (bonus.equals(SDRipper.IN_PROGRESS_BONUS))
-            {
-              hasInProgressBonus = true;
-              break;
-            }
-          }
-
-          if (returnValues[i])
-          {
-            if (!hasInProgressBonus)
-            {
-              String newBonuses[] = java.util.Arrays.copyOf(bonuses, bonuses.length + 1);
-              newBonuses[newBonuses.length - 1] = SDRipper.IN_PROGRESS_BONUS;
-              Wizard.getInstance().updateShowBonus(show, newBonuses);
-            }
-          }
-          else if (hasInProgressBonus)
-          {
-            // This shouldn't happen, but if this does happen, we should remove the bonus because
-            // that means we can't track this sport and we don't want to return true in the future
-            // if the EPG service is unavailable.
-            if (code == SDErrors.INVALID_PROGRAMID.CODE)
-            {
-              java.util.List<String> rebuild = new java.util.ArrayList<>(bonuses.length - 1);
-              for (String bonus : bonuses)
-              {
-                if (bonus.equals(SDRipper.IN_PROGRESS_BONUS))
-                {
-                  rebuild.add(bonus);
-                }
-              }
-              Wizard.getInstance().updateShowBonus(show, rebuild.toArray(new String[rebuild.size()]));
-            }
-            // Maybe the service is unavailable at this time, but we know the last time we checked
-            // in progress was available for this program.
-            else
-            {
-              returnValues[i] = true;
-            }
-          }
+            code == SDErrors.FUTURE_PROGRAM.CODE ||
+            code == SDErrors.PROGRAMID_QUEUED.CODE;
         }
+
         return returnValues;
       }});
     rft.put(new PredefinedJEPFunction("Show", "GetSDEPGInProgressSportStatus", 1, new String[] { "ExternalIDs" }, true)
