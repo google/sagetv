@@ -22,9 +22,6 @@
 #include <direct.h>
 #include <windows.h>
 
-// Custom build versions for OEM customers
-//#define SAGE_TV_LITE
-
 #define MYOUT(x) WriteConsole(stdOutHandle, x, strlen(x), &numWrit, NULL)
 LRESULT CALLBACK WndProc( HWND hWnd, UINT messg,
 								WPARAM wParam, LPARAM lParam );
@@ -471,7 +468,6 @@ int WINAPI WinMain( HINSTANCE hInst, 	/*Win32 entry-point routine */
 		sprintf(mutexName, "Global\\SageTVClientSingleton");
 #else
 
-#ifndef SAGE_TV_LITE
 	if (strstr(lpszCmdLine, "-client"))
 	{
 		bClient = TRUE;
@@ -480,7 +476,6 @@ int WINAPI WinMain( HINSTANCE hInst, 	/*Win32 entry-point routine */
 		sprintf(mutexName, "Global\\SageTVClientSingleton");
 	}
 	else
-#endif // SAGE_TV_LITE
 	{
 		sprintf(appName, "SageApp");
 		if (bWrapped && strstr(lpszCmdLine, "-connect"))
@@ -691,7 +686,7 @@ int WINAPI WinMain( HINSTANCE hInst, 	/*Win32 entry-point routine */
 	}
 
 	strcpy(myCmdLine, lpszCmdLine);
-#if (defined(SAGE_TV) || defined(SAGE_TV_STUDIO) || defined(SAGE_TV_LITE))
+#ifdef SAGE_TV
 	// If the SageTV Service is running, then load us up in client mode and autoconnect to localhost
 	// NOTE: If the service is set to start, but it hasn't loaded yet then we need to go into
 	// this mode also AND start the service as part of it.
@@ -709,8 +704,6 @@ int WINAPI WinMain( HINSTANCE hInst, 	/*Win32 entry-point routine */
 			// after us; we're linked to the Psueod-Client now.
 			svcRunning = TRUE;
 		}
-		// We need to check if it's the Lite or regular service and only connect to our
-		// appropriate one
 		SC_HANDLE schSCManager = OpenSCManager( 
 			NULL,                    // local machine 
 			NULL,                    // ServicesActive database 
@@ -734,20 +727,6 @@ int WINAPI WinMain( HINSTANCE hInst, 	/*Win32 entry-point routine */
 				if (QueryServiceConfig(schService, lpqscBuf, 4096, &bytesNeeded) &&
 					(lpqscBuf->dwStartType == SERVICE_AUTO_START || svcRunning))
 				{
-					// Check if this is the right service for us
-					BOOL isSvcLite = strstr("SageTVLiteService.exe", lpqscBuf->lpBinaryPathName) != NULL;
-					BOOL iAmLite = FALSE;
-#ifdef SAGE_TV_LITE
-					iAmLite = TRUE;
-#endif
-					if (isSvcLite != iAmLite)
-					{
-						MessageBox(NULL, "You cannot run SageTV & SageTVLite at the same time.\r\nPlease stop the SageTV Service.", "Error", MB_OK);
-						LocalFree(lpqscBuf);
-						CloseServiceHandle(schService); 
-						CloseServiceHandle(schSCManager);
-						return -1;
-					}
 					// Check if its starting already
 					SERVICE_STATUS srvStat;
 					if (!svcRunning && QueryServiceStatus(schService, &srvStat) &&
@@ -805,7 +784,6 @@ int WINAPI WinMain( HINSTANCE hInst, 	/*Win32 entry-point routine */
 		{
 			// This can happen if we're not running as an Administrator so we can't determine the
 			// state of the service. But we did find the mutex for it so we can assume it's running and connect to it.
-			// But we can't do the Lite check like we used to.
 			// Service is starting/started....we'll connect to it
 			bClient = TRUE;
 			sprintf(mutexName, "Global\\SageTVPseudoSingleton");
@@ -891,7 +869,7 @@ int WINAPI WinMain( HINSTANCE hInst, 	/*Win32 entry-point routine */
 		delete [] appPath;
 		delete [] newCmdLine;
 	}
-#if (defined(SAGE_TV) || defined(SAGE_TV_STUDIO))
+#ifdef SAGE_TV
     if (!bWrapped && m_hMutex)
     {
        CloseHandle(m_hMutex); //do as late as possible
@@ -1021,29 +999,9 @@ int launchJVMSage(LPSTR lpszCmdLine, HWND hWnd, BOOL bClient, BOOL bService)
 	strcat(prefFile, bClient ? "SageClient.properties" : "Sage.properties");
 	strcpy(jarPath, "-Djava.class.path=");
 	strcat(jarPath, appPath);
-#ifdef SAGE_TV_LITE
-	strcat(jarPath, "SageLite.jar;");
-#else
 	strcat(jarPath, "Sage.jar;");
-#endif
-	strcat(jarPath, appPath);
-	strcat(jarPath, "xerces.jar;");
-	strcat(jarPath, appPath);
-	strcat(jarPath, "plugin.jar;");
-	strcat(jarPath, appPath);
-	strcat(jarPath, ";");
-	char* envcp = getenv("CLASSPATH");
-	if (envcp)
-		strcat(jarPath, envcp);
-	options[vm_args.nOptions++].optionString = jarPath;
-#endif
-#ifdef SAGE_TV_STUDIO
-	strcpy(prefFile, bClient ? "sagetvclient " : "sagetv ");
-	strcat(prefFile, appPath);
-	strcat(prefFile, bClient ? "SageClient.properties" : "Sage.properties");
-	strcpy(jarPath, "-Djava.class.path=");
-	strcat(jarPath, appPath);
-	strcat(jarPath, "Studio.jar;");
+  strcat(jarPath, appPath);
+  strcat(jarPath, "JARs\\lucene-core-3.6.0.jar;");
 	strcat(jarPath, appPath);
 	strcat(jarPath, "xerces.jar;");
 	strcat(jarPath, appPath);
@@ -1062,6 +1020,8 @@ int launchJVMSage(LPSTR lpszCmdLine, HWND hWnd, BOOL bClient, BOOL bService)
 	strcpy(jarPath, "-Djava.class.path=");
 	strcat(jarPath, appPath);
 	strcat(jarPath, "Sage.jar;");
+	strcat(jarPath, appPath);
+  strcat(jarPath, "JARs\\lucene-core-3.6.0.jar;");
 	strcat(jarPath, appPath);
 	strcat(jarPath, "plugin.jar;");
 	strcat(jarPath, appPath);
@@ -1350,11 +1310,7 @@ int launchJVMSage(LPSTR lpszCmdLine, HWND hWnd, BOOL bClient, BOOL bService)
 	if (prefFile != 0)
 		env->SetObjectArrayElement(args, 3, env->NewStringUTF(prefFile));
 
-#ifdef SAGE_TV_LITE
-    jmethodID mid = env->GetStaticMethodID(uiMgrClass, "c", "([Ljava/lang/String;)V");
-#else
-    jmethodID mid = env->GetStaticMethodID(cls, "b", "([Ljava/lang/String;)V");
-#endif
+  jmethodID mid = env->GetStaticMethodID(cls, "b", "([Ljava/lang/String;)V");
 
 	// Legacy flags for license protection...not really needed anymore, could be removed after checking
 	jfieldID fid = env->GetStaticFieldID(cls, "j", "Z");
