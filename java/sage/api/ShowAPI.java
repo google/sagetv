@@ -1230,6 +1230,8 @@ public class ShowAPI {
           int code = sport.getCode();
           if (code == SDErrors.OK.CODE)
             returnValues[i] = sport.isComplete() ? 0 : 1;
+          else if (code == SDErrors.PROGRAMID_QUEUED.CODE)
+            returnValues[i] = 2;
           else if (code == SDErrors.FUTURE_PROGRAM.CODE)
             returnValues[i] = 3;
           else if (code == SDErrors.INVALID_PROGRAMID.CODE)
