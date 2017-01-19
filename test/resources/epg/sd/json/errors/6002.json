@@ -1,0 +1,9 @@
+{
+  "response": "FUTURE_PROGRAM",
+  "code": 6002,
+  "serverID": "20141201.web.2",
+  "message": "The programID you requested has not occurred yet, so isComplete status is unknown.",
+  "datetime": "2015-11-27T03:08:57Z",
+  "programID": "SP003264810000",
+  "eventStartDateTime": "2015-11-29T20:00Z"
+}

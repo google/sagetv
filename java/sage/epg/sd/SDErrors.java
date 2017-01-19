@@ -38,6 +38,7 @@ public enum SDErrors
   IMAGE_NOT_FOUND(5000 /*, "Could not find requested image. Post message to http://forums.schedulesdirect.org/viewforum.php?f=6 if you are having issues."*/),
   INVALID_PROGRAMID(6000 /*, "Could not find requested programID. Permanent failure."*/),
   PROGRAMID_QUEUED(6001 /*, "ProgramID should exist at the server, but doesn't. The server will regenerate the JSON for the program, so your application should retry."*/),
+  FUTURE_PROGRAM(6002 /*, "The programID you requested has not occurred yet, so isComplete status is unknown."*/),
   SCHEDULE_NOT_FOUND(7000 /*, "The schedule you requested should be available. Post message to http://forums.schedulesdirect.org/viewforum.php?f=6"*/),
   INVALID_SCHEDULE_REQUEST(7010 /*, "The server can't determine whether your schedule is valid or not. Open a support ticket."*/),
   SCHEDULE_RANGE_EXCEEDED(7020 /*, "The date that you've requested is outside of the range of the data for that stationID."*/),

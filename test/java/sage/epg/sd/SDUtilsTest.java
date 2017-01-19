@@ -49,7 +49,7 @@ public class SDUtilsTest
   @Test(groups = {"gson", "schedulesDirect", "dateTime", "conversion" })
   public void testDateConversion()
   {
-    long date = SDUtils.SDDateUTCToMillis("2014-06-28");
+    long date = SDUtils.SDDateUTCToMillis("2014-06-28") + TimeZone.getDefault().getRawOffset();
     assert date == 1403956800000L : "Expected 1403956800000, got " + date;
   }
 

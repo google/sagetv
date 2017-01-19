@@ -330,6 +330,16 @@ public class SDUtils
 
   private final static Object sdfDateLock = new Object();
   private static SimpleDateFormat sdfDate;
+  private static int timeZoneOffset;
+  public static void resetTimeZoneOffset()
+  {
+    synchronized (sdfDateLock)
+    {
+      // We are not accounting for DST.
+      timeZoneOffset = TimeZone.getDefault().getRawOffset();
+    }
+  }
+
   public static long SDDateUTCToMillis(String utcDate)
   {
     synchronized (sdfDateLock)
@@ -341,13 +351,15 @@ public class SDUtils
       {
         sdfDate = new SimpleDateFormat("yyyy-MM-dd");
         sdfDate.setTimeZone(TimeZone.getTimeZone("GMT"));
+        resetTimeZoneOffset();
       }
 
       // 2014-06-28
       try
       {
-        // Add 12 hours so that the date doesn't change when GMT is converted to the local time zone.
-        return sdfDate.parse(utcDate).getTime() + Sage.MILLIS_PER_HR * 12;
+        // Add 12 hours and subtract the current timezone offset so that the time is always noon in
+        // the current time zone (outside of DST).
+        return sdfDate.parse(utcDate).getTime() + Sage.MILLIS_PER_HR * 12 - timeZoneOffset;
       }
       catch (ParseException e)
       {

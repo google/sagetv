@@ -42,6 +42,7 @@ import sage.epg.sd.json.map.SDLineupMap;
 import sage.epg.sd.json.map.channel.SDAntennaChannelMap;
 import sage.epg.sd.json.map.station.SDLogo;
 import sage.epg.sd.json.map.station.SDStation;
+import sage.epg.sd.json.programs.SDInProgressSport;
 import sage.epg.sd.json.programs.SDKeyWords;
 import sage.epg.sd.json.programs.SDMovie;
 import sage.epg.sd.json.programs.SDPerson;
@@ -101,6 +102,8 @@ public class SDRipper extends EPGDataSource
 
   public static final String SOURCE_LABEL = " (sdepg)";
   private static final String SOURCE_LINEUP_ID = "epg_sd_name";
+
+  public static final String IN_PROGRESS_BONUS = "In Progress Available" + SOURCE_LABEL;
 
   // This is the preferred rating body. You would only be interested in changing this if you live in
   // another country and want to see a more familiar rating system.
@@ -1376,12 +1379,15 @@ public class SDRipper extends EPGDataSource
       // Used to queue up all of the series that we would like to get more details for after all of
       // the programs are loaded. We are using a Set to remove duplicates since this is accumulated
       // as we see what episodes likely have a series associated with them.
-      Set<String> needSeriesDetails = new HashSet<String>();
+      Set<String> needSeriesDetails = new HashSet<>();
       // String array used for various lookups that only contain one item.
       String singleLookup[] = new String[1];
       // All people added to the database are placed in this Set to be looked up after all guide
       // data has been populated. We are using a Set to remove duplicates for each pass.
       Set<SDPerson> addedPeople = new HashSet<>();
+      // All people aliases added to the database are added to this Set to be looked up after all
+      // guide data has been populated. The people aliases are overwritten with the addedPeople
+      // before the lookup happens so that we are mostly only looking up non-alias people.
       Set<SDPerson> addedAliases = new HashSet<>();
 
       int downloadedPrograms = 0;
@@ -1685,6 +1691,11 @@ public class SDRipper extends EPGDataSource
                     short seasonNum = programDetail.getSeason();
                     short episodeNum = programDetail.getEpisode();
                     String[] categories = programDetail.getGenres();
+                    if ("Children".equals(programDetail.getAudience()))
+                    {
+                      categories = Arrays.copyOf(categories, categories.length + 1);
+                      categories[categories.length - 1] = "Children target audience";
+                    }
                     // If this is a sports event, the first category needs to be Sports event or
                     // Sports non-event.
                     if (isSports && showType != null)
@@ -2225,11 +2236,6 @@ public class SDRipper extends EPGDataSource
     {
       switch (e.ERROR)
       {
-        case SERVICE_OFFLINE:
-          // When the service is offline, we should only check every 30 minutes to see if it's back.
-          // This might generate EPG warnings in the UI if it goes on for a while.
-          SDRipper.retryWait = -(Sage.time() + Sage.MILLIS_PER_MIN * 30);
-          break;
         case NO_LINEUPS:
         case LINEUP_NOT_FOUND:
           sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createSDLineupMissingMsg(this));
@@ -2245,19 +2251,15 @@ public class SDRipper extends EPGDataSource
         case INVALID_HASH:
         case INVALID_USER:
           sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createSDInvalidUsernamePasswordMsg());
-          // Set this to an hour so we aren't too obnoxious about the authentication error messages
-          // and so we shouldn't accidentally lock the account out.
-          SDRipper.retryWait = Sage.time() + Sage.MILLIS_PER_HR;
           break;
         case ACCOUNT_LOCKOUT:
           sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createSDAccountLockOutMsg());
-          SDRipper.retryWait = Sage.time() + Sage.MILLIS_PER_HR;
           break;
         case ACCOUNT_DISABLED:
           sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createSDAccountDisabledMsg());
           break;
       }
-
+      setExceptionTimeout(e.ERROR);
       System.out.println("SDEPG Exception: " + e.getMessage() + " code=" + e.ERROR.CODE);
       e.printStackTrace(System.out);
       SDSageSession.writeDebugException(e);
@@ -2591,5 +2593,156 @@ public class SDRipper extends EPGDataSource
     }
 
     return returnValue;
+  }
+
+  /**
+   * Is Schedules Direct offline?
+   * <p/>
+   * This is determined by if the last time Schedules Direct was used if the service reported that
+   * it was offline and 30 minutes has not yet passed since that time. This will not report that the
+   * service is offline due to authentication failures.
+   * <p/>
+   * It is acceptable to poll this if you are just trying to determine when you will be able to try
+   * to use the Schedules Direct service again.
+   *
+   * @return <code>true</code> if Schedules Direct is offline.
+   */
+  public static boolean isOffline()
+  {
+    long localWait = SDRipper.retryWait;
+    // Negative means the service is offline.
+    return localWait < 0 && Math.abs(localWait) > Sage.time();
+  }
+
+  /**
+   * Is Schedules Direct available?
+   * <p/>
+   * This is determined by trying to communicate with Schedules Direct if an unexpired token is
+   * present. If no token currently exists or it is expired, a new token will be acquired. If
+   * the token is unable to be obtained for any reason, the service is considered unavailable.
+   * <p/>
+   * Most of the time if this method returns <code>false</code>, {@link #isOffline()} returns
+   * <code>false</code> and you know credentials were provided, this is an authentication failure.
+   * If this is the case, this method will not perform a real check again the service again until a
+   * fixed waiting time (30 minutes to an hour) has expired or proper credentials have been entered.
+   * This wait is to try to prevent the account from being locked due to bad credentials being
+   * rapidly provided.
+   *
+   * @return <code>true</code> if Schedules Direct is available on this server.
+   */
+  public static boolean isAvailable()
+  {
+    long localWait = SDRipper.retryWait;
+    if (localWait != 0 && Math.abs(localWait) > Sage.time())
+    {
+      if (Sage.DBG) System.out.println("SDEPG Unable to use the Schedules Direct service at this time.");
+      return false;
+    }
+
+    try
+    {
+      ensureSession();
+      return true;
+    }
+    catch (Exception e)
+    {
+      if (Sage.DBG) System.out.println("SDEPG Unable to use the Schedules Direct service at this time: " + e.getMessage());
+      if (e instanceof SDException)
+        setExceptionTimeout(((SDException) e).ERROR);
+      return false;
+    }
+  }
+
+  /**
+   * Get details for multiple in progress sports.
+   * <p/>
+   * This method will not throw any exceptions. If there are exceptions, they will be converted to
+   * the numeric code for the actual errors and contained in {@link SDInProgressSport} objects. If
+   * {@link SDInProgressSport#getCode()} equals 0, then the entire object is valid. Otherwise the
+   * code corresponds with {@link SDErrors#CODE}.
+   *
+   * @param programIDs The program (external) ID's to look up.
+   * @return {@link SDInProgressSport[]} with indexes that correspond with the same indexes as
+   *         {@param programIDs}.
+   */
+  public static SDInProgressSport[] getInProgressSport(String programIDs[])
+  {
+    if (programIDs == null || programIDs.length == 0)
+      return new SDInProgressSport[0];
+
+    SDInProgressSport returnValues[] = new SDInProgressSport[programIDs.length];
+
+    long localWait = SDRipper.retryWait;
+    if (localWait != 0 && Math.abs(localWait) > Sage.time())
+    {
+      if (localWait < 0)
+        Arrays.fill(returnValues, new SDInProgressSport(SDErrors.SERVICE_OFFLINE.CODE));
+      else
+        Arrays.fill(returnValues, new SDInProgressSport(SDErrors.SAGETV_NO_PASSWORD.CODE));
+      return returnValues;
+    }
+
+    for (int i = 0; i < returnValues.length; i++)
+    {
+      try
+      {
+        returnValues[i] = ensureSession().getInProgressSport(programIDs[i]);
+      }
+      catch (SDException e)
+      {
+        if (Sage.DBG)
+        {
+          System.out.println("SDEPG Unable to get in progress sport: " + e.toString() + " programId=" + programIDs[i]);
+          e.printStackTrace(System.out);
+        }
+        setExceptionTimeout(e.ERROR);
+        switch (e.ERROR)
+        {
+          case SERVICE_OFFLINE:
+            Arrays.fill(returnValues, i, returnValues.length, new SDInProgressSport(SDErrors.SERVICE_OFFLINE.CODE));
+            return returnValues;
+          case SAGETV_NO_PASSWORD:
+          case INVALID_HASH:
+          case INVALID_USER:
+            Arrays.fill(returnValues, i, returnValues.length, new SDInProgressSport(SDErrors.SAGETV_NO_PASSWORD.CODE));
+            return returnValues;
+          default:
+            returnValues[i] = new SDInProgressSport(SDErrors.SAGETV_UNKNOWN.CODE);
+            break;
+        }
+      }
+      catch (Exception e)
+      {
+        if (Sage.DBG)
+        {
+          System.out.println("SDEPG Unable to get in progress sport: " + e.toString() + " programId=" + programIDs[i]);
+          e.printStackTrace(System.out);
+        }
+        returnValues[i] = new SDInProgressSport(SDErrors.SAGETV_UNKNOWN.CODE);
+      }
+    }
+    return returnValues;
+  }
+
+  private static void setExceptionTimeout(SDErrors error)
+  {
+    switch (error)
+    {
+      case SERVICE_OFFLINE:
+        // When the service is offline, we should only check every 30 minutes to see if it's back.
+        // This might generate EPG warnings in the UI if it goes on for a while.
+        SDRipper.retryWait = -(Sage.time() + Sage.MILLIS_PER_MIN * 30);
+        break;
+      case SAGETV_NO_PASSWORD:
+      case INVALID_HASH:
+      case INVALID_USER:
+        // Set this to an hour so we aren't too obnoxious about the authentication error messages
+        // and so we shouldn't accidentally lock the account out.
+        SDRipper.retryWait = Sage.time() + Sage.MILLIS_PER_HR;
+        break;
+      case ACCOUNT_LOCKOUT:
+        SDRipper.retryWait = Sage.time() + Sage.MILLIS_PER_HR;
+        break;
+    }
   }
 }
