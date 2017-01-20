@@ -1,6 +1,12 @@
 # Change Log
 
-## Version 9.0.13 (??)
+## Version 9.0.14 (??)
+* New: Added new API methods for in progress sports tracking using Schedules Direct.
+  * public boolean IsSDEPGServiceAvailable();
+  * public boolean[] IsSDEPGInProgressSport(String[] ExternalIDs);
+  * public int[] GetSDEPGInProgressSportStatus(String[] ExternalIDs);
+
+## Version 9.0.13 (2017-01-19)
 * Fix: Schedules Direct was unable to distinguish between two lineups with the exact same name.
 * Fix: Added handling for an unknown regular expression Schedules Direct was providing for the postal code for a few countries. The code also now skips the check if it does not recognize the regex formatting.
 * Fix: Added better handling to Seeker when starting a recording and no directories are selectable for the desired encoder.
@@ -12,10 +18,6 @@
 * New: Schedules Direct movie quality ratings are now a part of the bonus data.
 * Fix: Schedules Direct movie images are now prioritized to use box art first.
 * Fix: Schedules Direct now updates channels with No Data with previously saved hashes that happen to still be valid.
-* New: Added new API methods for in progress sports tracking using Schedules Direct.
-  * public boolean IsSDEPGServiceAvailable();
-  * public boolean[] IsSDEPGInProgressSport(String[] ExternalIDs);
-  * public int[] GetSDEPGInProgressSportStatus(String[] ExternalIDs);
 
 ## Version 9.0.12 (2016-12-22)
 * New: Schedules Direct now includes teams as people for favorite scheduling.
