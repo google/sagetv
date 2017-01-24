@@ -95,6 +95,8 @@
         <Custom Action="SetInstallFolderonDeferredCA" Before="KeepMPEGDecoder.vbs_CAregister">NOT Installed AND NOT PATCH </Custom>
         <Custom Action="KeepMPEGDecoder.vbs_CAregister" After="InstallInitialize">NOT Installed AND NOT PATCH </Custom>
       <?endif?>
+      <!-- Add the below in 1.009 to avoid the existing service from being delete and losing the account-->      
+      <InstallServices>NOT WIX_UPGRADE_DETECTED</InstallServices>
     </InstallExecuteSequence>    
 	</Product>
 
