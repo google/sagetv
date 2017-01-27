@@ -15,7 +15,7 @@
  */
 package sage.epg.sd.json.programs;
 
-public class SDRecommendations
+public class SDRecommendation
 {
   private String programID;
   private String title120;
@@ -43,5 +43,22 @@ public class SDRecommendations
       "programID='" + programID + '\'' +
       ", title120='" + title120 + '\'' +
       '}';
+  }
+
+  @Override
+  public boolean equals(Object o)
+  {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    SDRecommendation that = (SDRecommendation) o;
+
+    return programID != null ? programID.equals(that.programID) : that.programID == null;
+  }
+
+  @Override
+  public int hashCode()
+  {
+    return programID != null ? programID.hashCode() : 0;
   }
 }

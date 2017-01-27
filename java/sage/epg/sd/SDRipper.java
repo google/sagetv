@@ -15,6 +15,7 @@
  */
 package sage.epg.sd;
 
+import sage.Airing;
 import sage.CaptureDeviceInput;
 import sage.Channel;
 import sage.DBObject;
@@ -97,13 +98,14 @@ public class SDRipper extends EPGDataSource
   private static final String PROP_MOVIE_RATING_BODY = PROP_PREFIX + "/movie_rating_body";
   private static final String PROP_DIGRAPH = PROP_PREFIX + "/preferred_desc_digraph";
   private static final String PROP_SAGETV_COMPAT = PROP_PREFIX + "/sagetv_compat";
+  private static final String PROP_EDITORIAL_NEXT_RUN = PROP_PREFIX + "/editorial/next_run";
+  private static final String PROP_EDITORIAL_UPDATE_INTERVAL = PROP_PREFIX + "/editorial/update_interval";
+  private static final String PROP_EDITORIAL_IMPORT_LIMIT = PROP_PREFIX + "/editorial/import_limit";
   private static final String FILE_PROGRAM_MD5 = "sdmd5prog";
   private static final String FILE_SCHEDULE_MD5 = "sdmd5sched";
 
   public static final String SOURCE_LABEL = " (sdepg)";
   private static final String SOURCE_LINEUP_ID = "epg_sd_name";
-
-  public static final String IN_PROGRESS_BONUS = "In Progress Available" + SOURCE_LABEL;
 
   // This is the preferred rating body. You would only be interested in changing this if you live in
   // another country and want to see a more familiar rating system.
@@ -122,6 +124,13 @@ public class SDRipper extends EPGDataSource
   // Enables conversion of 14 character program IDs into 12 character IDs when the indexes 2 and 3
   // are zero.
   private static final boolean enableSageTVCompat = Sage.getBoolean(PROP_SAGETV_COMPAT, true);
+  // This is the amount of time in milliseconds that must have elapsed for the editorials to be
+  // updated again. This will help keep the editorials from being updated constantly for those with
+  // many lineups.
+  private static final int editorialUpdateInterval = Sage.getInt(PROP_EDITORIAL_UPDATE_INTERVAL, 86400000); // 24h
+  // This is the most editorials that will ever be imported within one interval. If this value is
+  // set to 0, the import process is disabled.
+  private static final int editorialImportLimit = Sage.getInt(PROP_EDITORIAL_IMPORT_LIMIT, 50);
 
   private static long postalCodeCacheTime;
   private static SDRegion regions[] = new SDRegion[0];
@@ -2231,6 +2240,37 @@ public class SDRipper extends EPGDataSource
 
       if (Sage.DBG) System.out.println("SDEPG Downloaded " + downloadedPrograms +
         " programs for " + downloadedAirings + " airings for: " + lineup);
+
+      long currentTime;
+      if (editorialImportLimit > 0 &&
+        (currentTime = Sage.time()) >= Sage.getLong(PROP_EDITORIAL_NEXT_RUN, currentTime))
+      {
+        List<SDEditorial> editorials = SDRecommended.getUsable(SDRecommended.getRecommendations(false));
+        // Try to at least fill one screen with recommendations if possible.
+        int minRecommendations = Math.min(6, editorialImportLimit / 2);
+        if (editorials.size() < minRecommendations)
+        {
+          if (Sage.DBG) System.out.println("SDEPG Got less than " + minRecommendations +
+            " recommendations, adding intelligent recordings");
+          editorials = SDRecommended.getUsable(SDRecommended.getRecommendations(true));
+        }
+        SDRecommended.reduceByWeight(editorials, editorialImportLimit);
+        for (SDEditorial editorial : editorials)
+        {
+          Airing airing = editorial.getAiring();
+          String startTime = Sage.dfStd(airing.getStartTime());
+          String channelName = airing.getChannelName();
+          Show show = airing.getShow();
+          String description = show.getDesc();
+          String title = show.getTitle();
+          String externalId = show.getExternalID();
+          if (enableSageTVCompat)
+            externalId = SDUtils.fromProgramToSageTV(externalId);
+          String url = SDRecommended.getBestEditorialImage(editorial);
+          wiz.addEditorial(externalId, title, startTime, channelName, description, url);
+        }
+        Sage.putLong(PROP_EDITORIAL_NEXT_RUN, currentTime + editorialUpdateInterval);
+      }
     }
     catch (SDException e)
     {

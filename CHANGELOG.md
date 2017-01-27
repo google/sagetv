@@ -5,6 +5,7 @@
   * public boolean IsSDEPGServiceAvailable();
   * public boolean[] IsSDEPGInProgressSport(String[] ExternalIDs);
   * public int[] GetSDEPGInProgressSportStatus(String[] ExternalIDs);
+* New: Added editorials based on recommendations from Schedules Direct.
 
 ## Version 9.0.13 (2017-01-19)
 * Fix: Schedules Direct was unable to distinguish between two lineups with the exact same name.
@@ -18,6 +19,7 @@
 * New: Schedules Direct movie quality ratings are now a part of the bonus data.
 * Fix: Schedules Direct movie images are now prioritized to use box art first.
 * Fix: Schedules Direct now updates channels with No Data with previously saved hashes that happen to still be valid.
+* Fix: Startup now explicitly adds lucene-core-3.6.0.jar before loading the JARs folder to address a common upgrade issue.
 
 ## Version 9.0.12 (2016-12-22)
 * New: Schedules Direct now includes teams as people for favorite scheduling.

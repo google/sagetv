@@ -115,7 +115,7 @@ public class SDProgramsTest extends DeserializeTest
 
     if (program.getRecommendations() != null)
     {
-      for (SDRecommendations recommendations : program.getRecommendations())
+      for (SDRecommendation recommendations : program.getRecommendations())
       {
         assert recommendations.getProgramId() != null;
         assert recommendations.getTitle120() != null;

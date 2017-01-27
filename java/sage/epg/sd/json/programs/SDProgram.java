@@ -27,7 +27,7 @@ public class SDProgram implements SDError
   private static final SDProgramMetadata[] EMPTY_METADATA = new SDProgramMetadata[0];
   private static final SDContentRating[] EMPTY_CONTENT_RATINGS = new SDContentRating[0];
   private static final SDPerson[] EMPTY_PEOPLE = new SDPerson[0];
-  private static final SDRecommendations[] EMPTY_RECOMMENDATIONS = new SDRecommendations[0];
+  private static final SDRecommendation[] EMPTY_RECOMMENDATIONS = new SDRecommendation[0];
 
   // These should only be present if there was a problem. Code 6001 should produce a warning in the
   // UI that the channel was not updated. Code 6000 should display an error in the UI since the
@@ -51,7 +51,7 @@ public class SDProgram implements SDError
   private SDMovie movie;
   private SDPerson cast[];
   private SDPerson crew[];
-  private SDRecommendations recommendations[];
+  private SDRecommendation recommendations[];
   private int duration;
   private SDImage episodeImage;
   private String showType;
@@ -257,7 +257,7 @@ public class SDProgram implements SDError
   /**
    * array of programs similar to this one that you may also enjoy. Optional.
    */
-  public SDRecommendations[] getRecommendations()
+  public SDRecommendation[] getRecommendations()
   {
     if (recommendations == null)
       return EMPTY_RECOMMENDATIONS;
