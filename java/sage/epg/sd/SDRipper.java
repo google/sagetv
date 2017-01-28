@@ -61,6 +61,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -2245,6 +2246,8 @@ public class SDRipper extends EPGDataSource
       if (editorialImportLimit > 0 &&
         (currentTime = Sage.time()) >= Sage.getLong(PROP_EDITORIAL_NEXT_RUN, currentTime))
       {
+        // The dates must be in this format or the Wizard will never remove the entries.
+        SimpleDateFormat editorialDate = new SimpleDateFormat("yyyy-MM-dd");
         List<SDEditorial> editorials = SDRecommended.getUsable(SDRecommended.getRecommendations(false));
         // Try to at least fill one screen with recommendations if possible.
         int minRecommendations = Math.min(6, editorialImportLimit / 2);
@@ -2258,7 +2261,7 @@ public class SDRipper extends EPGDataSource
         for (SDEditorial editorial : editorials)
         {
           Airing airing = editorial.getAiring();
-          String startTime = Sage.dfStd(airing.getStartTime());
+          String startTime = editorialDate.format(airing.getStartTime());
           String channelName = airing.getChannelName();
           Show show = airing.getShow();
           String description = show.getDesc();

@@ -19,9 +19,9 @@ import sage.Agent;
 import sage.Airing;
 import sage.DBObject;
 import sage.MediaFile;
+import sage.Pooler;
 import sage.Sage;
 import sage.Seeker;
-import sage.SeriesInfo;
 import sage.Show;
 import sage.TVEditorial;
 import sage.Wizard;
@@ -61,7 +61,7 @@ public class SDRecommended
         SDImage images[] = programImages[0].getImages();
         if (images.length > 0)
         {
-          SDImage bestImage = images[0];
+          SDImage bestImage = null;
           int desiredCategory = show.isMovie() ? SDImage.CAT_BOX_ART : SDImage.CAT_BANNER_L1;
           boolean desiredSize = false;
           for (SDImage image : images)
@@ -77,40 +77,20 @@ public class SDRecommended
               desiredSize = true;
               bestImage = image;
             }
-            else if (portrait && category == desiredCategory && !desiredSize)
+            else if (portrait && !desiredSize)
             {
               bestImage = image;
             }
           }
-          url = bestImage.getUri();
+          if (bestImage != null)
+            url = bestImage.getUri();
         }
       }
     }
     if (url == null)
     {
-      if (show.isMovie())
-        url = show.getAnyImageUrl(0, true);
-      else
-        url = show.getImageUrlForIndex(0, true);
-    }
-    if (url == null && !show.isMovie())
-    {
       SDImage image = editorial.getProgram().getEpisodeImage();
       url = image != null ? image.getUri() : null;
-
-      if (url == null)
-      {
-        try
-        {
-          String externalID = show.getExternalID();
-          int legacySeriesID = Integer.parseInt(externalID.substring(2, externalID.length() - 6));
-          SeriesInfo seriesInfo = Wizard.getInstance().getSeriesInfoForLegacySeriesID(legacySeriesID);
-          if (seriesInfo != null)
-          {
-            url = seriesInfo.getImageURL(0, true);
-          }
-        } catch (NumberFormatException e) {}
-      }
     }
 
     return url == null ? "" : url;
@@ -149,7 +129,8 @@ public class SDRecommended
       query.add(programId);
       if (query.size() >= limit)
       {
-        while (i < editorials.size())
+        int stop = i + 1;
+        while (stop < editorials.size())
         {
           editorials.remove(i);
         }
@@ -188,11 +169,12 @@ public class SDRecommended
       {
         Show show;
         if ((show = Wizard.getInstance().getShowForExternalID(programId)) == null || show.isWatched())
-          continue;
-        String newId = SDUtils.fromProgramToSageTV(programId);
-        if (newId.length() == 12 &&
-          (show = Wizard.getInstance().getShowForExternalID(programId)) == null || show.isWatched())
-          continue;
+        {
+          String newId = SDUtils.fromProgramToSageTV(programId);
+          if (newId.length() == 12 &&
+            ((show = Wizard.getInstance().getShowForExternalID(programId)) == null || show.isWatched()))
+            continue;
+        }
       }
 
       // Don't recommend shows that are clearly already favorites. We might get a show that changed
@@ -224,12 +206,16 @@ public class SDRecommended
       if (skip)
         continue;
 
+      Show shows[] = Pooler.EMPTY_SHOW_ARRAY;
       // Check if we could't record this show if we wanted to.
-      Show shows[] = Wizard.getInstance().getShowsForExternalIDPrefix(programId);
+      if (programId.length() == 14)
+      {
+        shows = Wizard.getInstance().getShowsForExternalIDPrefix(programId.substring(0, 10));
+      }
       String newID = SDUtils.fromProgramToSageTV(programId);
       if (newID.length() == 12)
       {
-        Show moreShows[] = Wizard.getInstance().getShowsForExternalIDPrefix(newID);
+        Show moreShows[] = Wizard.getInstance().getShowsForExternalIDPrefix(newID.substring(0, 8));
         int copyIndex = shows.length;
         shows = Arrays.copyOf(shows, shows.length + moreShows.length);
         System.arraycopy(moreShows, 0, shows, copyIndex, moreShows.length);

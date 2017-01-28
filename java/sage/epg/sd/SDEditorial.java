@@ -89,6 +89,15 @@ public class SDEditorial
     return recommendation != null ? recommendation.hashCode() : 0;
   }
 
+  @Override
+  public String toString()
+  {
+    return "SDEditorial{" +
+      "recommendation=" + recommendation +
+      ", weight=" + weight +
+      '}';
+  }
+
   public static final Comparator<SDEditorial> WEIGHT_COMPARATOR = new Comparator<SDEditorial>()
   {
     @Override
