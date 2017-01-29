@@ -6,6 +6,7 @@
   * public boolean[] IsSDEPGInProgressSport(String[] ExternalIDs);
   * public int[] GetSDEPGInProgressSportStatus(String[] ExternalIDs);
 * New: Added editorials based on recommendations from Schedules Direct.
+* Fix: Radio stations in Schedules Direct guide data now retain their prepended zeros in the guide data.
 
 ## Version 9.0.13 (2017-01-19)
 * Fix: Schedules Direct was unable to distinguish between two lineups with the exact same name.

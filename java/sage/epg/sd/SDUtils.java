@@ -371,6 +371,11 @@ public class SDUtils
 
   public static String removeLeadingZeros(String channelNumber)
   {
+    // Radio stations have 4 zeros total and without these, we can't distinguish between them and
+    // normal channels, so we always leave those alone.
+    if (channelNumber.length() == 4 && channelNumber.startsWith("0"))
+      return channelNumber;
+
     char channel[] = channelNumber.toCharArray();
     int writeFrom = -1;
 
