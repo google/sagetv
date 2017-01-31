@@ -1674,7 +1674,7 @@ public class SDRipper extends EPGDataSource
 
                         if (person.isAlias())
                           addedAliases.add(person);
-                        else if (person.getPersonId() != null)
+                        else if (person.getPersonId().length() > 0)
                           addedPeople.add(person);
                       }
                     }
@@ -2015,7 +2015,7 @@ public class SDRipper extends EPGDataSource
 
                       if (person.isAlias())
                         addedAliases.add(person);
-                      else if (person.getPersonId() != null)
+                      else if (person.getPersonId().length() > 0)
                         addedPeople.add(person);
                     }
                   }
