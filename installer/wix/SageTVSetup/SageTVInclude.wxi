@@ -2,13 +2,13 @@
 <Include>
 
   <!-- Installer (not the application) Version needs updating here. -->
-  <?define SageInstallerVersion="1.005" ?>
+  <?define SageInstallerVersion="1.010" ?>
 
   <!-- Version needs updating here. -->
   <?define MajorVersion="9" ?>
   <?define MinorVersion="0" ?>
-  <?define BuildVersion="9" ?>
-  <?define Revision="441" ?>
+  <?define BuildVersion="13" ?>
+  <?define Revision="536" ?>
   <!-- Full version number to display -->
   <?define VersionNumber="$(var.MajorVersion).$(var.MinorVersion).$(var.BuildVersion).$(var.Revision)" ?>
 
