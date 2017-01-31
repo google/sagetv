@@ -504,8 +504,10 @@ public class SDUtils
 
     // We are using the person ID as our ext ID.
     int personId = person.getPersonIdAsInt();
+
+    // Sports teams will not have any kind of person ID, so all we can do is just add their name.
     if (personId == 0)
-      return null;
+      return wiz.getPersonForName(personName);
 
     if (person.isAlias())
       personId *= -1;
