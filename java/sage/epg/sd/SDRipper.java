@@ -1403,6 +1403,7 @@ public class SDRipper extends EPGDataSource
       int downloadedPrograms = 0;
       int importAirings = 0;
       int downloadedAirings = 0;
+      int downloadedTeams = 0;
 
       while (true)
       {
@@ -1665,12 +1666,16 @@ public class SDRipper extends EPGDataSource
                         if (!addPerson)
                           continue;
 
+                        if (role == Show.TEAM_ROLE)
+                          downloadedTeams++;
+
                         people.add(newPerson);
                         roles.add(role);
+
                         if (person.isAlias())
-                          addedPeople.add(person);
-                        else
                           addedAliases.add(person);
+                        else if (person.getPersonId().length() > 0)
+                          addedPeople.add(person);
                       }
                     }
                     String[] expandedRatings = programDetail.getContentAdvisory();
@@ -2009,9 +2014,9 @@ public class SDRipper extends EPGDataSource
                       characters.add(newCharacter);
 
                       if (person.isAlias())
-                        addedPeople.add(person);
-                      else
                         addedAliases.add(person);
+                      else if (person.getPersonId().length() > 0)
+                        addedPeople.add(person);
                     }
                   }
 
@@ -2239,8 +2244,11 @@ public class SDRipper extends EPGDataSource
       // Save the md5 hashes for all programs.
       saveProgramMd5Map(programMd5Map);
 
+      // We are tracking the number of teams added so that we have a reference point to verify if
+      // the teams are broken or the show in question just does not have more detail.
       if (Sage.DBG) System.out.println("SDEPG Downloaded " + downloadedPrograms +
-        " programs for " + downloadedAirings + " airings for: " + lineup);
+        " programs containing " + downloadedTeams + " teams for " +
+        downloadedAirings + " airings for: " + lineup);
 
       long currentTime;
       if (editorialImportLimit > 0 &&
