@@ -1099,7 +1099,6 @@ HRESULT CMPEG2Dump::CloseFile( BOOL bAsync )
 	if (m_bRemoteFile)
 	{
 		CloseConnection();
-		m_bRemoteFile = FALSE;
 	    m_hFile = INVALID_HANDLE_VALUE;
 		return NOERROR;
 	}
