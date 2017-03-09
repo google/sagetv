@@ -802,7 +802,7 @@ STDMETHODIMP CMPEG2Dump::SetFileName(LPCOLESTR pszFileName,const AM_MEDIA_TYPE *
 		{
 			m_bDropNextSeq = true;
 		}
-		else if (m_hFile != INVALID_HANDLE_VALUE || m_bRemoteFile)
+		else if (m_hFile != INVALID_HANDLE_VALUE)
 		{
 			if (m_pNextFileName)
 			{
@@ -843,6 +843,19 @@ STDMETHODIMP CMPEG2Dump::SetFileName(LPCOLESTR pszFileName,const AM_MEDIA_TYPE *
 						DbgLog((LOG_TRACE, 2, TEXT("Upload host=%s"), m_pHostname));
 						pszFileName = firstSlash + 1;
 						_flog( "MPEG2Dump.LOG", "Dmup file:%s\n", pszFileName ) ;
+						if (m_pFileName) {
+				                        if (m_pNextFileName)
+				                        {
+				                                delete m_pNextFileName;
+				                                m_pNextFileName = NULL;
+				                        }
+				                        m_pNextFileName = new WCHAR[1+lstrlenW(pszFileName)];
+				                        if (m_pNextFileName == 0)
+                                				return E_OUTOFMEMORY;
+				                        lstrcpyW(m_pNextFileName, pszFileName);
+				                        m_switchNotify.Reset();
+						}
+
 					}
 					else
 					{
