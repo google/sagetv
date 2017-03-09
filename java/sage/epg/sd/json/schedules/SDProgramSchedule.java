@@ -386,6 +386,10 @@ public class SDProgramSchedule
           break;
       }
     }
+    else
+    {
+      setMask = false;
+    }
 
     if (!setMask)
     {
