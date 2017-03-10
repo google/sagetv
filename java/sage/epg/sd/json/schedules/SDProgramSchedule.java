@@ -361,9 +361,7 @@ public class SDProgramSchedule
         returnValue |= Airing.UHDTV_MASK;*/
     }
 
-    if (isPremiere())
-      returnValue |= Airing.PREMIERE_MASK;
-
+    boolean setMask = true;
     if (isPremiereOrFinale != null)
     {
       switch (isPremiereOrFinale)
@@ -383,7 +381,20 @@ public class SDProgramSchedule
         case "Premiere":
           returnValue |= Airing.PREMIERE_MASK;
           break;
+        default:
+          setMask = false;
+          break;
       }
+    }
+    else
+    {
+      setMask = false;
+    }
+
+    if (!setMask)
+    {
+      if (isPremiere())
+        returnValue |= Airing.PREMIERE_MASK;
     }
 
     if (newShowing)
