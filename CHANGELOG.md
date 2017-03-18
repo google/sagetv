@@ -1,6 +1,6 @@
 # Change Log
 
-## Version 9.0.14 (??)
+## Version 9.0.14 (2017-03-18)
 * New: Added new API methods for in progress sports tracking using Schedules Direct.
   * public boolean IsSDEPGServiceAvailable();
   * public boolean[] IsSDEPGInProgressSport(String[] ExternalIDs);
