@@ -69,7 +69,14 @@ xcopy "%_projectDir%..\..\..\third_party\Hauppauge\HCWIRBlaster.dll" "%_targetDi
 if errorlevel 1 goto CopyFailure
 
 @REM Copy the thirdparty JDIC components
-xcopy "%_projectDir%..\..\..\third_party\JDIC" "%_targetDir%\SageTV" /i /q /e
+xcopy "%_projectDir%..\..\..\third_party\JDIC\jdic.jar" "%_targetDir%\SageTV\JARs\" /q
+xcopy "%_projectDir%..\..\..\third_party\JDIC\packager.jar" "%_targetDir%\SageTV\JARs\" /q
+if errorlevel 1 goto CopyFailure
+xcopy "%_projectDir%..\..\..\third_party\JDIC\*.exe" "%_targetDir%\SageTV" /i /q /e
+if errorlevel 1 goto CopyFailure
+xcopy "%_projectDir%..\..\..\third_party\JDIC\*.dll" "%_targetDir%\SageTV" /i /q /e
+if errorlevel 1 goto CopyFailure
+xcopy "%_projectDir%..\..\..\third_party\JDIC\*.txt" "%_targetDir%\SageTV" /i /q /e
 if errorlevel 1 goto CopyFailure
 
 @REM Copy the thirdparty Technotrend component
