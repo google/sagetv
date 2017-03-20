@@ -411,10 +411,24 @@ public class FSManager implements Runnable
       }
       else
       {
-        if (IOUtils.exec2(new String[] { Sage.get("linux/dvdmounter", "mount"), isoFile.getAbsolutePath(), mountDir.getAbsolutePath(), "-o", "loop" }, true) != 0)
+        if (!Sage.LINUX_IS_ROOT)
         {
-          if (Sage.DBG) System.out.println("FAILED mounting ISO image " + isoFile + " to " + mountDir);
-          return null;
+          // mount requires root permissions
+          // the sagetv user needs to be in the sudoers list
+          // NOTE mount command is NOT resolved in properties because sudo is being used
+          if (IOUtils.exec2(new String[]{"sudo","-n", "mount", isoFile.getAbsolutePath(), mountDir.getAbsolutePath(), "-o", "loop,ro"}, true) != 0)
+          {
+            if (Sage.DBG) System.out.println("FAILED mounting ISO image " + isoFile + " to " + mountDir);
+            return null;
+          }
+        }
+        else
+        {
+          if (IOUtils.exec2(new String[]{Sage.get("linux/dvdmounter", "mount"), isoFile.getAbsolutePath(), mountDir.getAbsolutePath(), "-o", "loop"}, true) != 0)
+          {
+            if (Sage.DBG) System.out.println("FAILED mounting ISO image " + isoFile + " to " + mountDir);
+            return null;
+          }
         }
       }
       return mountDir;
@@ -478,7 +492,12 @@ public class FSManager implements Runnable
         }
       }
       else
-        IOUtils.exec2(new String[] { "umount", mountDir.getAbsolutePath() }, false);
+      {
+        if (Sage.LINUX_IS_ROOT)
+          IOUtils.exec2(new String[]{"umount", mountDir.getAbsolutePath()}, false);
+        else
+          IOUtils.exec2(new String[]{"sudo", "-n", "umount", mountDir.getAbsolutePath()}, false);
+      }
       mountDir.delete();
     }
   }

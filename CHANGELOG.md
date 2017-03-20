@@ -3,6 +3,7 @@
 ## Version 9.0.10 (??)
 * Fix: Enable streams with valid PAT packets and invalid PMT packets to be able to be detected by the built in remuxer.
 * New: Schedules Direct now includes teams as people for favorite scheduling.
+* New: SageTV server will no longer allow the server to go to sleep until video conversions are complete.
 
 ## Version 9.0.9 (2016-10-10)
 * Fix: GetSeriesID wasn't always returning a valid series ID
