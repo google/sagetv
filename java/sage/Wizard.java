@@ -796,7 +796,7 @@ public class Wizard implements EPGDBPublic2
    */
   public boolean isNoShow(Airing testMe)
   {
-    return testMe != null && testMe.getShowID() == noShowID;
+    return testMe != null && testMe.showID == noShowID;
   }
 
   void mpause() { if (primed) { try{Thread.sleep(Sage.EMBEDDED ? 300 : 50);}catch(Exception e){} } }
