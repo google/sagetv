@@ -1623,7 +1623,7 @@ public class SDRipper extends EPGDataSource
 
                     String title = programDetail.getTitle();
                     String episodeName = programDetail.getEpisodeTitle150();
-                    String desc = programDetail.getDescriptions().getDescription(preferedDescDigraph).getDescription();
+                    String desc = programDetail.getDescriptions().getDescription(preferedDescDigraph, false).getDescription();
                     long showDuration = programDetail.getDuration();
 
                     SDPerson cast[] = programDetail.getCast();
@@ -1948,7 +1948,7 @@ public class SDRipper extends EPGDataSource
                     if (seriesDesc == null) seriesDesc = seriesDescs[0].getDescription100();
                   }
                   if (seriesDesc == null)
-                    seriesDesc = seriesDetail.getDescriptions().getDescription(preferedDescDigraph).getDescription();
+                    seriesDesc = seriesDetail.getDescriptions().getDescription(preferedDescDigraph, true).getDescription();
                   if (seriesDesc == null)
                     seriesDesc = "";
 
@@ -2390,34 +2390,26 @@ public class SDRipper extends EPGDataSource
           reader = new BufferedReader(new FileReader(programFile));
           Map<Integer, Map<String, String>> returnValue = deserializeStationDayMd5Map(reader);
 
-          // Check for stations without any airing data and if we have saved hashes for that
-          // station, remove them so the station will update.
-          int lookupAirings[] = new int[returnValue.size()];
-          int i = 0;
-          for (Integer key : returnValue.keySet())
+          // Check for stations without any airing data right now and if we have saved hashes for
+          // that station, remove them so the station will update.
+          int size = returnValue.size();
+          long currTime = Sage.time();
+          for (Iterator<Integer> iterator = returnValue.keySet().iterator(); iterator.hasNext(); )
           {
-            lookupAirings[i++] = key;
+            Integer stationID = iterator.next();
+            Airing airings[] = Wizard.getInstance().getAirings(stationID, currTime, currTime + 1, true);
+            if (airings == null || airings.length == 0 || wiz.isNoShow(airings[0]))
+            {
+              if (Sage.DBG) System.out.println("SDEPG Removing hashes for station " + stationID);
+              iterator.remove();
+            }
           }
 
-          long latestAirings[] = Wizard.getInstance().getLatestTvAiringTime(lookupAirings);
-          if (latestAirings != null)
+          // If we have made changes, save them so if we shutdown in the middle of any update, we
+          // won't be left with only partial data.
+          if (returnValue.size() != size)
           {
-            for (i = 0; i < latestAirings.length; i++)
-            {
-              // If there are no airings, update the whole station.
-              if (latestAirings[i] == -1)
-              {
-                if (Sage.DBG) System.out.println("SDEPG Removed hashes for station " + lookupAirings[i]);
-                returnValue.remove(lookupAirings[i]);
-              }
-            }
-
-            // If we have made changes, save them so if we shutdown in the middle of any update, we
-            // won't be left with only partial data.
-            if (returnValue.size() != lookupAirings.length)
-            {
-              saveStationDayMd5Map(returnValue);
-            }
+            saveStationDayMd5Map(returnValue);
           }
 
           return returnValue;
