@@ -64,7 +64,6 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.text.DateFormat;
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -788,6 +787,17 @@ public class Wizard implements EPGDBPublic2
     Sage.putInt(prefsRoot + NOSHOW_ID, noShowID = noShow.id);
   }
 
+  /**
+   * Is an airing a "No Data" recording?
+   *
+   * @param testMe The {@link Airing} to check.
+   * @return <code>true</code> if the airing is a "No Data" recording.
+   */
+  public boolean isNoShow(Airing testMe)
+  {
+    return testMe != null && testMe.getShowID() == noShowID;
+  }
+
   void mpause() { if (primed) { try{Thread.sleep(Sage.EMBEDDED ? 300 : 50);}catch(Exception e){} } }
 
   void maintenance()
@@ -853,7 +863,7 @@ public class Wizard implements EPGDBPublic2
         mpause();
         // NOTE FOR EMBEDDED: I've updated this to no longer force saving of old Airings that are linked to
         // unviewable fractional Watched objects. These can grow the database to an unsustainable size although that
-        // would not realisitcally occur for customers; it has on test systems. We only really
+        // would not realistically occur for customers; it has on test systems. We only really
         // care about retaining the fractional watched information for things that can be
         // resumed.
         Index watchIndex = getIndex(WATCH_CODE, (byte)0);
@@ -5206,6 +5216,23 @@ public class Wizard implements EPGDBPublic2
     }
   }
 
+  // Used to create timed recordingings in Seeker2.
+  Airing getFakeAiring(long startTime, long endTime, int stationID)
+  {
+    return getFakeAiring(startTime, endTime, stationID, 0);
+  }
+
+  // Used to create timed recordingings in Seeker2.
+  Airing getFakeAiring(long startTime, long endTime, int stationID, int showID)
+  {
+    Airing fakeAir = new Airing(0);
+    fakeAir.time = startTime;
+    fakeAir.duration = endTime - startTime;
+    fakeAir.stationID = stationID;
+    fakeAir.showID = showID;
+    return fakeAir;
+  }
+
   /**
    * Get the time of the last non-NoShow airing in the database
    *
@@ -7035,6 +7062,8 @@ public class Wizard implements EPGDBPublic2
     if (p.extID == 0)
       return new Person[] { p };
     Person originalPerson = (p.extID < 0) ? p.getOriginalAlias() : p;
+    if (originalPerson == null)
+      originalPerson = p;
 
     int targetExtID = -1 * originalPerson.extID;
     // Now we get all the aliases for this person
