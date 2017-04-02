@@ -95,7 +95,8 @@ public class SDPerson
 
   public boolean isAlias()
   {
-    return personId != null && personId.length() > 0 && personId.equals(nameId);
+    return personId != null && personId.length() > 0 &&
+      nameId != null && nameId.length() > 0 && !personId.equals(nameId);
   }
 
   /**
