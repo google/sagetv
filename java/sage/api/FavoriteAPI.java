@@ -1189,6 +1189,7 @@ public class FavoriteAPI {
        * @return the list of Airings in the DB that match this Favorite
        *
        * @declaration public Airing[] GetPotentialFavoriteAirings(Favorite Favorite);
+       * @since 9.0.15
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         Agent fav = (Agent) stack.pop();

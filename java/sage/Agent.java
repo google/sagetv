@@ -442,12 +442,12 @@ public class Agent extends DBObject implements Favorite
   }
 
   public synchronized Airing[] getRelatedAirings(DBObject[] allAirs, boolean mainCache, boolean controlCPUUsage,
-          boolean ignoreDisabled, StringBuffer sbCache)
+          boolean ignoreDisabledFlag, StringBuffer sbCache)
   {
     if (allAirs == null) return Pooler.EMPTY_AIRING_ARRAY;
 
     //Short circuit this if the agent is disabled (and we don't want to ignore that fact)
-    if(!ignoreDisabled && testAgentFlag(DISABLED_FLAG)) return Pooler.EMPTY_AIRING_ARRAY;
+    if(!ignoreDisabledFlag && testAgentFlag(DISABLED_FLAG)) return Pooler.EMPTY_AIRING_ARRAY;
 
     if (ENABLE_AGENT_AIRING_CACHE)
     {
@@ -474,7 +474,7 @@ public class Agent extends DBObject implements Favorite
       for (Show show : shows) {
         Airing[] airings = wiz.getAirings(show, 0);
         for(Airing a : airings) {
-          if (followsTrend(a, true, sbCache, true, true))
+          if (followsTrend(a, true, sbCache, true, ignoreDisabledFlag))
             rv.add(a);
         }
       }
@@ -483,7 +483,7 @@ public class Agent extends DBObject implements Favorite
       {
         Airing a = (Airing) allAirs[i];
         if (a == null) continue;
-        if (followsTrend(a, true, sbCache, false, true))
+        if (followsTrend(a, true, sbCache, false, ignoreDisabledFlag))
           rv.add(a);
         if ((i % CPU_CONTROL_MOD_COUNT) == 0 && controlCPUUsage)
           try{Thread.sleep(Carny.SLEEP_PERIOD);}catch(Exception e){}
@@ -593,7 +593,7 @@ public class Agent extends DBObject implements Favorite
    * the buffer will be cleared and use.  When calling this method in a loop, the same StringBuffer can be used for each
    * call to limit object creation and memory use.
    * @param skipKeyword If true, keyword matching is not considered
-   * @param ignoreDisabled If true, treat this agent as if it is enabled, even if it isn't.
+   * @param ignoreDisabledFlag If true, treat this agent as if it is enabled, even if it isn't.
    * @return true if the given Airing matches this Agent (given the parameter criteria) , false otherwise.
    */
   /*
@@ -601,14 +601,14 @@ public class Agent extends DBObject implements Favorite
    * tested; but we can have Lucene do this for us
    */
   public boolean followsTrend(Airing air, boolean mustBeViewable, StringBuffer sbCache, boolean skipKeyword,
-          boolean ignoreDisabled)
+          boolean ignoreDisabledFlag)
   {
     if (air == null) return false;
     Show s = air.getShow();
     if (s == null) return false;
 
     //A disabled agent doesn't match any airings
-    if(!ignoreDisabled && testAgentFlag(DISABLED_FLAG))
+    if(!ignoreDisabledFlag && testAgentFlag(DISABLED_FLAG))
         return false;
     // Do not be case sensitive when checking titles!! We got a bunch of complaints about this on our forums.
     // Don't let null titles match all the Favorites!
