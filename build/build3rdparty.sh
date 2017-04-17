@@ -26,7 +26,14 @@ cd ../faad2
 make -j32 # || { echo "Build failed, exiting."; exit 1; }
 
 cd ../x264
-./configure "--extra-cflags=-fasm -fno-common -D_FILE_OFFSET_BITS=64" || { echo "Build failed, exiting."; exit 1; }
+# GCC 4.6 does not have -fno-aggressive-loop-optimizations.
+# GCC 4.8 built libx264 crashes without it.
+OPT_LIBX264_CFLAG=
+GCC_VERSION=`(echo 4.6; ${CC:-gcc} -dumpversion) | sort -V | tail -n 1`
+if [ "$GCC_VERSION" != "4.6" ]; then
+  OPT_LIBX264_CFLAG="-fno-aggressive-loop-optimizations"
+fi
+./configure "--extra-cflags=-fasm -fno-common -D_FILE_OFFSET_BITS=64 $OPT_LIBX264_CFLAG" || { echo "Build failed, exiting."; exit 1; }
 make -j32 || { echo "Build failed, exiting."; exit 1; }
 
 cd ../xvidcore/build/generic
