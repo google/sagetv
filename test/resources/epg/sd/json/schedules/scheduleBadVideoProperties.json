@@ -1,0 +1,20 @@
+{
+  "programID": "MV003820310000",
+  "airDateTime": "2017-04-29T20:00:00Z",
+  "duration": 9000,
+  "md5": "Sjk+Bn95ADoEHxGFMoUSHg",
+  "audioProperties": [
+    "cc",
+    "dvs"
+  ],
+  "videoProperties": {
+    "0": "hdtv",
+    "2": "letterbox"
+  },
+  "ratings": [
+    {
+      "body": "USA Parental Rating",
+      "code": "TVPG"
+    }
+  ]
+}

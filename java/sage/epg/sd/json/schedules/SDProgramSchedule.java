@@ -26,31 +26,31 @@ public class SDProgramSchedule
 {
   private static final SDContentRating[] EMPTY_CONTENT_RATING = new SDContentRating[0];
 
-  private String programID;
-  private String airDateTime;
-  private int duration;
-  private String md5;
+  protected String programID;
+  protected String airDateTime;
+  protected int duration;
+  protected String md5;
   @SerializedName("new")
-  private boolean newShowing;
-  private boolean cableInTheClassroom;
-  private boolean catchup;
-  private boolean continued;
-  private boolean educational;
-  private boolean joinedInProgress;
-  private boolean leftInProgress;
-  private boolean premiere;
-  private boolean programBreak;
-  private boolean repeat;
-  private boolean signed;
-  private boolean subjectToBlackout;
-  private boolean timeApproximate;
-  private boolean free;
-  private String liveTapeDelay;
-  private String isPremiereOrFinale;
-  private SDContentRating ratings[];
-  private SDMultiPart multipart;
-  private String audioProperties[];
-  private String videoProperties[];
+  protected boolean newShowing;
+  protected boolean cableInTheClassroom;
+  protected boolean catchup;
+  protected boolean continued;
+  protected boolean educational;
+  protected boolean joinedInProgress;
+  protected boolean leftInProgress;
+  protected boolean premiere;
+  protected boolean programBreak;
+  protected boolean repeat;
+  protected boolean signed;
+  protected boolean subjectToBlackout;
+  protected boolean timeApproximate;
+  protected boolean free;
+  protected String liveTapeDelay;
+  protected String isPremiereOrFinale;
+  protected SDContentRating ratings[];
+  protected SDMultiPart multipart;
+  protected String audioProperties[];
+  protected String videoProperties[];
 
   /**
    * 14 characters. Mandatory. What programID will the data be for.

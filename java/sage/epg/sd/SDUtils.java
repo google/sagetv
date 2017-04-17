@@ -39,6 +39,8 @@ import sage.epg.sd.json.programs.SDSeriesDescArrayDeserializer;
 import sage.epg.sd.json.programs.SDProgramMetadata;
 import sage.epg.sd.json.programs.SDMetadataDeserializer;
 import sage.epg.sd.json.programs.SDSeriesDescArray;
+import sage.epg.sd.json.schedules.SDProgramSchedule;
+import sage.epg.sd.json.schedules.SDProgramScheduleDeserializer;
 import sage.epg.sd.json.schedules.SDScheduleMd5Array;
 import sage.epg.sd.json.schedules.SDScheduleMd5ArrayDeserializer;
 
@@ -75,6 +77,7 @@ public class SDUtils
     gsonBuilder.registerTypeAdapter(SDSeriesDescArray.class, new SDSeriesDescArrayDeserializer());
     gsonBuilder.registerTypeAdapter(SDScheduleMd5Array.class, new SDScheduleMd5ArrayDeserializer());
     gsonBuilder.registerTypeAdapter(SDProgramImages[].class, new SDProgramImagesDeserializer());
+    gsonBuilder.registerTypeAdapter(SDProgramSchedule.class, new SDProgramScheduleDeserializer());
     GSON = gsonBuilder.create();
   }
 
