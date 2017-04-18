@@ -842,7 +842,7 @@ public final class Sage
               else
                 Sage.printlnx(s);
             }
-            public void println(String s)
+            public synchronized void println(String s)
             {
               super.println(s);
               if (stdOutHandle == 0)

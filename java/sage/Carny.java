@@ -117,6 +117,17 @@ public final class Carny implements Runnable
     mustSeeSet = Collections.synchronizedSet(new HashSet<Airing>());
     loveAirSet = Collections.synchronizedSet(new HashSet<Airing>());
     swapMap = new HashMap<Airing, Airing>();
+    agentWorkQueue = new ConcurrentLinkedQueue<>();
+    agentWorkers = Executors.newCachedThreadPool(new ThreadFactory()
+    {
+      @Override
+      public Thread newThread(Runnable r)
+      {
+        Thread newThread = new Thread(r);
+        newThread.setName("CarnyAgentWorker");
+        return newThread;
+      }
+    });
     prepped = false;
   }
 
@@ -964,6 +975,7 @@ public final class Carny implements Runnable
     Set<Airing> newMustSeeSet = Collections.synchronizedSet(new HashSet<Airing>());
     Set<Airing> blackBalled = Collections.synchronizedSet(new HashSet<Airing>());
 
+    DBObject[] allAgents = wiz.getRawAccess(Wizard.AGENT_CODE, (byte) 0);
     // This is now a local thread variable so we can multithread the agent work.
     //final DBObject[] allAgents = wiz.getRawAccess(Wizard.AGENT_CODE, (byte) 0);
     Set<Airing> newLoveAirSet = Collections.synchronizedSet(new HashSet<Airing>());
@@ -1005,7 +1017,6 @@ public final class Carny implements Runnable
     Airing[] remAirs = remAirSet.toArray(Pooler.EMPTY_AIRING_ARRAY);
 
     List<Agent> traitors = new Vector<>();
-    DBObject[] allAgents = wiz.getAgents();
     Set<Airing> watchedPotsToClear = Collections.synchronizedSet(new HashSet<Airing>());
     if (Sage.DBG) System.out.println("CARNY Processing " + allAgents.length + " Agents & " + allAirs.length + " Airs");
     boolean controlCPUUsage = doneInit && allAgents.length > 50 && Sage.getBoolean("control_profiler_cpu_usage", true);
@@ -1651,17 +1662,8 @@ public final class Carny implements Runnable
   // This is the queue that all of the worker threads get their tasks from. If we ever need to stop
   // everything, all we need to do is clear this queue and all of the threads will stop working
   // fairly quickly.
-  private ConcurrentLinkedQueue<Agent> agentWorkQueue = new ConcurrentLinkedQueue<>();
-  private ExecutorService agentWorkers = Executors.newCachedThreadPool(new ThreadFactory()
-  {
-    @Override
-    public Thread newThread(Runnable r)
-    {
-      Thread newThread = new Thread(r);
-      newThread.setName("CarnyAgentWorker");
-      return newThread;
-    }
-  });
+  private ConcurrentLinkedQueue<Agent> agentWorkQueue;
+  private ExecutorService agentWorkers;
 
   private static final int strComp(DBObject s1, DBObject s2)
   {
