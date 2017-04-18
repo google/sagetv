@@ -26,11 +26,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public final class Carny implements Runnable
 {
   private static final String GLOBAL_WATCH_COUNT = "global_watch_count";
   private static final String LIMITED_CARNY_INIT = "limited_carny_init";
+  // The user can define exactly how many threads will be used. This is not checked against the
+  // total core count, so the user could put in a number that's more if they want to experiment.
+  // There is no evidence that that would have a positive effect.
+  private static final String LIMITED_CARNY_THREADS = "limited_carny_threads";
   static final String CARNY_KEY = "carny";
 
   private static final long LOOKAHEAD = Sage.EMBEDDED ? 10*24*60*60*1000L : 14*24*60*60*1000L;
@@ -38,8 +50,10 @@ public final class Carny implements Runnable
    * NOTE: I CHANGED THIS ON 7/22/03. I THINK IT'S WHY ITS RECORDING
    * EXTRA STUFF, BECAUSE ANYTHING WILL COME THROUGH WITH AT LEAST THIS PROBABILITY
    */
-  private static final float MIN_WP = 0;//1e-6f;
+  protected static final float MIN_WP = 0;//1e-6f;
   public static final long SLEEP_PERIOD = Sage.EMBEDDED ? 120 : 30;
+  // The processor count is used to limit the number of threads we will spin up for agent processing.
+  public static final int PROCESSOR_COUNT = Math.max(Runtime.getRuntime().availableProcessors(), 1);
 
   public static final Object WATCH_MARK_JOB = new Object();
   public static final Object WATCH_REAL_JOB = new Object();
@@ -125,7 +139,7 @@ public final class Carny implements Runnable
     if (!doneInit)
     {
       lengthyInit(false);
-      Scheduler.getInstance().kick(false);
+      SchedulerSelector.getInstance().kick(false);
     }
     while (alive)
     {
@@ -170,6 +184,9 @@ public final class Carny implements Runnable
     {
       jobs.notifyAll();
     }
+    // alive being changed to false will be enough to cause a graceful termination of the agent
+    // worker threads.
+    agentWorkers.shutdown();
   }
 
   // Any non-standard processing we should do immediately, profiling calculations
@@ -354,7 +371,7 @@ public final class Carny implements Runnable
         pots = tempSet.toArray(Pooler.EMPTY_AIRING_ARRAY);
       }
       clientSyncAll();
-      Scheduler.getInstance().kick(true);
+      SchedulerSelector.getInstance().kick(true);
     }
   }
 
@@ -528,7 +545,7 @@ public final class Carny implements Runnable
         pots = tempSet.toArray(Pooler.EMPTY_AIRING_ARRAY);
       }
       clientSyncAll();
-      Scheduler.getInstance().kick(true);
+      SchedulerSelector.getInstance().kick(true);
     }
     submitJob(new Object[] { LOVE_JOB, null });
     sage.plugin.PluginEventManager.postEvent(sage.plugin.PluginEventManager.FAVORITE_MODIFIED,
@@ -637,12 +654,12 @@ public final class Carny implements Runnable
         pots = tempSet.toArray(Pooler.EMPTY_AIRING_ARRAY);
       }
       clientSyncAll();
-      Scheduler.getInstance().kick(true);
+      SchedulerSelector.getInstance().kick(true);
     }
     else if (resyncAll)
     {
       clientSyncAll();
-      Scheduler.getInstance().kick(true);
+      SchedulerSelector.getInstance().kick(true);
     }
 
     clientSyncLoves();
@@ -726,12 +743,12 @@ public final class Carny implements Runnable
   public void addDontLike(Airing air, boolean manual)
   {
     submitWasteJob(air, true, manual);
-    Scheduler.getInstance().kick(true);
+    SchedulerSelector.getInstance().kick(true);
   }
   public void removeDontLike(Airing air)
   {
     submitWasteJob(air, false, true);
-    Scheduler.getInstance().kick(true);
+    SchedulerSelector.getInstance().kick(true);
   }
   private void submitWasteJob(Airing air, boolean doWaste, boolean manual)
   {
@@ -928,10 +945,14 @@ public final class Carny implements Runnable
 
   private void stdProcessing()
   {
+    String lastMessage = null;
     if (!doneInit)
     {
-      Sage.setSplashText(Sage.rez("Module_Init_Progress", new Object[] { Sage.rez("Profiler"), new Double(0)}));
+      lastMessage = Sage.rez("Module_Init_Progress", new Object[] { Sage.rez("Profiler"), new Double(0)});
+      Sage.setSplashText(lastMessage);
     }
+
+    List<Future<Boolean>> agentWorkerFutures = new ArrayList<>();
     // This tracks when we started trying to compile the profiler info so we don't keep aborting attempts forever if it takes
     // a long time to figure out
     if (lastCycleCompleteTime >= cycleStartTime)
@@ -939,11 +960,12 @@ public final class Carny implements Runnable
     // Go through each Agent and run their think() process.
     Map<Airing, Float> newWPMap = Collections.synchronizedMap(new HashMap<Airing, Float>());
     Map<Airing, Agent> newCauseMap = Collections.synchronizedMap(new HashMap<Airing, Agent>());
-    Set<Airing> airSet = new HashSet<Airing>();
+    Set<Airing> airSet = Collections.synchronizedSet(new HashSet<Airing>());
     Set<Airing> newMustSeeSet = Collections.synchronizedSet(new HashSet<Airing>());
-    Set<Airing> blackBalled = new HashSet<Airing>();
+    Set<Airing> blackBalled = Collections.synchronizedSet(new HashSet<Airing>());
 
-    DBObject[] allAgents = wiz.getRawAccess(Wizard.AGENT_CODE, (byte) 0);
+    // This is now a local thread variable so we can multithread the agent work.
+    //final DBObject[] allAgents = wiz.getRawAccess(Wizard.AGENT_CODE, (byte) 0);
     Set<Airing> newLoveAirSet = Collections.synchronizedSet(new HashSet<Airing>());
 
     // We don't track music at all (that used to be in Agent.followsTrend)
@@ -982,160 +1004,138 @@ public final class Carny implements Runnable
     Airing[] allAirs = airset.toArray(Pooler.EMPTY_AIRING_ARRAY);
     Airing[] remAirs = remAirSet.toArray(Pooler.EMPTY_AIRING_ARRAY);
 
-    List<Agent> traitors = new ArrayList<Agent>();
-    allAgents = wiz.getAgents();
-    Set<Airing> watchedPotsToClear = new HashSet<Airing>();
+    List<Agent> traitors = new Vector<>();
+    DBObject[] allAgents = wiz.getAgents();
+    Set<Airing> watchedPotsToClear = Collections.synchronizedSet(new HashSet<Airing>());
     if (Sage.DBG) System.out.println("CARNY Processing " + allAgents.length + " Agents & " + allAirs.length + " Airs");
     boolean controlCPUUsage = doneInit && allAgents.length > 50 && Sage.getBoolean("control_profiler_cpu_usage", true);
-    // This array is used in the the Agent's calcWatchProb to avoid having to re-allocate a storage location each time we go through it.
-    // We make it bigger than what could possibly come up in the Agent's calc (i.e. every watch & waste matching it and none overlapping)
-    Airing[] airWorkCache = new Airing[1000 + wiz.getRawAccess(Wizard.WASTED_CODE, (byte) 0).length + wiz.getRawAccess(Wizard.WATCH_CODE, (byte) 0).length];
-    String paidProgRez = Sage.rez("Paid_Programming");
-    // We do a lot of String work for keyword favorites so have a buffer that they can do
-    // that work in to massively reduce GC'd memory allocations
-    StringBuffer sbCache = new StringBuffer();
-    String lastSplashMsg = null;
-    for (int i = 0; i < allAgents.length; i++)
+
+    // Add all of the work into a shared queue so we don't end up giving one thread a lot more work
+    // over another.
+    int submittedAgents;
+    if (!doneInit && Sage.getBoolean(LIMITED_CARNY_INIT, true))
     {
-      if (!doneInit)
+      for (Agent currAgent : (Agent[])allAgents)
       {
-        String newSplashMsg = Sage.rez("Module_Init_Progress", new Object[] { Sage.rez("Profiler"), new Double((i*1.0)/allAgents.length)});
-        if (!newSplashMsg.equals(lastSplashMsg))
-        {
-          Sage.setSplashText(newSplashMsg);
-          lastSplashMsg = newSplashMsg;
-        }
+        // This is an inexpensive check against two flags so we aren't adding agents to the queue
+        // that we already know shouldn't be there.
+        if (currAgent != null && !currAgent.testAgentFlag(Agent.DISABLED_FLAG) && currAgent.isFavorite())
+          agentWorkQueue.add(currAgent);
       }
-      if (controlCPUUsage)
-        try{Thread.sleep(SLEEP_PERIOD);}catch(Exception e){}
-      if (doneInit)
+      submittedAgents = agentWorkQueue.size();
+      if (Sage.DBG) System.out.println("CARNY Processing " + submittedAgents + " active favorites for limited init.");
+    }
+    else
+    {
+      for (Agent currAgent : (Agent[])allAgents)
       {
-        // Check to see if something else is a higher priority to calculate.
-        // NOTE: If we've been trying to build the profile for a half hour and haven't finished then it's
-        // likely that stopping early could cause us to never finish since recordings end/start so often.
-        // So in that case we do NOT stop processing early and just continue on our merry way!
-        if (!shouldContinueStdProcessing(Sage.eventTime() - cycleStartTime < 30*Sage.MILLIS_PER_MIN))
-        {
-          if (Sage.DBG) System.out.println("Carny is stopping processing early to do a new job...");
-          return; // just bail, it'll pick it all up afterwards
-        }
+        // This is an inexpensive check against a flag so we aren't adding agents to the queue that
+        // we already know shouldn't be there.
+        if (currAgent != null && !currAgent.testAgentFlag(Agent.DISABLED_FLAG))
+          agentWorkQueue.add(currAgent);
       }
-      Agent currAgent = (Agent) allAgents[i];
-      if (currAgent == null || currAgent.testAgentFlag(Agent.DISABLED_FLAG))
-        continue;
+      submittedAgents = agentWorkQueue.size();
+      if (Sage.DBG && submittedAgents != allAgents.length)
+        System.out.println("CARNY Processing " + submittedAgents + " active agents.");
+    }
 
-      if ((!doneInit && Sage.getBoolean(LIMITED_CARNY_INIT, true)) ||
-          (Sage.EMBEDDED && Seeker.getInstance().getDisableProfilerRecording()))
-      {
-        if (!currAgent.isFavorite())
-          continue;
-      }
+    // If we don't have any agents, there's no point is spinning up worker threads. Also some users
+    // might have servers with a lot of cores (> 8), so if we don't have a lot of agents, we will
+    // not try to spread the load across every core because it's just a waste of resources. We are
+    // arbitrarily selecting 75 agents per core. The number could be higher, but on lower powered
+    // machines this will make a more meaningful difference on startup.
+    int totalThreads = Sage.getInt(LIMITED_CARNY_THREADS, 0);
+    if (totalThreads <= 0)
+    {
+      totalThreads = submittedAgents == 0 ? 0 :
+        Math.min(PROCESSOR_COUNT, Math.max(1, submittedAgents / 75));
+    }
+    // Start/resume all of the agent worker threads.
+    for (int i = 0; i < totalThreads; i++)
+    {
+      Callable<Boolean> newJob = new CarnyAgentCallable(controlCPUUsage, totalThreads, doneInit, allAirs, remAirs,
+        traitors, newLoveAirSet, blackBalled, airSet, newWPMap, newCauseMap, watchedPotsToClear, newMustSeeSet);
+      agentWorkerFutures.add(agentWorkers.submit(newJob));
+    }
 
-      if (!currAgent.calcWatchProb(controlCPUUsage, airWorkCache, sbCache))
+    boolean workCanceled = false;
+    for (int i = 0; i < agentWorkerFutures.size(); i++)
+    {
+      Future<Boolean> future = agentWorkerFutures.get(i);
+      try
       {
-        traitors.add(currAgent);
-        continue;
-      }
-      Airing[] agePots = currAgent.getRelatedAirings(allAirs, true, controlCPUUsage, sbCache);
-      if (currAgent.isFavorite())
-      {
-        newLoveAirSet.addAll(Arrays.asList(agePots));
-
-        // Also check the rem airs so we're sure we get EVERYTHING in the DB
-        // that applies to this Favorite included in the group.
-        Airing[] remRelated = currAgent.getRelatedAirings(remAirs, false, controlCPUUsage, sbCache);
-        newLoveAirSet.addAll(Arrays.asList(remRelated));
-      }
-
-      // Check to see if this Agent is a Favorite who has a keep at most limit set with
-      // manual deleting. In that case, we don't add any of its future airings to the
-      // mustSeeSet or to the pots, but we do put them in the loveAirSet.
-      boolean dontScheduleThisAgent = false;
-      if (currAgent.isFavorite() && currAgent.testAgentFlag(Agent.DONT_AUTODELETE_FLAG) &&
-          currAgent.getAgentFlag(Agent.KEEP_AT_MOST_MASK) > 0)
-      {
-        int fileCount = 0;
-        for (int j = 0; j < agePots.length; j++)
+        Boolean keepRunning;
+        try
         {
-          MediaFile mf = wiz.getFileForAiring(agePots[j]);
-          if (mf != null && mf.isCompleteRecording())
-            fileCount++;
+          keepRunning = doneInit ? future.get(15, TimeUnit.MINUTES) : future.get(1000, TimeUnit.MILLISECONDS);
+          if (keepRunning == null)
+            keepRunning = false;
         }
-        int keepAtMost = currAgent.getAgentFlag(Agent.KEEP_AT_MOST_MASK);
-        if (fileCount >= keepAtMost)
+        catch (TimeoutException e)
         {
-          dontScheduleThisAgent = true;
-        }
-      }
-
-      boolean negator = currAgent.isNegativeNelly();
-      for (int j = 0; j < agePots.length; j++)
-      {
-        if (negator)
-        {
-          blackBalled.add(agePots[j]);
-          continue;
+          // Do not proceed to the next future since we are only breaking out of waiting for it to
+          // complete to update the logged progress. Otherwise we do not expect to ever find
+          // ourselves in this block.
+          i--;
+          keepRunning = true;
         }
 
-        // Skip this stuff
-        if (paidProgRez.equalsIgnoreCase(agePots[j].getTitle()) ||
-            wiz.isNoShow(agePots[j].showID))
-          continue;
+        int jobsRemoved = submittedAgents - agentWorkQueue.size();
 
-        airSet.add(agePots[j]);
-
-        /*
-         * NOTE: On 7/22/03 I moved the isWatched() down from the beginning of this loop.
-         * We want to keep watched airings in the Agent lookup table so we can
-         * use the agentFlags on them even after they're watched. So now watched
-         * airings will have a cause agent, but their WP will be zero.
-         */
-        /*
-         * NOTE: Narflex - 8/4/08 - Fixed bug where we wouldn't use the higher priority favorite
-         * in the cause map since comparing watchProb would be equal; this would then cause scheduling
-         * issues because the wrong agent was used for the scheduling that should have been higher priority sometimes
-         */
-
-        Float wp = newWPMap.get(agePots[j]);
-        boolean replaceInMap = false;
-        if (wp == null || (currAgent.watchProb > wp.floatValue()))
-          replaceInMap = true;
-        if (wp != null && currAgent.watchProb == wp.floatValue() && currAgent.isFavorite())
+        if (!doneInit)
         {
-          // Check for agent priority
-          Agent oldAgent = newCauseMap.get(agePots[j]);
-          if (oldAgent == null || doBattle(oldAgent, currAgent) == currAgent)
-            replaceInMap = true;
-        }
-        if (replaceInMap)
-        {
-          newCauseMap.put(agePots[j], currAgent);
-          /*
-           * We need to put the WP in temporarily even for watched stuff so the most powerful
-           * Agent shows up in the map, otherwise a cat agent could override a favorite agent on a watched show
-           */
-          newWPMap.put(agePots[j], new Float(currAgent.watchProb));
-          if (agePots[j].isWatchedForSchedulingPurpose())
-          {
-            watchedPotsToClear.add(agePots[j]);
-          }
-        }
-
-        if (agePots[j].isWatchedForSchedulingPurpose())
-          continue;
-        if (dontScheduleThisAgent)
-        {
-          MediaFile mf = wiz.getFileForAiring(agePots[j]);
-          if (mf == null || !mf.isCompleteRecording())
-          {
-            watchedPotsToClear.add(agePots[j]);
+          if (jobsRemoved == submittedAgents && (agentWorkerFutures.size() - 1) != i)
             continue;
+          String newSplashMsg = Sage.rez("Module_Init_Progress",
+            new Object[]{Sage.rez("Profiler"), new Double((jobsRemoved * 1.0) / submittedAgents)});
+          if (lastMessage == null || !newSplashMsg.equals(lastMessage))
+          {
+            Sage.setSplashText(newSplashMsg);
           }
+          lastMessage = newSplashMsg;
         }
-        if (currAgent.isFavorite())
-          newMustSeeSet.add(agePots[j]);
+        else if (keepRunning)
+        {
+          if (jobsRemoved == submittedAgents && (agentWorkerFutures.size() - 1) != i)
+            continue;
+          // This isn't a completely accurate statement because removing an agent from the queue
+          // doesn't mean we also finished processing the agent at the same time, but it is close
+          // enough.
+          if (Sage.DBG) System.out.println(
+            "Carny agent workers processed " + jobsRemoved + " of " + submittedAgents + " agents.");
+        }
+
+        // If a future returns false, that means we have a new job and need to stop all processing.
+        // That means we will likely have excess jobs left in the queue that need to be cleared out.
+        // It is ok to do this regardless of if other agent workers are still running because they
+        // all need to stop processing anyway.
+        if (!keepRunning)
+        {
+          System.out.println("Carny agent worker returned canceled.");
+          agentWorkQueue.clear();
+          workCanceled = true;
+        }
+      }
+      catch (Exception e)
+      {
+        // If we create any exceptions, everything is now invalid, so we need to remove the rest of
+        // the agents. We still need to wait for all of the threads to return or we will create a
+        // race condition and in this case that would be very bad.
+        agentWorkQueue.clear();
+        workCanceled = true;
+        if (!(e instanceof InterruptedException) && Sage.DBG)
+        {
+          System.out.println("Carny created an exception while processing: " + e.getMessage());
+          e.printStackTrace(System.out);
+          Throwable innerException = e.getCause();
+          if (innerException != null)
+            innerException.printStackTrace(System.out);
+        }
       }
     }
+
+    if (workCanceled)
+      return;
 
     synchronized (this)
     {
@@ -1205,7 +1205,7 @@ public final class Carny implements Runnable
       pots = airSet.toArray(Pooler.EMPTY_AIRING_ARRAY);
       mustSeeSet = newMustSeeSet;
     }
-    // This is when we need to propogate the change to all of our
+    // This is when we need to propagate the change to all of our
     // clients
     clientSyncAll();
 
@@ -1213,10 +1213,15 @@ public final class Carny implements Runnable
     lastCycleCompleteTime = Sage.eventTime();
 
     if (doneInit)
-      Scheduler.getInstance().kick(false);
+      SchedulerSelector.getInstance().kick(false);
   }
 
   public int getWatchCount() { return globalWatchCount; }
+
+  public synchronized Map<Airing, Float> getWpMap()
+  {
+    return new HashMap<>(wpMap);
+  }
 
   public synchronized float getWP(Airing air)
   {
@@ -1459,13 +1464,13 @@ public final class Carny implements Runnable
     //if (Sage.DBG) System.out.println("IN Carny createPriority(top=" + top + " bottom=" + bottom + ")");
     top.bully(bottom);
     //if (Sage.DBG) System.out.println("OUT Carny createPriority(top=" + top + " bottom=" + bottom + ")");
-    Scheduler.getInstance().kick(false);
+    SchedulerSelector.getInstance().kick(false);
   }
 
   public void setStartPadding(Agent bond, long padAmount)
   {
     bond.setStartPadding(padAmount);
-    Scheduler.getInstance().kick(false);
+    SchedulerSelector.getInstance().kick(false);
     sage.plugin.PluginEventManager.postEvent(sage.plugin.PluginEventManager.FAVORITE_MODIFIED,
         new Object[] { sage.plugin.PluginEventManager.VAR_FAVORITE, bond });
   }
@@ -1473,7 +1478,7 @@ public final class Carny implements Runnable
   public void setStopPadding(Agent bond, long padAmount)
   {
     bond.setStopPadding(padAmount);
-    Scheduler.getInstance().kick(false);
+    SchedulerSelector.getInstance().kick(false);
     sage.plugin.PluginEventManager.postEvent(sage.plugin.PluginEventManager.FAVORITE_MODIFIED,
         new Object[] { sage.plugin.PluginEventManager.VAR_FAVORITE, bond });
   }
@@ -1481,7 +1486,7 @@ public final class Carny implements Runnable
   public void setAgentFlags(Agent bond, int flagMask, int flagValue)
   {
     bond.setAgentFlags(flagMask, flagValue);
-    Scheduler.getInstance().kick(false);
+    SchedulerSelector.getInstance().kick(false);
     sage.plugin.PluginEventManager.postEvent(sage.plugin.PluginEventManager.FAVORITE_MODIFIED,
         new Object[] { sage.plugin.PluginEventManager.VAR_FAVORITE, bond });
   }
@@ -1642,6 +1647,21 @@ public final class Carny implements Runnable
   private Vector<ProfilingListener> listeners = new Vector<ProfilingListener>();
 
   private Map<Airing, Airing> swapMap;
+
+  // This is the queue that all of the worker threads get their tasks from. If we ever need to stop
+  // everything, all we need to do is clear this queue and all of the threads will stop working
+  // fairly quickly.
+  private ConcurrentLinkedQueue<Agent> agentWorkQueue = new ConcurrentLinkedQueue<>();
+  private ExecutorService agentWorkers = Executors.newCachedThreadPool(new ThreadFactory()
+  {
+    @Override
+    public Thread newThread(Runnable r)
+    {
+      Thread newThread = new Thread(r);
+      newThread.setName("CarnyAgentWorker");
+      return newThread;
+    }
+  });
 
   private static final int strComp(DBObject s1, DBObject s2)
   {
@@ -1824,5 +1844,195 @@ public final class Carny implements Runnable
     public boolean updateMustSees(Set<Airing> s);
     public boolean updateCauseMap(Map<Airing, Agent> m);
     public boolean updateWPMap(Map<Airing, Float> m);
+  }
+
+  public class CarnyAgentCallable implements Callable<Boolean>
+  {
+    final String paidProgRez = Sage.rez("Paid_Programming");
+
+    // These do not change between any of the threads, so it is ok for all of the threads to share
+    // these relatively constant variables.
+    private final boolean controlCPUUsage;
+    private final int totalThreads;
+    private final boolean doneInit;
+    private final Airing allAirs[];
+    private final Airing remAirs[];
+
+    // These must be synchronized because all of the threads will be adding and removing.
+    private final List<Agent> traitors;
+    private final Set<Airing> newLoveAirSet;
+    private final Set<Airing> blackBalled;
+    private final Set<Airing> airSet;
+    private final Map<Airing, Float> newWPMap;
+    private final Map<Airing, Agent> newCauseMap;
+    private final Set<Airing> watchedPotsToClear;
+    private final Set<Airing> newMustSeeSet;
+
+    public CarnyAgentCallable(boolean controlCPUUsage, int totalThreads, boolean doneInit,
+                              Airing[] allAirs, Airing[] remAirs, List<Agent> traitors,
+                              Set<Airing> newLoveAirSet, Set<Airing> blackBalled, Set<Airing> airSet,
+                              Map<Airing, Float> newWPMap, Map<Airing, Agent> newCauseMap,
+                              Set<Airing> watchedPotsToClear, Set<Airing> newMustSeeSet)
+    {
+      this.controlCPUUsage = controlCPUUsage;
+      this.totalThreads = totalThreads;
+      this.doneInit = doneInit;
+      this.allAirs = allAirs;
+      this.remAirs = remAirs;
+      this.traitors = traitors;
+      this.newLoveAirSet = newLoveAirSet;
+      this.blackBalled = blackBalled;
+      this.airSet = airSet;
+      this.newWPMap = newWPMap;
+      this.newCauseMap = newCauseMap;
+      this.watchedPotsToClear = watchedPotsToClear;
+      this.newMustSeeSet = newMustSeeSet;
+    }
+
+    // Returns false if the whole queue needs to be stopped for a new job. The above shared
+    // variables must be local to the method controlling the execution of these callables, so we
+    // will see the stopping process early message at least once for each processing thread, but
+    // there will be no concerns about old jobs breaking new jobs.
+    @Override
+    public Boolean call() throws Exception
+    {
+      if (Sage.DBG) System.out.println("Carny agent worker is starting a new job...");
+      final StringBuffer sbCache = new StringBuffer();
+      final Airing[] airWorkCache = new Airing[1000 + wiz.getRawAccess(Wizard.WASTED_CODE, (byte) 0).length + wiz.getRawAccess(Wizard.WATCH_CODE, (byte) 0).length];
+
+      Agent currAgent;
+      while (true)
+      {
+        currAgent = agentWorkQueue.poll();
+        // The queue is empty.
+        if (currAgent == null)
+        {
+          if (Sage.DBG) System.out.println("Carny agent worker is out of work.");
+          return true;
+        }
+
+        if (controlCPUUsage)
+          try{Thread.sleep(SLEEP_PERIOD * totalThreads);}catch(Exception e){}
+        if (doneInit)
+        {
+          // Check to see if something else is a higher priority to calculate.
+          // NOTE: If we've been trying to build the profile for a half hour and haven't finished then it's
+          // likely that stopping early could cause us to never finish since recordings end/start so often.
+          // So in that case we do NOT stop processing early and just continue on our merry way!
+          if (!shouldContinueStdProcessing(Sage.eventTime() - cycleStartTime < 30*Sage.MILLIS_PER_MIN))
+          {
+            if (Sage.DBG) System.out.println("Carny agent worker is quitting early to start a new job...");
+            return false; // just bail, it'll pick it all up afterwards
+          }
+        }
+
+        if (!currAgent.calcWatchProb(controlCPUUsage, airWorkCache, sbCache))
+        {
+          traitors.add(currAgent);
+          continue;
+        }
+        Airing[] agePots = currAgent.getRelatedAirings(allAirs, true, controlCPUUsage, sbCache);
+        if (currAgent.isFavorite())
+        {
+          newLoveAirSet.addAll(Arrays.asList(agePots));
+
+          // Also check the rem airs so we're sure we get EVERYTHING in the DB
+          // that applies to this Favorite included in the group.
+          Airing[] remRelated = currAgent.getRelatedAirings(remAirs, false, controlCPUUsage, sbCache);
+          newLoveAirSet.addAll(Arrays.asList(remRelated));
+        }
+
+        // Check to see if this Agent is a Favorite who has a keep at most limit set with
+        // manual deleting. In that case, we don't add any of its future airings to the
+        // mustSeeSet or to the pots, but we do put them in the loveAirSet.
+        boolean dontScheduleThisAgent = false;
+        if (currAgent.isFavorite() && currAgent.testAgentFlag(Agent.DONT_AUTODELETE_FLAG) &&
+          currAgent.getAgentFlag(Agent.KEEP_AT_MOST_MASK) > 0)
+        {
+          int fileCount = 0;
+          for (int j = 0; j < agePots.length; j++)
+          {
+            MediaFile mf = wiz.getFileForAiring(agePots[j]);
+            if (mf != null && mf.isCompleteRecording())
+              fileCount++;
+          }
+          int keepAtMost = currAgent.getAgentFlag(Agent.KEEP_AT_MOST_MASK);
+          if (fileCount >= keepAtMost)
+          {
+            dontScheduleThisAgent = true;
+          }
+        }
+
+        boolean negator = currAgent.isNegativeNelly();
+        for (int j = 0; j < agePots.length; j++)
+        {
+          if (negator)
+          {
+            blackBalled.add(agePots[j]);
+            continue;
+          }
+
+          // Skip this stuff
+          if (paidProgRez.equalsIgnoreCase(agePots[j].getTitle()) || wiz.isNoShow(agePots[j].showID))
+            continue;
+
+          airSet.add(agePots[j]);
+
+              /*
+               * NOTE: On 7/22/03 I moved the isWatched() down from the beginning of this loop.
+               * We want to keep watched airings in the Agent lookup table so we can
+               * use the agentFlags on them even after they're watched. So now watched
+               * airings will have a cause agent, but their WP will be zero.
+               */
+              /*
+               * NOTE: Narflex - 8/4/08 - Fixed bug where we wouldn't use the higher priority favorite
+               * in the cause map since comparing watchProb would be equal; this would then cause scheduling
+               * issues because the wrong agent was used for the scheduling that should have been higher priority sometimes
+               */
+
+          synchronized (newWPMap)
+          {
+            Float wp = newWPMap.get(agePots[j]);
+            boolean replaceInMap = false;
+            if (wp == null || (currAgent.watchProb > wp))
+              replaceInMap = true;
+            if (wp != null && currAgent.watchProb == wp && currAgent.isFavorite())
+            {
+              // Check for agent priority
+              Agent oldAgent = newCauseMap.get(agePots[j]);
+              if (oldAgent == null || doBattle(oldAgent, currAgent) == currAgent)
+                replaceInMap = true;
+            }
+            if (replaceInMap)
+            {
+              newCauseMap.put(agePots[j], currAgent);
+                  /*
+                   * We need to put the WP in temporarily even for watched stuff so the most powerful
+                   * Agent shows up in the map, otherwise a cat agent could override a favorite agent on a watched show
+                   */
+              newWPMap.put(agePots[j], currAgent.watchProb);
+              if (agePots[j].isWatchedForSchedulingPurpose())
+              {
+                watchedPotsToClear.add(agePots[j]);
+              }
+            }
+          }
+
+          if (agePots[j].isWatchedForSchedulingPurpose())
+            continue;
+          if (dontScheduleThisAgent)
+          {
+            MediaFile mf = wiz.getFileForAiring(agePots[j]);
+            if (mf == null || !mf.isCompleteRecording())
+            {
+              watchedPotsToClear.add(agePots[j]);
+              continue;
+            }
+          }
+          if (currAgent.isFavorite())
+            newMustSeeSet.add(agePots[j]);
+        }
+      }
+    }
   }
 }

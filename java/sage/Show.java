@@ -133,6 +133,9 @@ public final class Show extends DBObject
   public static final int IMAGE_SOURCE_BONES_GSTATIC = 0;
   public static final int IMAGE_SOURCE_FIBER_GSTATIC = 1;
 
+  // Used for localized check on isMovie() method.
+  static volatile String movieString = Sage.rez("Movie");
+
   public static String getRoleString(int x)
   {
     if (x < 0 || x >= ROLE_NAMES.length)
@@ -201,6 +204,18 @@ public final class Show extends DBObject
   }
 
   public String getCategory() { return (categories.length == 0) ? "" : categories[0].name; }
+
+  /**
+   * Checks case if the provided string matches the category.
+   *
+   * @param compare This is a Stringer optimized lookup that requires the incoming string to already
+   *               be all lowercase.
+   * @return <code>true</code> if the string matches the category.
+   */
+  public boolean isCategory(String compare)
+  {
+    return categories.length != 0 && categories[0].equalsIgnoreCase(compare);
+  }
 
   public String getSubCategory() { return (categories.length < 2) ? "" : categories[1].name; }
 
@@ -1464,7 +1479,7 @@ public final class Show extends DBObject
   {
     if (externalID.length > 1 && externalID[0] == 'M' && externalID[1] == 'V')
       return true;
-    if (categories != null && categories.length > 0 && Sage.rez("Movie").equals(categories[0].name))
+    if (categories != null && categories.length > 0 && movieString.equals(categories[0].name))
       return true;
     return false;
   }
