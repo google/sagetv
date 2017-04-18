@@ -15,10 +15,6 @@
  */
 package sage;
 
-import sage.nio.Splitter;
-
-import java.util.Set;
-
 public class MMC
 {
   public static final String DISABLE_CAPTURE = "None";
