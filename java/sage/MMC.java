@@ -410,12 +410,13 @@ public class MMC
 
   public long getRecordedBytes(java.io.File recordingFile)
   {
-    if (SeekerSelector.USE_BETA_SEEKER)
+    // TODO: Will be enabled in a future commit.
+    /*if (SeekerSelector.USE_BETA_SEEKER)
     {
       long returnValue = Splitter.getInstance().getBytesStreamed(recordingFile);
       if (returnValue != -1)
         return returnValue;
-    }
+    }*/
 
     java.util.Iterator walker = globalEncoderMap.values().iterator();
     while (walker.hasNext())

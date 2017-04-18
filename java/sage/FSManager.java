@@ -54,9 +54,10 @@ public class FSManager implements Runnable
 
         // There are some initialization ordering issues if we route through the selector here
         // instead of using Library directly.
-        if (SeekerSelector.USE_BETA_SEEKER)
+        // TODO: Will be enabled in a future commit.
+        /*if (SeekerSelector.USE_BETA_SEEKER)
           Library.getInstance().addIgnoreFile(newF);
-        else
+        else*/
           Seeker.getInstance().addIgnoreFile(newF);
       }
     }
