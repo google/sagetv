@@ -1026,8 +1026,9 @@ public final class Carny implements Runnable
     int submittedAgents;
     if (!doneInit && Sage.getBoolean(LIMITED_CARNY_INIT, true))
     {
-      for (Agent currAgent : (Agent[])allAgents)
+      for (int i = 0; i < allAgents.length; i++)
       {
+        Agent currAgent = (Agent) allAgents[i];
         // This is an inexpensive check against two flags so we aren't adding agents to the queue
         // that we already know shouldn't be there.
         if (currAgent != null && !currAgent.testAgentFlag(Agent.DISABLED_FLAG) && currAgent.isFavorite())
@@ -1038,8 +1039,9 @@ public final class Carny implements Runnable
     }
     else
     {
-      for (Agent currAgent : (Agent[])allAgents)
+      for (int i = 0; i < allAgents.length; i++)
       {
+        Agent currAgent = (Agent) allAgents[i];
         // This is an inexpensive check against a flag so we aren't adding agents to the queue that
         // we already know shouldn't be there.
         if (currAgent != null && !currAgent.testAgentFlag(Agent.DISABLED_FLAG))
