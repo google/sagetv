@@ -50,7 +50,7 @@ public final class Carny implements Runnable
    * NOTE: I CHANGED THIS ON 7/22/03. I THINK IT'S WHY ITS RECORDING
    * EXTRA STUFF, BECAUSE ANYTHING WILL COME THROUGH WITH AT LEAST THIS PROBABILITY
    */
-  protected static final float MIN_WP = 0;//1e-6f;
+  private static final float MIN_WP = 0;//1e-6f;
   public static final long SLEEP_PERIOD = Sage.EMBEDDED ? 120 : 30;
   // The processor count is used to limit the number of threads we will spin up for agent processing.
   public static final int PROCESSOR_COUNT = Math.max(Runtime.getRuntime().availableProcessors(), 1);
@@ -1230,11 +1230,6 @@ public final class Carny implements Runnable
   }
 
   public int getWatchCount() { return globalWatchCount; }
-
-  public synchronized Map<Airing, Float> getWpMap()
-  {
-    return new HashMap<>(wpMap);
-  }
 
   public synchronized float getWP(Airing air)
   {
