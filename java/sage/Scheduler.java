@@ -989,7 +989,7 @@ public class Scheduler implements Runnable, SchedulerInterface
       }
     }
     potentials.clear();
-    boolean irEnabled = !Sage.EMBEDDED || !SeekerSelector.getInstance().getDisableProfilerRecording();
+    boolean irEnabled = !Sage.EMBEDDED || !Seeker.getInstance().getDisableProfilerRecording();
 
     for (int i = 0; i < lookaheadAirs.length; i++)
     {
