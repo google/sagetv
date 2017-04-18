@@ -16,7 +16,6 @@
 package sage.api;
 
 import sage.UIClient;
-import sage.UIManager;
 
 import sage.*;
 
@@ -610,7 +609,7 @@ public class AiringAPI{
           // require them to resolve the conflict interactively. It can be dealt with in the
           // Recording Information Menu.
           mr.setRecordingQuality(q);
-          Scheduler.getInstance().kick(false); // because it can change the encoders for it
+          SchedulerSelector.getInstance().kick(false); // because it can change the encoders for it
         }
         return null;
       }});
@@ -652,10 +651,10 @@ public class AiringAPI{
             {
               Object rv;
               if (mr != null)
-                rv = Catbert.getRecordFailureObject(Seeker.getInstance().modifyRecord(start - mr.getStartTime(),
+                rv = Catbert.getRecordFailureObject(SeekerSelector.getInstance().modifyRecord(start - mr.getStartTime(),
                     stop - mr.getEndTime(), mr, uiClient));
               else
-                rv = Catbert.getRecordFailureObject(Seeker.getInstance().timedRecord(start, stop, a.getStationID(), 0, a, uiClient));
+                rv = Catbert.getRecordFailureObject(SeekerSelector.getInstance().timedRecord(start, stop, a.getStationID(), 0, a, uiClient));
               Catbert.asyncTaskComplete(taskID, rv);
             }
           }, "AsyncChannelSetRecordingTimes");
@@ -683,7 +682,7 @@ public class AiringAPI{
           {
             public void run()
             {
-              Catbert.asyncTaskComplete(taskID, Catbert.getRecordFailureObject(Seeker.getInstance().record(a, uiClient)));
+              Catbert.asyncTaskComplete(taskID, Catbert.getRecordFailureObject(SeekerSelector.getInstance().record(a, uiClient)));
             }
           }, "AsyncRecord");
           return taskID;
@@ -702,7 +701,7 @@ public class AiringAPI{
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         Airing a = getAir(stack);
         if (Permissions.hasPermission(Permissions.PERMISSION_RECORDINGSCHEDULE, stack.getUIMgr()))
-          Seeker.getInstance().cancelRecord(a, Sage.client ? stack.getUIMgrSafe() : stack.getUIMgr());
+          SeekerSelector.getInstance().cancelRecord(a, Sage.client ? stack.getUIMgrSafe() : stack.getUIMgr());
         return null;
       }});
     rft.put(new PredefinedJEPFunction("Airing", "IsAiringObject", 1, new String[] { "Airing" })

@@ -93,7 +93,7 @@ public class CaptureDeviceAPI{
        * @declaration public String[] GetActiveCaptureDevices();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return Scheduler.getInstance().getMyEncoderNames();
+        return SchedulerSelector.getInstance().getMyEncoderNames();
       }});
     rft.put(new PredefinedJEPFunction("CaptureDevice", "IsCaptureDeviceInUseByALiveClient", 1, new String[] {"CaptureDevice"}, true)
     {
@@ -105,7 +105,7 @@ public class CaptureDeviceAPI{
        * @declaration public boolean IsCaptureDeviceInUseByALiveClient(String CaptureDevice);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return Boolean.valueOf(Seeker.getInstance().isAClientControllingCaptureDevice(getCapDev(stack)));
+        return Boolean.valueOf(SeekerSelector.getInstance().isAClientControllingCaptureDevice(getCapDev(stack)));
       }});
     rft.put(new PredefinedJEPFunction("CaptureDevice", "AddInputForRFChannel", 2, new String[] {"CaptureDevice", "RFChannel"}, true)
     {
@@ -164,7 +164,7 @@ public class CaptureDeviceAPI{
        * @declaration public MediaFile GetCaptureDeviceCurrentRecordFile(String CaptureDevice);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return Seeker.getInstance().getCurrRecordMediaFile(getCapDev(stack));
+        return SeekerSelector.getInstance().getCurrRecordMediaFile(getCapDev(stack));
       }});
     rft.put(new PredefinedJEPFunction("CaptureDevice", "GetCaptureDeviceQualities", 1, new String[] {"CaptureDevice"}, true)
     {

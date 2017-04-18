@@ -33,7 +33,7 @@ import sage.Sage;
 import sage.SageConstants;
 import sage.SageRenderer;
 import sage.SageTV;
-import sage.Seeker;
+import sage.SeekerSelector;
 import sage.StringMatchUtils;
 import sage.UIClient;
 import sage.UIManager;
@@ -1818,7 +1818,7 @@ public class Utility {
           {
             public boolean accept(java.io.File path)
             {
-              return path.isDirectory() || ((mediaMask & Seeker.getInstance().guessImportedMediaMaskFast(path.getAbsolutePath())) != 0);
+              return path.isDirectory() || ((mediaMask & SeekerSelector.getInstance().guessImportedMediaMaskFast(path.getAbsolutePath())) != 0);
             }
           });
         }
@@ -2383,7 +2383,7 @@ public class Utility {
        * @declaration public boolean IsImportableFileType(String Filename);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return Boolean.valueOf(Seeker.getInstance().hasImportableFileExtension(getString(stack)));
+        return Boolean.valueOf(SeekerSelector.getInstance().hasImportableFileExtension(getString(stack)));
       }});
     rft.put(new PredefinedJEPFunction("Utility", "GetSubnetMask")
     {
@@ -2490,7 +2490,7 @@ public class Utility {
        * @declaration public String GuessMajorFileType(String Filename);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        switch (Seeker.getInstance().guessImportedMediaMaskFast(getString(stack)))
+        switch (SeekerSelector.getInstance().guessImportedMediaMaskFast(getString(stack)))
         {
           case DBObject.MEDIA_MASK_DVD:
             return "D";

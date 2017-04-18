@@ -21,7 +21,7 @@ import sage.DBObject;
 import sage.MediaFile;
 import sage.Pooler;
 import sage.Sage;
-import sage.Seeker;
+import sage.SeekerSelector;
 import sage.Show;
 import sage.TVEditorial;
 import sage.Wizard;
@@ -283,11 +283,11 @@ public class SDRecommended
   public static List<SDEditorial> getRecommendations(boolean includeIR) throws IOException, SDException
   {
     Set<String> lookupShows = new HashSet<>();
-    Airing airings[] = Seeker.getInstance().getInterleavedScheduledAirings();
+    Airing airings[] = SeekerSelector.getInstance().getInterleavedScheduledAirings();
     if (Sage.DBG) System.out.println("SDEPG Using " + airings.length + " airings for recommendations");
     if (includeIR)
     {
-      Airing irAirings[] = Seeker.getInstance().getIRScheduledAirings();
+      Airing irAirings[] = SeekerSelector.getInstance().getIRScheduledAirings();
       int copyIndex = airings.length;
       // Don't use more than 3000 ever. It will cause these suggestions to drive the SD
       // recommendations very hard towards shows that might be too derivative from what the user

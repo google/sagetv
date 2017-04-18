@@ -506,7 +506,7 @@ public class SageTV implements Runnable
 
     //		System.gc();
     Sage.setSplashText(Sage.rez("Module_Init", new Object[] { Sage.rez("SageTV_Core") }));
-    mySeeker = Seeker.prime();
+    mySeeker = SeekerSelector.prime();
     //		System.gc();
 
     if (SageConstants.LIBRARY_FUNCTION)
@@ -618,7 +618,7 @@ public class SageTV implements Runnable
 
     if (SageConstants.PVR)
     {
-      t = new Thread(myScheduler = Scheduler.getInstance(), "Scheduler");
+      t = new Thread(myScheduler = SchedulerSelector.getInstance(), "Scheduler");
       t.setDaemon(true);
       t.setPriority(Thread.MIN_PRIORITY);
       t.start();
@@ -1245,8 +1245,8 @@ public class SageTV implements Runnable
         }
         else
         {
-          Scheduler.getInstance().kick(false);
-          Seeker.getInstance().kick();
+          SchedulerSelector.getInstance().kick(false);
+          SeekerSelector.getInstance().kick();
         }
         java.util.Iterator walker = UIManager.getUIIterator();
         while (walker.hasNext())
@@ -1262,8 +1262,8 @@ public class SageTV implements Runnable
           ((UIManager) walker.next()).deepSleep(x);
         if (!Sage.client)
         {
-          Seeker.getInstance().releaseAllEncoding();
-          Scheduler.getInstance().prepareForStandby();
+          SeekerSelector.getInstance().releaseAllEncoding();
+          SchedulerSelector.getInstance().prepareForStandby();
           // Also release all IR xmt devices
           ExternalTuningManager.goodbye();
         }
@@ -1491,8 +1491,8 @@ public class SageTV implements Runnable
   private static final Object quantaLock = new Object();
 
   private static EPG guide;
-  private static Seeker mySeeker;
-  private static Scheduler myScheduler;
+  private static Hunter mySeeker;
+  private static SchedulerInterface myScheduler;
   private static Carny god;
   private static MMC mmc;
   private static boolean alive;

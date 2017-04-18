@@ -580,7 +580,7 @@ public final class Sage
   }
   public static String getFileSystemTypeX(String root, boolean skipSeekerSMBCheck)
   {
-    if (!skipSeekerSMBCheck && Sage.LINUX_OS && Sage.EMBEDDED && Seeker.getInstance().isSmbMountedFolder(new File(root)))
+    if (!skipSeekerSMBCheck && Sage.LINUX_OS && Sage.EMBEDDED && SeekerSelector.getInstance().isSmbMountedFolder(new File(root)))
     {
       return "SMB"; // for performance related problems with SMB type detection on embedded
     }
@@ -842,7 +842,7 @@ public final class Sage
               else
                 Sage.printlnx(s);
             }
-            public synchronized void println(String s)
+            public void println(String s)
             {
               super.println(s);
               if (stdOutHandle == 0)
@@ -1398,6 +1398,8 @@ public final class Sage
 
     // The role names are in a static array we need to fix
     System.arraycopy(Show.getRoleNames(), 0, Show.ROLE_NAMES, 0, Show.ROLE_NAMES.length);
+    // The localized string for checking if the category is a movie needs to be updated.
+    Show.movieString = Sage.rez("Movie");
 
     UserEvent.updateNameMaps();
 

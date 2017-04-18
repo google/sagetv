@@ -459,7 +459,7 @@ public class FavoriteAPI {
         if (Permissions.hasPermission(Permissions.PERMISSION_RECORDINGSCHEDULE, stack.getUIMgr()))
         {
           Carny.getInstance().setRecordingQuality(a, q);
-          Scheduler.getInstance().kick(false); // because it can change the encoders for it
+          SchedulerSelector.getInstance().kick(false); // because it can change the encoders for it
         }
         return null;
       }});
@@ -535,7 +535,7 @@ public class FavoriteAPI {
           if (mr != null && q != null && Permissions.hasPermission(Permissions.PERMISSION_RECORDINGSCHEDULE, stack.getUIMgr()))
           {
             mr.bully(q);
-            Scheduler.getInstance().kick(false);
+            SchedulerSelector.getInstance().kick(false);
           }
         }
         return null;

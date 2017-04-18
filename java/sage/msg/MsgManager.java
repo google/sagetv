@@ -324,7 +324,7 @@ public class MsgManager implements Runnable
       //if (Sage.DBG) System.out.println("ERROR couldn't find capture source to match epg data:" + srcName);
       return;
     }
-    sage.MediaFile mf = sage.Seeker.getInstance().getCurrRecordMediaFile(capDev);
+    sage.MediaFile mf = sage.SeekerSelector.getInstance().getCurrRecordMediaFile(capDev);
     if (mf != null)
     {
       sage.media.format.ContainerFormat cf;
@@ -380,7 +380,7 @@ public class MsgManager implements Runnable
       return;
     }
     if (Sage.DBG) System.out.println("Sending the core a capture device reset request for:" + capDev);
-    sage.Seeker.getInstance().requestDeviceReset(capDev);
+    sage.SeekerSelector.getInstance().requestDeviceReset(capDev);
   }
 
   private void processSysMsg(SageMsg msg)

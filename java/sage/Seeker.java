@@ -48,7 +48,7 @@ import java.util.Vector;
  * VideoSetupMenu for modifying video directory, EventRouter for determining if Power
  * button turns on or off
  */
-public class Seeker implements Runnable
+public class Seeker implements Hunter
 {
   private static final String VIDEO_STORAGE = "video_storage";
   private static final String ARCHIVE_DIRECTORY = "archive_directory";
@@ -1241,6 +1241,17 @@ public class Seeker implements Runnable
       writeArchiveDirsProps();
     }
 
+    // Even though this is the only method that manipulates this variable, it is run on a thread
+    // provided by pooler and it's remotely possible we could get a former thread that will have
+    // cached values. This prevents that from happening without forcing synchronization on all
+    // updates within this method.
+    synchronized (autoImportAddedNetPaths)
+    {
+      String array[] = autoImportAddedNetPaths.toArray(Pooler.EMPTY_STRING_ARRAY);
+      autoImportAddedNetPaths.clear();
+      autoImportAddedNetPaths.addAll(Arrays.asList(array));
+    }
+
     if (Sage.getBoolean("seeker/enforce_minimum_import_sizes", Sage.EMBEDDED))
     {
       minMusicImportSize = Sage.getLong("seeker/min_file_size_music_import", 50*1024);
@@ -1707,7 +1718,7 @@ public class Seeker implements Runnable
     }
   }
 
-  void kick()
+  public void kick()
   {
     synchronized (this)
     {
@@ -4145,7 +4156,7 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
           }
         }
 
-        Airing newRecord = null;
+        Airing newRecord;
         boolean autopilot = es.controllingClients.isEmpty();
         Airing defaultRecord = es.currRecord;
         boolean switchThis = false;
@@ -4568,7 +4579,7 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
     return wakeupTime;
   }
 
-  void goodbye()
+  public void goodbye()
   {
     //Set savedPartials = new HashSet(currRecordFiles);
     // NOTE: NARFLEX - 02/28/08 - This needs to be synchronized on the Seeker because the VideoFrame will
@@ -5050,7 +5061,7 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
     }
   }
 
-  int forceChannelTune(String mmcInputName, String chanString, UIClient uiClient)
+  public int forceChannelTune(String mmcInputName, String chanString, UIClient uiClient)
   {
     if (Sage.client)
     {
@@ -5138,7 +5149,7 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
     return null;
   }
 
-  MediaFile requestWatch(Airing watchAir, int[] errorReturn, UIClient uiClient)
+  public MediaFile requestWatch(Airing watchAir, int[] errorReturn, UIClient uiClient)
   {
     if (Sage.client)
       return NetworkClient.getSN().requestWatch(uiClient, watchAir, errorReturn);

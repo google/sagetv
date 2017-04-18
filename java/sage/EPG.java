@@ -419,7 +419,7 @@ public final class EPG implements Runnable
     // every time we change the enabled channels so it redoes the schedule and then also kicks the Seeker for what channels are viewable.
     if (!Sage.client)
     {
-      Scheduler.getInstance().kick(true);
+      SchedulerSelector.getInstance().kick(true);
     }
   }
 
@@ -637,7 +637,7 @@ public final class EPG implements Runnable
         if (reqMaintenanceType != MaintenanceType.NONE)
         {
           Carny.getInstance().kickHard();
-          Scheduler.getInstance().kick(false);
+          SchedulerSelector.getInstance().kick(false);
         }
 
         if (reqMaintenanceType != MaintenanceType.NONE

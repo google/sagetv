@@ -48,6 +48,7 @@ public class Person extends DBObject
   {
     super(in, ver, idMap);
     name = in.readUTF();
+    ignoreCaseHash = name.toLowerCase().hashCode();
     if (ver >= 0x4F)
     {
       Wizard wiz = Wizard.getInstance();
@@ -145,6 +146,7 @@ public class Person extends DBObject
   {
     Person fromMe = (Person) x;
     name = fromMe.name;
+    ignoreCaseHash = name.toLowerCase().hashCode();
     extID = fromMe.extID;
     dateOfBirth = fromMe.dateOfBirth;
     dateOfDeath = fromMe.dateOfDeath;
@@ -250,6 +252,15 @@ public class Person extends DBObject
   }
 
   public String getName() { return name; }
+
+  public boolean equalsIgnoreCase(Person compare)
+  {
+    // The hash could be 0, but it's not going to be any more often than any other hash and in case
+    // we miss a case where the title is set, this covers that problem.
+    if (ignoreCaseHash == 0 || compare.ignoreCaseHash == 0)
+      return toString().equalsIgnoreCase(compare.toString());
+    return compare.ignoreCaseHash == ignoreCaseHash && toString().equalsIgnoreCase(compare.toString());
+  }
 
   public int getNumAwards()
   {
@@ -387,6 +398,8 @@ public class Person extends DBObject
   byte[][] headshotUrls;
   // For resolved aliases
   transient Person orgPerson;
+  // To speed up case insensitive searches
+  transient int ignoreCaseHash;
 
   public static final Comparator<Person> NAME_COMPARATOR =
       new Comparator<Person>()

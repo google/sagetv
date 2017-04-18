@@ -761,7 +761,7 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
 
   public void run()
   {
-    seek = Seeker.getInstance();
+    seek = SeekerSelector.getInstance();
     if (Sage.DBG) System.out.println("VF thread is now running...");
     long waitTime = 0;
     long fileReadyTime = 0;
@@ -5056,7 +5056,7 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
           // Check if it's a recording with a live preview we can access
           if (theFile.isLocalFile() && theFile.isRecording() && !Sage.client)
           {
-            CaptureDeviceInput cdi = Seeker.getInstance().getInputForCurrRecordingFile(theFile);
+            CaptureDeviceInput cdi = SeekerSelector.getInstance().getInputForCurrRecordingFile(theFile);
             if (cdi != null && cdi.getCaptureDevice().getNativeVideoPreviewConfigHandle() != 0)
             {
               return true;
@@ -5160,7 +5160,7 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
         // Check if it's a recording with a live preview we can access
         if (theFile.isLocalFile() && theFile.isRecording() && !Sage.client)
         {
-          CaptureDeviceInput cdi = Seeker.getInstance().getInputForCurrRecordingFile(theFile);
+          CaptureDeviceInput cdi = SeekerSelector.getInstance().getInputForCurrRecordingFile(theFile);
           if (cdi != null && cdi.getCaptureDevice().getNativeVideoPreviewConfigHandle() != 0)
           {
             return new DShowSharedLiveMediaPlayer(cdi.toString());
@@ -5763,7 +5763,7 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
     });
   }
 
-  private Seeker seek;
+  private Hunter seek;
   private MediaFile currFile;
   private int mediaPlayerSetup;
   private boolean currFileLoaded;

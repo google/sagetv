@@ -168,7 +168,7 @@ public class BigBrother
   {
     sage.plugin.PluginEventManager.postEvent(sage.plugin.PluginEventManager.WATCHED_STATE_CHANGED,
         new Object[] { sage.plugin.PluginEventManager.VAR_AIRING, a });
-    Scheduler.getInstance().kick(true);
+    SchedulerSelector.getInstance().kick(true);
   }
   public static void clearWatched(Airing a)
   {
@@ -391,9 +391,7 @@ public class BigBrother
         s.cachedUnique = Show.PRESUMED_UNIQUE; return true;
       }
 
-      if ("movie".equalsIgnoreCase(s.getCategory()) ||
-          "sports".equalsIgnoreCase(s.getCategory()) ||
-          s.hasEpisodeName())
+      if (s.isCategory("movie") || s.isCategory("sports") || s.hasEpisodeName())
       {
         s.cachedUnique = Show.PRESUMED_UNIQUE;
         return true;
@@ -442,9 +440,7 @@ public class BigBrother
         return true;
       }
 
-      if ("movie".equalsIgnoreCase(s.getCategory()) ||
-          "sports".equalsIgnoreCase(s.getCategory()) ||
-          s.hasEpisodeName())
+      if (s.isCategory("movie") || s.isCategory("sports") || s.hasEpisodeName())
       {
         return true;
       }

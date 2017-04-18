@@ -597,7 +597,7 @@ public class Agent extends DBObject implements Favorite
         return false;
     // Do not be case sensitive when checking titles!! We got a bunch of complaints about this on our forums.
     // Don't let null titles match all the Favorites!
-    if (title != null && (s.title == null || (s.title != null && title != s.title && !title.toString().equalsIgnoreCase(s.title.toString()))))
+    if (title != null && (s.title == null || !title.equalsIgnoreCase(s.title)))
       return false;
     if ((agentMask & FIRSTRUN_MASK) == FIRSTRUN_MASK && !air.isFirstRun())
       return false;
@@ -607,7 +607,7 @@ public class Agent extends DBObject implements Favorite
     {
       int i = 0;
       for (; i < s.people.length; i++)
-        if ((person == s.people[i] || person.name.equalsIgnoreCase(s.people[i].name)) && (role == Show.ALL_ROLES || role == 0 || role == s.roles[i]))
+        if ((person == s.people[i] || person.equalsIgnoreCase(s.people[i])) && (role == Show.ALL_ROLES || role == 0 || role == s.roles[i]))
           break;
       if (i == s.people.length) return false;
     }
@@ -656,7 +656,8 @@ public class Agent extends DBObject implements Favorite
     if ((agentMask & LOVE_MASK) == 0 && (agentMask & TITLE_MASK) == 0)
     {
       // Non-title tracks only match English language shows
-      if (s.language != null && !"English".equalsIgnoreCase(s.language.name) && !"en".equalsIgnoreCase(s.language.name))
+      if (s.language != null && s.language.name != null &&
+        !s.language.equalsIgnoreCase("english") && !s.language.equalsIgnoreCase("en"))
         return false;
     }
 

@@ -1013,11 +1013,11 @@ public class LocatorRegistrationClient implements Runnable, LocatorConstants
     // We need to get the folder based on file type
     java.io.File[] libFolders = null;
     if (theMedia.mediaType == PICTURE_TYPE)
-      libFolders = sage.Seeker.getInstance().getArchiveDirectories(sage.Seeker.PICTURE_DIR_MASK);
+      libFolders = sage.SeekerSelector.getInstance().getArchiveDirectories(sage.Seeker.PICTURE_DIR_MASK);
     else if (theMedia.mediaType == AUDIO_TYPE)
-      libFolders = sage.Seeker.getInstance().getArchiveDirectories(sage.Seeker.MUSIC_DIR_MASK);
+      libFolders = sage.SeekerSelector.getInstance().getArchiveDirectories(sage.Seeker.MUSIC_DIR_MASK);
     else
-      libFolders = sage.Seeker.getInstance().getArchiveDirectories(sage.Seeker.VIDEO_DIR_MASK);
+      libFolders = sage.SeekerSelector.getInstance().getArchiveDirectories(sage.Seeker.VIDEO_DIR_MASK);
 
     return new java.io.File(libFolders[0], sage.Sage.rez("From_User", new Object[] { fromUser }) + java.io.File.separatorChar + theMedia.relativePath);
   }

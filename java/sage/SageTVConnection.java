@@ -15,8 +15,6 @@
  */
 package sage;
 
-import sage.plugin.PluginEventManager;
-
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -999,7 +997,7 @@ public class SageTVConnection implements Runnable, Wizard.XctSyncClient, Carny.P
     if (theAir != null)
     {
       int[] watchError = new int[1];
-      watchFile = Seeker.getInstance().requestWatch(theAir, watchError, requestor);
+      watchFile = SeekerSelector.getInstance().requestWatch(theAir, watchError, requestor);
       if (watchFile != null)
         rv = 0;
       else
@@ -1024,7 +1022,7 @@ public class SageTVConnection implements Runnable, Wizard.XctSyncClient, Carny.P
     if (mf != null)
     {
       int[] watchError = new int[1];
-      watchFile = Seeker.getInstance().requestWatch(mf, watchError, requestor);
+      watchFile = SeekerSelector.getInstance().requestWatch(mf, watchError, requestor);
       if (watchFile != null)
         rv = 0;
       else
@@ -1042,7 +1040,7 @@ public class SageTVConnection implements Runnable, Wizard.XctSyncClient, Carny.P
   {
     java.io.DataInputStream dis = new java.io.DataInputStream(new java.io.ByteArrayInputStream(myMsg.data));
     UIClient requestor = new RemoteUI(dis.readUTF());
-    Seeker.getInstance().finishWatch(requestor);
+    SeekerSelector.getInstance().finishWatch(requestor);
     return new Msg(RESPONSE_MSG, myMsg.type, null, myMsg.id);
   }
 
@@ -1052,7 +1050,7 @@ public class SageTVConnection implements Runnable, Wizard.XctSyncClient, Carny.P
     UIClient requestor = new RemoteUI(dis.readUTF());
     String chanString = dis.readUTF();
     String mmcInputName = dis.readUTF();
-    int rv = Seeker.getInstance().forceChannelTune(mmcInputName, chanString, requestor);
+    int rv = SeekerSelector.getInstance().forceChannelTune(mmcInputName, chanString, requestor);
     byte[] data = new byte[4];
     writeIntBytes(rv, data, 0);
     return new Msg(RESPONSE_MSG, myMsg.type, data, myMsg.id);
@@ -1110,22 +1108,22 @@ public class SageTVConnection implements Runnable, Wizard.XctSyncClient, Carny.P
 
     if (totalFileSize > freeSpace)
     {
-      if (!Sage.WINDOWS_OS || Seeker.getInstance().isPathInManagedStorage(destFile))
+      if (!Sage.WINDOWS_OS || SeekerSelector.getInstance().isPathInManagedStorage(destFile))
       {
         // Make a storage request with Seeker to get the space we need, and then see if we've got the space
         // now and then cancel the request.
         if (Sage.DBG) System.out.println("Requesting Seeker to clear up " + ((totalFileSize - freeSpace)/1000000) + "MB worth of space");
-        java.io.File tempFile = Seeker.getInstance().requestDirectoryStorage("scratch", totalFileSize - freeSpace);
-        synchronized (Seeker.getInstance())
+        java.io.File tempFile = SeekerSelector.getInstance().requestDirectoryStorage("scratch", totalFileSize - freeSpace);
+        synchronized (SeekerSelector.getInstance())
         {
-          Seeker.getInstance().kick();
+          SeekerSelector.getInstance().kick();
           try
           {
-            Seeker.getInstance().wait(5000);
+            SeekerSelector.getInstance().wait(5000);
           }catch (InterruptedException e){}
         }
         freeSpace = Sage.getDiskFreeSpace(destFile.getAbsolutePath());
-        Seeker.getInstance().clearDirectoryStorageRequest(tempFile);
+        SeekerSelector.getInstance().clearDirectoryStorageRequest(tempFile);
         if (totalFileSize > freeSpace)
         {
           System.out.println("ERROR Unable to clear up enough free space for library import");
@@ -1177,7 +1175,7 @@ public class SageTVConnection implements Runnable, Wizard.XctSyncClient, Carny.P
     java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
     java.io.DataOutputStream dos = new java.io.DataOutputStream(baos);
 
-    Object[] schedAirs = Seeker.getInstance().getScheduledAirings();
+    Object[] schedAirs = SeekerSelector.getInstance().getScheduledAirings();
     dos.writeInt(schedAirs.length);
     for (int i = 0; i < schedAirs.length; i++)
     {
@@ -1193,7 +1191,7 @@ public class SageTVConnection implements Runnable, Wizard.XctSyncClient, Carny.P
 
   private Msg recvGetCurrRecordFiles(Msg myMsg) throws java.io.IOException
   {
-    MediaFile[] mfs = Seeker.getInstance().getCurrRecordFiles();
+    MediaFile[] mfs = SeekerSelector.getInstance().getCurrRecordFiles();
     byte[] data = new byte[4*(mfs.length + 1)];
     int offset = 0;
     writeIntBytes(mfs.length, data, 0);
@@ -1210,7 +1208,7 @@ public class SageTVConnection implements Runnable, Wizard.XctSyncClient, Carny.P
   {
     java.io.DataInputStream dis = new java.io.DataInputStream(new java.io.ByteArrayInputStream(myMsg.data));
     UIClient requestor = new RemoteUI(dis.readUTF());
-    MediaFile mf = Seeker.getInstance().getCurrRecordFileForClient(requestor);
+    MediaFile mf = SeekerSelector.getInstance().getCurrRecordFileForClient(requestor);
     byte[] data = new byte[4];
     writeIntBytes((mf == null) ? 0 : mf.id, data, 0);
     return new Msg(RESPONSE_MSG, myMsg.type, data, myMsg.id);
@@ -1219,7 +1217,7 @@ public class SageTVConnection implements Runnable, Wizard.XctSyncClient, Carny.P
   // This is a broadcast message, no response is needed
   private void recvScheduleChanged(Msg myMsg) throws java.io.IOException
   {
-    Scheduler.getInstance().setClientDontKnowFlag(myMsg.data[0] != 0);
+    SchedulerSelector.getInstance().setClientDontKnowFlag(myMsg.data[0] != 0);
     Catbert.distributeHookToLocalUIs("RecordingScheduleChanged", null);
 
     // Not the most efficient way in the world, but much easier than the other options
@@ -1278,7 +1276,7 @@ public class SageTVConnection implements Runnable, Wizard.XctSyncClient, Carny.P
     int airID = convertToLocalDBID(dis.readInt());
     Airing theAir = Wizard.getInstance().getAiringForID(airID);
     if (theAir != null)
-      rv = Seeker.getInstance().record(theAir, requestor);
+      rv = SeekerSelector.getInstance().record(theAir, requestor);
     else
       rv = VideoFrame.WATCH_FAILED_NULL_AIRING;
     byte[] data = new byte[4];
@@ -1295,7 +1293,7 @@ public class SageTVConnection implements Runnable, Wizard.XctSyncClient, Carny.P
     Airing theAir = Wizard.getInstance().getAiringForID(airID);
     if (theAir != null)
     {
-      Seeker.getInstance().cancelRecord(theAir, requestor);
+      SeekerSelector.getInstance().cancelRecord(theAir, requestor);
       rv = true;
     }
     else
@@ -1319,11 +1317,11 @@ public class SageTVConnection implements Runnable, Wizard.XctSyncClient, Carny.P
     int rv;
     if (mr != null)
     {
-      rv = Seeker.getInstance().modifyRecord(startTime-mr.startTime, endTime-mr.getEndTime(), mr, requestor);
+      rv = SeekerSelector.getInstance().modifyRecord(startTime-mr.startTime, endTime-mr.getEndTime(), mr, requestor);
     }
     else
     {
-      rv = Seeker.getInstance().timedRecord(startTime, endTime, stationID, recurCode, air, requestor);
+      rv = SeekerSelector.getInstance().timedRecord(startTime, endTime, stationID, recurCode, air, requestor);
     }
     byte[] data = new byte[4];
     writeIntBytes(rv, data, 0);
@@ -2992,7 +2990,7 @@ public class SageTVConnection implements Runnable, Wizard.XctSyncClient, Carny.P
     try
     {
       byte[] data = new byte[1];
-      data[0] = (byte) (Scheduler.getInstance().areThereDontKnows() ? 1 : 0);
+      data[0] = (byte) (SchedulerSelector.getInstance().areThereDontKnows() ? 1 : 0);
       postMessage(new Msg(BROADCAST_MSG, SCHEDULE_CHANGED, data));
     }
     catch (Exception e)

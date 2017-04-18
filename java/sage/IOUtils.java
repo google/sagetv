@@ -137,7 +137,7 @@ public class IOUtils
     {
       if (kids[i].isFile())
       {
-        if (includeAllFileTypes || Seeker.getInstance().hasImportableFileExtension(kids[i].getName()))
+        if (includeAllFileTypes || SeekerSelector.getInstance().hasImportableFileExtension(kids[i].getName()))
           rv.add(kids[i]);
       }
       else if (kids[i].isDirectory())
