@@ -4156,7 +4156,7 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
           }
         }
 
-        Airing newRecord;
+        Airing newRecord = null;
         boolean autopilot = es.controllingClients.isEmpty();
         Airing defaultRecord = es.currRecord;
         boolean switchThis = false;
