@@ -149,6 +149,8 @@ public class MediaFile extends DBObject implements SegmentedFile
 
   static boolean MAKE_ALL_MEDIAFILES_LOCAL = false;
   static final String MAKE_ALL_MEDIAFILES_LOCAL_PROP = "make_all_mediafiles_local";
+  private static Boolean ffmpegSupportsVF = null;
+  private static Boolean ffmpegSupportsSkipNonKeys = null;
 
   static final Map<CaptureDeviceInput, MediaFile> liveFileMap =
       new HashMap<CaptureDeviceInput, MediaFile>();
@@ -5383,6 +5385,7 @@ public class MediaFile extends DBObject implements SegmentedFile
               if ((!imageThumbFile.isFile() || imageThumbFile.length() == 0) && (targetTime > 0 || !Sage.EMBEDDED))
               {
                 // Creation failed, but we used an offset time so try again without an offset
+                if (Sage.DBG) System.out.println("MediaFile using no-offset thumbnail method to create " + imageThumbFile + " for " + MediaFile.this);
                 res = execVideoThumbGen(pathString, deinterlaceGen, 0, finalThumbWidth, finalThumbHeight, false, imageThumbFile, -1);
               }
               thumbnailLoadState = 2;
@@ -5496,6 +5499,29 @@ public class MediaFile extends DBObject implements SegmentedFile
       int targetStream)
   {
     List<String> args = new ArrayList<String>(25);
+    String res;
+    synchronized (this)
+    {
+      if (ffmpegSupportsVF == null || ffmpegSupportsSkipNonKeys == null)
+      {
+        // Check if FFMPEG supports -vf and the preferred -skip_ options because
+        // several versions were distributed and some do not support these features
+        args.add(Sage.EMBEDDED ? "./ffmpegjpeg" : FFMPEGTranscoder.getTranscoderPath());
+        args.add("-h");
+        res = IOUtils.exec(args.toArray(Pooler.EMPTY_STRING_ARRAY), true, true, true);
+        ffmpegSupportsVF = res.contains("-vf ");
+        ffmpegSupportsSkipNonKeys = (res.contains("-skip_frame ") && res.contains("-skip_idct ") && res.contains("-skip_loop_filter "));
+        if (Sage.DBG) System.out.println("FFMPEG thumbnail option check: ffmpegSupportsVF=" + String.valueOf(ffmpegSupportsVF) + " ffmpegSupportsSkipNonKeys=" + String.valueOf(ffmpegSupportsSkipNonKeys));
+        args.clear();
+      }
+    }
+    // Return if skipNonKeys is specified but not supported by FFMPEG, instead
+    // of executing it with invalid options
+    if (skipNonKeys && !ffmpegSupportsSkipNonKeys)
+    {
+      res="skipNonKeys options not supported by ffmpeg";
+      return res;
+    }
     if (Sage.LINUX_OS || Sage.MAC_OS_X)
       args.add("nice");
     args.add(Sage.EMBEDDED ? "./ffmpegjpeg" : FFMPEGTranscoder.getTranscoderPath());
@@ -5528,18 +5554,18 @@ public class MediaFile extends DBObject implements SegmentedFile
     if (deinterlace)
       args.add("-deinterlace");
     // New version of FFMPEG requires using libavfilter for cropping
-    if (!Sage.EMBEDDED)
+    if (ffmpegSupportsVF && !Sage.EMBEDDED)
     {
       args.add("-vf");
       args.add("crop=0:8:0:0,scale=" + width + ":" + height);
     }
-    args.add("-vframes");
-    args.add("1");
-    if (Sage.EMBEDDED)
+    else
     {
       args.add("-s");
       args.add(width + "x" + height);
     }
+    args.add("-vframes");
+    args.add("1");
     args.add("-an");
     // Our optimized mode sets skipNonKeys to true...but if that fails just grab the first frame so we don't do a huge search again
     if (!Sage.EMBEDDED)
@@ -5570,7 +5596,7 @@ public class MediaFile extends DBObject implements SegmentedFile
     args.add("-vsync");
     args.add("0");
     args.add(IOUtils.getLibAVFilenameString(imageThumbFile.toString()));
-    String res = IOUtils.exec(args.toArray(Pooler.EMPTY_STRING_ARRAY), true, true, true);
+    res = IOUtils.exec(args.toArray(Pooler.EMPTY_STRING_ARRAY), true, true, true);
     return res;
   }
 
