@@ -976,8 +976,6 @@ public final class Carny implements Runnable
     Set<Airing> blackBalled = Collections.synchronizedSet(new HashSet<Airing>());
 
     DBObject[] allAgents = wiz.getRawAccess(Wizard.AGENT_CODE, (byte) 0);
-    // This is now a local thread variable so we can multithread the agent work.
-    //final DBObject[] allAgents = wiz.getRawAccess(Wizard.AGENT_CODE, (byte) 0);
     Set<Airing> newLoveAirSet = Collections.synchronizedSet(new HashSet<Airing>());
 
     // We don't track music at all (that used to be in Agent.followsTrend)
