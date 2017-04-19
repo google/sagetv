@@ -21,6 +21,7 @@ import sage.media.format.BitstreamFormat;
 import sage.media.format.ContainerFormat;
 import sage.media.format.FormatParser;
 import sage.media.format.ID3Parser;
+import sage.media.format.MPEGParser;
 import sage.media.format.MediaFormat;
 import sage.media.format.SubpictureFormat;
 import sage.media.format.VideoFormat;
