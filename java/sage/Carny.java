@@ -1061,6 +1061,14 @@ public final class Carny implements Runnable
       totalThreads = submittedAgents == 0 ? 0 :
         Math.min(PROCESSOR_COUNT, Math.max(1, submittedAgents / 75));
     }
+    // This is an unlikely number that will not break things like some crazy number someone might
+    // set or an bad value returned for the processor count. There is known contention between the
+    // threads since they all want to modify several common objects, so at some point there will be
+    // diminishing returns. This could be an argument for concurrent objects, but nothing is
+    // iterating the collections/maps while they are being modified and in real world testing the
+    // contention does not cause any measurable performance loss.
+    if (totalThreads > 64)
+      totalThreads = 64;
     // Start/resume all of the agent worker threads.
     for (int i = 0; i < totalThreads; i++)
     {
