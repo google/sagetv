@@ -519,6 +519,9 @@ public class Agent extends DBObject implements Favorite
     }
     else
     {
+      // We need a copy of the list before we make changes to ensure that the long route will be
+      // starting with the exact same data.
+      List<Airing> fullTrend = VERIFY_AIRING_OPTIMIZATION ? new ArrayList<Airing>(followsTrend) : null;
       int[] hashes = getHashes();
       for (int i = -1, hashesSize = hashes.length; i < hashesSize; i++)
       {
@@ -571,10 +574,9 @@ public class Agent extends DBObject implements Favorite
       {
         // If we don't provide a map, a full search is always executed. Also don't provide the cache
         // or we will overwrite the results of this first run.
-        List<Airing> fullTrend = Arrays.asList(optimizedFollowsTrend(
-          mustBeViewable, controlCPUUsage, sbCache, skipKeyword, -1, null, allAirings, null, mapName));
+        optimizedFollowsTrend(mustBeViewable, controlCPUUsage, sbCache, skipKeyword, -1, null, allAirings, fullTrend, mapName);
 
-        if (fullTrend != null && !fullTrend.equals(followsTrend))
+        if (!followsTrend.equals(fullTrend))
         {
           Set<Airing> diffs = new HashSet<>(followsTrend);
           diffs.removeAll(fullTrend);
@@ -614,10 +616,12 @@ public class Agent extends DBObject implements Favorite
             }
 
             ignoredHashes.removeAll(usedHashes);
+
+            // If we have no ignored hashes, then we have something we are not hashing or not
+            // hashing correctly.
             stringBuilder.append("Ignored Hashes: ").append(ignoredHashes).append("\r\n");
             stringBuilder.append("Used Hashes: ").append(usedHashes).append("\r\n");
             stringBuilder.append("Searched Hashes: ").append(searchedHashes).append("\r\n");
-
             System.out.println(stringBuilder.toString());
           }
         }
@@ -752,6 +756,8 @@ public class Agent extends DBObject implements Favorite
   public boolean isReRunsOnly() { return (agentMask & RERUN_MASK) == RERUN_MASK; }
   public boolean firstRunsAndReruns() { return !isFirstRunsOnly() && !isReRunsOnly(); }
   public String getTitle() { return (title == null) ? "" : title.name; }
+  // Title to be compared must be lowercase.
+  public boolean isSameTitle(String title) { return (title == null) ? false : title.equalsIgnoreCase(title); }
   public String getCategory() { return (category == null) ? "" : category.name; }
   public String getSubCategory() { return (subCategory == null) ? "" : subCategory.name; }
   public String getPerson() { return (person == null) ? "" : person.name; }
@@ -1568,13 +1574,14 @@ public class Agent extends DBObject implements Favorite
     return (Properties) favProps.clone();
   }
 
-  void resetHashes()
+  synchronized void resetHashes()
   {
     hashes = Pooler.EMPTY_INT_ARRAY;
   }
 
-  // This keeps us from looking this up on every Carny run.
-  int[] getHashes()
+  // We need to synchronize here or the properties could be updated and we'll end up writing the
+  // the wrong hashes.
+  synchronized int[] getHashes()
   {
     int[] newHashes = hashes;
     if (newHashes != Pooler.EMPTY_INT_ARRAY)
@@ -1693,5 +1700,5 @@ public class Agent extends DBObject implements Favorite
   private transient Wizard wiz;
   private transient boolean negator = false;
   // This is set by whatever thread gets it first, so it must be volatile.
-  private volatile transient int[] hashes = Pooler.EMPTY_INT_ARRAY;
+  private transient int[] hashes = Pooler.EMPTY_INT_ARRAY;
 }

@@ -152,7 +152,7 @@ public class SDRecommended
   {
     int alreadyExists = 0;
     List<SDEditorial> returnValues = new ArrayList<>();
-    Agent favorites[] = Wizard.getInstance().getFavorites();
+    Agent agents[] = Wizard.getInstance().getFavorites();
     TVEditorial currentEditorials[] = Wizard.getInstance().getEditorials();
     for (SDEditorial editorial : editorials)
     {
@@ -181,9 +181,13 @@ public class SDRecommended
       // titles or would have been recorded due to other rules, but we aren't too concerned about
       // that.
       boolean skip = false;
-      for (Agent favorite : favorites)
+      String lowerTitle = title.toLowerCase();
+      for (Agent agent : agents)
       {
-        if (favorite.getTitle().equals(title))
+        if (agent.testAgentFlag(Agent.DISABLED_FLAG))
+          continue;
+
+        if (agent.isSameTitle(lowerTitle))
         {
           skip = true;
           break;
