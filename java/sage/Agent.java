@@ -21,10 +21,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -38,8 +41,8 @@ public class Agent extends DBObject implements Favorite
   private static final int MIN_TOTAL = 2;
   private static final float MIN_WATCH_PROB = 0f;
   private static final float MAX_WATCH_PROB = 0.99f;
-
-  private static final boolean ENABLE_AGENT_AIRING_CACHE = false;
+  // Enables checking all airings against the optimized airings. This is for testing only.
+  private static final boolean VERIFY_AIRING_OPTIMIZATION = false;
 
   private static final int CPU_CONTROL_MOD_COUNT = Sage.getInt("profiler_cpu_mod_count", Sage.EMBEDDED ? 2500 : 25000);
 
@@ -191,6 +194,7 @@ public class Agent extends DBObject implements Favorite
     {
       buildFavProps(in.readUTF());
     }
+    resetHashes();
   }
 
   private void buildFavProps(String str)
@@ -429,64 +433,264 @@ public class Agent extends DBObject implements Favorite
     }
   }
 
+  private boolean binarySearchContains(List<? extends DBObject> list, int start, int end, DBObject key)
+  {
+    int low = start;
+    int high = end - 1;
+
+    while (low <= high) {
+      int mid = (low + high) >>> 1;
+      DBObject midVal = list.get(mid);
+      int cmp = midVal.getID() - key.getID();
+
+      if (cmp < 0)
+        low = mid + 1;
+      else if (cmp > 0)
+        high = mid - 1;
+      else
+        return true;
+    }
+
+    if (VERIFY_AIRING_OPTIMIZATION && list.contains(key))
+    {
+      StringBuilder stringBuilder = new StringBuilder("FAILED: to match what should have matched: ");
+      stringBuilder.append(key.getID()).append("is in: ");
+      for (DBObject o : list)
+        stringBuilder.append(o.getID()).append(',');
+      System.out.println(stringBuilder);
+    }
+
+    return false;
+  }
+
+  // We can use any of these to narrow down a keyword or timeslot search. We should often be able to
+  // at least limit the search to a channel, channels, first runs or reruns.
+  private boolean hasSpecificCriteria()
+  {
+    return title != null || testAgentFlag(Agent.FIRSTRUN_MASK) || testAgentFlag(Agent.RERUN_MASK) ||
+      person != null || category != null || subCategory != null || chanName.length() > 0 ||
+      (chanNames != null && chanNames.length > 0) || network != null || rated != null ||
+      year != null || pr != null;
+  }
+
+  private Airing[] optimizedFollowsTrend(boolean mustBeViewable, boolean controlCPUUsage,
+                                         StringBuffer sbCache, boolean skipKeyword,
+                                         int binarySearchEnd, Map<Integer, Airing[]> airingMap,
+                                         DBObject allAirings[], List<Airing> airWorkCache, String mapName)
+  {
+    List<Airing> followsTrend;
+    if (airWorkCache == null)
+      followsTrend = new ArrayList<>();
+    else
+      followsTrend = airWorkCache;
+
+    // For keyword and timeslot trends with no other limiting factors, we need to check everything
+    // since we haven't worked out a way to optimize this yet. Fortunately these are not as common
+    // as title and people agents.
+    if ((((!skipKeyword && keyword.length() > 0) ||
+      (slotType != 0 && timeslots != null && timeslots.length > 0)) &&
+        !hasSpecificCriteria()) || airingMap == null)
+    {
+      // This is here to help spell out any anything that's not being optimized when we are testing.
+      if (VERIFY_AIRING_OPTIMIZATION && airingMap != null)
+      {
+        if (Sage.DBG) System.out.println("Unable to use optimized query: " + toString());
+      }
+
+      for (int i = 0; i < allAirings.length; i++)
+      {
+        Airing airing = (Airing) allAirings[i];
+        if (binarySearchEnd != -1)
+        {
+          if (!binarySearchContains(followsTrend, 0, binarySearchEnd, airing) &&
+            followsTrend(airing, mustBeViewable, sbCache, skipKeyword))
+          {
+            followsTrend.add(airing);
+          }
+        }
+        else if (followsTrend(airing, mustBeViewable, sbCache, skipKeyword))
+        {
+          followsTrend.add(airing);
+        }
+
+        if ((i % CPU_CONTROL_MOD_COUNT) == 0 && controlCPUUsage)
+          try {Thread.sleep(Carny.SLEEP_PERIOD);} catch (Exception e) {}
+      }
+    }
+    else
+    {
+      int[] hashes = getHashes();
+      for (int i = -1, hashesSize = hashes.length; i < hashesSize; i++)
+      {
+        Airing airings[];
+        if (i != -1)
+        {
+          airings = airingMap.get(hashes[i]);
+        }
+        else
+        {
+          // Hash code 0 is special and covers anything that might not have been correctly hashed,
+          // so we always need to check these.
+          airings = airingMap.get(0);
+        }
+
+        if (airings == null)
+          continue;
+
+        int initialSize = followsTrend.size();
+
+        // Anything has incorporates more than one array will incur the contains performance
+        // penalty for the sake of reduced garbage collection. It really depends on the agent on
+        // if it would be faster to check contains or just run followsTrend.
+        for (int j = 0, airingLength = airings.length; j < airingLength; j++)
+        {
+          Airing airing = airings[j];
+          // If we get airings from more than one array, we could have duplicates. It appears
+          if (initialSize == 0 && followsTrend(airing, mustBeViewable, sbCache, skipKeyword))
+          {
+            followsTrend.add(airing);
+          }
+          else
+          {
+            if (!binarySearchContains(followsTrend, 0, followsTrend.size(), airing) &&
+              followsTrend(airing, mustBeViewable, sbCache, skipKeyword))
+            {
+              followsTrend.add(airing);
+              // This turns out to not be nearly as expensive as not being about to do binary
+              // searches for duplicate airings.
+              Collections.sort(followsTrend, DBObject.ID_COMPARATOR);
+            }
+          }
+        }
+
+        if (initialSize == 0)
+          Collections.sort(followsTrend, DBObject.ID_COMPARATOR);
+      }
+
+      if (VERIFY_AIRING_OPTIMIZATION)
+      {
+        // If we don't provide a map, a full search is always executed. Also don't provide the cache
+        // or we will overwrite the results of this first run.
+        List<Airing> fullTrend = Arrays.asList(optimizedFollowsTrend(
+          mustBeViewable, controlCPUUsage, sbCache, skipKeyword, -1, null, allAirings, null, mapName));
+
+        if (fullTrend != null && !fullTrend.equals(followsTrend))
+        {
+          Set<Airing> diffs = new HashSet<>(followsTrend);
+          diffs.removeAll(fullTrend);
+          if (diffs.size() > 0)
+          {
+            // This process is multi-threaded, so we insert our own new lines to ensure all of
+            // of the desired details will be adjacent.
+            StringBuilder stringBuilder = new StringBuilder("Trend optimized map ");
+            stringBuilder.append(mapName);
+            stringBuilder.append(" for agent ").append(toString()).append(" is missing ").append("\r\n");
+            stringBuilder.append(diffs).append("\r\n");
+            Set<Integer> usedHashes = new HashSet<>();
+            Set<Integer> ignoredHashes = new HashSet<>();
+            Set<Integer> searchedHashes = new HashSet<>();
+            for (int hash : hashes)
+              searchedHashes.add(hash);
+
+            main_loop:
+            for (Airing diff : diffs)
+            {
+              Set<Integer> thisAirHashes = new HashSet<>();
+              for (Map.Entry<Integer, Airing[]> entry : airingMap.entrySet())
+              {
+                if (searchedHashes.contains(entry.getKey()))
+                {
+                  usedHashes.add(entry.getKey());
+                  continue main_loop;
+                }
+
+                // This is used for testing, so we are choosing convenience over performance.
+                if (Arrays.asList(entry.getValue()).contains(diff))
+                {
+                  thisAirHashes.add(entry.getKey());
+                }
+              }
+              ignoredHashes.addAll(thisAirHashes);
+            }
+
+            ignoredHashes.removeAll(usedHashes);
+            stringBuilder.append("Ignored Hashes: ").append(ignoredHashes).append("\r\n");
+            stringBuilder.append("Used Hashes: ").append(usedHashes).append("\r\n");
+            stringBuilder.append("Searched Hashes: ").append(searchedHashes).append("\r\n");
+
+            System.out.println(stringBuilder.toString());
+          }
+        }
+      }
+    }
+
+    return airWorkCache == null ? followsTrend.toArray(Pooler.EMPTY_AIRING_ARRAY) : Pooler.EMPTY_AIRING_ARRAY;
+  }
+
   /*
    * The related airings don't change unless there's an update to the DB, so
    * cache this call.
    * This gets called from the AgentBrowser GUI as well as the Carny's main
    * thread, that's why it needs to be synced.
    */
-  public synchronized Airing[] getRelatedAirings(DBObject[] allAirs, boolean mainCache, boolean controlCPUUsage,
-      StringBuffer sbCache)
+  public Airing[] getRelatedAirings(DBObject[] allAirs, boolean mainCache,
+                                                 boolean controlCPUUsage, StringBuffer sbCache)
+  {
+    return getRelatedAirings(allAirs, mainCache, controlCPUUsage, sbCache, null, null);
+  }
+
+  // If the airings to be returned are larger than the airWorkCache, we return a new array.
+  public Airing[] getRelatedAirings(DBObject[] allAirs, boolean mainCache,
+                                    boolean controlCPUUsage, StringBuffer sbCache,
+                                    Map<Integer, Airing[]> airingMap,
+                                    List<Airing> airWorkCache)
   {
     if (allAirs == null) return Pooler.EMPTY_AIRING_ARRAY;
 
-    if (ENABLE_AGENT_AIRING_CACHE)
-    {
-      if (mainCache)
-      {
-        if (relAirCache != null && cacheTimestamp > wiz.getLastModified())
-          return relAirCache;
-        cacheTimestamp = Sage.time();
-      }
-      else
-      {
-        if (relAirCache2 != null && cacheTimestamp2 > wiz.getLastModified())
-          return relAirCache2;
-        cacheTimestamp2 = Sage.time();
-      }
-    }
+    List<Airing> rv = airWorkCache;
+    if (rv == null)
+      rv = new ArrayList<Airing>();
+    else
+      rv.clear();
 
-    ArrayList<Airing> rv = new ArrayList<Airing>();
     boolean keywordTest = (this.agentMask&(KEYWORD_MASK)) == (KEYWORD_MASK) &&
         !Sage.getBoolean("use_legacy_keyword_favorites", true);
-    if(keywordTest) {
+    if(keywordTest)
+    {
       // If we're only doing a keyword mask, speed it up via Lucene
       Show[] shows = wiz.searchShowsByKeyword(getKeyword());
-      for (Show show : shows) {
+      for (Show show : shows)
+      {
         Airing[] airings = wiz.getAirings(show, 0);
-        for(Airing a : airings) {
+        for (Airing a : airings)
+        {
           if (followsTrend(a, true, sbCache, true))
             rv.add(a);
         }
       }
-    } else {
-      for (int i = 0; i < allAirs.length; i++)
+    }
+    else
+    {
+      if (airingMap != null)
       {
-        Airing a = (Airing) allAirs[i];
-        if (a == null) continue;
-        if (followsTrend(a, true, sbCache))
-          rv.add(a);
-        if ((i % CPU_CONTROL_MOD_COUNT) == 0 && controlCPUUsage)
-          try{Thread.sleep(Carny.SLEEP_PERIOD);}catch(Exception e){}
+        optimizedFollowsTrend(true, controlCPUUsage, sbCache, false, -1, airingMap, allAirs, rv, "allAirs");
+      }
+      else
+      {
+        for (int i = 0; i < allAirs.length; i++)
+        {
+          Airing a = (Airing) allAirs[i];
+          if (a == null) continue;
+          if (followsTrend(a, true, sbCache))
+            rv.add(a);
+          if ((i % CPU_CONTROL_MOD_COUNT) == 0 && controlCPUUsage)
+            try {Thread.sleep(Carny.SLEEP_PERIOD);} catch (Exception e) {}
+        }
       }
     }
-    if (ENABLE_AGENT_AIRING_CACHE)
-    {
-      if (mainCache)
-        return (relAirCache = rv.toArray(Pooler.EMPTY_AIRING_ARRAY));
-      else
-        return (relAirCache2 = rv.toArray(Pooler.EMPTY_AIRING_ARRAY));
-    }
+
+    if (airWorkCache != null)
+      return Pooler.EMPTY_AIRING_ARRAY;
     else
       return rv.toArray(Pooler.EMPTY_AIRING_ARRAY);
   }
@@ -513,9 +717,6 @@ public class Agent extends DBObject implements Favorite
 
   synchronized void update(DBObject fromMe)
   {
-    // Clear the airings caches
-    cacheTimestamp = cacheTimestamp2 = 0;
-
     Agent bond = (Agent) fromMe;
     agentMask = bond.agentMask;
     createTime = bond.createTime;
@@ -543,6 +744,7 @@ public class Agent extends DBObject implements Favorite
       favProps = (Properties) bond.favProps.clone();
     else
       favProps = null;
+    resetHashes();
     super.update(fromMe);
   }
 
@@ -807,7 +1009,9 @@ public class Agent extends DBObject implements Favorite
   }
 
   // Returns false if it's an agent that shouldn't exist
-  boolean calcWatchProb(boolean controlCPUUsage, Airing[] airWorkCache, StringBuffer sbCache)
+  boolean calcWatchProb(boolean controlCPUUsage, List<Airing> airWorkCache, StringBuffer sbCache,
+                        Airing[] watchAirs, Map<Integer, Airing[]> watchAirsMap,
+                        Airing[] wastedAirs, Map<Integer, Airing[]> wastedAirsMap)
   {
     if ((agentMask & LOVE_MASK) == LOVE_MASK)
     {
@@ -821,6 +1025,13 @@ public class Agent extends DBObject implements Favorite
 
       return true;
     }
+
+    boolean unoptimized = wastedAirs == null || wastedAirs == null || wastedAirsMap == null || wastedAirsMap == null;
+    if (airWorkCache == null)
+      airWorkCache = new ArrayList<>();
+    else
+      airWorkCache.clear();
+
     // There's three different things that affect this calculation.
     // 1. The Airings that are declared Watched that follow this trend
     // 2. The Airings that are Wasted that follow this trend
@@ -832,57 +1043,91 @@ public class Agent extends DBObject implements Favorite
      * end of the array when we don't have overlap. We use a 'mergesort' type of scan to prevent overlap between
      * watched and wasted airings. We'll also need to track how many of them were Watched and how many were Wasted.
      */
-    int numWatchedAirs = 0;
-    int numWastedAirs = 0;
-    DBObject[] watches = wiz.getRawAccess(Wizard.WATCH_CODE, (byte) 0);
-    for (int i = 0; i < watches.length; i++)
+    if (unoptimized)
     {
-      Watched currWatch = (Watched) watches[i];
-      if (watches[i] != null && BigBrother.isFullWatch(currWatch))
+      DBObject[] watches = wiz.getRawAccess(Wizard.WATCH_CODE, (byte) 0);
+      for (int i = 0; i < watches.length; i++)
       {
-        Airing testA = currWatch.getAiring();
-        if (followsTrend(testA, false, sbCache))
+        Watched currWatch = (Watched) watches[i];
+        if (watches[i] != null && BigBrother.isFullWatch(currWatch))
         {
-          airWorkCache[numWatchedAirs++] = testA;
-        }
-      }
-      if (controlCPUUsage && (i % CPU_CONTROL_MOD_COUNT) == 0)
-        try{Thread.sleep(Carny.SLEEP_PERIOD);}catch(Exception e){}
-    }
-    Arrays.sort(airWorkCache, 0, numWatchedAirs, DBObject.ID_COMPARATOR);
-    DBObject[] waste = wiz.getRawAccess(Wizard.WASTED_CODE, (byte) 0);
-    int numManualWaste = 0;
-    int watchAirCompareIdx = 0;
-    for (int i = 0; i < waste.length; i++)
-    {
-      Wasted currWaste = (Wasted) waste[i];
-      if (waste[i] != null)
-      {
-        Airing testW = currWaste.getAiring();
-        if (followsTrend(testW, false, sbCache))
-        {
-          if (currWaste.manual)
-            numManualWaste++;
-          // Check for overlap with the Watches before we add it
-          int idDiff = 1;
-          while (watchAirCompareIdx < numWatchedAirs)
+          Airing testA = currWatch.getAiring();
+          if (followsTrend(testA, false, sbCache))
           {
-            idDiff = airWorkCache[watchAirCompareIdx].getID() - testW.getID();
-            if (idDiff < 0)
-            {
-              watchAirCompareIdx++;
-              idDiff = 1;
-            }
-            else
-              break;
+            airWorkCache.add(testA);
           }
-          if (idDiff > 0)
-            airWorkCache[numWatchedAirs + numWastedAirs++] = testW;
         }
+        if (controlCPUUsage && (i % CPU_CONTROL_MOD_COUNT) == 0)
+          try{Thread.sleep(Carny.SLEEP_PERIOD);}catch(Exception e){}
       }
-      if (controlCPUUsage && (i % CPU_CONTROL_MOD_COUNT) == 0)
-        try{Thread.sleep(Carny.SLEEP_PERIOD);}catch(Exception e){}
+
+      Collections.sort(airWorkCache, DBObject.ID_COMPARATOR);
     }
+    else
+    {
+      optimizedFollowsTrend(false, controlCPUUsage, sbCache, false, -1, watchAirsMap, watchAirs, airWorkCache, "watchAirsMap");
+    }
+
+    int numWatchedAirs = airWorkCache.size();
+
+    int numManualWaste = 0;
+    if (unoptimized)
+    {
+      // The binary search isn't saving us much time.
+      DBObject[] waste = wiz.getRawAccess(Wizard.WASTED_CODE, (byte) 0);
+      for (int i = 0; i < waste.length; i++)
+      {
+        Wasted currWaste = (Wasted) waste[i];
+        if (waste[i] != null)
+        {
+          Airing testW = currWaste.getAiring();
+          if (!binarySearchContains(airWorkCache, 0, numWatchedAirs, testW) &&
+            followsTrend(testW, false, sbCache))
+          {
+            if (currWaste.manual)
+              numManualWaste++;
+            airWorkCache.add(testW);
+          }
+        }
+        if (controlCPUUsage && (i % CPU_CONTROL_MOD_COUNT) == 0)
+          try{Thread.sleep(Carny.SLEEP_PERIOD);}catch(Exception e){}
+      }
+    }
+    else
+    {
+      optimizedFollowsTrend(false, controlCPUUsage, sbCache, false, airWorkCache.size(), wastedAirsMap, wastedAirs, airWorkCache, "wastedAirsMap");
+
+      // We need to start from the bottom or we will miss anything that was skipped because it was
+      // a duplicate.
+      for (int i = 0, airWorkCacheSize = airWorkCache.size(); i < airWorkCacheSize; i++)
+      {
+        Airing testW = airWorkCache.get(i);
+        Wasted currWasted = wiz.getWastedForAiring(testW);
+        if (currWasted == null)
+          continue;
+        if (currWasted.manual)
+          numManualWaste++;
+      }
+    }
+    int numWastedAirs = airWorkCache.size() - numWatchedAirs;
+
+
+    if (VERIFY_AIRING_OPTIMIZATION)
+    {
+      Set<Airing> test = new HashSet<>(airWorkCache);
+      if (test.size() != airWorkCache.size())
+      {
+        System.out.println("WARNING: List contains redundant values: " + test.size() + " != " + airWorkCache.size());
+        StringBuilder stringBuilder = new StringBuilder("Redundant list: ");
+        for (Airing airing : airWorkCache)
+        {
+          stringBuilder.append(airing.getID()).append(',');
+        }
+        System.out.println(stringBuilder);
+      }
+    }
+
+
 
     float watchCount = 0;
     int totalCount = 0;
@@ -897,9 +1142,9 @@ public class Agent extends DBObject implements Favorite
       titleWatchMap = new HashMap<Stringer, Float>();
       titleAllMap = new HashMap<Stringer, Integer>();
     }
-    for (int i = 0; i < numWatchedAirs + numWastedAirs; i++)
+    for (int i = 0, airWorkCacheSize = airWorkCache.size(); i < airWorkCacheSize; i++)
     {
-      Airing currAir = airWorkCache[i];
+      Airing currAir = airWorkCache.get(i);
       Show currShow = currAir.getShow();
       if (currShow == null) continue;
       Stringer theTit = null;
@@ -1149,8 +1394,6 @@ public class Agent extends DBObject implements Favorite
     return sb.toString().trim();
   }
 
-  void clearCache() { relAirCache = null; }
-
   public boolean isNegativeNelly()
   {
     return negator;
@@ -1325,6 +1568,96 @@ public class Agent extends DBObject implements Favorite
     return (Properties) favProps.clone();
   }
 
+  void resetHashes()
+  {
+    hashes = Pooler.EMPTY_INT_ARRAY;
+  }
+
+  // This keeps us from looking this up on every Carny run.
+  int[] getHashes()
+  {
+    int[] newHashes = hashes;
+    if (newHashes != Pooler.EMPTY_INT_ARRAY)
+      return newHashes;
+
+    // We don't need to include 0 because that's always assumed in look ups.
+    Set<Integer> searchedHashes = new HashSet<>();
+
+    if (title != null)
+    {
+      searchedHashes.add(title.ignoreCaseHash);
+    }
+
+    if (title == null)
+    {
+      if (testAgentFlag(Agent.FIRSTRUN_MASK))
+      {
+        searchedHashes.add(Agent.FIRSTRUN_MASK);
+      }
+      if (testAgentFlag(Agent.RERUN_MASK))
+      {
+        searchedHashes.add(Agent.RERUN_MASK);
+      }
+    }
+
+    if (person != null)
+    {
+      searchedHashes.add(person.ignoreCaseHash);
+    }
+
+    if (category != null)
+    {
+      searchedHashes.add(category.ignoreCaseHash);
+    }
+
+    if (subCategory != null)
+    {
+      searchedHashes.add(subCategory.ignoreCaseHash);
+    }
+
+    if (chanName.length() > 0)
+    {
+      searchedHashes.add(chanName.hashCode());
+    }
+
+    if (chanNames != null && chanNames.length > 0)
+    {
+      for (String chanName : chanNames)
+      {
+        searchedHashes.add(chanName.hashCode());
+      }
+    }
+
+    if (network != null)
+    {
+      searchedHashes.add(network.ignoreCaseHash);
+    }
+
+    if (rated != null)
+    {
+      searchedHashes.add(rated.ignoreCaseHash);
+    }
+
+    if (year != null)
+    {
+      searchedHashes.add(year.ignoreCaseHash);
+    }
+
+    if (pr != null)
+    {
+      searchedHashes.add(pr.ignoreCaseHash);
+    }
+
+    newHashes = new int[searchedHashes.size()];
+    int i = 0;
+    for (Integer hash : searchedHashes)
+    {
+      newHashes[i++] = hash;
+    }
+    hashes = newHashes;
+    return newHashes;
+  }
+
   final int agentID;
   int agentMask;
   transient float watchProb;
@@ -1358,9 +1691,7 @@ public class Agent extends DBObject implements Favorite
   private Matcher[] keywordMatchers;
   private String cachedKeywordForMats;
   private transient Wizard wiz;
-  private transient Airing[] relAirCache;
-  private transient long cacheTimestamp;
-  private transient Airing[] relAirCache2;
-  private transient long cacheTimestamp2;
   private transient boolean negator = false;
+  // This is set by whatever thread gets it first, so it must be volatile.
+  private volatile transient int[] hashes = Pooler.EMPTY_INT_ARRAY;
 }
