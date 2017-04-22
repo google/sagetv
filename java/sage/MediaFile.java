@@ -6281,7 +6281,9 @@ public class MediaFile extends DBObject implements SegmentedFile
   // This is null if we haven't parsed it yet or can't figure it out
   ContainerFormat fileFormat;
 
-  // This is null if we haven't promised anyone what the next segment name will be. This is a
+  // This is null if we have not guaranteed anyone what the next segment file name will be. This is
+  // the object returned when we need the next segment name before we actually want to add a new
+  // segment to the MediaFile.
   private NextSegmentGuarantee nextSegmentGuarantee;
 
   public static final Comparator<MediaFile> AIRING_ID_COMPARATOR =
