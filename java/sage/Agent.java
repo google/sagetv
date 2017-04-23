@@ -438,7 +438,8 @@ public class Agent extends DBObject implements Favorite
     int low = start;
     int high = end - 1;
 
-    while (low <= high) {
+    while (low <= high)
+    {
       int mid = (low + high) >>> 1;
       DBObject midVal = list.get(mid);
       int cmp = midVal.getID() - key.getID();
@@ -548,26 +549,59 @@ public class Agent extends DBObject implements Favorite
         for (int j = 0, airingLength = airings.length; j < airingLength; j++)
         {
           Airing airing = airings[j];
-          // If we get airings from more than one array, we could have duplicates. It appears
+          // If we get airings from more than one array, we could have duplicates. All of the arrays
+          // in the map are already binary sorted, so no sort is required initially.
           if (initialSize == 0 && followsTrend(airing, mustBeViewable, sbCache, skipKeyword))
           {
             followsTrend.add(airing);
           }
           else
           {
+            // This block works, but binary search is even faster even with the insertions needed to
+            // make it work reliably.
+            /*if (followsTrend(airing, mustBeViewable, sbCache, skipKeyword) &&
+              !followsTrend.contains(airing))
+            {
+              followsTrend.add(airing);
+            }*/
+
+            // This turns out to not be nearly as expensive as not being able to do binary
+            // searches for duplicate airings.
             if (!binarySearchContains(followsTrend, 0, followsTrend.size(), airing) &&
               followsTrend(airing, mustBeViewable, sbCache, skipKeyword))
             {
-              followsTrend.add(airing);
-              // This turns out to not be nearly as expensive as not being about to do binary
-              // searches for duplicate airings.
-              Collections.sort(followsTrend, DBObject.ID_COMPARATOR);
+              // We sort on each insert.
+              int size = followsTrend.size();
+
+              boolean contains = false;
+              int low = 0;
+              int high = size - 1;
+
+              while (low <= high)
+              {
+                int mid = (low + high) >>> 1;
+                DBObject midVal = followsTrend.get(mid);
+
+                int cmp = midVal.getID() - airing.getID();
+                if (cmp < 0)
+                  low = mid + 1;
+                else if (cmp > 0)
+                  high = mid - 1;
+                else
+                {
+                  contains = true;
+                  break; // duplicate!
+                }
+              }
+
+              // It's not in there already, so add it.
+              if (!contains)
+              {
+                followsTrend.add(low, airing);
+              }
             }
           }
         }
-
-        if (initialSize == 0)
-          Collections.sort(followsTrend, DBObject.ID_COMPARATOR);
       }
 
       if (VERIFY_AIRING_OPTIMIZATION)
@@ -576,7 +610,7 @@ public class Agent extends DBObject implements Favorite
         // or we will overwrite the results of this first run.
         optimizedFollowsTrend(mustBeViewable, controlCPUUsage, sbCache, skipKeyword, -1, null, allAirings, fullTrend, mapName);
 
-        if (!followsTrend.equals(fullTrend))
+        if (!fullTrend.equals(followsTrend))
         {
           Set<Airing> diffs = new HashSet<>(followsTrend);
           diffs.removeAll(fullTrend);
