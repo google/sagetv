@@ -1076,36 +1076,6 @@ public class Airing extends DBObject implements Schedulable
   };
 
   /**
-   * If scheduling start times are the same, sort by station ID. If the scheduling start times are
-   * different, sort by scheduling start time. Sorting is low to high.
-   */
-  public static final Comparator<Airing> SCHEDULE_CHANNEL_COMPARATOR =
-    new Comparator<Airing>()
-    {
-      public int compare(Airing a1, Airing a2)
-      {
-        if (a1 == a2)
-          return 0;
-        else if (a1 == null)
-          return 1;
-        else if (a2 == null)
-          return -1;
-
-        if (a1 instanceof ManualRecord.FakeAiring)
-          a1 = ((ManualRecord.FakeAiring) a1).getManualRecord().getContentAiring();
-        if (a2 instanceof ManualRecord.FakeAiring)
-          a2 = ((ManualRecord.FakeAiring) a2).getManualRecord().getContentAiring();
-
-        long s1 = a1.getSchedulingStart();
-        long s2 = a2.getSchedulingStart();
-
-        return (s1 == s2)
-          ? a1.stationID - a2.stationID
-          : Long.signum(s1 - s2);
-      }
-    };
-
-  /**
    * If station ID's are the same, the sort by start time. If station ID's are different, sort by
    * station ID. Sorting is low to high.
    */
