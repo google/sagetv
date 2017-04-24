@@ -257,7 +257,7 @@ public class IntBinarySet
     }
 
     fastAddInt(low, key);
-    return elementData[low];  // key not found.
+    return elementData[low];  // key added and returned.
   }
 
   private Integer binarySearchReturn(int key)
