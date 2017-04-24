@@ -15,6 +15,8 @@
  */
 package sage;
 
+import sage.util.IntBinarySet;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -958,35 +960,51 @@ public final class Carny implements Runnable
         0, null, null);
   }
 
+  // 1500 is chosen initially because we need to start with something and it should be a good value
+  // for lightly used installations. We then cache the last size we grew to if it's bigger so we
+  // don't need to keep re-allocating the array. This number generally doesn't change very often.
+  private int lastAgentInterestSize = 1500;
   // We first have all of the agents tell us what they will use if it's available. This way we don't
-  // waste time gathering mappings that nothing is actually going to use.
-  private Set<Integer> getAgentIntrests(List<Agent> agents)
+  // waste time and heap gathering mappings that nothing is actually going to use.
+  private IntBinarySet getAgentInterests(List<Agent> agents)
   {
-    Set<Integer> interests = new HashSet<>();
+    IntBinarySet interests = new IntBinarySet(lastAgentInterestSize);
     for (int i = 0, agentsLength = agents.size(); i < agentsLength; i++)
     {
       for (int hash : agents.get(i).getHashes())
       {
-        interests.add(hash);
+        interests.addInt(hash);
       }
     }
     // This is a special hash code for airings that the agent might not know it needs and it is
     // checked on all agents just in case.
-    interests.add(0);
+    interests.addInt(0);
+    // We are attempting to keep this number from becoming needlessly large or too precise. We could
+    // calculate this before allocating the set, but it seems to be faster to just guess even if we
+    // allocate too much or too little because the agents do not change that dramatically between
+    // runs.
+    lastAgentInterestSize = interests.size() + 10;
     return interests;
   }
 
-  private void addIfNeeded(Integer hash, Airing airing, Map<Integer, List<Airing>> buildMap, Collection<Integer> interested)
+  private void addIfNeeded(int hash, Airing airing, Map<Integer, List<Airing>> buildMap, IntBinarySet interested)
   {
-    if (!interested.contains(hash))
+    Integer hashInteger = interested.getInteger(hash);
+    if (hashInteger == null)
       return;
-    List<Airing> mappedAirings = buildMap.get(hash);
-    // We are using an array list to keep things in order and it allows us to use a binary search
-    // later when we iterate over this data at a high frequency.
+    List<Airing> mappedAirings = buildMap.get(hashInteger);
+    // We are using an array list to keep things in order so that we can do a binary search later.
+    // Most of the data with the exception of airings sorted by channel/time should already be
+    // sorted, and we will do a final sort on that one specifically.
     if (mappedAirings == null)
     {
-      mappedAirings = new ArrayList<>();
-      buildMap.put(hash, mappedAirings);
+      // 20 is selected based on random data samples. Often we only have one to two airings per
+      // array which can make this a really inefficient selection, but more often, we are close to
+      // 16 airings. This is admittedly a super small optimization, but we know we are going to put
+      // at least one airing in here, so creating the array is always going to happen at least once
+      // and this might keep us from needing to create a new one to expand.
+      mappedAirings = new ArrayList<>(20);
+      buildMap.put(hashInteger, mappedAirings);
       mappedAirings.add(airing);
     }
     else
@@ -998,7 +1016,7 @@ public final class Carny implements Runnable
     }
   }
 
-  private Map<Integer, Airing[]> buildMap(Collection<Airing> airings, Collection<Integer> interested, Map<Integer, Airing[]> mergeMap)
+  private Map<Integer, Airing[]> buildMap(Collection<Airing> airings, IntBinarySet interested, Map<Integer, Airing[]> mergeMap)
   {
     Map<Integer, List<Airing>> buildMap = new HashMap<>();
     for (Airing airing : airings)
@@ -1059,24 +1077,31 @@ public final class Carny implements Runnable
         addIfNeeded(currentHash, airing, buildMap, interested);
       }
 
-      // Agents that use the slotType and timeslots need to process all airs because there isn't
-      // currently an efficient way to map that data for quick lookups.
+      // Agents that use the slotType and timeslots without any other criteria need to process all
+      // airs because there isn't currently an efficient way to map that data for quick lookups.
 
-      // Agents that use keywords need to process all airs because there are we have not come up
-      // with and efficient way to look them up.
+      // Agents that use keywords without any other criteria need to process all airs because we
+      // have not come up with and efficient way to look them up.
     }
 
+    boolean sortNeeded = false;
     if (mergeMap != null)
     {
       for (Map.Entry<Integer, Airing[]> entry : mergeMap.entrySet())
       {
         List<Airing> mappedAirings = buildMap.get(entry.getKey());
         if (mappedAirings == null)
-          buildMap.put(entry.getKey(), (mappedAirings = new ArrayList<Airing>()));
-        Set<Airing> dedupe = new HashSet<>(Arrays.asList(entry.getValue()));
-        dedupe.addAll(mappedAirings);
-        mappedAirings.clear();
-        mappedAirings.addAll(dedupe);
+        {
+          buildMap.put(entry.getKey(), new ArrayList<>(Arrays.asList(entry.getValue())));
+        }
+        else
+        {
+          sortNeeded = true;
+          Set<Airing> dedupe = new HashSet<>(Arrays.asList(entry.getValue()));
+          dedupe.addAll(mappedAirings);
+          mappedAirings.clear();
+          mappedAirings.addAll(dedupe);
+        }
       }
     }
 
@@ -1086,9 +1111,9 @@ public final class Carny implements Runnable
     for (Map.Entry<Integer, List<Airing>> entry : buildMap.entrySet())
     {
       Airing[] finalAirings = entry.getValue().toArray(Pooler.EMPTY_AIRING_ARRAY);
-      // Sort by ID. Technically the list should already be in order, but this
-      // ensures we are not mistaken.
-      Arrays.sort(finalAirings, DBObject.ID_COMPARATOR);
+      // Sort by ID. This is not needed unless we know the data is not sorted by ID.
+      if (sortNeeded)
+        Arrays.sort(finalAirings, DBObject.ID_COMPARATOR);
       returnMap.put(entry.getKey(), finalAirings);
     }
     return returnMap;
@@ -1126,20 +1151,27 @@ public final class Carny implements Runnable
       // Clear this out since we're getting fresh airings from the DB now
       swapMap.clear();
     }
+    // We are getting binary sorted by CT code because these will not include old airings that have
+    // been replaced with new ones on the same station and timeslot.
     DBObject[] rawAirs = wiz.getRawAccess(Wizard.AIRING_CODE, Wizard.AIRINGS_BY_CT_CODE);
-    Set<Airing> airset = new HashSet<Airing>();
-    List<Airing> remAirSet = new ArrayList<Airing>();
+    // This seems to split the airings in half, but not perfectly, so we allocate 65% of the total
+    // to each array. Also unless we are incorrectly populating the database, we have no reason to
+    // use a set for either of these. All airings will be unique objects and using a set would
+    // create thousands of new objects for no gain and slower overall insertion performance due to
+    // the objects created for every new entry.
+    List<Airing> airset = new ArrayList<>(Math.max(10, Math.round((rawAirs.length * 0.65f))));
+    List<Airing> remAirSet = new ArrayList<>(Math.max(10, Math.round((rawAirs.length * 0.65f))));
 
     long currLookahead = Sage.getLong("scheduling_lookahead", LOOKAHEAD);
     int testMask = DBObject.MEDIA_MASK_TV;
     long currTime = Sage.time();
-    for (int i = 0; i < rawAirs.length; i++)
+    for (int i = 0, rawAirsLen = rawAirs.length; i < rawAirsLen; i++)
     {
       Airing a = (Airing) rawAirs[i];
       // Only use TV Airings in this calculation
       if (a == null || !a.hasMediaMaskAny(testMask)) continue;
-      if (a.time < currTime + currLookahead &&
-          a.time >= currTime - Scheduler.SCHEDULING_LOOKBEHIND && a.isTV())
+      if (a.getStartTime() < currTime + currLookahead &&
+          a.getStartTime() >= currTime - Scheduler.SCHEDULING_LOOKBEHIND && a.isTV())
       {
         airset.add(a);
       }
@@ -1148,13 +1180,27 @@ public final class Carny implements Runnable
         remAirSet.add(a);
       }
     }
+    // We need to sort for the media file insertion step so that we can do a binary search.
+    Collections.sort(airset, DBObject.ID_COMPARATOR);
+    // We need to sort this one for later so we don't need to sort 1000's of smaller arrays.
+    Collections.sort(remAirSet, DBObject.ID_COMPARATOR);
 
     // We also need to be sure we analyze all of the files
     MediaFile[] mfs = wiz.getFiles();
-    for (int i = 0; i < mfs.length; i++)
+    for (int i = 0, mfsLen = mfs.length; i < mfsLen; i++)
     {
-      if (!mfs[i].archive && mfs[i].isTV())
-        airset.add(mfs[i].getContentAiring());
+      MediaFile mf = mfs[i];
+      if (mf != null && !mf.isArchiveFile() && mf.isTV())
+      {
+        Airing contentAir = mf.getContentAiring();
+        // Ensure we are inserting unique airings since we are not using a set.
+        int index = Collections.binarySearch(airset, contentAir, DBObject.ID_COMPARATOR);
+        if (index < 0)
+        {
+          index = -(index + 1);
+          airset.add(index, contentAir);
+        }
+      }
     }
 
     // Add all of the work into a shared queue so we don't end up giving one thread a lot more work
@@ -1163,7 +1209,7 @@ public final class Carny implements Runnable
     List<Agent> mapAgents = disableCarnyMaps ? null : new ArrayList<Agent>(allAgents.length);
     if (!doneInit && Sage.getBoolean(LIMITED_CARNY_INIT, true))
     {
-      for (int i = 0; i < allAgents.length; i++)
+      for (int i = 0, allAgentsLen = allAgents.length; i < allAgentsLen; i++)
       {
         Agent currAgent = (Agent) allAgents[i];
         // This is an inexpensive check against two flags so we aren't adding agents to the queue
@@ -1179,7 +1225,7 @@ public final class Carny implements Runnable
     }
     else
     {
-      for (int i = 0; i < allAgents.length; i++)
+      for (int i = 0, allAgentsLen = allAgents.length; i < allAgentsLen; i++)
       {
         Agent currAgent = (Agent) allAgents[i];
         // This is an inexpensive check against a flag so we aren't adding agents to the queue that
@@ -1218,11 +1264,12 @@ public final class Carny implements Runnable
     }
     else
     {
-      Set<Integer> agentHashes = getAgentIntrests(mapAgents);
+      System.out.println("CARNY building airing maps...");
+      IntBinarySet agentHashes = getAgentInterests(mapAgents);
 
       DBObject[] watches = wiz.getRawAccess(Wizard.WATCH_CODE, (byte) 0);
-      List<Airing> fullWatchAirsList = new ArrayList<>();
-      for (int i = 0; i < watches.length; i++)
+      List<Airing> fullWatchAirsList = new ArrayList<>(watches.length);
+      for (int i = 0, watchesLen = watches.length; i < watchesLen; i++)
       {
         Watched currWatch = (Watched) watches[i];
         if (currWatch != null && BigBrother.isFullWatch(currWatch))
@@ -1232,8 +1279,8 @@ public final class Carny implements Runnable
       }
 
       DBObject[] waste = wiz.getRawAccess(Wizard.WASTED_CODE, (byte) 0);
-      List<Airing> wastedAirsList = new ArrayList<>();
-      for (int i = 0; i < waste.length; i++)
+      List<Airing> wastedAirsList = new ArrayList<>(waste.length);
+      for (int i = 0, wasteLen = waste.length; i < wasteLen; i++)
       {
         Wasted currWaste = (Wasted) waste[i];
         if (currWaste != null)
@@ -1252,6 +1299,10 @@ public final class Carny implements Runnable
       watchAirs = fullWatchAirsList.toArray(Pooler.EMPTY_AIRING_ARRAY);
       wastedAirs = wastedAirsList.toArray(Pooler.EMPTY_AIRING_ARRAY);
     }
+
+    // Free these fairly huge arrays up for immediate GC.
+    airset = null;
+    remAirSet = null;
 
     List<Agent> traitors = Collections.synchronizedList(new ArrayList<Agent>());
     Set<Airing> watchedPotsToClear = Collections.synchronizedSet(new HashSet<Airing>());
@@ -1330,7 +1381,7 @@ public final class Carny implements Runnable
           // doesn't mean we also finished processing the agent at the same time, but it is close
           // enough.
           if (Sage.DBG) System.out.println(
-            "Carny agent workers processed " + jobsRemoved + " of " + submittedAgents + " active agents.");
+            "CARNY agent workers processed " + jobsRemoved + " of " + submittedAgents + " active agents.");
         }
 
         // If a future returns false, that means we have a new job and need to stop all processing.
@@ -1339,7 +1390,7 @@ public final class Carny implements Runnable
         // all need to stop processing anyway.
         if (!keepRunning)
         {
-          System.out.println("Carny agent worker returned canceled.");
+          System.out.println("CARNY agent worker returned canceled.");
           agentWorkQueue.clear();
           workCanceled = true;
         }
@@ -1353,7 +1404,7 @@ public final class Carny implements Runnable
         workCanceled = true;
         if (!(e instanceof InterruptedException) && Sage.DBG)
         {
-          System.out.println("Carny created an exception while processing: " + e.getMessage());
+          System.out.println("CARNY created an exception while processing: " + e.getMessage());
           e.printStackTrace(System.out);
           Throwable innerException = e.getCause();
           if (innerException != null)
@@ -1395,7 +1446,7 @@ public final class Carny implements Runnable
       airSet.remove(badAir);
     }
 
-    for (int i = 0; i < stoners.length; i++)
+    for (int i = 0, stonersLen = stoners.length; i < stonersLen; i++)
     {
       Airing badAir = stoners[i].getAiring();
       newWPMap.remove(badAir);
@@ -1405,28 +1456,34 @@ public final class Carny implements Runnable
     }
 
     if (Sage.DBG) System.out.println("CARNY Traitors:" + traitors);
-    for (int i = 0; i < traitors.size(); i++)
+    for (int i = 0, traitorsSize = traitors.size(); i < traitorsSize; i++)
+    {
       wiz.removeAgent(traitors.get(i));
+    }
 
     synchronized (this)
     {
+      Agent thisAgent;
+      Float thisFloat;
       for (Airing oldAir : swapMap.keySet())
       {
         Airing newAir = swapMap.get(oldAir);
-        if (newWPMap.containsKey(oldAir))
-          newWPMap.put(newAir, newWPMap.remove(oldAir));
-        if (airSet.contains(oldAir))
+        if ((thisFloat = newWPMap.remove(oldAir)) != null)
         {
-          airSet.remove(oldAir);
+          newWPMap.put(newAir, thisFloat);
+        }
+        if (airSet.remove(oldAir))
+        {
           airSet.add(newAir);
         }
-        if (newMustSeeSet.contains(oldAir))
+        if (newMustSeeSet.remove(oldAir))
         {
-          newMustSeeSet.remove(oldAir);
           newMustSeeSet.add(newAir);
         }
-        if (newCauseMap.containsKey(oldAir))
-          newCauseMap.put(newAir, newCauseMap.remove(oldAir));
+        if ((thisAgent = newCauseMap.remove(oldAir)) != null)
+        {
+          newCauseMap.put(newAir, thisAgent);
+        }
       }
       wpMap = newWPMap;
       causeMap = newCauseMap;
@@ -2228,15 +2285,20 @@ public final class Carny implements Runnable
           synchronized (newWPMap)
           {
             Float wp = newWPMap.get(agentPot);
-            boolean replaceInMap = false;
-            if (wp == null || (currAgent.watchProb > wp))
-              replaceInMap = true;
-            if (wp != null && currAgent.watchProb == wp && currAgent.isFavorite())
+            boolean replaceInMap = wp == null;
+            if (!replaceInMap)
             {
-              // Check for agent priority
-              Agent oldAgent = newCauseMap.get(agentPot);
-              if (oldAgent == null || doBattle(oldAgent, currAgent) == currAgent)
+              if (currAgent.watchProb > wp)
+              {
                 replaceInMap = true;
+              }
+              else if (currAgent.watchProb == wp && currAgent.isFavorite())
+              {
+                // Check for agent priority
+                Agent oldAgent = newCauseMap.get(agentPot);
+                if (oldAgent == null || doBattle(oldAgent, currAgent) == currAgent)
+                  replaceInMap = true;
+              }
             }
             if (replaceInMap)
             {
