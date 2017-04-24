@@ -20,7 +20,7 @@ import java.util.Arrays;
 /**
  * This is a very basic binary search based class that will only store unique {@link Integer} on a
  * binary sorted array. It's primary purpose is to reduce Integer object creation which will
- * extremely rapidly grow when we are building the maps.
+ * extremely rapidly grow when we are building sets or maps using {@link Integer}.
  * <p/>
  * We store Integer objects, but we actually search them using primitives. This works well because
  * we are only unboxing. This was also attempted with a two array approach, but this turns out to
@@ -154,18 +154,18 @@ public class IntBinarySet
   }
 
   /**
-   * Get the boxed Integer object for the provided int if it is a part of this set.
+   * Get the boxed {@link Integer} object for the provided int if it is a part of this set.
    * <p/>
    * This method is intended to greatly reduce object creation when dealing with very large amounts
    * of autoboxing since beyond a certain number range, all boxing results in new object creation
    * even if it is for a number we just boxed a second ago.
    * <p/>
    * This should be used instead of {@link #containsInt(int)} if the resulting actions of true will
-   * involve using an Integer.
+   * involve using an {@link Integer}.
    *
    * @param lookup The int to look up.
-   * @return <code>null</code> if the set does not contain the provided int or an Integer of the
-   *         same value if it does.
+   * @return <code>null</code> if the set does not contain the provided int or an {@link Integer} of
+   *         the same value if it does.
    */
   public Integer getInteger(int lookup)
   {
@@ -173,18 +173,18 @@ public class IntBinarySet
   }
 
   /**
-   * Get a boxed Integer object if it is already a part of this set or insert a new one and return
-   * a boxed Integer.
+   * Get a boxed {@link Integer} if it is already a part of this set or insert a new one and return
+   * a boxed {@link Integer}.
    * <p/>
    * This is intended as a speedup for use of this class for on the spot caching. This is also
    * limited to 100,000 entries before the cache will start just autoboxing without caching. This
    * should only be used as a temporary object for very intense interactions with things like maps
-   * or sets when using Integer.
+   * or sets when using {@link Integer}.
    * <p/>
    * This will also filter out any numbers that the JVM always caches (-128 to 127).
    *
    * @param lookup The int to look up.
-   * @return An Integer of the same value if it does.
+   * @return An {@link Integer} of the same value if it does.
    */
   public Integer addOrGet(int lookup)
   {

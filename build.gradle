@@ -312,6 +312,10 @@ def getBuildNumber() {
 		buildVer = ant.sagebuildnum		
 	}else if (OperatingSystem.current().isWindows()) {
 		//ensure full path to git\bin is in the Path Environment variable on windows
+		// 04-24-2017 JS: I changed this to remove the dependency on sh. Also we should note that
+		// you will get error code 128 if you have git installed, but you did not pull this project
+		// using git because git will not know where to get the commit count from. This is likely
+		// true for Linux too.
 		new ByteArrayOutputStream().withStream { outputStream ->
 			exec {
 				executable 'git'
