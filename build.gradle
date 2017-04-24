@@ -310,6 +310,9 @@ def getBuildNumber() {
 			outputproperty: 'sagebuildnum')
 		
 		buildVer = ant.sagebuildnum		
+	}else if (OperatingSystem.current().isWindows()) {
+		//ensure full path to git\bin is in the Path Environment variable on windows
+		buildVer = ['sh', '-c', 'git rev-list HEAD --count'].execute().text.trim()
 	}
 	
 	if (buildVer == null) buildVer=0;

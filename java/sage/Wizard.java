@@ -4023,7 +4023,7 @@ public class Wizard implements EPGDBPublic2
     } finally {
       releaseWriteLock(WASTED_CODE);
     }
-    if (manual) {
+    if (manual && Sage.getBoolean("apply_dont_like_at_show_level", true)) {
       Show s = basedOn.getShow();
       if (s != null) {
         s.setDontLike(true);

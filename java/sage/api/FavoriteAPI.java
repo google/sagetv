@@ -1164,7 +1164,10 @@ public class FavoriteAPI {
     rft.put(new PredefinedJEPFunction("Favorite", "GetFavoriteAirings", new String[] { "Favorite" }, true)
     {
       /**
-       * Returns a list of all of the Airings in the database that match this Favorite.
+       * Returns a list of all of the Airings in the database that match this Favorite.  If this Favorite is disabled,
+       * no Airings will be returned.  To get a list of Airings that match a disabled Favorite, call
+       * GetPotentialFavoriteAirings instead.
+       *
        * @param Favorite the Favorite object
        * @return the list of Airings in the DB that match this Favorite
        *
@@ -1175,6 +1178,24 @@ public class FavoriteAPI {
         if (fav == null) return null;
         return fav.getRelatedAirings(Wizard.getInstance().getRawAccess(Wizard.AIRING_CODE,
             Wizard.AIRINGS_BY_CT_CODE), true, false, new StringBuffer());
+      }});
+    rft.put(new PredefinedJEPFunction("Favorite", "GetPotentialFavoriteAirings", new String[] { "Favorite" }, true)
+    {
+      /**
+       * Returns a list of all of the Airings in the database that match this Favorite.  If the favorite is disabled
+       * this API call will ignore that fact and return the Airings that would match this favorite if it were not
+       * disabled.
+       * @param Favorite the Favorite object
+       * @return the list of Airings in the DB that match this Favorite
+       *
+       * @declaration public Airing[] GetPotentialFavoriteAirings(Favorite Favorite);
+       * @since 9.0.15
+       */
+      public Object runSafely(Catbert.FastStack stack) throws Exception{
+        Agent fav = (Agent) stack.pop();
+        if (fav == null) return null;
+        return fav.getRelatedAirings(Wizard.getInstance().getRawAccess(Wizard.AIRING_CODE,
+            Wizard.AIRINGS_BY_CT_CODE), true, false, true, new StringBuffer());
       }});
     rft.put(new PredefinedJEPFunction("Favorite", "GetFavoriteID", new String[] { "Favorite" })
     {

@@ -4,6 +4,8 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProductVersion>3.10</ProductVersion>
+    <InstallType Condition=" '$(InstallType)' == '' ">Full</InstallType>
+    <ProdVersion Condition=" '$(ProdVersion)' == '' ">0.0.0.0</ProdVersion>
     <ProjectGuid>5b01df4d-2e11-43e0-adfe-b71f8082407a</ProjectGuid>
     <SchemaVersion>2.0</SchemaVersion>
     <OutputType>Bundle</OutputType>
@@ -15,18 +17,21 @@
     <OutputPath>release\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>obj\bootstrapper\$(Configuration)\</IntermediateOutputPath>
     <DefineSolutionProperties>false</DefineSolutionProperties>
+    <DefineConstants>InstallerType=$(InstallType);ProdVersion=$(ProdVersionStr)</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'SetupClient' ">
     <OutputName>SageTVClientSetup</OutputName>
     <OutputPath>release\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>obj\bootstrapper\$(Configuration)\</IntermediateOutputPath>
     <DefineSolutionProperties>false</DefineSolutionProperties>
+    <DefineConstants>InstallerType=$(InstallType);ProdVersion=$(ProdVersionStr)</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'SetupPlaceshifter' ">
     <OutputName>SageTVPlaceshifterSetup</OutputName>
     <OutputPath>release\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>obj\bootstrapper\$(Configuration)\</IntermediateOutputPath>
     <DefineSolutionProperties>false</DefineSolutionProperties>
+    <DefineConstants>InstallerType=$(InstallType);ProdVersion=$(ProdVersionStr)</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="ac3filterinstaller.wxs" />

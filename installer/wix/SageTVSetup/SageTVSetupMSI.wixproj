@@ -4,6 +4,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProductVersion>3.10</ProductVersion>
+    <ProdVersion Condition=" '$(ProdVersion)' == '' ">0.0.0.0</ProdVersion>
     <ProjectGuid>d6a79b87-8127-4b14-942d-cd00f50e4ce7</ProjectGuid>
     <SchemaVersion>2.0</SchemaVersion>
     <OutputType>Package</OutputType>
@@ -15,7 +16,7 @@
     <OutputName>SageTVSetupMSI</OutputName>
     <OutputPath>release\bin\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>obj\msi\$(Configuration)\</IntermediateOutputPath>
-    <DefineConstants>SourceSTV=..\..\..\stvs\SageTV7;SourceSageTVSource=source\SageTV\SageTV;SourceCommonSource=source\SageTV\Common;SourcePlaceshifterSource=source\SageTV\Placeshifter</DefineConstants>
+    <DefineConstants>SourceSTV=..\..\..\stvs\SageTV7;SourceSageTVSource=source\SageTV\SageTV;SourceCommonSource=source\SageTV\Common;SourcePlaceshifterSource=source\SageTV\Placeshifter;ProdVersion=0.0.0.0</DefineConstants>
     <DefineSolutionProperties>false</DefineSolutionProperties>
     <SuppressIces>ICE60;ICE61</SuppressIces>
   </PropertyGroup>
@@ -23,7 +24,7 @@
     <OutputName>SageTVClientSetupMSI</OutputName>
     <OutputPath>release\bin\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>obj\msi\$(Configuration)\</IntermediateOutputPath>
-    <DefineConstants>SourceSTV=..\..\..\stvs\SageTV7;SourceSageTVSource=source\SageTV\SageTV;SourceCommonSource=source\SageTV\Common;SourcePlaceshifterSource=source\SageTV\Placeshifter</DefineConstants>
+    <DefineConstants>SourceSTV=..\..\..\stvs\SageTV7;SourceSageTVSource=source\SageTV\SageTV;SourceCommonSource=source\SageTV\Common;SourcePlaceshifterSource=source\SageTV\Placeshifter;ProdVersion=0.0.0.0</DefineConstants>
     <DefineSolutionProperties>false</DefineSolutionProperties>
     <SuppressIces>ICE60;ICE61</SuppressIces>
   </PropertyGroup>
@@ -31,7 +32,7 @@
     <OutputName>SageTVPlaceshifterSetupMSI</OutputName>
     <OutputPath>release\bin\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>obj\msi\$(Configuration)\</IntermediateOutputPath>
-    <DefineConstants>SourceSTV=..\..\..\stvs\SageTV7;SourceSageTVSource=source\SageTV\SageTV;SourceCommonSource=source\SageTV\Common;SourcePlaceshifterSource=source\SageTV\Placeshifter</DefineConstants>
+    <DefineConstants>SourceSTV=..\..\..\stvs\SageTV7;SourceSageTVSource=source\SageTV\SageTV;SourceCommonSource=source\SageTV\Common;SourcePlaceshifterSource=source\SageTV\Placeshifter;ProdVersion=0.0.0.0</DefineConstants>
     <DefineSolutionProperties>false</DefineSolutionProperties>
     <SuppressIces>ICE60;ICE61</SuppressIces>
   </PropertyGroup>

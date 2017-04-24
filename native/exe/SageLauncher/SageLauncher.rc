@@ -1,6 +1,7 @@
 // Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
+#include "../../include/version.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -51,8 +52,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 9,0,9,441
- PRODUCTVERSION 9,0,9,0
+ FILEVERSION        VER_FILE_VERSION
+ PRODUCTVERSION     VER_PRODUCT_VERSION
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -67,14 +68,14 @@ BEGIN
     BEGIN
         BLOCK "080004b0"
         BEGIN
-            VALUE "CompanyName", "SageTV Open Source"
-            VALUE "FileDescription", "SageTV"
-            VALUE "FileVersion", "9.0.9.441"
-            VALUE "InternalName", "SageTV"
-            VALUE "LegalCopyright", "Copyright � � 2015-2016 The SageTV Authors"
-            VALUE "OriginalFilename", "SageTV.exe"
-            VALUE "ProductName", "SageTV"
-            VALUE "ProductVersion", "9.0.9.0"
+			VALUE "FileDescription", "SageTV"
+			VALUE "InternalName", "SageTV"
+			VALUE "OriginalFilename", "SageTV.exe"
+			VALUE "ProductName", "SageTV"
+			VALUE "CompanyName", "SageTV Open Source"
+			VALUE "FileVersion", VER_FILE_VERSION_STR "\0"
+			VALUE "LegalCopyright", "Copyright (C) 2015-2017 The SageTV Authors"
+			VALUE "ProductVersion", VER_PRODUCT_VERSION_STR "\0"
         END
     END
     BLOCK "VarFileInfo"

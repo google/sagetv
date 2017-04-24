@@ -115,6 +115,8 @@ third_party/codecs/faad2/plugins/xmms/src/.deps/
 third_party/codecs/faad2/plugins/xmms/src/Makefile
 third_party/codecs/faad2/plugins/xmms/src/Makefile.in
 third_party/codecs/faad2/stamp-h1
+third_party/codecs/giflib/config.h.in
+third_party/codecs/giflib/configure
 third_party/codecs/giflib/Makefile
 third_party/codecs/giflib/autom4te.cache/
 third_party/codecs/giflib/config.h
