@@ -33,7 +33,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.Vector;
 
-public class Scheduler implements Runnable, SchedulerInterface
+public class Scheduler implements SchedulerInterface
 {
   public static final long SCHEDULING_LOOKBEHIND = 180000L;// 3 min
   private static final float FUZZIFIER = 0.05f;//0.1f;
@@ -2909,7 +2909,7 @@ public class Scheduler implements Runnable, SchedulerInterface
    * it parsed far too many iterations. Something this other version of the function was designed to avoid. So we
    * cloned and adapted generateSingleMultiTunerSchedulingPermutation to work for this case too.
    */
-  public boolean testMultiTunerSchedulingPermutation(List<Airing> airList)
+  public boolean testMultiTunerSchedulingPermutation(Vector<Airing> airList)
   {
     if (airList.isEmpty())
     {

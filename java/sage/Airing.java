@@ -18,6 +18,7 @@ package sage;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
@@ -202,6 +203,8 @@ public class Airing extends DBObject implements Schedulable
 
   /**
    * Get adjusted the starting time for this airing.
+   * <p/>
+   * For Favorites that are back-to-back, we don't apply any padding at that junction.
    *
    * @return Adjusted starting time for this airing
    */
@@ -261,6 +264,8 @@ public class Airing extends DBObject implements Schedulable
 
   /**
    * Get adjusted the full duration of this airing.
+   * <p/>
+   * For Favorites that are back-to-back, we don't apply any padding at that junction.
    *
    * @return Adjusted full duration time of this airing
    */
@@ -282,6 +287,8 @@ public class Airing extends DBObject implements Schedulable
 
   /**
    * Get adjusted the ending time for this airing.
+   * <p/>
+   * For Favorites that are back-to-back, we don't apply any padding at that junction.
    *
    * @return Adjusted ending time for this airing
    */

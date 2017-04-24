@@ -455,7 +455,7 @@ public class Agent extends DBObject implements Favorite
     if (VERIFY_AIRING_OPTIMIZATION && list.contains(key))
     {
       StringBuilder stringBuilder = new StringBuilder("FAILED: to match what should have matched: ");
-      stringBuilder.append(key.getID()).append("is in: ");
+      stringBuilder.append(key.getID()).append(" is in: ");
       for (DBObject o : list)
         stringBuilder.append(o.getID()).append(',');
       System.out.println(stringBuilder);
