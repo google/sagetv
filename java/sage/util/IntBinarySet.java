@@ -30,7 +30,7 @@ import java.util.Arrays;
  */
 public class IntBinarySet
 {
-  private static int DEFAULT_SIZE = 10;
+  private final static int DEFAULT_SIZE = 10;
 
   private int size = 0;
   private Integer elementData[];

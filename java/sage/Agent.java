@@ -475,7 +475,7 @@ public class Agent extends DBObject implements Favorite
   }
 
   private Airing[] optimizedFollowsTrend(boolean mustBeViewable, boolean controlCPUUsage,
-                                         StringBuffer sbCache, boolean skipKeyword,
+                                         StringBuffer sbCache, boolean skipKeyword, boolean ignoreDisabledFlag,
                                          int binarySearchEnd, Map<Integer, Airing[]> airingMap,
                                          DBObject allAirings[], List<Airing> airWorkCache, String mapName)
   {
@@ -501,15 +501,15 @@ public class Agent extends DBObject implements Favorite
       for (int i = 0; i < allAirings.length; i++)
       {
         Airing airing = (Airing) allAirings[i];
-        if (binarySearchEnd != -1)
+        if (binarySearchEnd > 0)
         {
           if (!binarySearchContains(followsTrend, 0, binarySearchEnd, airing) &&
-            followsTrend(airing, mustBeViewable, sbCache, skipKeyword))
+            followsTrend(airing, mustBeViewable, sbCache, skipKeyword, ignoreDisabledFlag))
           {
             followsTrend.add(airing);
           }
         }
-        else if (followsTrend(airing, mustBeViewable, sbCache, skipKeyword))
+        else if (followsTrend(airing, mustBeViewable, sbCache, skipKeyword, ignoreDisabledFlag))
         {
           followsTrend.add(airing);
         }
@@ -551,7 +551,7 @@ public class Agent extends DBObject implements Favorite
           Airing airing = airings[j];
           // If we get airings from more than one array, we could have duplicates. All of the arrays
           // in the map are already binary sorted, so no sort is required initially.
-          if (initialSize == 0 && followsTrend(airing, mustBeViewable, sbCache, skipKeyword))
+          if (initialSize == 0 && followsTrend(airing, mustBeViewable, sbCache, skipKeyword, ignoreDisabledFlag))
           {
             followsTrend.add(airing);
           }
@@ -568,7 +568,7 @@ public class Agent extends DBObject implements Favorite
             // This turns out to not be nearly as expensive as not being able to do binary
             // searches for duplicate airings.
             if (!binarySearchContains(followsTrend, 0, followsTrend.size(), airing) &&
-              followsTrend(airing, mustBeViewable, sbCache, skipKeyword))
+              followsTrend(airing, mustBeViewable, sbCache, skipKeyword, ignoreDisabledFlag))
             {
               // We sort on each insert.
               int size = followsTrend.size();
@@ -608,7 +608,8 @@ public class Agent extends DBObject implements Favorite
       {
         // If we don't provide a map, a full search is always executed. Also don't provide the cache
         // or we will overwrite the results of this first run.
-        optimizedFollowsTrend(mustBeViewable, controlCPUUsage, sbCache, skipKeyword, -1, null, allAirings, fullTrend, mapName);
+        optimizedFollowsTrend(mustBeViewable, controlCPUUsage, sbCache, skipKeyword, ignoreDisabledFlag,
+          -1, null, allAirings, fullTrend, mapName);
 
         if (!fullTrend.equals(followsTrend))
         {
@@ -671,18 +672,49 @@ public class Agent extends DBObject implements Favorite
    * This gets called from the AgentBrowser GUI as well as the Carny's main
    * thread, that's why it needs to be synced.
    */
-  public Airing[] getRelatedAirings(DBObject[] allAirs, boolean mainCache,
-                                                 boolean controlCPUUsage, StringBuffer sbCache)
+
+  /**
+   * Get all airings from the provided airings that this agent matches.
+   *
+   * @param allAirs All airings to be considered by this agent.
+   * @param mainCache Deprecated.
+   * @param controlCPUUsage If <code>true</code>, this enables CPU usage throttling. This should
+   *                        only be used when processing a large number of agents and we do not want
+   *                        to potentially disrupt foreground tasks.
+   * @param ignoreDisabledFlag If <code>true</code>, treat this agent as if it is enabled, even if it is
+   *                       not.
+   * @param sbCache This is an persistent StringBuffer instance for re-use through many iterations.
+   * @return Airings that match this agent.
+   */
+  public Airing[] getRelatedAirings(DBObject[] allAirs, boolean mainCache, boolean controlCPUUsage,
+                                    boolean ignoreDisabledFlag, StringBuffer sbCache)
   {
-    return getRelatedAirings(allAirs, mainCache, controlCPUUsage, sbCache, null, null);
+    boolean legacyKeyword = Sage.getBoolean("use_legacy_keyword_favorites", true);
+    return getRelatedAirings(allAirs, mainCache, controlCPUUsage, ignoreDisabledFlag, legacyKeyword, sbCache, null, null);
   }
 
-  public Airing[] getRelatedAirings(DBObject[] allAirs, boolean mainCache,
-                                    boolean controlCPUUsage, StringBuffer sbCache,
-                                    Map<Integer, Airing[]> airingMap,
-                                    List<Airing> airWorkCache)
+  /**
+   * Get all airings from the provided airings that this agent matches.
+   *
+   * @param allAirs All airings to be considered by this agent.
+   * @param mainCache Deprecated.
+   * @param controlCPUUsage If <code>true</code>, this enables CPU usage throttling. This should
+   *                        only be used when processing a large number of agents and we do not want
+   *                        to potentially disrupt foreground tasks.
+   * @param ignoreDisabledFlag If <code>true</code>, treat this agent as if it is enabled, even if it is
+   *                       not.
+   * @param legacyKeyword Do not use Lucene to optimize keyword searches.
+   * @param sbCache This is an persistent StringBuffer instance for re-use through many iterations.
+   * @param airingMap This is an optional map used to speed up processing.
+   * @param airWorkCache This is an optional cache to be used for scratch space.
+   * @return Airings that match this agent.
+   */
+  public Airing[] getRelatedAirings(DBObject[] allAirs, boolean mainCache, boolean controlCPUUsage,
+                                    boolean ignoreDisabledFlag, boolean legacyKeyword, StringBuffer sbCache,
+                                    Map<Integer, Airing[]> airingMap, List<Airing> airWorkCache)
   {
-    if (allAirs == null) return Pooler.EMPTY_AIRING_ARRAY;
+    if (allAirs == null)
+      return Pooler.EMPTY_AIRING_ARRAY;
 
     List<Airing> rv = airWorkCache;
     if (rv == null)
@@ -690,9 +722,7 @@ public class Agent extends DBObject implements Favorite
     else
       rv.clear();
 
-
-    boolean keywordTest = (this.agentMask&(KEYWORD_MASK)) == (KEYWORD_MASK) &&
-        !Sage.getBoolean("use_legacy_keyword_favorites", true);
+    boolean keywordTest = !legacyKeyword && (this.agentMask&(KEYWORD_MASK)) == (KEYWORD_MASK);
     if(keywordTest)
     {
       // If we're only doing a keyword mask, speed it up via Lucene
@@ -702,7 +732,7 @@ public class Agent extends DBObject implements Favorite
         Airing[] airings = wiz.getAirings(show, 0);
         for (Airing a : airings)
         {
-          if (followsTrend(a, true, sbCache, true))
+          if (followsTrend(a, true, sbCache, true, ignoreDisabledFlag))
             rv.add(a);
         }
       }
@@ -711,7 +741,8 @@ public class Agent extends DBObject implements Favorite
     {
       if (airingMap != null)
       {
-        optimizedFollowsTrend(true, controlCPUUsage, sbCache, false, -1, airingMap, allAirs, rv, "allAirs");
+        optimizedFollowsTrend(true, controlCPUUsage, sbCache, false, ignoreDisabledFlag, -1,
+          airingMap, allAirs, rv, "allAirs");
       }
       else
       {
@@ -811,31 +842,36 @@ public class Agent extends DBObject implements Favorite
     return followsTrend(air, mustBeViewable, sbCache, false, false);
   }
 
-  public boolean followsTrend(Airing air, boolean mustBeViewable, StringBuffer sbCache, boolean skipKeyword)
+  public boolean followsTrend(Airing air, boolean mustBeViewable, StringBuffer sbCache,
+                              boolean skipKeyword)
   {
       return followsTrend(air, mustBeViewable, sbCache, skipKeyword, false);
   }
+
   /**
-   * Determine if the given airing meets the criteria for this Agent. (i.e. could the given Airing be scheduled because
-   * of this Agent)
+   * Determine if the given airing meets the criteria for this Agent. (i.e. could the given Airing
+   * be scheduled because of this Agent)
    *
    * @param air The Airing to be tested
-   * @param mustBeViewable If true, the Airing must be viewable for this method to return true.  Viewable means a
-   * recording that can be watched, or a channel that can be viewed.
-   * @param sbCache A StringBuffer to be used by this method.  If null a new StringBuffer will be created.  If non-null
-   * the buffer will be cleared and use.  When calling this method in a loop, the same StringBuffer can be used for each
-   * call to limit object creation and memory use.
+   * @param mustBeViewable If true, the Airing must be viewable for this method to return true.
+   *                       Viewable means a recording that can be watched, or a channel that can be
+   *                       viewed.
+   * @param sbCache A StringBuffer to be used by this method.  If null a new StringBuffer will be
+   *                created. If non-null the buffer will be cleared and use.  When calling this
+   *                method in a loop, the same StringBuffer can be used for each call to limit object
+   *                creation and memory use.
    * @param skipKeyword If true, keyword matching is not considered
    * @param ignoreDisabledFlag If true, treat this agent as if it is enabled, even if it isn't.
-   * @return true if the given Airing matches this Agent (given the parameter criteria) , false otherwise.
-   */
-  /*
-   * TODO(codefu): skipKeyword is a hack before showcase. It works since the other flags are AND
-   * tested; but we can have Lucene do this for us
+   * @return true if the given Airing matches this Agent (given the parameter criteria), false otherwise.
    */
   public boolean followsTrend(Airing air, boolean mustBeViewable, StringBuffer sbCache, boolean skipKeyword,
           boolean ignoreDisabledFlag)
   {
+    /*
+   * TODO(codefu): skipKeyword is a hack before showcase. It works since the other flags are AND
+   * tested; but we can have Lucene do this for us
+   */
+
     if (air == null) return false;
     Show s = air.getShow();
     if (s == null) return false;
@@ -1111,7 +1147,9 @@ public class Agent extends DBObject implements Favorite
     }
     else
     {
-      optimizedFollowsTrend(false, controlCPUUsage, sbCache, false, -1, watchAirsMap, watchAirs, airWorkCache, "watchAirsMap");
+      // These results will already be sorted by ID.
+      optimizedFollowsTrend(false, controlCPUUsage, sbCache, false, false, -1, watchAirsMap,
+        watchAirs, airWorkCache, "watchAirsMap");
     }
 
     int numWatchedAirs = airWorkCache.size();
@@ -1141,7 +1179,8 @@ public class Agent extends DBObject implements Favorite
     }
     else
     {
-      optimizedFollowsTrend(false, controlCPUUsage, sbCache, false, airWorkCache.size(), wastedAirsMap, wastedAirs, airWorkCache, "wastedAirsMap");
+      optimizedFollowsTrend(false, controlCPUUsage, sbCache, false, false, airWorkCache.size(),
+        wastedAirsMap, wastedAirs, airWorkCache, "wastedAirsMap");
 
       // We need to start from the bottom or we will miss anything that was skipped because it was
       // a duplicate.

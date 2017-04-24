@@ -1308,6 +1308,7 @@ public final class Carny implements Runnable
     Set<Airing> watchedPotsToClear = Collections.synchronizedSet(new HashSet<Airing>());
     if (Sage.DBG) System.out.println("CARNY Processing " + allAgents.length + " Agents & " + allAirs.length + " Airs");
     boolean controlCPUUsage = doneInit && allAgents.length > 50 && Sage.getBoolean("control_profiler_cpu_usage", true);
+    boolean useLegacyKeyword = Sage.getBoolean("use_legacy_keyword_favorites", true);
 
     // If we don't have any agents, there's no point is spinning up worker threads. Also some users
     // might have servers with a lot of cores (> 8), so if we don't have a lot of agents, we will
@@ -1331,7 +1332,7 @@ public final class Carny implements Runnable
     // Start/resume all of the agent worker threads.
     for (int i = 0; i < totalThreads; i++)
     {
-      Callable<Boolean> newJob = new CarnyAgentWorker(controlCPUUsage, totalThreads, doneInit,
+      Callable<Boolean> newJob = new CarnyAgentWorker(controlCPUUsage, totalThreads, doneInit, useLegacyKeyword,
         allAirs, remAirs, watchAirs, wastedAirs, allAirsMap, remAirsMap, watchAirsMap, wastedAirsMap, traitors,
         newLoveAirSet, blackBalled, airSet, newWPMap, newCauseMap, watchedPotsToClear, newMustSeeSet);
       agentWorkerFutures.add(agentWorkers.submit(newJob));
@@ -2126,6 +2127,7 @@ public final class Carny implements Runnable
     private final boolean controlCPUUsage;
     private final int totalThreads;
     private final boolean doneInit;
+    private final boolean skipKeyword;
     private final Airing allAirs[];
     private final Airing remAirs[];
     private final Airing watchAirs[];
@@ -2145,7 +2147,7 @@ public final class Carny implements Runnable
     private final Set<Airing> watchedPotsToClear;
     private final Set<Airing> newMustSeeSet;
 
-    public CarnyAgentWorker(boolean controlCPUUsage, int totalThreads, boolean doneInit,
+    public CarnyAgentWorker(boolean controlCPUUsage, int totalThreads, boolean doneInit, boolean legacyKeyword,
                             Airing[] allAirs, Airing[] remAirs, Airing[] watchAirs, Airing[] wastedAirs,
                             Map<Integer, Airing[]> allAirsMap,
                             Map<Integer, Airing[]> remAirsMap,
@@ -2158,6 +2160,7 @@ public final class Carny implements Runnable
       this.controlCPUUsage = controlCPUUsage;
       this.totalThreads = totalThreads;
       this.doneInit = doneInit;
+      this.skipKeyword = legacyKeyword;
       this.allAirs = allAirs;
       this.remAirs = remAirs;
       this.watchAirs = watchAirs;
@@ -2214,21 +2217,27 @@ public final class Carny implements Runnable
           }
         }
 
-        if (!currAgent.calcWatchProb(controlCPUUsage, potsWorkCache, sbCache, watchAirs, watchAirsMap, wastedAirs, wastedAirsMap))
+        if (!currAgent.calcWatchProb(controlCPUUsage, potsWorkCache, sbCache, watchAirs,
+          watchAirsMap, wastedAirs, wastedAirsMap))
         {
           traitors.add(currAgent);
           continue;
         }
 
-        currAgent.getRelatedAirings(allAirs, true, controlCPUUsage, sbCache, allAirsMap, potsWorkCache);
+        // We are passing true to ignoreDisabledFlag because we have already filtered out the
+        // disabled agents making this additional check a waste of time.
+        currAgent.getRelatedAirings(allAirs, true, controlCPUUsage, true, skipKeyword, sbCache, allAirsMap, potsWorkCache);
 
         if (currAgent.isFavorite())
         {
           newLoveAirSet.addAll(potsWorkCache);
 
-          // Also check the rem airs so we're sure we get EVERYTHING in the DB
-          // that applies to this Favorite included in the group.
-          currAgent.getRelatedAirings(remAirs, false, controlCPUUsage, sbCache, remAirsMap, remWorkCache);
+          // Also check the rem airs so we're sure we get EVERYTHING in the DB that applies to this
+          // Favorite included in the group.
+          //
+          // We are passing true to ignoreDisabledFlag because we have already filtered out the
+          // disabled agents making this additional check a waste of time.
+          currAgent.getRelatedAirings(remAirs, false, controlCPUUsage, true, skipKeyword, sbCache, remAirsMap, remWorkCache);
           newLoveAirSet.addAll(remWorkCache);
           remWorkCache.clear();
         }

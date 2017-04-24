@@ -1177,7 +1177,7 @@ public class FavoriteAPI {
         Agent fav = (Agent) stack.pop();
         if (fav == null) return null;
         return fav.getRelatedAirings(Wizard.getInstance().getRawAccess(Wizard.AIRING_CODE,
-            Wizard.AIRINGS_BY_CT_CODE), true, false, new StringBuffer());
+            Wizard.AIRINGS_BY_CT_CODE), true, false, false, new StringBuffer());
       }});
     rft.put(new PredefinedJEPFunction("Favorite", "GetPotentialFavoriteAirings", new String[] { "Favorite" }, true)
     {
@@ -1195,7 +1195,7 @@ public class FavoriteAPI {
         Agent fav = (Agent) stack.pop();
         if (fav == null) return null;
         return fav.getRelatedAirings(Wizard.getInstance().getRawAccess(Wizard.AIRING_CODE,
-            Wizard.AIRINGS_BY_CT_CODE), true, false, new StringBuffer());
+            Wizard.AIRINGS_BY_CT_CODE), true, false, true, new StringBuffer());
       }});
     rft.put(new PredefinedJEPFunction("Favorite", "GetFavoriteID", new String[] { "Favorite" })
     {
