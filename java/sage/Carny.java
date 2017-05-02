@@ -2317,7 +2317,7 @@ public final class Carny implements Runnable
       // as big as 15000 depending on what agent this worker ends up getting, but tests have shown
       // that allocating larger values can actually slow us down a bit partly because not all
       // workers end up dealing with large amounts of airings.
-      cache.useWorkCache = new CacheList(1000);
+      cache.airWorkCache = new CacheList(1000);
       final Map<Integer, Airing[]> allAirsMap = cache.allAirsMap;
       final Map<Integer, Airing[]> remAirsMap = cache.remAirsMap;
 
@@ -2362,15 +2362,15 @@ public final class Carny implements Runnable
 
         if (isFavorite)
         {
-          int potsWorkCacheSize = cache.useWorkCache.size;
+          int potsWorkCacheSize = cache.airWorkCache.size;
           callback.appendCapacityNewLoveAirSet(potsWorkCacheSize);
           for (int i = 0; i < potsWorkCacheSize; i++)
-            callback.addNewLoveAirSet(cache.useWorkCache.data[i]);
+            callback.addNewLoveAirSet(cache.airWorkCache.data[i]);
 
           // This only happens for active favorites which should number less than 500, so this isn't
           // going to amount to anything crazy for the GC. We are trying to take advantage of any
           // scratch space left in the currently allocated cache list.
-          cache.useWorkCache.setOffset();
+          cache.airWorkCache.setOffset();
           // Also check the rem airs so we're sure we get EVERYTHING in the DB that applies to this
           // Favorite included in the group.
           //
@@ -2379,14 +2379,14 @@ public final class Carny implements Runnable
           currAgent.getRelatedAirings(remAirs, controlCPUUsage, true, legacyKeyword, remAirsMap,
             cache, cache.sbCache);
 
-          int remWorkCacheSize = cache.useWorkCache.size;
+          int remWorkCacheSize = cache.airWorkCache.size;
           callback.appendCapacityNewLoveAirSet(remWorkCacheSize);
-          for (int i = cache.useWorkCache.offset; i < remWorkCacheSize; i++)
-            callback.addNewLoveAirSet(cache.useWorkCache.data[i]);
+          for (int i = cache.airWorkCache.offset; i < remWorkCacheSize; i++)
+            callback.addNewLoveAirSet(cache.airWorkCache.data[i]);
 
           // Remove the entries we just appended and gets rid of the offset so they don't break
           // anything below.
-          cache.useWorkCache.clearOffset();
+          cache.airWorkCache.clearOffset();
         }
 
         // Check to see if this Agent is a Favorite who has a keep at most limit set with
@@ -2397,9 +2397,9 @@ public final class Carny implements Runnable
           currAgent.getAgentFlag(Agent.KEEP_AT_MOST_MASK) > 0)
         {
           int fileCount = 0;
-          for (int j = 0, potsWorkCacheSize = cache.useWorkCache.size; j < potsWorkCacheSize; j++)
+          for (int j = 0, potsWorkCacheSize = cache.airWorkCache.size; j < potsWorkCacheSize; j++)
           {
-            MediaFile mf = wiz.getFileForAiring(cache.useWorkCache.data[j]);
+            MediaFile mf = wiz.getFileForAiring(cache.airWorkCache.data[j]);
             if (mf != null && mf.isCompleteRecording())
               fileCount++;
           }
@@ -2410,7 +2410,7 @@ public final class Carny implements Runnable
           }
         }
 
-        int potsWorkCacheSize = cache.useWorkCache.size;
+        int potsWorkCacheSize = cache.airWorkCache.size;
         boolean negator = currAgent.isNegativeNelly();
         if (negator)
           callback.appendCapacityBlackBalled(potsWorkCacheSize);
@@ -2419,7 +2419,7 @@ public final class Carny implements Runnable
 
         for (int j = 0; j < potsWorkCacheSize; j++)
         {
-          Airing agentPot = cache.useWorkCache.data[j];
+          Airing agentPot = cache.airWorkCache.data[j];
           if (negator)
           {
             callback.addBlackBalled(agentPot);
@@ -2704,7 +2704,7 @@ public final class Carny implements Runnable
     // Per thread.
     final StringBuilder sbCache = new StringBuilder();
     // This is the array that will actually be used and will return our results.
-    CacheList useWorkCache = null;
+    CacheList airWorkCache = null;
 
     // This is used to count the Don't Like watches without needing to do anything more than set
     // this value. This is the only thing that doesn't completely feel correct for this type of

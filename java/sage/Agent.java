@@ -491,8 +491,8 @@ public class Agent extends DBObject implements Favorite
         if (Sage.DBG) System.out.println("Unable to use optimized query: " + toString());
       }
 
-      int searchStart = cache.useWorkCache.offset;
-      int searchEnd = cache.useWorkCache.size;
+      int searchStart = cache.airWorkCache.offset;
+      int searchEnd = cache.airWorkCache.size;
       // We do not worry about binary ordering when we are processing all airings because they are
       // already sorted that way and if we are performing a second pass, it's much faster to just
       // check if we need it, then append it. If we need to go for a third pass (which never
@@ -502,11 +502,11 @@ public class Agent extends DBObject implements Favorite
         for (int i = 0; i < allAirings.length; i++)
         {
           Airing airing = (Airing) allAirings[i];
-          boolean contains = cache.useWorkCache.binarySearch(searchStart, searchEnd, airing) >= 0;
+          boolean contains = cache.airWorkCache.binarySearch(searchStart, searchEnd, airing) >= 0;
           if (!contains && followsTrend(airing, mustBeViewable, sbCache, skipKeyword, ignoreDisabledFlag))
           {
-            cache.useWorkCache.ensureAddCapacity(1);
-            cache.useWorkCache.add(airing);
+            cache.airWorkCache.ensureAddCapacity(1);
+            cache.airWorkCache.add(airing);
             contains = true;
           }
 
@@ -528,8 +528,8 @@ public class Agent extends DBObject implements Favorite
           Airing airing = (Airing) allAirings[i];
           if (followsTrend(airing, mustBeViewable, sbCache, skipKeyword, ignoreDisabledFlag))
           {
-            cache.useWorkCache.ensureAddCapacity(1);
-            cache.useWorkCache.add(airing);
+            cache.airWorkCache.ensureAddCapacity(1);
+            cache.airWorkCache.add(airing);
           }
 
           if ((i % CPU_CONTROL_MOD_COUNT) == 0 && controlCPUUsage)
@@ -543,7 +543,7 @@ public class Agent extends DBObject implements Favorite
       // starting with the exact same data. We don't need to worry about the offset here since if
       // we copy everything, the offset still takes us to the same location. This is also only for
       // verification.
-      Carny.CacheList fullTrend = VERIFY_AIRING_OPTIMIZATION ? cache.useWorkCache.copy() : null;
+      Carny.CacheList fullTrend = VERIFY_AIRING_OPTIMIZATION ? cache.airWorkCache.copy() : null;
       Carny.CacheList processedWaste = cache.processedWaste;
 
       for (int i = -1, hashesSize = hashes.length; i < hashesSize; i++)
@@ -570,12 +570,12 @@ public class Agent extends DBObject implements Favorite
             // We could have based this on the largest array when we started, but the reality is
             // that we do not know what worker will end up dealing with a large set until it
             // happens, so we always deal with last minute adjustments like this.
-            cache.useWorkCache.ensureAddCapacity(airingLength);
+            cache.airWorkCache.ensureAddCapacity(airingLength);
         }
 
         // If we get airings from more than one array, we could have duplicates. All of the arrays
         // in the map are already binary sorted, so no sort is required initially.
-        if (cache.useWorkCache.apparentSize() == 0)
+        if (cache.airWorkCache.apparentSize() == 0)
         {
           for (int j = 0; j < airingLength; j++)
           {
@@ -584,9 +584,9 @@ public class Agent extends DBObject implements Favorite
             {
               // For 0, we just check and resize as we go.
               if (i == -1)
-                cache.useWorkCache.ensureAddCapacity(1);
+                cache.airWorkCache.ensureAddCapacity(1);
 
-              cache.useWorkCache.add(airing);
+              cache.airWorkCache.add(airing);
 
               if (countManualWasted)
               {
@@ -610,15 +610,15 @@ public class Agent extends DBObject implements Favorite
             // already in the cache and did not clear followsTrend() because of the volume. This is
             // also why we don't try to consolidate all of the airings before we iterate them here.
             int index;
-            if ((index = cache.useWorkCache.binarySearch(airing)) < 0 &&
+            if ((index = cache.airWorkCache.binarySearch(airing)) < 0 &&
               followsTrend(airing, mustBeViewable, sbCache, skipKeyword, ignoreDisabledFlag))
             {
               // For 0, we just check and resize as we go.
               if (i == -1)
-                cache.useWorkCache.ensureAddCapacity(1);
+                cache.airWorkCache.ensureAddCapacity(1);
 
               index = -(index + 1);
-              cache.useWorkCache.add(index, airing);
+              cache.airWorkCache.add(index, airing);
             }
 
             // We are interesting in anything that has been inserted already or was just inserted,
@@ -637,8 +637,8 @@ public class Agent extends DBObject implements Favorite
       {
         // Cache this value in case we might come back with a different value.
         int optManualWaste = cache.manualWasted;
-        Carny.CacheList optAirWorkCache = cache.useWorkCache;
-        cache.useWorkCache = fullTrend;
+        Carny.CacheList optAirWorkCache = cache.airWorkCache;
+        cache.airWorkCache = fullTrend;
         // If we don't provide a map, a full search is always executed. Also don't provide the cache
         // or we will overwrite the results of this first run.
         optimizedFollowsTrend(mustBeViewable, controlCPUUsage, skipKeyword, ignoreDisabledFlag,
@@ -651,11 +651,11 @@ public class Agent extends DBObject implements Favorite
         }
 
         // Restore the old cache and manual wasted value.
-        cache.useWorkCache = optAirWorkCache;
+        cache.airWorkCache = optAirWorkCache;
         cache.manualWasted = optManualWaste;
 
         // We could make this a lot better, but this ia a non-production verification mode.
-        List<Airing> optList = cache.useWorkCache.getList();
+        List<Airing> optList = cache.airWorkCache.getList();
         List<Airing> fullTrendList = fullTrend.getList();
 
         if (optAirWorkCache.size != fullTrend.size || !optList.equals(fullTrendList))
@@ -791,7 +791,7 @@ public class Agent extends DBObject implements Favorite
     if (cache == null)
       rv = new ArrayList<Airing>();
     else
-      cache.useWorkCache.clear();
+      cache.airWorkCache.clear();
 
     boolean keywordTest = !legacyKeyword && (this.agentMask&(KEYWORD_MASK)) == (KEYWORD_MASK);
     if(keywordTest)
@@ -806,7 +806,7 @@ public class Agent extends DBObject implements Favorite
           if (followsTrend(a, true, sbCache, true, ignoreDisabledFlag))
           {
             if (cache != null)
-              cache.useWorkCache.add(a);
+              cache.airWorkCache.add(a);
             else
               rv.add(a);
           }
@@ -1197,7 +1197,7 @@ public class Agent extends DBObject implements Favorite
 
     // NOTE: We never call this method using an offset, so we can make some assumptions. If this
     // changes in the future, those assumptions need to be changed to account for the offset.
-    cache.useWorkCache.clear();
+    cache.airWorkCache.clear();
 
     // There's three different things that affect this calculation.
     // 1. The Airings that are declared Watched that follow this trend
@@ -1213,7 +1213,7 @@ public class Agent extends DBObject implements Favorite
     if (unoptimized)
     {
       DBObject[] watches = wiz.getRawAccess(Wizard.WATCH_CODE, (byte) 0);
-      cache.useWorkCache.ensureAddCapacity(watches.length);
+      cache.airWorkCache.ensureAddCapacity(watches.length);
 
       for (int i = 0; i < watches.length; i++)
       {
@@ -1223,14 +1223,14 @@ public class Agent extends DBObject implements Favorite
           Airing testA = currWatch.getAiring();
           if (followsTrend(testA, false, sbCache))
           {
-            cache.useWorkCache.add(testA);
+            cache.airWorkCache.add(testA);
           }
         }
         if (controlCPUUsage && (i % CPU_CONTROL_MOD_COUNT) == 0)
           try{Thread.sleep(Carny.SLEEP_PERIOD);}catch(Exception e){}
       }
 
-      cache.useWorkCache.sort();
+      cache.airWorkCache.sort();
     }
     else
     {
@@ -1239,13 +1239,13 @@ public class Agent extends DBObject implements Favorite
         cache, false, "watchAirsMap");
     }
 
-    int numWatchedAirs = cache.useWorkCache.size;
+    int numWatchedAirs = cache.airWorkCache.size;
 
     int numManualWaste = 0;
     if (unoptimized)
     {
       DBObject[] waste = wiz.getRawAccess(Wizard.WASTED_CODE, (byte) 0);
-      cache.useWorkCache.ensureAddCapacity(waste.length);
+      cache.airWorkCache.ensureAddCapacity(waste.length);
       for (int i = 0; i < waste.length; i++)
       {
         Wasted currWaste = (Wasted) waste[i];
@@ -1256,8 +1256,8 @@ public class Agent extends DBObject implements Favorite
           {
             if (currWaste.manual)
               numManualWaste++;
-            if (cache.useWorkCache.binarySearch(numWatchedAirs, testW) < 0)
-              cache.useWorkCache.add(testW);
+            if (cache.airWorkCache.binarySearch(numWatchedAirs, testW) < 0)
+              cache.airWorkCache.add(testW);
           }
         }
         if (controlCPUUsage && (i % CPU_CONTROL_MOD_COUNT) == 0)
@@ -1274,18 +1274,18 @@ public class Agent extends DBObject implements Favorite
     // This is correct because the air isn't considered wasted if it was also fully watched. We
     // accounted for manual waste (e.g. Don't Like) above. This is how the old behavior effectively
     // worked.
-    int numWastedAirs = cache.useWorkCache.size - numWatchedAirs;
+    int numWastedAirs = cache.airWorkCache.size - numWatchedAirs;
 
     if (VERIFY_AIRING_OPTIMIZATION)
     {
-      Set<Airing> test = new HashSet<>(cache.useWorkCache.getList());
-      if (test.size() != cache.useWorkCache.apparentSize())
+      Set<Airing> test = new HashSet<>(cache.airWorkCache.getList());
+      if (test.size() != cache.airWorkCache.apparentSize())
       {
-        System.out.println("WARNING: List contains redundant values: " + test.size() + " != " + cache.useWorkCache.apparentSize());
+        System.out.println("WARNING: List contains redundant values: " + test.size() + " != " + cache.airWorkCache.apparentSize());
         StringBuilder stringBuilder = new StringBuilder("Redundant list: ");
-        for (int i = cache.useWorkCache.offset; i < cache.useWorkCache.size; i++)
+        for (int i = cache.airWorkCache.offset; i < cache.airWorkCache.size; i++)
         {
-          Airing object = cache.useWorkCache.data[i];
+          Airing object = cache.airWorkCache.data[i];
           stringBuilder.append(object.getID()).append(',');
         }
         System.out.println(stringBuilder);
@@ -1313,9 +1313,9 @@ public class Agent extends DBObject implements Favorite
     }
 
     next_air:
-    for (int i = 0, size = cache.useWorkCache.size; i < size; i++)
+    for (int i = 0, size = cache.airWorkCache.size; i < size; i++)
     {
-      Airing currAir = cache.useWorkCache.data[i];
+      Airing currAir = cache.airWorkCache.data[i];
       Show currShow = currAir.getShow();
       if (currShow == null) continue;
       Stringer theTit = null;
@@ -1915,5 +1915,5 @@ public class Agent extends DBObject implements Favorite
   private transient boolean negator = false;
   // This is set by whatever thread gets it first, so it must be volatile.
   private transient int[] hashes = Pooler.EMPTY_INT_ARRAY;
-  private final Object hashesLock = new Object();
+  private transient final Object hashesLock = new Object();
 }
