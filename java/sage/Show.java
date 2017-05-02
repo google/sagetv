@@ -134,7 +134,7 @@ public final class Show extends DBObject
   public static final int IMAGE_SOURCE_FIBER_GSTATIC = 1;
 
   // Used for localized check on isMovie() method.
-  static volatile String movieString = Sage.rez("Movie");
+  static String movieString = Sage.rez("Movie");
 
   public static String getRoleString(int x)
   {
@@ -276,7 +276,7 @@ public final class Show extends DBObject
     }
   }
 
-  public void appendExpandedRatingsString(StringBuffer rv)
+  public void appendExpandedRatingsString(StringBuilder rv)
   {
     for (int i = 0; i < ers.length; i++)
     {
@@ -288,7 +288,7 @@ public final class Show extends DBObject
 
   public String getExpandedRatingsString()
   {
-    StringBuffer rv = new StringBuffer();
+    StringBuilder rv = new StringBuilder();
     appendExpandedRatingsString(rv);
     return rv.toString();
   }
@@ -305,7 +305,7 @@ public final class Show extends DBObject
     return rv;
   }
 
-  public void appendBonusesString(StringBuffer rv)
+  public void appendBonusesString(StringBuilder rv)
   {
     for (int i = 0; i < bonuses.length; i++)
     {
@@ -317,7 +317,7 @@ public final class Show extends DBObject
 
   public String getBonusesString()
   {
-    StringBuffer rv = new StringBuffer();
+    StringBuilder rv = new StringBuilder();
     appendBonusesString(rv);
     return rv.toString();
   }

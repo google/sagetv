@@ -3371,7 +3371,7 @@ public class MediaFile extends DBObject implements SegmentedFile
           if (idx != -1)
           {
             theShow.title.name = filePath.substring(idx, idx + theShow.title.name.length());
-            theShow.title.ignoreCaseHash = name.toLowerCase().hashCode();
+            theShow.title.ignoreCaseHash = theShow.title.name.toLowerCase().hashCode();
           }
         }
         String showEp = theShow.getEpisodeName();

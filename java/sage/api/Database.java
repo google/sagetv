@@ -689,7 +689,7 @@ public class Database {
         {
           bond = null;
           // Search through all of the Favorite objects to find the correct one
-          StringBuffer sbCache = new StringBuffer();
+          StringBuilder sbCache = new StringBuilder();
           for (int i = 0; i < cachedFavs.length; i++)
           {
             if (cachedFavs[i].followsTrend(air, false, sbCache))

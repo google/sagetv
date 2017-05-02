@@ -600,7 +600,7 @@ public class Airing extends DBObject implements Schedulable
   public int getTotalParts() { return partsB & 0x0F; }
   public int getPartNum() { return (partsB >> 4) & 0x0F; }
 
-  public void appendMiscInfo(StringBuffer sb)
+  public void appendMiscInfo(StringBuilder sb)
   {
     boolean addComma = false;
     if ((partsB & 0x0F) > 1)
@@ -752,7 +752,7 @@ public class Airing extends DBObject implements Schedulable
   }
   public String getMiscInfo()
   {
-    StringBuffer sb = new StringBuffer();
+    StringBuilder sb = new StringBuilder();
     appendMiscInfo(sb);
     return sb.toString();
   }
