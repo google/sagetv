@@ -6,6 +6,7 @@
     * public Airing[] GetPotentialFavoriteAirings(Favorite Favorite);
 * Fix: Aliases without a non-alias would cause an NPE when searching.
 * Fix: Schedule Direct aliasing logic was applied backwards.
+* Carny is now multi-threaded and highly optimized.
 
 ## Version 9.0.14 (2017-03-18)
 * New: Added new API methods for in progress sports tracking using Schedules Direct.
