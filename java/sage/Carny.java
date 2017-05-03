@@ -2483,13 +2483,6 @@ public final class Carny implements Runnable
         }
       }
 
-      // Check just how big the array internally grew for statistical analysis. Note that this is
-      // the internal array size, not the largest amount of data ever stored.
-      /*Field privateStringField = ArrayList.class.getDeclaredField("elementData");
-      privateStringField.setAccessible(true);
-      Object fieldValue[] = (Object[]) privateStringField.get(airsWorkCache);
-      System.out.println("elementData=" + fieldValue.length);*/
-
       callback.setComplete();
       return callback;
     }
