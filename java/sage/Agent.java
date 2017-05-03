@@ -197,7 +197,6 @@ public class Agent extends DBObject implements Favorite
     {
       buildFavProps(in.readUTF());
     }
-    resetHashes();
   }
 
   private void buildFavProps(String str)
@@ -454,28 +453,32 @@ public class Agent extends DBObject implements Favorite
     // We must have a cache to use this method. This will throw the exception immediately if we do
     // not.
     final StringBuilder sbCache = cache.sbCache;
-    final int[] hashes = getHashes();
+    final Integer[] hashes = getHashes();
 
     // For keyword and timeslot trends with no other limiting factors, we need to check everything
     // since we haven't worked out a way to optimize this yet. Fortunately these are not as common
     // as title and people agents. Skip keyword doesn't apply here because it's not an optimization
     // that implies we will get anything from the map.
+    // 05-03-2017 JS: I changed the call to hasSpecificCriteria() to just check if we have any
+    // hashes since it effectively the same thing, just faster to evaluate.
     boolean fullCheck = ((keyword.length() > 0 ||
-      (slotType != 0 && timeslots != null && timeslots.length > 0)) && !hasSpecificCriteria());
+      (slotType != 0 && timeslots != null && timeslots.length > 0)) && hashes.length == 0);
 
     // If an agent has an interest in the hash 0, that means it doesn't actually know what it wants
     // for at least one of its properties and that means we must do a full check.
-    if (!fullCheck)
+    // 05/03/2017 JS: We can eliminate this check because getHashes() will return an empty array if
+    // 0 is any of the hashes that would have been returned. This makes fullCheck already true.
+    /*if (!fullCheck)
     {
       for (int i = 0; i < hashes.length; i++)
       {
-        if (hashes[i] == 0)
+        if (hashes[i].equals(0))
         {
           fullCheck = true;
           break;
         }
       }
-    }
+    }*/
 
     if (countManualWasted)
     {
@@ -861,37 +864,33 @@ public class Agent extends DBObject implements Favorite
 
   synchronized void update(DBObject fromMe)
   {
-    synchronized (hashesLock)
-    {
-      Agent bond = (Agent) fromMe;
-      agentMask = bond.agentMask;
-      createTime = bond.createTime;
-      title = bond.title;
-      category = bond.category;
-      subCategory = bond.subCategory;
-      setChannelName(bond.chanName);
-      network = bond.network;
-      rated = bond.rated;
-      year = bond.year;
-      pr = bond.pr;
-      person = bond.person;
-      slotType = bond.slotType;
-      timeslots = (bond.timeslots == null ? null : ((int[]) bond.timeslots.clone()));
-      weakAgents = bond.weakAgents.clone();
-      quality = bond.quality;
-      autoConvertFormat = bond.autoConvertFormat;
-      autoConvertDest = bond.autoConvertDest;
-      startPad = bond.startPad;
-      stopPad = bond.stopPad;
-      agentFlags = bond.agentFlags;
-      role = bond.role;
-      keyword = bond.keyword;
-      if (bond.favProps != null)
-        favProps = (Properties) bond.favProps.clone();
-      else
-        favProps = null;
-      resetHashes();
-    }
+    Agent bond = (Agent) fromMe;
+    agentMask = bond.agentMask;
+    createTime = bond.createTime;
+    title = bond.title;
+    category = bond.category;
+    subCategory = bond.subCategory;
+    setChannelName(bond.chanName);
+    network = bond.network;
+    rated = bond.rated;
+    year = bond.year;
+    pr = bond.pr;
+    person = bond.person;
+    slotType = bond.slotType;
+    timeslots = (bond.timeslots == null ? null : ((int[]) bond.timeslots.clone()));
+    weakAgents = bond.weakAgents.clone();
+    quality = bond.quality;
+    autoConvertFormat = bond.autoConvertFormat;
+    autoConvertDest = bond.autoConvertDest;
+    startPad = bond.startPad;
+    stopPad = bond.stopPad;
+    agentFlags = bond.agentFlags;
+    role = bond.role;
+    keyword = bond.keyword;
+    if (bond.favProps != null)
+      favProps = (Properties) bond.favProps.clone();
+    else
+      favProps = null;
     super.update(fromMe);
   }
 
@@ -1299,8 +1298,11 @@ public class Agent extends DBObject implements Favorite
     boolean titleUniqueCount = (agentMask & TITLE_MASK) == 0;
     // These are used when doneShowMap needs an array. Reset the count so we can use them again.
     cache.resetNextAiringList();
-    // It's faster not to cache and clear this map.
-    Map<Show, Object> doneShowMap = new HashMap<>(); // Single Airing or List<Airing>
+    // It's faster not to cache and clear this map. This appears to be due to the number of shows
+    // being stored that need to be cleared. There's also a measurable performance bump by just
+    // allocating for the largest number of airings we might add to this map.
+    // Single Airing or List<Airing>
+    Map<Show, Object> doneShowMap = new HashMap<>((int)(cache.airWorkCache.size / 0.75) + 1);
     Map<Stringer, MutableFloat> titleWatchMap = null;
     Map<Stringer, MutableInteger> titleAllMap =  null;
 
@@ -1782,101 +1784,86 @@ public class Agent extends DBObject implements Favorite
     return (Properties) favProps.clone();
   }
 
-  private void resetHashes()
+  // 05/03/2017 JS: I changed this from caching this value to just re-creating it every time. The
+  // performance is break even since we only use these hashes once per cycle and it doesn't appear
+  // to be worth the memory usage. Since we aren't caching, we also use Integer since we will be
+  // using this against a HashMap and this will keep us from autoboxing in the process.
+  private Integer[] getHashes()
   {
-    synchronized (hashesLock)
+    // We don't need to include 0 because that's always assumed in look ups.
+    Set<Integer> searchedHashes = new HashSet<>();
+
+    if (title != null)
     {
-      hashes = Pooler.EMPTY_INT_ARRAY;
+      searchedHashes.add(title.ignoreCaseHash);
     }
-  }
 
-  // We need to synchronize here or the properties could be updated and we'll end up writing the
-  // the wrong hashes.
-  int[] getHashes()
-  {
-    synchronized (hashesLock)
+    if (title == null)
     {
-      int[] newHashes = hashes;
-      if (newHashes != Pooler.EMPTY_INT_ARRAY)
-        return newHashes;
-
-      // We don't need to include 0 because that's always assumed in look ups.
-      Set<Integer> searchedHashes = new HashSet<>();
-
-      if (title != null)
+      if (testAgentFlag(Agent.FIRSTRUN_MASK))
       {
-        searchedHashes.add(title.ignoreCaseHash);
+        searchedHashes.add(Agent.FIRSTRUN_MASK);
       }
-
-      if (title == null)
+      if (testAgentFlag(Agent.RERUN_MASK))
       {
-        if (testAgentFlag(Agent.FIRSTRUN_MASK))
-        {
-          searchedHashes.add(Agent.FIRSTRUN_MASK);
-        }
-        if (testAgentFlag(Agent.RERUN_MASK))
-        {
-          searchedHashes.add(Agent.RERUN_MASK);
-        }
+        searchedHashes.add(Agent.RERUN_MASK);
       }
+    }
 
-      if (person != null)
-      {
-        searchedHashes.add(person.ignoreCaseHash);
-      }
+    if (person != null)
+    {
+      searchedHashes.add(person.ignoreCaseHash);
+    }
 
-      if (category != null)
-      {
-        searchedHashes.add(category.ignoreCaseHash);
-      }
+    if (category != null)
+    {
+      searchedHashes.add(category.ignoreCaseHash);
+    }
 
-      if (subCategory != null)
-      {
-        searchedHashes.add(subCategory.ignoreCaseHash);
-      }
+    if (subCategory != null)
+    {
+      searchedHashes.add(subCategory.ignoreCaseHash);
+    }
 
-      if (chanName.length() > 0)
+    if (chanName.length() > 0)
+    {
+      searchedHashes.add(chanName.hashCode());
+    }
+
+    if (chanNames != null && chanNames.length > 0)
+    {
+      for (String chanName : chanNames)
       {
         searchedHashes.add(chanName.hashCode());
       }
-
-      if (chanNames != null && chanNames.length > 0)
-      {
-        for (String chanName : chanNames)
-        {
-          searchedHashes.add(chanName.hashCode());
-        }
-      }
-
-      if (network != null)
-      {
-        searchedHashes.add(network.ignoreCaseHash);
-      }
-
-      if (rated != null)
-      {
-        searchedHashes.add(rated.ignoreCaseHash);
-      }
-
-      if (year != null)
-      {
-        searchedHashes.add(year.ignoreCaseHash);
-      }
-
-      if (pr != null)
-      {
-        searchedHashes.add(pr.ignoreCaseHash);
-      }
-
-      newHashes = new int[searchedHashes.size()];
-      int i = 0;
-      for (Integer hash : searchedHashes)
-      {
-        newHashes[i++] = hash;
-      }
-      hashes = newHashes;
-      return newHashes;
     }
+
+    if (network != null)
+    {
+      searchedHashes.add(network.ignoreCaseHash);
+    }
+
+    if (rated != null)
+    {
+      searchedHashes.add(rated.ignoreCaseHash);
+    }
+
+    if (year != null)
+    {
+      searchedHashes.add(year.ignoreCaseHash);
+    }
+
+    if (pr != null)
+    {
+      searchedHashes.add(pr.ignoreCaseHash);
+    }
+
+    // This will ensure that we do a full search since 0 means at least one of our items doesn't
+    // have a "valid" hash.
+    if (searchedHashes.contains(0))
+      return new Integer[0];
+
+    return searchedHashes.toArray(new Integer[searchedHashes.size()]);
   }
 
   final int agentID;
@@ -1913,7 +1900,4 @@ public class Agent extends DBObject implements Favorite
   private String cachedKeywordForMats;
   private transient Wizard wiz;
   private transient boolean negator = false;
-  // This is set by whatever thread gets it first, so it must be volatile.
-  private transient int[] hashes = Pooler.EMPTY_INT_ARRAY;
-  private transient final Object hashesLock = new Object();
 }

@@ -1092,7 +1092,7 @@ public final class Carny implements Runnable
 
     // We could have this array around for a long time, so let's make sure we have the smallest
     // possible footprint.
-    Map<Integer, Airing[]> returnMap = new HashMap<>();
+    Map<Integer, Airing[]> returnMap = new HashMap<>((int)(buildMap.size() / 0.75f) + 1);
     for (Map.Entry<Integer, List<Airing>> entry : buildMap.entrySet())
     {
       Airing[] finalAirings = entry.getValue().toArray(Pooler.EMPTY_AIRING_ARRAY);
