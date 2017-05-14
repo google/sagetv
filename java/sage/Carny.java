@@ -19,6 +19,9 @@ import sage.util.MutableFloat;
 import sage.util.MutableInteger;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -992,12 +995,39 @@ public final class Carny implements Runnable
     }
   }
 
-  private Map<Integer, Airing[]> buildMap(List<Airing> airings, Map<Integer, Airing[]> mergeMap)
+  // Re-build the airing map for wasted so we don't need to keep re-getting wasted from the wizard.
+  // Wasted will cache it's airing on the first get which also keeps the requests at a minimum.
+  // This also keeps the airing binary sort which is desirable.
+  private Map<Integer, Wasted[]> buildWastedMap(Airing[] airings)
+  {
+    Map<Integer, Airing[]> airsMap = buildMap(airings);
+    Map<Integer, Wasted[]> wastedMap = new HashMap<>((int)(airsMap.size() / 0.75) + 1);
+
+    for (Map.Entry<Integer, Airing[]>  entry : airsMap.entrySet())
+    {
+      Airing airs[] = entry.getValue();
+      Wasted wasted[] = new Wasted[airs.length];
+      int w = 0;
+      for (int i = 0; i < airs.length; i++)
+      {
+        Wasted currWasted = wiz.getWastedForAiring(airs[i]);
+        if (currWasted != null)
+          wasted[w++] = currWasted;
+      }
+      // Somehow we lost one while re-building.
+      if (w != airs.length)
+        wasted = Arrays.copyOf(wasted, w);
+      wastedMap.put(entry.getKey(), wasted);
+    }
+    return wastedMap;
+  }
+
+  private Map<Integer, Airing[]> buildMap(Airing airings[])
   {
     Map<Integer, List<Airing>> buildMap = new HashMap<>();
-    for (int i = 0, airingsSize = airings.size(); i < airingsSize; i++)
+    for (int i = 0, airingsSize = airings.length; i < airingsSize; i++)
     {
-      Airing airing = airings.get(i);
+      Airing airing = airings[i];
       Show show = airing.getShow();
       if (show == null)
         continue;
@@ -1031,13 +1061,17 @@ public final class Carny implements Runnable
       Channel c = airing.getChannel();
       if (c != null)
       {
-        if (c.name != null)
+        // Sometimes there's a channel, but it doesn't have a name. We never match for channels
+        // that do not have a name and this ends up being a zero forcing all of the agents to
+        // process it even though there isn't a reason to do so.
+        if (c.name != null && c.name.length() > 0)
         {
           currentHash = c.name.hashCode();
           addToMaps(currentHash, airing, buildMap);
         }
 
-        if (c.network != null)
+        // Same situation with network (even more so).
+        if (c.network != null && c.network.name.length() > 0)
         {
           currentHash = c.network.ignoreCaseHash;
           addToMaps(currentHash, airing, buildMap);
@@ -1069,36 +1103,13 @@ public final class Carny implements Runnable
       // have not come up with and efficient way to look them up.
     }
 
-    boolean sortNeeded = false;
-    if (mergeMap != null)
-    {
-      for (Map.Entry<Integer, Airing[]> entry : mergeMap.entrySet())
-      {
-        List<Airing> mappedAirings = buildMap.get(entry.getKey());
-        if (mappedAirings == null)
-        {
-          buildMap.put(entry.getKey(), new ArrayList<>(Arrays.asList(entry.getValue())));
-        }
-        else
-        {
-          sortNeeded = true;
-          Set<Airing> dedupe = new HashSet<>(Arrays.asList(entry.getValue()));
-          dedupe.addAll(mappedAirings);
-          mappedAirings.clear();
-          mappedAirings.addAll(dedupe);
-        }
-      }
-    }
-
     // We could have this array around for a long time, so let's make sure we have the smallest
-    // possible footprint.
-    Map<Integer, Airing[]> returnMap = new HashMap<>((int)(buildMap.size() / 0.75f) + 1);
+    // possible footprint. Also arrays are just faster than lists to iterate.
+    Map<Integer, Airing[]> returnMap = new HashMap<>(Math.max (16, (int)(buildMap.size() / 0.75f) + 1));
+
     for (Map.Entry<Integer, List<Airing>> entry : buildMap.entrySet())
     {
       Airing[] finalAirings = entry.getValue().toArray(Pooler.EMPTY_AIRING_ARRAY);
-      // Sort by ID. This is not needed unless we know the data is not sorted by ID.
-      if (sortNeeded)
-        Arrays.sort(finalAirings, DBObject.ID_COMPARATOR);
       returnMap.put(entry.getKey(), finalAirings);
     }
     return returnMap;
@@ -1215,7 +1226,7 @@ public final class Carny implements Runnable
     Map<Integer, Airing[]> allAirsMap;
     Map<Integer, Airing[]> remAirsMap;
     Map<Integer, Airing[]> watchAirsMap;
-    Map<Integer, Airing[]> wastedAirsMap;
+    Map<Integer, Wasted[]> wastedAirsMap;
 
     Airing[] allAirs;
     Airing[] remAirs;
@@ -1260,20 +1271,19 @@ public final class Carny implements Runnable
         }
       }
 
-      // We need to sort this one now so we don't need to sort 1000's of smaller arrays.
+      // We need to sort these two now so we don't need to sort 1000's of smaller arrays.
       Collections.sort(fullWatchAirsList, DBObject.ID_COMPARATOR);
-      // We need to sort this one now so we don't need to sort 1000's of smaller arrays.
       Collections.sort(wastedAirsList, DBObject.ID_COMPARATOR);
-
-      allAirsMap = buildMap(airset, null);
-      remAirsMap = buildMap(remAirSet, null);
-      watchAirsMap = buildMap(fullWatchAirsList, null);
-      wastedAirsMap = buildMap(wastedAirsList, null);
 
       allAirs = airset.toArray(Pooler.EMPTY_AIRING_ARRAY);
       remAirs = remAirSet.toArray(Pooler.EMPTY_AIRING_ARRAY);
       watchAirs = fullWatchAirsList.toArray(Pooler.EMPTY_AIRING_ARRAY);
       wastedAirs = wastedAirsList.toArray(Pooler.EMPTY_AIRING_ARRAY);
+
+      allAirsMap = buildMap(allAirs);
+      remAirsMap = buildMap(remAirs);
+      watchAirsMap = buildMap(watchAirs);
+      wastedAirsMap = buildWastedMap(wastedAirs);
     }
 
     // Free these fairly huge arrays up for GC.
@@ -1283,11 +1293,11 @@ public final class Carny implements Runnable
 
     if (Sage.DBG) System.out.println("CARNY Processing " + allAgents.length + " Agents & " + allAirs.length + " Airs");
 
-    boolean controlCPUUsage = doneInit && allAgents.length > 50 && Sage.getBoolean("control_profiler_cpu_usage", true);
+    boolean controlCPUUsage = doneInit && submittedAgents > 50 && Sage.getBoolean("control_profiler_cpu_usage", true);
     boolean useLegacyKeyword = Sage.getBoolean("use_legacy_keyword_favorites", true);
     boolean aggressiveNegativeProfiling = Sage.getBoolean("aggressive_negative_profiling", false);
 
-    // If we don't have any agents, there's no point is spinning up worker threads. Also some users
+    // If we don't have any agents, there's no point in spinning up worker threads. Also some users
     // might have servers with a lot of cores (> 8), so if we don't have a lot of agents, we will
     // not try to spread the load across every core because it's just a waste of resources. We are
     // arbitrarily selecting 75 agents per core. The number could be higher, but on lower powered
@@ -1406,17 +1416,62 @@ public final class Carny implements Runnable
                 for (int k = 0, size = srcCauses.size(); k < size; k++)
                 {
                   WPCauseValue currCauseValue = srcCauses.get(k);
-                  WPCauseValue compCauseValue = firstCallback.addOrReturnWPCauseValue(currCauseValue);
+                  WPCauseValue mappedCauseValue = firstCallback.addOrReturnWPCauseValue(currCauseValue);
                   Airing agentPot = currCauseValue.airing;
 
                   // We just added this agent.
-                  if (compCauseValue == null && agentPot.isWatchedForSchedulingPurpose())
+                  if (mappedCauseValue == null)
                   {
-                    firstCallback.addWatchedPotsToClear(agentPot);
+                    if (agentPot.isWatchedForSchedulingPurpose())
+                      firstCallback.addWatchedPotsToClear(agentPot);
                   }
-                  else if (compCauseValue != null && compCauseValue.compareAndReplace(currCauseValue.agent) && agentPot.isWatchedForSchedulingPurpose())
+                  else
                   {
-                    firstCallback.addWatchedPotsToClear(agentPot);
+                      // This agent doesn't override the current agent.
+                    if (!mappedCauseValue.compareAndReplace(currCauseValue.agent))
+                    {
+                      // They are the same wp, so they might be out of order.
+                      if (mappedCauseValue.wp != MIN_WP && mappedCauseValue.wp == currCauseValue.wp)
+                      {
+                        // Fix the order of this entry so we have the same results every time.
+                        if (currCauseValue.agent.createTime > mappedCauseValue.agent.createTime)
+                        {
+                          WPCauseValue newCauseValue =
+                            firstCallback.replaceWPCauseValue(agentPot, currCauseValue.agent);
+                          currCauseValue = mappedCauseValue;
+                          mappedCauseValue = newCauseValue;
+                        }
+                        else if (currCauseValue.agent.createTime == mappedCauseValue.agent.createTime)
+                        {
+                          int currCauseID = currCauseValue.agent.agentID;
+                          int mappedCauseID = mappedCauseValue.agent.agentID;
+
+                          // Lower index is higher priority because lower indexes would be processed
+                          // before higher indexes. If we are out of order, we fix it here so that
+                          // we don't see different results on each run when the results should be
+                          // the same every time under the correct circumstances.
+                          if (currCauseID > 0 && mappedCauseID > 0 && mappedCauseID > currCauseID)
+                          {
+                            WPCauseValue newCauseValue =
+                              firstCallback.replaceWPCauseValue(agentPot, currCauseValue.agent);
+                            currCauseValue = mappedCauseValue;
+                            mappedCauseValue = newCauseValue;
+                          }
+                        }
+
+                        // Re-evaluate in case this is a favorite or we discover some other reason
+                        // why the order should be different in the future.
+                        if (mappedCauseValue.compareAndReplace(currCauseValue.agent) &&
+                          agentPot.isWatchedForSchedulingPurpose())
+                        {
+                          firstCallback.addWatchedPotsToClear(agentPot);
+                        }
+                      }
+                    }
+                    else if (agentPot.isWatchedForSchedulingPurpose())
+                    {
+                      firstCallback.addWatchedPotsToClear(agentPot);
+                    }
                   }
                 }
 
@@ -1463,8 +1518,10 @@ public final class Carny implements Runnable
           // Wait until we have actually finished the last worker thread before reporting 100%.
           if (jobsRemoved == submittedAgents && lastIndex != i)
             continue;
+          // An empty database without any airings should go straight to 100%.
           String newSplashMsg = Sage.rez("Module_Init_Progress",
-            new Object[]{Sage.rez("Profiler"), new Double((jobsRemoved * 1.0) / submittedAgents)});
+            new Object[]{Sage.rez("Profiler"), submittedAgents != 0 && allAirs.length != 0 ?
+              new Double((jobsRemoved * 1.0) / submittedAgents) : new Double(1.0)});
           if (lastMessage == null || !newSplashMsg.equals(lastMessage))
           {
             Sage.setSplashText(newSplashMsg);
@@ -1512,6 +1569,8 @@ public final class Carny implements Runnable
       }
     }
 
+    // If we have no agents to process, we will also get a null firstCallback without also getting
+    // workCanceled.
     if (workCanceled || firstCallback == null)
       return;
 
@@ -1523,10 +1582,11 @@ public final class Carny implements Runnable
     final Set<Airing> newMustSeeSet = new HashSet<>(firstCallback.newMustSeeSet);
     final List<WPCauseValue> newWPCauses = firstCallback.newWPCauses;
 
-    final Map<Airing, Float> newWPMap = new HashMap<>(Math.max(16, (int)(newWPCauses.size() / 0.75f) + 1));
-    final Map<Airing, Agent> newCauseMap = new HashMap<>(Math.max(16, (int)(newWPCauses.size() / 0.75f) + 1));
+    int newWPCausesSize = newWPCauses.size();
+    final Map<Airing, Float> newWPMap = new HashMap<>(Math.max(16, (int)(newWPCausesSize / 0.75f) + 1));
+    final Map<Airing, Agent> newCauseMap = new HashMap<>(Math.max(16, (int)(newWPCausesSize / 0.75f) + 1));
 
-    for (int i = 0, newWPCausesSize = newWPCauses.size(); i < newWPCausesSize; i++)
+    for (int i = 0; i < newWPCausesSize; i++)
     {
       WPCauseValue value = newWPCauses.get(i);
       // Modifications to values are all synchronized on their own entry as they are changed by
@@ -1627,6 +1687,17 @@ public final class Carny implements Runnable
 
     if (doneInit)
       SchedulerSelector.getInstance().kick(false);
+
+    /*dumpResults();
+    try
+    {
+      System.out.println("Press and key to exit...");
+      System.in.read();
+    } catch (IOException e)
+    {
+      e.printStackTrace();
+    }
+    System.exit(0);*/
   }
 
   public int getWatchCount() { return globalWatchCount; }
@@ -2255,6 +2326,214 @@ public final class Carny implements Runnable
 		f.setVisible(true);
 	}*/
 
+  /*private void dumpResults()
+  {
+    System.out.println("Dumping CARNY results...");
+
+    List<Airing> localPots;
+    List<Airing> localLoves;
+    List<Airing> localMustSee;
+    List<Map.Entry<Airing, Agent>> localCauseMap;
+    List<Map.Entry<Airing, Float>> localWpMap;
+    synchronized (this)
+    {
+      localPots = new ArrayList<>(Arrays.asList(pots));
+      localLoves = new ArrayList<>(loveAirSet);
+      localMustSee = new ArrayList<>(mustSeeSet);
+      localCauseMap = new ArrayList<>(causeMap.entrySet());
+      localWpMap = new ArrayList<>(wpMap.entrySet());
+    }
+
+    FileOutputStream potsFile = null;
+    FileOutputStream lovesFile = null;
+    FileOutputStream mustSeeFile = null;
+    FileOutputStream causeFile = null;
+    FileOutputStream wpFile = null;
+
+    try
+    {
+      potsFile = new FileOutputStream("carny_pots.txt", false);
+      lovesFile = new FileOutputStream("carny_loves.txt", false);
+      mustSeeFile = new FileOutputStream("carny_must_see.txt", false);
+      causeFile = new FileOutputStream("carny_cause.txt", false);
+      wpFile = new FileOutputStream("carny_wp.txt", false);
+
+      Collections.sort(localPots, DBObject.ID_COMPARATOR);
+      Collections.sort(localLoves, DBObject.ID_COMPARATOR);
+      Collections.sort(localMustSee, DBObject.ID_COMPARATOR);
+      Collections.sort(localCauseMap, new Comparator<Map.Entry<Airing, Agent>>()
+      {
+        @Override
+        public int compare(Map.Entry<Airing, Agent> o1, Map.Entry<Airing, Agent> o2)
+        {
+          return DBObject.ID_COMPARATOR.compare(o1.getKey(), o1.getKey());
+        }
+      });
+      Collections.sort(localWpMap, new Comparator<Map.Entry<Airing, Float>>()
+      {
+        @Override
+        public int compare(Map.Entry<Airing, Float> o1, Map.Entry<Airing, Float> o2)
+        {
+          return DBObject.ID_COMPARATOR.compare(o1.getKey(), o1.getKey());
+        }
+      });
+
+      for (int i = 0; i < 3; i++)
+      {
+        List<Airing> currList;
+        PrintWriter currWriter;
+        switch (i)
+        {
+          case 0:
+            currList = localPots;
+            currWriter = new PrintWriter(potsFile);
+            break;
+          case 1:
+            currList = localLoves;
+            currWriter = new PrintWriter(lovesFile);
+            break;
+          default:
+            currList = localMustSee;
+            currWriter = new PrintWriter(mustSeeFile);
+            break;
+        }
+
+        currWriter.write("Airing");
+        currWriter.write('\t');
+        currWriter.write("Show");
+        currWriter.write('\n');
+
+        for (Airing airing : currList)
+        {
+          Show show = airing.getShow();
+          if (show != null)
+          {
+            currWriter.write(airing.toString());
+            currWriter.write('\t');
+            currWriter.write(show.toString());
+            currWriter.write('\n');
+          }
+          else
+          {
+            currWriter.write(airing.toString());
+            currWriter.write('\t');
+            currWriter.write("S[No Show Available]");
+            currWriter.write('\n');
+          }
+        }
+
+        currWriter.flush();
+      }
+
+      PrintWriter currWriter = new PrintWriter(causeFile);
+      currWriter.write("Agent");
+      currWriter.write('\t');
+      currWriter.write("Airing");
+      currWriter.write('\t');
+      currWriter.write("Show");
+      currWriter.write('\n');
+
+      for (Map.Entry<Airing, Agent> entry : localCauseMap)
+      {
+        Agent agent = entry.getValue();
+        Airing airing = entry.getKey();
+        Show show = airing.getShow();
+        if (show != null)
+        {
+          currWriter.write(agent.toString());
+          currWriter.write('\t');
+          currWriter.write(airing.toString());
+          currWriter.write('\t');
+          currWriter.write(show.toString());
+          currWriter.write('\n');
+        }
+        else
+        {
+          currWriter.write(agent.toString());
+          currWriter.write('\t');
+          currWriter.write(airing.toString());
+          currWriter.write('\t');
+          currWriter.write("S[No Show Available]");
+          currWriter.write('\n');
+        }
+      }
+
+      currWriter.flush();
+      currWriter = new PrintWriter(wpFile);
+      currWriter.write("WP(Float)");
+      currWriter.write('\t');
+      currWriter.write("Airing");
+      currWriter.write('\t');
+      currWriter.write("Show");
+      currWriter.write('\n');
+
+      for (Map.Entry<Airing, Float> entry : localWpMap)
+      {
+        Float floater = entry.getValue();
+        Airing airing = entry.getKey();
+        Show show = airing.getShow();
+        if (show != null)
+        {
+          currWriter.write(floater.toString());
+          currWriter.write('\t');
+          currWriter.write(airing.toString());
+          currWriter.write('\t');
+          currWriter.write(show.toString());
+          currWriter.write('\n');
+        }
+        else
+        {
+          currWriter.write(floater.toString());
+          currWriter.write('\t');
+          currWriter.write(airing.toString());
+          currWriter.write('\t');
+          currWriter.write("S[No Show Available]");
+          currWriter.write('\n');
+        }
+      }
+
+      currWriter.flush();
+    }
+    catch (Exception e)
+    {
+      e.printStackTrace(System.out);
+    }
+    finally
+    {
+      try
+      {
+        if (potsFile != null)
+          potsFile.close();
+      } catch (Exception e) {}
+
+      try
+      {
+        if (lovesFile != null)
+          lovesFile.close();
+      } catch (Exception e) {}
+
+      try
+      {
+        if (mustSeeFile != null)
+          mustSeeFile.close();
+      } catch (Exception e) {}
+
+      try
+      {
+        if (causeFile != null)
+          causeFile.close();
+      } catch (Exception e) {}
+
+      try
+      {
+        if (wpFile != null)
+          wpFile.close();
+      } catch (Exception e) {}
+    }
+
+    System.out.println("Dumped CARNY results.");
+  }*/
+
   public static interface ProfilingListener
   {
     public boolean updateLoves(Set<Airing> s);
@@ -2449,20 +2728,18 @@ public final class Carny implements Runnable
           // this value.
           boolean isWatchedForSchedulingPurposes = agentPot.isWatchedForSchedulingPurpose();
 
-          // This is a much briefer critical code section than what we had when we were maintaining
-          // two maps that basically work with the same information presented different ways. This
-          // also cuts down on the Float object creation until after we are done processing all of
-          // the agents.
+          // This is a more efficient object than what we had when we were maintaining two maps that
+          // basically work with the same information presented different ways. This also cuts down
+          // on the Float object creation until after we are done processing all of the agents.
           WPCauseValue causeValue = callback.addOrReturnWPCauseValue(agentPot, currAgent);
 
           // We just added this agent.
-          if (causeValue == null && isWatchedForSchedulingPurposes)
+          if (causeValue == null)
           {
-            callback.addWatchedPotsToClear(agentPot);
-            isWatchedForSchedulingPurposes = true;
+            if (isWatchedForSchedulingPurposes)
+              callback.addWatchedPotsToClear(agentPot);
           }
-          else if (causeValue != null && causeValue.compareAndReplace(currAgent) &&
-            isWatchedForSchedulingPurposes)
+          else if (causeValue.compareAndReplace(currAgent) && isWatchedForSchedulingPurposes)
           {
             callback.addWatchedPotsToClear(agentPot);
           }
@@ -2505,6 +2782,11 @@ public final class Carny implements Runnable
     public void setComplete()
     {
       complete = true;
+    }
+
+    public WPCauseValue replaceWPCauseValue(Airing airing, Agent agent)
+    {
+      return binaryReplace(newWPCauses, airing, agent);
     }
 
     public WPCauseValue addOrReturnWPCauseValue(WPCauseValue newEntry)
@@ -2566,6 +2848,34 @@ public final class Carny implements Runnable
     public void addNewMustSeeSet(Airing airing)
     {
       binaryInsert(newMustSeeSet, airing);
+    }
+
+    private WPCauseValue binaryReplace(List<WPCauseValue> list, Airing airing, Agent agent)
+    {
+      int id = airing.getID();
+      int low = 0;
+      int high = list.size() - 1;
+
+      while (low <= high)
+      {
+        int mid = (low + high) >>> 1;
+        WPCauseValue causeValue = list.get(mid);
+        int midVal = causeValue.airing.getID();
+
+        if (midVal < id)
+          low = mid + 1;
+        else if (midVal > id)
+          high = mid - 1;
+        else
+        {
+          WPCauseValue newValue = new WPCauseValue(agent, airing);
+          list.set(mid, newValue); // key found
+          return newValue;
+        }
+      }
+      WPCauseValue newValue = new WPCauseValue(agent, airing);
+      list.add(low, newValue); // key not found.
+      return newValue;
     }
 
     private WPCauseValue binaryInsertOrReturn(List<WPCauseValue> list, Airing airing, Agent agent, WPCauseValue newEntry)
@@ -2671,8 +2981,8 @@ public final class Carny implements Runnable
 
       if (compareAgentWP == wp && compareAgent.isFavorite())
       {
-        // Check for agent priority
-        if (doBattle(agent, compareAgent) == compareAgent)
+        // Check for agent priority. This returns the lower priority agent.
+        if (doBattle(compareAgent, agent) == agent)
         {
           agent = compareAgent;
           wp = compareAgentWP;
@@ -2688,75 +2998,55 @@ public final class Carny implements Runnable
   {
     // Shared.
     final String paidProgRez;
-    final Float floatCache[]; // This is populated on demand.
     final Map<Integer, Airing[]> allAirsMap;
     final Map<Integer, Airing[]> remAirsMap;
     final Map<Integer, Airing[]> watchAirsMap;
-    final Map<Integer, Airing[]> wastedAirsMap;
+    final Map<Integer, Wasted[]> wastedAirsMap;
+    final int hashZero;
+    final boolean useMaps;
 
     // Per thread.
     final StringBuilder sbCache = new StringBuilder();
     // This is the array that will actually be used and will return our results.
     CacheList airWorkCache = null;
 
-    // This is used to count the Don't Like watches without needing to do anything more than set
-    // this value. This is the only thing that doesn't completely feel correct for this type of
-    // class, but do we really want to allocate some special int[] and add a parameter for this?
-    int manualWasted = 0;
-
-    // We are caching the lists use in watchProb(). We create about 4-20 of these per thread and
-    // this is faster than creating new ArrayLists for each one.
-    int airingListsCacheNumber = 0;
-    final List<List<Airing>> airingListsCache = new ArrayList<>();
-    // Used to prevent re-processing of wasted airs that we do not follow.
-    final CacheList processedWaste = new CacheList(1000);
     // It's actually faster to cache and clear these between runs of watchProb().
     final Map<Stringer, MutableFloat> titleWatchMap = new HashMap<>();
-    // This has the fastest iteration performance in testing.
     final Map<Stringer, MutableInteger> titleAllMap = new HashMap<>();
 
     // Clone the shared parts of the cache.
     public CarnyCache(CarnyCache cache)
     {
-      this(cache.allAirsMap, cache.remAirsMap, cache.watchAirsMap, cache.wastedAirsMap, cache.floatCache, cache.paidProgRez);
+      this(cache.allAirsMap, cache.remAirsMap, cache.watchAirsMap, cache.wastedAirsMap,
+        cache.paidProgRez, cache.hashZero, cache.useMaps);
     }
 
     // Create a new shared cache.
-    public CarnyCache(Map<Integer, Airing[]> allAirsMap, Map<Integer, Airing[]> remAirsMap, Map<Integer, Airing[]> watchAirsMap, Map<Integer, Airing[]> wastedAirsMap)
+    public CarnyCache(Map<Integer, Airing[]> allAirsMap, Map<Integer, Airing[]> remAirsMap,
+                      Map<Integer, Airing[]> watchAirsMap, Map<Integer, Wasted[]> wastedAirsMap)
     {
-      this(allAirsMap, remAirsMap, watchAirsMap, wastedAirsMap, new Float[1000], Sage.rez("Paid_Programming").toLowerCase());
+      this(allAirsMap, remAirsMap, watchAirsMap, wastedAirsMap,
+        Sage.rez("Paid_Programming").toLowerCase(),
+        (allAirsMap != null && remAirsMap != null && watchAirsMap != null && wastedAirsMap != null &&
+          allAirsMap.get(0) == null && remAirsMap.get(0) == null &&
+          watchAirsMap.get(0) == null && wastedAirsMap.get(0) == null) ? 0 : -1,
+        (allAirsMap != null && remAirsMap != null && watchAirsMap != null && wastedAirsMap != null));
     }
 
-    private CarnyCache(Map<Integer, Airing[]> allAirsMap, Map<Integer, Airing[]> remAirsMap, Map<Integer, Airing[]> watchAirsMap, Map<Integer, Airing[]> wastedAirsMap, Float floatCache[], String paidProgRez)
+    private CarnyCache(Map<Integer, Airing[]> allAirsMap, Map<Integer, Airing[]> remAirsMap,
+                       Map<Integer, Airing[]> watchAirsMap, Map<Integer, Wasted[]> wastedAirsMap,
+                       String paidProgRez, int hashZero, boolean useMaps)
     {
       this.paidProgRez = paidProgRez;
-      this.floatCache = floatCache;
       this.allAirsMap = allAirsMap;
       this.remAirsMap = remAirsMap;
       this.watchAirsMap = watchAirsMap;
       this.wastedAirsMap = wastedAirsMap;
-    }
 
-    public List<Airing> getNextAiringList()
-    {
-      int size = airingListsCache.size();
-      List<Airing> returnValue;
-      if (size <= airingListsCacheNumber)
-      {
-        // These on average are 2-4 airings, so when we need to add more, it's not that many more.
-        returnValue = new ArrayList<>();
-        airingListsCache.add(returnValue);
-        airingListsCacheNumber++;
-        return returnValue;
-      }
-      returnValue = airingListsCache.get(airingListsCacheNumber++);
-      returnValue.clear();
-      return returnValue;
-    }
-
-    public void resetNextAiringList()
-    {
-      airingListsCacheNumber = 0;
+      // If we know none of the maps have anything mapped to zero, we don't need to check this for
+      // anything and this gives us a small performance bump.
+      this.hashZero = hashZero;
+      this.useMaps = useMaps;
     }
   }
 
@@ -2926,7 +3216,7 @@ public final class Carny implements Runnable
      */
     public void add(Airing airing)
     {
-      add(size, airing);
+      data[size++] = airing;
     }
 
     /**
