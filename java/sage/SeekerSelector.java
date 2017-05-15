@@ -32,16 +32,9 @@ public class SeekerSelector
 
   public static class HunterHolder
   {
-    private final static Hunter hunterInstance;
-
-    static
-    {
-      // TODO: This will be enabled on a later commit.
-      if (USE_BETA_SEEKER)
-        hunterInstance = null; // Seeker2Library.getInstance()
-      else
-        hunterInstance = Seeker.getInstance();
-    }
+    // TODO: This will be enabled on a later commit.
+    private final static Hunter hunterInstance =
+      USE_BETA_SEEKER ? null /*Seeker2Library.getInstance()*/ : Seeker.getInstance();;
   }
 
   /**

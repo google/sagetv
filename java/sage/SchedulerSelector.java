@@ -17,20 +17,16 @@ package sage;
 
 public class SchedulerSelector
 {
-  private static final SchedulerInterface ourInstance;
+  private static class SchedulerInterfaceHolder
+  {
+    // TODO: This will be pulled together in a later commit.
+    private static final SchedulerInterface ourInstance =
+      SeekerSelector.USE_BETA_SEEKER ? null /*Scheduler2.getInstance();*/ : Scheduler.getInstance();
+  }
 
   public static SchedulerInterface getInstance()
   {
-    return ourInstance;
-  }
-
-  static
-  {
-    // TODO: This will be pulled together in a later commit.
-    if (SeekerSelector.USE_BETA_SEEKER)
-      ourInstance = null; //Scheduler2.getInstance();
-    else
-      ourInstance = Scheduler.getInstance();
+    return SchedulerInterfaceHolder.ourInstance;
   }
 
   private SchedulerSelector()
