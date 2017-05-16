@@ -457,7 +457,7 @@ public class Agent extends DBObject implements Favorite
     // We must have a cache to use this method. This will throw the exception immediately if we do
     // not.
     final StringBuilder sbCache = cache.sbCache;
-    final List<Integer> hashes = getHashes();
+    final List<Integer> hashes = cache.currentHashes;
 
     // For keyword and timeslot trends with no other limiting factors, we need to check everything
     // since we haven't worked out a way to optimize this yet. Fortunately these are not as common
@@ -1136,7 +1136,7 @@ public class Agent extends DBObject implements Favorite
     final Map<Integer, Airing[]> watchAirsMap = cache.watchAirsMap;;
     final Map<Integer, Wasted[]> wastedAirsMap = cache.wastedAirsMap;;
     final StringBuilder sbCache = cache.sbCache;
-    final List<Integer> hashes = getHashes();
+    final List<Integer> hashes = cache.currentHashes;
     final boolean unoptimized = hashes.size() == 0 || !cache.useMaps;
 
     // NOTE: We never call this method using an offset, so we can make some assumptions. If this
@@ -1216,8 +1216,10 @@ public class Agent extends DBObject implements Favorite
       Wasted[] oneWasted = null;
       Set<Wasted> matchedWastedAirs = null;
 
-      for (Integer hash : hashes)
+
+      for (int i = 0, hashesSize = hashes.size(); i < hashesSize; i++)
       {
+        Integer hash = hashes.get(i);
         Wasted[] wasteds = wastedAirsMap.get(hash);
         if (oneWasted == null)
         {
@@ -1239,15 +1241,15 @@ public class Agent extends DBObject implements Favorite
               new IdentityHashMap<Wasted, Boolean>(oneWasted.length + wasteds.length));
             // HashSet bulk add is one by one just like this. There is no advantage to converting
             // to a list; just more GC collection.
-            for (int i = 0, oneWastedLength = oneWasted.length; i < oneWastedLength; i++)
+            for (int j = 0, oneWastedLength = oneWasted.length; j < oneWastedLength; j++)
             {
-              matchedWastedAirs.add(oneWasted[i]);
+              matchedWastedAirs.add(oneWasted[j]);
             }
           }
 
-          for (int i = 0, wastedsLength = wasteds.length; i < wastedsLength; i++)
+          for (int j = 0, wastedsLength = wasteds.length; j < wastedsLength; j++)
           {
-            matchedWastedAirs.add(wasteds[i]);
+            matchedWastedAirs.add(wasteds[j]);
           }
           cache.airWorkCache.ensureAddCapacity(wasteds.length);
         }
@@ -1819,12 +1821,12 @@ public class Agent extends DBObject implements Favorite
   // performance is break even since we only use these hashes once per cycle and it doesn't appear
   // to be worth the memory usage. Since we aren't caching, we also use Integer since we will be
   // using this against a HashMap and this will keep us from autoboxing in the process.
-  private List<Integer> getHashes()
+  void getHashes(List<Integer> searchHashes)
   {
     // We don't need to include 0 because that's always assumed in look ups. If we do return 0, that
     // means this agent isn't sure what it needs, but the inverse is acceptable because that just
     // means the airing doesn't know what it matches and it will be tested on all of the agents.
-    List<Integer> searchHashes = new ArrayList<>();
+    searchHashes.clear();
 
     if (title != null)
     {
@@ -1895,9 +1897,7 @@ public class Agent extends DBObject implements Favorite
     // have a "valid" hash.
     int searchSize = searchHashes.size();
     if (searchSize == 0 || searchHashes.contains(0))
-      return Collections.emptyList();
-
-    return searchHashes;
+      searchHashes.clear();
   }
 
   final int agentID;

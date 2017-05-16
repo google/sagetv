@@ -1430,7 +1430,9 @@ public final class Carny implements Runnable
                       // This agent doesn't override the current agent.
                     if (!mappedCauseValue.compareAndReplace(currCauseValue.agent))
                     {
-                      // They are the same wp, so they might be out of order.
+                      // They are the same wp, so they might be out of order. We are mostly
+                      // interested in favorites which is why we don't do this for 0 WP, but for
+                      // higher values than 0, we try to keep things consistent.
                       if (mappedCauseValue.wp != MIN_WP && mappedCauseValue.wp == currCauseValue.wp)
                       {
                         // Fix the order of this entry so we have the same results every time.
@@ -1440,23 +1442,6 @@ public final class Carny implements Runnable
                             firstCallback.replaceWPCauseValue(agentPot, currCauseValue.agent);
                           currCauseValue = mappedCauseValue;
                           mappedCauseValue = newCauseValue;
-                        }
-                        else if (currCauseValue.agent.createTime == mappedCauseValue.agent.createTime)
-                        {
-                          int currCauseID = currCauseValue.agent.agentID;
-                          int mappedCauseID = mappedCauseValue.agent.agentID;
-
-                          // Lower index is higher priority because lower indexes would be processed
-                          // before higher indexes. If we are out of order, we fix it here so that
-                          // we don't see different results on each run when the results should be
-                          // the same every time under the correct circumstances.
-                          if (currCauseID > 0 && mappedCauseID > 0 && mappedCauseID > currCauseID)
-                          {
-                            WPCauseValue newCauseValue =
-                              firstCallback.replaceWPCauseValue(agentPot, currCauseValue.agent);
-                            currCauseValue = mappedCauseValue;
-                            mappedCauseValue = newCauseValue;
-                          }
                         }
 
                         // Re-evaluate in case this is a favorite or we discover some other reason
@@ -2628,6 +2613,8 @@ public final class Carny implements Runnable
           }
         }
 
+        // This clears the array and then adds all of the hashes for this agent.
+        currAgent.getHashes(cache.currentHashes);
         if (!currAgent.calcWatchProb(controlCPUUsage, watchAirs, wastedAirs, aggressiveNegativeProfiling, cache))
         {
           callback.addTraitor(currAgent);
@@ -3009,6 +2996,9 @@ public final class Carny implements Runnable
     final StringBuilder sbCache = new StringBuilder();
     // This is the array that will actually be used and will return our results.
     CacheList airWorkCache = null;
+    // This is the hashes we are working with for the current agent. This prevents us from getting
+    // this list up to 4 times and the GC associated with it.
+    final List<Integer> currentHashes = new ArrayList<>();
 
     // It's actually faster to cache and clear these between runs of watchProb().
     final Map<Stringer, MutableFloat> titleWatchMap = new HashMap<>();
