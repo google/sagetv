@@ -92,7 +92,7 @@ public final class Stringer extends DBObject implements Comparable<Stringer>
   }
 
   String name;
-  // Used for case insenstive comparisons.
+  // Used for case insensitive comparisons.
   transient int ignoreCaseHash;
 
   public static final Comparator<Stringer> NAME_COMPARATOR =
