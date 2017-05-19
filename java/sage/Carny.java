@@ -52,6 +52,10 @@ public final class Carny implements Runnable
   // This disables the mapping optimizations in favor of lower memory usage. In my own measurements
   // with about 64k airings and 12k agents, the maps consumed about 2MB. (JS)
   private static final String DISABLE_CARNY_MAPS = "disable_carny_maps";
+  // This performs a bit shift of the provided value to the hashes in the map. The goal is to
+  // increase collisions which will cause more airings to be grouped together at the expense of a
+  // very moderate performance loss.
+  private static final String MAP_DENSITY = "carny_map_density";
   static final String CARNY_KEY = "carny";
 
   private static final long LOOKAHEAD = Sage.EMBEDDED ? 10*24*60*60*1000L : 14*24*60*60*1000L;
@@ -998,9 +1002,9 @@ public final class Carny implements Runnable
   // Re-build the airing map for wasted so we don't need to keep re-getting wasted from the wizard.
   // Wasted will cache it's airing on the first get which also keeps the requests at a minimum.
   // This also keeps the airing binary sort which is desirable.
-  private Map<Integer, Wasted[]> buildWastedMap(Airing[] airings)
+  private Map<Integer, Wasted[]> buildWastedMap(Airing[] airings, int bitShift)
   {
-    Map<Integer, Airing[]> airsMap = buildMap(airings);
+    Map<Integer, Airing[]> airsMap = buildMap(airings, bitShift);
     Map<Integer, Wasted[]> wastedMap = new HashMap<>((int)(airsMap.size() / 0.75) + 1);
 
     for (Map.Entry<Integer, Airing[]>  entry : airsMap.entrySet())
@@ -1022,7 +1026,7 @@ public final class Carny implements Runnable
     return wastedMap;
   }
 
-  private Map<Integer, Airing[]> buildMap(Airing airings[])
+  private Map<Integer, Airing[]> buildMap(Airing airings[], int bitShift)
   {
     Map<Integer, List<Airing>> buildMap = new HashMap<>();
     for (int i = 0, airingsSize = airings.length; i < airingsSize; i++)
@@ -1033,7 +1037,7 @@ public final class Carny implements Runnable
         continue;
 
       int currentHash = show.title == null ? 0 : show.title.ignoreCaseHash;
-      addToMaps(currentHash, airing, buildMap);
+      addToMaps((currentHash >>> bitShift), airing, buildMap);
 
       currentHash = airing.isFirstRun() ? Agent.FIRSTRUN_MASK : Agent.RERUN_MASK;
       addToMaps(currentHash, airing, buildMap);
@@ -1043,7 +1047,7 @@ public final class Carny implements Runnable
       {
         Person person = people[j];
         currentHash = person.ignoreCaseHash;
-        addToMaps(currentHash, airing, buildMap);
+        addToMaps((currentHash >>> bitShift), airing, buildMap);
       }
 
       if (show.categories != null)
@@ -1054,7 +1058,7 @@ public final class Carny implements Runnable
         {
           Stringer category = categories[j];
           currentHash = category.ignoreCaseHash;
-          addToMaps(currentHash, airing, buildMap);
+          addToMaps((currentHash >>> bitShift), airing, buildMap);
         }
       }
 
@@ -1067,33 +1071,33 @@ public final class Carny implements Runnable
         if (c.name != null && c.name.length() > 0)
         {
           currentHash = c.name.hashCode();
-          addToMaps(currentHash, airing, buildMap);
+          addToMaps((currentHash >>> bitShift), airing, buildMap);
         }
 
         // Same situation with network (even more so).
         if (c.network != null && c.network.name.length() > 0)
         {
           currentHash = c.network.ignoreCaseHash;
-          addToMaps(currentHash, airing, buildMap);
+          addToMaps((currentHash >>> bitShift), airing, buildMap);
         }
       }
 
       if (show.rated != null)
       {
         currentHash = show.rated.ignoreCaseHash;
-        addToMaps(currentHash, airing, buildMap);
+        addToMaps((currentHash >>> bitShift), airing, buildMap);
       }
 
       if (show.year != null)
       {
         currentHash = show.year.ignoreCaseHash;
-        addToMaps(currentHash, airing, buildMap);
+        addToMaps((currentHash >>> bitShift), airing, buildMap);
       }
 
       if (show.pr != null)
       {
         currentHash = show.pr.ignoreCaseHash;
-        addToMaps(currentHash, airing, buildMap);
+        addToMaps((currentHash >>> bitShift), airing, buildMap);
       }
 
       // Agents that use the slotType and timeslots without any other criteria need to process all
@@ -1125,8 +1129,19 @@ public final class Carny implements Runnable
     }
 
     boolean disableCarnyMaps = Sage.getBoolean(DISABLE_CARNY_MAPS, false);
-    // This tracks when we started trying to compile the profiler info so we don't keep aborting attempts forever if it takes
-    // a long time to figure out
+    // Windows is still 32-bit, so we use this to keep memory usage down by what can be a
+    // substantial amount. In Linux we use 1 bit because it can actually result in better overall
+    // performance by reducing the number of possible arrays to be processed.
+    int mapBitShift = Sage.getInt(MAP_DENSITY, Sage.WINDOWS_OS ? 16 : 1);
+    // Don't let users push this beyond what even makes sense. Always leave at least 9 bits or we
+    // should just turn the maps off. This doesn't effect first runs and re-runs. They always get
+    // their own arrays.
+    if (mapBitShift >= 28)
+      mapBitShift = 27;
+    if (mapBitShift < 0)
+      mapBitShift = 0;
+    // This tracks when we started trying to compile the profiler info so we don't keep aborting
+    // attempts forever if it takes a long time to figure out
     if (lastCycleCompleteTime >= cycleStartTime)
       cycleStartTime = Sage.eventTime();
     // Go through each Agent and run their think() process.
@@ -1280,10 +1295,10 @@ public final class Carny implements Runnable
       watchAirs = fullWatchAirsList.toArray(Pooler.EMPTY_AIRING_ARRAY);
       wastedAirs = wastedAirsList.toArray(Pooler.EMPTY_AIRING_ARRAY);
 
-      allAirsMap = buildMap(allAirs);
-      remAirsMap = buildMap(remAirs);
-      watchAirsMap = buildMap(watchAirs);
-      wastedAirsMap = buildWastedMap(wastedAirs);
+      allAirsMap = buildMap(allAirs, mapBitShift);
+      remAirsMap = buildMap(remAirs, mapBitShift);
+      watchAirsMap = buildMap(watchAirs, mapBitShift);
+      wastedAirsMap = buildWastedMap(wastedAirs, mapBitShift);
     }
 
     // Free these fairly huge arrays up for GC.
@@ -1321,8 +1336,8 @@ public final class Carny implements Runnable
     for (int i = 0; i < totalThreads; i++)
     {
       Callable<CarnyWorkerCallback> newJob = new CarnyAgentWorker(controlCPUUsage, totalThreads,
-        doneInit, useLegacyKeyword, aggressiveNegativeProfiling, allAirs, remAirs, watchAirs,
-        wastedAirs, i != 0 ? new CarnyCache(seedCache) : seedCache);
+        doneInit, useLegacyKeyword, aggressiveNegativeProfiling, mapBitShift, allAirs, remAirs,
+        watchAirs, wastedAirs, i != 0 ? new CarnyCache(seedCache) : seedCache);
 
       agentWorkerFutures[i] = agentWorkers.submit(newJob);
     }
@@ -1676,7 +1691,7 @@ public final class Carny implements Runnable
     /*dumpResults();
     try
     {
-      System.out.println("Press and key to exit...");
+      System.out.println("Press any key to exit...");
       System.in.read();
     } catch (IOException e)
     {
@@ -2536,6 +2551,7 @@ public final class Carny implements Runnable
     private final boolean doneInit;
     private final boolean legacyKeyword;
     private final boolean aggressiveNegativeProfiling;
+    private final int mapBitShift;
     private final CarnyCache cache;
     private final String paidProgRez;
     private final Airing allAirs[];
@@ -2544,7 +2560,7 @@ public final class Carny implements Runnable
     private final Airing wastedAirs[];
 
     public CarnyAgentWorker(boolean controlCPUUsage, int totalThreads, boolean doneInit,
-                            boolean legacyKeyword, boolean aggressiveNegativeProfiling,
+                            boolean legacyKeyword, boolean aggressiveNegativeProfiling, int mapBitShift,
                             Airing[] allAirs, Airing[] remAirs, Airing[] watchAirs, Airing[] wastedAirs,
                             CarnyCache cache)
     {
@@ -2553,6 +2569,7 @@ public final class Carny implements Runnable
       this.doneInit = doneInit;
       this.legacyKeyword = legacyKeyword;
       this.aggressiveNegativeProfiling = aggressiveNegativeProfiling;
+      this.mapBitShift = mapBitShift;
       this.cache = cache;
       this.paidProgRez = cache.paidProgRez;
       this.allAirs = allAirs;
@@ -2614,7 +2631,7 @@ public final class Carny implements Runnable
         }
 
         // This clears the array and then adds all of the hashes for this agent.
-        currAgent.getHashes(cache.currentHashes);
+        currAgent.getHashes(cache.currentHashes, mapBitShift);
         if (!currAgent.calcWatchProb(controlCPUUsage, watchAirs, wastedAirs, aggressiveNegativeProfiling, cache))
         {
           callback.addTraitor(currAgent);

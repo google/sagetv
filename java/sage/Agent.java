@@ -1797,8 +1797,9 @@ public class Agent extends DBObject implements Favorite
   }
 
   // This helps us not create any more Integer objects than we need to.
-  private void addHash(int hash, List<Integer> list)
+  private void addHash(int intHash, List<Integer> list, int bitShift)
   {
+    int hash = (short) (intHash >>> bitShift);
     int low = 0;
     int high = list.size() - 1;
 
@@ -1821,7 +1822,7 @@ public class Agent extends DBObject implements Favorite
   // performance is break even since we only use these hashes once per cycle and it doesn't appear
   // to be worth the memory usage. Since we aren't caching, we also use Integer since we will be
   // using this against a HashMap and this will keep us from autoboxing in the process.
-  void getHashes(List<Integer> searchHashes)
+  void getHashes(List<Integer> searchHashes, int bitShift)
   {
     // We don't need to include 0 because that's always assumed in look ups. If we do return 0, that
     // means this agent isn't sure what it needs, but the inverse is acceptable because that just
@@ -1830,7 +1831,7 @@ public class Agent extends DBObject implements Favorite
 
     if (title != null)
     {
-      searchHashes.add(title.ignoreCaseHash);
+      searchHashes.add((title.ignoreCaseHash >>> bitShift));
     }
 
     if (title == null)
@@ -1847,50 +1848,50 @@ public class Agent extends DBObject implements Favorite
 
     if (person != null)
     {
-      addHash(person.ignoreCaseHash, searchHashes);
+      addHash(person.ignoreCaseHash, searchHashes, bitShift);
     }
 
     if (category != null)
     {
-      addHash(category.ignoreCaseHash, searchHashes);
+      addHash(category.ignoreCaseHash, searchHashes, bitShift);
     }
 
     if (subCategory != null)
     {
-      addHash(subCategory.ignoreCaseHash, searchHashes);
+      addHash(subCategory.ignoreCaseHash, searchHashes, bitShift);
     }
 
     if (chanName.length() > 0)
     {
-      addHash(chanName.hashCode(), searchHashes);
+      addHash(chanName.hashCode(), searchHashes, bitShift);
     }
 
     if (chanNames != null && chanNames.length > 0)
     {
       for (String chanName : chanNames)
       {
-        addHash(chanName.hashCode(), searchHashes);
+        addHash(chanName.hashCode(), searchHashes, bitShift);
       }
     }
 
     if (network != null)
     {
-      addHash(network.ignoreCaseHash, searchHashes);
+      addHash(network.ignoreCaseHash, searchHashes, bitShift);
     }
 
     if (rated != null)
     {
-      addHash(rated.ignoreCaseHash, searchHashes);
+      addHash(rated.ignoreCaseHash, searchHashes, bitShift);
     }
 
     if (year != null)
     {
-      addHash(year.ignoreCaseHash, searchHashes);
+      addHash(year.ignoreCaseHash, searchHashes, bitShift);
     }
 
     if (pr != null)
     {
-      addHash(pr.ignoreCaseHash, searchHashes);
+      addHash(pr.ignoreCaseHash, searchHashes, bitShift);
     }
 
     // This will ensure that we do a full search since 0 means at least one of our items doesn't
