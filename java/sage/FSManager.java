@@ -53,7 +53,15 @@ public class FSManager implements Runnable
         java.io.File newF = new java.io.File(walker.next().toString());
 
         // There are some initialization ordering issues if we route through the selector here
-        // instead of using Library directly.
+        // instead of using Library directly. The Seeker2 singleton is always loaded before the
+        // Library singleton in the selector and Seeker2 loads FSManager (hence why we are here). If
+        // we call back to the selector from here the Library reference doesn't exist yet and we
+        // will get a null pointer exception. It is however not a problem to directly get the
+        // Library singleton from here. It's important to note that while this sounds a little hacky
+        // the selector is there for performance reasons and this is the only case where we have an
+        // exception. I could just re-order a few things, but then I might accidentally change how
+        // something worked in the old Seeker and I do not want to create any new problems to
+        // address one exception.
         // TODO: Will be enabled in a future commit.
         /*if (SeekerSelector.USE_BETA_SEEKER)
           Library.getInstance().addIgnoreFile(newF);
