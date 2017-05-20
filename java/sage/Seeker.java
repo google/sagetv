@@ -1241,17 +1241,6 @@ public class Seeker implements Hunter
       writeArchiveDirsProps();
     }
 
-    // Even though this is the only method that manipulates this variable, it is run on a thread
-    // provided by pooler and it's remotely possible we could get a former thread that will have
-    // cached values. This prevents that from happening without forcing synchronization on all
-    // updates within this method.
-    synchronized (autoImportAddedNetPaths)
-    {
-      String array[] = autoImportAddedNetPaths.toArray(Pooler.EMPTY_STRING_ARRAY);
-      autoImportAddedNetPaths.clear();
-      autoImportAddedNetPaths.addAll(Arrays.asList(array));
-    }
-
     if (Sage.getBoolean("seeker/enforce_minimum_import_sizes", Sage.EMBEDDED))
     {
       minMusicImportSize = Sage.getLong("seeker/min_file_size_music_import", 50*1024);
