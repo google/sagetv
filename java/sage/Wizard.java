@@ -8366,7 +8366,7 @@ public class Wizard implements EPGDBPublic2
       if ( rv == null ) {
         rv = new Stringer(getNextWizID());
         rv.name = name;
-        rv.ignoreCaseHash = rv.name.toLowerCase().hashCode();
+        rv.ignoreCaseHash = name.toLowerCase().hashCode();
         rv.setMediaMask(createMediaMask);
         t.add(rv, true);
       } else {
@@ -8498,7 +8498,7 @@ public class Wizard implements EPGDBPublic2
         return rv;
       rv = new Stringer(getNextWizID());
       rv.name = new String(name);
-      rv.ignoreCaseHash = rv.name.toLowerCase().hashCode();
+      rv.ignoreCaseHash = name.toLowerCase().hashCode();
       rv.setMediaMask(createMediaMask);
       t.add(rv, !loading);
       return rv;
