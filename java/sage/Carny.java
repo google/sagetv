@@ -1039,9 +1039,6 @@ public final class Carny implements Runnable
       int currentHash = show.title == null ? 0 : show.title.ignoreCaseHash;
       addToMaps((currentHash >>> bitShift), airing, buildMap);
 
-      currentHash = airing.isFirstRun() ? Agent.FIRSTRUN_MASK : Agent.RERUN_MASK;
-      addToMaps(currentHash, airing, buildMap);
-
       Person[] people = show.people;
       for (int j = 0, peopleLength = people.length; j < peopleLength; j++)
       {
@@ -1130,15 +1127,15 @@ public final class Carny implements Runnable
 
     boolean disableCarnyMaps = Sage.getBoolean(DISABLE_CARNY_MAPS, false);
     // Windows is still 32-bit, so we use this to keep memory usage down by what can be a
-    // substantial amount. In Linux we use 1 bit because it can actually result in better overall
-    // performance by reducing the number of possible arrays to be processed.
-    int mapBitShift = Sage.getInt(MAP_DENSITY, Sage.WINDOWS_OS ? 16 : 1);
+    // substantial amount.
+    // 05/20/2017 JS: I did have 1 bit shifted for Linux, but I felt might not work well for
+    // everyone, so I changed it to 0.
+    int mapBitShift = Sage.getInt(MAP_DENSITY, Sage.WINDOWS_OS ? 16 : 0);
     // Don't let users push this beyond what even makes sense. Always leave at least 9 bits or we
-    // should just turn the maps off. This doesn't effect first runs and re-runs. They always get
-    // their own arrays.
+    // should just turn the maps off.
     if (mapBitShift >= 28)
       mapBitShift = 27;
-    if (mapBitShift < 0)
+    else if (mapBitShift < 0)
       mapBitShift = 0;
     // This tracks when we started trying to compile the profiler info so we don't keep aborting
     // attempts forever if it takes a long time to figure out
@@ -1622,8 +1619,11 @@ public final class Carny implements Runnable
       Airing badAir = blackBalled.get(i);
       newWPMap.remove(badAir);
       newCauseMap.remove(badAir);
-      newMustSeeSet.remove(badAir);
-      airSet.remove(badAir);
+      // Replaced with binary removals.
+      //newMustSeeSet.remove(badAir);
+      firstCallback.removeNewMustSeeSet(badAir);
+      //airSet.remove(badAir);
+      firstCallback.removeAirSet(badAir);
     }
 
     for (int i = 0, stonersLen = stoners.length; i < stonersLen; i++)
@@ -1631,7 +1631,10 @@ public final class Carny implements Runnable
       Airing badAir = stoners[i].getAiring();
       newWPMap.remove(badAir);
       newCauseMap.remove(badAir);
-      newMustSeeSet.remove(badAir);
+      // Replaced with binary removals.
+      //newMustSeeSet.remove(badAir);
+      firstCallback.removeNewMustSeeSet(badAir);
+      //airSet.remove(badAir);
       firstCallback.removeAirSet(badAir);
     }
 
@@ -2854,6 +2857,11 @@ public final class Carny implements Runnable
       binaryInsert(newMustSeeSet, airing);
     }
 
+    public void removeNewMustSeeSet(Airing airing)
+    {
+      binaryRemove(newMustSeeSet, airing);
+    }
+
     private WPCauseValue binaryReplace(List<WPCauseValue> list, Airing airing, Agent agent)
     {
       int id = airing.getID();
@@ -2985,8 +2993,8 @@ public final class Carny implements Runnable
 
       if (compareAgentWP == wp && compareAgent.isFavorite())
       {
-        // Check for agent priority. This returns the lower priority agent.
-        if (doBattle(compareAgent, agent) == agent)
+        // Check for agent priority. This returns the higher priority agent.
+        if (doBattle(compareAgent, agent) == compareAgent)
         {
           agent = compareAgent;
           wp = compareAgentWP;
