@@ -772,7 +772,7 @@ public class Agent extends DBObject implements Favorite
         {
           Airing a = (Airing) allAirs[i];
           if (a == null) continue;
-          if (followsTrend(a, true, sbCache))
+          if (followsTrend(a, true, sbCache, true, ignoreDisabledFlag))
             rv.add(a);
           if ((i % CPU_CONTROL_MOD_COUNT) == 0 && controlCPUUsage)
             try {Thread.sleep(Carny.SLEEP_PERIOD);} catch (Exception e) {}
@@ -1799,7 +1799,7 @@ public class Agent extends DBObject implements Favorite
   // This helps us not create any more Integer objects than we need to.
   private void addHash(int intHash, List<Integer> list, int bitShift)
   {
-    int hash = (short) (intHash >>> bitShift);
+    int hash = intHash >>> bitShift;
     int low = 0;
     int high = list.size() - 1;
 
@@ -1832,18 +1832,6 @@ public class Agent extends DBObject implements Favorite
     if (title != null)
     {
       searchHashes.add((title.ignoreCaseHash >>> bitShift));
-    }
-
-    if (title == null)
-    {
-      if (testAgentFlag(Agent.FIRSTRUN_MASK))
-      {
-        searchHashes.add(Agent.FIRSTRUN_MASK);
-      }
-      if (testAgentFlag(Agent.RERUN_MASK))
-      {
-        searchHashes.add(Agent.RERUN_MASK);
-      }
     }
 
     if (person != null)
@@ -1896,8 +1884,7 @@ public class Agent extends DBObject implements Favorite
 
     // This will ensure that we do a full search since 0 means at least one of our items doesn't
     // have a "valid" hash.
-    int searchSize = searchHashes.size();
-    if (searchSize == 0 || searchHashes.contains(0))
+    if (searchHashes.contains(0))
       searchHashes.clear();
   }
 
