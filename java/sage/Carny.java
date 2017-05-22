@@ -2973,9 +2973,9 @@ public final class Carny implements Runnable
       if (compareAgentWP == wp && (compareAgent.isFavorite() || order))
       {
         // Check for agent priority. This returns the higher priority agent if there is one or null
-        // if there no explicit priority is defined. When this is null there is an implicit priority
-        // that based on the AGENT_SORTER comparator. When order is true, we considering this
-        // sorting order in the determination on if we need to replace the agent or not.
+        // if no explicit priority is defined. When this is null there is an implicit priority that
+        // based on the AGENT_SORTER comparator. When order is true, we considering this sorting
+        // order in the determination on if we need to replace the agent or not.
         Agent winner = doBattle(agent, compareAgent);
         if (winner == compareAgent ||
           order && winner == null && AGENT_SORTER.compare(agent, compareAgent) > 0)
