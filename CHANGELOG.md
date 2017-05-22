@@ -1,12 +1,12 @@
 # Change Log
 
-## Version 9.0.15 (??)
+## Version 9.1.0 (??)
 * Fix: Transcoder crashing on Linux with signal 11.
 * New: Added new API method to get enabled and disabled favorites.
     * public Airing[] GetPotentialFavoriteAirings(Favorite Favorite);
 * Fix: Aliases without a non-alias would cause an NPE when searching.
 * Fix: Schedules Direct aliasing logic was applied backwards.
-* Carny is now multi-threaded and highly optimized.
+* New: Carny is now multi-threaded and highly optimized.
 * New: Schedules Direct movie length is now imported.
 * New: Schedules Direct alternative channel logos can now be used by changing the property sdepg_core/use_alternate_logos=false to true. 
 
