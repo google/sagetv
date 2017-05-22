@@ -102,6 +102,7 @@ public class SDRipper extends EPGDataSource
   private static final String PROP_EDITORIAL_NEXT_RUN = PROP_PREFIX + "/editorial/next_run";
   private static final String PROP_EDITORIAL_UPDATE_INTERVAL = PROP_PREFIX + "/editorial/update_interval";
   private static final String PROP_EDITORIAL_IMPORT_LIMIT = PROP_PREFIX + "/editorial/import_limit";
+  private static final String PROP_DOWNLOAD_ALTERNATE_LOGOS = PROP_PREFIX + "/use_alternate_logos";
   private static final String FILE_PROGRAM_MD5 = "sdmd5prog";
   private static final String FILE_SCHEDULE_MD5 = "sdmd5sched";
 
@@ -1129,6 +1130,7 @@ public class SDRipper extends EPGDataSource
       SDLineupMap map = ensureSession().getLineup(uri);
       int numChans = map.getStations().length;
       if (Sage.DBG) System.out.println("SDEPG got " + map.getStations().length + " channels");
+      boolean useAlternativeChannelLogos = Sage.getBoolean(PROP_DOWNLOAD_ALTERNATE_LOGOS, false);
 
       // Include any additional stations the the user has added to their lineup. There's no
       // guarantee that Schedules Direct will actually be able to use these since we have to look
@@ -1232,8 +1234,20 @@ public class SDRipper extends EPGDataSource
         String chanName = station.getCallsign();
         String longName = station.getName();
         String networkName = station.getAffiliate();
-        SDLogo logo = station.getLogo();
-        String logoURLEncode = logo != null ? logo.getURL() : null;
+        String logoURLEncode;
+        if (useAlternativeChannelLogos)
+        {
+          SDLogo logos[] = station.getStationLogos();
+          // There should be an alternative logo in several cases. If there isn't we default to the
+          // logo we would have had otherwise.
+          logoURLEncode = logos.length > 1 ? logos[1].getURL() : logos.length != 0 ? logos[0].getURL() : null;
+        }
+        else
+        {
+          SDLogo logo = station.getLogo();
+          logoURLEncode = logo != null ? logo.getURL() : null;
+        }
+
         int logoMask;
         byte[] logoURL;
         if (logoURLEncode != null)
@@ -1613,6 +1627,7 @@ public class SDRipper extends EPGDataSource
                     boolean canGetSeries = SDUtils.canGetSeries(extID);
                     boolean isSeries = "Series".equals(showType);
                     boolean isMovie = extID.startsWith("MV");
+                    SDMovie movie = isMovie ? programDetail.getMovie() : null;
 
                     // Add/update the series info any time an episode of a series is updated. This
                     // is a Set, so we will not create duplicates.
@@ -1624,7 +1639,7 @@ public class SDRipper extends EPGDataSource
                     String title = programDetail.getTitle();
                     String episodeName = programDetail.getEpisodeTitle150();
                     String desc = programDetail.getDescriptions().getDescription(preferedDescDigraph, false).getDescription();
-                    long showDuration = programDetail.getDuration();
+                    long showDuration = movie != null ? movie.getDuration() : programDetail.getDuration();
 
                     SDPerson cast[] = programDetail.getCast();
                     SDPerson crew[] = programDetail.getCrew();
@@ -1679,7 +1694,6 @@ public class SDRipper extends EPGDataSource
                       }
                     }
                     String[] expandedRatings = programDetail.getContentAdvisory();
-                    SDMovie movie = isMovie ? programDetail.getMovie() : null;
                     // Is only set when the program is a movie.
                     String rated = movie != null ? programDetail.getContentRating(movieRatingBody) : ""; // programDetail.getContentRating(ratingBody);
                     String year = movie != null ? movie.getYear() : "";

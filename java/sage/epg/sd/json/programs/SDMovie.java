@@ -24,7 +24,7 @@ public class SDMovie
   private static final QualityRating[] EMPTY_QUALITY_RATING = new QualityRating[0];
 
   private String year;
-  //private int duration;
+  private int duration;
   private QualityRating qualityRating[];
 
   /**
@@ -40,12 +40,13 @@ public class SDMovie
 
   /**
    * Duration (in integer seconds). Optional. NOTE: in a future API this will be removed from the
-   * movie array and will be an element of the program itself.
+   * movie array and will be an element of the program itself. (provided as in integer seconds and
+   * converted to long milliseconds before returning)
    */
-  /*public int getDuration()
+  public long getDuration()
   {
-    return duration;
-  }*/
+    return ((long)duration & 0xFFFFFFFFL) * 1000L;
+  }
 
   /**
    * an array of ratings for the quality of the movie. Optional.
