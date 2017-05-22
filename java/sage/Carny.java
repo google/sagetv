@@ -1142,7 +1142,7 @@ public final class Carny implements Runnable
     if (lastCycleCompleteTime >= cycleStartTime)
       cycleStartTime = Sage.eventTime();
     // Go through each Agent and run their think() process.
-    DBObject[] allAgents = wiz.getRawAccess(Wizard.AGENT_CODE, (byte) 0);
+    DBObject[] allAgents = wiz.getRawAccess(Wizard.AGENT_CODE, Wizard.AGENTS_BY_CARNY_CODE);
 
     // We don't track music at all (that used to be in Agent.followsTrend)
 
@@ -1437,38 +1437,15 @@ public final class Carny implements Runnable
                     if (agentPot.isWatchedForSchedulingPurpose())
                       firstCallback.addWatchedPotsToClear(agentPot);
                   }
-                  else
+                  // This must be run on all agents being merged or the sort order will be
+                  // inconsistent between runs of Carny or completely incorrect.
+                  else if (mappedCauseValue.compareAndReplace(currCauseValue.agent, true))
                   {
-                      // This agent doesn't override the current agent.
-                    if (!mappedCauseValue.compareAndReplace(currCauseValue.agent))
-                    {
-                      // They are the same wp, so they might be out of order. We are mostly
-                      // interested in favorites which is why we don't do this for 0 WP, but for
-                      // higher values than 0, we try to keep things consistent.
-                      if (mappedCauseValue.wp != MIN_WP && mappedCauseValue.wp == currCauseValue.wp)
-                      {
-                        // Fix the order of this entry so we have the same results every time.
-                        if (currCauseValue.agent.createTime > mappedCauseValue.agent.createTime)
-                        {
-                          WPCauseValue newCauseValue =
-                            firstCallback.replaceWPCauseValue(agentPot, currCauseValue.agent);
-                          currCauseValue = mappedCauseValue;
-                          mappedCauseValue = newCauseValue;
-                        }
-
-                        // Re-evaluate in case this is a favorite or we discover some other reason
-                        // why the order should be different in the future.
-                        if (mappedCauseValue.compareAndReplace(currCauseValue.agent) &&
-                          agentPot.isWatchedForSchedulingPurpose())
-                        {
-                          firstCallback.addWatchedPotsToClear(agentPot);
-                        }
-                      }
-                    }
-                    else if (agentPot.isWatchedForSchedulingPurpose())
-                    {
+                    // When we passed true into the compare and replace method, it also replaced
+                    // the agent if it has the same WP, but is logically not the agent we would have
+                    // selected if this was all done on a single thread.
+                    if (agentPot.isWatchedForSchedulingPurpose())
                       firstCallback.addWatchedPotsToClear(agentPot);
-                    }
                   }
                 }
 
@@ -2746,7 +2723,7 @@ public final class Carny implements Runnable
             if (isWatchedForSchedulingPurposes)
               callback.addWatchedPotsToClear(agentPot);
           }
-          else if (causeValue.compareAndReplace(currAgent) && isWatchedForSchedulingPurposes)
+          else if (causeValue.compareAndReplace(currAgent, false) && isWatchedForSchedulingPurposes)
           {
             callback.addWatchedPotsToClear(agentPot);
           }
@@ -2976,12 +2953,14 @@ public final class Carny implements Runnable
 
     /**
      * Compares the provided agent against the current agent and replaces it and the watch
-     * probability if the new agent is more desirable.
+     * probability of the compared agent is more desirable.
      *
      * @param compareAgent The agent to compare.
+     * @param order Use {@link #AGENT_SORTER} to ensure agents are also prioritized by their sorted
+     *             order when they have the same watch potential.
      * @return <code>true</code> if the agent was replaced.
      */
-    public boolean compareAndReplace(Agent compareAgent)
+    public boolean compareAndReplace(Agent compareAgent, boolean order)
     {
       float compareAgentWP = compareAgent.watchProb;
       if (agent == null || compareAgentWP > wp)
@@ -2991,10 +2970,15 @@ public final class Carny implements Runnable
         return true;
       }
 
-      if (compareAgentWP == wp && compareAgent.isFavorite())
+      if (compareAgentWP == wp && (compareAgent.isFavorite() || order))
       {
-        // Check for agent priority. This returns the higher priority agent.
-        if (doBattle(compareAgent, agent) == compareAgent)
+        // Check for agent priority. This returns the higher priority agent if there is one or null
+        // if there no explicit priority is defined. When this is null there is an implicit priority
+        // that based on the AGENT_SORTER comparator. When order is true, we considering this
+        // sorting order in the determination on if we need to replace the agent or not.
+        Agent winner = doBattle(agent, compareAgent);
+        if (winner == compareAgent ||
+          order && winner == null && AGENT_SORTER.compare(agent, compareAgent) > 0)
         {
           agent = compareAgent;
           wp = compareAgentWP;
