@@ -102,6 +102,7 @@ public class SDRipper extends EPGDataSource
   private static final String PROP_EDITORIAL_NEXT_RUN = PROP_PREFIX + "/editorial/next_run";
   private static final String PROP_EDITORIAL_UPDATE_INTERVAL = PROP_PREFIX + "/editorial/update_interval";
   private static final String PROP_EDITORIAL_IMPORT_LIMIT = PROP_PREFIX + "/editorial/import_limit";
+  private static final String PROP_DOWNLOAD_ALTERNATE_LOGOS = PROP_PREFIX + "/use_alternate_logos";
   private static final String FILE_PROGRAM_MD5 = "sdmd5prog";
   private static final String FILE_SCHEDULE_MD5 = "sdmd5sched";
 
@@ -132,6 +133,9 @@ public class SDRipper extends EPGDataSource
   // This is the most editorials that will ever be imported within one interval. If this value is
   // set to 0, the import process is disabled.
   private static final int editorialImportLimit = Sage.getInt(PROP_EDITORIAL_IMPORT_LIMIT, 50);
+  // This is used to synchronize on when we are modifying channels to ensure the are updated in sets
+  // and not half updated by one thread and half updated by another.
+  private static final Object updateChannelsLock = new Object();
 
   private static long postalCodeCacheTime;
   private static SDRegion regions[] = new SDRegion[0];
@@ -338,6 +342,11 @@ public class SDRipper extends EPGDataSource
         case "AccountLineups":
           // Get all lineups currently added to the account.
           return getLineupsForAccount();
+        case "UpdateChannelLogos":
+          // Update all of the channel logos with the latest URL's. This is called to quickly
+          // alternate between the primary and alternative channel logos.
+          getUpdateChannelLogos();
+          return "OK";
       }
     }
     catch (NumberFormatException e)
@@ -1038,6 +1047,97 @@ public class SDRipper extends EPGDataSource
     return returnValue != null ? returnValue : "";
   }
 
+  private static void getUpdateChannelLogos() throws IOException, SDException
+  {
+    Wizard wiz = Wizard.getInstance();
+    SDAccountLineups accountLineups = ensureSession().getAccountLineups();
+    EPGDataSource[] dataSources = EPG.getInstance().getDataSources();
+    int logoID[] = new int[1];
+    boolean didAdd[] = new boolean[1];
+    // We don't have any good reason to throw this exception preventing anything from updating if it
+    // could have, so if there are any with a lineup missing, we wait until the end to throw the
+    // lineup missing exception.
+    SDException throwLineupNotFound = null;
+
+    synchronized (updateChannelsLock)
+    {
+      boolean useAlternativeChannelLogos = Sage.getBoolean(PROP_DOWNLOAD_ALTERNATE_LOGOS, false);
+      for (EPGDataSource dataSource : dataSources)
+      {
+        if (!(dataSource instanceof SDRipper))
+          continue;
+
+        SDAccountLineup lineup = null;
+        for (SDAccountLineup accountLineup : accountLineups.getLineups())
+        {
+          if (accountLineup.getLineup() != null &&
+            accountLineup.getLineup().equals(((SDRipper) dataSource).getLineupID()))
+          {
+            lineup = accountLineup;
+            break;
+          }
+        }
+        // We have a lineup defined without a lineup in the actual account. Throw an exception.
+        if (lineup == null)
+        {
+          throwLineupNotFound = new SDException(SDErrors.LINEUP_NOT_FOUND);
+          continue;
+        }
+
+        String uri = lineup.getUri();
+        SDLineupMap map = ensureSession().getLineup(uri);
+        int numChans = map.getStations().length;
+        if (Sage.DBG) System.out.println("SDEPG updating " + numChans + " channel logos");
+
+        SDStation stations[] = map.getStations();
+        for (SDStation station : stations)
+        {
+          Channel channel = wiz.getChannelForStationID(station.getStationID());
+          // Don't use this opportunity to add new channels. Leave that for the next EPG update.
+          if (channel == null)
+            continue;
+
+          String logoURLEncode;
+          if (useAlternativeChannelLogos)
+          {
+            SDLogo logos[] = station.getStationLogos();
+            // There should be an alternative logo in several cases. If there isn't we default to the
+            // logo we would have had otherwise.
+            logoURLEncode = logos.length > 1 ? logos[1].getURL() : logos.length != 0 ? logos[0].getURL() : null;
+          }
+          else
+          {
+            SDLogo logo = station.getLogo();
+            logoURLEncode = logo != null ? logo.getURL() : null;
+          }
+
+          int logoMask;
+          byte[] logoURL;
+          if (logoURLEncode != null)
+          {
+            logoURL = SDImages.encodeLogoURL(logoURLEncode, logoID);
+            logoMask = Channel.SD_LOGO_MASK | logoID[0];
+          }
+          else
+          {
+            logoURL = Pooler.EMPTY_BYTE_ARRAY;
+            logoMask = 0;
+          }
+
+          // We are only changing the logo. Do not change anything else about this channel at this
+          // time. We will leave any real changes to the next EPG update so we can ensure any new
+          // notifications we implement in the future relating to channels will not have this one
+          // path as an exception.
+          wiz.addChannel(channel.getName(), channel.getLongName(),
+            channel.getNetwork(), channel.getStationID(), logoMask, logoURL, didAdd);
+        }
+      }
+    }
+
+    if (throwLineupNotFound != null)
+      throw throwLineupNotFound;
+  }
+
   @Override
   protected boolean extractGuide(long inGuideTime)
   {
@@ -1128,7 +1228,7 @@ public class SDRipper extends EPGDataSource
       String uri = lineup.getUri();
       SDLineupMap map = ensureSession().getLineup(uri);
       int numChans = map.getStations().length;
-      if (Sage.DBG) System.out.println("SDEPG got " + map.getStations().length + " channels");
+      if (Sage.DBG) System.out.println("SDEPG got " + numChans + " channels");
 
       // Include any additional stations the the user has added to their lineup. There's no
       // guarantee that Schedules Direct will actually be able to use these since we have to look
@@ -1224,126 +1324,142 @@ public class SDRipper extends EPGDataSource
       boolean[] caddrv = new boolean[1];
       int logoID[] = new int[1];
 
-      for (int i = 0; i < numChans; i++)
+      synchronized (updateChannelsLock)
       {
-        SDStation station = map.getStations()[i];
-
-        int stationID = station.getStationID();
-        String chanName = station.getCallsign();
-        String longName = station.getName();
-        String networkName = station.getAffiliate();
-        SDLogo logo = station.getLogo();
-        String logoURLEncode = logo != null ? logo.getURL() : null;
-        int logoMask;
-        byte[] logoURL;
-        if (logoURLEncode != null)
+        boolean useAlternativeChannelLogos = Sage.getBoolean(PROP_DOWNLOAD_ALTERNATE_LOGOS, false);
+        for (int i = 0; i < numChans; i++)
         {
-          logoURL = SDImages.encodeLogoURL(logoURLEncode, logoID);
-          logoMask = Channel.SD_LOGO_MASK | logoID[0];
-        }
-        else
-        {
-          logoURL = Pooler.EMPTY_BYTE_ARRAY;
-          logoMask = 0;
-        }
-        // Physical channel.
-        String dtvChan = null;
-        channelNumbers.clear();
+          SDStation station = map.getStations()[i];
 
-
-        // Get all channels with this station ID.
-        for (int j = 0; j < map.getMap().length; j++)
-        {
-          SDChannelMap channelMap = map.getMap()[j];
-
-          if (stationID == channelMap.getStationID())
+          int stationID = station.getStationID();
+          String chanName = station.getCallsign();
+          String longName = station.getName();
+          String networkName = station.getAffiliate();
+          String logoURLEncode;
+          if (useAlternativeChannelLogos)
           {
-            // Antenna maps will never have leading zeros because they don't use virtual channels.
-            if (SDRipper.removeLeadingZeros && !(channelMap instanceof SDAntennaChannelMap))
-            {
-              channelNumbers.add(SDUtils.removeLeadingZeros(channelMap.getChannel()));
-            }
-            else
-            {
-              String tempString = channelMap.getPhysicalChannel();
-              if (tempString != null)
-                dtvChan = tempString;
-
-              channelNumbers.add(channelMap.getChannel());
-            }
+            SDLogo logos[] = station.getStationLogos();
+            // There should be an alternative logo in several cases. If there isn't we default to the
+            // logo we would have had otherwise.
+            logoURLEncode = logos.length > 1 ? logos[1].getURL() : logos.length != 0 ? logos[0].getURL() : null;
           }
-        }
-
-
-        String[] chanNums = channelNumbers.toArray(new String[channelNumbers.size()]);
-        // This will not return a null value.
-        String[] prevChans = EPG.getInstance().getChannels(providerID, stationID);
-        // Preserve the first priority channel # for this station.
-        if (prevChans.length > 0 && chanNums.length > 0 &&
-            !prevChans[0].equals(chanNums[0]))
-        {
-          for (int j = 1; j < chanNums.length; j++)
+          else
           {
-            if (chanNums[j].equals(prevChans[0]))
-            {
-              chanNums[j] = chanNums[0];
-              chanNums[0] = prevChans[0];
-              break;
-            }
-          }
-        }
-
-        lineMap.put(stationID, chanNums);
-
-        Channel freshChan = wiz.addChannel(chanName, longName, networkName, stationID, logoMask, logoURL, caddrv);
-        if (caddrv[0])
-        {
-          // Clear any potentially existing MD5 hashes for this channel and save immediately. If we
-          // don't do this and the channel MD5 hashes have not changed since the last update, we
-          // might not download anything for the entire channel.
-          if (stationDayMd5s.remove(stationID) != null)
-          {
-            if (Sage.DBG) System.out.println("SDEPG Removed channel MD5 hash: " + freshChan);
-            saveStationDayMd5Map(stationDayMd5s);
+            SDLogo logo = station.getLogo();
+            logoURLEncode = logo != null ? logo.getURL() : null;
           }
 
-          wiz.resetAirings(stationID);
-          if (chanDownloadComplete && !Sage.getBoolean("epg/enable_newly_added_channels", true))
+          int logoMask;
+          byte[] logoURL;
+          if (logoURLEncode != null)
+          {
+            logoURL = SDImages.encodeLogoURL(logoURLEncode, logoID);
+            logoMask = Channel.SD_LOGO_MASK | logoID[0];
+          }
+          else
+          {
+            logoURL = Pooler.EMPTY_BYTE_ARRAY;
+            logoMask = 0;
+          }
+          // Physical channel.
+          String dtvChan = null;
+          channelNumbers.clear();
+
+
+          // Get all channels with this station ID.
+          for (int j = 0; j < map.getMap().length; j++)
+          {
+            SDChannelMap channelMap = map.getMap()[j];
+
+            if (stationID == channelMap.getStationID())
+            {
+              // Antenna maps will never have leading zeros because they don't use virtual channels.
+              if (SDRipper.removeLeadingZeros && !(channelMap instanceof SDAntennaChannelMap))
+              {
+                channelNumbers.add(SDUtils.removeLeadingZeros(channelMap.getChannel()));
+              }
+              else
+              {
+                String tempString = channelMap.getPhysicalChannel();
+                if (tempString != null)
+                  dtvChan = tempString;
+
+                channelNumbers.add(channelMap.getChannel());
+              }
+            }
+          }
+
+
+          String[] chanNums = channelNumbers.toArray(new String[channelNumbers.size()]);
+          // This will not return a null value.
+          String[] prevChans = EPG.getInstance().getChannels(providerID, stationID);
+          // Preserve the first priority channel # for this station.
+          if (prevChans.length > 0 && chanNums.length > 0 &&
+              !prevChans[0].equals(chanNums[0]))
+          {
+            for (int j = 1; j < chanNums.length; j++)
+            {
+              if (chanNums[j].equals(prevChans[0]))
+              {
+                chanNums[j] = chanNums[0];
+                chanNums[0] = prevChans[0];
+                break;
+              }
+            }
+          }
+
+          lineMap.put(stationID, chanNums);
+
+          Channel freshChan = wiz.addChannel(chanName, longName, networkName, stationID, logoMask, logoURL, caddrv);
+          if (caddrv[0])
+          {
+            // Clear any potentially existing MD5 hashes for this channel and save immediately. If we
+            // don't do this and the channel MD5 hashes have not changed since the last update, we
+            // might not download anything for the entire channel.
+            if (stationDayMd5s.remove(stationID) != null)
+            {
+              if (Sage.DBG) System.out.println("SDEPG Removed channel MD5 hash: " + freshChan);
+              saveStationDayMd5Map(stationDayMd5s);
+            }
+
+            wiz.resetAirings(stationID);
+            if (chanDownloadComplete && !Sage.getBoolean("epg/enable_newly_added_channels", true))
+            {
+              if (Sage.DBG) System.out.println("SDEPG Disabling newly added channel: " + freshChan);
+              setCanViewStation(stationID, false);
+            }
+          }
+          else if (chanDownloadComplete && prevChans.length == 1 && prevChans[0].equals("") && !Sage.getBoolean("epg/enable_newly_added_channels", true))
           {
             if (Sage.DBG) System.out.println("SDEPG Disabling newly added channel: " + freshChan);
             setCanViewStation(stationID, false);
           }
-        }
-        else if (chanDownloadComplete && prevChans.length == 1 && prevChans[0].equals("") && !Sage.getBoolean("epg/enable_newly_added_channels", true))
-        {
-          if (Sage.DBG) System.out.println("SDEPG Disabling newly added channel: " + freshChan);
-          setCanViewStation(stationID, false);
-        }
-        if (chanDownloadComplete && (caddrv[0] || (prevChans.length == 1 && prevChans[0].equals(""))))
-        {
-          // Channel download already done on this lineup and this channel is either new in the DB
-          // or it didn't have a mapping before on this lineup; either case means it's 'new' on the lineup
-          String chanString = "";
-          for (int x = 0; x < chanNums.length; x++)
+          if (chanDownloadComplete && (caddrv[0] || (prevChans.length == 1 && prevChans[0].equals(""))))
           {
-            chanString += chanNums[x];
-            if (x < chanNums.length - 1)
-              chanString += ',';
+            // Channel download already done on this lineup and this channel is either new in the DB
+            // or it didn't have a mapping before on this lineup; either case means it's 'new' on the lineup
+            String chanString = "";
+            for (int x = 0; x < chanNums.length; x++)
+            {
+              chanString += chanNums[x];
+              if (x < chanNums.length - 1)
+                chanString += ',';
+            }
+            if (Sage.DBG) System.out.println("SDEPG Sending system message for new channel on lineup newAdd=" + caddrv[0] + " prevChans=" + java.util.Arrays.asList(prevChans) + " chan=" + freshChan);
+            sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createNewChannelMsg(this, freshChan, chanString));
           }
-          if (Sage.DBG) System.out.println("SDEPG Sending system message for new channel on lineup newAdd=" + caddrv[0] + " prevChans=" + java.util.Arrays.asList(prevChans) + " chan=" + freshChan);
-          sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createNewChannelMsg(this, freshChan, chanString));
-        }
-        // If we haven't downloaded the channel data yet; then the station viewability cache in the EPG won't be correct yet
-        if (!chanDownloadComplete || EPG.getInstance().canViewStation(stationID) || !Sage.getBoolean("wizard/remove_airings_on_unviewable_channels2", true))
-          stations[i] = stationID;
-        else
-          stations[i] = 0;
-        if (dtvChan != null && dtvChan.length() > 0 && dtvChan.indexOf('-') != -1)
-        {
-          // We were not even using this information; so now we put the physical channel string here instead, if parsing fails we just continue on and ignore it
-          if (physicalMap == null)
-            physicalMap = new java.util.HashMap<Integer, String[]>();
-          physicalMap.put(stationID, new String[] { dtvChan });
+          // If we haven't downloaded the channel data yet; then the station viewability cache in the EPG won't be correct yet
+          if (!chanDownloadComplete || EPG.getInstance().canViewStation(stationID) || !Sage.getBoolean("wizard/remove_airings_on_unviewable_channels2", true))
+            stations[i] = stationID;
+          else
+            stations[i] = 0;
+          if (dtvChan != null && dtvChan.length() > 0 && dtvChan.indexOf('-') != -1)
+          {
+            // We were not even using this information; so now we put the physical channel string here instead, if parsing fails we just continue on and ignore it
+            if (physicalMap == null)
+              physicalMap = new java.util.HashMap<Integer, String[]>();
+            physicalMap.put(stationID, new String[] { dtvChan });
+          }
         }
       }
 
@@ -1613,6 +1729,7 @@ public class SDRipper extends EPGDataSource
                     boolean canGetSeries = SDUtils.canGetSeries(extID);
                     boolean isSeries = "Series".equals(showType);
                     boolean isMovie = extID.startsWith("MV");
+                    SDMovie movie = isMovie ? programDetail.getMovie() : null;
 
                     // Add/update the series info any time an episode of a series is updated. This
                     // is a Set, so we will not create duplicates.
@@ -1624,7 +1741,7 @@ public class SDRipper extends EPGDataSource
                     String title = programDetail.getTitle();
                     String episodeName = programDetail.getEpisodeTitle150();
                     String desc = programDetail.getDescriptions().getDescription(preferedDescDigraph, false).getDescription();
-                    long showDuration = programDetail.getDuration();
+                    long showDuration = movie != null ? movie.getDuration() : programDetail.getDuration();
 
                     SDPerson cast[] = programDetail.getCast();
                     SDPerson crew[] = programDetail.getCrew();
@@ -1679,7 +1796,6 @@ public class SDRipper extends EPGDataSource
                       }
                     }
                     String[] expandedRatings = programDetail.getContentAdvisory();
-                    SDMovie movie = isMovie ? programDetail.getMovie() : null;
                     // Is only set when the program is a movie.
                     String rated = movie != null ? programDetail.getContentRating(movieRatingBody) : ""; // programDetail.getContentRating(ratingBody);
                     String year = movie != null ? movie.getYear() : "";

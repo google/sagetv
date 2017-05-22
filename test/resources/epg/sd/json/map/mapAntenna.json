@@ -67,6 +67,18 @@
       "atscMinor": 1
     },
     {
+      "stationID": "100629",
+      "uhfVhf": 13,
+      "atscMajor": 22,
+      "atscMinor": 2
+    },
+    {
+      "stationID": "100630",
+      "uhfVhf": 13,
+      "atscMajor": 22,
+      "atscMinor": 3
+    },
+    {
       "stationID": "44627",
       "uhfVhf": 10,
       "atscMajor": 27,
@@ -89,6 +101,18 @@
       "uhfVhf": 11,
       "atscMajor": 28,
       "atscMinor": 1
+    },
+    {
+      "stationID": "100634",
+      "uhfVhf": 11,
+      "atscMajor": 28,
+      "atscMinor": 2
+    },
+    {
+      "stationID": "100635",
+      "uhfVhf": 11,
+      "atscMajor": 28,
+      "atscMinor": 3
     },
     {
       "stationID": "19610",
@@ -173,11 +197,27 @@
         "postalcode": "17604",
         "country": "United States"
       },
+      "stationLogo": [
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s28717_h3_aa.png",
+          "height": 270,
+          "width": 360,
+          "md5": "cf9686d6989ba8aa21ddb4",
+          "source": "Gracenote"
+        },
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s28717_h3_ba.png",
+          "height": 270,
+          "width": 360,
+          "md5": "32aac70665d3a199aa227a",
+          "source": "Gracenote"
+        }
+      ],
       "logo": {
         "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s28717_h3_aa.png",
         "height": 270,
         "width": 360,
-        "md5": "6c7554a4b7f6d83bcacf39"
+        "md5": "cf9686d6989ba8aa21ddb4"
       }
     },
     {
@@ -197,11 +237,27 @@
         "postalcode": "17604",
         "country": "United States"
       },
+      "stationLogo": [
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s28717_h3_aa.png",
+          "height": 270,
+          "width": 360,
+          "md5": "cf9686d6989ba8aa21ddb4",
+          "source": "Gracenote"
+        },
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s28717_h3_ba.png",
+          "height": 270,
+          "width": 360,
+          "md5": "32aac70665d3a199aa227a",
+          "source": "Gracenote"
+        }
+      ],
       "logo": {
         "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s28717_h3_aa.png",
         "height": 270,
         "width": 360,
-        "md5": "6c7554a4b7f6d83bcacf39"
+        "md5": "cf9686d6989ba8aa21ddb4"
       }
     },
     {
@@ -238,11 +294,20 @@
         "postalcode": "17604",
         "country": "United States"
       },
+      "stationLogo": [
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s70436_h3_aa.png",
+          "height": 270,
+          "width": 360,
+          "md5": "a33717dcc395f94e57d65c",
+          "source": "Gracenote"
+        }
+      ],
       "logo": {
         "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s70436_h3_aa.png",
         "height": 270,
         "width": 360,
-        "md5": "999ad5c3ce121bba5cf6b1"
+        "md5": "a33717dcc395f94e57d65c"
       }
     },
     {
@@ -262,11 +327,20 @@
         "postalcode": "17110",
         "country": "United States"
       },
+      "stationLogo": [
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s53098_h3_aa.png",
+          "height": 270,
+          "width": 360,
+          "md5": "cdb444eceb98b473fd8705",
+          "source": "Gracenote"
+        }
+      ],
       "logo": {
         "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s53098_h3_aa.png",
         "height": 270,
         "width": 360,
-        "md5": "a48c6cc6e461e993bb38f5"
+        "md5": "cdb444eceb98b473fd8705"
       }
     },
     {
@@ -286,11 +360,20 @@
         "postalcode": "17110",
         "country": "United States"
       },
+      "stationLogo": [
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s97051_h3_aa.png",
+          "height": 270,
+          "width": 360,
+          "md5": "3594e73748cc0e6069ee5d",
+          "source": "Gracenote"
+        }
+      ],
       "logo": {
         "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s97051_h3_aa.png",
         "height": 270,
         "width": 360,
-        "md5": "5fa23ea9f65e3a772b747f"
+        "md5": "3594e73748cc0e6069ee5d"
       }
     },
     {
@@ -310,11 +393,20 @@
         "postalcode": "17110",
         "country": "United States"
       },
+      "stationLogo": [
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s97051_h3_aa.png",
+          "height": 270,
+          "width": 360,
+          "md5": "3594e73748cc0e6069ee5d",
+          "source": "Gracenote"
+        }
+      ],
       "logo": {
         "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s97051_h3_aa.png",
         "height": 270,
         "width": 360,
-        "md5": "5fa23ea9f65e3a772b747f"
+        "md5": "3594e73748cc0e6069ee5d"
       }
     },
     {
@@ -334,11 +426,27 @@
         "postalcode": "17110",
         "country": "United States"
       },
+      "stationLogo": [
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s28711_h3_aa.png",
+          "height": 270,
+          "width": 360,
+          "md5": "49e59c75633162127981aa",
+          "source": "Gracenote"
+        },
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s28711_h3_ba.png",
+          "height": 270,
+          "width": 360,
+          "md5": "e9e34e073597cc8fce23f5",
+          "source": "Gracenote"
+        }
+      ],
       "logo": {
         "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s28711_h3_aa.png",
         "height": 270,
         "width": 360,
-        "md5": "cd39083eddabbf918d0372"
+        "md5": "49e59c75633162127981aa"
       }
     },
     {
@@ -358,11 +466,20 @@
         "postalcode": "17110",
         "country": "United States"
       },
+      "stationLogo": [
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s51307_h3_aa.png",
+          "height": 270,
+          "width": 360,
+          "md5": "319f3ddd6dac901e04c809",
+          "source": "Gracenote"
+        }
+      ],
       "logo": {
-        "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s16604_h3_aa.png",
+        "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s51307_h3_aa.png",
         "height": 270,
         "width": 360,
-        "md5": "c834727ffd24fdf9d21d11"
+        "md5": "319f3ddd6dac901e04c809"
       }
     },
     {
@@ -382,11 +499,20 @@
         "postalcode": "17110",
         "country": "United States"
       },
+      "stationLogo": [
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s51306_h3_aa.png",
+          "height": 270,
+          "width": 360,
+          "md5": "189a02afc435ba2fc30281",
+          "source": "Gracenote"
+        }
+      ],
       "logo": {
         "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s51306_h3_aa.png",
         "height": 270,
         "width": 360,
-        "md5": "79444f6040f9b1d0924504"
+        "md5": "189a02afc435ba2fc30281"
       }
     },
     {
@@ -406,11 +532,107 @@
         "postalcode": "18503",
         "country": "United States"
       },
+      "stationLogo": [
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s28711_h3_aa.png",
+          "height": 270,
+          "width": 360,
+          "md5": "49e59c75633162127981aa",
+          "source": "Gracenote"
+        },
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s28711_h3_ba.png",
+          "height": 270,
+          "width": 360,
+          "md5": "e9e34e073597cc8fce23f5",
+          "source": "Gracenote"
+        }
+      ],
       "logo": {
         "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s28711_h3_aa.png",
         "height": 270,
         "width": 360,
-        "md5": "cd39083eddabbf918d0372"
+        "md5": "49e59c75633162127981aa"
+      }
+    },
+    {
+      "stationID": "100629",
+      "name": "WYOUDT2 (WYOU-DT2)",
+      "callsign": "WYOUDT2",
+      "affiliate": "ESCAPE",
+      "broadcastLanguage": [
+        "en"
+      ],
+      "descriptionLanguage": [
+        "en"
+      ],
+      "broadcaster": {
+        "city": "Scranton",
+        "state": "PA",
+        "postalcode": "18503",
+        "country": "United States"
+      },
+      "stationLogo": [
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s89923_h3_aa.png",
+          "height": 270,
+          "width": 360,
+          "md5": "0914371f65ae5ff9d47803",
+          "source": "Gracenote"
+        },
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s89923_h3_ba.png",
+          "height": 270,
+          "width": 360,
+          "md5": "de1ab8ef2ebc28b4f715d4",
+          "source": "Gracenote"
+        }
+      ],
+      "logo": {
+        "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s89923_h3_aa.png",
+        "height": 270,
+        "width": 360,
+        "md5": "0914371f65ae5ff9d47803"
+      }
+    },
+    {
+      "stationID": "100630",
+      "name": "WYOUDT3 (WYOU-DT3)",
+      "callsign": "WYOUDT3",
+      "affiliate": "BOUNCE",
+      "broadcastLanguage": [
+        "en"
+      ],
+      "descriptionLanguage": [
+        "en"
+      ],
+      "broadcaster": {
+        "city": "Scranton",
+        "state": "PA",
+        "postalcode": "18503",
+        "country": "United States"
+      },
+      "stationLogo": [
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s73067_h3_aa.png",
+          "height": 270,
+          "width": 360,
+          "md5": "38014d73795a9022401e05",
+          "source": "Gracenote"
+        },
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s73067_h3_ba.png",
+          "height": 270,
+          "width": 360,
+          "md5": "6e48a27e6a39633e86c40b",
+          "source": "Gracenote"
+        }
+      ],
+      "logo": {
+        "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s73067_h3_aa.png",
+        "height": 270,
+        "width": 360,
+        "md5": "38014d73795a9022401e05"
       }
     },
     {
@@ -430,11 +652,27 @@
         "postalcode": "17110",
         "country": "United States"
       },
+      "stationLogo": [
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s28708_h3_aa.png",
+          "height": 270,
+          "width": 360,
+          "md5": "7c7151475875c31a8ab31a",
+          "source": "Gracenote"
+        },
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s28708_h3_ba.png",
+          "height": 270,
+          "width": 360,
+          "md5": "d94f02d71ed7bd120a0825",
+          "source": "Gracenote"
+        }
+      ],
       "logo": {
         "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s28708_h3_aa.png",
         "height": 270,
         "width": 360,
-        "md5": "39987b0849d402b3f112b7"
+        "md5": "7c7151475875c31a8ab31a"
       }
     },
     {
@@ -454,11 +692,27 @@
         "postalcode": "17110",
         "country": "United States"
       },
+      "stationLogo": [
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s18633_h3_aa.png",
+          "height": 270,
+          "width": 360,
+          "md5": "5cb93bd3127646ca6b33bd",
+          "source": "Gracenote"
+        },
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s18633_h3_ba.png",
+          "height": 270,
+          "width": 360,
+          "md5": "0c77c0a3770a0248c7cd70",
+          "source": "Gracenote"
+        }
+      ],
       "logo": {
         "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s18633_h3_aa.png",
         "height": 270,
         "width": 360,
-        "md5": "7791fd59b59f86c19ba7aa"
+        "md5": "5cb93bd3127646ca6b33bd"
       }
     },
     {
@@ -495,11 +749,100 @@
         "postalcode": "18701",
         "country": "United States"
       },
+      "stationLogo": [
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s28717_h3_aa.png",
+          "height": 270,
+          "width": 360,
+          "md5": "cf9686d6989ba8aa21ddb4",
+          "source": "Gracenote"
+        },
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s28717_h3_ba.png",
+          "height": 270,
+          "width": 360,
+          "md5": "32aac70665d3a199aa227a",
+          "source": "Gracenote"
+        }
+      ],
       "logo": {
         "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s28717_h3_aa.png",
         "height": 270,
         "width": 360,
-        "md5": "6c7554a4b7f6d83bcacf39"
+        "md5": "cf9686d6989ba8aa21ddb4"
+      }
+    },
+    {
+      "stationID": "100634",
+      "name": "WBREDT2 (WBRE-DT2)",
+      "callsign": "WBREDT2",
+      "affiliate": "LAFF",
+      "broadcastLanguage": [
+        "en"
+      ],
+      "descriptionLanguage": [
+        "en"
+      ],
+      "broadcaster": {
+        "city": "Wilkes Barre",
+        "state": "PA",
+        "postalcode": "18701",
+        "country": "United States"
+      },
+      "stationLogo": [
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s92091_h3_aa.png",
+          "height": 270,
+          "width": 360,
+          "md5": "8ddb360d95c9835f1f0769",
+          "source": "Gracenote"
+        }
+      ],
+      "logo": {
+        "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s92091_h3_aa.png",
+        "height": 270,
+        "width": 360,
+        "md5": "8ddb360d95c9835f1f0769"
+      }
+    },
+    {
+      "stationID": "100635",
+      "name": "WBREDT3 (WBRE-DT3)",
+      "callsign": "WBREDT3",
+      "affiliate": "GRIT",
+      "broadcastLanguage": [
+        "en"
+      ],
+      "descriptionLanguage": [
+        "en"
+      ],
+      "broadcaster": {
+        "city": "Wilkes Barre",
+        "state": "PA",
+        "postalcode": "18701",
+        "country": "United States"
+      },
+      "stationLogo": [
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s89922_h3_aa.png",
+          "height": 270,
+          "width": 360,
+          "md5": "1c667e5ca9418c11906768",
+          "source": "Gracenote"
+        },
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s89922_h3_ba.png",
+          "height": 270,
+          "width": 360,
+          "md5": "7f6a227515d3837eccef33",
+          "source": "Gracenote"
+        }
+      ],
+      "logo": {
+        "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s89922_h3_aa.png",
+        "height": 270,
+        "width": 360,
+        "md5": "1c667e5ca9418c11906768"
       }
     },
     {
@@ -520,11 +863,20 @@
         "country": "United States"
       },
       "isCommercialFree": true,
+      "stationLogo": [
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s32356_h3_aa.png",
+          "height": 270,
+          "width": 360,
+          "md5": "9d28333b398871a9e28307",
+          "source": "Gracenote"
+        }
+      ],
       "logo": {
         "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s32356_h3_aa.png",
         "height": 270,
         "width": 360,
-        "md5": "4aa5ae639a1dfcf4811398"
+        "md5": "9d28333b398871a9e28307"
       }
     },
     {
@@ -545,11 +897,20 @@
         "country": "United States"
       },
       "isCommercialFree": true,
+      "stationLogo": [
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s32356_h3_aa.png",
+          "height": 270,
+          "width": 360,
+          "md5": "9d28333b398871a9e28307",
+          "source": "Gracenote"
+        }
+      ],
       "logo": {
         "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s32356_h3_aa.png",
         "height": 270,
         "width": 360,
-        "md5": "4aa5ae639a1dfcf4811398"
+        "md5": "9d28333b398871a9e28307"
       }
     },
     {
@@ -603,11 +964,27 @@
         "postalcode": "17403",
         "country": "United States"
       },
+      "stationLogo": [
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s28719_h3_aa.png",
+          "height": 270,
+          "width": 360,
+          "md5": "64b0be36b801167ca1946f",
+          "source": "Gracenote"
+        },
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s28719_h3_ba.png",
+          "height": 270,
+          "width": 360,
+          "md5": "3d01afe143043b6e31fee7",
+          "source": "Gracenote"
+        }
+      ],
       "logo": {
         "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s28719_h3_aa.png",
         "height": 270,
         "width": 360,
-        "md5": "ced2c1ac9983b74d6fccb3"
+        "md5": "64b0be36b801167ca1946f"
       }
     },
     {
@@ -627,11 +1004,20 @@
         "postalcode": "17403",
         "country": "United States"
       },
+      "stationLogo": [
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s70248_h3_aa.png",
+          "height": 270,
+          "width": 360,
+          "md5": "0a38a466f3cf70c5757f66",
+          "source": "Gracenote"
+        }
+      ],
       "logo": {
         "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s70248_h3_aa.png",
         "height": 270,
         "width": 360,
-        "md5": "6a2b597e34a88ba05dde8c"
+        "md5": "0a38a466f3cf70c5757f66"
       }
     },
     {
@@ -651,11 +1037,27 @@
         "postalcode": "17403",
         "country": "United States"
       },
+      "stationLogo": [
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s61775_h3_aa.png",
+          "height": 270,
+          "width": 360,
+          "md5": "d34a7063e7c8e930f7247b",
+          "source": "Gracenote"
+        },
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s61775_h3_ba.png",
+          "height": 270,
+          "width": 360,
+          "md5": "0d984b9ac618242ec8ce70",
+          "source": "Gracenote"
+        }
+      ],
       "logo": {
         "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s61775_h3_aa.png",
         "height": 270,
         "width": 360,
-        "md5": "d537e6877bbec4c4ed44c8"
+        "md5": "d34a7063e7c8e930f7247b"
       }
     },
     {
@@ -675,11 +1077,20 @@
         "postalcode": "17356",
         "country": "United States"
       },
+      "stationLogo": [
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s78851_h3_aa.png",
+          "height": 270,
+          "width": 360,
+          "md5": "eead30a6c7b197fca59bc4",
+          "source": "Gracenote"
+        }
+      ],
       "logo": {
         "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s78851_h3_aa.png",
         "height": 270,
         "width": 360,
-        "md5": "d4a1ac8485c79aa0d8eb11"
+        "md5": "eead30a6c7b197fca59bc4"
       }
     },
     {
@@ -699,18 +1110,27 @@
         "postalcode": "17356",
         "country": "United States"
       },
+      "stationLogo": [
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s78851_h3_aa.png",
+          "height": 270,
+          "width": 360,
+          "md5": "eead30a6c7b197fca59bc4",
+          "source": "Gracenote"
+        }
+      ],
       "logo": {
         "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s78851_h3_aa.png",
         "height": 270,
         "width": 360,
-        "md5": "d4a1ac8485c79aa0d8eb11"
+        "md5": "eead30a6c7b197fca59bc4"
       }
     },
     {
       "stationID": "91324",
       "name": "WGCBDT3 (WGCB-DT3)",
       "callsign": "WGCBDT3",
-      "affiliate": "WORKS",
+      "affiliate": "CHARGE",
       "broadcastLanguage": [
         "en"
       ],
@@ -723,11 +1143,34 @@
         "postalcode": "17356",
         "country": "United States"
       },
+      "stationLogo": [
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s102148_h3_aa.png",
+          "height": 270,
+          "width": 360,
+          "md5": "40808cfdea12ba14604b36",
+          "source": "Gracenote"
+        },
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s88461_h3_aa.png",
+          "height": 270,
+          "width": 360,
+          "md5": "cb2156cfcc89c21931cc9a",
+          "source": "Gracenote"
+        },
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s88461_h3_ba.png",
+          "height": 270,
+          "width": 360,
+          "md5": "a4cfdce36a7c899b2b619a",
+          "source": "Gracenote"
+        }
+      ],
       "logo": {
-        "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s88461_h3_aa.png",
+        "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s102148_h3_aa.png",
         "height": 270,
         "width": 360,
-        "md5": "a7fbe9fb4e239347cc18a1"
+        "md5": "40808cfdea12ba14604b36"
       }
     },
     {
@@ -747,17 +1190,33 @@
         "postalcode": "17356",
         "country": "United States"
       },
+      "stationLogo": [
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s89923_h3_aa.png",
+          "height": 270,
+          "width": 360,
+          "md5": "0914371f65ae5ff9d47803",
+          "source": "Gracenote"
+        },
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s89923_h3_ba.png",
+          "height": 270,
+          "width": 360,
+          "md5": "de1ab8ef2ebc28b4f715d4",
+          "source": "Gracenote"
+        }
+      ],
       "logo": {
         "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s89923_h3_aa.png",
         "height": 270,
         "width": 360,
-        "md5": "007cfed3f0b365e8737b86"
+        "md5": "0914371f65ae5ff9d47803"
       }
     }
   ],
   "metadata": {
     "lineup": "USA-OTA-17112",
-    "modified": "2016-07-21T21:19:48Z",
+    "modified": "2017-04-12T00:26:56Z",
     "transport": "Antenna"
   }
 }

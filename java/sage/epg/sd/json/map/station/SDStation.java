@@ -22,6 +22,8 @@ import java.util.Arrays;
 
 public class SDStation
 {
+  private static final SDLogo EMPTY_LOGOS[] = new SDLogo[0];
+
   private String stationID;
   private String name;
   private String callsign;
@@ -31,6 +33,7 @@ public class SDStation
   private SDBroadcaster broadcaster;
   private boolean isCommercialFree;
   private SDLogo logo;
+  private SDLogo stationLogo[];
 
   public int getStationID()
   {
@@ -80,7 +83,14 @@ public class SDStation
 
   public SDLogo getLogo()
   {
+    if (logo == null && stationLogo != null && stationLogo.length > 0)
+      return stationLogo[0];
     return logo;
+  }
+
+  public SDLogo[] getStationLogos()
+  {
+    return stationLogo != null ? stationLogo : EMPTY_LOGOS;
   }
 
   @Override
@@ -96,6 +106,7 @@ public class SDStation
         ", broadcaster=" + broadcaster +
         ", isCommercialFree=" + isCommercialFree +
         ", logo=" + logo +
+        ", stationLogo=" + Arrays.toString(stationLogo) +
         '}';
   }
 }

@@ -31,6 +31,22 @@
         "postalcode": "17110",
         "country": "United States"
       },
+      "stationLogo": [
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s89922_h3_aa.png",
+          "height": 270,
+          "width": 360,
+          "md5": "3461b24f174a57f844fa56",
+          "source": "Gracenote"
+        },
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s10098_h3_ba.png",
+          "height": 270,
+          "width": 360,
+          "md5": "f27da5a7604ffbc6bfd532",
+          "source": "Gracenote"
+        }
+      ],
       "logo": {
         "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s10098_h3_aa.png",
         "height": 270,
@@ -56,6 +72,22 @@
         "country": "United States"
       },
       "isCommercialFree": true,
+      "stationLogo": [
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s89922_h3_aa.png",
+          "height": 270,
+          "width": 360,
+          "md5": "3461b24f174a57f844fa56",
+          "source": "Gracenote"
+        },
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s10098_h3_ba.png",
+          "height": 270,
+          "width": 360,
+          "md5": "f27da5a7604ffbc6bfd532",
+          "source": "Gracenote"
+        }
+      ],
       "logo": {
         "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s11039_h3_aa.png",
         "height": 270,
@@ -80,6 +112,22 @@
         "postalcode": "17403",
         "country": "United States"
       },
+      "stationLogo": [
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s89922_h3_aa.png",
+          "height": 270,
+          "width": 360,
+          "md5": "3461b24f174a57f844fa56",
+          "source": "Gracenote"
+        },
+        {
+          "URL": "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s10098_h3_ba.png",
+          "height": 270,
+          "width": 360,
+          "md5": "f27da5a7604ffbc6bfd532",
+          "source": "Gracenote"
+        }
+      ],
       "logo": {
         "URL": "https://s3.amazonaw.com/schedulesdirect/assets/stationLogos/s10212_h3_aa.png",
         "height": 270,
