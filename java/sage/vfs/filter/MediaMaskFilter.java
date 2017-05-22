@@ -52,7 +52,7 @@ public class MediaMaskFilter extends BasicDataObjectFilter
     if (MediaNode.DATATYPE_FILE.equals(dataType))
     {
       java.io.File f = (java.io.File) data;
-      return f.isDirectory() || (((sage.Seeker.getInstance().guessImportedMediaMaskFast(f.getAbsolutePath()) & mediaMask) == 0) == !matchPasses);
+      return f.isDirectory() || (((sage.SeekerSelector.getInstance().guessImportedMediaMaskFast(f.getAbsolutePath()) & mediaMask) == 0) == !matchPasses);
     }
     else if (MediaNode.DATATYPE_MEDIAFILE.equals(dataType))
     {

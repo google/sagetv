@@ -852,7 +852,7 @@ public abstract class SDSession
     JsonArray submit = new JsonArray();
     for (String program : programs)
     {
-      submit.add(program);
+      submit.add(SDUtils.fromSageTVtoProgram(program));
     }
 
     SDProgram[] returnValues = postAuthJson(GET_PROGRAMS, SDProgram[].class, submit);

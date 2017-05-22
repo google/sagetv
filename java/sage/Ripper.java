@@ -128,7 +128,7 @@ public class Ripper extends SystemTask
       if (Sage.DBG) System.out.println("CD BURNING IS COMPLETE!!!");
       succeeded();
 
-      Seeker.getInstance().scanLibrary(false);
+      SeekerSelector.getInstance().scanLibrary(false);
 
       // Now delete our temporary burn image
       clearScratch();

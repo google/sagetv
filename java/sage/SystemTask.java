@@ -88,7 +88,7 @@ public abstract class SystemTask implements Runnable
       alive = false;
       if (scratchDir != null)
       {
-        Seeker.getInstance().clearDirectoryStorageRequest(scratchDir);
+        SeekerSelector.getInstance().clearDirectoryStorageRequest(scratchDir);
         scratchDir = null;
       }
     }
@@ -186,8 +186,8 @@ public abstract class SystemTask implements Runnable
 
   protected void allocateScratchSpace(long size)
   {
-    scratchDir = Seeker.getInstance().requestDirectoryStorage("scratch", size);
-    Seeker.getInstance().kick();
+    scratchDir = SeekerSelector.getInstance().requestDirectoryStorage("scratch", size);
+    SeekerSelector.getInstance().kick();
     if (Sage.DBG) System.out.println("Temp dir for task data: " + scratchDir);
   }
 

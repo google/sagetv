@@ -27,7 +27,7 @@ public class IntelligentSorter extends BasicMediaNodeSorter
   public IntelligentSorter(boolean ascending)
   {
     super(ascending);
-    mycomp = sage.Seeker.getInstance().getMediaFileComparator(true);
+    mycomp = sage.SeekerSelector.getInstance().getMediaFileComparator(true);
   }
 
   public int compare(Object o1, Object o2)

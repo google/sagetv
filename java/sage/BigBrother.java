@@ -168,7 +168,7 @@ public class BigBrother
   {
     sage.plugin.PluginEventManager.postEvent(sage.plugin.PluginEventManager.WATCHED_STATE_CHANGED,
         new Object[] { sage.plugin.PluginEventManager.VAR_AIRING, a });
-    Scheduler.getInstance().kick(true);
+    SchedulerSelector.getInstance().kick(true);
   }
   public static void clearWatched(Airing a)
   {
@@ -305,17 +305,22 @@ public class BigBrother
 
   public static boolean areSameShow(Airing a1, Airing a2, boolean matchFavs)
   {
+    return areSameShow(a1, a2, matchFavs, null);
+  }
+
+  public static boolean areSameShow(Airing a1, Airing a2, boolean matchFavs, StringBuilder sbCache)
+  {
     if (a1 != null && a2 != null && a1.getShow() != null && a1.showID == a2.showID)
     {
       if ((isUnique(a1) || a1.time == a2.time) && (!matchFavs ||
-          Carny.getInstance().areSameFavorite(a1, a2)))
+          Carny.getInstance().areSameFavorite(a1, a2, sbCache)))
         return true;
       // Check for the Eastern/Pacific channel difference
       Channel c1 = a1.getChannel();
       Channel c2 = a2.getChannel();
       if ((c1 != null && c2 != null && ((c1.name.length() > 1 && c1.name.charAt(c1.name.length() - 1) == 'P') ||
           (c2.name.length() > 1 && c2.name.charAt(c2.name.length() - 1) == 'P')) && Math.abs(a1.time - a2.time) == 3*Sage.MILLIS_PER_HR) &&
-          (!matchFavs || Carny.getInstance().areSameFavorite(a1, a2)))
+          (!matchFavs || Carny.getInstance().areSameFavorite(a1, a2, sbCache)))
         return true;
     }
     return false;
@@ -391,9 +396,7 @@ public class BigBrother
         s.cachedUnique = Show.PRESUMED_UNIQUE; return true;
       }
 
-      if ("movie".equalsIgnoreCase(s.getCategory()) ||
-          "sports".equalsIgnoreCase(s.getCategory()) ||
-          s.hasEpisodeName())
+      if (s.isCategory("movie") || s.isCategory("sports") || s.hasEpisodeName())
       {
         s.cachedUnique = Show.PRESUMED_UNIQUE;
         return true;
@@ -442,9 +445,7 @@ public class BigBrother
         return true;
       }
 
-      if ("movie".equalsIgnoreCase(s.getCategory()) ||
-          "sports".equalsIgnoreCase(s.getCategory()) ||
-          s.hasEpisodeName())
+      if (s.isCategory("movie") || s.isCategory("sports") || s.hasEpisodeName())
       {
         return true;
       }

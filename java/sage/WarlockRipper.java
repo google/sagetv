@@ -307,7 +307,7 @@ public class WarlockRipper extends EPGDataSource
     sb.append(' ');
     sb.append(wiz.getSize(Wizard.MEDIAFILE_CODE));
     sb.append(' ');
-    long[] usedAndTotalSpace = Seeker.getInstance().getUsedAndTotalVideoDiskspace();
+    long[] usedAndTotalSpace = SeekerSelector.getInstance().getUsedAndTotalVideoDiskspace();
     sb.append(usedAndTotalSpace[1]);
     sb.append(' ');
     sb.append(usedAndTotalSpace[0]);

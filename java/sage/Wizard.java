@@ -710,7 +710,7 @@ public class Wizard implements EPGDBPublic2
           while (true)
           {
             try{Thread.sleep(5000);}catch(Exception e){}
-            if (numUncompXcts > NUM_TRANSACTIONS_TO_COMPRESS && !Seeker.getInstance().isDoingImportScan())
+            if (numUncompXcts > NUM_TRANSACTIONS_TO_COMPRESS && !SeekerSelector.getInstance().isDoingImportScan())
             {
               if (Sage.DBG) System.out.println("Setting overflow marker because we've exceeded the # of xcts for a re-save: num=" + numUncompXcts);
               flashOverflow = true;
@@ -786,17 +786,6 @@ public class Wizard implements EPGDBPublic2
     noShow = addShow(Sage.rez("EPG_Cell_No_Data"), null, null, null, 0, null, null, null, null, null, null, null, null, "NoShow",
         null, 0,  0, (short) 0, (short) 0, false, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0);
     Sage.putInt(prefsRoot + NOSHOW_ID, noShowID = noShow.id);
-  }
-
-  /**
-   * Is an airing a "No Data" recording?
-   *
-   * @param testMe The {@link Airing} to check.
-   * @return <code>true</code> if the airing is a "No Data" recording.
-   */
-  public boolean isNoShow(Airing testMe)
-  {
-    return testMe != null && testMe.showID == noShowID;
   }
 
   void mpause() { if (primed) { try{Thread.sleep(Sage.EMBEDDED ? 300 : 50);}catch(Exception e){} } }
@@ -5647,6 +5636,7 @@ public class Wizard implements EPGDBPublic2
       acquireWriteLock(PEOPLE_CODE);
       person = (oldPerson != null) ? (Person) oldPerson.clone() : new Person(getNextWizID());
       person.name = new String(name);
+      person.ignoreCaseHash = name.toLowerCase().hashCode();
       person.extID = extID;
       person.dateOfBirth = dob;
       person.dateOfDeath = dod;
@@ -5735,6 +5725,7 @@ public class Wizard implements EPGDBPublic2
         }
         Person rv = new Person(getNextWizID());
         rv.name = new String(name);
+        rv.ignoreCaseHash = name.toLowerCase().hashCode();
         rv.setMediaMask(DBObject.MEDIA_MASK_TV);
         // We use a negative external ID for a Person to indicate an alias to the real one stored in the DB
         rv.extID = -1 * extID;
@@ -5824,6 +5815,7 @@ public class Wizard implements EPGDBPublic2
       {
         Person rv = new Person(getNextWizID());
         rv.name = new String(name);
+        rv.ignoreCaseHash = name.toLowerCase().hashCode();
         rv.setMediaMask(createMediaMask);
         rv.extID = 0;
         t.add(rv, !loading);
@@ -8374,6 +8366,7 @@ public class Wizard implements EPGDBPublic2
       if ( rv == null ) {
         rv = new Stringer(getNextWizID());
         rv.name = name;
+        rv.ignoreCaseHash = name.toLowerCase().hashCode();
         rv.setMediaMask(createMediaMask);
         t.add(rv, true);
       } else {
@@ -8505,6 +8498,7 @@ public class Wizard implements EPGDBPublic2
         return rv;
       rv = new Stringer(getNextWizID());
       rv.name = new String(name);
+      rv.ignoreCaseHash = name.toLowerCase().hashCode();
       rv.setMediaMask(createMediaMask);
       t.add(rv, !loading);
       return rv;
@@ -8707,6 +8701,17 @@ public class Wizard implements EPGDBPublic2
   }
 
   boolean isStandalone() { return standalone; }
+
+  /**
+   * Is an airing a "No Data" recording?
+   *
+   * @param testMe The {@link Airing} to check.
+   * @return <code>true</code> if the airing is a "No Data" recording.
+   */
+  public boolean isNoShow(Airing testMe)
+  {
+    return testMe != null && testMe.showID == noShowID;
+  }
 
   boolean isNoShow(Show s) { return noShow == s; }
 

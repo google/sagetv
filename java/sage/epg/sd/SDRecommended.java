@@ -21,7 +21,7 @@ import sage.DBObject;
 import sage.MediaFile;
 import sage.Pooler;
 import sage.Sage;
-import sage.Seeker;
+import sage.SeekerSelector;
 import sage.Show;
 import sage.TVEditorial;
 import sage.Wizard;
@@ -152,7 +152,7 @@ public class SDRecommended
   {
     int alreadyExists = 0;
     List<SDEditorial> returnValues = new ArrayList<>();
-    Agent favorites[] = Wizard.getInstance().getFavorites();
+    Agent agents[] = Wizard.getInstance().getFavorites();
     TVEditorial currentEditorials[] = Wizard.getInstance().getEditorials();
     for (SDEditorial editorial : editorials)
     {
@@ -161,7 +161,12 @@ public class SDRecommended
       if (title == null || title.length() == 0)
         continue;
       String programId = recommendation.getProgramId();
-      if (programId == null || programId.length() == 0)
+      // 05/05/2016 JS: I made this a check for an expected length and specifically prepending with
+      // a known prefix because we were throwing some garbage at SD that we shouldn't.
+      if (programId == null || programId.length() == 0 ||
+        (programId.length() != 12 && programId.length() != 14) ||
+        (!programId.startsWith("EP") && !programId.startsWith("SH") &&
+          !programId.startsWith("MV") && !programId.startsWith("SP")))
         continue;
 
       // Don't recommend movies that we have already seen or don't exist in the Wizard.
@@ -171,8 +176,7 @@ public class SDRecommended
         if ((show = Wizard.getInstance().getShowForExternalID(programId)) == null || show.isWatched())
         {
           String newId = SDUtils.fromProgramToSageTV(programId);
-          if (newId.length() == 12 &&
-            ((show = Wizard.getInstance().getShowForExternalID(programId)) == null || show.isWatched()))
+          if (newId.length() == 12 && (show == null || show.isWatched()))
             continue;
         }
       }
@@ -181,9 +185,13 @@ public class SDRecommended
       // titles or would have been recorded due to other rules, but we aren't too concerned about
       // that.
       boolean skip = false;
-      for (Agent favorite : favorites)
+      String lowerTitle = title.toLowerCase();
+      for (Agent agent : agents)
       {
-        if (favorite.getTitle().equals(title))
+        if (agent.testAgentFlag(Agent.DISABLED_FLAG))
+          continue;
+
+        if (agent.isSameTitle(lowerTitle))
         {
           skip = true;
           break;
@@ -196,7 +204,7 @@ public class SDRecommended
       // different external ID.
       for (TVEditorial currentEditorial : currentEditorials)
       {
-        if (currentEditorial.getTitle().equals(title))
+        if (currentEditorial.getTitle().equalsIgnoreCase(title))
         {
           alreadyExists++;
           skip = true;
@@ -283,11 +291,11 @@ public class SDRecommended
   public static List<SDEditorial> getRecommendations(boolean includeIR) throws IOException, SDException
   {
     Set<String> lookupShows = new HashSet<>();
-    Airing airings[] = Seeker.getInstance().getInterleavedScheduledAirings();
+    Airing airings[] = SeekerSelector.getInstance().getInterleavedScheduledAirings();
     if (Sage.DBG) System.out.println("SDEPG Using " + airings.length + " airings for recommendations");
     if (includeIR)
     {
-      Airing irAirings[] = Seeker.getInstance().getIRScheduledAirings();
+      Airing irAirings[] = SeekerSelector.getInstance().getIRScheduledAirings();
       int copyIndex = airings.length;
       // Don't use more than 3000 ever. It will cause these suggestions to drive the SD
       // recommendations very hard towards shows that might be too derivative from what the user
@@ -375,7 +383,30 @@ public class SDRecommended
 
       if (Sage.DBG) System.out.println("SDEPG Using " + lookupShows.size() + " watched shows for recommendations");
 
-      SDProgram programs[] = SDRipper.ensureSession().getPrograms(lookupShows);
+      SDProgram programs[];
+      try
+      {
+        programs = SDRipper.ensureSession().getPrograms(lookupShows);
+      }
+      catch (Exception e)
+      {
+        if (Sage.DBG) System.out.println("SDEPG Unable to perform bulk lookup: " + e.toString());
+        ArrayList<SDProgram> newPrograms = new ArrayList<>(lookupShows.size());
+        // We have a problem with at least one of the shows we tried to look up this is kind of
+        // expected since we are asking for data that we were never told existed. We'll process them
+        // one by one since we don't have any way of knowing what one it was.
+        for (String lookupShow : lookupShows)
+        {
+          try
+          {
+            programs = SDRipper.ensureSession().getPrograms(Collections.singleton(lookupShow));
+            if (programs[0].getCode() == 0)
+              newPrograms.add(programs[0]);
+            // We expect that at least one of these will fail.
+          } catch (Exception e1) {}
+        }
+        programs = newPrograms.toArray(new SDProgram[newPrograms.size()]);
+      }
       lookupShows.clear();
       int recommendationCount = 0;
       for (SDProgram program : programs)
@@ -422,7 +453,31 @@ public class SDRecommended
       orderedPrograms.add(editorial.getRecommendation().getProgramId());
     }
 
-    SDProgram programs[] = SDRipper.ensureSession().getPrograms(orderedPrograms);
+    SDProgram programs[];
+    try
+    {
+      programs = SDRipper.ensureSession().getPrograms(lookupShows);
+    }
+    catch (Exception e)
+    {
+      if (Sage.DBG) System.out.println("SDEPG Unable to perform bulk lookup: " + e.toString());
+      ArrayList<SDProgram> newPrograms = new ArrayList<>(lookupShows.size());
+      // We have a problem with at least one of the shows we tried to look up this is kind of
+      // expected since we are asking for data that we were never told existed. We'll process them
+      // one by one since we don't have any way of knowing what one it was.
+      for (String lookupShow : orderedPrograms)
+      {
+        try
+        {
+          programs = SDRipper.ensureSession().getPrograms(Collections.singleton(lookupShow));
+          if (programs[0].getCode() == 0)
+            newPrograms.add(programs[0]);
+          // We expect that at least one of these will fail.
+        } catch (Exception e1) {}
+      }
+      programs = newPrograms.toArray(new SDProgram[newPrograms.size()]);
+    }
+    lookupShows.clear();
     for (int i = 0; i < programs.length; i++)
     {
       SDProgram program = programs[i];

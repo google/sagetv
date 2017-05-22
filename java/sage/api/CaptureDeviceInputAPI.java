@@ -499,7 +499,7 @@ public class CaptureDeviceInputAPI{
             ds.setEnabled(true);
         }
         getCapDevInput(stack).setProvider(provID);
-        Scheduler.getInstance().kick(false);
+        SchedulerSelector.getInstance().kick(false);
         return Boolean.TRUE;
       }});
     rft.put(new PredefinedJEPFunction("CaptureDeviceInput", "ConfigureInputWithoutEPGData", 1, new String[] {"CaptureDeviceInput"}, true)
@@ -532,7 +532,7 @@ public class CaptureDeviceInputAPI{
         else
           ds.setEnabled(true);
         cdi.setProvider(provID);
-        Scheduler.getInstance().kick(false);
+        SchedulerSelector.getInstance().kick(false);
         return Boolean.TRUE;
       }});
     rft.put(new PredefinedJEPFunction("CaptureDeviceInput", "ReleaseCaptureDeviceInput", 1, new String[] {"CaptureDeviceInput"}, true)
@@ -546,7 +546,7 @@ public class CaptureDeviceInputAPI{
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         getCapDevInput(stack).setProvider(0);
-        Scheduler.getInstance().kick(false);
+        SchedulerSelector.getInstance().kick(false);
         return null;
       }});
     rft.put(new PredefinedJEPFunction("CaptureDeviceInput", "GetCaptureDeviceInputBeingViewed")
@@ -580,7 +580,7 @@ public class CaptureDeviceInputAPI{
        * @declaration public String GetCaptureDeviceInputRecordingMediaFile(MediaFile MediaFile);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        Object rv = Seeker.getInstance().getInputForCurrRecordingFile(getMediaFile(stack));
+        Object rv = SeekerSelector.getInstance().getInputForCurrRecordingFile(getMediaFile(stack));
         return (rv == null) ? null : rv.toString();
       }});
     rft.put(new PredefinedJEPFunction("CaptureDeviceInput", "GetLineupForCaptureDeviceInput", 1, new String[] {"CaptureDeviceInput"})

@@ -54,7 +54,7 @@ public class ServerPowerManagement extends PowerManagement
     // server situation
     if (!Sage.client)
     {
-      if (Seeker.getInstance().requiresPower())
+      if (SeekerSelector.getInstance().requiresPower())
         return SYSTEM_POWER;
       if (Ministry.getInstance().requiresPower())
     	return SYSTEM_POWER;
@@ -82,7 +82,7 @@ public class ServerPowerManagement extends PowerManagement
   // Determine the next time we need to be awake to do a recording
   protected long getWakeupTime()
   {
-    return Scheduler.getInstance().getNextMustSeeTime();
+    return SchedulerSelector.getInstance().getNextMustSeeTime();
   }
 
   public long getWaitTime() { return Sage.getLong("power_management_wait_time_new", Math.min(Sage.getLong("power_management_wait_time", 30000), 10000)); }

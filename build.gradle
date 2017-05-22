@@ -312,10 +312,21 @@ def getBuildNumber() {
 		buildVer = ant.sagebuildnum		
 	}else if (OperatingSystem.current().isWindows()) {
 		//ensure full path to git\bin is in the Path Environment variable on windows
-		buildVer = ['sh', '-c', 'git rev-list HEAD --count'].execute().text.trim()
+		// 04-24-2017 JS: I changed this to remove the dependency on sh. Also we should note that
+		// you will get error code 128 if you have git installed, but you did not pull this project
+		// using git because git will not know where to get the commit count from. This is likely
+		// true for Linux too.
+		new ByteArrayOutputStream().withStream { outputStream ->
+			exec {
+				executable 'git'
+				args 'rev-list', 'HEAD', '--count'
+				standardOutput = outputStream
+			}
+			buildVer = outputStream.toString().trim()
+		}
 	}
 	
-	if (buildVer == null) buildVer=0;
+	if (buildVer == null || buildVer == "") buildVer=0;
 	return buildVer;
 }
 

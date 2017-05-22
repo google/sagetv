@@ -689,7 +689,7 @@ public class Database {
         {
           bond = null;
           // Search through all of the Favorite objects to find the correct one
-          StringBuffer sbCache = new StringBuffer();
+          StringBuilder sbCache = new StringBuilder();
           for (int i = 0; i < cachedFavs.length; i++)
           {
             if (cachedFavs[i].followsTrend(air, false, sbCache))
@@ -1635,7 +1635,7 @@ public class Database {
             return (l1 < l2) ? -1 : ((l1 > l2) ? 1 : 0);
           }
         });
-        optSortMap.put("intelligent", Seeker.getInstance().getMediaFileComparator(true));
+        optSortMap.put("intelligent", SeekerSelector.getInstance().getMediaFileComparator(true));
         optSortMap.put("caseinsensitive", new java.util.Comparator()
         {
           public int compare(Object o1, Object o2)

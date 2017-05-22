@@ -931,7 +931,7 @@ public class Playlist extends DBObject
     if (playlistItems.size() == 0)
     {
       if (Sage.DBG) System.out.println("Ignoring playlist due to zero size: " + theFile);
-      Seeker.getInstance().addIgnoreFile(theFile);
+      SeekerSelector.getInstance().addIgnoreFile(theFile);
       return null;
     }
     Playlist rv;

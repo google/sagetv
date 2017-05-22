@@ -103,7 +103,7 @@ public class FilesystemMediaNode extends BasicMediaNode
         }
         return mf.getThumbnail(loader);
       }
-      int mediaMask = Seeker.getInstance().guessImportedMediaMaskFast(myFile.getAbsolutePath());
+      int mediaMask = SeekerSelector.getInstance().guessImportedMediaMaskFast(myFile.getAbsolutePath());
       return MediaFile.getGenericImage(mediaMask, loader);
     }
   }

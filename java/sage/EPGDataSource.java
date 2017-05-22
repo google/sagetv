@@ -133,7 +133,7 @@ public class EPGDataSource
       if (foundOne)
       {
         dataScanRequested = true;
-        Seeker.getInstance().kick();
+        SeekerSelector.getInstance().kick();
       }
       return true;
     }
@@ -159,7 +159,7 @@ public class EPGDataSource
         cdi = cdis[i];
     }
     if (kickSeekNow)
-      Seeker.getInstance().kick();
+      SeekerSelector.getInstance().kick();
     if (dataScanAllowed && cdi != null && cdi.isActive() && cdi.getCaptureDevice().isDataScanning())
     {
       if (Sage.DBG) System.out.println("EPGDS " + name + " found a capture device to start data scanning with:" + cdi);
@@ -217,7 +217,7 @@ public class EPGDataSource
         java.util.List<Integer> currStatList = ent.getValue();
 
         // If we're here then we want to scan!
-        synchronized (Seeker.getInstance())
+        synchronized (SeekerSelector.getInstance())
         {
           if (cdi.getCaptureDevice().isDataScanning())
           {
@@ -254,7 +254,7 @@ public class EPGDataSource
       for (int i = 0; i < cdis.length; i++)
         cdis[i].getCaptureDevice().cancelDataScanRequest(cdis[i]);
       dataScanRequested = false;
-      Seeker.getInstance().kick();
+      SeekerSelector.getInstance().kick();
     }
   }
 
@@ -702,7 +702,7 @@ public class EPGDataSource
         if (foundOne)
         {
           dataScanRequested = true;
-          Seeker.getInstance().kick();
+          SeekerSelector.getInstance().kick();
         }
       }
 

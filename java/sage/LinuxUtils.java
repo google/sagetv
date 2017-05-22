@@ -317,7 +317,7 @@ public class LinuxUtils
                   {
                     // When we first set the clock we need to kick some parts of the core system if we didn't get it set at the start
                     Carny.getInstance().kickHard();
-                    Scheduler.getInstance().kick(false);
+                    SchedulerSelector.getInstance().kick(false);
                   }
                   ntpdateWorked = true;
                 }

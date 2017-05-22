@@ -220,7 +220,7 @@ public abstract class TranscodeJob
     setJobState(TRANSCODING);
     transcodeSegment = getStartingSegment();
     if (Sage.DBG) System.out.println("Initiating xcode for " + mf.getFile(transcodeSegment));
-    Seeker.getInstance().requestFileStorage(getTempFile(transcodeSegment), estimateTranscodeSize());
+    SeekerSelector.getInstance().requestFileStorage(getTempFile(transcodeSegment), estimateTranscodeSize());
     getTempFile(transcodeSegment).deleteOnExit();
     transcodeNow();
   }
@@ -230,7 +230,7 @@ public abstract class TranscodeJob
     setJobState(TRANSCODING);
     transcodeSegment++;
     if (Sage.DBG) System.out.println("Initiating xcode for " + mf.getFile(transcodeSegment));
-    Seeker.getInstance().requestFileStorage(getTempFile(transcodeSegment), estimateTranscodeSize());
+    SeekerSelector.getInstance().requestFileStorage(getTempFile(transcodeSegment), estimateTranscodeSize());
     getTempFile(transcodeSegment).deleteOnExit();
     transcodeNow();
   }
@@ -242,7 +242,7 @@ public abstract class TranscodeJob
   {
     java.io.File deadFile = getTempFile(transcodeSegment);
     if (deadFile != null)
-      Seeker.getInstance().clearFileStorageRequest(deadFile);
+      SeekerSelector.getInstance().clearFileStorageRequest(deadFile);
   }
 
   public void abandon()
