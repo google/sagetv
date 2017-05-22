@@ -22,7 +22,7 @@ import java.util.Arrays;
 
 public class SDStation
 {
-  private static SDLogo EMPTY_LOGOS[] = new SDLogo[0];
+  private static final SDLogo EMPTY_LOGOS[] = new SDLogo[0];
 
   private String stationID;
   private String name;
