@@ -26,8 +26,8 @@
 LRESULT CALLBACK WndProc( HWND hWnd, UINT messg,
 								WPARAM wParam, LPARAM lParam );
 
-#define JVM_MISSING if (hWnd){MessageBox(NULL, "Could not get information on current JVM.\nPlease install Java Runtime Environment 1.4","Java Missing", MB_OK);}\
-else{OutputDebugStringA("Could not get information on current JVM.\nPlease install Java Runtime Environment 1.4");}
+#define JVM_MISSING if (hWnd){MessageBox(NULL, "Could not get information on current JVM.\nPlease install Java Runtime Environment 1.7 or greater","Java Missing", MB_OK);}\
+else{OutputDebugStringA("Could not get information on current JVM.\nPlease install Java Runtime Environment 1.7 or greater");}
 
 static JNIEnv* globalenv = 0;
 static HANDLE stdOutHandle = 0;
@@ -966,7 +966,7 @@ int launchJVMSage(LPSTR lpszCmdLine, HWND hWnd, BOOL bClient, BOOL bService)
 		hLib = LoadLibrary(jvmPath);
 		if(hLib == NULL) 
 		{
-			errorMsg("Could not find jvm.dll.\nPlease install Java Runtime Environment 1.4", "Java Missing", hWnd);
+			errorMsg("Could not find jvm.dll.\nPlease install Java Runtime Environment 1.7 or greater", "Java Missing", hWnd);
 			return FALSE;
 		}
 	}
@@ -980,7 +980,7 @@ int launchJVMSage(LPSTR lpszCmdLine, HWND hWnd, BOOL bClient, BOOL bService)
 	
 	if (createJavaVM==NULL)
 	{
-		errorMsg("Could not execute jvm.dll.\nPlease install Java Runtime Environment 1.4", "Java Missing", hWnd);
+		errorMsg("Could not execute jvm.dll.\nPlease install Java Runtime Environment 1.7 or greater", "Java Missing", hWnd);
 		return FALSE;
 	}
 
@@ -1208,6 +1208,13 @@ int launchJVMSage(LPSTR lpszCmdLine, HWND hWnd, BOOL bClient, BOOL bService)
 		}
 		RegCloseKey(myKey);
 	}
+	else if (strstr(currVer, "1.8") || strstr(currVer, "1.9"))
+	{
+		// If we are running Java 8 or 9, enable string deduplication. This has very measurable
+		// benefits in multi-miniclient situations.
+		options[vm_args.nOptions++].optionString = "-XX:+UseG1GC";
+		options[vm_args.nOptions++].optionString = "-XX:+UseStringDeduplication";
+	}
 	options[vm_args.nOptions++].optionString = "-verbose:gc";
 #ifdef _DEBUG
 
@@ -1262,7 +1269,7 @@ int launchJVMSage(LPSTR lpszCmdLine, HWND hWnd, BOOL bClient, BOOL bService)
 	int res = (*createJavaVM)(&vm, (void**) &env, &vm_args); 
 	if (res != 0)
 	{
-		errorMsg("Could not create JVM.\nPlease reinstall Java Runtime Environment 1.4", "Java Missing", hWnd);
+		errorMsg("Could not create JVM.\nPlease reinstall Java Runtime Environment 1.7 or greater.", "Java Missing", hWnd);
 		return FALSE;
 	}
 	globalenv = env;
