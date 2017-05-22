@@ -9,6 +9,7 @@
 * New: Carny is now multi-threaded and highly optimized.
 * New: Schedules Direct movie length is now imported.
 * New: Schedules Direct alternative channel logos can now be used by changing the property sdepg_core/use_alternate_logos=false to true.
+    * This can also be changed in the UI via Setup > Detailed Setup > Customize > Use Alternative Schedules Direct Channel Logos.
 * New: Enabled G1GC String deduplication for Java versions 8 and 9.
 
 ## Version 9.0.14 (2017-03-18)

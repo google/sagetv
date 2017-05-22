@@ -339,6 +339,11 @@ public class SDRipper extends EPGDataSource
         case "AccountLineups":
           // Get all lineups currently added to the account.
           return getLineupsForAccount();
+        case "UpdateChannelLogos":
+          // Update all of the channel logos with the latest URL's. This is called to quickly
+          // alternate between the primary and alternative channel logos.
+          getUpdateChannelLogos();
+          return "OK";
       }
     }
     catch (NumberFormatException e)
@@ -1039,6 +1044,94 @@ public class SDRipper extends EPGDataSource
     return returnValue != null ? returnValue : "";
   }
 
+  private static void getUpdateChannelLogos() throws IOException, SDException
+  {
+    Wizard wiz = Wizard.getInstance();
+    SDAccountLineups accountLineups = ensureSession().getAccountLineups();
+    EPGDataSource[] dataSources = EPG.getInstance().getDataSources();
+    int logoID[] = new int[1];
+    boolean didAdd[] = new boolean[1];
+    // We don't have any good reason to throw this exception preventing anything from updating if it
+    // could have, so if there are any with a lineup missing, we wait until the end to throw the
+    // lineup missing exception.
+    SDException throwLineupNotFound = null;
+
+    for (EPGDataSource dataSource : dataSources)
+    {
+      if (!(dataSource instanceof SDRipper))
+        continue;
+
+      SDAccountLineup lineup = null;
+      for (SDAccountLineup accountLineup : accountLineups.getLineups())
+      {
+        if (accountLineup.getLineup() != null &&
+          accountLineup.getLineup().equals(((SDRipper) dataSource).getLineupID()))
+        {
+          lineup = accountLineup;
+          break;
+        }
+      }
+      // We have a lineup defined without a lineup in the actual account. Throw an exception.
+      if (lineup == null)
+      {
+        throwLineupNotFound = new SDException(SDErrors.LINEUP_NOT_FOUND);
+        continue;
+      }
+
+      String uri = lineup.getUri();
+      SDLineupMap map = ensureSession().getLineup(uri);
+      int numChans = map.getStations().length;
+      if (Sage.DBG) System.out.println("SDEPG updating " + numChans + " channel logos");
+      boolean useAlternativeChannelLogos = Sage.getBoolean(PROP_DOWNLOAD_ALTERNATE_LOGOS, false);
+
+      SDStation stations[] = map.getStations();
+      for (SDStation station : stations)
+      {
+        Channel channel = wiz.getChannelForStationID(station.getStationID());
+        // Don't use this opportunity to add new channels. Leave that for the next EPG update.
+        if (channel == null)
+          continue;
+
+        String logoURLEncode;
+        if (useAlternativeChannelLogos)
+        {
+          SDLogo logos[] = station.getStationLogos();
+          // There should be an alternative logo in several cases. If there isn't we default to the
+          // logo we would have had otherwise.
+          logoURLEncode = logos.length > 1 ? logos[1].getURL() : logos.length != 0 ? logos[0].getURL() : null;
+        }
+        else
+        {
+          SDLogo logo = station.getLogo();
+          logoURLEncode = logo != null ? logo.getURL() : null;
+        }
+
+        int logoMask;
+        byte[] logoURL;
+        if (logoURLEncode != null)
+        {
+          logoURL = SDImages.encodeLogoURL(logoURLEncode, logoID);
+          logoMask = Channel.SD_LOGO_MASK | logoID[0];
+        }
+        else
+        {
+          logoURL = Pooler.EMPTY_BYTE_ARRAY;
+          logoMask = 0;
+        }
+
+        // We are only changing the logo. Do not change anything else about this channel at this
+        // time. We will leave any real changes to the next EPG update so we can ensure any new
+        // notifications we implement in the future relating to channels will not have this one
+        // path as an exception.
+        wiz.addChannel(channel.getName(), channel.getLongName(),
+          channel.getNetwork(), channel.getStationID(), logoMask, logoURL, didAdd);
+      }
+    }
+
+    if (throwLineupNotFound != null)
+      throw throwLineupNotFound;
+  }
+
   @Override
   protected boolean extractGuide(long inGuideTime)
   {
@@ -1129,7 +1222,7 @@ public class SDRipper extends EPGDataSource
       String uri = lineup.getUri();
       SDLineupMap map = ensureSession().getLineup(uri);
       int numChans = map.getStations().length;
-      if (Sage.DBG) System.out.println("SDEPG got " + map.getStations().length + " channels");
+      if (Sage.DBG) System.out.println("SDEPG got " + numChans + " channels");
       boolean useAlternativeChannelLogos = Sage.getBoolean(PROP_DOWNLOAD_ALTERNATE_LOGOS, false);
 
       // Include any additional stations the the user has added to their lineup. There's no
