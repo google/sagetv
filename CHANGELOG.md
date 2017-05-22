@@ -1,6 +1,6 @@
 # Change Log
 
-## Version 9.1.0 (??)
+## Version 9.1.0 (2017-05-22)
 * Fix: Transcoder crashing on Linux with signal 11.
 * New: Added new API method to get enabled and disabled favorites.
     * public Airing[] GetPotentialFavoriteAirings(Favorite Favorite);
