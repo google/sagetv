@@ -1,5 +1,8 @@
 # Change Log
 
+## Version 9.1.1 (2017-05-22)
+* Fix: Fixed a problem with awk parsing in Ubuntu
+
 ## Version 9.1.0 (2017-05-22)
 * Fix: Transcoder crashing on Linux with signal 11.
 * New: Added new API method to get enabled and disabled favorites.
