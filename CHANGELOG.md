@@ -1,5 +1,8 @@
 # Change Log
 
+## Version 9.1.2 (??)
+* Fix: Changed awk parsing to use sed to clean up the Jave version check.
+
 ## Version 9.1.1 (2017-05-22)
 * Fix: Fixed a problem with awk parsing in Ubuntu
 
