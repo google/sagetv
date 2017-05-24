@@ -1,7 +1,8 @@
 # Change Log
 
 ## Version 9.1.2 (??)
-* Fix: Changed awk parsing to use sed to clean up the Jave version check.
+* Fix: Changed awk parsing to use sed to clean up the Java version check.
+* Fix: API methods GetFavoriteAirings() and GetPotentialFavoriteAirings() were returning all airings for keyword favorites.
 
 ## Version 9.1.1 (2017-05-22)
 * Fix: Fixed a problem with awk parsing in Ubuntu
