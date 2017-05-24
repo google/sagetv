@@ -772,7 +772,7 @@ public class Agent extends DBObject implements Favorite
         {
           Airing a = (Airing) allAirs[i];
           if (a == null) continue;
-          if (followsTrend(a, true, sbCache, true, ignoreDisabledFlag))
+          if (followsTrend(a, true, sbCache, false, ignoreDisabledFlag))
             rv.add(a);
           if ((i % CPU_CONTROL_MOD_COUNT) == 0 && controlCPUUsage)
             try {Thread.sleep(Carny.SLEEP_PERIOD);} catch (Exception e) {}
