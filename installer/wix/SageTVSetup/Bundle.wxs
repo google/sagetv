@@ -2,6 +2,7 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
      xmlns:bal="http://schemas.microsoft.com/wix/BalExtension"
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+  <?include SageTVVersionInclude.wxi ?>
   <?include SageTVInclude.wxi ?>
   <Bundle Name="$(var.ProductName)" Version="$(var.VersionNumber)" Manufacturer="$(var.Manufacturer)" UpgradeCode="$(var.UpgradeCodeMSI)"
           IconSourceFile='Resource\SageIcon.ico'>

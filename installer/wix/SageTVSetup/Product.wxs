@@ -2,6 +2,7 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
   xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension" 
   xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+  <?include SageTVVersionInclude.wxi ?>
   <?include SageTVInclude.wxi ?>	
   <Product Id="*" Name="$(var.ProductName)" Language="1033" Version="$(var.VersionNumber)" Manufacturer="$(var.Manufacturer)" UpgradeCode="$(var.UpgradeCodeMSI)">
 		<Package InstallerVersion="405" Compressed="yes" InstallScope="perMachine" InstallPrivileges="elevated" />

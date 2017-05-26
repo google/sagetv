@@ -1,11 +1,11 @@
-/* Created by InstallerBuild.ps1 script 28-Mar-2017 08:06 */
+/* Created by InstallerBuild.ps1 script 24-May-2017 08:17 */
 #define STRINGIZE2(s) #s
 #define STRINGIZE(s) STRINGIZE2(s)
 
 #define VERSION_MAJOR               9
-#define VERSION_MINOR               0
-#define VERSION_REVISION            14
-#define VERSION_BUILD               568
+#define VERSION_MINOR               1
+#define VERSION_REVISION            1
+#define VERSION_BUILD               651
 
 #define VER_FILE_VERSION            VERSION_MAJOR, VERSION_MINOR, VERSION_REVISION, VERSION_BUILD
 #define VER_FILE_VERSION_STR        STRINGIZE(VERSION_MAJOR)        \
