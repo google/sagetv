@@ -4,18 +4,6 @@
   <!-- Installer (not the application) Version needs updating here. -->
   <?define SageInstallerVersion="1.013" ?>
 
-  <!-- Version needs updating here. -->
-  <?define MajorVersion="9" ?>
-  <?define MinorVersion="0" ?>
-  <?define BuildVersion="14" ?>
-  <?define Revision="568" ?>
-  <!-- Full version number to display -->
-  <?if $(var.ProdVersion) = "" ?>
-    <?define VersionNumber="$(var.MajorVersion).$(var.MinorVersion).$(var.BuildVersion).$(var.Revision)" ?>
-  <?else?>
-    <?define VersionNumber=$(var.ProdVersion) ?>
-  <?endif?>
-
   <!-- Set the product name -->
   <?if $(var.Configuration) = SetupServer ?>
     <?define ProductName="SageTV" ?>
