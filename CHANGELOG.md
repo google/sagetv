@@ -3,6 +3,7 @@
 ## Version 9.1.2 (??)
 * Fix: Changed awk parsing to use sed to clean up the Java version check.
 * Fix: API methods GetFavoriteAirings() and GetPotentialFavoriteAirings() were returning all airings for keyword favorites.
+* New: Increased possible range for scheduling lookahead to 21 days. The default is still 14 days.
 
 ## Version 9.1.1 (2017-05-22)
 * Fix: Fixed a problem with awk parsing in Ubuntu
@@ -74,3 +75,22 @@
 ## Version 9.0.7 (2016-08-10)
 * New: Added SageTVPluginsDev.d directory support (See [SageTVPluginsDev README](SageTVPluginsDev.md))
 * New: Added direct JAR linking in SageTV Plugin Manifest (ie, no need to repackage library plugins as .zip files)
+
+
+#### Notes about incrementing versions for developers:
+
+* If you are the first to commit changes after a release, ensure that the following have been incremented beyond the last release:
+    * MICRO_VERSION in sage/Version.java
+* If you make any changes to stvs/SageTV7/SageTV7.xml, ensure that the following are updated in the STV:
+    * AddGlobalContext( "STVversionText", "October 13, 2015" )
+        * This should match the date of the commit.
+    * AddGlobalContext( "ThisSTVSetVersionNum", "2015101301" )
+        * This should match the date of the commit and if there was more than one commit the same day, the last two digits should be incremented.
+        * The format is YYYYMMDDVV.
+        * YYYY is the year.
+        * MM if the month number.
+        * DD is the day of the month.
+        * VV is the commit version for this date. This resets to 01 if the date changes.
+    * STVVersion [="9.0.1.1"]
+        * This should start with MAJOR_VERSION.MINOR_VERSION.MICRO_VERSION in sage/Version.java
+        * The last number should only be incremented in tandem with the last two digits of ThisSTVSetVersionNum.
