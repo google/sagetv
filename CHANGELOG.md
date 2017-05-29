@@ -4,6 +4,7 @@
 * Fix: Changed awk parsing to use sed to clean up the Java version check.
 * Fix: API methods GetFavoriteAirings() and GetPotentialFavoriteAirings() were returning all airings for keyword favorites.
 * New: Increased possible range for scheduling lookahead to 21 days. The default is still 14 days.
+* Fix: Removed check in Scheduler that was preventing a future airing beyond lookahead from being considered to resolve a conflict.
 
 ## Version 9.1.1 (2017-05-22)
 * Fix: Fixed a problem with awk parsing in Ubuntu
