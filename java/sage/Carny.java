@@ -1303,7 +1303,7 @@ public final class Carny implements Runnable
     remAirSet = null;
     CarnyCache seedCache = new CarnyCache(allAirsMap, remAirsMap, watchAirsMap, wastedAirsMap);
 
-    if (Sage.DBG) System.out.println("CARNY Processing " + allAgents.length + " Agents & " + allAirs.length + " Airs");
+    if (Sage.DBG) System.out.println("CARNY Processing " + submittedAgents + " Agents & " + allAirs.length + " Airs");
 
     boolean controlCPUUsage = doneInit && submittedAgents > 50 && Sage.getBoolean("control_profiler_cpu_usage", true);
     boolean useLegacyKeyword = Sage.getBoolean("use_legacy_keyword_favorites", true);
@@ -1543,10 +1543,31 @@ public final class Carny implements Runnable
       }
     }
 
+
+    if (workCanceled)
+      return;
+
     // If we have no agents to process, we will also get a null firstCallback without also getting
     // workCanceled.
-    if (workCanceled || firstCallback == null)
+    if (firstCallback == null)
+    {
+      if (Sage.DBG) System.out.println("CARNY has no agents to process.");
+
+      // This is here purely for aesthetic reasons. Otherwise all we see is 0%.
+      if (!doneInit)
+      {
+        lastMessage = Sage.rez("Module_Init_Progress", new Object[] { Sage.rez("Profiler"), new Double(1)});
+        Sage.setSplashText(lastMessage);
+      }
+
+      // We would skip this step otherwise. We could get here with an actual schedule by not having
+      // any automatically created agents and removing our last favorite.
+      if (doneInit)
+        SchedulerSelector.getInstance().kick(false);
+      // This must be set or Scheduler and Seeker will not function.
+      prepped = true;
       return;
+    }
 
     final List<Agent> traitors = firstCallback.traitors;
     final Set<Airing> newLoveAirSet = new HashSet<>(firstCallback.newLoveAirSet);
