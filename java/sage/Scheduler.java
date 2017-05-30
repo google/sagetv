@@ -631,10 +631,13 @@ public class Scheduler implements SchedulerInterface
           {
             // 2-2-05 Added the check for wasted so we don't schedule
             // things that are marked as don't like
+            // 5-26-17 JS: Removed must see requirement because it can cause
+            // us to have a conflict even when a future airing makes the
+            // outcome incorrect.
             if (getSchedulingStart(kitty[p]) >= desiredStartLookTime &&
                 god.areSameFavorite(kitty[p], mustAir) &&
-                wiz.getWastedForAiring(kitty[p]) == null &&
-                god.isMustSee(kitty[p]))
+                wiz.getWastedForAiring(kitty[p]) == null /*&&
+                god.isMustSee(kitty[p])*/)
               v.add(kitty[p]);
           }
         }
@@ -646,9 +649,12 @@ public class Scheduler implements SchedulerInterface
         {
           // 2-2-05 Added the check for wasted so we don't schedule
           // things that are marked as don't like
+          // 5-26-17 JS: Removed must see requirement because it can cause
+          // us to have a conflict even when a future airing makes the
+          // outcome incorrect.
           if (god.areSameFavorite(kitty[p], mustAir) &&
-              wiz.getWastedForAiring(kitty[p]) == null &&
-              god.isMustSee(kitty[p]))
+              wiz.getWastedForAiring(kitty[p]) == null /*&&
+              god.isMustSee(kitty[p])*/)
             v.add(kitty[p]);
         }
       }
