@@ -1,5 +1,8 @@
 # Change Log
 
+## Version 9.1.3 (2017-05-30)
+* Fix: A missing space in an if test causes the Linux start script to fail.
+
 ## Version 9.1.2 (2017-05-30)
 * Fix: Changed awk parsing to use sed to clean up the Java version check.
 * Fix: API methods GetFavoriteAirings() and GetPotentialFavoriteAirings() were returning all airings for keyword favorites.
