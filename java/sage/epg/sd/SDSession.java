@@ -72,6 +72,8 @@ public abstract class SDSession
   private static final String GET_CELEBRITY_IMAGES = URL_VERSIONED + "/metadata/celebrity/";
   // Get supported sports that are in progress.
   private static final String GET_IN_PROGRESS_SPORT = URL_VERSIONED + "/metadata/stillRunning/";
+  // Delete a lineup that is no longer being updated.
+  private static final String DELETE_ACCOUNT_LINEUP = URL_VERSIONED + "/lineups/";
 
   // The character set to be used for outgoing communications.
   protected static final Charset OUT_CHARSET = StandardCharsets.UTF_8;
@@ -802,7 +804,7 @@ public abstract class SDSession
     if (lineup.getUri() != null)
       url = new URL(URL_BASE + lineup.getUri());
     else
-      url = new URL(URL_BASE + "/lineups/" + lineup.getLineup());
+      url = new URL(DELETE_ACCOUNT_LINEUP + lineup.getLineup());
 
     JsonObject reply = deleteAuthJson(url, JsonObject.class);
 
