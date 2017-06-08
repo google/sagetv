@@ -15,13 +15,21 @@
  */
 package sage.media.sub;
 
+import sage.Sage;
+
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 /**
  *
  * @author Narflex
  */
 public abstract class SubtitleHandler
 {
-
+  public static final boolean SUB_DEBUG = Sage.DBG && Sage.getBoolean("debug_subtitles", false);
+  public static final long NO_MORE_SUBS_LONG_WAIT = sage.Sage.MILLIS_PER_WEEK;
   public static final int PTS_VALID_MASK = 0x1;
   public static final int FLUSH_SUBTITLE_QUEUE = 0x2;
   public static final int CC_SUBTITLE_MASK = 0x10;
@@ -30,15 +38,17 @@ public abstract class SubtitleHandler
   public SubtitleHandler(sage.media.format.ContainerFormat inFormat)
   {
     mediaFormat = inFormat;
-    subEntries = new java.util.Vector();
-    subLangEntryMap = new java.util.HashMap();
+    subEntries = new java.util.ArrayList<SubtitleEntry>();
+    subLangEntryMap = new ConcurrentHashMap<String, List<SubtitleEntry>>();
     external = (mediaFormat != null);
   }
 
-  // Returns the index into the Vector for the first item that overlaps (or is right after if no overlap, unless its the last one)
+  // Returns the index into the List for the first item that overlaps (or is right after if no overlap, unless its the last one)
   protected int getSubEntryIndex(long targetTime)
   {
-    synchronized (subEntries)
+    subtitleLock.readLock().lock();
+
+    try
     {
       int low = 0;
       int high = subEntries.size() - 1;
@@ -46,7 +56,7 @@ public abstract class SubtitleHandler
       while (low <= high)
       {
         mid = (low + high) >> 1;
-      SubtitleEntry midVal = (SubtitleEntry) subEntries.get(mid);
+      SubtitleEntry midVal = subEntries.get(mid);
       long cmp = midVal.start - targetTime;
 
       if (cmp < 0)
@@ -65,8 +75,8 @@ public abstract class SubtitleHandler
         mid++;
       while (mid > 0)
       {
-        SubtitleEntry currEntry = (SubtitleEntry) subEntries.get(mid);
-        SubtitleEntry prevEntry = (SubtitleEntry) subEntries.get(mid - 1);
+        SubtitleEntry currEntry = subEntries.get(mid);
+        SubtitleEntry prevEntry = subEntries.get(mid - 1);
         if (prevEntry.start >= targetTime ||
             (prevEntry.duration > 0 && prevEntry.start <= targetTime && prevEntry.start + prevEntry.duration > targetTime))
           mid--;
@@ -77,6 +87,10 @@ public abstract class SubtitleHandler
       }
       return mid;
     }
+    finally
+    {
+      subtitleLock.readLock().unlock();
+    }
   }
 
   public String getSubtitleText(long currMediaTime, boolean willDisplay)
@@ -84,13 +98,16 @@ public abstract class SubtitleHandler
     if (external)
       currMediaTime += delay;
     String rv = "";
-    synchronized (subEntries)
+
+    subtitleLock.readLock().lock();
+
+    try
     {
       boolean foundValid = false;
       for (int i = getSubEntryIndex(currMediaTime); i < subEntries.size(); i++)
       {
-        SubtitleEntry currEntry = (SubtitleEntry) subEntries.get(i);
-        SubtitleEntry nextEntry = (SubtitleEntry) ((i < subEntries.size() - 1) ? subEntries.get(i + 1) : null);
+        SubtitleEntry currEntry = subEntries.get(i);
+        SubtitleEntry nextEntry = ((i < subEntries.size() - 1) ? subEntries.get(i + 1) : null);
         if (currEntry.start <= currMediaTime)
         {
           if ((currEntry.duration > 0 && currEntry.start + currEntry.duration > currMediaTime) ||
@@ -121,7 +138,11 @@ public abstract class SubtitleHandler
         }
       }
     }
-    //System.out.println("Got Subtitle text=" + rv + " subEntryPos=" + subEntryPos);
+    finally
+    {
+      subtitleLock.readLock().unlock();
+    }
+    if (SUB_DEBUG) System.out.println("Got Subtitle text=" + rv + " subEntryPos=" + subEntryPos);
     return rv;
   }
 
@@ -167,16 +188,22 @@ public abstract class SubtitleHandler
     if (!x.equals(currLang))
     {
       currLang = x;
-      if (subLangEntryMap.size() > 1)
+
+      // It's always faster to try to get the item, even if it doesn't exist.
+      List<SubtitleEntry> newList = subLangEntryMap.get(currLang);
+
+      if (newList != null)
       {
-        java.util.Vector newVec = (java.util.Vector) subLangEntryMap.get(currLang);
-        if (newVec != null)
+        subtitleLock.writeLock().lock();
+
+        try
         {
-          synchronized (subEntries)
-          {
-            subEntries = newVec;
-            subEntryPos = -1; // reset the position
-          }
+          subEntries = newList;
+          subEntryPos = -1; // reset the position
+        }
+        finally
+        {
+          subtitleLock.writeLock().unlock();
         }
       }
     }
@@ -192,16 +219,20 @@ public abstract class SubtitleHandler
   {
     if (external)
       currMediaTime += delay;
+
     // NOTE: If there's multiple subs to display at once this won't notice the update time for the non-primary ones
-    synchronized (subEntries)
+
+    subtitleLock.readLock().lock();
+
+    try
     {
       if (subEntries.isEmpty())
-        return sage.Sage.MILLIS_PER_WEEK;
+        return NO_MORE_SUBS_LONG_WAIT;
       if (subEntryPos < 0)
       {
-        return Math.max(0, ((SubtitleEntry)subEntries.firstElement()).start - currMediaTime);
+        return Math.max(0, (subEntries.get(0)).start - currMediaTime);
       }
-      SubtitleEntry prevEntry = (SubtitleEntry) (subEntryPos > 0 ? subEntries.get(subEntryPos - 1) : null);
+      SubtitleEntry prevEntry = (subEntryPos > 0 ? subEntries.get(subEntryPos - 1) : null);
       if (prevEntry != null)
       {
         // This checks if the position we have is too far forward in the stream relative to the current media time
@@ -211,14 +242,14 @@ public abstract class SubtitleHandler
           return 0; // We're on the wrong one; need to update now
         }
       }
-      SubtitleEntry currEntry = (SubtitleEntry) subEntries.get(subEntryPos);
+      SubtitleEntry currEntry = subEntries.get(subEntryPos);
       SubtitleEntry nextEntry = (subEntryPos == subEntries.size() - 1) ?
-          null : ((SubtitleEntry) subEntries.get(subEntryPos + 1));
+          null : (subEntries.get(subEntryPos + 1));
       long waitTime;
       if (currEntry.duration > 0)
       {
         if (currEntry.start + currEntry.duration <= currMediaTime && nextEntry == null && currBlank)
-          waitTime = sage.Sage.MILLIS_PER_WEEK;
+          waitTime = NO_MORE_SUBS_LONG_WAIT;
         else if (currEntry.start >= currMediaTime || currBlank)
           waitTime = currEntry.start - currMediaTime;
         else if (currEntry.start + currEntry.duration > currMediaTime)
@@ -228,7 +259,7 @@ public abstract class SubtitleHandler
       }
       else
       {
-        waitTime = ((currEntry.start > currMediaTime || (currBlank && subEntryPos == 0)) ? (currEntry.start - currMediaTime) : sage.Sage.MILLIS_PER_WEEK);
+        waitTime = ((currEntry.start > currMediaTime || (currBlank && subEntryPos == 0)) ? (currEntry.start - currMediaTime) : NO_MORE_SUBS_LONG_WAIT);
       }
       if (nextEntry == null)
         return Math.max(0, waitTime);
@@ -238,6 +269,10 @@ public abstract class SubtitleHandler
       if (waitTime < 0)
         waitTime = 0;
       return waitTime;
+    }
+    finally
+    {
+      subtitleLock.readLock().unlock();
     }
   }
 
@@ -341,14 +376,21 @@ public abstract class SubtitleHandler
   // Returns true if the timing delay for the next subtitle update has changed (i.e. VF needs a kick)
   public boolean postSubtitleInfo(long time, long dur, byte[] rawText, int flags)
   {
-    synchronized (subEntries)
+    subtitleLock.writeLock().lock();
+
+    try
     {
       if ((flags & FLUSH_SUBTITLE_QUEUE) == FLUSH_SUBTITLE_QUEUE)
       {
         subEntries.clear();
         subEntryPos = -1;
       }
+
       return insertEntryForPostedInfo(time, dur, rawText);
+    }
+    finally
+    {
+      subtitleLock.writeLock().unlock();
     }
   }
 
@@ -366,7 +408,7 @@ public abstract class SubtitleHandler
     // Now strip any HTML tags that may be in the text
     if (theText.indexOf('<') != -1)
     {
-      StringBuffer sb = new StringBuffer(theText.length());
+      StringBuilder sb = new StringBuilder(theText.length());
       boolean inTag = false;
       for (int j = 0;  j < theText.length(); j++)
       {
@@ -386,8 +428,13 @@ public abstract class SubtitleHandler
   protected boolean insertSubtitleEntry(SubtitleEntry newEntry)
   {
     if (newEntry == null) return false;
-    synchronized (subEntries)
+
+    subtitleLock.writeLock().lock();
+
+    try
     {
+      if (subEntries == null) return false;
+
       boolean rv = subEntryPos == subEntries.size() - 1;
       if (subEntries.isEmpty())
         subEntries.add(newEntry);
@@ -397,11 +444,15 @@ public abstract class SubtitleHandler
         if (idx < 0)
           idx = -(idx + 1);
         // Check to make sure we insert after the last one w/ the same start time
-        for (idx = idx + 1; idx < subEntries.size() && ((SubtitleEntry) subEntries.get(idx)).start == newEntry.start; idx++);
+        for (idx = idx + 1; idx < subEntries.size() && (subEntries.get(idx)).start == newEntry.start; idx++);
         idx = Math.min(idx, subEntries.size());
-        subEntries.insertElementAt(newEntry, idx);
+        subEntries.add(idx, newEntry);
       }
       return rv;
+    }
+    finally
+    {
+      subtitleLock.writeLock().unlock();
     }
   }
 
@@ -409,22 +460,29 @@ public abstract class SubtitleHandler
   {
     // Find the time diff between the sub that should be displayed at the specified time and the one that many offsets from it.
     currMediaTime += delay;
-    synchronized (subEntries)
+
+    subtitleLock.readLock().lock();
+
+    try
     {
       if (subEntries.isEmpty())
         return 0;
       int tempPos = subEntryPos + adjustAmount;
       tempPos = Math.max(0, Math.min(tempPos, subEntries.size() - 1));
       // If we're wanting to show the next sub right now and that sub is actually the current index; just not displayed yet
-      if (subEntryPos >= 0 && ((SubtitleEntry) subEntries.get(subEntryPos)).start > currMediaTime && adjustAmount > 0)
+      if (subEntryPos >= 0 && subEntries.get(subEntryPos).start > currMediaTime && adjustAmount > 0)
         adjustAmount--;
-      SubtitleEntry ent = (SubtitleEntry) subEntries.get(tempPos);
+      SubtitleEntry ent = subEntries.get(tempPos);
       return ent.start - currMediaTime;
+    }
+    finally
+    {
+      subtitleLock.readLock().unlock();
     }
   }
 
   // This deals with resolving server references to external subtitle files and downloading them to temp storage to use ourself
-  protected java.io.File getLoadableSubtitleFile(sage.MediaFile mf, java.io.File subFile) throws java.io.IOException
+  /*protected static java.io.File getLoadableSubtitleFile(sage.MediaFile mf, java.io.File subFile) throws java.io.IOException
   {
     if (mf.isLocalFile())
     {
@@ -435,7 +493,7 @@ public abstract class SubtitleHandler
       if (sage.Sage.EMBEDDED || sage.NetworkClient.getSN().requestMediaServerAccess(subFile, true))
       {
         java.io.File tmpFile = java.io.File.createTempFile("stv", ".sub");
-        if (sage.Sage.DBG) System.out.println("Downloading remote subtitle file from: " + subFile + " to local path: " + tmpFile);
+        if (SUB_DEBUG) System.out.println("Downloading remote subtitle file from: " + subFile + " to local path: " + tmpFile);
         tmpFile.deleteOnExit();
         mf.copyToLocalStorage(subFile, tmpFile);
         return tmpFile;
@@ -443,7 +501,7 @@ public abstract class SubtitleHandler
       else
         throw new java.io.IOException("Cannot get MediaServer access to remote subtitle file:" + subFile);
     }
-  }
+  }*/
 
   // This handles various formats for time range strings used in subtitle files.
   // This'll return {start, duration} for the array
@@ -562,9 +620,15 @@ public abstract class SubtitleHandler
   // NOTE: You still need to call VF.kick() for that loop to run; but this'll ensure an update occurs at that point
   public void forceSubRefresh()
   {
-    synchronized (subEntries)
+    subtitleLock.writeLock().lock();
+
+    try
     {
       subEntryPos = -1;
+    }
+    finally
+    {
+      subtitleLock.writeLock().unlock();
     }
   }
 
@@ -575,9 +639,11 @@ public abstract class SubtitleHandler
   protected String currLang = null;
   protected boolean enabled;
 
-  // Sorted list of all known subtitle data mapped from String(language)->Vector
-  protected java.util.Map subLangEntryMap; // If there's more than one language, we'll be using this
-  protected java.util.Vector subEntries; // for the current language
+  // Use this lock for all reads and writes to subEntries and any SubtitleEntry objects from subLangEntryMap
+  protected final ReadWriteLock subtitleLock = new ReentrantReadWriteLock(true);
+  // Sorted list of all known subtitle data mapped from String(language)->List
+  protected java.util.Map<String, java.util.List<SubtitleEntry>> subLangEntryMap; // If there's more than one language, we'll be using this
+  protected java.util.List<SubtitleEntry> subEntries; // for the current language
   protected int subEntryPos = -1;
   protected boolean currBlank;
 
@@ -585,7 +651,7 @@ public abstract class SubtitleHandler
 
   protected long delay;
 
-  protected static class SubtitleEntry implements Comparable
+  protected static class SubtitleEntry implements Comparable<SubtitleEntry>
   {
     public SubtitleEntry(String text, long start, long duration)
     {
@@ -610,21 +676,21 @@ public abstract class SubtitleHandler
       this.size = rawdata.length;
     }
 
-    public int compareTo(Object o)
+    @Override
+    public int compareTo(SubtitleEntry o)
     {
-      SubtitleEntry se = (SubtitleEntry) o;
-      if (start < se.start)
+      if (start < o.start)
         return -1;
-      else if (start > se.start)
+      else if (start > o.start)
         return 1;
-      else if (duration < se.duration)
+      else if (duration < o.duration)
         return -1;
-      else if (duration > se.duration)
+      else if (duration > o.duration)
         return 1;
       else if (text != null)
-        return text.compareTo(se.text);
+        return text.compareTo(o.text);
       else
-        return (int) (offset - se.offset);
+        return (int) (offset - o.offset);
     }
 
     public String toString()

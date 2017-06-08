@@ -20,7 +20,7 @@
  */
 
 /**
- * @file flic.c
+ * @file
  * Autodesk Animator FLI/FLC Video Decoder
  * by Mike Melanson (melanson@pcisys.net)
  * for more information on the .fli/.flc file format and all of its many
@@ -38,10 +38,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
+#include "libavutil/intreadwrite.h"
 #include "avcodec.h"
-#include "bswap.h"
 
 #define FLI_256_COLOR 4
 #define FLI_DELTA     7
@@ -76,7 +75,7 @@ typedef struct FlicDecodeContext {
     int fli_type;  /* either 0xAF11 or 0xAF12, affects palette resolution */
 } FlicDecodeContext;
 
-static int flic_decode_init(AVCodecContext *avctx)
+static av_cold int flic_decode_init(AVCodecContext *avctx)
 {
     FlicDecodeContext *s = avctx->priv_data;
     unsigned char *fli_header = (unsigned char *)avctx->extradata;
@@ -483,8 +482,9 @@ static int flic_decode_frame_15_16BPP(AVCodecContext *avctx,
         switch (chunk_type) {
         case FLI_256_COLOR:
         case FLI_COLOR:
-            /* For some reason, it seems that non-paletised flics do include one of these */
-            /* chunks in their first frame.  Why i do not know, it seems rather extraneous */
+            /* For some reason, it seems that non-palettized flics do
+             * include one of these chunks in their first frame.
+             * Why I do not know, it seems rather extraneous. */
 /*            av_log(avctx, AV_LOG_ERROR, "Unexpected Palette chunk %d in non-paletised FLC\n",chunk_type);*/
             stream_ptr = stream_ptr + chunk_size - 6;
             break;
@@ -585,7 +585,7 @@ static int flic_decode_frame_15_16BPP(AVCodecContext *avctx,
                  * during decompression. So if it is required (i.e., this is not a LE target, we do
                  * a second pass over the line here, swapping the bytes.
                  */
-#ifdef WORDS_BIGENDIAN
+#if HAVE_BIGENDIAN
                 pixel_ptr = y_ptr;
                 pixel_countdown = s->avctx->width;
                 while (pixel_countdown > 0) {
@@ -700,8 +700,10 @@ static int flic_decode_frame_24BPP(AVCodecContext *avctx,
 
 static int flic_decode_frame(AVCodecContext *avctx,
                              void *data, int *data_size,
-                             const uint8_t *buf, int buf_size)
+                             AVPacket *avpkt)
 {
+    const uint8_t *buf = avpkt->data;
+    int buf_size = avpkt->size;
     if (avctx->pix_fmt == PIX_FMT_PAL8) {
       return flic_decode_frame_8BPP(avctx, data, data_size,
                                     buf, buf_size);
@@ -725,7 +727,7 @@ static int flic_decode_frame(AVCodecContext *avctx,
 }
 
 
-static int flic_decode_end(AVCodecContext *avctx)
+static av_cold int flic_decode_end(AVCodecContext *avctx)
 {
     FlicDecodeContext *s = avctx->priv_data;
 
@@ -737,7 +739,7 @@ static int flic_decode_end(AVCodecContext *avctx)
 
 AVCodec flic_decoder = {
     "flic",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_FLIC,
     sizeof(FlicDecodeContext),
     flic_decode_init,
@@ -748,5 +750,6 @@ AVCodec flic_decoder = {
     NULL,
     NULL,
     NULL,
-    NULL
+    NULL,
+    .long_name = NULL_IF_CONFIG_SMALL("Autodesk Animator Flic video"),
 };

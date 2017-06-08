@@ -48,7 +48,7 @@ import java.util.Vector;
  * VideoSetupMenu for modifying video directory, EventRouter for determining if Power
  * button turns on or off
  */
-public class Seeker implements Runnable
+public class Seeker implements Hunter
 {
   private static final String VIDEO_STORAGE = "video_storage";
   private static final String ARCHIVE_DIRECTORY = "archive_directory";
@@ -1707,7 +1707,7 @@ public class Seeker implements Runnable
     }
   }
 
-  void kick()
+  public void kick()
   {
     synchronized (this)
     {
@@ -2357,6 +2357,10 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
     {
       VideoStorage bestStore = findBestStorageForSize(spaceMaybeNeeded, encState.capDev.getForcedVideoStoragePrefix());
       if (Sage.DBG) System.out.println("VideoStorage for new file: " + bestStore);
+      if (bestStore == null) {
+        encState.doingStartup = false;
+        throw new IllegalArgumentException(Sage.rez("CAPTURE_ERROR_NO_RECORDING_DIRECTORY"));
+      }
 			sage.media.format.ContainerFormat cf = mmcConn.getEncoderMediaFormat();
       encState.currRecordFile = wiz.addMediaFile(encState.currRecord, currTime, bestStore.videoDir.toString(),
           fileQualityName, mmcConn.getProviderID(),
@@ -2873,11 +2877,15 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
         sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createFailedRecordingMsg(es.capDev.getActiveInput(), es.currRecord,
 					es.currRecord.getChannel(), EPG.getInstance().getPhysicalChannel(es.capDev.getActiveInput() != null ?
                 es.capDev.getActiveInput().getProviderID() : 0, es.currRecord.getStationID())));
-      } else {
+      } else if (!es.currRecordFile.isAnyLiveStream()) {
         // Check if we have low bitrate detection configured, and if it was too low...post a message about it.
         long bitrateThreshold = es.capDev.getBitrateThresholdForError();
         if (bitrateThreshold > 0) {
-          long actualBitrate = es.currRecordFile.getSize() * 8000 / es.currRecordFile.getRecordDuration();
+          // The 5000 is just a fudge factor because this was getting hit falsely for recordings with
+          // small durations, part of it was due to the tuning delay, but based on the examples, even accounting
+          // for that would have put us really close to the edge of detection.
+          long actualBitrate = es.currRecordFile.getSize() * 8000 / Math.max(1,
+              es.currRecordFile.getRecordDuration() - es.capDev.getPostTuningDelay() - 5000);
           if (actualBitrate < bitrateThreshold) {
             if (Sage.DBG) System.out.println("Seeker detected a bitrate of " + actualBitrate + " which is below the error threshold of " +
                 bitrateThreshold + " and will post a system message about this for: " + es.currRecordFile);
@@ -3116,7 +3124,6 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
   {
     synchronized (videoStore)
     {
-      if (videoStore.size() == 1) return videoStore.firstElement();
       long maxFree = 0;
       int minSimWrites = Integer.MAX_VALUE;
       boolean perfBalance = Sage.getBoolean("seeker/recording_disk_balance_maxbw", false);
@@ -3164,6 +3171,8 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
           freeMap.put(vs, currUnres);
         }
       }
+
+      if (videoStore.size() == 1) return videoStore.firstElement();
 
       // Return the video drive with the most free space, not just the first drive with enough space
       // That way we balance the disks if they're not keeping them full.
@@ -4227,7 +4236,7 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
 
         // If we don't have a default, get one if there's one available and we want a default
         if (defaultRecord == null && es.lastStationID != 0 &&
-            (!autopilot || !disableProfilerRecs || es.capDev.shouldNotStopDevice()))
+            (!autopilot || !disableProfilerRecs || es.capDev.shouldNotStopDevice()) && es.stationSet.contains(es.lastStationID))
         {
           Airing[] nextOnChan = wiz.getAirings(es.lastStationID,
               currTime, currTime + 1, false);
@@ -4535,8 +4544,14 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
       {
         Object[] currStartData = pendingStarts.elementAt(i);
         if (Sage.DBG) System.out.println("Change in record to another show. Entering device record mode. - NOW");
-        startRecord((EncoderState) currStartData[0], (Airing) currStartData[1],
+        try
+        {
+          startRecord((EncoderState) currStartData[0], (Airing) currStartData[1],
             (Long) currStartData[2], (Boolean) currStartData[3]);
+        } catch (Throwable e) {
+          Catbert.distributeHookToAll(
+            "MediaPlayerError", new Object[] { Sage.rez("Capture"), e.getMessage() });
+        }
       }
     }
 
@@ -4553,7 +4568,7 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
     return wakeupTime;
   }
 
-  void goodbye()
+  public void goodbye()
   {
     //Set savedPartials = new HashSet(currRecordFiles);
     // NOTE: NARFLEX - 02/28/08 - This needs to be synchronized on the Seeker because the VideoFrame will
@@ -5035,7 +5050,7 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
     }
   }
 
-  int forceChannelTune(String mmcInputName, String chanString, UIClient uiClient)
+  public int forceChannelTune(String mmcInputName, String chanString, UIClient uiClient)
   {
     if (Sage.client)
     {
@@ -5123,7 +5138,7 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
     return null;
   }
 
-  MediaFile requestWatch(Airing watchAir, int[] errorReturn, UIClient uiClient)
+  public MediaFile requestWatch(Airing watchAir, int[] errorReturn, UIClient uiClient)
   {
     if (Sage.client)
       return NetworkClient.getSN().requestWatch(uiClient, watchAir, errorReturn);
@@ -5179,65 +5194,67 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
       // trying to access the encoders at the same time.
       synchronized (this)
       {
-        // NOTE(codefu): findBestEncoderForNow() can race with other threads; this will verify that
-        // we still have a valid *best* encoder.
-        // Encoder validity:
-        //   1) tuner is recording something, but its what we asked it to
-        //   2) tuner has no controlling clients, in which case we've cancled the recording due to user conflict resolution
-        //   3) we're the only controlling client
-        Airing tempRecord = es == null ? null : es.currRecord;
-        if (!((tempRecord != null && tempRecord.stationID == watchAir.stationID && watchAir.stationID != 0)
-            || es.controllingClients.isEmpty()
-            || (es.controllingClients.size() == 1 && es.controllingClients.contains(uiClient)))) {
-          if (Sage.DBG) System.out.println("requestWatch(" + uiClient + ", " + watchAir
-              + ") lost the race for es=" + es + " controlled now by: " + es.controllingClients
-              + " with currRecord:" + es.currRecord);
-          continue;
-        }
-        // NOTE: Because we raced, there's a chance that one of the encoders is actually 'better for
-        // us' meaning the same program is now recording somewhere else. Use that one so we don't
-        // record twice (if you've canceled something because you thought it was full, I feel bad
-        // for you son, I've got 99 problems and your canceled recording ain't one)
-        EncoderState sameChannelES = null;
-        EncoderState sameFileES = null;
-        MediaFile encoderMatchFile = Wizard.getInstance().getFileForAiring(watchAir);
-        for(EncoderState searcher : encoderStateMap.values()) {
-          if (searcher.currRecord != null && searcher.currRecord.stationID == watchAir.stationID
-              && watchAir.stationID != 0) {
-            if (encoderMatchFile == searcher.currRecordFile) {
-              sameFileES = searcher;
-              break;
-            } else {
-              sameChannelES = searcher;
+        if (es != null) {
+          // NOTE(codefu): findBestEncoderForNow() can race with other threads; this will verify that
+          // we still have a valid *best* encoder.
+          // Encoder validity:
+          //   1) tuner is recording something, but its what we asked it to
+          //   2) tuner has no controlling clients, in which case we've cancled the recording due to user conflict resolution
+          //   3) we're the only controlling client
+          Airing tempRecord = es == null ? null : es.currRecord;
+          if (!((tempRecord != null && tempRecord.stationID == watchAir.stationID && watchAir.stationID != 0)
+              || es.controllingClients.isEmpty()
+              || (es.controllingClients.size() == 1 && es.controllingClients.contains(uiClient)))) {
+            if (Sage.DBG) System.out.println("requestWatch(" + uiClient + ", " + watchAir
+                + ") lost the race for es=" + es + " controlled now by: " + es.controllingClients
+                + " with currRecord:" + es.currRecord);
+            continue;
+          }
+          // NOTE: Because we raced, there's a chance that one of the encoders is actually 'better for
+          // us' meaning the same program is now recording somewhere else. Use that one so we don't
+          // record twice (if you've canceled something because you thought it was full, I feel bad
+          // for you son, I've got 99 problems and your canceled recording ain't one)
+          EncoderState sameChannelES = null;
+          EncoderState sameFileES = null;
+          MediaFile encoderMatchFile = Wizard.getInstance().getFileForAiring(watchAir);
+          for(EncoderState searcher : encoderStateMap.values()) {
+            if (searcher.currRecord != null && searcher.currRecord.stationID == watchAir.stationID
+                && watchAir.stationID != 0) {
+              if (encoderMatchFile == searcher.currRecordFile) {
+                sameFileES = searcher;
+                break;
+              } else {
+                sameChannelES = searcher;
+              }
             }
           }
-        }
-        if (sameFileES != null) {
-          if (es != sameFileES) {
-            if (Sage.DBG) System.out.println("Switching to the encoder that's recording the same file: " + sameFileES);
-            es = sameFileES;
+          if (sameFileES != null) {
+            if (es != sameFileES) {
+              if (Sage.DBG) System.out.println("Switching to the encoder that's recording the same file: " + sameFileES);
+              es = sameFileES;
+            }
+          } else if (sameChannelES != null) {
+            if (es != sameChannelES) {
+              if (Sage.DBG) System.out.println("requestWatch(" + uiClient + ", " + watchAir
+                  + ") won the race for es=" + es + " controlled now by: " + es.controllingClients
+                  + " with currRecord:" + es.currRecord + " but a better encoder could be found at="
+                  + sameChannelES + " with controlling=" + sameChannelES.controllingClients
+                  + " with currRecord:" + sameChannelES.currRecord);
+              es = sameChannelES;
+            }
           }
-        } else if (sameChannelES != null) {
-          if (es != sameChannelES) {
-            if (Sage.DBG) System.out.println("requestWatch(" + uiClient + ", " + watchAir
-                + ") won the race for es=" + es + " controlled now by: " + es.controllingClients
-                + " with currRecord:" + es.currRecord + " but a better encoder could be found at="
-                + sameChannelES + " with controlling=" + sameChannelES.controllingClients
-                + " with currRecord:" + sameChannelES.currRecord);
-            es = sameChannelES;
-          }
-        }
-        // If the tuner we are going to use is already recording the target channel; then change the
-        // requested Airing to be what that tuner is recording. This will then end up playing the
-        // requested channel; which is correct. If we don't do this; then we may end up flipping
-        // the Airing that the tuner was using to an incorrect one (this can only happen during padding)
-        // which doesn't end at the right time....or cause the start padding to be removed from the
-        // other recording.
-        if (es != null && es.currRecord != null && es.currRecord.stationID == watchAir.stationID && watchAir.stationID != 0) {
-          Airing newWatchAir = es.currRecord;
-          if (newWatchAir != watchAir) {
-            System.out.println("Switching requested Airing to watch since that's what is currently recording:" + newWatchAir);
-            watchAir = newWatchAir;
+          // If the tuner we are going to use is already recording the target channel; then change the
+          // requested Airing to be what that tuner is recording. This will then end up playing the
+          // requested channel; which is correct. If we don't do this; then we may end up flipping
+          // the Airing that the tuner was using to an incorrect one (this can only happen during padding)
+          // which doesn't end at the right time....or cause the start padding to be removed from the
+          // other recording.
+          if (es.currRecord != null && es.currRecord.stationID == watchAir.stationID && watchAir.stationID != 0) {
+            Airing newWatchAir = es.currRecord;
+            if (newWatchAir != watchAir) {
+              System.out.println("Switching requested Airing to watch since that's what is currently recording:" + newWatchAir);
+              watchAir = newWatchAir;
+            }
           }
         }
 

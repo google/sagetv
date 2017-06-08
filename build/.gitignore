@@ -7,6 +7,7 @@
 /ubuntuserver/
 /ubuntuclient/
 /clientrelease/
+/pluginrelease/
 /sagetv*.deb
 /sagetv*.gz
 /SageJar*.zip

@@ -82,7 +82,7 @@ public class MiniClientWindow extends sage.SageTVWindow
     {
       try
       {
-        System.loadLibrary("Sage");
+        sage.Native.loadLibrary("Sage");
       }
       catch (Throwable t)
       {

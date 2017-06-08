@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <stdint.h>
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include "sage_FreetypeFont.h"
@@ -58,7 +59,7 @@ void sysOutPrint(JNIEnv* env, const char* cstr, ...)
  * Method:    loadFreetypeLib0
  * Signature: ()J
  */
-JNIEXPORT jlong JNICALL _Java_sage_FreetypeFont_loadFreetypeLib0
+JNIEXPORT jlong JNICALL Java_sage_FreetypeFont_loadFreetypeLib0
   (JNIEnv *env, jclass jc)
 {
 	FT_Library library;
@@ -68,7 +69,7 @@ JNIEXPORT jlong JNICALL _Java_sage_FreetypeFont_loadFreetypeLib0
 		sysOutPrint(env, "Error loading FreeType of %d\n", error);
 		return 0;
 	}
- 	return (jlong) library;
+ 	return (jlong)(intptr_t) library;
 }
 
 /*
@@ -76,10 +77,10 @@ JNIEXPORT jlong JNICALL _Java_sage_FreetypeFont_loadFreetypeLib0
  * Method:    closeFreetypeLib0
  * Signature: (J)Z
  */
-JNIEXPORT jboolean JNICALL _Java_sage_FreetypeFont_closeFreetypeLib0
+JNIEXPORT jboolean JNICALL Java_sage_FreetypeFont_closeFreetypeLib0
   (JNIEnv *env, jclass jc, jlong ptr)
 {
-	FT_Library library = (FT_Library) ptr;
+	FT_Library library = (FT_Library)(intptr_t) ptr;
 	if (library)
 	{
 		if (FT_Done_FreeType(library))
@@ -95,10 +96,10 @@ JNIEXPORT jboolean JNICALL _Java_sage_FreetypeFont_closeFreetypeLib0
  * Method:    closeFontFace0
  * Signature: (J)Z
  */
-JNIEXPORT jboolean JNICALL _Java_sage_FreetypeFont_closeFontFace0
+JNIEXPORT jboolean JNICALL Java_sage_FreetypeFont_closeFontFace0
   (JNIEnv *env, jobject jo, jlong fontPtr)
 {
-	FTDataStruct* fontData = (FTDataStruct*) fontPtr;
+	FTDataStruct* fontData = (FTDataStruct*)(intptr_t) fontPtr;
 	// NOTE: WE CAN ONLY CLOSE THE SIZE SINCE OTHERS MIGHT STILL BE USING THE FACE!!!!
 	// THIS LEAKS MEMORY IF YOU THINK IT'LL CLOSE THE FONT FACE!!!!!
 	// THIS LEAKS MEMORY IF YOU THINK IT'LL CLOSE THE FONT FACE!!!!!
@@ -113,12 +114,12 @@ JNIEXPORT jboolean JNICALL _Java_sage_FreetypeFont_closeFontFace0
  * Method:    loadFontFace0
  * Signature: (JLjava/lang/String;I)J
  */
-JNIEXPORT jlong JNICALL _Java_sage_FreetypeFont_loadFontFace0
+JNIEXPORT jlong JNICALL Java_sage_FreetypeFont_loadFontFace0
   (JNIEnv *env, jobject jo, jlong ftLibPtr, jstring jstr, jint ptSize, jint style)
 {
 
 	FT_Face face;
-	FT_Library library = (FT_Library) ftLibPtr;
+	FT_Library library = (FT_Library)(intptr_t) ftLibPtr;
 	const char* cstr = (*env)->GetStringUTFChars(env, jstr, NULL);
 	int error = FT_New_Face(library, cstr, 0, &face);
 
@@ -162,7 +163,7 @@ JNIEXPORT jlong JNICALL _Java_sage_FreetypeFont_loadFontFace0
 	}
 	
     	
-	return (jlong) rv;
+	return (jlong)(intptr_t) rv;
 }
 
 
@@ -171,10 +172,10 @@ JNIEXPORT jlong JNICALL _Java_sage_FreetypeFont_loadFontFace0
  * Method:    deriveFontFace0
  * Signature: (JI)J
  */
-JNIEXPORT jlong JNICALL _Java_sage_FreetypeFont_deriveFontFace0
+JNIEXPORT jlong JNICALL Java_sage_FreetypeFont_deriveFontFace0
   (JNIEnv *env, jobject jo, jlong fontPtr, jint ptSize, jint style)
 {
-	FTDataStruct* fontData = (FTDataStruct*) fontPtr;
+	FTDataStruct* fontData = (FTDataStruct*)(intptr_t) fontPtr;
 	FT_Size newSize;
 	int error = FT_New_Size(fontData->facePtr, &newSize);
 	if (error)
@@ -215,7 +216,7 @@ JNIEXPORT jlong JNICALL _Java_sage_FreetypeFont_deriveFontFace0
 			rv->style = rv->style | FT_STYLE_FLAG_ITALIC;
 		}
 	}
-	return rv;
+	return (jlong)(intptr_t) rv;
 }
 
 /*
@@ -223,11 +224,11 @@ JNIEXPORT jlong JNICALL _Java_sage_FreetypeFont_deriveFontFace0
  * Method:    getGlyphForChar0
  * Signature: (JC)I
  */
-JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_getGlyphForChar0
+JNIEXPORT jint JNICALL Java_sage_FreetypeFont_getGlyphForChar0
   (JNIEnv *env, jobject jo, jlong fontPtr, jchar c)
 {
 	//FT_Face face = (FT_Face) facePtr;
-	FTDataStruct* fontData = (FTDataStruct*) fontPtr;
+	FTDataStruct* fontData = (FTDataStruct*)(intptr_t) fontPtr;
 	return FT_Get_Char_Index(fontData->facePtr, c);
 }
 
@@ -236,13 +237,13 @@ JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_getGlyphForChar0
  * Method:    loadGlyph0
  * Signature: (JI)V
  */
-JNIEXPORT void JNICALL _Java_sage_FreetypeFont_loadGlyph0
+JNIEXPORT void JNICALL Java_sage_FreetypeFont_loadGlyph0
   (JNIEnv *env, jobject jo, jlong fontPtr, jint glyphCode)
 {
 	//FT_Face face = (FT_Face) facePtr;
-	FTDataStruct* fontData = (FTDataStruct*) fontPtr;
+	FTDataStruct* fontData = (FTDataStruct*)(intptr_t) fontPtr;
 	FT_Activate_Size(fontData->sizePtr);
-	int error = FT_Load_Glyph(fontData->facePtr, glyphCode, FT_LOAD_DEFAULT);
+	int error = FT_Load_Glyph(fontData->facePtr, glyphCode, FT_LOAD_FORCE_AUTOHINT);
 	if ((fontData->style & FT_STYLE_FLAG_BOLD) != 0)
 	{
 		// Apply bold effect
@@ -313,10 +314,10 @@ FT_Pos dy = dx;
  * Method:    renderGlyph0
  * Signature: (JLjava/awt/image/BufferedImage;II)I
  */
-JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_renderGlyph0
+JNIEXPORT jint JNICALL Java_sage_FreetypeFont_renderGlyph0
   (JNIEnv *env, jobject jo, jlong fontPtr, jobject buffImage, jint imageX, jint imageY)
 {
-	FTDataStruct* fontData = (FTDataStruct*) fontPtr;
+	FTDataStruct* fontData = (FTDataStruct*)(intptr_t) fontPtr;
 	FT_Face face = fontData->facePtr;
 	FT_Activate_Size(fontData->sizePtr);
 	int error = FT_Render_Glyph(face->glyph, ft_render_mode_normal);
@@ -361,7 +362,7 @@ JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_renderGlyph0
  * Method:    renderGlyphRaw0
  * Signature: (JLsage/media/image/RawImage;IIII)Lsage/media/image/RawImage;
  */
-JNIEXPORT jobject JNICALL _Java_sage_FreetypeFont_renderGlyphRaw0
+JNIEXPORT jobject JNICALL Java_sage_FreetypeFont_renderGlyphRaw0
   (JNIEnv *env, jobject jo, jlong fontPtr, jobject inRawImage, jint rawWidth, jint rawHeight, jint imageX, jint imageY)
 {
 	static jclass rawImageClass = 0;
@@ -418,7 +419,7 @@ JNIEXPORT jobject JNICALL _Java_sage_FreetypeFont_renderGlyphRaw0
 		myImageData = (unsigned char*) (*env)->GetDirectBufferAddress(env, bb);
 	}
 
-	FTDataStruct* fontData = (FTDataStruct*) fontPtr;
+	FTDataStruct* fontData = (FTDataStruct*)(intptr_t) fontPtr;
 	FT_Face face = fontData->facePtr;
 	FT_Activate_Size(fontData->sizePtr);
 	// Render the glyph to a FT buffer
@@ -459,10 +460,10 @@ JNIEXPORT jobject JNICALL _Java_sage_FreetypeFont_renderGlyphRaw0
  * Method:    getNumGlyphs0
  * Signature: (J)I
  */
-JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_getNumGlyphs0
+JNIEXPORT jint JNICALL Java_sage_FreetypeFont_getNumGlyphs0
   (JNIEnv *env, jobject jo, jlong fontPtr)
 {
-	FTDataStruct* fontData = (FTDataStruct*) fontPtr;
+	FTDataStruct* fontData = (FTDataStruct*)(intptr_t) fontPtr;
 	return fontData->facePtr->num_glyphs;
 }
 /*
@@ -470,10 +471,10 @@ JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_getNumGlyphs0
  * Method:    getGlyphWidth0
  * Signature: (J)I
  */
-JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_getGlyphWidth0
+JNIEXPORT jint JNICALL Java_sage_FreetypeFont_getGlyphWidth0
   (JNIEnv *env, jobject jo, jlong fontPtr)
 {
-	FTDataStruct* fontData = (FTDataStruct*) fontPtr;
+	FTDataStruct* fontData = (FTDataStruct*)(intptr_t) fontPtr;
 	return fontData->facePtr->glyph->metrics.width;
 }
 
@@ -482,10 +483,10 @@ JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_getGlyphWidth0
  * Method:    getGlyphHeight0
  * Signature: (J)I
  */
-JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_getGlyphHeight0
+JNIEXPORT jint JNICALL Java_sage_FreetypeFont_getGlyphHeight0
   (JNIEnv *env, jobject jo, jlong fontPtr)
 {
-	FTDataStruct* fontData = (FTDataStruct*) fontPtr;
+	FTDataStruct* fontData = (FTDataStruct*)(intptr_t) fontPtr;
 	return fontData->facePtr->glyph->metrics.height;
 }
 
@@ -494,10 +495,10 @@ JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_getGlyphHeight0
  * Method:    getGlyphBearingX0
  * Signature: (J)I
  */
-JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_getGlyphBearingX0
+JNIEXPORT jint JNICALL Java_sage_FreetypeFont_getGlyphBearingX0
   (JNIEnv *env, jobject jo, jlong fontPtr)
 {
-	FTDataStruct* fontData = (FTDataStruct*) fontPtr;
+	FTDataStruct* fontData = (FTDataStruct*)(intptr_t) fontPtr;
 	return fontData->facePtr->glyph->metrics.horiBearingX;
 }
 
@@ -506,10 +507,10 @@ JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_getGlyphBearingX0
  * Method:    getGlyphBearingY0
  * Signature: (J)I
  */
-JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_getGlyphBearingY0
+JNIEXPORT jint JNICALL Java_sage_FreetypeFont_getGlyphBearingY0
   (JNIEnv *env, jobject jo, jlong fontPtr)
 {
-	FTDataStruct* fontData = (FTDataStruct*) fontPtr;
+	FTDataStruct* fontData = (FTDataStruct*)(intptr_t) fontPtr;
 	return fontData->facePtr->glyph->metrics.horiBearingY;
 }
 
@@ -518,10 +519,10 @@ JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_getGlyphBearingY0
  * Method:    getGlyphAdvance0
  * Signature: (J)I
  */
-JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_getGlyphAdvance0
+JNIEXPORT jint JNICALL Java_sage_FreetypeFont_getGlyphAdvance0
   (JNIEnv *env, jobject jo, jlong fontPtr)
 {
-	FTDataStruct* fontData = (FTDataStruct*) fontPtr;
+	FTDataStruct* fontData = (FTDataStruct*)(intptr_t) fontPtr;
 	return fontData->facePtr->glyph->advance.x;
 }
 
@@ -530,10 +531,10 @@ JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_getGlyphAdvance0
  * Method:    getFontHeight0
  * Signature: (J)I
  */
-JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_getFontHeight0
+JNIEXPORT jint JNICALL Java_sage_FreetypeFont_getFontHeight0
   (JNIEnv *env, jobject jo, jlong fontPtr)
 {
-	FTDataStruct* fontData = (FTDataStruct*) fontPtr;
+	FTDataStruct* fontData = (FTDataStruct*)(intptr_t) fontPtr;
 	return fontData->sizePtr->metrics.height;
 }
 
@@ -542,10 +543,10 @@ JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_getFontHeight0
  * Method:    getFontAscent0
  * Signature: (J)I
  */
-JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_getFontAscent0
+JNIEXPORT jint JNICALL Java_sage_FreetypeFont_getFontAscent0
   (JNIEnv *env, jobject jo, jlong fontPtr)
 {
-	FTDataStruct* fontData = (FTDataStruct*) fontPtr;
+	FTDataStruct* fontData = (FTDataStruct*)(intptr_t) fontPtr;
 	return fontData->sizePtr->metrics.ascender;
 }
 
@@ -554,9 +555,9 @@ JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_getFontAscent0
  * Method:    getFontDescent0
  * Signature: (J)I
  */
-JNIEXPORT jint JNICALL _Java_sage_FreetypeFont_getFontDescent0
+JNIEXPORT jint JNICALL Java_sage_FreetypeFont_getFontDescent0
   (JNIEnv *env, jobject jo, jlong fontPtr)
 {
-	FTDataStruct* fontData = (FTDataStruct*) fontPtr;
+	FTDataStruct* fontData = (FTDataStruct*)(intptr_t) fontPtr;
 	return fontData->sizePtr->metrics.descender;
 }

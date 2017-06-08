@@ -19,50 +19,49 @@
  */
 
 /**
- * @file internal.h
- * common internal api header.
+ * @file
+ * common internal API header
  */
 
-#ifndef FFMPEG_INTERNAL_H
-#define FFMPEG_INTERNAL_H
+#ifndef AVUTIL_INTERNAL_H
+#define AVUTIL_INTERNAL_H
 
 #if !defined(DEBUG) && !defined(NDEBUG)
 #    define NDEBUG
 #endif
 
+#include <limits.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <assert.h>
+#include "config.h"
+#include "attributes.h"
+#include "timer.h"
 
 #ifndef attribute_align_arg
-#if defined(__GNUC__) && (__GNUC__ > 4 || __GNUC__ == 4 && __GNUC_MINOR__>1)
+#if (!defined(__ICC) || __ICC > 1110) && AV_GCC_VERSION_AT_LEAST(4,2)
 #    define attribute_align_arg __attribute__((force_align_arg_pointer))
 #else
 #    define attribute_align_arg
 #endif
 #endif
 
+
+/**
+ * Mark a variable as used and prevent the compiler from optimizing it away.
+ * This is useful for asm that accesses varibles in ways that the compiler does not
+ * understand
+ */
 #ifndef attribute_used
-#if defined(__GNUC__) && (__GNUC__ > 3 || __GNUC__ == 3 && __GNUC_MINOR__ > 0)
+#if AV_GCC_VERSION_AT_LEAST(3,1)
 #    define attribute_used __attribute__((used))
 #else
 #    define attribute_used
 #endif
 #endif
 
-/* Use Apple-specific AltiVec syntax for vector declarations when necessary. */
-#ifdef __APPLE_CC__
-#define AVV(x...) (x)
-#else
-#define AVV(x...) {x}
-#endif
-
-#ifndef M_PI
-#define M_PI    3.14159265358979323846
-#endif
-
 #ifndef INT16_MIN
-#define INT16_MIN       (-0x7fff-1)
+#define INT16_MIN       (-0x7fff - 1)
 #endif
 
 #ifndef INT16_MAX
@@ -70,7 +69,7 @@
 #endif
 
 #ifndef INT32_MIN
-#define INT32_MIN       (-0x7fffffff-1)
+#define INT32_MIN       (-0x7fffffff - 1)
 #endif
 
 #ifndef INT32_MAX
@@ -82,7 +81,7 @@
 #endif
 
 #ifndef INT64_MIN
-#define INT64_MIN       (-0x7fffffffffffffffLL-1)
+#define INT64_MIN       (-0x7fffffffffffffffLL - 1)
 #endif
 
 #ifndef INT64_MAX
@@ -94,46 +93,24 @@
 #endif
 
 #ifndef INT_BIT
-#    if INT_MAX != 2147483647
-#        define INT_BIT 64
-#    else
-#        define INT_BIT 32
-#    endif
+#    define INT_BIT (CHAR_BIT * sizeof(int))
 #endif
-
-#if ( defined(__PIC__) || defined(__pic__) ) && ! defined(PIC)
-#    define PIC
-#endif
-
-#include "intreadwrite.h"
-#include "bswap.h"
 
 #ifndef offsetof
-#    define offsetof(T,F) ((unsigned int)((char *)&((T *)0)->F))
+#    define offsetof(T, F) ((unsigned int)((char *)&((T *)0)->F))
 #endif
 
-#ifdef USE_FASTMEMCPY
-#    include "libvo/fastmemcpy.h"
-#    define memcpy(a,b,c) fast_memcpy(a,b,c)
-#endif
+/* Use to export labels from asm. */
+#define LABEL_MANGLE(a) EXTERN_PREFIX #a
 
 // Use rip-relative addressing if compiling PIC code on x86-64.
-#if defined(__MINGW32__) || defined(__CYGWIN__) || defined(__DJGPP__) || \
-    defined(__OS2__) || (defined (__OpenBSD__) && !defined(__ELF__))
-#    if defined(ARCH_X86_64) && defined(PIC)
-#        define MANGLE(a) "_" #a"(%%rip)"
-#    else
-#        define MANGLE(a) "_" #a
-#    endif
+#if ARCH_X86_64 && defined(PIC)
+#    define LOCAL_MANGLE(a) #a "(%%rip)"
 #else
-#    if defined(ARCH_X86_64) && defined(PIC)
-#        define MANGLE(a) #a"(%%rip)"
-#    elif defined(__APPLE__)
-#        define MANGLE(a) "_" #a
-#    else
-#        define MANGLE(a) #a
-#    endif
+#    define LOCAL_MANGLE(a) #a
 #endif
+
+#define MANGLE(a) EXTERN_PREFIX LOCAL_MANGLE(a)
 
 /* debug stuff */
 
@@ -148,94 +125,21 @@
 
 /* math */
 
-extern const uint32_t ff_inverse[256];
-
-#if defined(ARCH_X86)
-#    define FASTDIV(a,b) \
-    ({\
-        int ret,dmy;\
-        asm volatile(\
-            "mull %3"\
-            :"=d"(ret),"=a"(dmy)\
-            :"1"(a),"g"(ff_inverse[b])\
-            );\
-        ret;\
-    })
-#elif defined(ARCH_ARMV4L)
-#    define FASTDIV(a,b) \
-    ({\
-        int ret,dmy;\
-        asm volatile(\
-            "umull %1, %0, %2, %3"\
-            :"=&r"(ret),"=&r"(dmy)\
-            :"r"(a),"r"(ff_inverse[b])\
-            );\
-        ret;\
-    })
-#elif defined(CONFIG_FASTDIV)
-#    define FASTDIV(a,b)   ((uint32_t)((((uint64_t)a)*ff_inverse[b])>>32))
-#else
-#    define FASTDIV(a,b)   ((a)/(b))
-#endif
-
-extern const uint8_t ff_sqrt_tab[256];
-
-static inline int av_log2_16bit(unsigned int v);
-
-static inline unsigned int ff_sqrt(unsigned int a)
-{
-    unsigned int b;
-
-    if(a<255) return (ff_sqrt_tab[a+1]-1)>>4;
-    else if(a<(1<<12)) b= ff_sqrt_tab[a>>4 ]>>2;
-#ifndef CONFIG_SMALL
-    else if(a<(1<<14)) b= ff_sqrt_tab[a>>6 ]>>1;
-    else if(a<(1<<16)) b= ff_sqrt_tab[a>>8 ]   ;
-#endif
-    else{
-        int s= av_log2_16bit(a>>16)>>1;
-        unsigned int c= a>>(s+2);
-        b= ff_sqrt_tab[c>>(s+8)];
-        b= FASTDIV(c,b) + (b<<s);
-    }
-
-    return b - (a<b*b);
-}
-
-#if defined(ARCH_X86)
+#if ARCH_X86
 #define MASK_ABS(mask, level)\
-            asm volatile(\
-                "cdq                    \n\t"\
+            __asm__ volatile(\
+                "cltd                   \n\t"\
                 "xorl %1, %0            \n\t"\
                 "subl %1, %0            \n\t"\
                 : "+a" (level), "=&d" (mask)\
             );
 #else
 #define MASK_ABS(mask, level)\
-            mask= level>>31;\
-            level= (level^mask)-mask;
+            mask  = level >> 31;\
+            level = (level ^ mask) - mask;
 #endif
 
-#ifdef HAVE_CMOV
-#define COPY3_IF_LT(x,y,a,b,c,d)\
-asm volatile (\
-    "cmpl %0, %3        \n\t"\
-    "cmovl %3, %0       \n\t"\
-    "cmovl %4, %1       \n\t"\
-    "cmovl %5, %2       \n\t"\
-    : "+&r" (x), "+&r" (a), "+r" (c)\
-    : "r" (y), "r" (b), "r" (d)\
-);
-#else
-#define COPY3_IF_LT(x,y,a,b,c,d)\
-if((y)<(x)){\
-     (x)=(y);\
-     (a)=(b);\
-     (c)=(d);\
-}
-#endif
-
-/* avoid usage of various functions */
+/* avoid usage of dangerous/inappropriate system functions */
 #undef  malloc
 #define malloc please_use_av_malloc
 #undef  free
@@ -245,70 +149,86 @@ if((y)<(x)){\
 #undef  time
 #define time time_is_forbidden_due_to_security_issues
 #undef  rand
-#define rand rand_is_forbidden_due_to_state_trashing_use_av_random
+#define rand rand_is_forbidden_due_to_state_trashing_use_av_lfg_get
 #undef  srand
-#define srand srand_is_forbidden_due_to_state_trashing_use_av_init_random
+#define srand srand_is_forbidden_due_to_state_trashing_use_av_lfg_init
 #undef  random
-#define random random_is_forbidden_due_to_state_trashing_use_av_random
+#define random random_is_forbidden_due_to_state_trashing_use_av_lfg_get
 #undef  sprintf
 #define sprintf sprintf_is_forbidden_due_to_security_issues_use_snprintf
 #undef  strcat
 #define strcat strcat_is_forbidden_due_to_security_issues_use_av_strlcat
 #undef  exit
 #define exit exit_is_forbidden
-#if !(defined(LIBAVFORMAT_BUILD) || defined(FFMPEG_FRAMEHOOK_H))
+#ifndef LIBAVFORMAT_BUILD
 #undef  printf
-#define printf please_use_av_log
+#define printf please_use_av_log_instead_of_printf
 #undef  fprintf
-#define fprintf please_use_av_log
+#define fprintf please_use_av_log_instead_of_fprintf
 #undef  puts
-#define puts please_use_av_log
+#define puts please_use_av_log_instead_of_puts
 #undef  perror
 #define perror please_use_av_log_instead_of_perror
 #endif
 
-#define CHECKED_ALLOCZ(p, size)\
+#define FF_ALLOC_OR_GOTO(ctx, p, size, label)\
 {\
-    p= av_mallocz(size);\
-    if(p==NULL && (size)!=0){\
-        av_log(NULL, AV_LOG_ERROR, "Cannot allocate memory.");\
-        goto fail;\
+    p = av_malloc(size);\
+    if (p == NULL && (size) != 0) {\
+        av_log(ctx, AV_LOG_ERROR, "Cannot allocate memory.\n");\
+        goto label;\
     }\
 }
 
-#ifndef HAVE_LLRINT
-static av_always_inline long long llrint(double x)
-{
-    return rint(x);
+#define FF_ALLOCZ_OR_GOTO(ctx, p, size, label)\
+{\
+    p = av_mallocz(size);\
+    if (p == NULL && (size) != 0) {\
+        av_log(ctx, AV_LOG_ERROR, "Cannot allocate memory.\n");\
+        goto label;\
+    }\
 }
-#endif /* HAVE_LLRINT */
 
-#ifndef HAVE_LRINT
-static av_always_inline long int lrint(double x)
-{
-    return rint(x);
-}
-#endif /* HAVE_LRINT */
+#include "libm.h"
 
-#ifndef HAVE_LRINTF
-static av_always_inline long int lrintf(float x)
-{
-    return (int)(rint(x));
-}
-#endif /* HAVE_LRINTF */
+/**
+ * Return NULL if CONFIG_SMALL is true, otherwise the argument
+ * without modification. Used to disable the definition of strings
+ * (for example AVCodec long_names).
+ */
+#if CONFIG_SMALL
+#   define NULL_IF_CONFIG_SMALL(x) NULL
+#else
+#   define NULL_IF_CONFIG_SMALL(x) x
+#endif
 
-#ifndef HAVE_ROUND
-static av_always_inline double round(double x)
-{
-    return (x > 0) ? floor(x + 0.5) : ceil(x - 0.5);
-}
-#endif /* HAVE_ROUND */
 
-#ifndef HAVE_ROUNDF
-static av_always_inline float roundf(float x)
-{
-    return (x > 0) ? floor(x + 0.5) : ceil(x - 0.5);
-}
-#endif /* HAVE_ROUNDF */
+/**
+ * Define a function with only the non-default version specified.
+ *
+ * On systems with ELF shared libraries, all symbols exported from
+ * FFmpeg libraries are tagged with the name and major version of the
+ * library to which they belong.  If a function is moved from one
+ * library to another, a wrapper must be retained in the original
+ * location to preserve binary compatibility.
+ *
+ * Functions defined with this macro will never be used to resolve
+ * symbols by the build-time linker.
+ *
+ * @param type return type of function
+ * @param name name of function
+ * @param args argument list of function
+ * @param ver  version tag to assign function
+ */
+#if HAVE_SYMVER_ASM_LABEL
+#   define FF_SYMVER(type, name, args, ver)                     \
+    type ff_##name args __asm__ (EXTERN_PREFIX #name "@" ver);  \
+    type ff_##name args
+#elif HAVE_SYMVER_GNU_ASM
+#   define FF_SYMVER(type, name, args, ver)                             \
+    __asm__ (".symver ff_" #name "," EXTERN_PREFIX #name "@" ver);      \
+    type ff_##name args;                                                \
+    type ff_##name args
+#endif
 
-#endif /* FFMPEG_INTERNAL_H */
+#endif /* AVUTIL_INTERNAL_H */

@@ -18,17 +18,25 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
+
+#include "libavutil/intreadwrite.h"
 #include "avcodec.h"
 #include "adx.h"
 
 /**
- * @file adx.c
+ * @file
  * SEGA CRI adx codecs.
  *
  * Reference documents:
  * http://ku-www.ss.titech.ac.jp/~yatsushi/adx.html
  * adx2wav & wav2adx http://www.geocities.co.jp/Playtown/2004/
  */
+
+static av_cold int adx_decode_init(AVCodecContext *avctx)
+{
+    avctx->sample_fmt = SAMPLE_FMT_S16;
+    return 0;
+}
 
 /* 18 bytes <-> 32 samples */
 
@@ -96,8 +104,10 @@ static int adx_decode_header(AVCodecContext *avctx,const unsigned char *buf,size
 
 static int adx_decode_frame(AVCodecContext *avctx,
                 void *data, int *data_size,
-                const uint8_t *buf0, int buf_size)
+                AVPacket *avpkt)
 {
+    const uint8_t *buf0 = avpkt->data;
+    int buf_size = avpkt->size;
     ADXContext *c = avctx->priv_data;
     short *samples = data;
     const uint8_t *buf = buf0;
@@ -158,12 +168,13 @@ static int adx_decode_frame(AVCodecContext *avctx,
 
 AVCodec adpcm_adx_decoder = {
     "adpcm_adx",
-    CODEC_TYPE_AUDIO,
+    AVMEDIA_TYPE_AUDIO,
     CODEC_ID_ADPCM_ADX,
     sizeof(ADXContext),
-    NULL,
+    adx_decode_init,
     NULL,
     NULL,
     adx_decode_frame,
+    .long_name = NULL_IF_CONFIG_SMALL("SEGA CRI ADX ADPCM"),
 };
 

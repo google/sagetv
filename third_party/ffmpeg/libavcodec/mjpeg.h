@@ -1,6 +1,6 @@
 /*
  * MJPEG encoder and decoder
- * Copyright (c) 2000, 2001 Fabrice Bellard.
+ * Copyright (c) 2000, 2001 Fabrice Bellard
  * Copyright (c) 2003 Alex Beregszaszi
  * Copyright (c) 2003-2004 Michael Niedermayer
  *
@@ -26,15 +26,15 @@
  */
 
 /**
- * @file mjpeg.h
+ * @file
  * MJPEG encoder and decoder.
  */
 
-#ifndef FFMPEG_MJPEG_H
-#define FFMPEG_MJPEG_H
+#ifndef AVCODEC_MJPEG_H
+#define AVCODEC_MJPEG_H
 
 #include "avcodec.h"
-#include "bitstream.h"
+#include "put_bits.h"
 
 
 /* JPEG marker codes */
@@ -138,10 +138,9 @@ static inline void put_marker(PutBitContext *p, int code)
     }
 
 extern const uint8_t ff_mjpeg_bits_dc_luminance[];
-extern const uint8_t ff_mjpeg_val_dc_luminance[];
+extern const uint8_t ff_mjpeg_val_dc[];
 
 extern const uint8_t ff_mjpeg_bits_dc_chrominance[];
-extern const uint8_t ff_mjpeg_val_dc_chrominance[];
 
 extern const uint8_t ff_mjpeg_bits_ac_luminance[];
 extern const uint8_t ff_mjpeg_val_ac_luminance[];
@@ -153,4 +152,4 @@ void ff_mjpeg_build_huffman_codes(uint8_t *huff_size, uint16_t *huff_code,
                                   const uint8_t *bits_table,
                                   const uint8_t *val_table);
 
-#endif /* FFMPEG_MJPEG_H */
+#endif /* AVCODEC_MJPEG_H */

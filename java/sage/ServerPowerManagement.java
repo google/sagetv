@@ -36,9 +36,9 @@ public class ServerPowerManagement extends PowerManagement
   {
     super();
     if (Sage.WINDOWS_OS)
-      System.loadLibrary("SageTVWin32");
+      sage.Native.loadLibrary("SageTVWin32");
     else if (Sage.MAC_OS_X)
-      System.loadLibrary("Sage");
+      sage.Native.loadLibrary("Sage");
     extendersKeepServerOn = Sage.getBoolean("extender_power_keeps_server_out_of_standby", false);
   }
 
@@ -54,8 +54,10 @@ public class ServerPowerManagement extends PowerManagement
     // server situation
     if (!Sage.client)
     {
-      if (Seeker.getInstance().requiresPower())
+      if (SeekerSelector.getInstance().requiresPower())
         return SYSTEM_POWER;
+      if (Ministry.getInstance().requiresPower())
+    	return SYSTEM_POWER;
       // Check for any streaming clients or non-locally connected SageTV Clients
       MediaServer ms = SageTV.getMediaServer();
       if ((ms != null && ms.areClientsConnected()) || NetworkClient.areNonLocalClientsConnected())
@@ -80,7 +82,7 @@ public class ServerPowerManagement extends PowerManagement
   // Determine the next time we need to be awake to do a recording
   protected long getWakeupTime()
   {
-    return Scheduler.getInstance().getNextMustSeeTime();
+    return SchedulerSelector.getInstance().getNextMustSeeTime();
   }
 
   public long getWaitTime() { return Sage.getLong("power_management_wait_time_new", Math.min(Sage.getLong("power_management_wait_time", 30000), 10000)); }

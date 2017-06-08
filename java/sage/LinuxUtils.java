@@ -15,6 +15,10 @@
  */
 package sage;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 public class LinuxUtils
 {
   public static final String NET_CONFIG_WIRED = "linux/network/wired";
@@ -313,7 +317,7 @@ public class LinuxUtils
                   {
                     // When we first set the clock we need to kick some parts of the core system if we didn't get it set at the start
                     Carny.getInstance().kickHard();
-                    Scheduler.getInstance().kick(false);
+                    SchedulerSelector.getInstance().kick(false);
                   }
                   ntpdateWorked = true;
                 }
@@ -537,24 +541,36 @@ public class LinuxUtils
     // We can't enumerate the network interfaces because it also includes interfaces
     // that are down. So this might not be are actual IP. The only way we can do it
     // is using ifconfig or native code. This can't be done correctly in Java.
-    String eth0Info = IOUtils.exec(new String[] { "ifconfig", "eth0" });
-    String eth1Info = IOUtils.exec(new String[] { "ifconfig", "eth1" });
-    java.util.regex.Pattern pat = java.util.regex.Pattern.compile(
-        "inet addr\\:(\\p{Digit}\\p{Digit}?\\p{Digit}?\\.\\p{Digit}\\p{Digit}?\\p{Digit}?\\.\\p{Digit}\\p{Digit}?\\p{Digit}?\\.\\p{Digit}\\p{Digit}?\\p{Digit}?) ");
-    if (eth1Info.indexOf("UP") != -1)
+
+    // List of "known" linux network addresses
+    // adding the "configured" one first, may result is 2 hits on that one if it's wrong, and it's
+    // in the extended list
+    List<String> devices = new ArrayList<>(Arrays.asList(Sage.get("linux/wired_network_port", "eth0"), "eth0","eth1","eno1","br0","docker0"));
+    String ip=null;
+    for (String dev: devices)
     {
-      java.util.regex.Matcher mat = pat.matcher(eth1Info);
+      ip=getIPAddressFromInetInfo(IOUtils.exec(new String[] { "ifconfig", dev }));
+      if (ip!=null) return ip;
+    }
+
+    System.out.println("Linux: Unable to get IP ADDRESS from " + devices);
+    return "0.0.0.0";
+  }
+
+  static java.util.regex.Pattern INETINFO_IP_PATTERN = java.util.regex.Pattern.compile(
+    "inet addr\\:(\\p{Digit}\\p{Digit}?\\p{Digit}?\\.\\p{Digit}\\p{Digit}?\\p{Digit}?\\.\\p{Digit}\\p{Digit}?\\p{Digit}?\\.\\p{Digit}\\p{Digit}?\\p{Digit}?) ");
+
+  static String getIPAddressFromInetInfo(String inetInfo) {
+    if (inetInfo!=null && inetInfo.contains("UP"))
+    {
+      java.util.regex.Matcher mat = INETINFO_IP_PATTERN.matcher(inetInfo);
       // Go with eth1
-      mat.find();
-      return mat.group(1);
+      if (mat.find())
+      {
+        return mat.group(1);
+      }
     }
-    else
-    {
-      java.util.regex.Matcher mat = pat.matcher(eth0Info);
-      // Go with eth0
-      mat.find();
-      return mat.group(1);
-    }
+    return null;
   }
 
   public static int getOpticalDiscType()

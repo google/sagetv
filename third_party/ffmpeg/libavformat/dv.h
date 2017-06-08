@@ -6,7 +6,7 @@
  * of DV technical info.
  *
  * Raw DV format
- * Copyright (c) 2002 Fabrice Bellard.
+ * Copyright (c) 2002 Fabrice Bellard
  *
  * This file is part of FFmpeg.
  *
@@ -25,8 +25,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef FFMPEG_DV_H
-#define FFMPEG_DV_H
+#ifndef AVFORMAT_DV_H
+#define AVFORMAT_DV_H
 
 #include "avformat.h"
 
@@ -38,7 +38,7 @@ void dv_offset_reset(DVDemuxContext *c, int64_t frame_offset);
 
 typedef struct DVMuxContext DVMuxContext;
 DVMuxContext* dv_init_mux(AVFormatContext* s);
-int dv_assemble_frame(DVMuxContext *c, AVStream*, const uint8_t*, int, uint8_t**);
+int dv_assemble_frame(DVMuxContext *c, AVStream*, uint8_t*, int, uint8_t**);
 void dv_delete_mux(DVMuxContext*);
 
-#endif /* FFMPEG_DV_H */
+#endif /* AVFORMAT_DV_H */

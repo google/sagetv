@@ -18,11 +18,13 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
+
+#include "libavutil/intreadwrite.h"
 #include "avcodec.h"
 
 #include "truespeech_data.h"
 /**
- * @file truespeech.c
+ * @file
  * TrueSpeech decoder.
  */
 
@@ -50,10 +52,11 @@ typedef struct {
     int16_t filters[32]; // filters for every subframe
 } TSContext;
 
-static int truespeech_decode_init(AVCodecContext * avctx)
+static av_cold int truespeech_decode_init(AVCodecContext * avctx)
 {
 //    TSContext *c = avctx->priv_data;
 
+    avctx->sample_fmt = SAMPLE_FMT_S16;
     return 0;
 }
 
@@ -329,8 +332,10 @@ static void truespeech_save_prevvec(TSContext *c)
 
 static int truespeech_decode_frame(AVCodecContext *avctx,
                 void *data, int *data_size,
-                const uint8_t *buf, int buf_size)
+                AVPacket *avpkt)
 {
+    const uint8_t *buf = avpkt->data;
+    int buf_size = avpkt->size;
     TSContext *c = avctx->priv_data;
 
     int i, j;
@@ -342,6 +347,11 @@ static int truespeech_decode_frame(AVCodecContext *avctx,
     if (!buf_size)
         return 0;
 
+    if (buf_size < 32) {
+        av_log(avctx, AV_LOG_ERROR,
+               "Too small input buffer (%d bytes), need at least 32 bytes\n", buf_size);
+        return -1;
+    }
     iterations = FFMIN(buf_size / 32, *data_size / 480);
     for(j = 0; j < iterations; j++) {
         truespeech_read_frame(c, buf + consumed);
@@ -373,11 +383,12 @@ static int truespeech_decode_frame(AVCodecContext *avctx,
 
 AVCodec truespeech_decoder = {
     "truespeech",
-    CODEC_TYPE_AUDIO,
+    AVMEDIA_TYPE_AUDIO,
     CODEC_ID_TRUESPEECH,
     sizeof(TSContext),
     truespeech_decode_init,
     NULL,
     NULL,
     truespeech_decode_frame,
+    .long_name = NULL_IF_CONFIG_SMALL("DSP Group TrueSpeech"),
 };

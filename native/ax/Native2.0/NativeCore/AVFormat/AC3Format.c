@@ -93,8 +93,13 @@ int ReadAC3AudioHeader( AC3_AUDIO *pAC3Audio, const uint8_t* pStart, int nSize )
 	//search for AC3 SYNC code 
 	for ( i = 0; i<nSize-1; i++ )
 	{
-		if ( ( p[i] == 0x0B && p[i+1] == 0x77 ) ||
-			 ( p[i] == 0x77 && p[i+1] == 0x0B ) )
+    // Narflex 7/12/2016: This used to accept byte-swapped AC3 as a valid header
+    // which occassionally breaks format detection for regular AC3. I don't
+    // think we've ever come across a byte-swapped AC3 file outside of having to
+    // do Dolby certification, so I'm going to change this to no longer accept
+    // a byte-swapped sync word to fix the bug.
+		if ( ( p[i] == 0x0B && p[i+1] == 0x77 )/* ||
+			 ( p[i] == 0x77 && p[i+1] == 0x0B )*/ )
 			 break;
 	}
 

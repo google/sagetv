@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004 Roman Shaposhnik.
+ * Copyright (c) 2004 Roman Shaposhnik
  *
  * Many thanks to Steven M. Schultz for providing clever ideas and
  * to Michael Niedermayer <michaelni@gmx.at> for writing initial
@@ -25,15 +25,18 @@
 
 #include "avcodec.h"
 
-typedef int (action_t)(AVCodecContext *c, void *arg);
+typedef int (action_func)(AVCodecContext *c, void *arg);
+typedef int (action_func2)(AVCodecContext *c, void *arg, int jobnr, int threadnr);
 
 typedef struct ThreadContext {
     pthread_t *workers;
-    action_t *func;
-    void **args;
+    action_func *func;
+    action_func2 *func2;
+    void *args;
     int *rets;
     int rets_count;
     int job_count;
+    int job_size;
 
     pthread_cond_t last_job_cond;
     pthread_cond_t current_job_cond;
@@ -67,7 +70,8 @@ static void* attribute_align_arg worker(void *v)
         }
         pthread_mutex_unlock(&c->current_job_lock);
 
-        c->rets[our_job%c->rets_count] = c->func(avctx, c->args[our_job]);
+        c->rets[our_job%c->rets_count] = c->func ? c->func(avctx, (char*)c->args + our_job*c->job_size):
+                                                   c->func2(avctx, c->args, our_job, self_id);
 
         pthread_mutex_lock(&c->current_job_lock);
         our_job = c->current_job++;
@@ -100,7 +104,7 @@ void avcodec_thread_free(AVCodecContext *avctx)
     av_freep(&avctx->thread_opaque);
 }
 
-int avcodec_thread_execute(AVCodecContext *avctx, action_t* func, void **arg, int *ret, int job_count)
+static int avcodec_thread_execute(AVCodecContext *avctx, action_func* func, void *arg, int *ret, int job_count, int job_size)
 {
     ThreadContext *c= avctx->thread_opaque;
     int dummy_ret;
@@ -112,6 +116,7 @@ int avcodec_thread_execute(AVCodecContext *avctx, action_t* func, void **arg, in
 
     c->current_job = avctx->thread_count;
     c->job_count = job_count;
+    c->job_size = job_size;
     c->args = arg;
     c->func = func;
     if (ret) {
@@ -128,10 +133,22 @@ int avcodec_thread_execute(AVCodecContext *avctx, action_t* func, void **arg, in
     return 0;
 }
 
+static int avcodec_thread_execute2(AVCodecContext *avctx, action_func2* func2, void *arg, int *ret, int job_count)
+{
+    ThreadContext *c= avctx->thread_opaque;
+    c->func2 = func2;
+    return avcodec_thread_execute(avctx, NULL, arg, ret, job_count, 0);
+}
+
 int avcodec_thread_init(AVCodecContext *avctx, int thread_count)
 {
     int i;
     ThreadContext *c;
+
+    avctx->thread_count = thread_count;
+
+    if (thread_count <= 1)
+        return 0;
 
     c = av_mallocz(sizeof(ThreadContext));
     if (!c)
@@ -144,9 +161,9 @@ int avcodec_thread_init(AVCodecContext *avctx, int thread_count)
     }
 
     avctx->thread_opaque = c;
-    avctx->thread_count = thread_count;
     c->current_job = 0;
     c->job_count = 0;
+    c->job_size = 0;
     c->done = 0;
     pthread_cond_init(&c->current_job_cond, NULL);
     pthread_cond_init(&c->last_job_cond, NULL);
@@ -164,5 +181,6 @@ int avcodec_thread_init(AVCodecContext *avctx, int thread_count)
     avcodec_thread_park_workers(c, thread_count);
 
     avctx->execute = avcodec_thread_execute;
+    avctx->execute2 = avcodec_thread_execute2;
     return 0;
 }

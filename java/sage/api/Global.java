@@ -25,12 +25,13 @@ import sage.EPGDataSource;
 import sage.ExternalTuningManager;
 import sage.FileDownloader;
 import sage.FileTransfer;
+import sage.SchedulerSelector;
+import sage.SeekerSelector;
 import sage.IOUtils;
 import sage.LinuxUtils;
 import sage.MMC;
 import sage.ManualRecord;
 import sage.MediaFile;
-import sage.MetaImage;
 import sage.MiniClientSageRenderer;
 import sage.NetworkClient;
 import sage.NewStorageDeviceDetector;
@@ -196,7 +197,7 @@ public class Global {
        * @declaration public boolean AreThereUnresolvedConflicts();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return Boolean.valueOf(Scheduler.getInstance().areThereDontKnows());
+        return Boolean.valueOf(SchedulerSelector.getInstance().areThereDontKnows());
       }});
     rft.put(new PredefinedJEPFunction("Global", "IsAsleep")
     {
@@ -218,7 +219,7 @@ public class Global {
        * @declaration public long GetTotalDiskspaceAvailable();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return new Long(Seeker.getInstance().getAvailVideoDiskspace());
+        return new Long(SeekerSelector.getInstance().getAvailVideoDiskspace());
       }});
     rft.put(new PredefinedJEPFunction("Global", "GetTotalLibraryDuration", true)
     {
@@ -229,7 +230,7 @@ public class Global {
        * @declaration public long GetTotalLibraryDuration();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return new Long(Seeker.getInstance().getTotalImportedLibraryDuration());
+        return new Long(SeekerSelector.getInstance().getTotalImportedLibraryDuration());
       }});
     rft.put(new PredefinedJEPFunction("Global", "GetTotalVideoDuration", true)
     {
@@ -240,7 +241,7 @@ public class Global {
        * @declaration public long GetTotalVideoDuration();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return new Long(Seeker.getInstance().getTotalVideoDuration());
+        return new Long(SeekerSelector.getInstance().getTotalVideoDuration());
       }});
     rft.put(new PredefinedJEPFunction("Global", "GetUsedLibraryDiskspace", true)
     {
@@ -251,7 +252,7 @@ public class Global {
        * @declaration public long GetUsedLibraryDiskspace();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return new Long(Seeker.getInstance().getUsedImportedLibraryDiskspace());
+        return new Long(SeekerSelector.getInstance().getUsedImportedLibraryDiskspace());
       }});
     rft.put(new PredefinedJEPFunction("Global", "GetUsedVideoDiskspace", true)
     {
@@ -262,7 +263,7 @@ public class Global {
        * @declaration public long GetUsedVideoDiskspace();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return new Long(Seeker.getInstance().getUsedVideoDiskspace());
+        return new Long(SeekerSelector.getInstance().getUsedVideoDiskspace());
       }});
     rft.put(new PredefinedJEPFunction("Global", "AreAiringsSameShow", 2, new String[] {"Airing1", "Airing2"})
     {
@@ -336,28 +337,90 @@ public class Global {
         String lineup = getString(stack);
         return Boolean.valueOf(EPG.getInstance().getEPGDSForEPGDSName(lineup).isChanDownloadComplete());
       }});
+    rft.put(new PredefinedJEPFunction("Global", "GetEPGProperty", new String[]{"EPGDataSource", "Property", "Parameter"}, true)
+    {
+      /**
+       * Gets a property from a specific EPG data source with an optional parameter
+       * @param EPGDataSource the name of the EPG data source
+       * @param Property the property name to get
+       * @param Parameter optional parameter
+       * @return the value of the requested property
+       * @since 9.0
+       *
+       * @declaration public Object GetEPGProperty(String EPGDataSource, String Property, String Parameter);
+       */
+      public Object runSafely(Catbert.FastStack stack) throws Exception{
+        String parameter = getString(stack);
+        String property = getString(stack);
+        String dataSource = getString(stack);
+
+        try
+        {
+          return EPG.getProperty(dataSource, property, parameter);
+        }
+        catch (sage.EPGServerException e)
+        {
+          return e.getMessage();
+        }
+      }});
+    rft.put(new PredefinedJEPFunction("Global", "SetEPGProperty", new String[]{"EPGDataSource", "Property", "Value"}, true)
+    {
+      /**
+       * Sets a property for a specific EPG data source to the provided value
+       * @param EPGDataSource the name of the EPG data source
+       * @param Property the property name to set
+       * @param Value the value to set
+       * @return result of setting the property
+       * @since 9.0
+       *
+       * @declaration public Object SetEPGProperty(String EPGDataSource, String Property, String Value);
+       */
+      public Object runSafely(Catbert.FastStack stack) throws Exception{
+        String value = getString(stack);
+        String property = getString(stack);
+        String dataSource = getString(stack);
+
+        try
+        {
+          return EPG.setProperty(dataSource, property, value);
+        }
+        catch (sage.EPGServerException e)
+        {
+          return e.getMessage();
+        }
+      }});
     rft.put(new PredefinedJEPFunction("Global", "GetLocalMarketsFromEPGServer", true)
     {
       /**
        * Gets a list of all the possible United States local broadcast markets from the EPG server
-       * @return a list of all the possible United States local broadcast markets from the EPG server
+       * @return a String[] of all the possible United States local broadcast markets from the EPG server or a String error message of "NO_KEY", "INVALID_KEY", or "CONNECTION_FAILURE"
        *
-       * @declaration public String[] GetLocalMarketsFromEPGServer();
+       * @declaration public Object GetLocalMarketsFromEPGServer();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return EPG.getInstance().getLocalMarketsAndCacheNames(null);
+        try {
+          return EPG.getInstance().getLocalMarketsAndCacheNames();
+        } catch (sage.EPGServerException e) {
+          System.out.println("ERROR communicating with EPG server of: " + e);
+          return e.getMessage();
+        }
       }});
     rft.put(new PredefinedJEPFunction("Global", "GetLineupsForZipCodeFromEPGServer", 1, new String[]{"ZipCode"}, true)
     {
       /**
        * Gets a list from the EPG server of all the possible EPG Lineups that are available in a given zip code
        * @param ZipCode the zip code to search for EPG lineups in
-       * @return a list from the EPG server of all the possible EPG lineups in the specified zip code
+       * @return a String[] from the EPG server of all the possible EPG lineups in the specified zip code or a String error message of "NO_KEY", "INVALID_KEY", or "CONNECTION_FAILURE"
        *
-       * @declaration public String[] GetLineupsForZipCodeFromEPGServer(String ZipCode);
+       * @declaration public Object GetLineupsForZipCodeFromEPGServer(String ZipCode);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return EPG.getInstance().getProvidersAndCacheNames(getString(stack), null);
+        try {
+          return EPG.getInstance().getProvidersAndCacheNames(getString(stack));
+        } catch (sage.EPGServerException e) {
+          System.out.println("ERROR communicating with EPG server of: " + e);
+          return e.getMessage();
+        }
       }});
     rft.put(new PredefinedJEPFunction("Global", "GetCurrentlyRecordingMediaFiles", true)
     {
@@ -368,7 +431,7 @@ public class Global {
        * @declaration public MediaFile[] GetCurrentlyRecordingMediaFiles();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return Seeker.getInstance().getCurrRecordFiles();
+        return SeekerSelector.getInstance().getCurrRecordFiles();
       }});
     rft.put(new PredefinedJEPFunction("Global", "GetSuggestedIntelligentRecordings", true)
     {
@@ -381,7 +444,7 @@ public class Global {
        * @declaration public Airing[] GetSuggestedIntelligentRecordings();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return Seeker.getInstance().getIRScheduledAirings();
+        return SeekerSelector.getInstance().getIRScheduledAirings();
       }});
     rft.put(new PredefinedJEPFunction("Global", "GetScheduledRecordings", true)
     {
@@ -392,7 +455,7 @@ public class Global {
        * @declaration public Airing[] GetScheduledRecordings();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return Seeker.getInstance().getInterleavedScheduledAirings();
+        return SeekerSelector.getInstance().getInterleavedScheduledAirings();
       }});
     rft.put(new PredefinedJEPFunction("Global", "GetScheduledRecordingsForDevice", 1, new String[] { "CaptureDevice"}, true)
     {
@@ -404,7 +467,7 @@ public class Global {
        * @declaration public Airing[] GetScheduledRecordingsForDevice(String CaptureDevice);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return Seeker.getInstance().getScheduledAiringsForSource(getString(stack));
+        return SeekerSelector.getInstance().getScheduledAiringsForSource(getString(stack));
       }});
     rft.put(new PredefinedJEPFunction("Global", "GetScheduledRecordingsForTime", 2, new String[] { "StartTime", "StopTime" }, true)
     {
@@ -418,7 +481,7 @@ public class Global {
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         long stop = getLong(stack);
-        return Seeker.getInstance().getInterleavedScheduledAirings(getLong(stack), stop);
+        return SeekerSelector.getInstance().getInterleavedScheduledAirings(getLong(stack), stop);
       }});
     rft.put(new PredefinedJEPFunction("Global", "GetScheduledRecordingsForDeviceForTime", 3, new String[] { "CaptureDevice", "StartTime", "StopTime"}, true)
     {
@@ -434,7 +497,7 @@ public class Global {
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         long stop = getLong(stack);
         long start = getLong(stack);
-        return Seeker.getInstance().getScheduledAiringsForSource(getString(stack), start, stop);
+        return SeekerSelector.getInstance().getScheduledAiringsForSource(getString(stack), start, stop);
       }});
     rft.put(new PredefinedJEPFunction("Global", "GetRecentlyWatched", 1, new String[] {"DurationToLookBack"}, true)
     {
@@ -446,7 +509,7 @@ public class Global {
        * @declaration public Airing[] GetRecentlyWatched(long DurationToLookBack);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return Seeker.getInstance().getRecentWatches(Sage.time() - getLong(stack));
+        return SeekerSelector.getInstance().getRecentWatches(Sage.time() - getLong(stack));
       }});
     rft.put(new PredefinedJEPFunction("Global", "RunLibraryImportScan", 1, new String[] {"WaitUntilDone"}, true)
     {
@@ -457,7 +520,7 @@ public class Global {
        * @declaration public void RunLibraryImportScan(boolean WaitUntilDone);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        Seeker.getInstance().scanLibrary(Catbert.evalBool(stack.pop())); return null;
+        SeekerSelector.getInstance().scanLibrary(Catbert.evalBool(stack.pop())); return null;
       }});
     rft.put(new PredefinedJEPFunction("Global", "Exit")
     {
@@ -526,7 +589,7 @@ public class Global {
           }
         }
         EPG.getInstance().kick();
-        Scheduler.getInstance().kick(false);
+        SchedulerSelector.getInstance().kick(false);
         if (Sage.client)
         {
           return makeNetworkedCall(stack);
@@ -1592,8 +1655,8 @@ public class Global {
        * @declaration public java.util.Vector GetAiringsThatWontBeRecorded(boolean OnlyUnresolved);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        java.util.Map conMap = Catbert.evalBool(stack.pop()) ? Scheduler.getInstance().getUnresolvedConflictsMap() :
-          Scheduler.getInstance().getConflictsMap();
+        java.util.Map conMap = Catbert.evalBool(stack.pop()) ? SchedulerSelector.getInstance().getUnresolvedConflictsMap() :
+          SchedulerSelector.getInstance().getConflictsMap();
         java.util.Vector rv = new java.util.Vector();
         java.util.Iterator walker = conMap.values().iterator();
         while (walker.hasNext())
@@ -1654,6 +1717,31 @@ public class Global {
           }
         }
         return Boolean.FALSE; // this means we're a full SageTV UI running under Linux
+      }});
+    rft.put(new PredefinedJEPFunction("Global", "IsTouchUI")
+    {
+      /**
+       * Returns true if this UI is being run in a touch environment, such as a phone or tablet.
+       * @return true if this UI is being run in a touch environment, false otherwise
+       *
+       * @since 9.0.4
+       * @declaration public boolean IsTouchUI();
+       */
+      public Object runSafely(Catbert.FastStack stack) throws Exception{
+        if (stack.getUIMgr() == null) // if we have no UI, we're not touch enabled
+          return Boolean.FALSE;
+        int uiType = stack.getUIMgr().getUIClientType();
+        // If we're a Remote UI with a TOUCH then we're a touch enabled UI
+        if (uiType == UIClient.REMOTE_UI)
+        {
+          if (stack.getUIMgr().getRootPanel().getRenderEngine() instanceof MiniClientSageRenderer)
+          {
+            String ipdp = ((MiniClientSageRenderer) stack.getUIMgr().getRootPanel().getRenderEngine()).getInputDevsProp();
+            if (ipdp != null && ipdp.indexOf("TOUCH") != -1)
+              return Boolean.TRUE;
+          }
+        }
+        return Boolean.FALSE; // Touch is not enabled on this UI
       }});
     rft.put(new PredefinedJEPFunction("Global", "IsServerUI")
     {
@@ -1821,7 +1909,7 @@ public class Global {
 							}
 						}
 					}*/
-            rv = Catbert.getRecordFailureObject(Seeker.getInstance().timedRecord(start, stop, c.getStationID(), recurCode, baseAir, uiClient));
+            rv = Catbert.getRecordFailureObject(SeekerSelector.getInstance().timedRecord(start, stop, c.getStationID(), recurCode, baseAir, uiClient));
             Catbert.asyncTaskComplete(taskID, rv);
           }
         }, "AsyncCreateTimedRecording");
@@ -2860,7 +2948,7 @@ public class Global {
        * @declaration public boolean IsDoingLibraryImportScan();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return Seeker.getInstance().isDoingImportScan() ? Boolean.TRUE : Boolean.FALSE;
+        return SeekerSelector.getInstance().isDoingImportScan() ? Boolean.TRUE : Boolean.FALSE;
       }});
     rft.put(new PredefinedJEPFunction("Global", "SwitchEmbeddedModeTo", new String[] { "NewMode" })
     {
@@ -2927,7 +3015,7 @@ public class Global {
         if (Sage.DBG) System.out.println("Preparing the system for a firmware load...free all the memory we can...");
         if (Sage.DBG) System.out.println("MemStats-1: Used=" + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())/1000000 +
             "MB Total=" + Runtime.getRuntime().totalMemory()/1000000 + "MB Max=" + Runtime.getRuntime().maxMemory()/1000000 + "MB");
-        Seeker.getInstance().disableLibraryScanning();
+        SeekerSelector.getInstance().disableLibraryScanning();
         // Kill the process for recording as well
         IOUtils.exec2(new String[] { "sh", "-c", "kill `pidof SGMRecording`"}, true);
         if (stack.getUIMgrSafe() != null)
@@ -3084,6 +3172,21 @@ public class Global {
     rft.put(new PredefinedJEPFunction("Global", "GetEPGUpdateState", true) {
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         return EPG.getInstance().getEpgStateString();
+      }});
+    rft.put(new PredefinedJEPFunction("Global", "IsSDEPGServiceAvailable", true)
+    {
+      /**
+       * Returns true if the Schedules Direct EPG service is available.
+       * This is determined by trying to communicate with Schedules Direct if an unexpired token is
+       * present. If no token currently exists or it is expired, a new token will be acquired. If
+       * the token is unable to be obtained for any reason, the service is considered unavailable.
+       * @return true if the Schedules Direct EPG service is configured and able to authenticate, false otherwise
+       * @since 9.0
+       *
+       * @declaration public boolean IsSDEPGServiceAvailable();
+       */
+      public Object runSafely(Catbert.FastStack stack) throws Exception{
+        return sage.epg.sd.SDRipper.isAvailable();
       }});
     /*
 		rft.put(new PredefinedJEPFunction("Global", "", -1)

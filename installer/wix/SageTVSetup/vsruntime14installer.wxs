@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+  <Fragment>
+
+    <!-- Detect existing version of VC ++ 2015 x86 libraries -->
+    <util:FileSearch Id="GetVC14X86onX64Exists" Condition="VersionNT64" Variable="vc14x86Exists" Path="[System64Folder]vcruntime140.dll" Result="exists"/>
+    <util:FileSearch Id="GetVC14X86onX64Version" Condition="VersionNT64" Variable="vc14x86Version" Path="[System64Folder]vcruntime140.dll" Result="version"/>
+    <util:FileSearch Id="GetVC14X86onX86Exists" Condition="NOT VersionNT64" Variable="vc14x86Exists" Path="[SystemFolder]vcruntime140.dll" Result="exists"/>
+    <util:FileSearch Id="GetVC14X86onX86Version" Condition="NOT VersionNT64" Variable="vc14x86Version" Path="[SystemFolder]vcruntime140.dll" Result="version"/>
+
+    <PackageGroup Id="redist_vc140">
+      <?if $(var.InstallerType) = Full ?>
+	      <ExePackage Id="vc140"
+			  DisplayName="Visual C++ 2015 Redistributable Package(x86 offline)"
+			  Cache="yes" 
+			  PerMachine="yes" 
+			  Permanent="yes" 
+			  Vital="yes" 
+			  Compressed="yes"
+			  SourceFile="redist\VC_redist.x86.exe"
+			  Name="Redist\VC_redist.x86.exe"
+			  InstallCommand="/quiet /norestart"
+			  DetectCondition="vc14x86Exists AND vc14x86Version &gt;= v14.0.23026"
+			  Protocol="burn">
+		    <!-- Ignore "Newer version installed" error -->
+		    <ExitCode Value="1638" Behavior="success"/>
+		</ExePackage>
+      <?else?>
+	      <ExePackage Id="vc140"
+			  DisplayName="Visual C++ 2010 Redistributable Package(x86 online)"
+			  Cache="yes" 
+			  PerMachine="yes" 
+			  Permanent="yes" 
+			  Vital="yes" 
+			  Compressed="no"
+			  SourceFile="redist\VC_redist.x86.exe"
+			  Name="Redist\VC_redist.x86.exe"
+			  InstallCommand="/quiet /norestart"
+	                  DownloadUrl="https://dl.bintray.com/opensagetv/sagetv/installersupportfiles/1.002/vc_redist.x86.exe"
+			  DetectCondition="vc14x86Exists AND vc14x86Version &gt;= v14.0.23026"
+			  Protocol="burn">
+		    <!-- Ignore "Newer version installed" error -->
+		    <ExitCode Value="1638" Behavior="success"/>
+		</ExePackage>
+      <?endif?>
+    </PackageGroup>
+  </Fragment>
+</Wix>

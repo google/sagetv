@@ -116,10 +116,10 @@ public class NewStorageDeviceDetector implements Runnable
         for (int i = 0; i < seekerNotifies.size(); i++)
         {
           Object[] currInfo = (Object[]) seekerNotifies.get(i);
-          if (!Sage.client && Seeker.getInstance().isAutoImportEnabled() && UIManager.getNonLocalUICount() == 0)
+          if (!Sage.client && SeekerSelector.getInstance().isAutoImportEnabled() && UIManager.getNonLocalUICount() == 0)
           {
             if (Sage.DBG) System.out.println("Automatically adding USB device to import path since no UI is available for prompting...");
-            Seeker.getInstance().addArchiveDirectory(currInfo[0].toString(), Seeker.ALL_DIR_MASK);
+            SeekerSelector.getInstance().addArchiveDirectory(currInfo[0].toString(), Seeker.ALL_DIR_MASK);
           }
           Catbert.distributeHookToLocalUIs("StorageDeviceAdded", new Object[] { currInfo[0], currInfo[1] });
         }
@@ -184,7 +184,7 @@ public class NewStorageDeviceDetector implements Runnable
         if (Sage.DBG) System.out.println("Drives have been removed...rescan...");
         if (!Sage.client)
         {
-          Seeker.getInstance().scanLibrary(false);
+          SeekerSelector.getInstance().scanLibrary(false);
         }
       }
       existingDrives = currDrivesClone;
@@ -328,10 +328,10 @@ public class NewStorageDeviceDetector implements Runnable
           }
           else
           {
-            if (!Sage.client && Seeker.getInstance().isAutoImportEnabled() && UIManager.getNonLocalUICount() == 0)
+            if (!Sage.client && SeekerSelector.getInstance().isAutoImportEnabled() && UIManager.getNonLocalUICount() == 0)
             {
               if (Sage.DBG) System.out.println("Automatically adding USB device to import path since no UI is available for prompting...");
-              Seeker.getInstance().addArchiveDirectory(newDir.toString(), Seeker.ALL_DIR_MASK);
+              SeekerSelector.getInstance().addArchiveDirectory(newDir.toString(), Seeker.ALL_DIR_MASK);
             }
             Catbert.distributeHookToLocalUIs("StorageDeviceAdded", new Object[] { newDir, specialName });
           }
@@ -502,8 +502,8 @@ public class NewStorageDeviceDetector implements Runnable
       if (!mountedDevs.isEmpty())
       {
         if (Sage.DBG) System.out.println("External drives lost: " + mountedDevs);
-        java.util.Set allArchiveDirs = (Seeker.getInstance().isAutoImportEnabled() && !Sage.client) ?
-            new java.util.HashSet(java.util.Arrays.asList(Seeker.getInstance().getArchiveDirectories(Seeker.ALL_DIR_MASK))) : null;
+        java.util.Set allArchiveDirs = (SeekerSelector.getInstance().isAutoImportEnabled() && !Sage.client) ?
+            new java.util.HashSet(java.util.Arrays.asList(SeekerSelector.getInstance().getArchiveDirectories(Seeker.ALL_DIR_MASK))) : null;
             java.util.Iterator walker = mountedDevs.iterator();
             boolean validRemoves = false;
             while (walker.hasNext())
@@ -532,7 +532,7 @@ public class NewStorageDeviceDetector implements Runnable
                 mountMap.remove(name);
                 if (allArchiveDirs != null && mountedDir != null && allArchiveDirs.contains(mountedDir))
                 {
-                  Seeker.getInstance().removeArchiveDirectory(mountedDir, Seeker.ALL_DIR_MASK);
+                  SeekerSelector.getInstance().removeArchiveDirectory(mountedDir, Seeker.ALL_DIR_MASK);
                 }
               }
             }
@@ -541,7 +541,7 @@ public class NewStorageDeviceDetector implements Runnable
               if (!Sage.client)
               {
                 LinuxUtils.updateSmbConfig(true);
-                Seeker.getInstance().scanLibrary(false);
+                SeekerSelector.getInstance().scanLibrary(false);
               }
               extraMountCheck = true; // in case we unmounted something that changed device ID
             }
@@ -585,7 +585,7 @@ public class NewStorageDeviceDetector implements Runnable
         if (Sage.DBG) System.out.println("Drives have been removed...rescan...");
         if (!Sage.client)
         {
-          Seeker.getInstance().scanLibrary(false);
+          SeekerSelector.getInstance().scanLibrary(false);
         }
       }
       existingDrives = currDrivesClone;

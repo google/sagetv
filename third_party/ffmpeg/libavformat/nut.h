@@ -19,14 +19,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef FFMPEG_NUT_H
-#define FFMPEG_NUT_H
+#ifndef AVFORMAT_NUT_H
+#define AVFORMAT_NUT_H
 
 //#include <limits.h>
+//#include "libavutil/adler32.h"
+//#include "libavcodec/mpegaudio.h"
 #include "avformat.h"
-//#include "mpegaudio.h"
 #include "riff.h"
-//#include "adler32.h"
+#include "metadata.h"
 
 #define      MAIN_STARTCODE (0x7A561F5F04ADULL + (((uint64_t)('N'<<8) + 'M')<<48))
 #define    STREAM_STARTCODE (0x11405BF2F9DBULL + (((uint64_t)('N'<<8) + 'S')<<48))
@@ -50,14 +51,14 @@ typedef enum{
     FLAG_MATCH_TIME =2048, ///<If set, match_time_delta is coded in the frame header
     FLAG_CODED      =4096, ///<if set, coded_flags are stored in the frame header
     FLAG_INVALID    =8192, ///<if set, frame_code is invalid
-}flag_t;
+} Flag;
 
 typedef struct {
     uint64_t pos;
     uint64_t back_ptr;
 //    uint64_t global_key_pts;
     int64_t ts;
-} syncpoint_t;
+} Syncpoint;
 
 typedef struct {
     uint16_t flags;
@@ -67,7 +68,7 @@ typedef struct {
     int16_t  pts_delta;
     uint8_t  reserved_count;
     uint8_t  header_idx;
-} FrameCode; // maybe s/FrameCode/framecode_t/ or change all to Java style but do not mix
+} FrameCode;
 
 typedef struct {
     int last_flags;
@@ -78,7 +79,7 @@ typedef struct {
     int msb_pts_shift;
     int max_pts_distance;
     int decode_delay; //FIXME duplicate of has_b_frames
-} StreamContext;// maybe s/StreamContext/streamcontext_t/
+} StreamContext;
 
 typedef struct {
     AVFormatContext *avf;
@@ -97,10 +98,23 @@ typedef struct {
     struct AVTreeNode *syncpoints;
 } NUTContext;
 
+extern const AVCodecTag ff_nut_subtitle_tags[];
+extern const AVCodecTag ff_nut_video_tags[];
+
+typedef struct {
+    char str[9];
+    int flag;
+} Dispositions;
+
 void ff_nut_reset_ts(NUTContext *nut, AVRational time_base, int64_t val);
 int64_t ff_lsb2full(StreamContext *stream, int64_t lsb);
-int ff_nut_sp_pos_cmp(syncpoint_t *a, syncpoint_t *b);
-int ff_nut_sp_pts_cmp(syncpoint_t *a, syncpoint_t *b);
+int ff_nut_sp_pos_cmp(const Syncpoint *a, const Syncpoint *b);
+int ff_nut_sp_pts_cmp(const Syncpoint *a, const Syncpoint *b);
 void ff_nut_add_sp(NUTContext *nut, int64_t pos, int64_t back_ptr, int64_t ts);
+void ff_nut_free_sp(NUTContext *nut);
 
-#endif /* FFMPEG_NUT_H */
+extern const Dispositions ff_nut_dispositions[];
+
+extern const AVMetadataConv ff_nut_metadata_conv[];
+
+#endif /* AVFORMAT_NUT_H */

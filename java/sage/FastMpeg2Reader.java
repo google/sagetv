@@ -15,11 +15,18 @@
  */
 package sage;
 
-import java.io.*;
+import sage.nio.BufferedFileChannel;
+import sage.nio.LocalFileChannel;
+import sage.nio.RemoteFileChannel;
+import sage.nio.SageFileChannel;
+
+import java.io.EOFException;
+import java.io.File;
+import java.io.IOException;
 
 public final class FastMpeg2Reader
 {
-  private FasterRandomFile ins;
+  private SageFileChannel ins;
   private sage.media.bluray.BluRayStreamer bdp; // for faster access w/out casting
   private TranscodeEngine inxs;
   private File mpegFile;
@@ -292,18 +299,15 @@ public final class FastMpeg2Reader
       if (isBluRaySource)
       {
         if (Sage.DBG) System.out.println("MPEG2 pusher detected network BluRay source format...");
-        sage.media.bluray.BluRayNetworkFile bnf = new sage.media.bluray.BluRayNetworkFile(hostname, mpegFile, false, targetBDTitle);
+        sage.media.bluray.BluRayFile bnf = new sage.media.bluray.BluRayFile(hostname, mpegFile, false, targetBDTitle, 131072);
         bdp = bnf;
         ins = bnf;
-        bdp.setBufferSize(131072);
         forceTSSource = true;
         tsPacketSize = 192;
       }
       else
       {
-        NetworkChannelFile nrf = new NetworkChannelFile(hostname, mpegFile, "r", null, false);
-        ins = nrf;
-        nrf.setBufferSize(131072);
+        ins = new BufferedFileChannel(new RemoteFileChannel(hostname, mpegFile), 131072, true);
         // If we already know it's TS then set it that way.
         // This is MUCH more reliable then the TS detection we have below which simply checks the first byte for 0x47
         if (sourceFormat != null)
@@ -375,16 +379,15 @@ public final class FastMpeg2Reader
       else if (mpegFile.isDirectory() && sage.media.format.MediaFormat.MPEG2_TS.equals(sourceFormat.getFormatName()))
       {
         if (Sage.DBG) System.out.println("MPEG2 pusher detected BluRay source format...");
-        sage.media.bluray.BluRayRandomFile bnf = new sage.media.bluray.BluRayRandomFile(mpegFile, false, targetBDTitle);
+        sage.media.bluray.BluRayFile bnf = new sage.media.bluray.BluRayFile(mpegFile, false, targetBDTitle, 65536);
         bdp = bnf;
         ins = bnf;
-        bdp.setBufferSize(65536);
         forceTSSource = true;
         tsPacketSize = 192;
       }
       else
       {
-        ins = new BufferedFileChannel(mpegFile, "r", null, false);
+        ins = new sage.nio.BufferedFileChannel(new LocalFileChannel(mpegFile, true), true);
         if (sourceFormat != null && sage.media.format.MediaFormat.VC1.equals(sourceFormat.getPrimaryVideoFormat()))
           vc1RemapMode = true;
         // If we already know it's TS then set it that way.
@@ -747,7 +750,7 @@ public final class FastMpeg2Reader
   {
     try
     {
-      return (ins != null) ? ins.length() : inxs.getVirtualTranscodeSize();
+      return (ins != null) ? ins.size() : inxs.getVirtualTranscodeSize();
     }catch (Exception e){return 0;}
   }
 
@@ -766,7 +769,7 @@ public final class FastMpeg2Reader
 
   public long availableToRead()
   {
-    return Math.max(0, (ins != null) ? (length() - ins.getFilePointer()) : inxs.getAvailableTranscodeBytes());
+    return Math.max(0, (ins != null) ? (length() - ins.position()) : inxs.getAvailableTranscodeBytes());
   }
 
   // This will return a number less than or equal to the argument; it avoids checking the actual file size if it knows
@@ -776,7 +779,7 @@ public final class FastMpeg2Reader
     // Minimize the number of calls to length()
     if (ins != null)
     {
-      long currPos = ins.getFilePointer();
+      long currPos = ins.position();
       if (lastCheckSize - currPos >= numBytes)
         return numBytes;
       lastCheckSize = length();
@@ -792,7 +795,7 @@ public final class FastMpeg2Reader
     // Minimize the number of calls to length()
     if (ins != null)
     {
-      long currPos = ins.getFilePointer();
+      long currPos = ins.position();
       if (lastCheckSize - currPos >= numBytes)
         return true;
       lastCheckSize = length();
@@ -802,7 +805,7 @@ public final class FastMpeg2Reader
       return inxs.getAvailableTranscodeBytes() >= numBytes;
   }
 
-  public long getReadPos() { return (ins != null) ? ins.getFilePointer() : inxs.getVirtualReadPosition(); }
+  public long getReadPos() { return (ins != null) ? ins.position() : inxs.getVirtualReadPosition(); }
 
   public boolean canSkipOnNextRead()
   {
@@ -874,7 +877,7 @@ public final class FastMpeg2Reader
     {
       if (ins != null)
       {
-        ins.seek(currBytePos);
+        ins.position(currBytePos);
       }
       buf.clear().limit(len);
       int rv = read(buf, len);
@@ -913,7 +916,7 @@ public final class FastMpeg2Reader
       long llen = len;
       while (llen > 0) // try 16k blocks for the CIFS issue
       {
-        llen -= ins.transferTo(dest, llen);
+        llen -= ins.transferTo(llen, dest);
       }
     }
     else
@@ -979,7 +982,7 @@ public final class FastMpeg2Reader
             {
               if (Sage.DBG) System.out.println("BluRay reseek at end of cell w/ not enough left for buffer; skipping to next cell");
               long skipper = bdp.getBytesLeftInClip();
-              ins.skipBytes((int)skipper);
+              ins.skip(skipper);
               bitsDone += 8*skipper;
             }
             buf.clear().limit(len);
@@ -1178,7 +1181,7 @@ public final class FastMpeg2Reader
                                     // IDR start code found...good packet :)
                                     waitForIFrame = false;
                                     bytesSkippedForIFrameSync = tsStart;
-                                    ins.seek(lastPAT);
+                                    ins.position(lastPAT);
                                     bitsDone = lastPAT*8;
                                     numReseeksLeft = 0;
                                     forceAnotherCycle = true;
@@ -1198,7 +1201,7 @@ public final class FastMpeg2Reader
                                   // Found the I Frame
                                   waitForIFrame = false;
                                   bytesSkippedForIFrameSync = tsStart;
-                                  ins.seek(lastPAT);
+                                  ins.position(lastPAT);
                                   bitsDone = lastPAT*8;
                                   numReseeksLeft = 0;
                                   forceAnotherCycle = true;
@@ -1382,7 +1385,7 @@ public final class FastMpeg2Reader
                                 // Found the I Frame
                                 waitForIFrame = false;
                                 bytesSkippedForIFrameSync = i;
-                                ins.seek(bitsDone/8 + packStart);
+                                ins.position(bitsDone/8 + packStart);
                                 bitsDone += packStart*8;
                                 numReseeksLeft = 0;
                                 forceAnotherCycle = true;
@@ -1643,7 +1646,7 @@ public final class FastMpeg2Reader
   {
     if (Sage.DBG) System.out.println("Mpeg2Reader seeking to pos=" + 0);
     if (ins != null)
-      ins.seek(0);
+      ins.position(0);
     else
       inxs.seekToPosition(0);
     bitsDone = 0;
@@ -1656,6 +1659,7 @@ public final class FastMpeg2Reader
 
   public void seek(long seekTime) throws IOException
   {
+    seekTime = Math.max(0, seekTime);
     if (seekTime == 0)
     {
       seekToBeginning(); // this avoids reloading the transcoder
@@ -1685,6 +1689,7 @@ public final class FastMpeg2Reader
   }
   private void seek(long seekTime, int minReadRequired) throws IOException
   {
+    seekTime = Math.max(0, seekTime);
     if (ins != null)
     {
       long targetPTS = seekTime*90 + firstPTS;
@@ -1701,7 +1706,7 @@ public final class FastMpeg2Reader
       if (Sage.DBG) System.out.println("Mpeg2Reader seeking to pos=" + targetPos + " time=" + Sage.durFormatMillis(seekTime));
       if (streamTranscodeMode != null)
         transcodePTSOffset = seekTime*90;
-      ins.seek(targetPos);
+      ins.position(targetPos);
       bitsDone = targetPos*8;
     }
     else
@@ -2473,7 +2478,7 @@ public final class FastMpeg2Reader
     numBytes -= numPeeks;
     if (ins != null)
     {
-      ins.seek(ins.getFilePointer() + numBytes);
+      ins.position(ins.position() + numBytes);
     }
     else
       inxs.seekToPosition(inxs.getVirtualReadPosition() + numBytes);

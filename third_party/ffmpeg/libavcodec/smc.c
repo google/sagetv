@@ -20,7 +20,7 @@
  */
 
 /**
- * @file smc.c
+ * @file
  * QT SMC Video Decoder by Mike Melanson (melanson@pcisys.net)
  * For more information about the SMC format, visit:
  *   http://www.pcisys.net/~melanson/codecs/
@@ -31,10 +31,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
+#include "libavutil/intreadwrite.h"
 #include "avcodec.h"
-#include "dsputil.h"
 
 #define CPAIR 2
 #define CQUAD 4
@@ -45,7 +44,6 @@
 typedef struct SmcContext {
 
     AVCodecContext *avctx;
-    DSPContext dsp;
     AVFrame frame;
 
     const unsigned char *buf;
@@ -368,16 +366,11 @@ static void smc_decode_stream(SmcContext *s)
                     flags_a = xx012456, flags_b = xx89A37B
                 */
                 /* build the color flags */
-                color_flags_a = color_flags_b = 0;
                 color_flags_a =
-                    (s->buf[stream_ptr + 0] << 16) |
-                    ((s->buf[stream_ptr + 1] & 0xF0) << 8) |
-                    ((s->buf[stream_ptr + 2] & 0xF0) << 4) |
-                    ((s->buf[stream_ptr + 2] & 0x0F) << 4) |
-                    ((s->buf[stream_ptr + 3] & 0xF0) >> 4);
+                    ((AV_RB16(s->buf + stream_ptr    ) & 0xFFF0) << 8) |
+                     (AV_RB16(s->buf + stream_ptr + 2) >> 4);
                 color_flags_b =
-                    (s->buf[stream_ptr + 4] << 16) |
-                    ((s->buf[stream_ptr + 5] & 0xF0) << 8) |
+                    ((AV_RB16(s->buf + stream_ptr + 4) & 0xFFF0) << 8) |
                     ((s->buf[stream_ptr + 1] & 0x0F) << 8) |
                     ((s->buf[stream_ptr + 3] & 0x0F) << 4) |
                     (s->buf[stream_ptr + 5] & 0x0F);
@@ -428,13 +421,12 @@ static void smc_decode_stream(SmcContext *s)
     }
 }
 
-static int smc_decode_init(AVCodecContext *avctx)
+static av_cold int smc_decode_init(AVCodecContext *avctx)
 {
     SmcContext *s = avctx->priv_data;
 
     s->avctx = avctx;
     avctx->pix_fmt = PIX_FMT_PAL8;
-    dsputil_init(&s->dsp, avctx);
 
     s->frame.data[0] = NULL;
 
@@ -443,8 +435,10 @@ static int smc_decode_init(AVCodecContext *avctx)
 
 static int smc_decode_frame(AVCodecContext *avctx,
                              void *data, int *data_size,
-                             const uint8_t *buf, int buf_size)
+                             AVPacket *avpkt)
 {
+    const uint8_t *buf = avpkt->data;
+    int buf_size = avpkt->size;
     SmcContext *s = avctx->priv_data;
 
     s->buf = buf;
@@ -467,7 +461,7 @@ static int smc_decode_frame(AVCodecContext *avctx,
     return buf_size;
 }
 
-static int smc_decode_end(AVCodecContext *avctx)
+static av_cold int smc_decode_end(AVCodecContext *avctx)
 {
     SmcContext *s = avctx->priv_data;
 
@@ -479,7 +473,7 @@ static int smc_decode_end(AVCodecContext *avctx)
 
 AVCodec smc_decoder = {
     "smc",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_SMC,
     sizeof(SmcContext),
     smc_decode_init,
@@ -487,4 +481,5 @@ AVCodec smc_decoder = {
     smc_decode_end,
     smc_decode_frame,
     CODEC_CAP_DR1,
+    .long_name = NULL_IF_CONFIG_SMALL("QuickTime Graphics (SMC)"),
 };

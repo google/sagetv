@@ -20,29 +20,23 @@
  */
 
 /**
- * @file mpc.c Musepack decoder core
+ * @file
+ * Musepack decoder core
  * MPEG Audio Layer 1/2 -like codec with frames of 1152 samples
  * divided into 32 subbands.
  */
 
 #include "avcodec.h"
-#include "bitstream.h"
+#include "get_bits.h"
 #include "dsputil.h"
-#include "random.h"
-
-#ifdef CONFIG_MPEGAUDIO_HP
-#define USE_HIGHPRECISION
-#endif
 #include "mpegaudio.h"
 
 #include "mpc.h"
 #include "mpcdata.h"
 
-static DECLARE_ALIGNED_16(MPA_INT, mpa_window[512]);
-
-void ff_mpc_init()
+void ff_mpc_init(void)
 {
-    ff_mpa_synth_init(mpa_window);
+    ff_mpa_synth_init(ff_mpa_synth_window);
 }
 
 /**
@@ -58,7 +52,7 @@ static void mpc_synth(MPCContext *c, int16_t *out)
         samples_ptr = samples + ch;
         for(i = 0; i < SAMPLES_PER_BAND; i++) {
             ff_mpa_synth_filter(c->synth_buf[ch], &(c->synth_buf_offset[ch]),
-                                mpa_window, &dither_state,
+                                ff_mpa_synth_window, &dither_state,
                                 samples_ptr, 2,
                                 c->sb_samples[ch][i]);
             samples_ptr += 64;

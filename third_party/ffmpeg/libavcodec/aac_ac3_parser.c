@@ -1,7 +1,7 @@
 /*
- * Common AAC and AC3 parser
- * Copyright (c) 2003 Fabrice Bellard.
- * Copyright (c) 2003 Michael Niedermayer.
+ * Common AAC and AC-3 parser
+ * Copyright (c) 2003 Fabrice Bellard
+ * Copyright (c) 2003 Michael Niedermayer
  *
  * This file is part of FFmpeg.
  *
@@ -29,60 +29,74 @@ int ff_aac_ac3_parse(AVCodecParserContext *s1,
                      const uint8_t *buf, int buf_size)
 {
     AACAC3ParseContext *s = s1->priv_data;
-    const uint8_t *buf_ptr;
-    int len, sample_rate, bit_rate, channels, samples;
+    ParseContext *pc = &s->pc;
+    int len, i;
+    int new_frame_start;
 
-    *poutbuf = NULL;
-    *poutbuf_size = 0;
-
-    buf_ptr = buf;
-    while (buf_size > 0) {
-        int size_needed= s->frame_size ? s->frame_size : s->header_size;
-        len = s->inbuf_ptr - s->inbuf;
-
-        if(len<size_needed){
-            len = FFMIN(size_needed - len, buf_size);
-            memcpy(s->inbuf_ptr, buf_ptr, len);
-            buf_ptr      += len;
-            s->inbuf_ptr += len;
-            buf_size     -= len;
-        }
-
-        if (s->frame_size == 0) {
-            if ((s->inbuf_ptr - s->inbuf) == s->header_size) {
-                len = s->sync(s->inbuf, &channels, &sample_rate, &bit_rate,
-                              &samples);
-                if (len == 0) {
-                    /* no sync found : move by one byte (inefficient, but simple!) */
-                    memmove(s->inbuf, s->inbuf + 1, s->header_size - 1);
-                    s->inbuf_ptr--;
-                } else {
-                    s->frame_size = len;
-                    /* update codec info */
-                    avctx->sample_rate = sample_rate;
-                    /* allow downmixing to stereo (or mono for AC3) */
-                    if(avctx->request_channels > 0 &&
-                            avctx->request_channels < channels &&
-                            (avctx->request_channels <= 2 ||
-                            (avctx->request_channels == 1 &&
-                            avctx->codec_id == CODEC_ID_AC3))) {
-                        avctx->channels = avctx->request_channels;
-                    } else {
-                        avctx->channels = channels;
-                    }
-                    avctx->bit_rate = bit_rate;
-                    avctx->frame_size = samples;
-                }
+get_next:
+    i=END_NOT_FOUND;
+    if(s->remaining_size <= buf_size){
+        if(s->remaining_size && !s->need_next_header){
+            i= s->remaining_size;
+            s->remaining_size = 0;
+        }else{ //we need a header first
+            len=0;
+            for(i=s->remaining_size; i<buf_size; i++){
+                s->state = (s->state<<8) + buf[i];
+                if((len=s->sync(s->state, s, &s->need_next_header, &new_frame_start)))
+                    break;
             }
-        } else {
-            if(s->inbuf_ptr - s->inbuf == s->frame_size){
-                *poutbuf = s->inbuf;
-                *poutbuf_size = s->frame_size;
-                s->inbuf_ptr = s->inbuf;
-                s->frame_size = 0;
-                break;
+            if(len<=0){
+                i=END_NOT_FOUND;
+            }else{
+                s->state=0;
+                i-= s->header_size -1;
+                s->remaining_size = len;
+                if(!new_frame_start || pc->index+i<=0){
+                    s->remaining_size += i;
+                    goto get_next;
+                }
             }
         }
     }
-    return buf_ptr - buf;
+
+    if(ff_combine_frame(pc, i, &buf, &buf_size)<0){
+        s->remaining_size -= FFMIN(s->remaining_size, buf_size);
+        *poutbuf = NULL;
+        *poutbuf_size = 0;
+        return buf_size;
+    }
+
+    *poutbuf = buf;
+    *poutbuf_size = buf_size;
+
+    /* update codec info */
+    if(s->codec_id)
+        avctx->codec_id = s->codec_id;
+
+    /* Due to backwards compatible HE-AAC the sample rate, channel count,
+       and total number of samples found in an AAC ADTS header are not
+       reliable. Bit rate is still accurate because the total frame duration in
+       seconds is still correct (as is the number of bits in the frame). */
+    if (avctx->codec_id != CODEC_ID_AAC) {
+        avctx->sample_rate = s->sample_rate;
+
+        /* allow downmixing to stereo (or mono for AC-3) */
+        if(avctx->request_channels > 0 &&
+                avctx->request_channels < s->channels &&
+                (avctx->request_channels <= 2 ||
+                (avctx->request_channels == 1 &&
+                (avctx->codec_id == CODEC_ID_AC3 ||
+                 avctx->codec_id == CODEC_ID_EAC3)))) {
+            avctx->channels = avctx->request_channels;
+        } else {
+            avctx->channels = s->channels;
+            avctx->channel_layout = s->channel_layout;
+        }
+        avctx->frame_size = s->samples;
+    }
+
+    avctx->bit_rate = s->bit_rate;
+
+    return i;
 }

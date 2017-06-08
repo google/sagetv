@@ -16,6 +16,9 @@
 package sage.api;
 
 import sage.*;
+import sage.epg.sd.SDErrors;
+import sage.epg.sd.SDRipper;
+import sage.epg.sd.json.programs.SDInProgressSport;
 
 /**
  * Show represents detailed information about content. This is where the actual metadata information is stored.
@@ -1136,132 +1139,6 @@ public class ShowAPI {
         String imgUrl = s.getImageUrlForIndex(idx, thumb);
         return (imgUrl == null) ? null : imgUrl;
       }});
-    rft.put(new PredefinedJEPFunction("Show", "HasPersonImage", new String[] { "Person" })
-    {
-      /**
-       * Returns true if the passed in Person has an image associated with them
-       * @param Person the Person object
-       * @return true if the passed in Person has an image associated with them, false otherwise
-       * @since 8.0
-       *
-       * @declaration public boolean HasPersonImage(Person Person);
-       */
-      public Object runSafely(Catbert.FastStack stack) throws Exception{
-        Person p = getPerson(stack);
-        return (p != null && p.hasImage()) ? Boolean.TRUE : Boolean.FALSE;
-      }});
-    rft.put(new PredefinedJEPFunction("Show", "GetPersonImage", new String[] { "Person", "Thumb" })
-    {
-      /**
-       * Returns the image for the specified person
-       * @param Person the Person object
-       * @param Thumb true if a thumbnail is desired, false if a full size image is desired
-       * @return a MetaImage object representing the requested image, null if one does not exist
-       * @since 8.0
-       *
-       * @declaration public MetaImage GetPersonImage(Person Person, boolean Thumb);
-       */
-      public Object runSafely(Catbert.FastStack stack) throws Exception{
-        boolean thumb = evalBool(stack.pop());
-        Person p = getPerson(stack);
-        if (p != null && p.hasImage())
-        {
-          return MetaImage.getMetaImage(p.getImageURL(thumb), stack.getUIComponent());
-        }
-        else
-          return null;
-      }});
-    rft.put(new PredefinedJEPFunction("Show", "GetPersonImageURL", new String[] { "Person", "Thumb" })
-    {
-      /**
-       * Returns the image URL for the specified person
-       * @param Person the Person object
-       * @param Thumb true if a thumbnail is desired, false if a full size image is desired
-       * @return a URL representing the requested image, null if one does not exist
-       * @since 8.0
-       *
-       * @declaration public String GetPersonImageURL(Person Person, boolean Thumb);
-       */
-      public Object runSafely(Catbert.FastStack stack) throws Exception{
-        boolean thumb = evalBool(stack.pop());
-        Person p = getPerson(stack);
-        if (p != null && p.hasImage())
-        {
-          return p.getImageURL(thumb);
-        }
-        else
-          return null;
-      }});
-    rft.put(new PredefinedJEPFunction("Show", "GetPersonDateOfBirth", new String[] { "Person" })
-    {
-      /**
-       * Returns a String representing the birthdate of the specified person, empty string if unknown
-       * @param Person the Person object
-       * @return a String representing the birthdate of the specified person, empty string if unknown
-       * @since 8.0
-       *
-       * @declaration public String GetPersonDateOfBirth(Person Person);
-       */
-      public Object runSafely(Catbert.FastStack stack) throws Exception{
-        Person p = getPerson(stack);
-        return (p != null ) ? p.getDateOfBirth() : "";
-      }});
-    rft.put(new PredefinedJEPFunction("Show", "GetPersonDateOfDeath", new String[] { "Person" })
-    {
-      /**
-       * Returns a String representing the date of the specified person's death, empty string if unknown
-       * @param Person the Person object
-       * @return a String representing the date of the specified person's death, empty string if unknown
-       * @since 8.0
-       *
-       * @declaration public String GetPersonDateOfDeath(Person Person);
-       */
-      public Object runSafely(Catbert.FastStack stack) throws Exception{
-        Person p = getPerson(stack);
-        return (p != null ) ? p.getDateOfDeath() : "";
-      }});
-    rft.put(new PredefinedJEPFunction("Show", "GetPersonBirthplace", new String[] { "Person" })
-    {
-      /**
-       * Returns a String representing the birthplace of the specified person, empty string if unknown
-       * @param Person the Person object
-       * @return a String representing the birthplace of the specified person, empty string if unknown
-       * @since 8.0
-       *
-       * @declaration public String GetPersonBirthplace(Person Person);
-       */
-      public Object runSafely(Catbert.FastStack stack) throws Exception{
-        Person p = getPerson(stack);
-        return (p != null ) ? p.getBirthplace() : "";
-      }});
-    rft.put(new PredefinedJEPFunction("Show", "GetPersonID", new String[] { "Person" })
-    {
-      /**
-       * Returns the unique ID used to identify this Person. Can get used later on a call to {@link #GetPersonForID GetPersonForID()}
-       * @param Person the Person object
-       * @return the unique ID used to identify this Person
-       * @since 8.1
-       *
-       * @declaration public int GetPersonID(Person Person);
-       */
-      public Object runSafely(Catbert.FastStack stack) throws Exception{
-        Person p = getPerson(stack);
-        return (p == null) ? null : new Integer(p.getID());
-      }});
-    rft.put(new PredefinedJEPFunction("Show", "GetPersonForID", 1, new String[] { "PersonID" })
-    {
-      /**
-       * Returns the Person object that corresponds to the passed in ID. The ID should have been obtained from a call to {@link #GetPersonID GetPersonID()}
-       * @param PersonID the Person id
-       * @return the Person object that corresponds to the passed in ID
-       * @since 8.1
-       *
-       * @declaration public Person GetPersonForID(int PersonID);
-       */
-      public Object runSafely(Catbert.FastStack stack) throws Exception{
-        int i = getInt(stack);
-        return Wizard.getInstance().getPersonForID(i);
-      }});
     rft.put(new PredefinedJEPFunction("Show", "GetMovieStarRating", 1, new String[] { "Show" })
     {
       /**
@@ -1288,8 +1165,86 @@ public class ShowAPI {
         }
         return new Float(f);
       }});
+    rft.put(new PredefinedJEPFunction("Show", "IsSDEPGInProgressSport", 1, new String[] { "ExternalIDs" }, true)
+    {
+      /**
+       * Returns if the provided external ID's can be tracked when in progress through Schedules Direct.
+       * Note that if the Schedules Direct service is not available, this will always return false
+       * for all requested ID's.
+       * @param ExternalIDs Array of external ID's to look up
+       * @return true for the corresponding index of each external ID that can be tracked, otherwise false on the same index
+       * @since 9.0
+       *
+       * @declaration public boolean[] IsSDEPGInProgressSport(String[] ExternalIDs);
+       */
+      public Object runSafely(Catbert.FastStack stack) throws Exception{
+        String externalIDs[] = getStringList(stack);
+        SDInProgressSport sports[] = SDRipper.getInProgressSport(externalIDs);
+        boolean returnValues[] = new boolean[sports.length];
+        for (int i = 0; i < sports.length; i++)
+        {
+          if (sports[i] == null)
+            continue;
 
+          int code = sports[i].getCode();
+          // All 3 of these codes indicate that the program can be tracked when it is in progress.
+          returnValues[i] = code == SDErrors.OK.CODE ||
+            code == SDErrors.FUTURE_PROGRAM.CODE ||
+            code == SDErrors.PROGRAMID_QUEUED.CODE;
+        }
 
+        return returnValues;
+      }});
+    rft.put(new PredefinedJEPFunction("Show", "GetSDEPGInProgressSportStatus", 1, new String[] { "ExternalIDs" }, true)
+    {
+      /**
+       * Returns the current Schedules Direct provided in progress status for each of the provided external ID's.
+       * The status will be one of the following:
+       * 0 = Complete
+       * 1 = In progress
+       * 2 = Status is not available at the moment (try again in 30 seconds)
+       * 3 = Program is in the future and will be able to be tracked
+       * 4 = Program is not trackable
+       * 5 = Schedules Direct is offline/not available right now (try again in an hour)
+       * 6 = Schedules Direct authentication failure
+       * 7 = General failure
+       * @param ExternalIDs Array of external ID's to look up
+       * @return int for each corresponding index representing the current status of the requested external ID's
+       * @since 9.0
+       *
+       * @declaration public int[] GetSDEPGInProgressSportStatus(String[] ExternalIDs);
+       */
+      public Object runSafely(Catbert.FastStack stack) throws Exception{
+        String externalIDs[] = getStringList(stack);
+        SDInProgressSport sports[] = SDRipper.getInProgressSport(externalIDs);
+        int returnValues[] = new int[sports.length];
+        for (int i = 0; i < sports.length; i++)
+        {
+          SDInProgressSport sport = sports[i];
+          if (sport == null)
+          {
+            returnValues[i] = 7;
+            continue;
+          }
+
+          int code = sport.getCode();
+          if (code == SDErrors.OK.CODE)
+            returnValues[i] = sport.isComplete() ? 0 : 1;
+          else if (code == SDErrors.PROGRAMID_QUEUED.CODE)
+            returnValues[i] = 2;
+          else if (code == SDErrors.FUTURE_PROGRAM.CODE)
+            returnValues[i] = 3;
+          else if (code == SDErrors.INVALID_PROGRAMID.CODE)
+            returnValues[i] = 4;
+          else if (code == SDErrors.SERVICE_OFFLINE.CODE)
+            returnValues[i] = 5;
+          else if (code == SDErrors.SAGETV_NO_PASSWORD.CODE)
+            returnValues[i] = 6;
+          else
+            returnValues[i] = 7;
+        }
+        return returnValues;
+      }});
     /*
 		rft.put(new PredefinedJEPFunction("Show", "", 1, new String[] { "Show" })
 		{public Object runSafely(Catbert.FastStack stack) throws Exception{

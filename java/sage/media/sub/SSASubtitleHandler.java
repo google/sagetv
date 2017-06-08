@@ -15,6 +15,8 @@
  */
 package sage.media.sub;
 
+import java.util.ArrayList;
+
 /**
  *
  * @author Narflex
@@ -51,16 +53,28 @@ public class SSASubtitleHandler extends SubtitleHandler
     getLanguages();
     for (int i = 0; i < subs.length; i++)
     {
-      java.io.File subFile = null;
+      final java.io.File subFile = new java.io.File(subs[i].getPath());
       java.io.BufferedReader inStream = null;
       try
       {
-        subFile = getLoadableSubtitleFile(sourceFile, new java.io.File(subs[i].getPath()));
-        subEntries = new java.util.Vector();
-        subLangEntryMap.put(subLangs[i], subEntries);
+        //subFile = getLoadableSubtitleFile(sourceFile, new java.io.File(subs[i].getPath()));
 
-        // Now read in the SSA file and fill up the subEntries Vector
-        inStream = sage.IOUtils.openReaderDetectCharset(subFile, sage.Sage.I18N_CHARSET);
+        java.util.List<SubtitleEntry> newSubLang = new ArrayList<SubtitleEntry>();
+        subLangEntryMap.put(subLangs[i], newSubLang);
+
+        subtitleLock.writeLock().lock();
+
+        try
+        {
+          subEntries = newSubLang;
+        }
+        finally
+        {
+          subtitleLock.writeLock().unlock();
+        }
+
+        // Now read in the SSA file and fill up the subEntries List
+        inStream = sage.IOUtils.openReaderDetectCharset(subFile, sage.Sage.I18N_CHARSET, sourceFile.isLocalFile());
         String line = inStream.readLine();
         StringBuffer configInfo = new StringBuffer();
         // Read everything up to [Events] and process that config data
@@ -92,8 +106,6 @@ public class SSASubtitleHandler extends SubtitleHandler
       }
       finally
       {
-        if (subFile != null && !sourceFile.isLocalFile())
-          subFile.delete();
         if (inStream != null)
         {
           try

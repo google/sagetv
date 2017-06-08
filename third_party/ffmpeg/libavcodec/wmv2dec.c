@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002 The FFmpeg Project.
+ * Copyright (c) 2002 The FFmpeg Project
  *
  * This file is part of FFmpeg.
  *
@@ -21,6 +21,8 @@
 #include "avcodec.h"
 #include "dsputil.h"
 #include "mpegvideo.h"
+#include "h263.h"
+#include "mathops.h"
 #include "msmpeg4.h"
 #include "msmpeg4data.h"
 #include "intrax8.h"
@@ -128,7 +130,7 @@ return -1;
         decode_ext_header(w);
 
     s->pict_type = get_bits1(&s->gb) + 1;
-    if(s->pict_type == I_TYPE){
+    if(s->pict_type == FF_I_TYPE){
         code = get_bits(&s->gb, 7);
         av_log(s->avctx, AV_LOG_DEBUG, "I7:%X/\n", code);
     }
@@ -143,7 +145,7 @@ int ff_wmv2_decode_secondary_picture_header(MpegEncContext * s)
 {
     Wmv2Context * const w= (Wmv2Context*)s;
 
-    if (s->pict_type == I_TYPE) {
+    if (s->pict_type == FF_I_TYPE) {
         if(w->j_type_bit) w->j_type= get_bits1(&s->gb);
         else              w->j_type= 0; //FIXME check
 
@@ -354,7 +356,7 @@ int ff_wmv2_decode_mb(MpegEncContext *s, DCTELEM block[6][64])
 
     if(w->j_type) return 0;
 
-    if (s->pict_type == P_TYPE) {
+    if (s->pict_type == FF_P_TYPE) {
         if(IS_SKIP(s->current_picture.mb_type[s->mb_y * s->mb_stride + s->mb_x])){
             /* skip mb */
             s->mb_intra = 0;
@@ -431,7 +433,7 @@ int ff_wmv2_decode_mb(MpegEncContext *s, DCTELEM block[6][64])
             }
         }
     } else {
-//if(s->pict_type==P_TYPE)
+//if(s->pict_type==FF_P_TYPE)
 //   printf("%d%d ", s->inter_intra_pred, cbp);
 //printf("I at %d %d %d %06X\n", s->mb_x, s->mb_y, ((cbp&3)? 1 : 0) +((cbp&0x3C)? 2 : 0), show_bits(&s->gb, 24));
         s->ac_pred = get_bits1(&s->gb);
@@ -457,14 +459,14 @@ int ff_wmv2_decode_mb(MpegEncContext *s, DCTELEM block[6][64])
     return 0;
 }
 
-static int wmv2_decode_init(AVCodecContext *avctx){
+static av_cold int wmv2_decode_init(AVCodecContext *avctx){
     Wmv2Context * const w= avctx->priv_data;
 
     if(avctx->idct_algo==FF_IDCT_AUTO){
         avctx->idct_algo=FF_IDCT_WMV2;
     }
 
-    if(ff_h263_decode_init(avctx) < 0)
+    if(ff_msmpeg4_decode_init(avctx) < 0)
         return -1;
 
     ff_wmv2_common_init(w);
@@ -474,7 +476,7 @@ static int wmv2_decode_init(AVCodecContext *avctx){
     return 0;
 }
 
-static int wmv2_decode_end(AVCodecContext *avctx)
+static av_cold int wmv2_decode_end(AVCodecContext *avctx)
 {
     Wmv2Context *w = avctx->priv_data;
 
@@ -484,7 +486,7 @@ static int wmv2_decode_end(AVCodecContext *avctx)
 
 AVCodec wmv2_decoder = {
     "wmv2",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_WMV2,
     sizeof(Wmv2Context),
     wmv2_decode_init,
@@ -492,4 +494,7 @@ AVCodec wmv2_decoder = {
     wmv2_decode_end,
     ff_h263_decode_frame,
     CODEC_CAP_DRAW_HORIZ_BAND | CODEC_CAP_DR1,
+    .max_lowres = 3,
+    .long_name = NULL_IF_CONFIG_SMALL("Windows Media Video 8"),
+    .pix_fmts= ff_pixfmt_list_420,
 };

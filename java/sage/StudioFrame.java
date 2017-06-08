@@ -2792,8 +2792,13 @@ public class StudioFrame implements java.awt.event.ActionListener, STVEditor, Tr
                   }
                   else if (op.opType == UNCONTAIN_OP || op.opType == MOVE_OP)
                   {
-                    WidgetFidget.contain(op.w1, op.w2, op.idx);
-                    opsToRemove.add(op);
+                    Widget oldWidgSwap = uiMgr.getModuleGroup().symbolMap.get(op.w2.symbol());
+                    if (oldWidgSwap != null) {
+                      WidgetFidget.contain(op.w1, oldWidgSwap, op.idx);
+                      opsToRemove.add(op);
+                    } else {
+                      System.out.println("CANNOT perform an uncontain operation because the old widget does not exist in the new STV!");
+                    }
                   }
                   else if (op.opType == CONTAIN_OP)
                   {

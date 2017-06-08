@@ -23,7 +23,15 @@
 
 uint32_t x264_cpu_detect( void );
 int      x264_cpu_num_processors( void );
-void     x264_emms( void );
+void     x264_cpu_emms( void );
+void     x264_cpu_sfence( void );
+#if HAVE_MMX
+#define x264_emms() x264_cpu_emms()
+#else
+#define x264_emms()
+#endif
+#define x264_sfence x264_cpu_sfence
+void     x264_cpu_mask_misalign_sse( void );
 
 /* kluge:
  * gcc can't give variables any greater alignment than the stack frame has.
@@ -32,11 +40,12 @@ void     x264_emms( void );
  * gcc 4.2 introduced __attribute__((force_align_arg_pointer)) to fix this
  * problem, but I don't want to require such a new version.
  * This applies only to x86_32, since other architectures that need alignment
- * also have ABIs that ensure aligned stack. */
-#if defined(ARCH_X86) && defined(HAVE_MMX)
-void x264_stack_align( void (*func)(x264_t*), x264_t *arg );
+ * either have ABIs that ensure aligned stack, or don't support it at all. */
+#if ARCH_X86 && HAVE_MMX
+int x264_stack_align( void (*func)(), ... );
+#define x264_stack_align(func,...) x264_stack_align((void (*)())func, __VA_ARGS__)
 #else
-#define x264_stack_align(func,arg) func(arg)
+#define x264_stack_align(func,...) func(__VA_ARGS__)
 #endif
 
 typedef struct {

@@ -44,6 +44,16 @@ public abstract class SageRenderer
     return null;
   }
 
+  /**
+   * Subclasses can override this to provide context for the MENU_HINTS property to pass to the client.
+   *
+   * @return
+   */
+  public void setMenuHint(String menuName, String popupName, boolean hasTextInput)
+  {
+    // doing nothing for most renderers.
+  }
+
   public abstract boolean allocateBuffers(int width, int height);
 
   public void preprocessNextDisplayList(java.util.ArrayList v)

@@ -26,7 +26,14 @@ cd ../faad2
 make -j32 # || { echo "Build failed, exiting."; exit 1; }
 
 cd ../x264
-./configure "--extra-cflags=-fasm -fno-common -D_FILE_OFFSET_BITS=64" --disable-avis-input --disable-mp4-output --enable-pthread || { echo "Build failed, exiting."; exit 1; }
+# GCC 4.6 does not have -fno-aggressive-loop-optimizations.
+# GCC 4.8 built libx264 crashes without it.
+OPT_LIBX264_CFLAG=
+GCC_VERSION=`(echo 4.6; ${CC:-gcc} -dumpversion) | sort -V | tail -n 1`
+if [ "$GCC_VERSION" != "4.6" ]; then
+  OPT_LIBX264_CFLAG="-fno-aggressive-loop-optimizations"
+fi
+./configure "--extra-cflags=-fasm -fno-common -D_FILE_OFFSET_BITS=64 $OPT_LIBX264_CFLAG" || { echo "Build failed, exiting."; exit 1; }
 make -j32 || { echo "Build failed, exiting."; exit 1; }
 
 cd ../xvidcore/build/generic
@@ -37,7 +44,7 @@ make -j32 || { echo "Build failed, exiting."; exit 1; }
 # Build FFMPEG
 cd ../../../../ffmpeg
 make clean
-./configure --disable-ffserver --disable-ffplay --enable-gpl --enable-pthreads   --enable-nonfree --enable-libfaac --enable-libx264 --enable-libxvid --disable-devices   --disable-demuxer=msnwc_tcp --enable-libfaad "--extra-cflags=-I. -I`readlink -f ../codecs/faad2/include` -I`readlink -f ../codecs/faac/include` -I`readlink -f ../codecs/x264` -I`readlink -f ../codecs/xvidcore/src`" "--extra-ldflags=-L`readlink -f ../codecs/faac/libfaac/.libs` -L`readlink -f ../codecs/faad2/libfaad/.libs` -L`readlink -f ../codecs/x264` -L`readlink -f ../codecs/xvidcore/build/generic/=build`" || { echo "Build failed, exiting."; exit 1; }
+./configure --disable-ffserver --disable-ffplay --enable-gpl --enable-pthreads --enable-nonfree --enable-libfaac --enable-libx264 --enable-libxvid --disable-devices --disable-bzlib --disable-demuxer=msnwc_tcp --enable-libfaad "--extra-cflags=-I. -I`readlink -f ../codecs/faad2/include` -I`readlink -f ../codecs/faac/include` -I`readlink -f ../codecs/x264` -I`readlink -f ../codecs/xvidcore/src`" "--extra-ldflags=-L`readlink -f ../codecs/faac/libfaac/.libs` -L`readlink -f ../codecs/faad2/libfaad/.libs` -L`readlink -f ../codecs/x264` -L`readlink -f ../codecs/xvidcore/build/generic/=build`" || { echo "Build failed, exiting."; exit 1; }
 make -j32 || { echo "Build failed, exiting."; exit 1; }
 
 cd ../../build

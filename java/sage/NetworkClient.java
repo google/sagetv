@@ -253,7 +253,7 @@ public class NetworkClient
         }
 
         // In case there's network encoders on the new client that just came up also
-        Scheduler.getInstance().kick(true);
+        SchedulerSelector.getInstance().kick(true);
       }
       else
       {
@@ -316,6 +316,7 @@ public class NetworkClient
     catch (Throwable e)
     {
       System.out.println("Error w/SageTV client connection:" + e);
+      e.printStackTrace(System.out);
       if (stvconn != null)
       {
         NetworkClient oldConn = (NetworkClient) clientMap.get(stvconn.getClientName());
@@ -407,7 +408,7 @@ public class NetworkClient
       {
         java.util.Iterator uiWalker = UIManager.getUIIterator();
         while (uiWalker.hasNext())
-          Seeker.getInstance().finishWatch((UIClient) uiWalker.next());
+          SeekerSelector.getInstance().finishWatch((UIClient) uiWalker.next());
       }
     }
     if (clientListener != null)
@@ -449,7 +450,7 @@ public class NetworkClient
         }
       }
       // Trigger cleanup of the watch file map
-      Seeker.getInstance().kick();
+      SeekerSelector.getInstance().kick();
     }
   }
 

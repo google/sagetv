@@ -19,24 +19,20 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "libavcodec/imgconvert.h"
 #include "avfilter.h"
-#include "imgconvert.h"
 
 /* TODO: buffer pool.  see comment for avfilter_default_get_video_buffer() */
-void avfilter_default_free_video_buffer(AVFilterPic *pic)
+static void avfilter_default_free_video_buffer(AVFilterPic *pic)
 {
     av_free(pic->data[0]);
     av_free(pic);
 }
 
-#define ALIGN(a) do{ \
-                     (a) = ((a) + 15) & (~15); \
-                 } while(0);
-
 /* TODO: set the buffer's priv member to a context structure for the whole
  * filter chain.  This will allow for a buffer pool instead of the constant
  * alloc & free cycle currently implemented. */
-AVFilterPicRef *avfilter_default_get_video_buffer(AVFilterLink *link, int perms)
+AVFilterPicRef *avfilter_default_get_video_buffer(AVFilterLink *link, int perms, int w, int h)
 {
     AVFilterPic *pic = av_mallocz(sizeof(AVFilterPic));
     AVFilterPicRef *ref = av_mallocz(sizeof(AVFilterPicRef));
@@ -44,8 +40,8 @@ AVFilterPicRef *avfilter_default_get_video_buffer(AVFilterLink *link, int perms)
     char *buf;
 
     ref->pic   = pic;
-    ref->w     = link->w;
-    ref->h     = link->h;
+    ref->w     = pic->w = w;
+    ref->h     = pic->h = h;
 
     /* make sure the buffer gets read permission or it's useless for output */
     ref->perms = perms | AV_PERM_READ;
@@ -56,10 +52,11 @@ AVFilterPicRef *avfilter_default_get_video_buffer(AVFilterLink *link, int perms)
     ff_fill_linesize((AVPicture *)pic, pic->format, ref->w);
 
     for (i=0; i<4;i++)
-        ALIGN(pic->linesize[i]);
+        pic->linesize[i] = FFALIGN(pic->linesize[i], 16);
 
     tempsize = ff_fill_pointer((AVPicture *)pic, NULL, pic->format, ref->h);
-    buf = av_malloc(tempsize);
+    buf = av_malloc(tempsize + 16); // +2 is needed for swscaler, +16 to be
+                                    // SIMD-friendly
     ff_fill_pointer((AVPicture *)pic, buf, pic->format, ref->h);
 
     memcpy(ref->data,     pic->data,     sizeof(pic->data));
@@ -76,10 +73,21 @@ void avfilter_default_start_frame(AVFilterLink *link, AVFilterPicRef *picref)
         out = link->dst->outputs[0];
 
     if(out) {
-        out->outpic      = avfilter_get_video_buffer(out, AV_PERM_WRITE);
-        out->outpic->pts = picref->pts;
+        out->outpic      = avfilter_get_video_buffer(out, AV_PERM_WRITE, out->w, out->h);
+        avfilter_copy_picref_props(out->outpic, picref);
         avfilter_start_frame(out, avfilter_ref_pic(out->outpic, ~0));
     }
+}
+
+void avfilter_default_draw_slice(AVFilterLink *link, int y, int h, int slice_dir)
+{
+    AVFilterLink *out = NULL;
+
+    if(link->dst->output_count)
+        out = link->dst->outputs[0];
+
+    if(out)
+        avfilter_draw_slice(out, y, h, slice_dir);
 }
 
 void avfilter_default_end_frame(AVFilterLink *link)
@@ -154,5 +162,25 @@ int avfilter_default_query_formats(AVFilterContext *ctx)
 {
     avfilter_set_common_formats(ctx, avfilter_all_colorspaces());
     return 0;
+}
+
+void avfilter_null_start_frame(AVFilterLink *link, AVFilterPicRef *picref)
+{
+    avfilter_start_frame(link->dst->outputs[0], picref);
+}
+
+void avfilter_null_draw_slice(AVFilterLink *link, int y, int h, int slice_dir)
+{
+    avfilter_draw_slice(link->dst->outputs[0], y, h, slice_dir);
+}
+
+void avfilter_null_end_frame(AVFilterLink *link)
+{
+    avfilter_end_frame(link->dst->outputs[0]);
+}
+
+AVFilterPicRef *avfilter_null_get_video_buffer(AVFilterLink *link, int perms, int w, int h)
+{
+    return avfilter_get_video_buffer(link->dst->outputs[0], perms, w, h);
 }
 

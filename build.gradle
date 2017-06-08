@@ -1,7 +1,7 @@
 import org.gradle.internal.os.OperatingSystem
 
 plugins {
-	id "com.jfrog.bintray" version "1.3.1"
+	id "com.jfrog.bintray" version "1.7.3"
 }
 
 apply plugin: "java"
@@ -58,9 +58,9 @@ configurations {
 	miniclient.extendsFrom compile
 }
 
-// Maybe someday we'll target >1.5 (hopefully)
-targetCompatibility = 1.5
-sourceCompatibility = 1.5
+// Maybe someday we'll target >1.7 (hopefully)
+targetCompatibility = 1.7
+sourceCompatibility = 1.7
 
 compileJava {
 	options.warnings = false
@@ -80,7 +80,8 @@ sourceSets {
             	'third_party/MetadataExtractor/java',
             	'third_party/Ogle/java',
             	'third_party/RSSLIB4J/java',
-            	'third_party/SingularSys/java'
+            	'third_party/SingularSys/java',
+				'third_party/GSON/java'
             ]
             excludes = [
 				// mac files, need to be on a Mac to build these
@@ -91,6 +92,14 @@ sourceSets {
             ]
         }
     }
+
+	test {
+		java {
+			srcDirs = [
+				'test/java'
+			]
+		}
+	}
 	
 	// Miniclient configuration only specifies the Minimal files and
 	// javac will find and compile all the dependencies based on the
@@ -98,7 +107,7 @@ sourceSets {
 	miniclient {
 		java {
 			srcDirs = [
-				'java',
+				'java'
 			]
             includes = [
             	'sage/miniclient/MiniClient.java',
@@ -111,6 +120,9 @@ sourceSets {
 }
 
 dependencies {
+	testCompile 'org.testng:testng:6.1.1'
+	testCompile "org.mockito:mockito-core:1.9.5"
+
 	compile files(
 		'third_party/UPnPLib/sbbi-upnplib-1.0.3.jar',
 
@@ -124,11 +136,21 @@ dependencies {
 	compile "org.jogamp.gluegen:gluegen-rt-main:$jogampVer"
 	
 	
-	// Miniclient dependendencies for compiling
+	// Miniclient dependencies for compiling
 	miniclientCompile "org.jogamp.gluegen:gluegen-rt-main:$jogampVer"
 	miniclientCompile "org.jogamp.jogl:jogl-all-main:$jogampVer"
 }
 
+test {
+	useTestNG()
+	reports.html.destination = file("$sageBuildDir/reports/testng")
+	systemProperty 'io_test_file', "delete-io-testng."
+	systemProperty 'nio_test_file', "delete-nio-testng."
+	systemProperty 'sage.testing', "true"
+
+    workingDir = file("$sageBuildDir/sagetv_test/");
+    workingDir.mkdirs();
+}
 
 /**
  * this is sort of a hack... normally we'd never set the -sourcepath on a java compile
@@ -137,7 +159,7 @@ dependencies {
  */
 tasks.withType(JavaCompile) {
 	//options.fork=true
-	options.compilerArgs << "-sourcepath" << sourceSets.main.java.srcDirs.join(":")
+	options.compilerArgs << "-sourcepath" << sourceSets.main.java.srcDirs.join(java.io.File.pathSeparator)
 }
 
 task miniclient(type:JavaCompile) << {
@@ -288,9 +310,23 @@ def getBuildNumber() {
 			outputproperty: 'sagebuildnum')
 		
 		buildVer = ant.sagebuildnum		
+	}else if (OperatingSystem.current().isWindows()) {
+		//ensure full path to git\bin is in the Path Environment variable on windows
+		// 04-24-2017 JS: I changed this to remove the dependency on sh. Also we should note that
+		// you will get error code 128 if you have git installed, but you did not pull this project
+		// using git because git will not know where to get the commit count from. This is likely
+		// true for Linux too.
+		new ByteArrayOutputStream().withStream { outputStream ->
+			exec {
+				executable 'git'
+				args 'rev-list', 'HEAD', '--count'
+				standardOutput = outputStream
+			}
+			buildVer = outputStream.toString().trim()
+		}
 	}
 	
-	if (buildVer == null) buildVer=0;
+	if (buildVer == null || buildVer == "") buildVer=0;
 	return buildVer;
 }
 
@@ -344,7 +380,7 @@ task (restoreSageConstants) << {
 
 // task dependencies
 compileJava.dependsOn updateBuildNumber
-sageJar.dependsOn cleanSageJar, classes
+sageJar.dependsOn cleanSageJar, classes, test
 miniclientJar.dependsOn clean, miniclientClasses, cleanMiniJar
 linuxMiniClientRelease.dependsOn miniclientJar
 sageJar.finalizedBy restoreSageConstants

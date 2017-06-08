@@ -1,6 +1,6 @@
 /*
  * WavPack demuxer
- * Copyright (c) 2006 Konstantin Shishkov.
+ * Copyright (c) 2006 Konstantin Shishkov
  *
  * This file is part of FFmpeg.
  *
@@ -19,8 +19,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "libavutil/intreadwrite.h"
 #include "avformat.h"
-#include "bswap.h"
+#include "apetag.h"
+#include "id3v1.h"
 
 // specs say that maximum block size is 1Mb
 #define WV_BLOCK_LIMIT 1047576
@@ -96,21 +98,34 @@ static int wv_read_block_header(AVFormatContext *ctx, ByteIOContext *pb)
     get_buffer(pb, wc->extra, WV_EXTRA_SIZE);
     wc->flags = AV_RL32(wc->extra + 4);
     //parse flags
-    if(wc->flags & WV_FLOAT){
-        av_log(ctx, AV_LOG_ERROR, "Floating point data is not supported\n");
-        return -1;
-    }
-    if(wc->flags & WV_HYBRID){
-        av_log(ctx, AV_LOG_ERROR, "Hybrid coding mode is not supported\n");
-        return -1;
-    }
-
     bpp = ((wc->flags & 3) + 1) << 3;
     chan = 1 + !(wc->flags & WV_MONO);
     rate = wv_rates[(wc->flags >> 23) & 0xF];
-    if(rate == -1){
-        av_log(ctx, AV_LOG_ERROR, "Unknown sampling rate\n");
-        return -1;
+    if(rate == -1 && !wc->block_parsed){
+        int64_t block_end = url_ftell(pb) + wc->blksize - 24;
+        if(url_is_streamed(pb)){
+            av_log(ctx, AV_LOG_ERROR, "Cannot determine custom sampling rate\n");
+            return -1;
+        }
+        while(url_ftell(pb) < block_end){
+            int id, size;
+            id = get_byte(pb);
+            size = (id & 0x80) ? get_le24(pb) : get_byte(pb);
+            size <<= 1;
+            if(id&0x40)
+                size--;
+            if((id&0x3F) == 0x27){
+                rate = get_le24(pb);
+                break;
+            }else{
+                url_fskip(pb, size);
+            }
+        }
+        if(rate == -1){
+            av_log(ctx, AV_LOG_ERROR, "Cannot determine custom sampling rate\n");
+            return -1;
+        }
+        url_fseek(pb, block_end - wc->blksize + 24, SEEK_SET);
     }
     if(!wc->bpp) wc->bpp = bpp;
     if(!wc->chan) wc->chan = chan;
@@ -124,7 +139,7 @@ static int wv_read_block_header(AVFormatContext *ctx, ByteIOContext *pb)
         av_log(ctx, AV_LOG_ERROR, "Channels differ, this block: %i, header block: %i\n", chan, wc->chan);
         return -1;
     }
-    if(wc->flags && rate != wc->rate){
+    if(wc->flags && rate != -1 && rate != wc->rate){
         av_log(ctx, AV_LOG_ERROR, "Sampling rate differ, this block: %i, header block: %i\n", rate, wc->rate);
         return -1;
     }
@@ -139,22 +154,31 @@ static int wv_read_header(AVFormatContext *s,
     WVContext *wc = s->priv_data;
     AVStream *st;
 
+    wc->block_parsed = 0;
     if(wv_read_block_header(s, pb) < 0)
         return -1;
 
-    wc->block_parsed = 0;
     /* now we are ready: build format streams */
     st = av_new_stream(s, 0);
     if (!st)
         return -1;
-    st->codec->codec_type = CODEC_TYPE_AUDIO;
+    st->codec->codec_type = AVMEDIA_TYPE_AUDIO;
     st->codec->codec_id = CODEC_ID_WAVPACK;
     st->codec->channels = wc->chan;
     st->codec->sample_rate = wc->rate;
-    st->codec->bits_per_sample = wc->bpp;
+    st->codec->bits_per_coded_sample = wc->bpp;
     av_set_pts_info(st, 64, 1, wc->rate);
-    s->start_time = 0;
-    s->duration = (int64_t)wc->samples * AV_TIME_BASE / st->codec->sample_rate;
+    st->start_time = 0;
+    st->duration = wc->samples;
+
+    if(!url_is_streamed(s->pb)) {
+        int64_t cur = url_ftell(s->pb);
+        ff_ape_parse_tag(s);
+        if(!av_metadata_get(s->metadata, "", NULL, AV_METADATA_IGNORE_SUFFIX))
+            ff_id3v1_read(s);
+        url_fseek(s->pb, cur, SEEK_SET);
+    }
+
     return 0;
 }
 
@@ -184,11 +208,6 @@ static int wv_read_packet(AVFormatContext *s,
     pkt->size = ret + WV_EXTRA_SIZE;
     pkt->pts = wc->soff;
     av_add_index_entry(s->streams[0], wc->pos, pkt->pts, 0, 0, AVINDEX_KEYFRAME);
-    return 0;
-}
-
-static int wv_read_close(AVFormatContext *s)
-{
     return 0;
 }
 
@@ -226,11 +245,11 @@ static int wv_read_seek(AVFormatContext *s, int stream_index, int64_t timestamp,
 
 AVInputFormat wv_demuxer = {
     "wv",
-    "WavPack",
+    NULL_IF_CONFIG_SMALL("WavPack"),
     sizeof(WVContext),
     wv_probe,
     wv_read_header,
     wv_read_packet,
-    wv_read_close,
+    NULL,
     wv_read_seek,
 };

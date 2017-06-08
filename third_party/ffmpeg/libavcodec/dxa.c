@@ -20,13 +20,14 @@
  */
 
 /**
- * @file dxa.c
+ * @file
  * DXA Video decoder
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "libavutil/intreadwrite.h"
 #include "avcodec.h"
 
 #include <zlib.h>
@@ -187,8 +188,10 @@ static int decode_13(AVCodecContext *avctx, DxaDecContext *c, uint8_t* dst, uint
     return 0;
 }
 
-static int decode_frame(AVCodecContext *avctx, void *data, int *data_size, const uint8_t *buf, int buf_size)
+static int decode_frame(AVCodecContext *avctx, void *data, int *data_size, AVPacket *avpkt)
 {
+    const uint8_t *buf = avpkt->data;
+    int buf_size = avpkt->size;
     DxaDecContext * const c = avctx->priv_data;
     uint8_t *outptr, *srcptr, *tmpptr;
     unsigned long dsize;
@@ -285,16 +288,12 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *data_size, const
     return orig_buf_size;
 }
 
-static int decode_init(AVCodecContext *avctx)
+static av_cold int decode_init(AVCodecContext *avctx)
 {
     DxaDecContext * const c = avctx->priv_data;
 
     c->avctx = avctx;
     avctx->pix_fmt = PIX_FMT_PAL8;
-
-    if (avcodec_check_dimensions(avctx, avctx->width, avctx->height) < 0) {
-        return -1;
-    }
 
     c->dsize = avctx->width * avctx->height * 2;
     if((c->decomp_buf = av_malloc(c->dsize)) == NULL) {
@@ -305,7 +304,7 @@ static int decode_init(AVCodecContext *avctx)
     return 0;
 }
 
-static int decode_end(AVCodecContext *avctx)
+static av_cold int decode_end(AVCodecContext *avctx)
 {
     DxaDecContext * const c = avctx->priv_data;
 
@@ -320,12 +319,14 @@ static int decode_end(AVCodecContext *avctx)
 
 AVCodec dxa_decoder = {
     "dxa",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_DXA,
     sizeof(DxaDecContext),
     decode_init,
     NULL,
     decode_end,
-    decode_frame
+    decode_frame,
+    CODEC_CAP_DR1,
+    .long_name = NULL_IF_CONFIG_SMALL("Feeble Files/ScummVM DXA"),
 };
 

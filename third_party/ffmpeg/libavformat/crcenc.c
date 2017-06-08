@@ -1,6 +1,6 @@
 /*
  * CRC encoder (for codec/format testing)
- * Copyright (c) 2002 Fabrice Bellard.
+ * Copyright (c) 2002 Fabrice Bellard
  *
  * This file is part of FFmpeg.
  *
@@ -18,8 +18,9 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
+
+#include "libavutil/adler32.h"
 #include "avformat.h"
-#include "adler32.h"
 
 typedef struct CRCState {
     uint32_t crcval;
@@ -55,7 +56,7 @@ static int crc_write_trailer(struct AVFormatContext *s)
 
 AVOutputFormat crc_muxer = {
     "crc",
-    "crc testing format",
+    NULL_IF_CONFIG_SMALL("CRC testing format"),
     NULL,
     "",
     sizeof(CRCState),

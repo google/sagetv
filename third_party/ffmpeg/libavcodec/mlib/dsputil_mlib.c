@@ -1,6 +1,6 @@
 /*
  * Sun mediaLib optimized DSP utils
- * Copyright (c) 2001 Fabrice Bellard.
+ * Copyright (c) 2001 Fabrice Bellard
  *
  * This file is part of FFmpeg.
  *
@@ -19,8 +19,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "dsputil.h"
-#include "mpegvideo.h"
+#include "libavcodec/dsputil.h"
+#include "libavcodec/mpegvideo.h"
 
 #include <mlib_types.h>
 #include <mlib_status.h>
@@ -455,7 +455,7 @@ void MPV_common_init_mlib(MpegEncContext *s)
         s->dsp.fdct = ff_fdct_mlib;
     }
 
-    if(s->avctx->idct_algo==FF_IDCT_AUTO || s->avctx->idct_algo==FF_IDCT_MLIB){
+    if(s->avctx->idct_algo==FF_IDCT_MLIB){
         s->dsp.idct_put= ff_idct_put_mlib;
         s->dsp.idct_add= ff_idct_add_mlib;
         s->dsp.idct    = ff_idct_mlib;

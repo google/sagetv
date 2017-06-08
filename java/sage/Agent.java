@@ -15,16 +15,24 @@
  */
 package sage;
 
+import sage.util.MutableFloat;
+import sage.util.MutableInteger;
+
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -38,8 +46,8 @@ public class Agent extends DBObject implements Favorite
   private static final int MIN_TOTAL = 2;
   private static final float MIN_WATCH_PROB = 0f;
   private static final float MAX_WATCH_PROB = 0.99f;
-
-  private static final boolean ENABLE_AGENT_AIRING_CACHE = false;
+  // Enables checking all airings against the optimized airings. This is for testing only.
+  static final boolean VERIFY_AIRING_OPTIMIZATION = false;
 
   private static final int CPU_CONTROL_MOD_COUNT = Sage.getInt("profiler_cpu_mod_count", Sage.EMBEDDED ? 2500 : 25000);
 
@@ -94,7 +102,7 @@ public class Agent extends DBObject implements Favorite
     agentID = id;
     wiz = Wizard.getInstance();
     createTime = Sage.time();
-    weakAgents = new int[0];
+    weakAgents = Pooler.EMPTY_INT_ARRAY;
     quality = "";
     autoConvertFormat = "";
   }
@@ -138,9 +146,17 @@ public class Agent extends DBObject implements Favorite
       }
     }
     slotType = in.readInt();
-    weakAgents = new int[in.readInt()];
-    for (int i = 0; i < weakAgents.length; i++)
-      weakAgents[i] = readID(in, idMap);
+    int weakAgentLength = in.readInt();
+    if (weakAgentLength == 0)
+    {
+      weakAgents = Pooler.EMPTY_INT_ARRAY;
+    }
+    else
+    {
+      weakAgents = new int[weakAgentLength];
+      for (int i = 0; i < weakAgents.length; i++)
+        weakAgents[i] = readID(in, idMap);
+    }
     if (ver < 0x2D)
     {
       int numWeakAirings = in.readInt(); // legacy
@@ -422,10 +438,245 @@ public class Agent extends DBObject implements Favorite
       for (i = 0; i < weakAgents.length; i++)
         if (weakAgents[i] != weakerID)
           newWeaks[j++] = weakAgents[i];
-      weakAgents = newWeaks;
+
+      if (newWeaks.length == 0)
+        weakAgents = Pooler.EMPTY_INT_ARRAY;
+      else
+        weakAgents = newWeaks;
       wiz.logUpdate(this, Wizard.AGENT_CODE);
     } finally {
       wiz.releaseWriteLock(Wizard.AGENT_CODE);
+    }
+  }
+
+  private void optimizedFollowsTrend(boolean mustBeViewable, boolean controlCPUUsage,
+                                     boolean skipKeyword, boolean ignoreDisabledFlag,
+                                     Map<Integer, Airing[]> airingMap, DBObject allAirings[],
+                                     Carny.CarnyCache cache, String mapName)
+  {
+    // We must have a cache to use this method. This will throw the exception immediately if we do
+    // not.
+    final StringBuilder sbCache = cache.sbCache;
+    final List<Integer> hashes = cache.currentHashes;
+
+    // For keyword and timeslot trends with no other limiting factors, we need to check everything
+    // since we haven't worked out a way to optimize this yet. Fortunately these are not as common
+    // as title and people agents. Skip keyword doesn't apply here because it's not an optimization
+    // that implies we will get anything from the map.
+    // 05-03-2017 JS: I changed the call to hasSpecificCriteria() to just check if we have any
+    // hashes since it is effectively the same thing, just faster to evaluate.
+    // 05-04-2017 JS: I removed evaluating anything other than the length of hash since if it is
+    // zero we have nothing to work with and that always means we need to check all of the provided
+    // airings. This resulted in a moderate performance bump.
+    int hashesSize = hashes.size();
+    boolean fullCheck = hashesSize == 0;
+
+    // If an agent has an interest in the hash 0, that means it doesn't actually know what it wants
+    // for at least one of its properties and that means we must do a full check.
+    // 05/03/2017 JS: We can eliminate this check because getHashes() will return an empty array if
+    // 0 is any of the hashes that would have been returned. This makes fullCheck already true.
+    /*if (!fullCheck)
+    {
+      for (int i = 0; i < hashes.length; i++)
+      {
+        if (hashes[i].equals(0))
+        {
+          fullCheck = true;
+          break;
+        }
+      }
+    }*/
+
+    if (fullCheck || airingMap == null)
+    {
+      // This is here to help spell out any anything that's not being optimized when we are testing.
+      if (VERIFY_AIRING_OPTIMIZATION && airingMap != null)
+      {
+        if (Sage.DBG) System.out.println("Unable to use optimized query: " + toString());
+      }
+
+      for (int i = 0; i < allAirings.length; i++)
+      {
+        Airing airing = (Airing) allAirings[i];
+        if (followsTrend(airing, mustBeViewable, sbCache, skipKeyword, ignoreDisabledFlag))
+        {
+          cache.airWorkCache.ensureAddCapacity(1);
+          cache.airWorkCache.add(airing);
+        }
+
+        if ((i % CPU_CONTROL_MOD_COUNT) == 0 && controlCPUUsage)
+          try {Thread.sleep(Carny.SLEEP_PERIOD);} catch (Exception e) {}
+      }
+    }
+    else
+    {
+      // We need a copy of the list before we make changes to ensure that the long route will be
+      // starting with the exact same data. We don't need to worry about the offset here since if
+      // we copy everything, the offset still takes us to the same location. This is also only for
+      // verification.
+      Carny.CacheList fullTrend = VERIFY_AIRING_OPTIMIZATION ? cache.airWorkCache.copy() : null;
+
+      for (int i = cache.hashZero /* 0 or -1 */; i < hashesSize; i++)
+      {
+        int airingLength;
+        Airing airings[];
+        switch (i)
+        {
+          case -1:
+            // Hash code 0 is special and covers anything that might not have been correctly hashed,
+            // so we always need to check these.
+            airings = airingMap.get(0);
+            if (airings == null)
+              continue;
+            airingLength = airings.length;
+            break;
+          default:
+            airings = airingMap.get(hashes.get(i));
+            if (airings == null)
+              continue;
+            airingLength = airings.length;
+            // If one matches, often most of them will unless it is 0 which is a little more random
+            // in nature. Testing showed that this consistently reduced time by a measurable amount.
+            // We could have based this on the largest array when we started, but the reality is
+            // that we do not know what worker will end up dealing with a large set until it
+            // happens, so we always deal with last minute adjustments like this.
+            cache.airWorkCache.ensureAddCapacity(airingLength);
+        }
+
+        // If we get airings from more than one array, we could have duplicates. All of the arrays
+        // in the map are already binary sorted, so no sort is required initially.
+        if (cache.airWorkCache.apparentSize() == 0)
+        {
+          for (int j = 0; j < airingLength; j++)
+          {
+            Airing airing = airings[j];
+            if (followsTrend(airing, mustBeViewable, sbCache, skipKeyword, ignoreDisabledFlag))
+            {
+              // For 0, we just check and resize as we go.
+              if (i == -1)
+                cache.airWorkCache.ensureAddCapacity(1);
+
+              cache.airWorkCache.add(airing);
+            }
+          }
+        }
+        else
+        {
+          for (int j = 0; j < airingLength; j++)
+          {
+            Airing airing = airings[j];
+            // Inserting airings to maintain binary searching turns out to not be nearly as
+            // expensive as not being able to do binary searches for duplicate airings. I tried also
+            // excluding previously processed airings using a HashSet and a binary searched array
+            // (faster of the two), but it was still faster to re-processing anything that's not
+            // already in the cache and did not clear followsTrend() because of the volume. This is
+            // also why we don't try to consolidate all of the airings before we iterate them here.
+            int index;
+            if ((index = cache.airWorkCache.binarySearch(airing)) < 0 &&
+              followsTrend(airing, mustBeViewable, sbCache, skipKeyword, ignoreDisabledFlag))
+            {
+              // For 0, we just check and resize as we go.
+              if (i == -1)
+                cache.airWorkCache.ensureAddCapacity(1);
+
+              index = -(index + 1);
+              cache.airWorkCache.add(index, airing);
+            }
+          }
+        }
+      }
+
+      if (VERIFY_AIRING_OPTIMIZATION)
+      {
+        Carny.CacheList optAirWorkCache = cache.airWorkCache;
+        cache.airWorkCache = fullTrend;
+        // If we don't provide a map, a full search is always executed. Also don't provide the cache
+        // or we will overwrite the results of this first run.
+        optimizedFollowsTrend(mustBeViewable, controlCPUUsage, skipKeyword, ignoreDisabledFlag,
+          null, allAirings, cache, mapName);
+
+        // Restore the old cache and manual wasted value.
+        cache.airWorkCache = optAirWorkCache;
+
+        // We could make this a lot better, but this ia a non-production verification mode.
+        List<Airing> optList = cache.airWorkCache.getList();
+        List<Airing> fullTrendList = fullTrend.getList();
+
+        if (optAirWorkCache.size != fullTrend.size || !optList.equals(fullTrendList))
+        {
+          if (optAirWorkCache.size != fullTrend.size)
+          {
+            if (Sage.DBG) System.out.println(
+              "Optimized size " + optAirWorkCache.size + " != full size " + fullTrend.size);
+          }
+
+          Set<Airing> diffs = new HashSet<>(optList);
+          diffs.removeAll(fullTrendList);
+          if (diffs.size() == 0)
+          {
+            diffs = new HashSet<>(fullTrendList);
+            diffs.removeAll(optList);
+          }
+          if (diffs.size() > 0)
+          {
+            // This process is multi-threaded, so we insert our own new lines to ensure all of
+            // of the desired details will be adjacent.
+            StringBuilder stringBuilder = new StringBuilder("Trend optimized map ");
+            stringBuilder.append(mapName);
+            stringBuilder.append(" for agent ").append(toString()).append(" is missing ").append("\r\n");
+            stringBuilder.append(diffs).append("\r\n");
+
+            Set<Integer> usedHashes = new HashSet<>();
+            Set<Integer> ignoredHashes = new HashSet<>();
+            Set<Integer> searchedHashes = new HashSet<>();
+            searchedHashes.addAll(hashes);
+
+            main_loop:
+            for (Iterator<Airing> iterator = diffs.iterator(); iterator.hasNext(); )
+            {
+              Airing diff = iterator.next();
+              Set<Integer> thisAirHashes = new HashSet<>();
+              int stringReset = stringBuilder.length();
+              for (Map.Entry<Integer, Airing[]> entry : airingMap.entrySet())
+              {
+                if (searchedHashes.contains(entry.getKey()))
+                {
+                  usedHashes.add(entry.getKey());
+                  stringBuilder.setLength(stringReset);
+                  continue main_loop;
+                }
+
+                // This is used for testing, so we are choosing convenience over performance.
+                if (Arrays.asList(entry.getValue()).contains(diff))
+                {
+                  thisAirHashes.add(entry.getKey());
+                  stringBuilder.append("Related Airings: ");
+                  stringBuilder.append(entry.getKey()).append(':');
+                  for (int i = 0; i < entry.getValue().length; i++)
+                  {
+                    Airing airing = entry.getValue()[i];
+                    Show show = airing.getShow();
+                    if (show != null && searchedHashes.contains(show.title.ignoreCaseHash))
+                      stringBuilder.append("****");
+                    stringBuilder.append(show.title.ignoreCaseHash).append(' ').append(show.title.name).append(',');
+                  }
+                  stringBuilder.append("\r\n");
+                }
+              }
+              ignoredHashes.addAll(thisAirHashes);
+            }
+            stringBuilder.append("\r\n");
+            ignoredHashes.removeAll(usedHashes);
+
+            // If we have no ignored hashes, then we have something we are not hashing or not
+            // hashing correctly.
+            stringBuilder.append("Ignored Hashes: ").append(ignoredHashes).append("\r\n");
+            stringBuilder.append("Used Hashes: ").append(usedHashes).append("\r\n");
+            stringBuilder.append("Searched Hashes: ").append(searchedHashes).append("\r\n");
+            System.out.println(stringBuilder.toString());
+          }
+        }
+      }
     }
   }
 
@@ -435,60 +686,103 @@ public class Agent extends DBObject implements Favorite
    * This gets called from the AgentBrowser GUI as well as the Carny's main
    * thread, that's why it needs to be synced.
    */
-  public synchronized Airing[] getRelatedAirings(DBObject[] allAirs, boolean mainCache, boolean controlCPUUsage,
-      StringBuffer sbCache)
+
+  /**
+   * Get all airings from the provided airings that this agent matches.
+   *
+   * @param allAirs All airings to be considered by this agent.
+   * @param controlCPUUsage If <code>true</code>, this enables CPU usage throttling. This should
+   *                        only be used when processing a large number of agents and we do not want
+   *                        to potentially disrupt foreground tasks.
+   * @param ignoreDisabledFlag If <code>true</code>, treat this agent as if it is enabled, even if it is
+   *                       not.
+   * @param sbCache This is an persistent StringBuffer instance for re-use through many iterations.
+   * @return Airings that match this agent.
+   */
+  public Airing[] getRelatedAirings(DBObject[] allAirs, boolean controlCPUUsage,
+                                    boolean ignoreDisabledFlag, StringBuilder sbCache)
   {
-    if (allAirs == null) return Pooler.EMPTY_AIRING_ARRAY;
+    boolean legacyKeyword = Sage.getBoolean("use_legacy_keyword_favorites", true);
+    return getRelatedAirings(
+      allAirs, controlCPUUsage, ignoreDisabledFlag, legacyKeyword, null, null, sbCache);
+  }
 
-    if (ENABLE_AGENT_AIRING_CACHE)
+  /**
+   * Get all airings from the provided airings that this agent matches.
+   *
+   * @param allAirs All airings to be considered by this agent.
+   * @param controlCPUUsage If <code>true</code>, this enables CPU usage throttling. This should
+   *                        only be used when processing a large number of agents and we do not want
+   *                        to potentially disrupt foreground tasks.
+   * @param ignoreDisabledFlag If <code>true</code>, treat this agent as if it is enabled, even if it is
+   *                       not.
+   * @param legacyKeyword Do not use Lucene to optimize keyword searches.
+   * @param cache This is an optional shared {@link sage.Carny.CarnyCache} object.
+   * @param sbCache This is an persistent StringBuffer instance for re-use through many iterations.
+   * @return Airings that match this agent.
+   */
+  public Airing[] getRelatedAirings(DBObject[] allAirs, boolean controlCPUUsage,
+                                    boolean ignoreDisabledFlag, boolean legacyKeyword,
+                                    Map<Integer, Airing[]> airingMap, Carny.CarnyCache cache,
+                                    StringBuilder sbCache)
+  {
+    if (allAirs == null)
+      return Pooler.EMPTY_AIRING_ARRAY;
+    if (sbCache == null)
+      sbCache = new StringBuilder();
+
+    List<Airing> rv = null;
+    if (cache == null)
+      rv = new ArrayList<Airing>();
+    else
+      cache.airWorkCache.clear();
+
+    boolean keywordTest = !legacyKeyword && (this.agentMask&(KEYWORD_MASK)) == (KEYWORD_MASK);
+    if(keywordTest)
     {
-      if (mainCache)
-      {
-        if (relAirCache != null && cacheTimestamp > wiz.getLastModified())
-          return relAirCache;
-        cacheTimestamp = Sage.time();
-      }
-      else
-      {
-        if (relAirCache2 != null && cacheTimestamp2 > wiz.getLastModified())
-          return relAirCache2;
-        cacheTimestamp2 = Sage.time();
-      }
-    }
-
-    ArrayList<Airing> rv = new ArrayList<Airing>();
-    boolean keywordTest = (this.agentMask&(KEYWORD_MASK)) == (KEYWORD_MASK) &&
-        !Sage.getBoolean("use_legacy_keyword_favorites", true);
-    if(keywordTest) {
       // If we're only doing a keyword mask, speed it up via Lucene
       Show[] shows = wiz.searchShowsByKeyword(getKeyword());
-      for (Show show : shows) {
+      for (Show show : shows)
+      {
         Airing[] airings = wiz.getAirings(show, 0);
-        for(Airing a : airings) {
-          if (followsTrend(a, true, sbCache, true))
-            rv.add(a);
+        if (cache != null)
+          cache.airWorkCache.ensureAddCapacity(airings.length);
+        for (Airing a : airings)
+        {
+          if (followsTrend(a, true, sbCache, true, ignoreDisabledFlag))
+          {
+            if (cache != null)
+              cache.airWorkCache.add(a);
+            else
+              rv.add(a);
+          }
         }
       }
-    } else {
-      for (int i = 0; i < allAirs.length; i++)
-      {
-        Airing a = (Airing) allAirs[i];
-        if (a == null) continue;
-        if (followsTrend(a, true, sbCache))
-          rv.add(a);
-        if ((i % CPU_CONTROL_MOD_COUNT) == 0 && controlCPUUsage)
-          try{Thread.sleep(Carny.SLEEP_PERIOD);}catch(Exception e){}
-      }
-    }
-    if (ENABLE_AGENT_AIRING_CACHE)
-    {
-      if (mainCache)
-        return (relAirCache = rv.toArray(Pooler.EMPTY_AIRING_ARRAY));
-      else
-        return (relAirCache2 = rv.toArray(Pooler.EMPTY_AIRING_ARRAY));
     }
     else
-      return rv.toArray(Pooler.EMPTY_AIRING_ARRAY);
+    {
+      if (cache != null)
+      {
+        optimizedFollowsTrend(true, controlCPUUsage, false, ignoreDisabledFlag, airingMap,
+          allAirs, cache, "allAirs");
+      }
+      else
+      {
+        for (int i = 0; i < allAirs.length; i++)
+        {
+          Airing a = (Airing) allAirs[i];
+          if (a == null) continue;
+          if (followsTrend(a, true, sbCache, false, ignoreDisabledFlag))
+            rv.add(a);
+          if ((i % CPU_CONTROL_MOD_COUNT) == 0 && controlCPUUsage)
+            try {Thread.sleep(Carny.SLEEP_PERIOD);} catch (Exception e) {}
+        }
+      }
+    }
+
+    // We don't return anything if we used the cache. The data is in the cache. This needs to either
+    // be more elegant or the cache should always contain the return.
+    return cache != null ? Pooler.EMPTY_AIRING_ARRAY : rv.toArray(Pooler.EMPTY_AIRING_ARRAY);
   }
 
   boolean validate()
@@ -513,9 +807,6 @@ public class Agent extends DBObject implements Favorite
 
   synchronized void update(DBObject fromMe)
   {
-    // Clear the airings caches
-    cacheTimestamp = cacheTimestamp2 = 0;
-
     Agent bond = (Agent) fromMe;
     agentMask = bond.agentMask;
     createTime = bond.createTime;
@@ -530,7 +821,7 @@ public class Agent extends DBObject implements Favorite
     person = bond.person;
     slotType = bond.slotType;
     timeslots = (bond.timeslots == null ? null : ((int[]) bond.timeslots.clone()));
-    weakAgents = bond.weakAgents.clone();
+    weakAgents = bond.weakAgents.length == 0 ? Pooler.EMPTY_INT_ARRAY : bond.weakAgents.clone();
     quality = bond.quality;
     autoConvertFormat = bond.autoConvertFormat;
     autoConvertDest = bond.autoConvertDest;
@@ -550,6 +841,8 @@ public class Agent extends DBObject implements Favorite
   public boolean isReRunsOnly() { return (agentMask & RERUN_MASK) == RERUN_MASK; }
   public boolean firstRunsAndReruns() { return !isFirstRunsOnly() && !isReRunsOnly(); }
   public String getTitle() { return (title == null) ? "" : title.name; }
+  // Title to be compared must be lowercase.
+  public boolean isSameTitle(String title) { return (title == null) ? false : title.equalsIgnoreCase(title); }
   public String getCategory() { return (category == null) ? "" : category.name; }
   public String getSubCategory() { return (subCategory == null) ? "" : subCategory.name; }
   public String getPerson() { return (person == null) ? "" : person.name; }
@@ -564,40 +857,51 @@ public class Agent extends DBObject implements Favorite
   public int getSlotType() { return slotType; }
   public String getKeyword() { return keyword; }
 
-  public boolean followsTrend(Airing air, boolean mustBeViewable, StringBuffer sbCache)
+  public boolean followsTrend(Airing air, boolean mustBeViewable, StringBuilder sbCache)
   {
-    return followsTrend(air, mustBeViewable, sbCache, false);
+    return followsTrend(air, mustBeViewable, sbCache, false, false);
+  }
+
+  public boolean followsTrend(Airing air, boolean mustBeViewable, StringBuilder sbCache,
+                              boolean skipKeyword)
+  {
+      return followsTrend(air, mustBeViewable, sbCache, skipKeyword, false);
   }
 
   /**
-   * Determine if the given airing meets the criteria for this Agent. (i.e. could the given Airing be scheduled because
-   * of this Agent)
+   * Determine if the given airing meets the criteria for this Agent. (i.e. could the given Airing
+   * be scheduled because of this Agent)
    *
    * @param air The Airing to be tested
-   * @param mustBeViewable If true, the Airing must be viewable for this method to return true.  Viewable means a
-   * recording that can be watched, or a channel that can be viewed.
-   * @param sbCache A StringBuffer to be used by this method.  If null a new StringBuffer will be created.  If non-null
-   * the buffer will be cleared and use.  When calling this method in a loop, the same StringBuffer can be used for each
-   * call to limit object creation and memory use.
+   * @param mustBeViewable If true, the Airing must be viewable for this method to return true.
+   *                       Viewable means a recording that can be watched, or a channel that can be
+   *                       viewed.
+   * @param sbCache A StringBuffer to be used by this method.  If null a new StringBuffer will be
+   *                created. If non-null the buffer will be cleared and use.  When calling this
+   *                method in a loop, the same StringBuffer can be used for each call to limit object
+   *                creation and memory use.
    * @param skipKeyword If true, keyword matching is not considered
-   * @return true if the given Airing matches this Agent (given the parameter criteria) , false otherwise.
+   * @param ignoreDisabledFlag If true, treat this agent as if it is enabled, even if it isn't.
+   * @return true if the given Airing matches this Agent (given the parameter criteria), false otherwise.
    */
-  /*
+  public boolean followsTrend(Airing air, boolean mustBeViewable, StringBuilder sbCache,
+                              boolean skipKeyword, boolean ignoreDisabledFlag)
+  {
+    /*
    * TODO(codefu): skipKeyword is a hack before showcase. It works since the other flags are AND
    * tested; but we can have Lucene do this for us
    */
-  public boolean followsTrend(Airing air, boolean mustBeViewable, StringBuffer sbCache, boolean skipKeyword)
-  {
+
     if (air == null) return false;
     Show s = air.getShow();
     if (s == null) return false;
 
     //A disabled agent doesn't match any airings
-    if(testAgentFlag(DISABLED_FLAG))
+    if(!ignoreDisabledFlag && testAgentFlag(DISABLED_FLAG))
         return false;
     // Do not be case sensitive when checking titles!! We got a bunch of complaints about this on our forums.
     // Don't let null titles match all the Favorites!
-    if (title != null && (s.title == null || (s.title != null && title != s.title && !title.toString().equalsIgnoreCase(s.title.toString()))))
+    if (title != null && (s.title == null || !title.equalsIgnoreCase(s.title)))
       return false;
     if ((agentMask & FIRSTRUN_MASK) == FIRSTRUN_MASK && !air.isFirstRun())
       return false;
@@ -607,7 +911,8 @@ public class Agent extends DBObject implements Favorite
     {
       int i = 0;
       for (; i < s.people.length; i++)
-        if ((person == s.people[i] || person.name.equalsIgnoreCase(s.people[i].name)) && (role == Show.ALL_ROLES || role == 0 || role == s.roles[i]))
+        if ((person == s.people[i] || person.equalsIgnoreCase(s.people[i])) &&
+          (role == Show.ALL_ROLES || role == 0 || role == s.roles[i]))
           break;
       if (i == s.people.length) return false;
     }
@@ -628,9 +933,11 @@ public class Agent extends DBObject implements Favorite
           return false;
       }
     }
-    if (chanName.length() > 0 && (air.getChannel() == null || !chanNameMatches(air.getChannel().name)))
+    // We were getting the channel up to four times more than we actually need.
+    Channel channel = null;
+    if (chanName.length() > 0 && ((channel = air.getChannel()) == null || !chanNameMatches(channel.name)))
       return false;
-    if (network != null && (air.getChannel() == null || network != air.getChannel().network))
+    if (network != null && ((channel == null && ((channel = air.getChannel()) == null)) || network != channel.network))
       return false;
     if (rated != null && rated != s.rated)
       return false;
@@ -656,7 +963,8 @@ public class Agent extends DBObject implements Favorite
     if ((agentMask & LOVE_MASK) == 0 && (agentMask & TITLE_MASK) == 0)
     {
       // Non-title tracks only match English language shows
-      if (s.language != null && !"English".equalsIgnoreCase(s.language.name) && !"en".equalsIgnoreCase(s.language.name))
+      if (s.language != null && s.language.name != null &&
+        !s.language.equalsIgnoreCase("english") && !s.language.equalsIgnoreCase("en"))
         return false;
     }
 
@@ -664,15 +972,15 @@ public class Agent extends DBObject implements Favorite
     if (mustBeViewable && wiz.getFileForAiring(air) == null && !air.isViewable())
       return false;
 
-    if (skipKeyword == false && keyword.length() > 0)
+    if (!skipKeyword && keyword.length() > 0)
     {
       boolean titleOnly = keyword.startsWith("TITLE:");
       String currKeyword = titleOnly ? keyword.substring("TITLE:".length()).trim() : keyword;
       // The fields in Show that we can test against are:
       // Title, Episode, Description, Year, People, category, subcategory, bonuses, ers, language
-      StringBuffer fullShowTest;
+      StringBuilder fullShowTest;
       if (sbCache == null)
-        fullShowTest = new StringBuffer(s.getTitle());
+        fullShowTest = new StringBuilder(s.getTitle());
       else
       {
         sbCache.setLength(0);
@@ -698,7 +1006,10 @@ public class Agent extends DBObject implements Favorite
         fullShowTest.append('|'); s.appendBonusesString(fullShowTest);
         fullShowTest.append('|'); s.appendExpandedRatingsString(fullShowTest);
         fullShowTest.append('|'); fullShowTest.append(s.getLanguage());
-        fullShowTest.append('|'); fullShowTest.append(air.getChannelName());
+        fullShowTest.append('|'); fullShowTest.append(channel != null ? channel.name : air.getChannelName());
+        // This is a small point of contention because it uses the String resolver. If someone has
+        // many threads running and many keyword favorites, this will collide a lot more than you
+        // want on Part_Of_Parts.
         fullShowTest.append('|'); air.appendMiscInfo(fullShowTest);
         fullShowTest.append('|'); fullShowTest.append(s.getExternalID());
       }
@@ -806,20 +1117,32 @@ public class Agent extends DBObject implements Favorite
   }
 
   // Returns false if it's an agent that shouldn't exist
-  boolean calcWatchProb(boolean controlCPUUsage, Airing[] airWorkCache, StringBuffer sbCache)
+  boolean calcWatchProb(boolean controlCPUUsage, Airing[] watchAirs, Airing[] wastedAirs,
+                        boolean aggressiveNegativeProfiling, Carny.CarnyCache cache)
   {
     if ((agentMask & LOVE_MASK) == LOVE_MASK)
     {
       watchProb = 1;
       negator = false;
 
-      // Save some last-used values to display for the agent; indicatre as not set.
+      // Save some last-used values to display for the agent; indicate as not set.
       lastnumWatchedAirs = -1;
       lastnumWastedAirs = -1;
       lastnumManualWaste = -1;
 
       return true;
     }
+
+    final Map<Integer, Airing[]> watchAirsMap = cache.watchAirsMap;;
+    final Map<Integer, Wasted[]> wastedAirsMap = cache.wastedAirsMap;;
+    final StringBuilder sbCache = cache.sbCache;
+    final List<Integer> hashes = cache.currentHashes;
+    final boolean unoptimized = hashes.size() == 0 || !cache.useMaps;
+
+    // NOTE: We never call this method using an offset, so we can make some assumptions. If this
+    // changes in the future, those assumptions need to be changed to account for the offset.
+    cache.airWorkCache.clear();
+
     // There's three different things that affect this calculation.
     // 1. The Airings that are declared Watched that follow this trend
     // 2. The Airings that are Wasted that follow this trend
@@ -831,56 +1154,170 @@ public class Agent extends DBObject implements Favorite
      * end of the array when we don't have overlap. We use a 'mergesort' type of scan to prevent overlap between
      * watched and wasted airings. We'll also need to track how many of them were Watched and how many were Wasted.
      */
-    int numWatchedAirs = 0;
-    int numWastedAirs = 0;
-    DBObject[] watches = wiz.getRawAccess(Wizard.WATCH_CODE, (byte) 0);
-    for (int i = 0; i < watches.length; i++)
+    if (unoptimized)
     {
-      Watched currWatch = (Watched) watches[i];
-      if (watches[i] != null && BigBrother.isFullWatch(currWatch))
+      DBObject[] watches = wiz.getRawAccess(Wizard.WATCH_CODE, (byte) 0);
+      cache.airWorkCache.ensureAddCapacity(watches.length);
+
+      for (int i = 0; i < watches.length; i++)
       {
-        Airing testA = currWatch.getAiring();
-        if (followsTrend(testA, false, sbCache))
+        Watched currWatch = (Watched) watches[i];
+        if (watches[i] != null && BigBrother.isFullWatch(currWatch))
         {
-          airWorkCache[numWatchedAirs++] = testA;
-        }
-      }
-      if (controlCPUUsage && (i % CPU_CONTROL_MOD_COUNT) == 0)
-        try{Thread.sleep(Carny.SLEEP_PERIOD);}catch(Exception e){}
-    }
-    Arrays.sort(airWorkCache, 0, numWatchedAirs, DBObject.ID_COMPARATOR);
-    DBObject[] waste = wiz.getRawAccess(Wizard.WASTED_CODE, (byte) 0);
-    int numManualWaste = 0;
-    int watchAirCompareIdx = 0;
-    for (int i = 0; i < waste.length; i++)
-    {
-      Wasted currWaste = (Wasted) waste[i];
-      if (waste[i] != null)
-      {
-        Airing testW = currWaste.getAiring();
-        if (followsTrend(testW, false, sbCache))
-        {
-          if (currWaste.manual)
-            numManualWaste++;
-          // Check for overlap with the Watches before we add it
-          int idDiff = 1;
-          while (watchAirCompareIdx < numWatchedAirs)
+          Airing testA = currWatch.getAiring();
+          if (followsTrend(testA, false, sbCache))
           {
-            idDiff = airWorkCache[watchAirCompareIdx].getID() - testW.getID();
-            if (idDiff < 0)
-            {
-              watchAirCompareIdx++;
-              idDiff = 1;
-            }
-            else
-              break;
+            cache.airWorkCache.ensureAddCapacity(1);
+            cache.airWorkCache.add(testA);
           }
-          if (idDiff > 0)
-            airWorkCache[numWatchedAirs + numWastedAirs++] = testW;
+        }
+        if (controlCPUUsage && (i % CPU_CONTROL_MOD_COUNT) == 0)
+          try{Thread.sleep(Carny.SLEEP_PERIOD);}catch(Exception e){}
+      }
+
+      cache.airWorkCache.sort();
+    }
+    else
+    {
+      // These results will already be sorted by ID.
+      optimizedFollowsTrend(false, controlCPUUsage, false, false, watchAirsMap, watchAirs,
+        cache, "watchAirsMap");
+    }
+
+    int numWatchedAirs = cache.airWorkCache.size;
+
+    int numManualWaste = 0;
+    if (unoptimized)
+    {
+      DBObject[] waste = wiz.getRawAccess(Wizard.WASTED_CODE, (byte) 0);
+      cache.airWorkCache.ensureAddCapacity(waste.length);
+      for (int i = 0; i < waste.length; i++)
+      {
+        Wasted currWaste = (Wasted) waste[i];
+        if (waste[i] != null)
+        {
+          Airing testW = currWaste.getAiring();
+          if (followsTrend(testW, false, sbCache))
+          {
+            if (currWaste.manual)
+              numManualWaste++;
+            if (cache.airWorkCache.binarySearch(numWatchedAirs, testW) < 0)
+              cache.airWorkCache.add(testW);
+          }
+        }
+        if (controlCPUUsage && (i % CPU_CONTROL_MOD_COUNT) == 0)
+          try{Thread.sleep(Carny.SLEEP_PERIOD);}catch(Exception e){}
+      }
+    }
+    else
+    {
+      // If we only get one array, we can forgo using a set. This happens fairly often since many
+      // times an agent only has one interest.
+      Wasted[] oneWasted = null;
+      Set<Wasted> matchedWastedAirs = null;
+
+
+      for (int i = 0, hashesSize = hashes.size(); i < hashesSize; i++)
+      {
+        Integer hash = hashes.get(i);
+        Wasted[] wasteds = wastedAirsMap.get(hash);
+        if (oneWasted == null)
+        {
+          if (wasteds != null)
+          {
+            oneWasted = wasteds;
+            cache.airWorkCache.ensureAddCapacity(wasteds.length);
+          }
+        }
+        else if (wasteds != null)
+        {
+          if (matchedWastedAirs == null)
+          {
+            // We are using identity because it doesn't create nodes and Wasted objects are always
+            // the same object when they are the same Wasted airing. There will not be other objects
+            // that could be equal. This map is actually faster more often than not in this specific
+            // situation with the bonus of not creating excess objects.
+            matchedWastedAirs = Collections.newSetFromMap(
+              new IdentityHashMap<Wasted, Boolean>(oneWasted.length + wasteds.length));
+            // HashSet bulk add is one by one just like this. There is no advantage to converting
+            // to a list; just more GC collection.
+            for (int j = 0, oneWastedLength = oneWasted.length; j < oneWastedLength; j++)
+            {
+              matchedWastedAirs.add(oneWasted[j]);
+            }
+          }
+
+          for (int j = 0, wastedsLength = wasteds.length; j < wastedsLength; j++)
+          {
+            matchedWastedAirs.add(wasteds[j]);
+          }
+          cache.airWorkCache.ensureAddCapacity(wasteds.length);
         }
       }
-      if (controlCPUUsage && (i % CPU_CONTROL_MOD_COUNT) == 0)
-        try{Thread.sleep(Carny.SLEEP_PERIOD);}catch(Exception e){}
+
+      // Sizes of 0 take the unoptimized path. Sizes of 1 do not need to be deduplicated, so we can
+      // process the single array if it exists directly.
+      if (matchedWastedAirs != null)
+      {
+        int i = 0;
+        for (Wasted currWaste : matchedWastedAirs)
+        {
+          Airing testW = currWaste.getAiring();
+          if (testW == null)
+            continue;
+          if (followsTrend(testW, false, sbCache))
+          {
+            if (currWaste.manual)
+              numManualWaste++;
+            if (cache.airWorkCache.binarySearch(numWatchedAirs, testW) < 0)
+              cache.airWorkCache.add(testW);
+          }
+
+          if (controlCPUUsage && (i++ % CPU_CONTROL_MOD_COUNT) == 0)
+            try{Thread.sleep(Carny.SLEEP_PERIOD);}catch(Exception e){}
+        }
+      }
+      else if (oneWasted != null)
+      {
+        int airingsLength = oneWasted.length;
+        for (int i = 0; i < airingsLength; i++)
+        {
+          Wasted currWaste = oneWasted[i];
+          Airing testW = currWaste.getAiring();
+          if (testW == null)
+            continue;
+          if (followsTrend(testW, false, sbCache))
+          {
+            if (currWaste.manual)
+              numManualWaste++;
+            if (cache.airWorkCache.binarySearch(numWatchedAirs, testW) < 0)
+              cache.airWorkCache.add(testW);
+          }
+
+          if (controlCPUUsage && (i % CPU_CONTROL_MOD_COUNT) == 0)
+            try{Thread.sleep(Carny.SLEEP_PERIOD);}catch(Exception e){}
+        }
+      }
+    }
+    // This is correct because the air isn't considered wasted if it was also fully watched. We
+    // accounted for manual waste (e.g. Don't Like) above. This is how the old behavior effectively
+    // worked.
+    int numWastedAirs = cache.airWorkCache.size - numWatchedAirs;
+
+    if (VERIFY_AIRING_OPTIMIZATION)
+    {
+      Set<Airing> test = new HashSet<>(cache.airWorkCache.getList());
+      if (test.size() != cache.airWorkCache.apparentSize())
+      {
+        System.out.println("WARNING: List contains redundant values: " + test.size() + " != " + cache.airWorkCache.apparentSize());
+        StringBuilder stringBuilder = new StringBuilder("Redundant list: ");
+        for (int i = cache.airWorkCache.offset; i < cache.airWorkCache.size; i++)
+        {
+          Airing object = cache.airWorkCache.data[i];
+          stringBuilder.append(object.getID()).append(',');
+        }
+        System.out.println(stringBuilder);
+      }
     }
 
     float watchCount = 0;
@@ -888,50 +1325,75 @@ public class Agent extends DBObject implements Favorite
 
     // Make all non-title based agents title unique for tracking
     boolean titleUniqueCount = (agentMask & TITLE_MASK) == 0;
-    Map<Show, List<Airing>> doneShowMap = new HashMap<Show, List<Airing>>();
-    Map<Stringer, Float> titleWatchMap = null;
-    Map<Stringer, Integer> titleAllMap = null;
+    int cacheSize = cache.airWorkCache.size;
+    // It's faster not to cache and clear this map. This appears to be due to the number of shows
+    // being stored that need to be cleared.
+    // Single Airing or ArrayList<Airing>
+    Map<Show, Object> doneShowMap = new HashMap<>((int)(cacheSize / 0.75) + 1);
+    Map<Stringer, MutableFloat> titleWatchMap = null;
+    Map<Stringer, MutableInteger> titleAllMap =  null;
+
     if (titleUniqueCount)
     {
-      titleWatchMap = new HashMap<Stringer, Float>();
-      titleAllMap = new HashMap<Stringer, Integer>();
+      titleWatchMap = cache.titleWatchMap;
+      titleWatchMap.clear();
+      titleAllMap = cache.titleAllMap;
+      titleAllMap.clear();
     }
-    for (int i = 0; i < numWatchedAirs + numWastedAirs; i++)
+
+    next_air:
+    for (int i = 0; i < cacheSize; i++)
     {
-      Airing currAir = airWorkCache[i];
+      Airing currAir = cache.airWorkCache.data[i];
       Show currShow = currAir.getShow();
       if (currShow == null) continue;
       Stringer theTit = null;
       if (titleUniqueCount)
         theTit = currShow.title;
-      List<Airing> airSet = doneShowMap.get(currShow);
-      if (airSet != null)
+      Object airSet = doneShowMap.get(currShow);
+      if (airSet instanceof Airing)
       {
-        boolean didIt = false;
-        for (int j = 0; j < airSet.size() && !didIt; j++)
-        {
-          if (BigBrother.areSameShow(airSet.get(j), currAir, true))
-            didIt = true;
-        }
-        if (didIt)
+        if (BigBrother.areSameShow((Airing) airSet, currAir, true, sbCache))
           continue;
+
+        ArrayList<Airing> newList = new ArrayList<>();
+        newList.add((Airing) airSet);
+        newList.add(currAir);
+        doneShowMap.put(currShow, newList);
       }
-      else
+      // For some reason this didn't work correctly when it was instanceof List.
+      else if (airSet instanceof ArrayList)
       {
-        airSet = new ArrayList<Airing>();
-        doneShowMap.put(currShow, airSet);
+        for (int j = 0; j < ((ArrayList)airSet).size(); j++)
+        {
+          if (BigBrother.areSameShow((Airing)((ArrayList)airSet).get(j), currAir, true, sbCache))
+            continue next_air;
+        }
       }
-      airSet.add(currAir);
+      else // Must be null.
+      {
+        doneShowMap.put(currShow, currAir);
+      }
 
       if (i < numWatchedAirs)
       {
         if (titleUniqueCount)
         {
-          Float theFloat = titleWatchMap.get(theTit);
-          titleWatchMap.put(theTit, 1 + ((theFloat == null) ? 0 : theFloat));
+          // Floats are not cached in any way like Integers, so this ends up creating tons of
+          // objects when all we really need is a mutable float object.
+          MutableFloat theFloat = titleWatchMap.get(theTit);
+          //titleWatchMap.put(theTit, 1 + ((theFloat == null) ? 0 : theFloat));
+          if (theFloat == null)
+            titleWatchMap.put(theTit, new MutableFloat(1));
+          else
+            theFloat.increment(1);
 
-          Integer theInt = titleAllMap.get(theTit);
-          titleAllMap.put(theTit, 1 + ((theInt == null) ? 0 : theInt));
+          MutableInteger theInt = titleAllMap.get(theTit);
+          //titleAllMap.put(theTit, 1 + ((theInt == null) ? 0 : theInt));
+          if (theInt == null)
+            titleAllMap.put(theTit, new MutableInteger(1));
+          else
+            theInt.increment(1);
         }
         else
         {
@@ -944,8 +1406,12 @@ public class Agent extends DBObject implements Favorite
       {
         if (titleUniqueCount)
         {
-          Integer theInt = titleAllMap.get(theTit);
-          titleAllMap.put(theTit, 1 + ((theInt == null) ? 0 : theInt));
+          MutableInteger theInt = titleAllMap.get(theTit);
+          //titleAllMap.put(theTit, 1 + ((theInt == null) ? 0 : theInt));
+          if (theInt == null)
+            titleAllMap.put(theTit, new MutableInteger(1));
+          else
+            theInt.increment(1);
         }
         else
         {
@@ -956,12 +1422,12 @@ public class Agent extends DBObject implements Favorite
     int realTotalCount;
     if (titleUniqueCount)
     {
-      for (Map.Entry<Stringer, Integer> ent : titleAllMap.entrySet())
+      for (Map.Entry<Stringer, MutableInteger> ent : titleAllMap.entrySet())
       {
-        int total = ent.getValue();
-        Float currW = titleWatchMap.get(ent.getKey());
+        int total = ent.getValue().getValue();
+        MutableFloat currW = titleWatchMap.get(ent.getKey());
         if (currW != null)
-          watchCount += currW / total;
+          watchCount += currW.getValue() / total;
         totalCount++;
       }
       realTotalCount = totalCount;
@@ -981,18 +1447,22 @@ public class Agent extends DBObject implements Favorite
     // If there are more Don't Likes than Watched, set Watch Prob to 0 so this agent
     // won't be the cause of a recording w/o stopping some other agent from causing a recording.
     if ( (numWatchedAirs == 0 && numWastedAirs > 1) || (numManualWaste > numWatchedAirs) )
-        watchProb = 0;
+      watchProb = 0;
 
     // For a Title agent (or if aggressive negative profiling is on), then check whether
     // this agent should also prevent any other agent from recordings something; i.e.: set negator to true.
     negator = ((agentMask & TITLE_MASK) != 0 || Sage.getBoolean("aggressive_negative_profiling", false)) &&
-        ((numWatchedAirs == 0 && numWastedAirs > 1) ||
-            (numManualWaste > numWatchedAirs));
+      ((numWatchedAirs == 0 && numWastedAirs > 1) ||
+        (numManualWaste > numWatchedAirs));
 
     // Save some last-used values to display for the agent.
     lastnumWatchedAirs = numWatchedAirs;
     lastnumWastedAirs = numWastedAirs;
     lastnumManualWaste = numManualWaste;
+
+    lastRealTotalCount = realTotalCount;
+    lastTotalCount = totalCount;
+    lastWatchCount = watchCount;
 
     // We need two data points to exist if we're actor based
     if (realTotalCount == 0) return false;
@@ -1001,6 +1471,10 @@ public class Agent extends DBObject implements Favorite
     if ((agentMask & ACTOR_MASK) != ACTOR_MASK) return true;
     return (watchCount >= 2);
   }
+
+  int lastRealTotalCount;
+  int lastTotalCount;
+  float lastWatchCount;
 
   public String getTypeName()
   {
@@ -1147,8 +1621,6 @@ public class Agent extends DBObject implements Favorite
     }
     return sb.toString().trim();
   }
-
-  void clearCache() { relAirCache = null; }
 
   public boolean isNegativeNelly()
   {
@@ -1324,6 +1796,98 @@ public class Agent extends DBObject implements Favorite
     return (Properties) favProps.clone();
   }
 
+  // This helps us not create any more Integer objects than we need to.
+  private void addHash(int intHash, List<Integer> list, int bitShift)
+  {
+    int hash = intHash >>> bitShift;
+    int low = 0;
+    int high = list.size() - 1;
+
+    while (low <= high)
+    {
+      int mid = (low + high) >>> 1;
+      int midVal = list.get(mid);
+
+      if (midVal < hash)
+        low = mid + 1;
+      else if (midVal > hash)
+        high = mid - 1;
+      else
+        return;
+    }
+    list.add(low, hash);
+  }
+
+  // 05/03/2017 JS: I changed this from caching this value to just re-creating it every time. The
+  // performance is break even since we only use these hashes once per cycle and it doesn't appear
+  // to be worth the memory usage. Since we aren't caching, we also use Integer since we will be
+  // using this against a HashMap and this will keep us from autoboxing in the process.
+  void getHashes(List<Integer> searchHashes, int bitShift)
+  {
+    // We don't need to include 0 because that's always assumed in look ups. If we do return 0, that
+    // means this agent isn't sure what it needs, but the inverse is acceptable because that just
+    // means the airing doesn't know what it matches and it will be tested on all of the agents.
+    searchHashes.clear();
+
+    if (title != null)
+    {
+      searchHashes.add((title.ignoreCaseHash >>> bitShift));
+    }
+
+    if (person != null)
+    {
+      addHash(person.ignoreCaseHash, searchHashes, bitShift);
+    }
+
+    if (category != null)
+    {
+      addHash(category.ignoreCaseHash, searchHashes, bitShift);
+    }
+
+    if (subCategory != null)
+    {
+      addHash(subCategory.ignoreCaseHash, searchHashes, bitShift);
+    }
+
+    if (chanName.length() > 0)
+    {
+      addHash(chanName.hashCode(), searchHashes, bitShift);
+    }
+
+    if (chanNames != null && chanNames.length > 0)
+    {
+      for (String chanName : chanNames)
+      {
+        addHash(chanName.hashCode(), searchHashes, bitShift);
+      }
+    }
+
+    if (network != null)
+    {
+      addHash(network.ignoreCaseHash, searchHashes, bitShift);
+    }
+
+    if (rated != null)
+    {
+      addHash(rated.ignoreCaseHash, searchHashes, bitShift);
+    }
+
+    if (year != null)
+    {
+      addHash(year.ignoreCaseHash, searchHashes, bitShift);
+    }
+
+    if (pr != null)
+    {
+      addHash(pr.ignoreCaseHash, searchHashes, bitShift);
+    }
+
+    // This will ensure that we do a full search since 0 means at least one of our items doesn't
+    // have a "valid" hash.
+    if (searchHashes.contains(0))
+      searchHashes.clear();
+  }
+
   final int agentID;
   int agentMask;
   transient float watchProb;
@@ -1357,9 +1921,5 @@ public class Agent extends DBObject implements Favorite
   private Matcher[] keywordMatchers;
   private String cachedKeywordForMats;
   private transient Wizard wiz;
-  private transient Airing[] relAirCache;
-  private transient long cacheTimestamp;
-  private transient Airing[] relAirCache2;
-  private transient long cacheTimestamp2;
   private transient boolean negator = false;
 }

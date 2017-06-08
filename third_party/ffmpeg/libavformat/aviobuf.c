@@ -18,14 +18,20 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
+
+#include "libavutil/crc.h"
+#include "libavutil/intreadwrite.h"
 #include "avformat.h"
 #include "avio.h"
-#include "crc.h"
+#include "internal.h"
 #include <stdarg.h>
 
 #define IO_BUFFER_SIZE 32768
 
 static void fill_buffer(ByteIOContext *s);
+#if LIBAVFORMAT_VERSION_MAJOR >= 53
+static int url_resetbuf(ByteIOContext *s, int flags);
+#endif
 
 int init_put_byte(ByteIOContext *s,
                   unsigned char *buffer,
@@ -34,13 +40,13 @@ int init_put_byte(ByteIOContext *s,
                   void *opaque,
                   int (*read_packet)(void *opaque, uint8_t *buf, int buf_size),
                   int (*write_packet)(void *opaque, uint8_t *buf, int buf_size),
-                  offset_t (*seek)(void *opaque, offset_t offset, int whence))
+                  int64_t (*seek)(void *opaque, int64_t offset, int whence))
 {
     s->buffer = buffer;
     s->buffer_size = buffer_size;
     s->buf_ptr = buffer;
-    url_resetbuf(s, write_flag ? URL_WRONLY : URL_RDONLY);
     s->opaque = opaque;
+    url_resetbuf(s, write_flag ? URL_WRONLY : URL_RDONLY);
     s->write_packet = write_packet;
     s->read_packet = read_packet;
     s->seek = seek;
@@ -67,7 +73,8 @@ ByteIOContext *av_alloc_put_byte(
                   void *opaque,
                   int (*read_packet)(void *opaque, uint8_t *buf, int buf_size),
                   int (*write_packet)(void *opaque, uint8_t *buf, int buf_size),
-                  offset_t (*seek)(void *opaque, offset_t offset, int whence)) {
+                  int64_t (*seek)(void *opaque, int64_t offset, int whence))
+{
     ByteIOContext *s = av_mallocz(sizeof(ByteIOContext));
     init_put_byte(s, buffer, buffer_size, write_flag, opaque,
                   read_packet, write_packet, seek);
@@ -101,12 +108,8 @@ void put_byte(ByteIOContext *s, int b)
 
 void put_buffer(ByteIOContext *s, const unsigned char *buf, int size)
 {
-    int len;
-
     while (size > 0) {
-        len = (s->buf_end - s->buf_ptr);
-        if (len > size)
-            len = size;
+        int len = FFMIN(s->buf_end - s->buf_ptr, size);
         memcpy(s->buf_ptr, buf, len);
         s->buf_ptr += len;
 
@@ -124,10 +127,12 @@ void put_flush_packet(ByteIOContext *s)
     s->must_flush = 0;
 }
 
-offset_t url_fseek(ByteIOContext *s, offset_t offset, int whence)
+int64_t url_fseek(ByteIOContext *s, int64_t offset, int whence)
 {
-    offset_t offset1;
-    offset_t pos;
+    int64_t offset1;
+    int64_t pos;
+    int force = whence & AVSEEK_FORCE;
+    whence &= ~AVSEEK_FORCE;
 
     if(!s)
         return AVERROR(EINVAL);
@@ -145,56 +150,57 @@ offset_t url_fseek(ByteIOContext *s, offset_t offset, int whence)
     }
     offset1 = offset - pos;
     if (!s->must_flush &&
-        offset1 >= 0 && offset1 < (s->buf_end - s->buffer)) {
+        offset1 >= 0 && offset1 <= (s->buf_end - s->buffer)) {
         /* can do the seek inside the buffer */
         s->buf_ptr = s->buffer + offset1;
-    } else if(s->is_streamed && !s->write_flag &&
-              offset1 >= 0 && offset1 < (s->buf_end - s->buffer) + (1<<16)){
+    } else if(s->is_streamed && !s->write_flag && offset1 >= 0 &&
+              (whence != SEEK_END || force)) {
         while(s->pos < offset && !s->eof_reached)
             fill_buffer(s);
         if (s->eof_reached)
-            return AVERROR(EPIPE);
+            return AVERROR_EOF;
         s->buf_ptr = s->buf_end + offset - s->pos;
     } else {
-        offset_t res = AVERROR(EPIPE);
+        int64_t res;
 
-#if defined(CONFIG_MUXERS) || defined(CONFIG_NETWORK)
+#if CONFIG_MUXERS || CONFIG_NETWORK
         if (s->write_flag) {
             flush_buffer(s);
             s->must_flush = 1;
-        } else
-#endif /* defined(CONFIG_MUXERS) || defined(CONFIG_NETWORK) */
-        {
-            s->buf_end = s->buffer;
         }
-        s->buf_ptr = s->buffer;
-        if (!s->seek || (res = s->seek(s->opaque, offset, SEEK_SET)) < 0)
+#endif /* CONFIG_MUXERS || CONFIG_NETWORK */
+        if (!s->seek)
+            return AVERROR(EPIPE);
+        if ((res = s->seek(s->opaque, offset, SEEK_SET)) < 0)
             return res;
+        if (!s->write_flag)
+            s->buf_end = s->buffer;
+        s->buf_ptr = s->buffer;
         s->pos = offset;
     }
     s->eof_reached = 0;
     return offset;
 }
 
-void url_fskip(ByteIOContext *s, offset_t offset)
+void url_fskip(ByteIOContext *s, int64_t offset)
 {
     url_fseek(s, offset, SEEK_CUR);
 }
 
-offset_t url_ftell(ByteIOContext *s)
+int64_t url_ftell(ByteIOContext *s)
 {
     return url_fseek(s, 0, SEEK_CUR);
 }
 
-offset_t url_fsize(ByteIOContext *s)
+int64_t url_fsize(ByteIOContext *s)
 {
-    offset_t size;
+    int64_t size;
 
     if(!s)
         return AVERROR(EINVAL);
 
     if (!s->seek)
-        return AVERROR(EPIPE);
+        return AVERROR(ENOSYS);
     size = s->seek(s->opaque, 0, AVSEEK_SIZE);
     if(size<0){
         if ((size = s->seek(s->opaque, -1, SEEK_END)) < 0)
@@ -241,6 +247,24 @@ void put_strz(ByteIOContext *s, const char *str)
         put_buffer(s, (const unsigned char *) str, strlen(str) + 1);
     else
         put_byte(s, 0);
+}
+
+int ff_get_v_length(uint64_t val){
+    int i=1;
+
+    while(val>>=7)
+        i++;
+
+    return i;
+}
+
+void ff_put_v(ByteIOContext *bc, uint64_t val){
+    int i= ff_get_v_length(val);
+
+    while(--i>0)
+        put_byte(bc, 128 | (val>>(7*i)));
+
+    put_byte(bc, val&127);
 }
 
 void put_le64(ByteIOContext *s, uint64_t val)
@@ -290,20 +314,34 @@ void put_tag(ByteIOContext *s, const char *tag)
 
 static void fill_buffer(ByteIOContext *s)
 {
-    int len=0;
+    uint8_t *dst= !s->max_packet_size && s->buf_end - s->buffer < s->buffer_size ? s->buf_ptr : s->buffer;
+    int len= s->buffer_size - (dst - s->buffer);
+    int max_buffer_size = s->max_packet_size ? s->max_packet_size : IO_BUFFER_SIZE;
+
+    assert(s->buf_ptr == s->buf_end);
 
     /* no need to do anything if EOF already reached */
     if (s->eof_reached)
         return;
 
-    if(s->update_checksum){
+    if(s->update_checksum && dst == s->buffer){
         if(s->buf_end > s->checksum_ptr)
             s->checksum= s->update_checksum(s->checksum, s->checksum_ptr, s->buf_end - s->checksum_ptr);
         s->checksum_ptr= s->buffer;
     }
 
+    /* make buffer smaller in case it ended up large after probing */
+    if (s->buffer_size > max_buffer_size) {
+        url_setbufsize(s, max_buffer_size);
+
+        s->checksum_ptr = dst = s->buffer;
+        len = s->buffer_size;
+    }
+
     if(s->read_packet)
-        len = s->read_packet(s->opaque, s->buffer, s->buffer_size);
+        len = s->read_packet(s->opaque, dst, len);
+    else
+        len = 0;
     if (len <= 0) {
         /* do not modify buffer if EOF reached so that a seek back can
            be done without rereading data */
@@ -312,22 +350,28 @@ static void fill_buffer(ByteIOContext *s)
             s->error= len;
     } else {
         s->pos += len;
-        s->buf_ptr = s->buffer;
-        s->buf_end = s->buffer + len;
+        s->buf_ptr = dst;
+        s->buf_end = dst + len;
     }
 }
 
-unsigned long ff_crc04C11DB7_update(unsigned long checksum, const uint8_t *buf, unsigned int len){
+unsigned long ff_crc04C11DB7_update(unsigned long checksum, const uint8_t *buf,
+                                    unsigned int len)
+{
     return av_crc(av_crc_get_table(AV_CRC_32_IEEE), checksum, buf, len);
 }
 
-unsigned long get_checksum(ByteIOContext *s){
+unsigned long get_checksum(ByteIOContext *s)
+{
     s->checksum= s->update_checksum(s->checksum, s->checksum_ptr, s->buf_ptr - s->checksum_ptr);
     s->update_checksum= NULL;
     return s->checksum;
 }
 
-void init_checksum(ByteIOContext *s, unsigned long (*update_checksum)(unsigned long c, const uint8_t *p, unsigned int len), unsigned long checksum){
+void init_checksum(ByteIOContext *s,
+                   unsigned long (*update_checksum)(unsigned long c, const uint8_t *p, unsigned int len),
+                   unsigned long checksum)
+{
     s->update_checksum= update_checksum;
     if(s->update_checksum){
         s->checksum= checksum;
@@ -396,11 +440,15 @@ int get_buffer(ByteIOContext *s, unsigned char *buf, int size)
                     break;
             }
         } else {
-            av_memcpy(buf, s->buf_ptr, len);
+            memcpy(buf, s->buf_ptr, len);
             buf += len;
             s->buf_ptr += len;
             size -= len;
         }
+    }
+    if (size1 == size) {
+        if (url_ferror(s)) return url_ferror(s);
+        if (url_feof(s))   return AVERROR_EOF;
     }
     return size1 - size;
 }
@@ -419,8 +467,12 @@ int get_partial_buffer(ByteIOContext *s, unsigned char *buf, int size)
     }
     if (len > size)
         len = size;
-    av_memcpy(buf, s->buf_ptr, len);
+    memcpy(buf, s->buf_ptr, len);
     s->buf_ptr += len;
+    if (!len) {
+        if (url_ferror(s)) return url_ferror(s);
+        if (url_feof(s))   return AVERROR_EOF;
+    }
     return len;
 }
 
@@ -518,14 +570,13 @@ int url_fdopen(ByteIOContext **s, URLContext *h)
     uint8_t *buffer;
     int buffer_size, max_packet_size;
 
-
     max_packet_size = url_get_max_packet_size(h);
     if (max_packet_size) {
         buffer_size = max_packet_size; /* no need to bufferize more than one packet */
     } else {
         buffer_size = IO_BUFFER_SIZE;
     }
-    buffer = av_mallocUncached(buffer_size);
+    buffer = av_malloc(buffer_size);
     if (!buffer)
         return AVERROR(ENOMEM);
 
@@ -546,7 +597,7 @@ int url_fdopen(ByteIOContext **s, URLContext *h)
     (*s)->max_packet_size = max_packet_size;
     if(h->prot) {
         (*s)->read_pause = (int (*)(void *, int))h->prot->url_read_pause;
-        (*s)->read_seek  = (offset_t (*)(void *, int, int64_t, int))h->prot->url_read_seek;
+        (*s)->read_seek  = (int64_t (*)(void *, int, int64_t, int))h->prot->url_read_seek;
     }
     return 0;
 }
@@ -554,7 +605,7 @@ int url_fdopen(ByteIOContext **s, URLContext *h)
 int url_setbufsize(ByteIOContext *s, int buf_size)
 {
     uint8_t *buffer;
-    buffer = av_mallocUncached(buf_size);
+    buffer = av_malloc(buf_size);
     if (!buffer)
         return AVERROR(ENOMEM);
 
@@ -566,11 +617,18 @@ int url_setbufsize(ByteIOContext *s, int buf_size)
     return 0;
 }
 
+#if LIBAVFORMAT_VERSION_MAJOR < 53
 int url_resetbuf(ByteIOContext *s, int flags)
+#else
+static int url_resetbuf(ByteIOContext *s, int flags)
+#endif
 {
-    URLContext *h = s->opaque;
-    if ((flags & URL_RDWR) || (h && h->flags != flags && !h->flags & URL_RDWR))
+#if LIBAVFORMAT_VERSION_MAJOR < 53
+    if (flags & URL_RDWR)
         return AVERROR(EINVAL);
+#else
+    assert(flags == URL_WRONLY || flags == URL_RDONLY);
+#endif
 
     if (flags & URL_WRONLY) {
         s->buf_end = s->buffer + s->buffer_size;
@@ -579,6 +637,42 @@ int url_resetbuf(ByteIOContext *s, int flags)
         s->buf_end = s->buffer;
         s->write_flag = 0;
     }
+    return 0;
+}
+
+int ff_rewind_with_probe_data(ByteIOContext *s, unsigned char *buf, int buf_size)
+{
+    int64_t buffer_start;
+    int buffer_size;
+    int overlap, new_size;
+
+    if (s->write_flag)
+        return AVERROR(EINVAL);
+
+    buffer_size = s->buf_end - s->buffer;
+
+    /* the buffers must touch or overlap */
+    if ((buffer_start = s->pos - buffer_size) > buf_size)
+        return AVERROR(EINVAL);
+
+    overlap = buf_size - buffer_start;
+    new_size = buf_size + buffer_size - overlap;
+
+    if (new_size > buf_size) {
+        if (!(buf = av_realloc(buf, new_size)))
+            return AVERROR(ENOMEM);
+
+        memcpy(buf + buf_size, s->buffer + overlap, buffer_size - overlap);
+        buf_size = new_size;
+    }
+
+    av_free(s->buffer);
+    s->buf_ptr = s->buffer = buf;
+    s->pos = s->buffer_size = buf_size;
+    s->buf_end = s->buf_ptr + buf_size;
+    s->eof_reached = 0;
+    s->must_flush = 0;
+
     return 0;
 }
 
@@ -612,7 +706,7 @@ URLContext *url_fileno(ByteIOContext *s)
     return s->opaque;
 }
 
-#ifdef CONFIG_MUXERS
+#if CONFIG_MUXERS
 int url_fprintf(ByteIOContext *s, const char *fmt, ...)
 {
     va_list ap;
@@ -660,24 +754,29 @@ int av_url_read_fpause(ByteIOContext *s, int pause)
     return s->read_pause(s->opaque, pause);
 }
 
-offset_t av_url_read_fseek(ByteIOContext *s,
-        int stream_index, int64_t timestamp, int flags)
+int64_t av_url_read_fseek(ByteIOContext *s, int stream_index,
+                          int64_t timestamp, int flags)
 {
     URLContext *h = s->opaque;
-    offset_t ret;
+    int64_t ret;
     if (!s->read_seek)
         return AVERROR(ENOSYS);
     ret = s->read_seek(h, stream_index, timestamp, flags);
     if(ret >= 0) {
+        int64_t pos;
         s->buf_ptr = s->buf_end; // Flush buffer
-        s->pos = s->seek(h, 0, SEEK_CUR);
+        pos = s->seek(h, 0, SEEK_CUR);
+        if (pos >= 0)
+            s->pos = pos;
+        else if (pos != AVERROR(ENOSYS))
+            ret = pos;
     }
     return ret;
 }
 
 /* url_open_dyn_buf and url_close_dyn_buf are used in rtp.c to send a response
- * back to the server even if CONFIG_MUXERS is not set. */
-#if defined(CONFIG_MUXERS) || defined(CONFIG_NETWORK)
+ * back to the server even if CONFIG_MUXERS is false. */
+#if CONFIG_MUXERS || CONFIG_NETWORK
 /* buffer handling */
 int url_open_buf(ByteIOContext **s, uint8_t *buf, int buf_size, int flags)
 {
@@ -711,7 +810,7 @@ typedef struct DynBuffer {
 static int dyn_buf_write(void *opaque, uint8_t *buf, int buf_size)
 {
     DynBuffer *d = opaque;
-    int new_size, new_allocated_size;
+    unsigned new_size, new_allocated_size;
 
     /* reallocate buffer if needed */
     new_size = d->pos + buf_size;
@@ -728,10 +827,10 @@ static int dyn_buf_write(void *opaque, uint8_t *buf, int buf_size)
     if (new_allocated_size > d->allocated_size) {
         d->buffer = av_realloc(d->buffer, new_allocated_size);
         if(d->buffer == NULL)
-             return -1234;
+             return AVERROR(ENOMEM);
         d->allocated_size = new_allocated_size;
     }
-    av_memcpy(d->buffer + d->pos, buf, buf_size);
+    memcpy(d->buffer + d->pos, buf, buf_size);
     d->pos = new_size;
     if (d->pos > d->size)
         d->size = d->pos;
@@ -744,10 +843,7 @@ static int dyn_packet_buf_write(void *opaque, uint8_t *buf, int buf_size)
     int ret;
 
     /* packetized write: output the header */
-    buf1[0] = (buf_size >> 24);
-    buf1[1] = (buf_size >> 16);
-    buf1[2] = (buf_size >> 8);
-    buf1[3] = (buf_size);
+    AV_WB32(buf1, buf_size);
     ret= dyn_buf_write(opaque, buf1, 4);
     if(ret < 0)
         return ret;
@@ -756,7 +852,7 @@ static int dyn_packet_buf_write(void *opaque, uint8_t *buf, int buf_size)
     return dyn_buf_write(opaque, buf, buf_size);
 }
 
-static offset_t dyn_buf_seek(void *opaque, offset_t offset, int whence)
+static int64_t dyn_buf_seek(void *opaque, int64_t offset, int whence)
 {
     DynBuffer *d = opaque;
 
@@ -773,28 +869,20 @@ static offset_t dyn_buf_seek(void *opaque, offset_t offset, int whence)
 static int url_open_dyn_buf_internal(ByteIOContext **s, int max_packet_size)
 {
     DynBuffer *d;
-    int io_buffer_size, ret;
-
-    if (max_packet_size)
-        io_buffer_size = max_packet_size;
-    else
-        io_buffer_size = 1024;
+    int ret;
+    unsigned io_buffer_size = max_packet_size ? max_packet_size : 1024;
 
     if(sizeof(DynBuffer) + io_buffer_size < io_buffer_size)
         return -1;
-    d = av_malloc(sizeof(DynBuffer) + io_buffer_size);
+    d = av_mallocz(sizeof(DynBuffer) + io_buffer_size);
     if (!d)
-        return -1;
+        return AVERROR(ENOMEM);
     *s = av_mallocz(sizeof(ByteIOContext));
     if(!*s) {
         av_free(d);
         return AVERROR(ENOMEM);
     }
     d->io_buffer_size = io_buffer_size;
-    d->buffer = NULL;
-    d->pos = 0;
-    d->size = 0;
-    d->allocated_size = 0;
     ret = init_put_byte(*s, d->io_buffer, io_buffer_size,
                         1, d, NULL,
                         max_packet_size ? dyn_packet_buf_write : dyn_buf_write,
@@ -824,6 +912,14 @@ int url_close_dyn_buf(ByteIOContext *s, uint8_t **pbuffer)
 {
     DynBuffer *d = s->opaque;
     int size;
+    static const char padbuf[FF_INPUT_BUFFER_PADDING_SIZE] = {0};
+    int padding = 0;
+
+    /* don't attempt to pad fixed-size packet buffers */
+    if (!s->max_packet_size) {
+        put_buffer(s, padbuf, sizeof(padbuf));
+        padding = FF_INPUT_BUFFER_PADDING_SIZE;
+    }
 
     put_flush_packet(s);
 
@@ -831,6 +927,6 @@ int url_close_dyn_buf(ByteIOContext *s, uint8_t **pbuffer)
     size = d->size;
     av_free(d);
     av_free(s);
-    return size;
+    return size - padding;
 }
 #endif /* CONFIG_MUXERS || CONFIG_NETWORK */

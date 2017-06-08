@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002 The FFmpeg Project.
+ * Copyright (c) 2002 The FFmpeg Project
  *
  * This file is part of FFmpeg.
  *
@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef FFMPEG_WMV2_H
-#define FFMPEG_WMV2_H
+#ifndef AVCODEC_WMV2_H
+#define AVCODEC_WMV2_H
 
 #include "avcodec.h"
 #include "dsputil.h"
@@ -50,9 +50,9 @@ typedef struct Wmv2Context{
     int hshift;
 
     ScanTable abt_scantable[2];
-    DECLARE_ALIGNED_8(DCTELEM, abt_block2[6][64]);
+    DECLARE_ALIGNED(16, DCTELEM, abt_block2)[6][64];
 }Wmv2Context;
 
 void ff_wmv2_common_init(Wmv2Context * w);
 
-#endif /* FFMPEG_WMV2_H */
+#endif /* AVCODEC_WMV2_H */

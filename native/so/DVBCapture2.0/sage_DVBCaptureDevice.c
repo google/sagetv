@@ -1510,7 +1510,7 @@ int tuneATSCChannel( DVBCaptureDev *CDev, ATSC_FREQ* atsc, int dryTune )
 			setHardDemuxPid( CDev, atsc->audio_pid, 2 );
 	}
 	else
-		resetHardDemuxPid( CDev, 0x2000 );	
+		resetHardDemuxPid( CDev, ALL_PIDS );
 
 
 	flog(( "Native.log", "tune ATSC ch:%d frq:%d successed (drytune:%d)\r\n", atsc->physical_ch, freq, dryTune ));
@@ -1589,7 +1589,7 @@ int tuneATSCChannel( DVBCaptureDev *CDev, ATSC_FREQ* atsc, int dryTune )
 		emptyDmxBufferSize( CDev, CDev->dmx_buffer_size );
 	    flog(( "Native.log", "front end status:%s (0x%x)\r\n", front_end_status_string(status), status ));
 	}
-	resetHardDemuxPid( CDev, 0x2000 );	
+	resetHardDemuxPid( CDev, ALL_PIDS );
 	return (int)freq;
 }
 
@@ -1692,7 +1692,7 @@ int tuneDVBTFrequency( DVBCaptureDev *CDev, DVB_T_FREQ* dvbt, int dryTune)
 		}
 
 	}
-	resetHardDemuxPid( CDev, 0x2000 );	
+	resetHardDemuxPid( CDev, ALL_PIDS );
 	return 1;
 
 }
@@ -1766,7 +1766,7 @@ int tuneDVBCFrequency( DVBCaptureDev *CDev, DVB_C_FREQ* dvbc, int dryTune )
 		//close( CDev->dvrFd );
 		//CDev->dvrFd = -1;
 
-		if ( ioctl( CDev->frontendFd, FE_SET_FRONTEND, &feparams ) < 0) 
+		if ( ioctl( CDev->frontendFd, FE_SET_FRONTEND, &feparams ) < 0)
 		{
 			flog(( "Native.log", "tuneDVBC failed\r\n" ));
 			return -1;
@@ -1800,7 +1800,7 @@ int tuneDVBCFrequency( DVBCaptureDev *CDev, DVB_C_FREQ* dvbc, int dryTune )
 
 
 	}
-	resetHardDemuxPid( CDev, 0x2000 );	
+	resetHardDemuxPid( CDev, ALL_PIDS );
 	return 1;
 }
 
@@ -1812,6 +1812,8 @@ int tuneDVBSFrequency( DVBCaptureDev *CDev, DVB_S_FREQ* dvbs, int dryTune )
 	fe_status_t status;
 	struct dvb_frontend_parameters feparams = {0};
 	unsigned long freq;
+	unsigned long ifreq;
+
 	if (dvbs == NULL)
 	{
 		flog(( "Native.log", "Invalid DVB-S entry.\r\n" ));
@@ -1822,12 +1824,12 @@ int tuneDVBSFrequency( DVBCaptureDev *CDev, DVB_S_FREQ* dvbs, int dryTune )
 	{
 		//FE_QPSK:
 		freq = dvbs->frequency; //in 10HMZ	
+		unsigned int symbol_rate = dvbs->symbol_rate * 1000;
 
 		{
-			int hiband = 0;
-
-			if ( CDev->lnb.switch_val && CDev->lnb.high_val && freq >= CDev->lnb.switch_val)
-				hiband = 1;
+			int hiband = (CDev->lnb.switch_val
+					&& CDev->lnb.high_val
+					&& freq > CDev->lnb.switch_val * 1000) ? 1 : 0;
 
 			setup_lnb( CDev->frontendFd,
 				       CDev->sat_no,
@@ -1836,40 +1838,54 @@ int tuneDVBSFrequency( DVBCaptureDev *CDev, DVB_S_FREQ* dvbs, int dryTune )
 
 			usleep(50000);
 
-			if (hiband)
-				feparams.frequency = abs( freq - CDev->lnb.high_val);
-			else
-				feparams.frequency = abs( freq - CDev->lnb.low_val );
+			unsigned long freq_offset = (hiband ? CDev->lnb.high_val : CDev->lnb.low_val) * 1000;
+			ifreq = abs(freq - freq_offset);
+
 		}
 
-		feparams.u.qpsk.symbol_rate = dvbs->symbol_rate*1000;
-		feparams.inversion = INVERSION_AUTO;
-				
+		fe_code_rate_t fec;
 		switch( dvbs->fec_inner_rate ) {
-		case 1:feparams.u.qpsk.fec_inner = FEC_1_2;	 	break;     
-		case 2:feparams.u.qpsk.fec_inner = FEC_2_3;		break;     
-		case 3:feparams.u.qpsk.fec_inner = FEC_3_4;		break;     
-		case 4:feparams.u.qpsk.fec_inner = FEC_4_5;		break;     
-		case 5:feparams.u.qpsk.fec_inner = FEC_5_6;		break;     
-		case 6:feparams.u.qpsk.fec_inner = FEC_6_7;		break;     
-		case 7:feparams.u.qpsk.fec_inner = FEC_7_8;		break;     
-		case 8:feparams.u.qpsk.fec_inner = FEC_8_9;		break;     
-		case 9:feparams.u.qpsk.fec_inner = FEC_AUTO; 		break;     
-		default:  feparams.u.qam.fec_inner = FEC_AUTO;           break;     
+			case 1:fec = FEC_1_2;	 	break;
+			case 2:fec = FEC_2_3;		break;
+			case 3:fec = FEC_3_4;		break;
+			case 4:fec = FEC_3_5;		break;
+			case 5:fec = FEC_4_5;		break;
+			case 6:fec = FEC_5_6;		break;
+			case 7:fec = FEC_7_8;		break;
+			case 8:fec = FEC_8_9;		break;
+			default:  fec = FEC_AUTO;   break;
 		}
-		
-		flog(( "Native.log", "DVB-S frq:%d, %d symbrate:%d fec-inner:%d(%d)  pol:%d sat:%d \r\n",
-				     freq, feparams.frequency, feparams.u.qpsk.symbol_rate, 
-					 feparams.u.qpsk.fec_inner, dvbs->fec_inner_rate, dvbs->polarisation, CDev->sat_no ));
 
-		//close and reopen to drop data in device buffer, not have data leaking into the next recording
-/*		close( CDev->dvrFd );
-		CDev->dvrFd = -1;
-*/
-		if ( ioctl(CDev->frontendFd, FE_SET_FRONTEND, &feparams) < 0) 
-		{
-			flog(( "Native.log", "tuneDVBS failed setting tuning data on frontend.(%s)\r\n", strerror(errno) ));
-			return -1;
+		int delivery_system = QPSK;
+		int modulation;
+		switch (dvbs->modulation) {
+			case 30:
+				modulation = PSK_8;
+				delivery_system = SYS_DVBS2;
+				break;
+			default: modulation = QPSK;
+		}
+
+		struct dtv_property dtv_properties[DTV_IOCTL_MAX_MSGS] = {0};
+		int i = 0;
+		dtv_properties[i].cmd = DTV_DELIVERY_SYSTEM; 	dtv_properties[i].u.data = delivery_system;
+		dtv_properties[++i].cmd = DTV_FREQUENCY;		dtv_properties[i].u.data = ifreq;
+		dtv_properties[++i].cmd = DTV_MODULATION;	    dtv_properties[i].u.data = modulation;
+		dtv_properties[++i].cmd = DTV_SYMBOL_RATE; 		dtv_properties[i].u.data = symbol_rate;
+		dtv_properties[++i].cmd = DTV_INNER_FEC; 		dtv_properties[i].u.data = fec;
+		dtv_properties[++i].cmd = DTV_INVERSION;		dtv_properties[i].u.data = INVERSION_AUTO;
+		dtv_properties[++i].cmd = DTV_TUNE;
+
+		struct dtv_properties dtv_props;
+		dtv_props.num = i + 1;
+		dtv_props.props = dtv_properties;
+		
+		flog(( "Native.log", "DVB-S frq:%d, %d symbrate:%d fec-inner:%d(%d)  pol:%d sat:%d  mod:%d(%d)\r\n",
+				dvbs->frequency, ifreq, symbol_rate,
+					 fec, dvbs->fec_inner_rate, dvbs->polarisation, CDev->sat_no, dvbs->modulation, modulation ));
+
+		if (ioctl(CDev->frontendFd, FE_SET_PROPERTY, &dtv_props) == -1) {
+			flog(( "Native.log", "Failed setting front-end properties.(%s)\r\n", strerror(errno) ));
 		}
 
 /*		if((CDev->dvrFd = open(CDev->dvrName,O_RDONLY|O_NONBLOCK)) < 0)
@@ -1898,7 +1914,7 @@ int tuneDVBSFrequency( DVBCaptureDev *CDev, DVB_S_FREQ* dvbs, int dryTune )
 		}
 	}
 	flog(( "Native.log", "front end status: 0x%x.\r\n",  status ));
-	resetHardDemuxPid( CDev, 0x2000 );	
+	resetHardDemuxPid( CDev, ALL_PIDS );
 	return 1;
 }
 

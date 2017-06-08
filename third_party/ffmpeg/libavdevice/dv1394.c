@@ -19,21 +19,23 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "config.h"
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <poll.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
-#include <sys/poll.h>
 #include <sys/time.h>
 #include <time.h>
+#include <strings.h>
 
-#include "avformat.h"
+#include "libavformat/avformat.h"
 
 #undef DV1394_DEBUG
 
+#include "libavformat/dv.h"
 #include "dv1394.h"
-#include "dv.h"
 
 struct dv1394_data {
     int fd;
@@ -227,7 +229,7 @@ static int dv1394_close(AVFormatContext * context)
 
 AVInputFormat dv1394_demuxer = {
     .name           = "dv1394",
-    .long_name      = "dv1394 A/V grab",
+    .long_name      = NULL_IF_CONFIG_SMALL("DV1394 A/V grab"),
     .priv_data_size = sizeof(struct dv1394_data),
     .read_header    = dv1394_read_header,
     .read_packet    = dv1394_read_packet,

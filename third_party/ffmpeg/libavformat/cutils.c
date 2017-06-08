@@ -19,12 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 #include "avformat.h"
+#include "internal.h"
 
 /* add one element to a dynamic array */
-void __dynarray_add(unsigned long **tab_ptr, int *nb_ptr, unsigned long elem)
+void ff_dynarray_add(intptr_t **tab_ptr, int *nb_ptr, intptr_t elem)
 {
     int nb, nb_alloc;
-    unsigned long *tab;
+    intptr_t *tab;
 
     nb = *nb_ptr;
     tab = *tab_ptr;
@@ -33,7 +34,7 @@ void __dynarray_add(unsigned long **tab_ptr, int *nb_ptr, unsigned long elem)
             nb_alloc = 1;
         else
             nb_alloc = nb * 2;
-        tab = av_realloc(tab, nb_alloc * sizeof(unsigned long));
+        tab = av_realloc(tab, nb_alloc * sizeof(intptr_t));
         *tab_ptr = tab;
     }
     tab[nb++] = elem;
@@ -77,11 +78,12 @@ struct tm *brktimegm(time_t secs, struct tm *tm)
 
     /* oh well, may be someone some day will invent a formula for this stuff */
     y = 1970; /* start "guessing" */
-    while (days >= (ISLEAP(y)?366:365)) {
+    while (days > 365) {
         ny = (y + days/366);
         days -= (ny - y) * 365 + LEAPS_COUNT(ny - 1) - LEAPS_COUNT(y - 1);
         y = ny;
     }
+    if (days==365 && !ISLEAP(y)) { days=0; y++; }
     md[1] = ISLEAP(y)?29:28;
     for (m=0; days >= md[m]; m++)
          days -= md[m];

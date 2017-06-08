@@ -15,6 +15,8 @@
  */
 package sage;
 
+import sage.epg.sd.SDImages;
+
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -40,11 +42,13 @@ public class Person extends DBObject
     yearList = Pooler.EMPTY_SHORT_ARRAY;
     awardNames = Pooler.EMPTY_STRINGER_ARRAY;
     headshotImageId = -1;
+    headshotUrls = Pooler.EMPTY_2D_BYTE_ARRAY;
   }
   Person(DataInput in, byte ver, Map<Integer, Integer> idMap) throws IOException
   {
     super(in, ver, idMap);
     name = in.readUTF();
+    ignoreCaseHash = name.toLowerCase().hashCode();
     if (ver >= 0x4F)
     {
       Wizard wiz = Wizard.getInstance();
@@ -76,6 +80,22 @@ public class Person extends DBObject
       awardNames = Pooler.EMPTY_STRINGER_ARRAY;
       headshotImageId = -1;
     }
+
+    if (ver >= 0x57)
+    {
+      byte headshotLen = in.readByte();
+      headshotUrls = headshotLen == 0 ? Pooler.EMPTY_2D_BYTE_ARRAY : new byte[headshotLen][];
+      for (int i = 0; i < headshotLen; i++)
+      {
+        int headshotUrlLen = in.readShort();
+        headshotUrls[i] = new byte[headshotUrlLen];
+        in.readFully(headshotUrls[i], 0, headshotUrlLen);
+      }
+    }
+    else
+    {
+      headshotUrls = Pooler.EMPTY_2D_BYTE_ARRAY;
+    }
   }
 
   void write(DataOutput out, int flags) throws IOException
@@ -96,6 +116,19 @@ public class Person extends DBObject
         out.writeInt(useLookupIdx ? awardNames[i].lookupIdx : awardNames[i].id);
     }
     out.writeShort(headshotImageId);
+    // This will always be the case if there are images.
+    if (headshotUrls.length == 2)
+    {
+      out.writeByte(2);
+      out.writeShort(headshotUrls[0].length);
+      out.write(headshotUrls[0]);
+      out.writeShort(headshotUrls[1].length);
+      out.write(headshotUrls[1]);
+    }
+    else
+    {
+      out.writeByte(0);
+    }
   }
 
   public String toString()
@@ -113,6 +146,7 @@ public class Person extends DBObject
   {
     Person fromMe = (Person) x;
     name = fromMe.name;
+    ignoreCaseHash = name.toLowerCase().hashCode();
     extID = fromMe.extID;
     dateOfBirth = fromMe.dateOfBirth;
     dateOfDeath = fromMe.dateOfDeath;
@@ -120,6 +154,7 @@ public class Person extends DBObject
     yearList = fromMe.yearList;
     awardNames = fromMe.awardNames;
     headshotImageId = fromMe.headshotImageId;
+    headshotUrls = fromMe.headshotUrls;
     super.update(fromMe);
   }
 
@@ -132,11 +167,16 @@ public class Person extends DBObject
         return orgPerson.hasImage();
     }
 
-    return headshotImageId >= 0;
+    return headshotImageId >= 0 || headshotUrls.length == 2;
   }
 
   public String getImageURL(boolean thumb)
   {
+    if (headshotUrls.length == 2)
+    {
+      return SDImages.decodeGeneralImageUrl(headshotUrls[thumb ? 1 : 0]);
+    }
+
     if (extID < 0)
     {
       resolveAlias();
@@ -188,6 +228,7 @@ public class Person extends DBObject
         testMe.yearList.length == yearList.length &&
         testMe.awardNames.length == awardNames.length &&
         testMe.headshotImageId == headshotImageId &&
+        testMe.headshotUrls.length == headshotUrls.length &&
         testMe.getMediaMask() == getMediaMask())
     {
       for (int i = 0; i < yearList.length; i++)
@@ -196,6 +237,14 @@ public class Person extends DBObject
       for (int i = 0; i < awardNames.length; i++)
         if (awardNames[i] != testMe.awardNames[i])
           return false;
+      for (int i = 0; i < headshotUrls.length; i++)
+      {
+        if (headshotUrls[i].length != testMe.headshotUrls[i].length)
+          return false;
+        for (int j = 0; j < headshotUrls[i].length; j++)
+          if (headshotUrls[i][j] != testMe.headshotUrls[i][j])
+            return false;
+      }
       return true;
     }
     else
@@ -203,6 +252,15 @@ public class Person extends DBObject
   }
 
   public String getName() { return name; }
+
+  public boolean equalsIgnoreCase(Person compare)
+  {
+    // The hash could be 0, but it's not going to be any more often than any other hash and in case
+    // we miss a case where the title is set, this covers that problem.
+    if (ignoreCaseHash == 0 || compare.ignoreCaseHash == 0)
+      return toString().equalsIgnoreCase(compare.toString());
+    return compare.ignoreCaseHash == ignoreCaseHash && toString().equalsIgnoreCase(compare.toString());
+  }
 
   public int getNumAwards()
   {
@@ -336,8 +394,12 @@ public class Person extends DBObject
   short[] yearList;
   Stringer[] awardNames;
   short headshotImageId;
+  // The first dimension is the large image URL. The second dimension is the thumbnail image URL.
+  byte[][] headshotUrls;
   // For resolved aliases
   transient Person orgPerson;
+  // To speed up case insensitive searches
+  transient int ignoreCaseHash;
 
   public static final Comparator<Person> NAME_COMPARATOR =
       new Comparator<Person>()

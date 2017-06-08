@@ -33,7 +33,7 @@ import sage.Sage;
 import sage.SageConstants;
 import sage.SageRenderer;
 import sage.SageTV;
-import sage.Seeker;
+import sage.SeekerSelector;
 import sage.StringMatchUtils;
 import sage.UIClient;
 import sage.UIManager;
@@ -1818,7 +1818,7 @@ public class Utility {
           {
             public boolean accept(java.io.File path)
             {
-              return path.isDirectory() || ((mediaMask & Seeker.getInstance().guessImportedMediaMaskFast(path.getAbsolutePath())) != 0);
+              return path.isDirectory() || ((mediaMask & SeekerSelector.getInstance().guessImportedMediaMaskFast(path.getAbsolutePath())) != 0);
             }
           });
         }
@@ -2383,7 +2383,7 @@ public class Utility {
        * @declaration public boolean IsImportableFileType(String Filename);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return Boolean.valueOf(Seeker.getInstance().hasImportableFileExtension(getString(stack)));
+        return Boolean.valueOf(SeekerSelector.getInstance().hasImportableFileExtension(getString(stack)));
       }});
     rft.put(new PredefinedJEPFunction("Utility", "GetSubnetMask")
     {
@@ -2490,7 +2490,7 @@ public class Utility {
        * @declaration public String GuessMajorFileType(String Filename);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        switch (Seeker.getInstance().guessImportedMediaMaskFast(getString(stack)))
+        switch (SeekerSelector.getInstance().guessImportedMediaMaskFast(getString(stack)))
         {
           case DBObject.MEDIA_MASK_DVD:
             return "D";
@@ -2910,6 +2910,20 @@ public class Utility {
         java.io.File f = getFile(stack);
         return IOUtils.calcMD5(f);
       }});
+    rft.put(new PredefinedJEPFunction("Utility", "CalculateSHA1Hash", new String[] { "EncodeString"})
+    {
+      /**
+       * Calculates the SHA1 hash of a String
+       * @param EncodeString the String to be converted into a SHA1 hash
+       * @return the SHA1 sum of the provided String or null if the string was null
+       * @since 9.0
+       *
+       * @declaration public String CalculateSHA1Hash(String EncodeString);
+       */
+      public Object runSafely(Catbert.FastStack stack) throws Exception{
+        String encodeString = getString(stack);
+        return IOUtils.calcSHA1(encodeString);
+      }});
     rft.put(new PredefinedJEPFunction("Utility", "ReloadNameserverCache")
     {
       /**
@@ -2968,6 +2982,39 @@ public class Utility {
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         return IOUtils.getFileAsString(getFile(stack));
+      }});
+    rft.put(new PredefinedJEPFunction("Utility", "WriteStringToFile", new String[] { "FilePath", "Data" }, true)
+    {
+      /**
+       * Opens the file at the specified path and writes out the specified String as its contents.
+       * This will use the server's filesystem if executed on SageTVClient.
+       * @param FilePath the file path
+       * @param Data the contents to write to the file
+       * @return true if successful, false if there was an error writing to the file
+       * @since 9.0
+       *
+       * @declaration public boolean WriteStringToFile(java.io.File FilePath, String Data);
+       */
+      public Object runSafely(Catbert.FastStack stack) throws Exception{
+        String s = getString(stack);
+        java.io.File f = getFile(stack);
+        return IOUtils.writeStringToFile(f, s);
+      }});
+    rft.put(new PredefinedJEPFunction("Utility", "WriteStringToLocalFile", new String[] { "FilePath", "Data" })
+    {
+      /**
+       * Opens the file at the specified path and writes out the specified String as its contents.
+       * @param FilePath the file path
+       * @param Data the contents to write to the file
+       * @return true if successful, false if there was an error writing to the file
+       * @since 9.0
+       *
+       * @declaration public boolean WriteStringToLocalFile(java.io.File FilePath, String Data);
+       */
+      public Object runSafely(Catbert.FastStack stack) throws Exception{
+        String s = getString(stack);
+        java.io.File f = getFile(stack);
+        return IOUtils.writeStringToFile(f, s);
       }});
     rft.put(new PredefinedJEPFunction("Utility", "IsLocalRestartNeeded")
     {

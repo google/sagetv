@@ -1,6 +1,6 @@
 /*
  * WMA compatible codec
- * Copyright (c) 2002-2007 The FFmpeg Project.
+ * Copyright (c) 2002-2007 The FFmpeg Project
  *
  * This file is part of FFmpeg.
  *
@@ -19,11 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef FFMPEG_WMA_H
-#define FFMPEG_WMA_H
+#ifndef AVCODEC_WMA_H
+#define AVCODEC_WMA_H
 
-#include "bitstream.h"
+#include "get_bits.h"
+#include "put_bits.h"
 #include "dsputil.h"
+#include "fft.h"
 
 /* size of blocks */
 #define BLOCK_MIN_BITS 7
@@ -49,6 +51,8 @@
 //FIXME should be in wmadec
 #define VLCBITS 9
 #define VLCMAX ((22+VLCBITS-1)/VLCBITS)
+
+typedef float WMACoef;          ///< type for decoded coefficients, int16_t would be enough for wma 1/2
 
 typedef struct CoefVLCTable {
     int n;                      ///< total number of codes
@@ -90,7 +94,7 @@ typedef struct WMACodecContext {
 //FIXME the following 3 tables should be shared between decoders
     VLC coef_vlc[2];
     uint16_t *run_table[2];
-    uint16_t *level_table[2];
+    float *level_table[2];
     uint16_t *int_table[2];
     const CoefVLCTable *coef_vlcs[2];
     /* frame info */
@@ -108,16 +112,15 @@ typedef struct WMACodecContext {
     uint8_t ms_stereo;                      ///< true if mid/side stereo mode
     uint8_t channel_coded[MAX_CHANNELS];    ///< true if channel is coded
     int exponents_bsize[MAX_CHANNELS];      ///< log2 ratio frame/exp. length
-    DECLARE_ALIGNED_16(float, exponents[MAX_CHANNELS][BLOCK_MAX_SIZE]);
+    DECLARE_ALIGNED(16, float, exponents)[MAX_CHANNELS][BLOCK_MAX_SIZE];
     float max_exponent[MAX_CHANNELS];
-    int16_t coefs1[MAX_CHANNELS][BLOCK_MAX_SIZE];
-    DECLARE_ALIGNED_16(float, coefs[MAX_CHANNELS][BLOCK_MAX_SIZE]);
-    DECLARE_ALIGNED_16(FFTSample, output[BLOCK_MAX_SIZE * 2]);
-    MDCTContext mdct_ctx[BLOCK_NB_SIZES];
+    WMACoef coefs1[MAX_CHANNELS][BLOCK_MAX_SIZE];
+    DECLARE_ALIGNED(16, float, coefs)[MAX_CHANNELS][BLOCK_MAX_SIZE];
+    DECLARE_ALIGNED(16, FFTSample, output)[BLOCK_MAX_SIZE * 2];
+    FFTContext mdct_ctx[BLOCK_NB_SIZES];
     float *windows[BLOCK_NB_SIZES];
-    DECLARE_ALIGNED_16(FFTSample, mdct_tmp[BLOCK_MAX_SIZE]); ///< temporary storage for imdct
     /* output buffer for one frame and the last for IMDCT windowing */
-    DECLARE_ALIGNED_16(float, frame_out[MAX_CHANNELS][BLOCK_MAX_SIZE * 2]);
+    DECLARE_ALIGNED(16, float, frame_out)[MAX_CHANNELS][BLOCK_MAX_SIZE * 2];
     /* last frame info */
     uint8_t last_superframe[MAX_CODED_SUPERFRAME_SIZE + 4]; /* padding added */
     int last_bitoffset;
@@ -137,14 +140,24 @@ typedef struct WMACodecContext {
 #endif
 } WMACodecContext;
 
+extern const uint16_t ff_wma_critical_freqs[25];
 extern const uint16_t ff_wma_hgain_huffcodes[37];
 extern const uint8_t ff_wma_hgain_huffbits[37];
 extern const float ff_wma_lsp_codebook[NB_LSP_COEFS][16];
-extern const uint32_t ff_wma_scale_huffcodes[121];
-extern const uint8_t ff_wma_scale_huffbits[121];
+extern const uint32_t ff_aac_scalefactor_code[121];
+extern const uint8_t  ff_aac_scalefactor_bits[121];
 
+int av_cold ff_wma_get_frame_len_bits(int sample_rate, int version,
+                                      unsigned int decode_flags);
 int ff_wma_init(AVCodecContext * avctx, int flags2);
 int ff_wma_total_gain_to_bits(int total_gain);
 int ff_wma_end(AVCodecContext *avctx);
+unsigned int ff_wma_get_large_val(GetBitContext* gb);
+int ff_wma_run_level_decode(AVCodecContext* avctx, GetBitContext* gb,
+                            VLC *vlc,
+                            const float *level_table, const uint16_t *run_table,
+                            int version, WMACoef *ptr, int offset,
+                            int num_coefs, int block_len, int frame_len_bits,
+                            int coef_nb_bits);
 
-#endif /* FFMPEG_WMA_H */
+#endif /* AVCODEC_WMA_H */

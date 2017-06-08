@@ -15,10 +15,14 @@
  */
 package sage;
 
+import sage.epg.sd.SDRipper;
+
 public class WarlockRipper extends EPGDataSource
 {
   // 601 debug epg raw data to file:epg.log
   static final boolean EPG_DEBUG = false;
+
+  public static final String SOURCE_NAME = "WarlockRipper";
 
   private static final String SERVER_ADDRESS = "server_address";
   public static final int STANDARD_TIMEOUT = 120000; // two minutes
@@ -33,9 +37,10 @@ public class WarlockRipper extends EPGDataSource
   {
     super(inID);
 
-    Sage.put(prefsRoot + EPG.EPG_CLASS, "WarlockRipper");
+    Sage.put(prefsRoot + EPG.EPG_CLASS, SOURCE_NAME);
   }
 
+  @Override
   public void reset()
   {
     super.reset();
@@ -43,19 +48,19 @@ public class WarlockRipper extends EPGDataSource
   }
 
   // Return is an array of String[2], [0] is the id and [1] is the 'name'
-  public static String[][] getProviders(String zipCode, boolean[] didConnect)
+  public static String[][] getProviders(String zipCode) throws EPGServerException
   {
     if (Sage.time() - zipLocalCacheTime > Sage.MILLIS_PER_DAY)
       zipProviderCache.clear();
     else if (zipProviderCache.containsKey(zipCode))
     {
-      String[][] rv = (String[][]) zipProviderCache.get(zipCode);
+      String[][] rv = zipProviderCache.get(zipCode);
       if (rv != null && rv.length > 0)
         return rv;
     }
     if (!doesHaveEpgLicense()) {
       System.out.println("You do not have a SageTV license, you cannot download EPG data.");
-      return new String[0][0];
+      throw new EPGServerException(EPG.EPG_SERVER_NO_KEY);
     }
     ServerConnectInfo sci = null;
     String cleanZip = zipCode.replace(' ', '-');
@@ -63,8 +68,6 @@ public class WarlockRipper extends EPGDataSource
     try
     {
       sci = connectToServer(submitInfoStr);
-
-      if (didConnect != null) didConnect[0] = true;
 
       // Send the request to get the providers
       sci.outStream.write(("GET_PROVIDERS " + cleanZip + "\r\n").getBytes());
@@ -97,9 +100,10 @@ public class WarlockRipper extends EPGDataSource
       zipLocalCacheTime = Sage.time();
       return rv;
     }
-    catch (Exception e)
+    catch (java.io.IOException e)
     {
       if (Sage.DBG) System.out.println("Repeated errors in communicating with server :" + e);
+      throw new EPGServerException(EPG.EPG_SERVER_CONNECTION_FAILURE);
       //e.printStackTrace();
     }
     finally
@@ -109,11 +113,9 @@ public class WarlockRipper extends EPGDataSource
         sci.close();
       }
     }
-
-    return null;
   }
 
-  private static ServerConnectInfo connectToServer(String submitInfoStr) throws java.io.IOException
+  private static ServerConnectInfo connectToServer(String submitInfoStr) throws java.io.IOException, EPGServerException
   {
     try
     {
@@ -140,20 +142,46 @@ public class WarlockRipper extends EPGDataSource
     }
   }
 
-  public static String[][] getLocalMarkets(boolean[] didConnect)
+  /**
+   * Get a property specific to this EPG source instance.
+   * <p/>
+   * This does not strictly need to be a saved property. This can also be used to return
+   * specialized status information, etc.
+   *
+   * @param property The name of the property to get.
+   * @param parameter An optional parameter related to the property.
+   * @return The value for the given property.
+   */
+  public static Object getProperty(String property, String parameter)
+  {
+    return "OK";
+  }
+
+  /**
+   * Set a property specific to this EPG source instance.
+   *
+   * @param property The name of the property to set.
+   * @param value The value to set the property to.
+   * @return The result of setting the property.
+   */
+  public static Object setProperty(String property, String value)
+  {
+    return "OK";
+  }
+
+  public static String[][] getLocalMarkets() throws EPGServerException
   {
     if (Sage.time() - zipLocalCacheTime < Sage.MILLIS_PER_DAY && localMarketCache != null)
       return localMarketCache;
     if (!doesHaveEpgLicense()) {
       System.out.println("You do not have a SageTV license, you cannot download EPG data.");
-      return new String[0][0];
+      throw new EPGServerException(EPG.EPG_SERVER_NO_KEY);
     }
     ServerConnectInfo sci = null;
     String submitInfoStr = getSubmitInfo(Wizard.getInstance(), "0");
     try
     {
       sci = connectToServer(submitInfoStr);
-      if (didConnect != null) didConnect[0] = true;
 
       // Send the request to get the providers
       sci.outStream.write(("GET_LOCALS\r\n").getBytes());
@@ -203,6 +231,7 @@ public class WarlockRipper extends EPGDataSource
     catch (java.io.IOException e)
     {
       if (Sage.DBG) System.out.println("Repeated errors in communicating with server :" + e);
+      throw new EPGServerException(EPG.EPG_SERVER_CONNECTION_FAILURE);
       //e.printStackTrace();
     }
     finally
@@ -212,8 +241,6 @@ public class WarlockRipper extends EPGDataSource
         sci.close();
       }
     }
-
-    return null;
   }
 
   private static String convertSB(StringBuffer sb)
@@ -234,20 +261,31 @@ public class WarlockRipper extends EPGDataSource
   }
 
   public static String getEPGLicenseKey() {
-    return Sage.WINDOWS_OS ? System.getProperty("USERKEY") : IOUtils.getFileAsString(new java.io.File("activkey")).trim();
+    String rv = null;
+    java.io.File activKeyFile = new java.io.File("activkey");
+    // Allow using the 'activkey' file on any platform, that way we can set the license key
+    // from the UI as well since we can't set startup environment variables that way easily.
+    // We also need to read from it first in case they override the environment variable on
+    // Windows with a license key entered in the UI.
+    if (activKeyFile.isFile())
+      rv = IOUtils.getFileAsString(new java.io.File("activkey")).trim();
+    if (Sage.WINDOWS_OS && (rv == null || rv.length() == 0))
+      rv = System.getProperty("USERKEY");
+    return rv;
   }
 
+  // This method is called from the STV, don't change it's signature
   public static boolean doesHaveEpgLicense() {
     // NOTE: This of course is not the only way EPG clients are being validated...we're not that
     // dumb, ya know?  This is just to avoid people hitting the server who don't have a license.
     String key = getEPGLicenseKey();
-    return (key != null && key.length() > 0);
+    return (key != null && key.length() > 0 && !key.equals("NOKEY"));
   }
 
   // This may take some time due to the diskspace calculation so do it before we connect to the server
   public static String getSubmitInfo(Wizard wiz, String providerID)
   {
-    StringBuffer sb = new StringBuffer();
+    StringBuilder sb = new StringBuilder();
     sb.append("SUBMIT_INFO ");
     sb.append(Carny.getInstance().getWatchCount());
     sb.append(' ');
@@ -269,7 +307,7 @@ public class WarlockRipper extends EPGDataSource
     sb.append(' ');
     sb.append(wiz.getSize(Wizard.MEDIAFILE_CODE));
     sb.append(' ');
-    long[] usedAndTotalSpace = Seeker.getInstance().getUsedAndTotalVideoDiskspace();
+    long[] usedAndTotalSpace = SeekerSelector.getInstance().getUsedAndTotalVideoDiskspace();
     sb.append(usedAndTotalSpace[1]);
     sb.append(' ');
     sb.append(usedAndTotalSpace[0]);
@@ -297,17 +335,23 @@ public class WarlockRipper extends EPGDataSource
   }
 
   public static void submitInfo(java.io.DataInputStream inStream, java.io.DataOutputStream outStream,
-      String infoString) throws java.io.IOException
+      String infoString) throws java.io.IOException, EPGServerException
   {
     outStream.write(infoString.getBytes());
     outStream.flush();
     String tempString = readLineBytes(inStream);
-    if (!tempString.equals("OK"))
+    if (!"OK".equals(tempString)) {
+      if ("INVALIDKEY".equals(tempString)) {
+        System.out.println("EPG server indicated the license key is invalid");
+        throw new EPGServerException(EPG.EPG_SERVER_INVALID_KEY);
+      }
       throw new java.io.IOException("ERROR Server returned response:" + tempString);
+    }
   }
 
   // This is so we can track everything from everywhere since it can't be disabled (unless they override the
   // resolution of warlock.freytechnologies.com)
+  @Override
   protected boolean extractGuide(long inGuideTime)
   {
     if (!doesHaveEpgLicense()) {
@@ -316,6 +360,7 @@ public class WarlockRipper extends EPGDataSource
         return EPG.getInstance().pluginExtractGuide(Long.toString(providerID));
       }
       System.out.println("You do not have a SageTV license or an EPG plugin installed, you cannot download EPG data.");
+      sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createEPGServerNoKeyMsg());
       return false;
     }
     guideTime = Sage.time(); //inGuideTime;
@@ -392,7 +437,7 @@ public class WarlockRipper extends EPGDataSource
       // Include any additional stations the the user has added to their lineup
       // NOTE: If the EPG server decides we have no channels then we fill this with
       // all of our channels
-      java.util.Map overrideMap;
+      java.util.Map<Integer, String[]> overrideMap;
       if (numChans > 0)
         overrideMap = EPG.getInstance().getOverrideMap(getProviderID());
       else
@@ -402,16 +447,16 @@ public class WarlockRipper extends EPGDataSource
         sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createLineupLostMsg(this));
       }
       if (overrideMap == null)
-        overrideMap = new java.util.HashMap();
+        overrideMap = new java.util.HashMap<Integer, String[]>();
       int numExtraChans = overrideMap.size();
 
       int[] stations = new int[numChans + numExtraChans];
 
-      java.util.Iterator walker = overrideMap.keySet().iterator();
+      java.util.Iterator<Integer> walker = overrideMap.keySet().iterator();
       int extraChanNum = 0;
       while (walker.hasNext())
       {
-        Integer val = (Integer) walker.next();
+        Integer val = walker.next();
         if (val != null && (!Sage.getBoolean("wizard/remove_airings_on_unviewable_channels2", true) || EPG.getInstance().canViewStation(val.intValue())))
         {
           stations[numChans + extraChanNum++] = val.intValue();
@@ -421,6 +466,7 @@ public class WarlockRipper extends EPGDataSource
       // Also include all channels from any other lineups that are not Zap2it lineups so they get downloaded somewhere.
       // This may end up being redundant...but so is our channel downloading across lineups anyways.
       // On embedded we also need to find any other channels that may have been enabled on other lineups and do them in our update here
+      // JS 8/22/2016: Added skipping SDRipper since Schedules Direct will take care of it's own lineups.
       CaptureDeviceInput[] conInputs = MMC.getInstance().getConfiguredInputs();
       for (int i = 0; i < conInputs.length; i++)
       {
@@ -428,7 +474,7 @@ public class WarlockRipper extends EPGDataSource
         {
           // Check if this is a non-Zap2it lineup
           EPGDataSource otherDS = EPG.getInstance().getSourceForProviderID(conInputs[i].getProviderID());
-          if (!(otherDS instanceof WarlockRipper))
+          if (!(otherDS instanceof WarlockRipper) && !(otherDS instanceof SDRipper))
           {
             int[] altStations = EPG.getInstance().getAllStations(conInputs[i].getProviderID());
             for (int j = 0; j < altStations.length; j++)
@@ -445,9 +491,9 @@ public class WarlockRipper extends EPGDataSource
       }
 
       java.util.Set logosToDownload = new java.util.HashSet();
-      java.util.Map lineMap = new java.util.HashMap();
-      java.util.Map serviceMap = new java.util.HashMap();
-      java.util.Map physicalMap = null;
+      java.util.Map<Integer, String[]> lineMap = new java.util.HashMap<Integer, String[]>();
+      java.util.Map<Integer, Integer> serviceMap = new java.util.HashMap<Integer, Integer>();
+      java.util.Map<Integer, String[]> physicalMap = null;
       boolean[] caddrv = new boolean[1];
       for (int i = 0; i < numChans; i++)
       {
@@ -545,7 +591,7 @@ public class WarlockRipper extends EPGDataSource
         {
           // We were not even using this information; so now we put the physical channel string here instead, if parsing fails we just continue on and ignore it
           if (physicalMap == null)
-            physicalMap = new java.util.HashMap();
+            physicalMap = new java.util.HashMap<Integer, String[]>();
           physicalMap.put(new Integer(stationID), new String[] { dtvChan});
 
           // See if we already had this channel in our lineup through an auto-generated channel, and that channel was enabled. If it was,
@@ -620,7 +666,7 @@ public class WarlockRipper extends EPGDataSource
           Sage.time() - 2*Sage.MILLIS_PER_DAY)
             numAirsInDBForStation++;
         }
-        Long currUpdateID = (Long) updateIDMap.get(new Integer(stationID));
+        Long currUpdateID = updateIDMap.get(new Integer(stationID));
         long serverUpdateID = (currUpdateID != null) ? currUpdateID.longValue() : 0;
         sci.outStream.write(("GET_UPDATED_SHOWS3 " + stationID + " " + guideTime + " " +
             14*Sage.MILLIS_PER_DAY + " " + serverUpdateID + " " + numAirsInDBForStation + "\r\n").getBytes());
@@ -816,13 +862,14 @@ public class WarlockRipper extends EPGDataSource
         updateIDMap.put(new Integer(stationID), new Long(newUpdateID));
 
         // Do this after each station; so then next time we don't redo stuff we've already done
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
+        java.util.Iterator<java.util.Map.Entry<Integer, Long>> walker2;
         synchronized (updateIDMap)
         {
-          walker = updateIDMap.entrySet().iterator();
+          walker2 = updateIDMap.entrySet().iterator();
           while (walker.hasNext())
           {
-            java.util.Map.Entry ent = (java.util.Map.Entry) walker.next();
+            java.util.Map.Entry ent = walker2.next();
             sb.append(ent.getKey());
             sb.append(',');
             sb.append(ent.getValue());
@@ -934,6 +981,17 @@ public class WarlockRipper extends EPGDataSource
       //appendExceptionError(e);
       return false;
     }
+    catch (EPGServerException e) {
+      if (EPG.EPG_SERVER_NO_KEY.equals(e.getMessage())) {
+        sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createEPGServerNoKeyMsg());
+      } else if (EPG.EPG_SERVER_INVALID_KEY.equals(e.getMessage())) {
+        sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createEPGServerInvalidKeyMsg());
+      } else {
+        errorText += "Runtime error in processing data:" + e + '\n';
+        appendExceptionError(e);
+      }
+      return false;
+    }
     catch (Throwable t)
     {
       errorText += "Runtime error in processing data:" + t + '\n';
@@ -996,6 +1054,7 @@ public class WarlockRipper extends EPGDataSource
     }
   }
 
+  @Override
   protected long getGuideWidth() { return 24*MILLIS_PER_HOUR; }
 
   private long guideTime;
@@ -1004,12 +1063,12 @@ public class WarlockRipper extends EPGDataSource
   private int currDataPos;
 
   private static long zipLocalCacheTime;
-  private static java.util.Map zipProviderCache = new java.util.HashMap();
+  private static java.util.Map<String, String[][]> zipProviderCache = new java.util.HashMap<String, String[][]>();
   private static String[][] localMarketCache;
 
   private static class ServerConnectInfo
   {
-    public ServerConnectInfo(java.net.Socket inSock, String submitInfoStr) throws java.io.IOException
+    public ServerConnectInfo(java.net.Socket inSock, String submitInfoStr) throws java.io.IOException, EPGServerException
     {
       sock = inSock;
       sock.setSoTimeout(15000);

@@ -25,7 +25,7 @@ public class DShowTranscodeJob extends TranscodeJob implements Runnable
   {
     if (Sage.WINDOWS_OS && SageConstants.LIBRARY_FUNCTION)
     {
-      System.loadLibrary("DShowTranscode");
+      sage.Native.loadLibrary("DShowTranscode");
     }
   }
 

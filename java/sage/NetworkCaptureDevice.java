@@ -229,6 +229,9 @@ public final class NetworkCaptureDevice extends CaptureDevice
     currentlyRecordingBufferSize = recordBufferSize;
     uploadID = 0;
     uploadID = getUploadFileID(new java.io.File(encodeFile));
+
+    doPluginTune(channel);
+
     if (currentlyRecordingBufferSize > 0)
     {
       submitHostCommand("BUFFER " + getNetworkSourceName() + '|' + channel + '|' + currentlyRecordingBufferSize + '|' +
@@ -265,22 +268,35 @@ public final class NetworkCaptureDevice extends CaptureDevice
 
   public void switchEncoding(String switchFile, String channel) throws EncodingException
   {
+    java.io.File recFileLookup = new java.io.File(recFilename);
+
     if (uploadID > 0 && recFilename != null)
-      SageTV.getMediaServer().removeFromUploadList(new java.io.File(recFilename));
+      SageTV.getMediaServer().removeFromUploadList(recFileLookup);
     if (channel == null || channel.length() == 0) channel = getChannel();
     if (channel == null || channel.length() == 0) channel = "2";
     uploadID = 0;
     uploadID = getUploadFileID(new java.io.File(switchFile));
-    if (currentlyRecordingBufferSize > 0)
+
+    MediaServerRemuxer remuxer = MediaServerRemuxer.getRemuxer(recFileLookup);
+
+    if (remuxer != null)
     {
-      submitHostCommand("BUFFER_SWITCH " + channel + '|' + currentlyRecordingBufferSize + '|' + switchFile,
-          "BUFFER_SWITCH " + getNetworkSourceName() + "|" + (uploadID > 0 ? (uploadID + "|") : "") + channel + '|' + currentlyRecordingBufferSize + '|' + switchFile,
-          true);
+      remuxer.startSwitch(switchFile, uploadID);
+      remuxer.waitIsSwitched();
     }
     else
     {
-      submitHostCommand("SWITCH " + channel + '|' + switchFile,
-          "SWITCH " + getNetworkSourceName() + "|" + (uploadID > 0 ? (uploadID + "|") : "") + channel + '|' + switchFile, true);
+      if (currentlyRecordingBufferSize > 0)
+      {
+        submitHostCommand("BUFFER_SWITCH " + channel + '|' + currentlyRecordingBufferSize + '|' + switchFile,
+            "BUFFER_SWITCH " + getNetworkSourceName() + "|" + (uploadID > 0 ? (uploadID + "|") : "") + channel + '|' + currentlyRecordingBufferSize + '|' + switchFile,
+            true);
+      }
+      else
+      {
+        submitHostCommand("SWITCH " + channel + '|' + switchFile,
+            "SWITCH " + getNetworkSourceName() + "|" + (uploadID > 0 ? (uploadID + "|") : "") + channel + '|' + switchFile, true);
+      }
     }
     recFilename = switchFile;
     recStart = Sage.time();
@@ -338,7 +354,18 @@ public final class NetworkCaptureDevice extends CaptureDevice
   {
     //		if (Sage.EMBEDDED && isDeviceOnThisMachine() && currentlyRecordingBufferSize == 0 && recFilename != null)
     //			return new java.io.File(recFilename).length();
-    return (recFilename == null) ? 0 : submitLongHostRequest("GET_FILE_SIZE " + recFilename);
+
+    if (recFilename != null)
+    {
+      MediaServerRemuxer remuxer = MediaServerRemuxer.getRemuxer(new java.io.File(recFilename));
+
+      if (remuxer != null)
+        return remuxer.getFileSize();
+      else
+        return submitLongHostRequest("GET_FILE_SIZE " + recFilename);
+    }
+
+    return 0;
   }
 
   public boolean isFunctioning()

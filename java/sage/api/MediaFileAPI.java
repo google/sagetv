@@ -565,7 +565,7 @@ public class MediaFileAPI {
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         MediaFile mf = getMediaFile(stack); if (mf == null || !Permissions.hasPermission(Permissions.PERMISSION_DELETE, stack.getUIMgr())) return Boolean.FALSE;
-        return Boolean.valueOf(Seeker.getInstance().destroyFile(mf, true, "User", stack.getUIMgr() != null ? stack.getUIMgr().getLocalUIClientName() : null));
+        return Boolean.valueOf(SeekerSelector.getInstance().destroyFile(mf, true, "User", stack.getUIMgr() != null ? stack.getUIMgr().getLocalUIClientName() : null));
       }});
     rft.put(new PredefinedJEPFunction("MediaFile", "DeleteFileWithoutPrejudice", 1, new String[] { "MediaFile" }, true)
     {
@@ -583,7 +583,7 @@ public class MediaFileAPI {
         MediaFile mf = getMediaFile(stack); if (mf == null || !Permissions.hasPermission(Permissions.PERMISSION_DELETE, stack.getUIMgr())) return Boolean.FALSE;
         if (Permissions.hasPermission(Permissions.PERMISSION_RECORDINGSCHEDULE, stack.getUIMgr()))
           BigBrother.clearWatched(mf.getContentAiring());
-        return Boolean.valueOf(Seeker.getInstance().destroyFile(mf, false, "User", stack.getUIMgr() != null ? stack.getUIMgr().getLocalUIClientName() : null));
+        return Boolean.valueOf(SeekerSelector.getInstance().destroyFile(mf, false, "User", stack.getUIMgr() != null ? stack.getUIMgr().getLocalUIClientName() : null));
       }});
     rft.put(new PredefinedJEPFunction("MediaFile", "GetFileDuration", 1, new String[] { "MediaFile" })
     {
@@ -1147,7 +1147,7 @@ public class MediaFileAPI {
               tmpFile = new java.io.File(srcFile.getParentFile(), "TEMP" + (x++) + srcFile.getName());
             String tmpPath = tmpFile.toString();
             if (sage.media.image.ImageLoader.createThumbnail(srcFile.toString(),
-                tmpPath, finalThumbWidth, finalThumbHeight))
+                tmpPath, finalThumbWidth, finalThumbHeight, 0))
             {
               // Backup the original file first if we haven't already
               if (Sage.getBoolean("temp_backup_picture_file_before_rotateflip", true) &&

@@ -1,7 +1,7 @@
 /*
  * LZW decoder
- * Copyright (c) 2003 Fabrice Bellard.
- * Copyright (c) 2006 Konstantin Shishkov.
+ * Copyright (c) 2003 Fabrice Bellard
+ * Copyright (c) 2006 Konstantin Shishkov
  *
  * This file is part of FFmpeg.
  *
@@ -21,7 +21,7 @@
  */
 
 /**
- * @file lzw.c
+ * @file
  * @brief LZW decoding routines
  * @author Fabrice Bellard
  * Modified for use in TIFF by Konstantin Shishkov
@@ -109,19 +109,19 @@ void ff_lzw_decode_tail(LZWState *p)
         s->pbuf= s->ebuf;
 }
 
-void ff_lzw_decode_open(LZWState **p)
+av_cold void ff_lzw_decode_open(LZWState **p)
 {
     *p = av_mallocz(sizeof(struct LZWState));
 }
 
-void ff_lzw_decode_close(LZWState **p)
+av_cold void ff_lzw_decode_close(LZWState **p)
 {
     av_freep(p);
 }
 
 /**
  * Initialize LZW decoder
- * @param s LZW context
+ * @param p LZW context
  * @param csize initial code size in bits
  * @param buf input data
  * @param buf_size input data size
@@ -131,7 +131,7 @@ int ff_lzw_decode_init(LZWState *p, int csize, const uint8_t *buf, int buf_size,
 {
     struct LZWState *s = (struct LZWState *)p;
 
-    if(csize < 1 || csize > LZW_MAXBITS)
+    if(csize < 1 || csize >= LZW_MAXBITS)
         return -1;
     /* read buffer */
     s->pbuf = buf;
@@ -161,7 +161,7 @@ int ff_lzw_decode_init(LZWState *p, int csize, const uint8_t *buf, int buf_size,
  * NOTE: the algorithm here is inspired from the LZW GIF decoder
  *  written by Steven A. Bennett in 1987.
  *
- * @param s LZW context
+ * @param p LZW context
  * @param buf output buffer
  * @param len number of bytes to decode
  * @return number of bytes decoded

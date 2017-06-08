@@ -49,6 +49,11 @@ import sage.media.format.FormatParser;
 import sage.msg.MsgManager;
 import sage.msg.SystemMessage;
 
+import sage.io.BufferedSageFile;
+import sage.io.EncryptedSageFile;
+import sage.io.LocalSageFile;
+import sage.io.SageDataFile;
+
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
@@ -203,7 +208,9 @@ public class Wizard implements EPGDBPublic2
   // 83 added support for writing out index orders; this is backwards compatible since older versions will skip this section and create their own indices
   // 84 open sourced initial version
   // 85 fixed Wizard bug where we were loading using BYTE_CHARSET instead of I18N_CHARSET
-  public static byte VERSION = SageConstants.PVR ? 0x55 : 0x46;
+  // 86 added support for encoded Schedules Direct image URLs for Channel, Show and SeriesInfo objects
+  // 87 added support for encoded Schedules Direct image URLs for Person
+  public static byte VERSION = SageConstants.PVR ? 0x57 : 0x46;
   public static final byte BAD_VERSION = 0x00;
 
   // This flag is to deal with the problem where we used 32-bit ints for Airing durations in compact DB mode. For PVR
@@ -703,7 +710,7 @@ public class Wizard implements EPGDBPublic2
           while (true)
           {
             try{Thread.sleep(5000);}catch(Exception e){}
-            if (numUncompXcts > NUM_TRANSACTIONS_TO_COMPRESS && !Seeker.getInstance().isDoingImportScan())
+            if (numUncompXcts > NUM_TRANSACTIONS_TO_COMPRESS && !SeekerSelector.getInstance().isDoingImportScan())
             {
               if (Sage.DBG) System.out.println("Setting overflow marker because we've exceeded the # of xcts for a re-save: num=" + numUncompXcts);
               flashOverflow = true;
@@ -748,7 +755,7 @@ public class Wizard implements EPGDBPublic2
           if (Sage.EMBEDDED)
             dbout.flush();
           else
-            dbout.fullFlush();
+            dbout.sync();
         }
         catch (Exception e){}
       }
@@ -846,7 +853,7 @@ public class Wizard implements EPGDBPublic2
         mpause();
         // NOTE FOR EMBEDDED: I've updated this to no longer force saving of old Airings that are linked to
         // unviewable fractional Watched objects. These can grow the database to an unsustainable size although that
-        // would not realisitcally occur for customers; it has on test systems. We only really
+        // would not realistically occur for customers; it has on test systems. We only really
         // care about retaining the fractional watched information for things that can be
         // resumed.
         Index watchIndex = getIndex(WATCH_CODE, (byte)0);
@@ -2598,12 +2605,15 @@ public class Wizard implements EPGDBPublic2
       }
       else if (!Sage.client && dbFile != null)
       {
-        String mode = "rw";
-        if (!Sage.EMBEDDED)
-        {
-          mode = mode + "d";
-        }
-        dbout = new FasterRandomFile(dbFile, mode, Sage.I18N_CHARSET);
+        String mode = !Sage.EMBEDDED ? "rwd" : "rw";
+        // 128k was chosen from observing most random writes are typically less than this distance
+        // behind the actual write buffer. The original default of 64k would often miss even with
+        // the optimizer trying to compensate for the last miss since the misses were more than 64k
+        // behind the latest write.
+        dbout = new SageDataFile(new BufferedSageFile(
+            new LocalSageFile(dbFile, mode),
+            BufferedSageFile.READ_BUFFER_SIZE, 131072),
+            Sage.I18N_CHARSET);
         dbout.seek(dbout.length());
       }
       if (Sage.getBoolean("db_perf_analysis", false))
@@ -2613,7 +2623,7 @@ public class Wizard implements EPGDBPublic2
     catch (Throwable e)
     {
       System.out.println("thrown " + e);
-      e.printStackTrace();
+      e.printStackTrace(System.out);
       if (recover)
       {
         // There's an error in the file cause we quit too early last time, restore
@@ -2850,18 +2860,22 @@ public class Wizard implements EPGDBPublic2
       resetAirings(stationID);
     return (c != null);
   }
+  public Channel addChannel(String name, String longName, String network, int stationID, int logoMask, byte[] logoURL, boolean [] didAdd)
+  {
+    return addChannel(name, longName, network, stationID, logoMask, Pooler.EMPTY_INT_ARRAY, logoURL, didAdd);
+  }
   // 601 Channel addChannel(...
   public Channel addChannel(String name, String longName, String network, int stationID, int logoMask, boolean [] didAdd)
   {
-    return addChannel(name, longName, network, stationID, logoMask, Pooler.EMPTY_INT_ARRAY, didAdd);
+    return addChannel(name, longName, network, stationID, logoMask, Pooler.EMPTY_INT_ARRAY, Pooler.EMPTY_BYTE_ARRAY, didAdd);
   }
-  public Channel addChannel(String name, String longName, String network, int stationID, int logoMask, int[] imageList,
+  public Channel addChannel(String name, String longName, String network, int stationID, int logoMask, int[] imageList, byte[] logoURL,
       boolean [] didAdd)
   {
     if (stationID == 0 && (name == null || name.length() > 0 || longName == null || longName.length() > 0))
     {
       // Do allow our own internal adding of the zero station ID channel, we use a zero length string for the names in that case
-      if (Sage.DBG) System.out.println("ERROR Invalid request to add a channel with a zero stationID: name=" + name + " desc=" + longName + " newtwork=" + network);
+      if (Sage.DBG) System.out.println("ERROR Invalid request to add a channel with a zero stationID: name=" + name + " desc=" + longName + " network=" + network);
       return null;
     }
     // Check if the channel already exists
@@ -2879,6 +2893,7 @@ public class Wizard implements EPGDBPublic2
         c.network = getNetworkForName(network);
         c.logoMask = logoMask;
         c.logoImages = (imageList == null) ? Pooler.EMPTY_INT_ARRAY : imageList;
+        c.logoURL = (logoURL == null || logoURL.length == 0) ? Pooler.EMPTY_BYTE_ARRAY : logoURL;
         getTable(CHANNEL_CODE).add(c, true);
         updateLastModified(DBObject.MEDIA_MASK_TV);
         if (Sage.DBG) System.out.println("Added:" + c);
@@ -2922,6 +2937,12 @@ public class Wizard implements EPGDBPublic2
           if (newC == null)
             newC = (Channel) c.clone();
           newC.logoImages = imageList;
+        }
+        if (c.logoURL != logoURL && !Arrays.equals(logoURL, c.logoURL))
+        {
+          if (newC == null)
+            newC = (Channel) c.clone();
+          newC.logoURL = logoURL;
         }
         if (newC != null)
         {
@@ -3094,6 +3115,21 @@ public class Wizard implements EPGDBPublic2
   {
     return addSeriesInfo(legacySeriesID, title, network, description, history, premiereDate, finaleDate, airDOW, airHrMin, imageURL, people, characters) != null;
   }
+  public SeriesInfo addSeriesInfo(int legacySeriesID, int showcardID, String title, String network, String description, String history, String premiereDate,
+      String finaleDate, String airDOW, String airHrMin, Person[] people, String[] characters, byte[][] imageURLs)
+  {
+    return addSeriesInfo(legacySeriesID, showcardID, title, network, description, history, premiereDate, finaleDate, airDOW, airHrMin,
+      "", people, characters, Pooler.EMPTY_INT_ARRAY, Pooler.EMPTY_LONG_ARRAY, imageURLs);
+  }
+  public SeriesInfo addSeriesInfo(int legacySeriesID, int showcardID, String title, String network, String description, String history, String premiereDate,
+      String finaleDate, String airDOW, String airHrMin, String[] people, String[] characters, byte[][] imageURLs)
+  {
+    Person[] peeps = (people == null || people.length == 0) ? Pooler.EMPTY_PERSON_ARRAY : new Person[people.length];
+    for (int i = 0; i < peeps.length; i++)
+      peeps[i] = getPersonForName(people[i]);
+    return addSeriesInfo(legacySeriesID, showcardID, title, network, description, history, premiereDate, finaleDate, airDOW, airHrMin,
+        "", peeps, characters, Pooler.EMPTY_INT_ARRAY, Pooler.EMPTY_LONG_ARRAY, imageURLs);
+  }
   public SeriesInfo addSeriesInfo(int legacySeriesID, String title, String network, String description, String history, String premiereDate,
       String finaleDate, String airDOW, String airHrMin, String imageURL, String[] people, String[] characters)
   {
@@ -3101,10 +3137,16 @@ public class Wizard implements EPGDBPublic2
     for (int i = 0; i < peeps.length; i++)
       peeps[i] = getPersonForName(people[i]);
     return addSeriesInfo(legacySeriesID, 0, title, network, description, history, premiereDate, finaleDate, airDOW, airHrMin,
-        imageURL, peeps, characters, Pooler.EMPTY_INT_ARRAY, Pooler.EMPTY_LONG_ARRAY);
+        imageURL, peeps, characters, Pooler.EMPTY_INT_ARRAY, Pooler.EMPTY_LONG_ARRAY, Pooler.EMPTY_2D_BYTE_ARRAY);
   }
   public SeriesInfo addSeriesInfo(int legacySeriesID, int showcardID, String title, String network, String description, String history, String premiereDate,
       String finaleDate, String airDOW, String airHrMin, String imageUrl, Person[] people, String[] characters, int[] seriesImages, long[] castImages)
+  {
+    return addSeriesInfo(legacySeriesID, showcardID, title, network, description, history, premiereDate, finaleDate, airDOW, airHrMin, imageUrl, people,
+        characters, seriesImages, castImages, Pooler.EMPTY_2D_BYTE_ARRAY);
+  }
+  public SeriesInfo addSeriesInfo(int legacySeriesID, int showcardID, String title, String network, String description, String history, String premiereDate,
+      String finaleDate, String airDOW, String airHrMin, String imageUrl, Person[] people, String[] characters, int[] seriesImages, long[] castImages, byte[][] imageURLs)
   {
     SeriesInfo oldSeries = (showcardID == 0) ? getSeriesInfoForLegacySeriesID(legacySeriesID) : getSeriesInfoForShowcardID(showcardID);
     SeriesInfo series;
@@ -3148,6 +3190,10 @@ public class Wizard implements EPGDBPublic2
         series.seriesImages = Pooler.EMPTY_INT_ARRAY;
       else
         series.seriesImages = seriesImages.clone();
+      if (imageURLs == null || imageURLs.length == 0)
+        series.imageURLs = Pooler.EMPTY_2D_BYTE_ARRAY;
+      else
+        series.imageURLs = imageURLs.clone();
       if (castImages == null || castImages.length == 0)
         series.castImages = Pooler.EMPTY_LONG_ARRAY;
       else
@@ -3977,7 +4023,7 @@ public class Wizard implements EPGDBPublic2
     } finally {
       releaseWriteLock(WASTED_CODE);
     }
-    if (manual) {
+    if (manual && Sage.getBoolean("apply_dont_like_at_show_level", true)) {
       Show s = basedOn.getShow();
       if (s != null) {
         s.setDontLike(true);
@@ -4505,7 +4551,7 @@ public class Wizard implements EPGDBPublic2
   {
     return (addShow(title, episodeName, desc, duration, new String[] {category, subCategory}, getPeopleArray(people), roles, rated,
         expandedRatings, year, parentalRating, bonus, extID, language, originalAirDate, true, 0, (short)0, (short)0,
-        (short)0, false, 0, 0, Pooler.EMPTY_SHORT_ARRAY) != null);
+        (short)0, false, 0, 0, Pooler.EMPTY_SHORT_ARRAY, Pooler.EMPTY_2D_BYTE_ARRAY) != null);
   }
 
   public boolean addShowPublic2(String title, String episodeName, String desc, long duration, String[] categories,
@@ -4515,7 +4561,7 @@ public class Wizard implements EPGDBPublic2
   {
     return (addShow(title, episodeName, desc, duration, categories, getPeopleArray(people), roles, rated,
         expandedRatings, year, parentalRating, bonus, extID, language, originalAirDate, true, 0, seasonNum, episodeNum,
-        (short)0, forcedUnique, 0, 0, Pooler.EMPTY_SHORT_ARRAY) != null);
+        (short)0, forcedUnique, 0, 0, Pooler.EMPTY_SHORT_ARRAY, Pooler.EMPTY_2D_BYTE_ARRAY) != null);
   }
 
   public Show addShow(String title, String primeTitle, String episodeName, String desc, long duration, String[] categories,
@@ -4526,7 +4572,28 @@ public class Wizard implements EPGDBPublic2
   {
     return addShow(title, episodeName, desc, duration, categories, getPeopleArray(people), roles, rated, expandedRatings,
         year, parentalRating, bonus, extID, language, originalAirDate, false, mediaMask, seasonNum, episodeNum, (short)0,
-        forcedUnique, 0, 0, Show.convertLegacyShowImageData(photoCountTall, photoCountWide, posterCountTall, posterCountWide));
+        forcedUnique, 0, 0, Show.convertLegacyShowImageData(photoCountTall, photoCountWide, posterCountTall, posterCountWide),
+        Pooler.EMPTY_2D_BYTE_ARRAY);
+  }
+
+  public Show addShow(String title, String episodeName, String desc, long duration, String[] categories,
+                      Person[] people, byte[] roles, String rated, String[] expandedRatings,
+                      String year, String parentalRating, String[] bonus, String extID, String language, long originalAirDate,
+                      int mediaMask, short seasonNum, short episodeNum, boolean forcedUnique, int showcardID, byte urls[][])
+  {
+    return addShow(title, episodeName, desc, duration, categories, people, roles, rated, expandedRatings,
+        year, parentalRating, bonus, extID, language, originalAirDate, false, mediaMask, seasonNum, episodeNum, (short)0,
+        forcedUnique, showcardID, 0, Pooler.EMPTY_SHORT_ARRAY, urls);
+  }
+
+  public Show addShow(String title, String episodeName, String desc, long duration, String[] categories,
+                      String[] people, byte[] roles, String rated, String[] expandedRatings,
+                      String year, String parentalRating, String[] bonus, String extID, String language, long originalAirDate,
+                      int mediaMask, short seasonNum, short episodeNum, boolean forcedUnique, int showcardID, byte urls[][])
+  {
+    return addShow(title, episodeName, desc, duration, categories, getPeopleArray(people), roles, rated, expandedRatings,
+        year, parentalRating, bonus, extID, language, originalAirDate, false, mediaMask, seasonNum, episodeNum, (short)0,
+        forcedUnique, showcardID, 0, Pooler.EMPTY_SHORT_ARRAY, urls);
   }
 
   public Show addShow(String title, String episodeName, String desc, long duration, String[] categories,
@@ -4537,14 +4604,14 @@ public class Wizard implements EPGDBPublic2
   {
     return addShow(title, episodeName, desc, duration, categories, people, roles, rated, expandedRatings, year, parentalRating,
         bonus, extID, language, originalAirDate, false, mediaMask, seasonNum, episodeNum, altEpisodeNum, forcedUnique, showcardID,
-        seriesID, imageIDs);
+        seriesID, imageIDs, Pooler.EMPTY_2D_BYTE_ARRAY);
   }
 
   private Show addShow(String title, String episodeName, String desc, long duration, String[] categories,
       Person[] people, byte[] roles, String rated, String[] expandedRatings,
       String year, String parentalRating, String[] bonus, String extID, String language, long originalAirDate, boolean fromAPlugin,
       int mediaMask, short seasonNum, short episodeNum, short altEpisodeNum, boolean forcedUnique, int showcardID, int seriesID,
-      short[] imageIDs)
+      short[] imageIDs, byte[][] imageURLs)
   {
     // Double check this first because clients can't synchronize on our structure
     Show oldShow = getShowForExternalID(extID);
@@ -4628,6 +4695,11 @@ public class Wizard implements EPGDBPublic2
       s.seriesID = seriesID;
       s.showcardID = showcardID;
       s.imageIDs = (imageIDs == null ? Pooler.EMPTY_SHORT_ARRAY : ((short[]) imageIDs.clone()));
+      if (imageURLs == null || imageURLs.length == 0)
+        s.imageURLs = Pooler.EMPTY_2D_BYTE_ARRAY;
+      else
+        s.imageURLs = imageURLs.clone();
+
       if (forcedUnique)
         s.cachedUnique = Show.FORCED_UNIQUE;
 
@@ -5134,6 +5206,23 @@ public class Wizard implements EPGDBPublic2
     }
   }
 
+  // Used to create timed recordingings in Seeker2.
+  Airing getFakeAiring(long startTime, long endTime, int stationID)
+  {
+    return getFakeAiring(startTime, endTime, stationID, 0);
+  }
+
+  // Used to create timed recordingings in Seeker2.
+  Airing getFakeAiring(long startTime, long endTime, int stationID, int showID)
+  {
+    Airing fakeAir = new Airing(0);
+    fakeAir.time = startTime;
+    fakeAir.duration = endTime - startTime;
+    fakeAir.stationID = stationID;
+    fakeAir.showID = showID;
+    return fakeAir;
+  }
+
   /**
    * Get the time of the last non-NoShow airing in the database
    *
@@ -5215,6 +5304,114 @@ public class Wizard implements EPGDBPublic2
     return lastAiringTime;
   }
 
+  /**
+   * Get the time of the last non-NoShow airing in the database
+   *
+   * @param lookupIDs An array of station ID's to look up the latest airing for.
+   * @return <code>null</code> when database is not yet ready, an empty array if lookupIDs is
+   *         <code>null</code> or empty or the millisecond time (or -1 if there are no airings) of
+   *         the last airing for each lookupID
+   */
+  public long[] getLatestTvAiringTime(int lookupIDs[]) {
+    if (loading) return null;
+    if (lookupIDs == null || lookupIDs.length == 0) return Pooler.EMPTY_LONG_ARRAY;
+    long returnValues[] = new long[lookupIDs.length];
+    Arrays.fill(returnValues, -1);
+
+    // Get all channels
+    Channel[] channels=getChannels();
+
+    Table t = getTable(AIRING_CODE);
+    Index indy = t.getIndex(AIRINGS_BY_CT_CODE);
+
+    int lastIndex=0;
+    try {
+      t.acquireReadLock();
+      // for each channel
+      for ( int chanIndex = 0; chanIndex < channels.length; chanIndex++)
+      {
+        int stationID = channels[chanIndex].getStationID();
+
+        if ( stationID > 0 )
+        {
+          // Only check station IDs that match the channels we are looking for.
+          boolean skip = true;
+          for (int i = 0; i < lookupIDs.length; i++)
+          {
+            if (stationID == lookupIDs[i])
+            {
+              skip = false;
+              break;
+            }
+          }
+          if (skip) continue;
+
+          int index=-1;
+          int low = lastIndex; // use lastIndex as a hint of where to start looking
+          int high = t.num - 1;
+          int mid =-1;
+          Airing air=null;
+
+          // binary search for last airing on channel
+          while ( low < high )
+          {
+            mid = ( low + high ) >> 1;
+            air = (Airing) indy.data[mid];
+            if ( mid == low )
+              // cannot go deeper
+              break;
+
+            long cmp = air.stationID - stationID;
+            if ( cmp == 0 ) {
+              // use negative comparison to get last airing on this channel
+              cmp = -1 ;
+            }
+
+            if ( cmp < 0 )
+              low = mid;
+            else if ( cmp > 0 )
+              high = mid;
+            else {
+              break;
+            }
+          }
+          // check that we did actually find an airing on the
+          // station we want...
+          if ( air != null && air.stationID == stationID )
+          {
+            index=mid;
+            // last airing for channel found
+            // store index for next iteration of binary search loop
+            lastIndex = index;
+
+            // skip noshows by moving back
+            while ( index >0  && air != null && isNoShow(air.showID) && air.stationID == stationID )
+            {
+              index--;
+              air =(Airing) indy.data[index];
+            }
+
+            if ( air != null && air.stationID == stationID && ! isNoShow(air.showID) )
+            {
+              // We could have saved the index earlier, but if there is more than one entry for the
+              // same station ID, it would not get get updated.
+              for (int i = 0; i < lookupIDs.length; i++)
+              {
+                if (stationID == lookupIDs[i])
+                {
+                  // got valid show on this channel
+                  returnValues[i] = Math.max(returnValues[i], air.getEndTime());
+                }
+              }
+            }
+          }
+        } // if non-zero Station ID
+      } // for each channel
+    } finally {
+      t.releaseReadLock();
+    }
+    return returnValues;
+  }
 
   Watched addWatched(Airing watchAir, long watchStart, long watchEnd,
       long realStart, long realEnd)
@@ -5418,11 +5615,19 @@ public class Wizard implements EPGDBPublic2
     t.remove(removeMe, true);
   }
 
+  public Person addPerson(String name, int extID, int dob, int dod, String birthPlace, short[] yearList, String[] awardList, byte[][] headshotUrls, int mediaMask)
+  {
+    return addPerson(name, extID, dob, dod, birthPlace, yearList, awardList, (short)-1, headshotUrls, mediaMask);
+  }
   public Person addPerson(String name, int extID, int dob, int dod, String birthPlace, short[] yearList, String[] awardList, short headshotImageID)
   {
     return addPerson(name, extID, dob, dod, birthPlace, yearList, awardList, headshotImageID, DBObject.MEDIA_MASK_TV);
   }
   public Person addPerson(String name, int extID, int dob, int dod, String birthPlace, short[] yearList, String[] awardList, short headshotImageID, int mediaMask)
+  {
+    return addPerson(name, extID, dob, dod, birthPlace, yearList, awardList, headshotImageID, Pooler.EMPTY_2D_BYTE_ARRAY, mediaMask);
+  }
+  public Person addPerson(String name, int extID, int dob, int dod, String birthPlace, short[] yearList, String[] awardList, short headshotImageID, byte[][] headshotUrls, int mediaMask)
   {
     name = name.trim();
     Person oldPerson = getPersonForNameAndExtID(name, extID, false);
@@ -5431,6 +5636,7 @@ public class Wizard implements EPGDBPublic2
       acquireWriteLock(PEOPLE_CODE);
       person = (oldPerson != null) ? (Person) oldPerson.clone() : new Person(getNextWizID());
       person.name = new String(name);
+      person.ignoreCaseHash = name.toLowerCase().hashCode();
       person.extID = extID;
       person.dateOfBirth = dob;
       person.dateOfDeath = dod;
@@ -5440,6 +5646,7 @@ public class Wizard implements EPGDBPublic2
       for (int i = 0; i < person.awardNames.length; i++)
         person.awardNames[i] = getBonusForName(awardList[i], DBObject.MEDIA_MASK_TV);
       person.headshotImageId = headshotImageID;
+      person.headshotUrls = (headshotUrls == null || headshotUrls.length != 2) ? Pooler.EMPTY_2D_BYTE_ARRAY : headshotUrls;
 
       person.setMediaMask(mediaMask);
 
@@ -5518,6 +5725,7 @@ public class Wizard implements EPGDBPublic2
         }
         Person rv = new Person(getNextWizID());
         rv.name = new String(name);
+        rv.ignoreCaseHash = name.toLowerCase().hashCode();
         rv.setMediaMask(DBObject.MEDIA_MASK_TV);
         // We use a negative external ID for a Person to indicate an alias to the real one stored in the DB
         rv.extID = -1 * extID;
@@ -5607,6 +5815,7 @@ public class Wizard implements EPGDBPublic2
       {
         Person rv = new Person(getNextWizID());
         rv.name = new String(name);
+        rv.ignoreCaseHash = name.toLowerCase().hashCode();
         rv.setMediaMask(createMediaMask);
         rv.extID = 0;
         t.add(rv, !loading);
@@ -6846,6 +7055,8 @@ public class Wizard implements EPGDBPublic2
     if (p.extID == 0)
       return new Person[] { p };
     Person originalPerson = (p.extID < 0) ? p.getOriginalAlias() : p;
+    if (originalPerson == null)
+      originalPerson = p;
 
     int targetExtID = -1 * originalPerson.extID;
     // Now we get all the aliases for this person
@@ -7345,7 +7556,7 @@ public class Wizard implements EPGDBPublic2
     }
     else if (dbFile.isFile() && dbFile.length() > 0)
     {
-      FasterRandomFile in = null;
+      SageDataFile in = null;
       loading = true;
       boolean finishedAll = false;
       Map<Integer, Integer> idTranslation = null;
@@ -7381,9 +7592,19 @@ public class Wizard implements EPGDBPublic2
       {
         long fileLength = dbFile.length();
         // The SageTVLite Wiz DB files are not encrypted
-        in = new FasterRandomFile(dbFile, (SageTV.upgradeFromLite || LITE || Sage.EMBEDDED) ? "r" :"rc", Sage.I18N_CHARSET);
+        if (SageTV.upgradeFromLite || LITE || Sage.EMBEDDED)
+          in = new SageDataFile(new BufferedSageFile(
+              new LocalSageFile(dbFile, true),
+              BufferedSageFile.READ_BUFFER_SIZE),
+              Sage.I18N_CHARSET);
+        else
+          in = new SageDataFile(new EncryptedSageFile(new BufferedSageFile(
+              new LocalSageFile(dbFile, true),
+              BufferedSageFile.READ_BUFFER_SIZE)),
+              Sage.I18N_CHARSET);
+
         // Testing shows the DB loads 5% faster if this is false...not much of an optimization, but it helps
-        in.setOptimizeReadFully(false);
+        //in.setOptimizeReadFully(false);
         byte b1 = in.readUnencryptedByte();
         byte b2 = in.readUnencryptedByte();
         byte b3 = in.readUnencryptedByte();
@@ -7402,12 +7623,13 @@ public class Wizard implements EPGDBPublic2
         if (version < 0x2F || version >= 0x54)
         {
           // unencrypted DB file
-          in.close();
-          in = new FasterRandomFile(dbFile, "r", (version == 0x54) ? Sage.BYTE_CHARSET : Sage.I18N_CHARSET);
+          //Remove encryption filter.
+          in = new SageDataFile(in.getUnencryptedSource(), (version == 0x54) ? Sage.BYTE_CHARSET : Sage.I18N_CHARSET);
+          // We are already at the right position since we didn't re-open the file.
+          /*in.readUnencryptedByte();
           in.readUnencryptedByte();
           in.readUnencryptedByte();
-          in.readUnencryptedByte();
-          in.readUnencryptedByte();
+          in.readUnencryptedByte();*/
         }
         if (version < 0x35)
         {
@@ -7422,14 +7644,14 @@ public class Wizard implements EPGDBPublic2
         Table t = null;
         HashMap<Byte, Set<DBObject>> killMap = new HashMap<Byte, Set<DBObject>>();
         if (Sage.DBG) System.out.println("DBFile at version " + version + " FileSize=" + fileLength);
-        long fp = in.getFilePointer();
+        long fp = in.position();
         int cmdLength = 0;
         byte opcode = 0;
         byte typecode = 0;
         int numTransactionRecords = 0;
-        while (fileLength > in.getFilePointer())
+        while (fileLength > in.position())
         {
-          long newFp = in.getFilePointer();
+          long newFp = in.position();
           if (fp + cmdLength != newFp)
           {
             if (!finishedAll) {
@@ -7751,11 +7973,8 @@ public class Wizard implements EPGDBPublic2
           }
         }
       }
-      String fileMode = "rw";
-      if (!Sage.EMBEDDED)
-      {
-        fileMode += "d";
-      }
+      // Looks cleaner and creates one less string for !Sage.EMBEDDED.
+      String fileMode = !Sage.EMBEDDED ? "rwd" : "rw";
       if(!backupFailed) {
         int dbWriteFlags = 0;
         // I'm leaving this false for now as it introduces a DB incompatibility for downgrades, but
@@ -7771,23 +7990,31 @@ public class Wizard implements EPGDBPublic2
         dbFile = new File(dbFile.getAbsolutePath() + ".tmp");
         dbFile.createNewFile();
         if (Sage.DBG) System.out.println("Wizard compressing new file with version "+VERSION+"...");
-        dbout = new FasterRandomFile(dbFile, fileMode, Sage.I18N_CHARSET);
+        // 128k was chosen from observing most random writes are typically less than this distance
+        // behind the actual write buffer. The original default of 64k would often miss even with
+        // the optimizer trying to compensate for the last miss since the misses were more than 64k
+        // behind the latest write.
+        dbout = new SageDataFile(new BufferedSageFile(
+            new LocalSageFile(dbFile, fileMode),
+            BufferedSageFile.READ_BUFFER_SIZE, 131072),
+            Sage.I18N_CHARSET);
         dbout.writeUnencryptedByte((byte) 'W');
         dbout.writeUnencryptedByte((byte) 'I');
         dbout.writeUnencryptedByte((byte) 'Z');
         dbout.flush();
 
         // The BAD_VERSION marker is to signify incompletely saved DB files.
-        long verPos = dbout.getFilePointer();
+        long verPos = dbout.position();
         dbout.writeUnencryptedByte(BAD_VERSION);
-        dbout.fullFlush();
+        dbout.sync();
 
         for (int i = 0; i < WRITE_ORDER.length; i++)
         {
           if (Sage.DBG) System.out.println("Wizard writing out table info for " +
               getNameForCode(WRITE_ORDER[i]));
           Table currTable = getTable(WRITE_ORDER[i]);
-          long fp = dbout.getFilePointer();
+          // 7/14/2016 JS: Setting the variable here doesn't make any sense; it never gets used.
+          long fp;// = dbout.position();
           dbout.writeInt(10);
           dbout.writeByte(SIZE);
           try {
@@ -7796,7 +8023,7 @@ public class Wizard implements EPGDBPublic2
             dbout.writeInt(currTable.num);
             if (currTable.num > 0)
             {
-              fp = dbout.getFilePointer();
+              fp = dbout.position();
               dbout.writeInt(Integer.MAX_VALUE);
               dbout.writeByte(FULL_DATA);
               dbout.writeByte(currTable.primary.indexCode);
@@ -7843,19 +8070,29 @@ public class Wizard implements EPGDBPublic2
         long endSaveTime = Sage.eventTime();
         if (Sage.DBG) System.out.println("DB saveTime=" + ((endSaveTime - startSaveTime)/1000.0) + " sec");
         numUncompXcts = 0;
-        long fp = dbout.getFilePointer();
+        long fp = dbout.position();
         dbout.setLength(fp);
-        dbout.fullFlush();
+        dbout.sync();
         dbout.seek(verPos);
         dbout.writeUnencryptedByte(VERSION);
         dbout.close();
         dbFile.renameTo(realDBFile);
         dbFile = realDBFile;
-        dbout = new FasterRandomFile(dbFile, fileMode, Sage.I18N_CHARSET);
+        // 128k was chosen from observing most random writes are typically less than this distance
+        // behind the actual write buffer. The original default of 64k would often miss even with
+        // the optimizer trying to compensate for the last miss since the misses were more than 64k
+        // behind the latest write.
+        dbout = new SageDataFile(new BufferedSageFile(
+            new LocalSageFile(dbFile, fileMode),
+            BufferedSageFile.READ_BUFFER_SIZE, 131072),
+            Sage.I18N_CHARSET);
         dbout.seek(fp);
       } else {
         // backup failed to update; make sure we've got dbout set.
-        dbout = new FasterRandomFile(dbFile, fileMode, Sage.I18N_CHARSET);
+        dbout = new SageDataFile(new BufferedSageFile(
+            new LocalSageFile(dbFile, fileMode),
+            BufferedSageFile.READ_BUFFER_SIZE, 131072),
+            Sage.I18N_CHARSET);
         dbout.seek(dbout.length());
       }
       while (true)
@@ -7871,7 +8108,7 @@ public class Wizard implements EPGDBPublic2
           nextXct = pendingWriteXcts.remove(0);
         }
 
-        long fp = dbout.getFilePointer();
+        long fp = dbout.position();
         dbout.writeInt(Integer.MAX_VALUE);
         dbout.writeByte(nextXct.xctType);
         dbout.writeByte(nextXct.objectType);
@@ -7909,9 +8146,9 @@ public class Wizard implements EPGDBPublic2
       numUncompXcts++;
       synchronized (outLock)
       {
-        FastRandomFile frf = dbout;
+        SageDataFile frf = dbout;
         if (frf == null) return;
-        long fp = frf.getFilePointer();
+        long fp = frf.position();
         try
         {
           if (listeners.isEmpty())
@@ -7999,9 +8236,9 @@ public class Wizard implements EPGDBPublic2
       numUncompXcts++;
       synchronized (outLock)
       {
-        FastRandomFile frf = dbout;
+        SageDataFile frf = dbout;
         if (frf == null) return;
-        long fp = frf.getFilePointer();
+        long fp = frf.position();
         try
         {
           if (listeners.isEmpty())
@@ -8031,7 +8268,7 @@ public class Wizard implements EPGDBPublic2
           catch (IOException ioe)
           {
             System.out.println("IO Error updating DB file: " + ioe);
-            ioe.printStackTrace();
+            ioe.printStackTrace(System.out);
           }
         }
       }
@@ -8054,9 +8291,9 @@ public class Wizard implements EPGDBPublic2
       numUncompXcts++;
       synchronized (outLock)
       {
-        FastRandomFile frf = dbout;
+        SageDataFile frf = dbout;
         if (frf == null) return;
-        long fp = frf.getFilePointer();
+        long fp = frf.position();
         try
         {
           if (listeners.isEmpty())
@@ -8077,7 +8314,7 @@ public class Wizard implements EPGDBPublic2
         catch (Exception e)
         {
           if (Sage.DBG) System.out.println("Error updating DB file:" + e);
-          if (Sage.DBG) e.printStackTrace();
+          if (Sage.DBG) e.printStackTrace(System.out);
           try
           {
             frf.flush();
@@ -8086,16 +8323,16 @@ public class Wizard implements EPGDBPublic2
           catch (IOException ioe)
           {
             System.out.println("IO Error updating DB file: " + ioe);
-            ioe.printStackTrace();
+            ioe.printStackTrace(System.out);
           }
         }
       }
     }
   }
 
-  public static void logCmdLength(FastRandomFile frf, long fp) throws IOException
+  public static void logCmdLength(SageDataFile frf, long fp) throws IOException
   {
-    frf.writeIntAtOffset(fp, (int)(frf.getFilePointer() - fp));
+    frf.writeIntAtOffset(fp, (int)(frf.position() - fp));
   }
 
   /*
@@ -8129,6 +8366,7 @@ public class Wizard implements EPGDBPublic2
       if ( rv == null ) {
         rv = new Stringer(getNextWizID());
         rv.name = name;
+        rv.ignoreCaseHash = name.toLowerCase().hashCode();
         rv.setMediaMask(createMediaMask);
         t.add(rv, true);
       } else {
@@ -8260,6 +8498,7 @@ public class Wizard implements EPGDBPublic2
         return rv;
       rv = new Stringer(getNextWizID());
       rv.name = new String(name);
+      rv.ignoreCaseHash = name.toLowerCase().hashCode();
       rv.setMediaMask(createMediaMask);
       t.add(rv, !loading);
       return rv;
@@ -8463,6 +8702,17 @@ public class Wizard implements EPGDBPublic2
 
   boolean isStandalone() { return standalone; }
 
+  /**
+   * Is an airing a "No Data" recording?
+   *
+   * @param testMe The {@link Airing} to check.
+   * @return <code>true</code> if the airing is a "No Data" recording.
+   */
+  public boolean isNoShow(Airing testMe)
+  {
+    return testMe != null && testMe.showID == noShowID;
+  }
+
   boolean isNoShow(Show s) { return noShow == s; }
 
   boolean isNoShow(int showID) { return noShow.id == showID; }
@@ -8538,7 +8788,7 @@ public class Wizard implements EPGDBPublic2
       if (Sage.DBG)
       {
         System.out.println("WIZARD TRANSACTION ERROR:" + e);
-        e.printStackTrace();
+        e.printStackTrace(System.out);
       }
     }
   }
@@ -8575,16 +8825,21 @@ public class Wizard implements EPGDBPublic2
           addXctListener(addMe);
           return;
         }
-        long startFP = dbout.getFilePointer();
+        long startFP = dbout.position();
         try
         {
-          dbout.seek(4); // skip version # & WIZ
+          dbout.seek(4); // skip version # & WIZ.
           byte[] netBuf = new byte[65536];
           long dbLeft = dbout.length() - 4;
           if (Sage.DBG) System.out.println("Sending DB to client of size:" + dbLeft);
           // Since we are just transferring the whole file like this it is faster to have this optimization on
           // at this point.
-          dbout.setOptimizeReadFully(true);
+          // 7-12-2016 JS: The newer implementation works out if a read could fit completely within
+          // the buffer and based on that will either do a partial buffer + direct read, no buffer +
+          // direct read or a fully buffered read. Since the default read buffer size is 32k and the
+          // read length here is mostly 256k, it will trigger the same kind of optimization that
+          // this enabled in the old class.
+          //dbout.setOptimizeReadFully(true);
           while (dbLeft > 0)
           {
             int currRead = Math.min(netBuf.length, (int)dbLeft);
@@ -8817,9 +9072,9 @@ public class Wizard implements EPGDBPublic2
 
   private byte version;
   private String prefsRoot;
-  private FasterRandomFile dbout;
+  private SageDataFile dbout;
   private Carny god;
-  private Object outLock = new Object();
+  private final Object outLock = new Object();
   private File dbFile;
   private File dbBackupFile;
   private File widgetDBFile;
@@ -8857,7 +9112,7 @@ public class Wizard implements EPGDBPublic2
 
   private Vector<XctSyncClient> listeners;
 
-  private Vector<XctObject> pendingWriteXcts;
+  private final Vector<XctObject> pendingWriteXcts;
   private boolean suspendWrite;
 
   private boolean clientIsSyncing;

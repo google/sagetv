@@ -1,6 +1,6 @@
 /*
  * Beam Software SIFF demuxer
- * Copyright (c) 2007 Konstantin Shishkov.
+ * Copyright (c) 2007 Konstantin Shishkov
  *
  * This file is part of FFmpeg.
  *
@@ -19,8 +19,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "libavutil/intreadwrite.h"
 #include "avformat.h"
-#include "riff.h"
 
 enum SIFFTags{
     TAG_SIFF = MKTAG('S', 'I', 'F', 'F'),
@@ -60,11 +60,12 @@ typedef struct SIFFContext{
 
 static int siff_probe(AVProbeData *p)
 {
+    uint32_t tag = AV_RL32(p->buf + 8);
     /* check file header */
-    if (AV_RL32(p->buf) == TAG_SIFF)
-        return AVPROBE_SCORE_MAX;
-    else
+    if (AV_RL32(p->buf) != TAG_SIFF ||
+        (tag != TAG_VBV1 && tag != TAG_SOUN))
         return 0;
+    return AVPROBE_SCORE_MAX;
 }
 
 static int create_audio_stream(AVFormatContext *s, SIFFContext *c)
@@ -73,10 +74,10 @@ static int create_audio_stream(AVFormatContext *s, SIFFContext *c)
     ast = av_new_stream(s, 0);
     if (!ast)
         return -1;
-    ast->codec->codec_type      = CODEC_TYPE_AUDIO;
+    ast->codec->codec_type      = AVMEDIA_TYPE_AUDIO;
     ast->codec->codec_id        = CODEC_ID_PCM_U8;
     ast->codec->channels        = 1;
-    ast->codec->bits_per_sample = c->bits;
+    ast->codec->bits_per_coded_sample = c->bits;
     ast->codec->sample_rate     = c->rate;
     ast->codec->frame_size      = c->block_align;
     av_set_pts_info(ast, 16, 1, c->rate);
@@ -117,7 +118,7 @@ static int siff_parse_vbv1(AVFormatContext *s, SIFFContext *c, ByteIOContext *pb
     st = av_new_stream(s, 0);
     if (!st)
         return -1;
-    st->codec->codec_type = CODEC_TYPE_VIDEO;
+    st->codec->codec_type = AVMEDIA_TYPE_VIDEO;
     st->codec->codec_id   = CODEC_ID_VB;
     st->codec->codec_tag  = MKTAG('V', 'B', 'V', '1');
     st->codec->width      = width;
@@ -215,7 +216,7 @@ static int siff_read_packet(AVFormatContext *s, AVPacket *pkt)
             c->curstrm = 0;
         }
         if(!c->cur_frame || c->curstrm)
-            pkt->flags |= PKT_FLAG_KEY;
+            pkt->flags |= AV_PKT_FLAG_KEY;
         if (c->curstrm == -1)
             c->cur_frame++;
     }else{
@@ -228,7 +229,7 @@ static int siff_read_packet(AVFormatContext *s, AVPacket *pkt)
 
 AVInputFormat siff_demuxer = {
     "siff",
-    "Beam Software SIFF",
+    NULL_IF_CONFIG_SMALL("Beam Software SIFF"),
     sizeof(SIFFContext),
     siff_probe,
     siff_read_header,

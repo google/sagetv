@@ -2,7 +2,9 @@ CC=gcc
 #CC=mipsel-unknown-linux-gnu-gcc
 #CFLAGS = -c -fPIC -I/usr/local/j2sdk/include/ -I/usr/local/j2sdk/include/linux -D_FILE_OFFSET_BITS=64 -I/video/sagecrossbuild/include/freetype2/ -I/video/sagecrossbuild/include/
 #CFLAGS = -c -fPIC -I/usr/local/j2sdk/include/ -I/usr/local/j2sdk/include/linux -D_FILE_OFFSET_BITS=64 -I/usr/include/freetype2/
-CFLAGS = -c -O -D_JNI_IMPLEMENTATION -IC:\\jdk1.4\\include -IC:\\jdk1.4\\include\\win32 -IC:\\msys\\1.0\\home\\Narflex\\freetype-2.1.10\\include
+#CFLAGS = -c -O -D_JNI_IMPLEMENTATION -IC:\\jdk1.4\\include -IC:\\jdk1.4\\include\\win32 -IC:\\msys\\1.0\\home\\Narflex\\freetype-2.1.10\\include
+CFLAGS = -c -O -D_JNI_IMPLEMENTATION -IC:\\Program\ Files\ \(x86\)\\Java\\jdk1.8.0_72\\include -IC:\\Program\ Files\ \(x86\)\\Java\\jdk1.8.0_72\\include\\win32 -IC:\\temp\\sagetv\\stage\\include -IC:\\temp\\sagetv\\stage\\include\\freetype2
+LIBPATH = C:\\temp\\sagetv\\stage\\lib
 BINDIR=/usr/local/bin
 
 OBJFILES=sage_FreetypeFont.o
@@ -10,7 +12,7 @@ OBJFILES=sage_FreetypeFont.o
 FreetypeFontJNI.dll: $(OBJFILES)
 #	$(CC) -shared -W1 -o libFreetypeFontJNI.so $(OBJFILES) -L/video/crosstool-8634-2/crosstool/gcc-4.2-20070307-glibc-2.5/mipsel-unknown-linux-gnu/lib -lfreetype
 #	$(CC) -shared -W1 -o libFreetypeFontJNI.so $(OBJFILES) -L/video/sagecrosslib/lib -lfreetype
-	$(CC) -shared -W1 -o FreetypeFontJNI.dll $(OBJFILES) -lfreetype -lz
+	$(CC) -Wl,--kill-at -shared -static -L$(LIBPATH) -o FreetypeFontJNI.dll $(OBJFILES) -lfreetype -lz
 
 clean:
 	rm -f *.o FreetypeFontJNI.dll *.c~ *.h~

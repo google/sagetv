@@ -31,6 +31,7 @@ public class Pooler
   public static final Stringer[] EMPTY_STRINGER_ARRAY = new Stringer[0];
   public static final Person[] EMPTY_PERSON_ARRAY = new Person[0];
   public static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
+  public static final byte[][] EMPTY_2D_BYTE_ARRAY = new byte[0][0];
   public static final int[] EMPTY_INT_ARRAY = new int[0];
   public static final short[] EMPTY_SHORT_ARRAY = new short[0];
   public static final long[] EMPTY_LONG_ARRAY = new long[0];
@@ -38,6 +39,7 @@ public class Pooler
   public static final Show[] EMPTY_SHOW_ARRAY = new Show[0];
   public static final tv.sage.mod.AbstractWidget[] EMPTY_ABSTRACTWIDGET_ARRAY = new tv.sage.mod.AbstractWidget[0];
   public static final Channel[] EMPTY_CHANNEL_ARRAY = new Channel[0];
+  public static final MediaFile[] EMPTY_MEDIA_FILE_ARRAY = new MediaFile[0];
   private static java.util.Stack vectorPool = new java.util.Stack();
   private static int numVecsCreated = 0;
   private static java.util.Stack arrayListPool = new java.util.Stack();

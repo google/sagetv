@@ -16,6 +16,8 @@
 package sage.api;
 
 import sage.*;
+import sage.epg.sd.SDRipper;
+import sage.epg.sd.json.lineup.SDAccountLineup;
 
 /**
  * Represents an specific input on a CaptureDevice such as the TV Tuner, Composite or S-Video inputs
@@ -401,8 +403,6 @@ public class CaptureDeviceInputAPI{
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         return getCapDevInput(stack).getCrossName();
       }});
-
-
     rft.put(new PredefinedJEPFunction("CaptureDeviceInput", "ConfigureInputForEPGDataLineup", 2, new String[] {"CaptureDeviceInput", "Lineup"}, true)
     {
       /**
@@ -417,9 +417,40 @@ public class CaptureDeviceInputAPI{
         String lineup = getString(stack);
         EPG epg = EPG.getInstance();
         long provID = epg.getProviderIDForEPGDSName(lineup);
-        long serverProvID = epg.getCachedProviderIDForName(lineup);
+        long serverProvID;
+
+        if (lineup != null && lineup.endsWith(SDRipper.SOURCE_LABEL))
+        {
+          if (provID != 0)
+          {
+            EPGDataSource ds = epg.getSourceForProviderID(provID);
+            if (ds != null)
+              ds.setEnabled(true);
+          }
+          else
+          {
+            SDAccountLineup accountLineup = SDRipper.getAccountLineup(lineup.substring(0, lineup.length() - SDRipper.SOURCE_LABEL.length()));
+            if (accountLineup == null)
+              return Boolean.FALSE;
+
+            provID = SDRipper.getHashFromAccountLineup(accountLineup);
+            if (provID == 0)
+              return Boolean.FALSE;
+
+            int newDataSourceID = Wizard.getInstance().getNextWizID();
+            while (epg.getSourceForID(newDataSourceID) != null)
+              newDataSourceID = Wizard.getInstance().getNextWizID();
+
+            SDRipper DataSource = new SDRipper(newDataSourceID);
+            DataSource.setName(lineup);
+            DataSource.setProviderID(provID);
+            DataSource.setLineupID(accountLineup.getLineup());
+            DataSource.setEnabled(true);
+            epg.addDataSource(DataSource);
+          }
+        }
         // Sometimes the provider ID will change, but not the name. I don't know why Tribune does this; but we need to account for that case.
-        if (provID == 0 || (serverProvID != 0 && provID != serverProvID))
+        else if (((serverProvID = epg.getCachedProviderIDForName(lineup)) != 0 && provID != serverProvID) || provID == 0)
         {
           // We haven't created a datasource for this provider ID yet. We need to
           // do that now since its going to be used.
@@ -468,7 +499,7 @@ public class CaptureDeviceInputAPI{
             ds.setEnabled(true);
         }
         getCapDevInput(stack).setProvider(provID);
-        Scheduler.getInstance().kick(false);
+        SchedulerSelector.getInstance().kick(false);
         return Boolean.TRUE;
       }});
     rft.put(new PredefinedJEPFunction("CaptureDeviceInput", "ConfigureInputWithoutEPGData", 1, new String[] {"CaptureDeviceInput"}, true)
@@ -501,7 +532,7 @@ public class CaptureDeviceInputAPI{
         else
           ds.setEnabled(true);
         cdi.setProvider(provID);
-        Scheduler.getInstance().kick(false);
+        SchedulerSelector.getInstance().kick(false);
         return Boolean.TRUE;
       }});
     rft.put(new PredefinedJEPFunction("CaptureDeviceInput", "ReleaseCaptureDeviceInput", 1, new String[] {"CaptureDeviceInput"}, true)
@@ -515,7 +546,7 @@ public class CaptureDeviceInputAPI{
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         getCapDevInput(stack).setProvider(0);
-        Scheduler.getInstance().kick(false);
+        SchedulerSelector.getInstance().kick(false);
         return null;
       }});
     rft.put(new PredefinedJEPFunction("CaptureDeviceInput", "GetCaptureDeviceInputBeingViewed")
@@ -549,7 +580,7 @@ public class CaptureDeviceInputAPI{
        * @declaration public String GetCaptureDeviceInputRecordingMediaFile(MediaFile MediaFile);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        Object rv = Seeker.getInstance().getInputForCurrRecordingFile(getMediaFile(stack));
+        Object rv = SeekerSelector.getInstance().getInputForCurrRecordingFile(getMediaFile(stack));
         return (rv == null) ? null : rv.toString();
       }});
     rft.put(new PredefinedJEPFunction("CaptureDeviceInput", "GetLineupForCaptureDeviceInput", 1, new String[] {"CaptureDeviceInput"})

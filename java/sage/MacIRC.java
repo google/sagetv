@@ -48,7 +48,7 @@ public class MacIRC implements sage.SageTVInputPlugin
   {
     if(!available) {
       try {
-        System.loadLibrary("MacIRC");
+        sage.Native.loadLibrary("MacIRC");
         available = true;
       } catch(Throwable t) {
         //				System.out.println("ERROR loading MacIRC library: "+t);

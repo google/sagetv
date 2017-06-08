@@ -18,12 +18,25 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef FFMPEG_ADLER32_H
-#define FFMPEG_ADLER32_H
+#ifndef AVUTIL_ADLER32_H
+#define AVUTIL_ADLER32_H
 
 #include <stdint.h>
+#include "attributes.h"
 
+/**
+ * Calculate the Adler32 checksum of a buffer.
+ *
+ * Passing the return value to a subsequent av_adler32_update() call
+ * allows the checksum of multiple buffers to be calculated as though
+ * they were concatenated.
+ *
+ * @param adler initial checksum value
+ * @param buf   pointer to input buffer
+ * @param len   size of input buffer
+ * @return      updated checksum
+ */
 unsigned long av_adler32_update(unsigned long adler, const uint8_t *buf,
-                                unsigned int len);
+                                unsigned int len) av_pure;
 
-#endif /* FFMPEG_ADLER32_H */
+#endif /* AVUTIL_ADLER32_H */

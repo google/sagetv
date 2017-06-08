@@ -18,8 +18,11 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
+
+#include "libavcodec/get_bits.h"
 #include "avformat.h"
-#include "bitstream.h"
+#include "id3v2.h"
+#include "id3v1.h"
 
 typedef struct {
     int totalframes, currentframe;
@@ -28,6 +31,13 @@ typedef struct {
 static int tta_probe(AVProbeData *p)
 {
     const uint8_t *d = p->buf;
+
+    if (ff_id3v2_match(d, ID3v2_DEFAULT_MAGIC))
+        d += ff_id3v2_tag_len(d);
+
+    if (d - p->buf >= p->buf_size)
+        return 0;
+
     if (d[0] == 'T' && d[1] == 'T' && d[2] == 'A' && d[3] == '1')
         return 80;
     return 0;
@@ -38,9 +48,14 @@ static int tta_read_header(AVFormatContext *s, AVFormatParameters *ap)
     TTAContext *c = s->priv_data;
     AVStream *st;
     int i, channels, bps, samplerate, datalen, framelen;
-    uint64_t framepos;
+    uint64_t framepos, start_offset;
 
-    if (get_le32(s->pb) != ff_get_fourcc("TTA1"))
+    ff_id3v2_read(s, ID3v2_DEFAULT_MAGIC);
+    if (!av_metadata_get(s->metadata, "", NULL, AV_METADATA_IGNORE_SUFFIX))
+        ff_id3v1_read(s);
+
+    start_offset = url_ftell(s->pb);
+    if (get_le32(s->pb) != AV_RL32("TTA1"))
         return -1; // not tta file
 
     url_fskip(s->pb, 2); // FIXME: flags
@@ -86,20 +101,20 @@ static int tta_read_header(AVFormatContext *s, AVFormatParameters *ap)
     }
     url_fskip(s->pb, 4); // seektable crc
 
-    st->codec->codec_type = CODEC_TYPE_AUDIO;
+    st->codec->codec_type = AVMEDIA_TYPE_AUDIO;
     st->codec->codec_id = CODEC_ID_TTA;
     st->codec->channels = channels;
     st->codec->sample_rate = samplerate;
-    st->codec->bits_per_sample = bps;
+    st->codec->bits_per_coded_sample = bps;
 
-    st->codec->extradata_size = url_ftell(s->pb);
+    st->codec->extradata_size = url_ftell(s->pb) - start_offset;
     if(st->codec->extradata_size+FF_INPUT_BUFFER_PADDING_SIZE <= (unsigned)st->codec->extradata_size){
         //this check is redundant as get_buffer should fail
         av_log(s, AV_LOG_ERROR, "extradata_size too large\n");
         return -1;
     }
     st->codec->extradata = av_mallocz(st->codec->extradata_size+FF_INPUT_BUFFER_PADDING_SIZE);
-    url_fseek(s->pb, 0, SEEK_SET);
+    url_fseek(s->pb, start_offset, SEEK_SET);
     get_buffer(s->pb, st->codec->extradata, st->codec->extradata_size);
 
     return 0;
@@ -138,7 +153,7 @@ static int tta_read_seek(AVFormatContext *s, int stream_index, int64_t timestamp
 
 AVInputFormat tta_demuxer = {
     "tta",
-    "true-audio",
+    NULL_IF_CONFIG_SMALL("True Audio"),
     sizeof(TTAContext),
     tta_probe,
     tta_read_header,

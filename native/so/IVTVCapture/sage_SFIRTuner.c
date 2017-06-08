@@ -162,13 +162,13 @@ typedef (*LPFNTakedown)(void);
 typedef (*LPFNMacroTune)(int);
 typedef (*LPFNPLAY)(remote*, unsigned char*, int);
 #else
-typedef int (*LPFNSetup)(int);
+typedef void* (*LPFNSetup)(int);
 typedef struct command* (*LPFNGetCommand)(int,unsigned char*);
 typedef unsigned long (*LPFNCarrier_Frequency)(int);
 typedef unsigned long (*LPFNBit_Time)(int);
-typedef (*LPFNTakedown)(int);
+typedef (*LPFNTakedown)(void*);
 typedef (*LPFNMacroTune)(int,int);
-typedef (*LPFNPLAY)(int,remote*, unsigned char*, int);
+typedef (*LPFNPLAY)(void*,remote*, unsigned char*, int);
 #endif
 typedef const char* (*FARPROC)();
 typedef (*LPFNINIT)(void);
@@ -457,7 +457,7 @@ JNIEXPORT void JNICALL Java_sage_SFIRTuner_closeDevice(JNIEnv *env, jobject jo)
 #if defined(__APPLE__)
 		fnTakedown();
 #else
-		fnTakedown((int)GetLongField(env, jo, "nativePort"));
+		fnTakedown((void*)GetLongField(env, jo, "nativePort"));
 #endif
 }
 
@@ -492,7 +492,7 @@ JNIEXPORT jlong JNICALL Java_sage_SFIRTuner_findBitRate(JNIEnv *env, jobject jo)
 #if defined(__APPLE__)
 		return fnGetBitrate();
 #else
-		return fnGetBitrate((int)GetLongField(env, jo, "nativePort"));
+		return fnGetBitrate((void*)GetLongField(env, jo, "nativePort"));
 #endif
 	else
 		return 0;
@@ -511,7 +511,7 @@ JNIEXPORT jlong JNICALL Java_sage_SFIRTuner_findCarrierFrequency(JNIEnv *env, jo
 #if defined(__APPLE__)
 		return fnGetCarrier();
 #else
-		return fnGetCarrier((int)GetLongField(env, jo, "nativePort"));
+		return fnGetCarrier((void*)GetLongField(env, jo, "nativePort"));
 #endif
 	else
 		return 0;
@@ -587,8 +587,8 @@ JNIEXPORT jboolean JNICALL Java_sage_SFIRTuner_openDevice(JNIEnv *env, jobject j
 #if defined(__APPLE__)
 	return fnSetup(portNum) ? JNI_TRUE : JNI_FALSE;
 #else
-	int natPort = fnSetup(portNum);
-	SetLongField(env, jo, "nativePort", natPort);
+	void *natPort = fnSetup(portNum);
+	SetLongField(env, jo, "nativePort", (jlong)natPort);
 	return natPort ? JNI_TRUE : JNI_FALSE;
 #endif
 }
@@ -609,7 +609,7 @@ JNIEXPORT void JNICALL Java_sage_SFIRTuner_playCommand(JNIEnv *env, jobject jo, 
 #if defined(__APPLE__)
 	lpfnPlay(crem, (unsigned char*)cname, repeat);
 #else
-	lpfnPlay((int)GetLongField(env, jo, "nativePort"), crem, (unsigned char*)cname, repeat);
+	lpfnPlay((void*)GetLongField(env, jo, "nativePort"), crem, (unsigned char*)cname, repeat);
 #endif
 	(*env)->ReleaseStringUTFChars(env, jcmdName, cname);
 	FreeCRemotes(&crem);
@@ -665,7 +665,7 @@ JNIEXPORT void JNICALL Java_sage_SFIRTuner_init0(JNIEnv *env, jobject jo)
 	jstring jfname = (jstring)GetObjectField(env, jo, "devFilename", "Ljava/lang/String;");
 	const char* cname = (*env)->GetStringUTFChars(env, jfname, NULL);
 	deviceDLL = dlopen(cname, RTLD_NOW);
-	SetLongField(env, jo, "nativeDllHandle", (jint) deviceDLL);
+	SetLongField(env, jo, "nativeDllHandle", (jlong) deviceDLL);
 	(*env)->ReleaseStringUTFChars(env, jfname, cname);
 }
 

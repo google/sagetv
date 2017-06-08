@@ -1,0 +1,517 @@
+{
+  "stationID": "20454",
+  "programs": [
+    {
+      "programID": "EP003781390281",
+      "airDateTime": "2016-08-04T00:00:00Z",
+      "duration": 3600,
+      "md5": "UuqA6BlBsv7OjUp5Y7eIGQ",
+      "new": true,
+      "audioProperties": [
+        "cc",
+        "DD 5.1",
+        "stereo"
+      ],
+      "videoProperties": [
+        "hdtv"
+      ],
+      "ratings": [
+        {
+          "body": "USA Parental Rating",
+          "code": "TVPG"
+        }
+      ]
+    },
+    {
+      "programID": "EP007537910262",
+      "airDateTime": "2016-08-04T01:00:00Z",
+      "duration": 3600,
+      "md5": "sPD6NkAWxG/zQZah7BrRqQ",
+      "audioProperties": [
+        "cc",
+        "DD 5.1",
+        "dvs",
+        "stereo"
+      ],
+      "videoProperties": [
+        "hdtv"
+      ],
+      "ratings": [
+        {
+          "body": "USA Parental Rating",
+          "code": "TV14"
+        }
+      ]
+    },
+    {
+      "programID": "EP022861070008",
+      "airDateTime": "2016-08-04T02:00:00Z",
+      "duration": 3600,
+      "md5": "PJcHp66iCUOc1QVzl8Qg/Q",
+      "new": true,
+      "audioProperties": [
+        "cc",
+        "DD 5.1",
+        "stereo"
+      ],
+      "videoProperties": [
+        "hdtv"
+      ],
+      "ratings": [
+        {
+          "body": "USA Parental Rating",
+          "code": "TV14"
+        }
+      ]
+    },
+    {
+      "programID": "SH003523780000",
+      "airDateTime": "2016-08-04T03:00:00Z",
+      "duration": 2100,
+      "md5": "BJa532qcxi6MGGmEaKWnmQ",
+      "new": true,
+      "audioProperties": [
+        "cc",
+        "stereo"
+      ],
+      "videoProperties": [
+        "hdtv"
+      ]
+    },
+    {
+      "programID": "EP019062760190",
+      "airDateTime": "2016-08-04T03:35:00Z",
+      "duration": 3720,
+      "md5": "Xb37xdqM7sjt1/Lc4cZF4w",
+      "new": true,
+      "audioProperties": [
+        "DD 5.1",
+        "stereo"
+      ],
+      "videoProperties": [
+        "hdtv"
+      ],
+      "ratings": [
+        {
+          "body": "USA Parental Rating",
+          "code": "TVPG"
+        }
+      ]
+    },
+    {
+      "programID": "EP019952930224",
+      "airDateTime": "2016-08-04T04:37:00Z",
+      "duration": 3600,
+      "md5": "mVJakGBSNOvhMMyJcr0SVQ",
+      "new": true,
+      "audioProperties": [
+        "cc",
+        "DD 5.1",
+        "stereo"
+      ],
+      "videoProperties": [
+        "hdtv"
+      ],
+      "ratings": [
+        {
+          "body": "USA Parental Rating",
+          "code": "TV14"
+        }
+      ]
+    },
+    {
+      "programID": "EP008556560660",
+      "airDateTime": "2016-08-04T05:37:00Z",
+      "duration": 1800,
+      "md5": "d7dZlywT2PDjTpuzz9t8Qg",
+      "audioProperties": [
+        "cc",
+        "stereo"
+      ],
+      "videoProperties": [
+        "hdtv"
+      ],
+      "ratings": [
+        {
+          "body": "USA Parental Rating",
+          "code": "TVPG"
+        }
+      ]
+    },
+    {
+      "programID": "SH003523780000",
+      "airDateTime": "2016-08-04T06:07:00Z",
+      "duration": 2100,
+      "md5": "BJa532qcxi6MGGmEaKWnmQ",
+      "audioProperties": [
+        "cc",
+        "stereo"
+      ],
+      "videoProperties": [
+        "hdtv"
+      ]
+    },
+    {
+      "programID": "SH022941750000",
+      "airDateTime": "2016-08-04T06:42:00Z",
+      "duration": 1740,
+      "md5": "rpejzeGERLIYPL7N8YlzYA"
+    },
+    {
+      "programID": "SH015837620000",
+      "airDateTime": "2016-08-04T07:11:00Z",
+      "duration": 1740,
+      "md5": "2k4rttEZo/PqFQTwBymDCw"
+    },
+    {
+      "programID": "SH022691780000",
+      "airDateTime": "2016-08-04T07:40:00Z",
+      "duration": 4800,
+      "md5": "Axnv9gZfVBPKPyblY3yuTA",
+      "new": true,
+      "audioProperties": [
+        "cc",
+        "stereo"
+      ],
+      "videoProperties": [
+        "hdtv"
+      ]
+    },
+    {
+      "programID": "SH000191310000",
+      "airDateTime": "2016-08-04T09:00:00Z",
+      "duration": 1800,
+      "md5": "yR7QRioabIYYb83nkoNKVg",
+      "new": true,
+      "audioProperties": [
+        "cc",
+        "stereo"
+      ],
+      "videoProperties": [
+        "hdtv"
+      ]
+    },
+    {
+      "programID": "SH018079690000",
+      "airDateTime": "2016-08-04T09:30:00Z",
+      "duration": 1800,
+      "md5": "XfklgWtD4VShhz7dXbbKuQ",
+      "new": true,
+      "audioProperties": [
+        "cc",
+        "stereo"
+      ],
+      "videoProperties": [
+        "hdtv"
+      ]
+    },
+    {
+      "programID": "SH018079690000",
+      "airDateTime": "2016-08-04T10:00:00Z",
+      "duration": 3600,
+      "md5": "XfklgWtD4VShhz7dXbbKuQ",
+      "new": true,
+      "audioProperties": [
+        "cc",
+        "stereo"
+      ],
+      "videoProperties": [
+        "hdtv"
+      ]
+    },
+    {
+      "programID": "SH018079690000",
+      "airDateTime": "2016-08-04T11:00:00Z",
+      "duration": 3600,
+      "md5": "XfklgWtD4VShhz7dXbbKuQ",
+      "new": true,
+      "audioProperties": [
+        "cc",
+        "stereo"
+      ],
+      "videoProperties": [
+        "hdtv"
+      ]
+    },
+    {
+      "programID": "EP015057881247",
+      "airDateTime": "2016-08-04T12:00:00Z",
+      "duration": 7200,
+      "md5": "SxCilRHfy3nHr22AjVQVug",
+      "new": true,
+      "audioProperties": [
+        "cc",
+        "stereo"
+      ],
+      "videoProperties": [
+        "hdtv"
+      ]
+    },
+    {
+      "programID": "SH011761320000",
+      "airDateTime": "2016-08-04T14:00:00Z",
+      "duration": 3600,
+      "md5": "ygnzI9J1hz6vbI0OC/WqDA",
+      "audioProperties": [
+        "cc",
+        "stereo"
+      ],
+      "ratings": [
+        {
+          "body": "USA Parental Rating",
+          "code": "TVPG"
+        }
+      ]
+    },
+    {
+      "programID": "SH000043720000",
+      "airDateTime": "2016-08-04T15:00:00Z",
+      "duration": 3600,
+      "md5": "VwmLyRdOGurzp5eYR5SKiQ",
+      "audioProperties": [
+        "cc",
+        "stereo"
+      ],
+      "videoProperties": [
+        "hdtv"
+      ],
+      "ratings": [
+        {
+          "body": "USA Parental Rating",
+          "code": "TVG"
+        }
+      ]
+    },
+    {
+      "programID": "SH003523740000",
+      "airDateTime": "2016-08-04T16:00:00Z",
+      "duration": 1800,
+      "md5": "irylJvv3AuJqUdxWqo0Gpw",
+      "new": true,
+      "audioProperties": [
+        "cc",
+        "stereo"
+      ],
+      "videoProperties": [
+        "hdtv"
+      ]
+    },
+    {
+      "programID": "EP000044223426",
+      "airDateTime": "2016-08-04T16:30:00Z",
+      "duration": 3600,
+      "md5": "UdZNfr/3ON4zmT34a4vEsg",
+      "new": true,
+      "audioProperties": [
+        "cc",
+        "stereo"
+      ],
+      "videoProperties": [
+        "hdtv"
+      ],
+      "ratings": [
+        {
+          "body": "USA Parental Rating",
+          "code": "TV14"
+        }
+      ]
+    },
+    {
+      "programID": "EP000042172646",
+      "airDateTime": "2016-08-04T17:30:00Z",
+      "duration": 1800,
+      "md5": "sVx5/E2qN3AkTjInQ60oEA",
+      "new": true,
+      "audioProperties": [
+        "SAP",
+        "cc",
+        "stereo"
+      ],
+      "videoProperties": [
+        "hdtv"
+      ],
+      "ratings": [
+        {
+          "body": "USA Parental Rating",
+          "code": "TV14"
+        }
+      ]
+    },
+    {
+      "programID": "EP013078551302",
+      "airDateTime": "2016-08-04T18:00:00Z",
+      "duration": 3600,
+      "md5": "FmeYYIEVBJ7aGNvJcfN4mg",
+      "new": true,
+      "audioProperties": [
+        "cc",
+        "stereo"
+      ],
+      "videoProperties": [
+        "hdtv"
+      ],
+      "ratings": [
+        {
+          "body": "USA Parental Rating",
+          "code": "TV14"
+        }
+      ]
+    },
+    {
+      "programID": "EP019581180401",
+      "airDateTime": "2016-08-04T19:00:00Z",
+      "duration": 1800,
+      "md5": "2FEIMQsLV+xW/IGEYoemxg",
+      "audioProperties": [
+        "cc",
+        "stereo"
+      ],
+      "videoProperties": [
+        "hdtv"
+      ],
+      "ratings": [
+        {
+          "body": "USA Parental Rating",
+          "code": "TVG"
+        }
+      ]
+    },
+    {
+      "programID": "EP019581180427",
+      "airDateTime": "2016-08-04T19:30:00Z",
+      "duration": 1800,
+      "md5": "kDmcCnyNkytUfO5otk1QGw",
+      "audioProperties": [
+        "cc",
+        "stereo"
+      ],
+      "videoProperties": [
+        "hdtv"
+      ],
+      "ratings": [
+        {
+          "body": "USA Parental Rating",
+          "code": "TVG"
+        }
+      ]
+    },
+    {
+      "programID": "EP005178512376",
+      "airDateTime": "2016-08-04T20:00:00Z",
+      "duration": 3600,
+      "md5": "6x3SCNHLThWIH3Q+59Ybww",
+      "audioProperties": [
+        "cc",
+        "stereo"
+      ],
+      "videoProperties": [
+        "hdtv"
+      ],
+      "ratings": [
+        {
+          "body": "USA Parental Rating",
+          "code": "TVPG"
+        }
+      ]
+    },
+    {
+      "programID": "EP001887105613",
+      "airDateTime": "2016-08-04T21:00:00Z",
+      "duration": 1800,
+      "md5": "LUD59oHVRjhLqMJNB20oEQ",
+      "audioProperties": [
+        "cc",
+        "stereo"
+      ],
+      "videoProperties": [
+        "hdtv"
+      ],
+      "ratings": [
+        {
+          "body": "USA Parental Rating",
+          "code": "TVPG"
+        }
+      ]
+    },
+    {
+      "programID": "EP001887105584",
+      "airDateTime": "2016-08-04T21:30:00Z",
+      "duration": 1800,
+      "md5": "7GJWQ6csCEsZ1+23pPsfWg",
+      "audioProperties": [
+        "cc",
+        "stereo"
+      ],
+      "videoProperties": [
+        "hdtv"
+      ],
+      "ratings": [
+        {
+          "body": "USA Parental Rating",
+          "code": "TVPG"
+        }
+      ]
+    },
+    {
+      "programID": "SH003523770000",
+      "airDateTime": "2016-08-04T22:00:00Z",
+      "duration": 1800,
+      "md5": "lx0c4xGWHf/DZUfxepbrQQ",
+      "new": true,
+      "audioProperties": [
+        "cc",
+        "stereo"
+      ],
+      "videoProperties": [
+        "hdtv"
+      ]
+    },
+    {
+      "programID": "EP014145321201",
+      "airDateTime": "2016-08-04T22:30:00Z",
+      "duration": 1800,
+      "md5": "nr/4PoUDiupXm8YWdT4Yww",
+      "new": true,
+      "audioProperties": [
+        "cc",
+        "stereo"
+      ],
+      "videoProperties": [
+        "hdtv"
+      ]
+    },
+    {
+      "programID": "SH005371070000",
+      "airDateTime": "2016-08-04T23:00:00Z",
+      "duration": 1800,
+      "md5": "I2xO06NM+nwqwoac34B2iA",
+      "new": true,
+      "audioProperties": [
+        "cc",
+        "stereo"
+      ],
+      "videoProperties": [
+        "hdtv"
+      ]
+    },
+    {
+      "programID": "EP000014577691",
+      "airDateTime": "2016-08-04T23:30:00Z",
+      "duration": 1800,
+      "md5": "WdMWPr85d9TkAAA2uvNc4Q",
+      "new": true,
+      "audioProperties": [
+        "cc",
+        "stereo"
+      ],
+      "videoProperties": [
+        "hdtv"
+      ]
+    }
+  ],
+  "metadata": {
+    "modified": "2016-08-04T19:03:54Z",
+    "md5": "Q3onhNEr2SF4KieHTTLbug",
+    "startDate": "2016-08-04"
+  }
+}

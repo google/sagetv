@@ -201,7 +201,13 @@ public class Airing extends DBObject implements Schedulable
         || (s != null && ((time - s.originalAirDate) < 28 * Sage.MILLIS_PER_DAY));
   }
 
-  // For Favorites that are back-to-back, we don't apply any padding at that junction
+  /**
+   * Get adjusted the starting time for this airing.
+   * <p/>
+   * For Favorites that are back-to-back, we don't apply any padding at that junction.
+   *
+   * @return Adjusted starting time for this airing
+   */
   public long getSchedulingStart()
   {
     ManualRecord mr = Wizard.getInstance().getManualRecord(this);
@@ -210,7 +216,9 @@ public class Airing extends DBObject implements Schedulable
     Agent bond = Carny.getInstance().getCauseAgent(this);
     if (bond == null || bond.startPad == 0)
       return time;
-    else if (Carny.getInstance().isLoveAir(this) && Sage.getBoolean("remove_padding_on_back_to_back_favorites", true))
+    // For Favorites that are back-to-back, we don't apply any padding at that junction
+    if (!SeekerSelector.USE_BETA_SEEKER && Carny.getInstance().isLoveAir(this) &&
+      Sage.getBoolean("remove_padding_on_back_to_back_favorites", true))
     {
       return getAdjustedSchedulingStart(bond);
     }
@@ -254,6 +262,13 @@ public class Airing extends DBObject implements Schedulable
     return time - bond.startPad;
   }
 
+  /**
+   * Get adjusted the full duration of this airing.
+   * <p/>
+   * For Favorites that are back-to-back, we don't apply any padding at that junction.
+   *
+   * @return Adjusted full duration time of this airing
+   */
   public long getSchedulingDuration()
   {
     ManualRecord mr = Wizard.getInstance().getManualRecord(this);
@@ -262,7 +277,7 @@ public class Airing extends DBObject implements Schedulable
     Agent bond = Carny.getInstance().getCauseAgent(this);
     if (bond == null || (bond.stopPad == 0 && bond.startPad == 0))
       return duration;
-    if (Carny.getInstance().isLoveAir(this) &&
+    if (!SeekerSelector.USE_BETA_SEEKER && Carny.getInstance().isLoveAir(this) &&
         Sage.getBoolean("remove_padding_on_back_to_back_favorites", true))
     {
       return getAdjustedSchedulingEnd(bond) - getAdjustedSchedulingStart(bond);
@@ -270,6 +285,13 @@ public class Airing extends DBObject implements Schedulable
     return duration + bond.stopPad + bond.startPad;
   }
 
+  /**
+   * Get adjusted the ending time for this airing.
+   * <p/>
+   * For Favorites that are back-to-back, we don't apply any padding at that junction.
+   *
+   * @return Adjusted ending time for this airing
+   */
   public long getSchedulingEnd()
   {
     ManualRecord mr = Wizard.getInstance().getManualRecord(this);
@@ -278,7 +300,8 @@ public class Airing extends DBObject implements Schedulable
     Agent bond = Carny.getInstance().getCauseAgent(this);
     if (bond == null || bond.stopPad == 0)
       return time + duration;
-    else if (Carny.getInstance().isLoveAir(this) && Sage.getBoolean("remove_padding_on_back_to_back_favorites", true))
+    else if (!SeekerSelector.USE_BETA_SEEKER && Carny.getInstance().isLoveAir(this) &&
+      Sage.getBoolean("remove_padding_on_back_to_back_favorites", true))
     {
       return getAdjustedSchedulingEnd(bond);
     }
@@ -336,6 +359,11 @@ public class Airing extends DBObject implements Schedulable
   public Show getShow()
   {
     return (myShow != null) ? myShow : (myShow = Wizard.getInstance().getShowForID(showID));
+  }
+
+  public int getShowID()
+  {
+    return showID;
   }
 
   public long getTTA() { return Math.max(0, time - Sage.time()); }
@@ -572,7 +600,7 @@ public class Airing extends DBObject implements Schedulable
   public int getTotalParts() { return partsB & 0x0F; }
   public int getPartNum() { return (partsB >> 4) & 0x0F; }
 
-  public void appendMiscInfo(StringBuffer sb)
+  public void appendMiscInfo(StringBuilder sb)
   {
     boolean addComma = false;
     if ((partsB & 0x0F) > 1)
@@ -724,7 +752,7 @@ public class Airing extends DBObject implements Schedulable
   }
   public String getMiscInfo()
   {
-    StringBuffer sb = new StringBuffer();
+    StringBuilder sb = new StringBuilder();
     appendMiscInfo(sb);
     return sb.toString();
   }
@@ -1025,6 +1053,10 @@ public class Airing extends DBObject implements Schedulable
     }
   };
 
+  /**
+   * If start times are the same, sort by station ID. If the start times are different, sort by
+   * start time. Sorting is low to high.
+   */
   public static final Comparator<Airing> TIME_CHANNEL_COMPARATOR =
       new Comparator<Airing>()
   {
@@ -1043,6 +1075,10 @@ public class Airing extends DBObject implements Schedulable
     }
   };
 
+  /**
+   * If station ID's are the same, the sort by start time. If station ID's are different, sort by
+   * station ID. Sorting is low to high.
+   */
   public static final Comparator<Airing> CHANNEL_TIME_COMPARATOR =
       new Comparator<Airing>()
   {

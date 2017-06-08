@@ -46,6 +46,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -73,7 +74,7 @@ public class MediaFile extends DBObject implements SegmentedFile
   private static final boolean VIDEO_THUMBNAIL_FILE_GEN = Sage.getBoolean("video_thumbnail_generation", true);
   private static final String THUMB_FOLDER_NAME = Sage.get("ui/thumbnail_folder", "GeneratedThumbnails");
   public static final File THUMB_FOLDER = new File(Sage.getPath("cache"), THUMB_FOLDER_NAME);
-  public static final String ILLEGAL_FILE_NAME_CHARACTERS = "\\/:*?<>|\"";  // Jeff Harrison - 10/2/2015
+  public static final String LEGAL_FILE_NAME_CHARACTERS = " `!@#$%^&()-_+={}[];',";		// Jeff Harrison - 09/10/2016
 
   // Ensure this directory is created, we rely on this in a few places
   static
@@ -160,9 +161,19 @@ public class MediaFile extends DBObject implements SegmentedFile
     return liveFileMap.get(cdi);
   }
 
+  static MediaFile putLiveMediaFileForInput(CaptureDeviceInput cdi, MediaFile file)
+  {
+    return liveFileMap.put(cdi, file);
+  }
+
   public static MediaFile getLiveBufferedMediaFileForInput(CaptureDeviceInput cdi)
   {
     return liveBuffFileMap.get(cdi);
+  }
+
+  static MediaFile putLiveBufferedMediaFileForInput(CaptureDeviceInput cdi, MediaFile file)
+  {
+    return liveBuffFileMap.put(cdi, file);
   }
 
   protected MediaFile(int inFileID)
@@ -602,7 +613,7 @@ public class MediaFile extends DBObject implements SegmentedFile
     Airing metaAir = null;
     // Temporarily guess the media type based off the filename extension that's mapped for import (really only used for detecting DVDs)
     String nameLC = rawFile.getName().toLowerCase();
-    setMediaMask(Seeker.getInstance().guessImportedMediaMask(rawFile.getAbsolutePath()));
+    setMediaMask(SeekerSelector.getInstance().guessImportedMediaMask(rawFile.getAbsolutePath()));
 
     long rawFileLastMod = rawFile.lastModified();
     if (rawFileLastMod == 0)
@@ -3248,6 +3259,11 @@ public class MediaFile extends DBObject implements SegmentedFile
     return generalType;
   }
 
+  int getInfoAiringID()
+  {
+    return infoAiringID;
+  }
+
   boolean validate()
   {
     if (getContentAiring() == null)
@@ -3355,6 +3371,7 @@ public class MediaFile extends DBObject implements SegmentedFile
           if (idx != -1)
           {
             theShow.title.name = filePath.substring(idx, idx + theShow.title.name.length());
+            theShow.title.ignoreCaseHash = theShow.title.name.toLowerCase().hashCode();
           }
         }
         String showEp = theShow.getEpisodeName();
@@ -3710,7 +3727,82 @@ public class MediaFile extends DBObject implements SegmentedFile
     }
   }
 
+  /**
+   * Returns a new file name that can be guaranteed to be able to be used on this media file shortly.
+   * <p/>
+   * You can only get one of these at a time. You must pass the {@link NextSegmentGuarantee}
+   * returned from here to {@link #rollGuaranteedSegment(NextSegmentGuarantee)} to start a
+   * new segment before you can call this and get a new segment.
+   * <p/>
+   * This is only to be used when recording and transitioning between file segments during live
+   * playback.
+   *
+   * @return <code>null</code> if your request was denied.
+   */
+  synchronized NextSegmentGuarantee startGuaranteedSegment(long currTime)
+  {
+    // We can only assure one of these at a time.
+    if (nextSegmentGuarantee != null)
+      return null;
+    File nextFileName = getNextSegment(false);
+    return nextFileName != null ? nextSegmentGuarantee = new NextSegmentGuarantee(nextFileName, currTime) : null;
+  }
+
+  /**
+   * Start a new segment with the file from a {@link NextSegmentGuarantee} object.
+   * <p/>
+   * This is only to be used when recording and transitioning between file segments during live
+   * playback.
+   *
+   * @param nextSegment The {@link NextSegmentGuarantee} object provided by
+   *                    {@link #startGuaranteedSegment(long)} for this {@link MediaFile}.
+   * @return <code>true</code> if the segment change was successful.
+   */
+  synchronized boolean rollGuaranteedSegment(NextSegmentGuarantee nextSegment)
+  {
+    if (nextSegmentGuarantee == null || nextSegment != nextSegmentGuarantee)
+      return false;
+
+    Wizard wiz = Wizard.getInstance();
+    try
+    {
+      wiz.acquireWriteLock(Wizard.MEDIAFILE_CODE);
+      endSegment(nextSegmentGuarantee.getStartTime());
+      startSegment(nextSegmentGuarantee.getStartTime() + 1, null, nextSegment.getNewSegment());
+    } finally {
+      wiz.releaseWriteLock(Wizard.MEDIAFILE_CODE);
+    }
+
+    if (Sage.DBG) System.out.println("MediaFile transitioned to subfile:" + nextSegmentGuarantee.getNextSegment() + " " + this);
+    nextSegmentGuarantee = null;
+    return true;
+  }
+
+  /**
+   * Release a guaranteed new file segment.
+   * <p/>
+   * You cannot release the guarantee without the correct {@link NextSegmentGuarantee} for this
+   * {@link MediaFile} unless the <code>force</code> parameter is get to <code>true</code>.
+   * <p/>
+   * This is only to be used when recording and transitioning between file segments during live
+   * playback.
+   *
+   * @param nextSegment The {@link NextSegmentGuarantee} object provided by
+   *                    {@link #startGuaranteedSegment(long)} for this {@link MediaFile}.
+   * @param force Set <code>true</code> to clear the segment regardless of if nextSegment is correct.
+   */
+  synchronized void releaseGuaranteedSegment(NextSegmentGuarantee nextSegment, boolean force)
+  {
+    if (nextSegment == nextSegmentGuarantee || force)
+      nextSegmentGuarantee = null;
+  }
+
   synchronized void startSegment(long startTime, String newEncodedBy)
+  {
+    startSegment(startTime, newEncodedBy, null);
+  }
+
+  private synchronized void startSegment(long startTime, String newEncodedBy, File guaranteedFile)
   {
     Wizard wiz = Wizard.getInstance();
     try {
@@ -3725,7 +3817,10 @@ public class MediaFile extends DBObject implements SegmentedFile
       else if (newEncodedBy != null)
         encodedBy = newEncodedBy;
       addTimes(startTime, 0);
-      files.addElement(getNextSegment(false));
+      if (guaranteedFile != null)
+        files.addElement(guaranteedFile);
+      else
+        files.addElement(getNextSegment(false));
       if (isLiveBufferedStream())
       {
         files.firstElement().deleteOnExit();
@@ -3737,7 +3832,7 @@ public class MediaFile extends DBObject implements SegmentedFile
             if (Sage.DBG) System.out.println("Deleting old media file buffer file because its name changed:"  + oldFiles.get(i));
             // If the deletion fails, be sure we don't import it
             if (!oldFiles.get(i).delete())
-              Seeker.getInstance().addIgnoreFile(oldFiles.get(i));
+              SeekerSelector.getInstance().addIgnoreFile(oldFiles.get(i));
           }
         }
         // This'll affect the sorting of the secondary index so we need to re-sort this in the DB
@@ -4150,7 +4245,7 @@ public class MediaFile extends DBObject implements SegmentedFile
         Show s = getShow();
         // Jeff Harrison - 10/5/2015
         // Add spaces around SxxExx and Episode Name
-        String sectionDivider = (Sage.getBoolean("extended_filenames", false) ? " - " : "-");				
+        String sectionDivider = (Sage.getBoolean("extended_filenames", false) ? " - " : "-");
         String namePart = (forcedStringName != null ? forcedStringName :
           (createValidFilename(s.getTitle()) +
             ((Sage.getBoolean("use_season_episode_nums_in_filenames", false) && s.getSeasonNumber() > 0 && s.getEpisodeNumber() > 0) ?
@@ -4212,7 +4307,8 @@ public class MediaFile extends DBObject implements SegmentedFile
       }
 
       fileNum++;
-    } while (!ignoreFiles && (rv.isFile() || files.contains(rv)));
+    } while (!ignoreFiles && (rv.isFile() || files.contains(rv) ||
+      (nextSegmentGuarantee != null && rv.equals(nextSegmentGuarantee.getNewSegment()))));
     if (!ignoreFiles && !rv.isFile())
     {
       try
@@ -4253,22 +4349,31 @@ public class MediaFile extends DBObject implements SegmentedFile
   public static String createValidFilename(String tryMe)
   {
     if (tryMe == null) return "null";
+    boolean allowUnicode = Sage.getBoolean("allow_unicode_characters_in_generated_filenames", false);
+    boolean extendedFilenames = Sage.getBoolean("extended_filenames", false);
+    if (!allowUnicode) {
+      // Normalize any accented characters by decomposing them into their
+      // ascii value and the accent. The accent will be stripped out in the loop
+      // below.
+      tryMe = Normalizer.normalize(tryMe, Normalizer.Form.NFD);
+    }
     int len = tryMe.length();
     StringBuffer sb = new StringBuffer(len);
     for (int i = 0; i < len; i++)
     {
       char c = tryMe.charAt(i);
       // Stick with ASCII to prevent issues with the filesystem names unless a custom property is set
-      if (Sage.getBoolean("allow_unicode_characters_in_generated_filenames", false))
+      if (allowUnicode)
       {
-        if (Character.isLetterOrDigit(c))
-          sb.append(c);
+        if (Character.isLetterOrDigit(c) ||
+                (extendedFilenames && LEGAL_FILE_NAME_CHARACTERS.contains(String.valueOf(c))))
+            sb.append(c);
       } else if ((c >= 'a' && c <= 'z') ||
         (c >= '0' && c <= '9') ||
         (c >= 'A' && c <= 'Z') ||
-        // Jeff Harrison - 10/2/2015
-        // Keep spaces and other extra characters in filenames excluding illegal characters
-        (Sage.getBoolean("extended_filenames", false) && !ILLEGAL_FILE_NAME_CHARACTERS.contains(c + "")))
+        // Jeff Harrison - 09/10/2016
+     	  // Keep spaces and other extra characters in filenames
+        (extendedFilenames && LEGAL_FILE_NAME_CHARACTERS.contains(String.valueOf(c))))
           sb.append(c);
     }
     return sb.toString();
@@ -4288,6 +4393,9 @@ public class MediaFile extends DBObject implements SegmentedFile
             getContentAiring().getDuration())- LOSS_FOR_COMPLETE)));
   }
 
+  /**
+   * Use with care.
+   */
   void thisIsComplete()
   {
     if (!forcedComplete)
@@ -5206,7 +5314,7 @@ public class MediaFile extends DBObject implements SegmentedFile
                 if (isLocalFile() || !Sage.client/*isTrueClient()*/) // optimize for pseudo-clients
                 {
                   if (ImageLoader.createThumbnail(getFile(0).toString(),
-                      imageThumbFile.toString(), finalThumbWidth, finalThumbHeight))
+                      imageThumbFile.toString(), finalThumbWidth, finalThumbHeight, MetaImage.getMetaImage(MediaFile.this).getRotation()))
                   {
                     thumbnailLoadState = 2;
                   }
@@ -5222,7 +5330,7 @@ public class MediaFile extends DBObject implements SegmentedFile
                   tempFile.deleteOnExit();
                   copyToLocalStorage(tempFile);
                   if (ImageLoader.createThumbnail(tempFile.toString(),
-                      imageThumbFile.toString(), finalThumbWidth, finalThumbHeight))
+                      imageThumbFile.toString(), finalThumbWidth, finalThumbHeight, MetaImage.getMetaImage(MediaFile.this).getRotation()))
                   {
                     thumbnailLoadState = 2;
                   }
@@ -6133,6 +6241,12 @@ public class MediaFile extends DBObject implements SegmentedFile
     times = newTimes;
   }
 
+  public String getVideoDirectory()
+  {
+    return videoDirectory;
+  }
+
+
   Airing myAiring;
   String videoDirectory;
   String name;
@@ -6166,6 +6280,11 @@ public class MediaFile extends DBObject implements SegmentedFile
 
   // This is null if we haven't parsed it yet or can't figure it out
   ContainerFormat fileFormat;
+
+  // This is null if we have not guaranteed anyone what the next segment file name will be. This is
+  // the object returned when we need the next segment name before we actually want to add a new
+  // segment to the MediaFile.
+  private NextSegmentGuarantee nextSegmentGuarantee;
 
   public static final Comparator<MediaFile> AIRING_ID_COMPARATOR =
       new Comparator<MediaFile>()
@@ -6371,6 +6490,33 @@ public class MediaFile extends DBObject implements SegmentedFile
         }
       }
       return null;
+    }
+  }
+
+  public class NextSegmentGuarantee
+  {
+    private final File nextSegment;
+    private final long currTime;
+
+    private NextSegmentGuarantee(File nextSegment, long currTime)
+    {
+      this.nextSegment = nextSegment;
+      this.currTime = currTime;
+    }
+
+    public File getNewSegment()
+    {
+      return nextSegment;
+    }
+
+    public String getNextSegment()
+    {
+      return nextSegment.toString();
+    }
+
+    public long getStartTime()
+    {
+      return currTime;
     }
   }
 }

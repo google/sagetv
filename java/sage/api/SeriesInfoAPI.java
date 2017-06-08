@@ -498,7 +498,12 @@ public class SeriesInfoAPI
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         SeriesInfo si = getSeriesInfo(stack);
-        return si == null ? "" : Integer.toString(si.getShowcardID());
+        if (si == null)
+          return "";
+        int id = si.getShowcardID();
+        if (id == 0)
+          id = si.getSeriesID();
+        return Integer.toString(id);
       }});
     rft.put(new PredefinedJEPFunction("SeriesInfo", "GetSeriesInfoForID", 1, new String[] { "SeriesID" })
     {

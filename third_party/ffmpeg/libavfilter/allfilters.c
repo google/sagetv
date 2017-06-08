@@ -21,14 +21,10 @@
 
 #include "avfilter.h"
 
-#define REGISTER_VF(X,x) { \
-          extern AVFilter avfilter_vf_##x ; \
-          if(ENABLE_VF_##X )  avfilter_register(&avfilter_vf_##x ); }
 
-
-#define REGISTER_VSRC(X,x) { \
-          extern AVFilter avfilter_vsrc_##x ; \
-          if(ENABLE_VSRC_##X )  avfilter_register(&avfilter_vsrc_##x ); }
+#define REGISTER_FILTER(X,x,y) { \
+          extern AVFilter avfilter_##y##_##x ; \
+          if(CONFIG_##X##_FILTER )  avfilter_register(&avfilter_##y##_##x ); }
 
 void avfilter_register_all(void)
 {
@@ -38,6 +34,21 @@ void avfilter_register_all(void)
         return;
     initialized = 1;
 
-//    REGISTER_VF(CROP,crop);
+    REGISTER_FILTER (ASPECT,      aspect,      vf);
+    REGISTER_FILTER (CROP,        crop,        vf);
+    REGISTER_FILTER (FORMAT,      format,      vf);
+    REGISTER_FILTER (NOFORMAT,    noformat,    vf);
+    REGISTER_FILTER (NULL,        null,        vf);
+    REGISTER_FILTER (PAD,         pad,         vf);
+    REGISTER_FILTER (PIXDESCTEST, pixdesctest, vf);
+    REGISTER_FILTER (PIXELASPECT, pixelaspect, vf);
+    REGISTER_FILTER (SCALE,       scale,       vf);
+    REGISTER_FILTER (SLICIFY,     slicify,     vf);
+    REGISTER_FILTER (UNSHARP,     unsharp,     vf);
+    REGISTER_FILTER (VFLIP,       vflip,       vf);
 
+    REGISTER_FILTER (BUFFER,      buffer,      vsrc);
+    REGISTER_FILTER (NULLSRC,     nullsrc,     vsrc);
+
+    REGISTER_FILTER (NULLSINK,    nullsink,    vsink);
 }

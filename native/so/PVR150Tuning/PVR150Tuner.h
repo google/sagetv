@@ -53,18 +53,18 @@ void MacroTune(int,int);
 int NeedBitrate(void);
 int NeedCarrierFrequency(void);
 const char* DeviceName();
-int OpenDevice(int ComPort);
-void CloseDevice(int);
-unsigned long FindBitRate(int);
-unsigned long FindCarrierFrequency(int);
+void* OpenDevice(int ComPort);
+void CloseDevice(void * );
+unsigned long FindBitRate(void *);
+unsigned long FindCarrierFrequency(void *);
 struct remote *CreateRemote(unsigned char *Name);
 void AddRemote(struct remote *Remote, struct remote **head);
 void AddCommand(struct command *Command, struct command **Command_List);
 void SaveRemotes(remote *head, const char* pszPathName);
 struct remote *LoadRemotes(const char* pszPathName);
 void InitDevice();
-command* RecordCommand(int,unsigned char *Name);
-void PlayCommand (int,remote *remote, unsigned char *name, int tx_repeats);
+command* RecordCommand(void * ,unsigned char *Name);
+void PlayCommand (void * ,remote *remote, unsigned char *name, int tx_repeats);
 void FreeRemotes(remote **head);
 
 #ifdef __cplusplus

@@ -33,6 +33,8 @@ make -C ../../native/so/MPEGParser2.0 || { echo "Build failed, exiting."; exit 1
 cp ../../native/so/MPEGParser2.0/*.so .
 make -C ../../native/so/HDHomeRun2.0 || { echo "Build failed, exiting."; exit 1; }
 cp ../../native/so/HDHomeRun2.0/*.so .
+make -C ../../native/dll/JavaRemuxer2 || { echo "Build failed, exiting."; exit 1; }
+cp ../../native/dll/JavaRemuxer2/*.so .
 
 mkdir irtunerplugins
 cd irtunerplugins
@@ -79,7 +81,7 @@ cd ../../third_party/ffmpeg
 make clean
 ./configure --build-suffix=-minimal --disable-static --enable-shared \
   --disable-decoders --disable-encoders --disable-parsers --disable-filters \
-  --disable-protocols --disable-muxers --disable-demuxers --disable-bsfs \
+  --disable-protocols --disable-muxers --disable-demuxers --disable-bsfs --disable-hwaccels \
   --enable-encoder=mpeg1video --enable-encoder=mpeg2video \
   --enable-decoder=mp3 --enable-decoder=mp2 --enable-encoder=mp2 \
   --enable-muxer=mpeg1system --enable-muxer=mpeg1vcd --enable-muxer=mpeg1video \

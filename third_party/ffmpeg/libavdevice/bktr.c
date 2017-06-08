@@ -3,7 +3,7 @@
  * Copyright (c) 2002 Steve O'Hara-Smith
  * based on
  *           Linux video grab interface
- *           Copyright (c) 2000,2001 Gerard Lantau.
+ *           Copyright (c) 2000,2001 Gerard Lantau
  * and
  *           simple_grab.c Copyright (c) 1999 Roger Hardiman
  *
@@ -23,14 +23,18 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-#include "avformat.h"
-#if defined (HAVE_DEV_BKTR_IOCTL_METEOR_H) && defined (HAVE_DEV_BKTR_IOCTL_BT848_H)
+
+#define _BSD_SOURCE 1
+#define _NETBSD_SOURCE
+
+#include "libavformat/avformat.h"
+#if HAVE_DEV_BKTR_IOCTL_METEOR_H && HAVE_DEV_BKTR_IOCTL_BT848_H
 # include <dev/bktr/ioctl_meteor.h>
 # include <dev/bktr/ioctl_bt848.h>
-#elif defined (HAVE_MACHINE_IOCTL_METEOR_H) && defined (HAVE_MACHINE_IOCTL_BT848_H)
+#elif HAVE_MACHINE_IOCTL_METEOR_H && HAVE_MACHINE_IOCTL_BT848_H
 # include <machine/ioctl_meteor.h>
 # include <machine/ioctl_bt848.h>
-#elif defined (HAVE_DEV_VIDEO_METEOR_IOCTL_METEOR_H) && defined (HAVE_DEV_VIDEO_METEOR_IOCTL_BT848_H)
+#elif HAVE_DEV_VIDEO_METEOR_IOCTL_METEOR_H && HAVE_DEV_VIDEO_BKTR_IOCTL_BT848_H
 # include <dev/video/meteor/ioctl_meteor.h>
 # include <dev/video/bktr/ioctl_bt848.h>
 #elif HAVE_DEV_IC_BT8XX_H
@@ -42,6 +46,8 @@
 #include <sys/mman.h>
 #include <sys/time.h>
 #include <signal.h>
+#include <stdint.h>
+#include <strings.h>
 
 typedef struct {
     int video_fd;
@@ -49,7 +55,7 @@ typedef struct {
     int width, height;
     int frame_rate;
     int frame_rate_base;
-    u_int64_t per_frame;
+    uint64_t per_frame;
 } VideoData;
 
 
@@ -76,7 +82,7 @@ static int bktr_dev[] = { METEOR_DEV0, METEOR_DEV1, METEOR_DEV2,
 
 uint8_t *video_buf;
 size_t video_buf_size;
-u_int64_t last_frame_time;
+uint64_t last_frame_time;
 volatile sig_atomic_t nsignals;
 
 
@@ -86,7 +92,7 @@ static void catchsignal(int signal)
     return;
 }
 
-static int bktr_init(const char *video_device, int width, int height,
+static av_cold int bktr_init(const char *video_device, int width, int height,
     int format, int *video_fd, int *tuner_fd, int idev, double frequency)
 {
     struct meteor_geomet geo;
@@ -200,9 +206,9 @@ static int bktr_init(const char *video_device, int width, int height,
     return 0;
 }
 
-static void bktr_getframe(u_int64_t per_frame)
+static void bktr_getframe(uint64_t per_frame)
 {
-    u_int64_t curtime;
+    uint64_t curtime;
 
     curtime = av_gettime();
     if (!last_frame_time
@@ -261,9 +267,9 @@ static int grab_read_header(AVFormatContext *s1, AVFormatParameters *ap)
     s->height = height;
     s->frame_rate = frame_rate;
     s->frame_rate_base = frame_rate_base;
-    s->per_frame = ((u_int64_t)1000000 * s->frame_rate_base) / s->frame_rate;
+    s->per_frame = ((uint64_t)1000000 * s->frame_rate_base) / s->frame_rate;
 
-    st->codec->codec_type = CODEC_TYPE_VIDEO;
+    st->codec->codec_type = AVMEDIA_TYPE_VIDEO;
     st->codec->pix_fmt = PIX_FMT_YUV420P;
     st->codec->codec_id = CODEC_ID_RAWVIDEO;
     st->codec->width = width;
@@ -310,7 +316,7 @@ static int grab_read_close(AVFormatContext *s1)
 
 AVInputFormat bktr_demuxer = {
     "bktr",
-    "video grab",
+    NULL_IF_CONFIG_SMALL("video grab"),
     sizeof(VideoData),
     NULL,
     grab_read_header,

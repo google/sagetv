@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+	<Fragment>
+    <DirectoryRef Id="MicrosoftDirectXFolder">
+      <Directory Id="DirectXRedistDirectory" Name="DirectX9.0c">
+        <Component Id="DirectXRedist" Guid="{7F1C0E85-174A-40EB-8C83-93A488865348}">
+          <File Id="DXSETUPEXE"
+            Source="redist\directx9\dxsetup.exe"
+            KeyPath="yes"
+            Checksum="yes"/>
+          <File Id="dxupdate.cab"
+            Source="redist\directx9\dxupdate.cab"/>
+          <File Id="dxdllreg_x86.cab"
+            Source="redist\directx9\dxdllreg_x86.cab"/>
+          <File Id="dsetup32.dll"
+            Source="redist\directx9\dsetup32.dll"/>
+          <File Id="dsetup.dll"
+            Source="redist\directx9\dsetup.dll"/>
+          <File Id="Jun2010_d3dx9_43_x86.cab"
+            Source="redist\directx9\Jun2010_d3dx9_43_x86.cab"/>
+          <File Id="Jun2010_D3DCompiler_43_x86.cab"
+            Source="redist\directx9\Jun2010_D3DCompiler_43_x86.cab"/>
+        </Component>
+      </Directory>
+    </DirectoryRef>
+
+    <Feature Id="DirectXRedist"
+             Title="Directx9"
+             AllowAdvertise="no"
+      Display="hidden" Level="1">
+      <ComponentRef Id="DirectXRedist"/>
+    </Feature>
+  </Fragment>
+</Wix>

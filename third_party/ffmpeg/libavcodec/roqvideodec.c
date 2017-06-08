@@ -19,20 +19,18 @@
  */
 
 /**
- * @file roqvideodec.c
- * Id RoQ Video Decoder by Dr. Tim Ferguson
- * For more information about the Id RoQ format, visit:
+ * @file
+ * id RoQ Video Decoder by Dr. Tim Ferguson
+ * For more information about the id RoQ format, visit:
  *   http://www.csse.monash.edu.au/~timf/
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
 #include "avcodec.h"
 #include "bytestream.h"
-#include "dsputil.h"
 #include "roqvideo.h"
 
 static void roqvideo_decode_frame(RoqContext *ri)
@@ -154,7 +152,7 @@ static void roqvideo_decode_frame(RoqContext *ri)
 }
 
 
-static int roq_decode_init(AVCodecContext *avctx)
+static av_cold int roq_decode_init(AVCodecContext *avctx)
 {
     RoqContext *s = avctx->priv_data;
 
@@ -164,15 +162,16 @@ static int roq_decode_init(AVCodecContext *avctx)
     s->last_frame    = &s->frames[0];
     s->current_frame = &s->frames[1];
     avctx->pix_fmt = PIX_FMT_YUV444P;
-    dsputil_init(&s->dsp, avctx);
 
     return 0;
 }
 
 static int roq_decode_frame(AVCodecContext *avctx,
                             void *data, int *data_size,
-                            const uint8_t *buf, int buf_size)
+                            AVPacket *avpkt)
 {
+    const uint8_t *buf = avpkt->data;
+    int buf_size = avpkt->size;
     RoqContext *s = avctx->priv_data;
     int copy= !s->current_frame->data[0];
 
@@ -198,7 +197,7 @@ static int roq_decode_frame(AVCodecContext *avctx,
     return buf_size;
 }
 
-static int roq_decode_end(AVCodecContext *avctx)
+static av_cold int roq_decode_end(AVCodecContext *avctx)
 {
     RoqContext *s = avctx->priv_data;
 
@@ -213,7 +212,7 @@ static int roq_decode_end(AVCodecContext *avctx)
 
 AVCodec roq_decoder = {
     "roqvideo",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_ROQ,
     sizeof(RoqContext),
     roq_decode_init,
@@ -221,4 +220,5 @@ AVCodec roq_decoder = {
     roq_decode_end,
     roq_decode_frame,
     CODEC_CAP_DR1,
+    .long_name = NULL_IF_CONFIG_SMALL("id RoQ video"),
 };

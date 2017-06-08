@@ -51,7 +51,22 @@ public class FSManager implements Runnable
       while (walker.hasNext())
       {
         java.io.File newF = new java.io.File(walker.next().toString());
-        Seeker.getInstance().addIgnoreFile(newF);
+
+        // There are some initialization ordering issues if we route through the selector here
+        // instead of using Library directly. The Seeker2 singleton is always loaded before the
+        // Library singleton in the selector and Seeker2 loads FSManager (hence why we are here). If
+        // we call back to the selector from here the Library reference doesn't exist yet and we
+        // will get a null pointer exception. It is however not a problem to directly get the
+        // Library singleton from here. It's important to note that while this sounds a little hacky
+        // the selector is there for performance reasons and this is the only case where we have an
+        // exception. I could just re-order a few things, but then I might accidentally change how
+        // something worked in the old Seeker and I do not want to create any new problems to
+        // address one exception.
+        // TODO: Will be enabled in a future commit.
+        /*if (SeekerSelector.USE_BETA_SEEKER)
+          Library.getInstance().addIgnoreFile(newF);
+        else*/
+          Seeker.getInstance().addIgnoreFile(newF);
       }
     }
     // Make sure we mount the hard drive as early as possible if we know it's there; the Seeker needs this for its lib scan
@@ -118,7 +133,7 @@ public class FSManager implements Runnable
         deleteQueue.notifyAll();
       }
     }
-    Seeker seeky = Seeker.getInstance();
+    Hunter seeky = SeekerSelector.getInstance();
     long checkPeriod = Sage.getLong("seeker/fs_mgr_wait_period", 15000);
     while (alive)
     {
@@ -285,7 +300,7 @@ public class FSManager implements Runnable
         }
       }
 
-      java.io.File[] netMounts = Seeker.getInstance().getSmbMountedFolders();
+      java.io.File[] netMounts = SeekerSelector.getInstance().getSmbMountedFolders();
       for (int i = 0; i < netMounts.length; i++)
       {
         java.io.File stvTmpDir = new java.io.File(netMounts[i], ".sagetv");
@@ -411,10 +426,24 @@ public class FSManager implements Runnable
       }
       else
       {
-        if (IOUtils.exec2(new String[] { Sage.get("linux/dvdmounter", "mount"), isoFile.getAbsolutePath(), mountDir.getAbsolutePath(), "-o", "loop" }, true) != 0)
+        if (!Sage.LINUX_IS_ROOT)
         {
-          if (Sage.DBG) System.out.println("FAILED mounting ISO image " + isoFile + " to " + mountDir);
-          return null;
+          // mount requires root permissions
+          // the sagetv user needs to be in the sudoers list
+          // NOTE mount command is NOT resolved in properties because sudo is being used
+          if (IOUtils.exec2(new String[]{"sudo","-n", "mount", isoFile.getAbsolutePath(), mountDir.getAbsolutePath(), "-o", "loop,ro"}, true) != 0)
+          {
+            if (Sage.DBG) System.out.println("FAILED mounting ISO image " + isoFile + " to " + mountDir);
+            return null;
+          }
+        }
+        else
+        {
+          if (IOUtils.exec2(new String[]{Sage.get("linux/dvdmounter", "mount"), isoFile.getAbsolutePath(), mountDir.getAbsolutePath(), "-o", "loop"}, true) != 0)
+          {
+            if (Sage.DBG) System.out.println("FAILED mounting ISO image " + isoFile + " to " + mountDir);
+            return null;
+          }
         }
       }
       return mountDir;
@@ -478,7 +507,12 @@ public class FSManager implements Runnable
         }
       }
       else
-        IOUtils.exec2(new String[] { "umount", mountDir.getAbsolutePath() }, false);
+      {
+        if (Sage.LINUX_IS_ROOT)
+          IOUtils.exec2(new String[]{"umount", mountDir.getAbsolutePath()}, false);
+        else
+          IOUtils.exec2(new String[]{"sudo", "-n", "umount", mountDir.getAbsolutePath()}, false);
+      }
       mountDir.delete();
     }
   }
@@ -543,7 +577,7 @@ public class FSManager implements Runnable
                 {
                   deleteQueue.remove(0);
                   Sage.put(DELETE_QUEUE_PROP, Sage.createDelimSetString(new java.util.HashSet(deleteQueue), ";"));
-                  Seeker.getInstance().removeIgnoreFile(currFile.f);
+                  SeekerSelector.getInstance().removeIgnoreFile(currFile.f);
                 }
                 Sage.savePrefs();
                 if (Sage.DBG) System.out.println("Completed progressive deletion of: " + currFile);
@@ -605,7 +639,7 @@ public class FSManager implements Runnable
         dinf.firstFailTime = Sage.time();
         deleteQueue.add(dinf);
         deleteQueue.notifyAll();
-        Seeker.getInstance().addIgnoreFile(f);
+        SeekerSelector.getInstance().addIgnoreFile(f);
         return true;
       }
     }

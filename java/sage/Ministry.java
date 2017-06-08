@@ -342,7 +342,7 @@ public class Ministry implements Runnable
           }
         }
 
-        Seeker seek = Seeker.getInstance();
+        Hunter seek = SeekerSelector.getInstance();
         for (int i = 0; i < waitingForAbsolution.size(); i++)
         {
           TranscodeJob tj = (TranscodeJob) waitingForAbsolution.get(i);
@@ -396,7 +396,7 @@ public class Ministry implements Runnable
               }
             }
             else
-              Seeker.getInstance().processFileExport(tj.getMediaFile().getFiles(), MediaFile.ACQUISITION_MANUAL);
+              SeekerSelector.getInstance().processFileExport(tj.getMediaFile().getFiles(), MediaFile.ACQUISITION_MANUAL);
           }
           else
           {
@@ -454,7 +454,7 @@ public class Ministry implements Runnable
                   addedFile.addSegmentFileDirect((java.io.File) actualFilesVec.get(x));
                 }
                 ok = true;
-                Seeker.getInstance().processFileExport(addedFile.getFiles(), MediaFile.ACQUISITION_MANUAL);
+                SeekerSelector.getInstance().processFileExport(addedFile.getFiles(), MediaFile.ACQUISITION_MANUAL);
               }
               else
                 ok = false;
@@ -825,6 +825,15 @@ public class Ministry implements Runnable
       return true;
   }
 
+  public boolean requiresPower()
+  {
+    // This is true if there's any transcode jobs are in the queue
+    synchronized (this)
+    {
+    	return (converting.size() > 0 || waitingForConversion.size() > 0);
+    }
+  }
+  
   private Object lock = new Object();
   private java.util.Vector waitingForConversion = new java.util.Vector();
   private java.util.Vector converting = new java.util.Vector();

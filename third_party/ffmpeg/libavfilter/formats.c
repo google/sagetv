@@ -19,6 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "libavutil/pixdesc.h"
 #include "avfilter.h"
 
 /**
@@ -69,35 +70,47 @@ AVFilterFormats *avfilter_merge_formats(AVFilterFormats *a, AVFilterFormats *b)
     return ret;
 }
 
-AVFilterFormats *avfilter_make_format_list(int len, ...)
+AVFilterFormats *avfilter_make_format_list(const enum PixelFormat *pix_fmts)
 {
-    AVFilterFormats *ret;
-    int i;
-    va_list vl;
+    AVFilterFormats *formats;
+    int count;
 
-    ret = av_mallocz(sizeof(AVFilterFormats));
-    ret->formats = av_malloc(sizeof(*ret->formats) * len);
-    ret->format_count = len;
+    for (count = 0; pix_fmts[count] != PIX_FMT_NONE; count++)
+        ;
 
-    va_start(vl, len);
-    for(i = 0; i < len; i ++)
-        ret->formats[i] = va_arg(vl, int);
-    va_end(vl);
+    formats               = av_mallocz(sizeof(AVFilterFormats));
+    formats->formats      = av_malloc(sizeof(*formats->formats) * count);
+    formats->format_count = count;
+    memcpy(formats->formats, pix_fmts, sizeof(*formats->formats) * count);
 
-    return ret;
+    return formats;
+}
+
+int avfilter_add_colorspace(AVFilterFormats **avff, enum PixelFormat pix_fmt)
+{
+    enum PixelFormat *pix_fmts;
+
+    if (!(*avff) && !(*avff = av_mallocz(sizeof(AVFilterFormats))))
+        return AVERROR(ENOMEM);
+
+    pix_fmts = av_realloc((*avff)->formats,
+                          sizeof((*avff)->formats) * ((*avff)->format_count+1));
+    if (!pix_fmts)
+        return AVERROR(ENOMEM);
+
+    (*avff)->formats = pix_fmts;
+    (*avff)->formats[(*avff)->format_count++] = pix_fmt;
+    return 0;
 }
 
 AVFilterFormats *avfilter_all_colorspaces(void)
 {
-    AVFilterFormats *ret;
-    int i;
+    AVFilterFormats *ret = NULL;
+    enum PixelFormat pix_fmt;
 
-    ret = av_mallocz(sizeof(AVFilterFormats));
-    ret->formats = av_malloc(sizeof(*ret->formats) * PIX_FMT_NB);
-    ret->format_count = PIX_FMT_NB;
-
-    for(i = 0; i < PIX_FMT_NB; i ++)
-        ret->formats[i] = i;
+    for (pix_fmt = 0; pix_fmt < PIX_FMT_NB; pix_fmt++)
+        if (!(av_pix_fmt_descriptors[pix_fmt].flags & PIX_FMT_HWACCEL))
+            avfilter_add_colorspace(&ret, pix_fmt);
 
     return ret;
 }
@@ -120,7 +133,12 @@ static int find_ref_index(AVFilterFormats **ref)
 
 void avfilter_formats_unref(AVFilterFormats **ref)
 {
-    int idx = find_ref_index(ref);
+    int idx;
+
+    if (!*ref)
+        return;
+
+    idx = find_ref_index(ref);
 
     if(idx >= 0)
         memmove((*ref)->refs + idx, (*ref)->refs + idx+1,

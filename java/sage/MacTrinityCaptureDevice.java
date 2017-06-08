@@ -670,36 +670,6 @@ public class MacTrinityCaptureDevice extends CaptureDevice implements Runnable
 
   }
 
-
-
-  private void doPluginTune(String tuneString)
-
-  {
-
-    if (!DirecTVSerialControl.DIRECTV_SERIAL_CONTROL.equals(activeSource.getTuningPlugin()))
-
-    {
-
-      SFIRTuner tunePlug = ExternalTuningManager.getIRTunerPlugin(activeSource.getTuningPlugin(),
-
-          activeSource.getTuningPluginPort());
-
-      if (tunePlug != null)
-
-        tunePlug.playTuneString(activeSource.getDevice(), tuneString);
-
-    }
-
-    else
-
-      ExternalTuningManager.getDirecTVSerialControl().tune(activeSource.getTuningPluginPort() == 0 ?
-
-          activeSource.getDevice() : ("COM" + activeSource.getTuningPluginPort()) , tuneString);
-
-  }
-
-
-
   public void setEncodingQuality(String encodingName)
 
   {

@@ -22,7 +22,7 @@ package sage;
 public class Version
 {
   public static final byte MAJOR_VERSION = 9;
-  public static final byte MINOR_VERSION = 0;
+  public static final byte MINOR_VERSION = 1;
   public static final byte MICRO_VERSION = 3;
 
   public static final String VERSION = MAJOR_VERSION + "." + MINOR_VERSION + "." + MICRO_VERSION + "." + SageConstants.BUILD_VERSION;

@@ -19,24 +19,24 @@
  */
 
 /**
- * @file tree.h
+ * @file
  * A tree container.
- * Insertion, Removial, Finding equal, largest which is smaller than and
- * smallest which is larger than all have O(log n) worst case time.
+ * Insertion, removal, finding equal, largest which is smaller than and
+ * smallest which is larger than, all have O(log n) worst case complexity.
  * @author Michael Niedermayer <michaelni@gmx.at>
  */
 
-#ifndef FFMPEG_TREE_H
-#define FFMPEG_TREE_H
+#ifndef AVUTIL_TREE_H
+#define AVUTIL_TREE_H
 
 struct AVTreeNode;
 extern const int av_tree_node_size;
 
 /**
- * Finds an element.
+ * Find an element.
  * @param root a pointer to the root node of the tree
- * @param next If next is not NULL then next[0] will contain the previous
- *             element and next[1] the next element if either does not exist
+ * @param next If next is not NULL, then next[0] will contain the previous
+ *             element and next[1] the next element. If either does not exist,
  *             then the corresponding entry in next is unchanged.
  * @return An element with cmp(key, elem)==0 or NULL if no such element exists in
  *         the tree.
@@ -44,12 +44,11 @@ extern const int av_tree_node_size;
 void *av_tree_find(const struct AVTreeNode *root, void *key, int (*cmp)(void *key, const void *b), void *next[2]);
 
 /**
- * Inserts or removes an element.
- * If *next is NULL then the element supplied will be removed, if no such
- * element exists behavior is undefined.
- * If *next is not NULL then the element supplied will be inserted, unless
+ * Insert or remove an element.
+ * If *next is NULL, then the supplied element will be removed if it exists.
+ * If *next is not NULL, then the supplied element will be inserted, unless
  * it already exists in the tree.
- * @param rootp A pointer to a pointer to the root node of the tree. Note that
+ * @param rootp A pointer to a pointer to the root node of the tree; note that
  *              the root node can change during insertions, this is required
  *              to keep the tree balanced.
  * @param next Used to allocate and free AVTreeNodes. For insertion the user
@@ -62,6 +61,7 @@ void *av_tree_find(const struct AVTreeNode *root, void *key, int (*cmp)(void *ke
  *             This allows the use of flat arrays, which have
  *             lower overhead compared to many malloced elements.
  *             You might want to define a function like:
+ *             @code
  *             void *tree_insert(struct AVTreeNode **rootp, void *key, int (*cmp)(void *key, const void *b), AVTreeNode **next){
  *                 if(!*next) *next= av_mallocz(av_tree_node_size);
  *                 return av_tree_insert(rootp, key, cmp, next);
@@ -70,13 +70,26 @@ void *av_tree_find(const struct AVTreeNode *root, void *key, int (*cmp)(void *ke
  *                 if(*next) av_freep(next);
  *                 return av_tree_insert(rootp, key, cmp, next);
  *             }
- *
- * @return If no insertion happened, the found element.
- *         If an insertion or removial happened, then either key or NULL will be returned.
+ *             @endcode
+ * @return If no insertion happened, the found element; if an insertion or
+ *         removal happened, then either key or NULL will be returned.
  *         Which one it is depends on the tree state and the implementation. You
  *         should make no assumptions that it's one or the other in the code.
  */
 void *av_tree_insert(struct AVTreeNode **rootp, void *key, int (*cmp)(void *key, const void *b), struct AVTreeNode **next);
 void av_tree_destroy(struct AVTreeNode *t);
 
-#endif /* FFMPEG_TREE_H */
+/**
+ * Apply enu(opaque, &elem) to all the elements in the tree in a given range.
+ *
+ * @param cmp a comparison function that returns < 0 for a element below the
+ *            range, > 0 for a element above the range and == 0 for a
+ *            element inside the range
+ *
+ * @note The cmp function should use the same ordering used to construct the
+ *       tree.
+ */
+void av_tree_enumerate(struct AVTreeNode *t, void *opaque, int (*cmp)(void *opaque, void *elem), int (*enu)(void *opaque, void *elem));
+
+
+#endif /* AVUTIL_TREE_H */

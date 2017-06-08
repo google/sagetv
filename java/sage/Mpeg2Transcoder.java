@@ -15,11 +15,14 @@
  */
 package sage;
 
-import java.io.*;
+import sage.io.SageFileSource;
+
+import java.io.File;
+import java.io.IOException;
 
 public final class Mpeg2Transcoder
 {
-  private FastRandomFile ins;
+  private SageFileSource ins;
   private File mpegFile;
   private String hostname;
 
@@ -45,7 +48,7 @@ public final class Mpeg2Transcoder
     mpegFile = theFile;
     hostname = inHostname;
     System.out.println("Creating Mpeg2Transcoder");
-    System.loadLibrary("Mpeg2Transcoder");
+    sage.Native.loadLibrary("Mpeg2Transcoder");
   }
 
   public void setLogging(boolean x)

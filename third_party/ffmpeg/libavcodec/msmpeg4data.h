@@ -23,15 +23,15 @@
  */
 
 /**
- * @file msmpeg4data.h
+ * @file
  * MSMPEG4 data tables.
  */
 
-#ifndef FFMPEG_MSMPEG4DATA_H
-#define FFMPEG_MSMPEG4DATA_H
+#ifndef AVCODEC_MSMPEG4DATA_H
+#define AVCODEC_MSMPEG4DATA_H
 
-#include "common.h"
-#include "bitstream.h"
+#include "libavutil/common.h"
+#include "get_bits.h"
 #include "rl.h"
 
 /* motion vector table */
@@ -49,21 +49,8 @@ extern VLC ff_msmp4_mb_i_vlc;
 extern VLC ff_msmp4_dc_luma_vlc[2];
 extern VLC ff_msmp4_dc_chroma_vlc[2];
 
-/* intra picture macro block coded block pattern */
+/* intra picture macroblock coded block pattern */
 extern const uint16_t ff_msmp4_mb_i_table[64][2];
-
-extern const uint8_t cbpy_tab[16][2];
-
-extern const uint8_t DCtab_lum[13][2];
-extern const uint8_t DCtab_chrom[13][2];
-
-extern const uint8_t mvtab[33][2];
-
-extern const uint8_t intra_MCBPC_code[9];
-extern const uint8_t intra_MCBPC_bits[9];
-
-extern const uint8_t inter_MCBPC_code[28];
-extern const uint8_t inter_MCBPC_bits[28];
 
 #define WMV1_SCANTABLE_COUNT 4
 
@@ -76,7 +63,6 @@ extern RLTable rl_table[NB_RL_TABLES];
 extern const uint8_t wmv1_y_dc_scale_table[32];
 extern const uint8_t wmv1_c_dc_scale_table[32];
 extern const uint8_t old_ff_y_dc_scale_table[32];
-extern const uint8_t old_ff_c_dc_scale_table[32];
 
 extern MVTable mv_tables[2];
 
@@ -92,9 +78,9 @@ extern const uint32_t ff_table0_dc_chroma[120][2];
 extern const uint32_t ff_table1_dc_chroma[120][2];
 
 #define WMV2_INTER_CBP_TABLE_COUNT 4
-extern const uint32_t (*wmv2_inter_table[WMV2_INTER_CBP_TABLE_COUNT])[2];
+extern const uint32_t (* const wmv2_inter_table[WMV2_INTER_CBP_TABLE_COUNT])[2];
 
 extern const uint8_t wmv2_scantableA[64];
 extern const uint8_t wmv2_scantableB[64];
 
-#endif /* FFMPEG_MSMPEG4DATA_H */
+#endif /* AVCODEC_MSMPEG4DATA_H */

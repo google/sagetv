@@ -24,7 +24,7 @@ public class MacNativeCaptureManager implements CaptureDeviceManager
   public MacNativeCaptureManager() throws Throwable
   {
     try {
-      System.loadLibrary("MacNativeCapture");
+      sage.Native.loadLibrary("MacNativeCapture");
     } catch (Throwable t) {
       System.out.println("Unable to load native capture manager: " + t);
       throw t;

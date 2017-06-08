@@ -1792,10 +1792,10 @@ public class MiniPlayer implements DVDMediaPlayer
                 if (rpSrc.isServerEOS())
                 {
                   MediaFile currRecFile = null;
-                  if (uiMgr != null && (currRecFile = Seeker.getInstance().getCurrRecordFileForClient(uiMgr, false)) != null)
+                  if (uiMgr != null && (currRecFile = SeekerSelector.getInstance().getCurrRecordFileForClient(uiMgr, false)) != null)
                   {
                     // Also make sure this device supports fast mux switching
-                    CaptureDevice recInput = Seeker.getInstance().getCaptureDeviceControlledByClient(uiMgr);
+                    CaptureDevice recInput = SeekerSelector.getInstance().getCaptureDeviceControlledByClient(uiMgr);
                     if (!eos && (recInput == null || recInput.supportsFastMuxSwitch()))
                     {
                       if (Sage.DBG) System.out.println("SERVER Buffer size is now ZERO! Trigger local EOS to start the seamless file switch");
@@ -1957,10 +1957,10 @@ public class MiniPlayer implements DVDMediaPlayer
               if (readBufferSize <= 0)
               {
                 MediaFile currRecFile = null;
-                if (uiMgr != null && (currRecFile = Seeker.getInstance().getCurrRecordFileForClient(uiMgr, false)) != null)
+                if (uiMgr != null && (currRecFile = SeekerSelector.getInstance().getCurrRecordFileForClient(uiMgr, false)) != null)
                 {
                   // Also make sure this device supports fast mux switching
-                  CaptureDevice recInput = Seeker.getInstance().getCaptureDeviceControlledByClient(uiMgr);
+                  CaptureDevice recInput = SeekerSelector.getInstance().getCaptureDeviceControlledByClient(uiMgr);
                   if (!eos && (recInput == null || recInput.supportsFastMuxSwitch()))
                   {
                     if (Sage.DBG) System.out.println("SERVER Buffer size is now ZERO! Trigger local EOS to start the seamless file switch");

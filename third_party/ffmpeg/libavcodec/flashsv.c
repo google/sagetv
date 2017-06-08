@@ -21,7 +21,7 @@
  */
 
 /**
- * @file flashsv.c
+ * @file
  * Flash Screen Video decoder
  * @author Alex Beregszaszi
  * @author Benjamin Larsson
@@ -51,7 +51,7 @@
 #include <stdlib.h>
 
 #include "avcodec.h"
-#include "bitstream.h"
+#include "get_bits.h"
 
 #include <zlib.h>
 
@@ -79,7 +79,7 @@ static void copy_region(uint8_t *sptr, uint8_t *dptr,
 }
 
 
-static int flashsv_decode_init(AVCodecContext *avctx)
+static av_cold int flashsv_decode_init(AVCodecContext *avctx)
 {
     FlashSVContext *s = avctx->priv_data;
     int zret; // Zlib return code
@@ -102,8 +102,10 @@ static int flashsv_decode_init(AVCodecContext *avctx)
 
 static int flashsv_decode_frame(AVCodecContext *avctx,
                                     void *data, int *data_size,
-                                    const uint8_t *buf, int buf_size)
+                                    AVPacket *avpkt)
 {
+    const uint8_t *buf = avpkt->data;
+    int buf_size = avpkt->size;
     FlashSVContext *s = avctx->priv_data;
     int h_blocks, v_blocks, h_part, v_part, i, j;
     GetBitContext gb;
@@ -111,9 +113,8 @@ static int flashsv_decode_frame(AVCodecContext *avctx,
     /* no supplementary picture */
     if (buf_size == 0)
         return 0;
-
-    if(s->frame.data[0])
-            avctx->release_buffer(avctx, &s->frame);
+    if (buf_size < 4)
+        return -1;
 
     init_get_bits(&gb, buf, buf_size * 8);
 
@@ -160,10 +161,10 @@ static int flashsv_decode_frame(AVCodecContext *avctx,
         h_blocks, v_blocks, h_part, v_part);
 
     s->frame.reference = 1;
-    s->frame.buffer_hints = FF_BUFFER_HINTS_VALID;
-    if (avctx->get_buffer(avctx, &s->frame) < 0) {
-        av_log(s->avctx, AV_LOG_ERROR, "get_buffer() failed\n");
-        return -1;
+    s->frame.buffer_hints = FF_BUFFER_HINTS_VALID | FF_BUFFER_HINTS_PRESERVE | FF_BUFFER_HINTS_REUSABLE;
+    if(avctx->reget_buffer(avctx, &s->frame) < 0){
+      av_log(avctx, AV_LOG_ERROR, "reget_buffer() failed\n");
+      return -1;
     }
 
     /* loop over all block columns */
@@ -182,6 +183,11 @@ static int flashsv_decode_frame(AVCodecContext *avctx,
 
             /* get the size of the compressed zlib chunk */
             int size = get_bits(&gb, 16);
+            if (8 * size > get_bits_left(&gb)) {
+                avctx->release_buffer(avctx, &s->frame);
+                s->frame.data[0] = NULL;
+                return -1;
+            }
 
             if (size == 0) {
                 /* no change, don't do anything */
@@ -200,7 +206,7 @@ static int flashsv_decode_frame(AVCodecContext *avctx,
                 ret = inflate(&(s->zstream), Z_FINISH);
                 if (ret == Z_DATA_ERROR)
                 {
-                    av_log(avctx, AV_LOG_ERROR, "Zlib resync occured\n");
+                    av_log(avctx, AV_LOG_ERROR, "Zlib resync occurred\n");
                     inflateSync(&(s->zstream));
                     ret = inflate(&(s->zstream), Z_FINISH);
                 }
@@ -211,7 +217,7 @@ static int flashsv_decode_frame(AVCodecContext *avctx,
                     /* return -1; */
                 }
                 copy_region(s->tmpblock, s->frame.data[0], s->image_height-(hp+hs+1), wp, hs, ws, s->frame.linesize[0]);
-                skip_bits(&gb, 8*size);   /* skip the consumed bits */
+                skip_bits_long(&gb, 8*size);   /* skip the consumed bits */
             }
         }
     }
@@ -228,7 +234,7 @@ static int flashsv_decode_frame(AVCodecContext *avctx,
 }
 
 
-static int flashsv_decode_end(AVCodecContext *avctx)
+static av_cold int flashsv_decode_end(AVCodecContext *avctx)
 {
     FlashSVContext *s = avctx->priv_data;
     inflateEnd(&(s->zstream));
@@ -246,7 +252,7 @@ static int flashsv_decode_end(AVCodecContext *avctx)
 
 AVCodec flashsv_decoder = {
     "flashsv",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_FLASHSV,
     sizeof(FlashSVContext),
     flashsv_decode_init,
@@ -254,5 +260,6 @@ AVCodec flashsv_decoder = {
     flashsv_decode_end,
     flashsv_decode_frame,
     CODEC_CAP_DR1,
-    .pix_fmts = (enum PixelFormat[]){PIX_FMT_BGR24, -1},
+    .pix_fmts = (const enum PixelFormat[]){PIX_FMT_BGR24, PIX_FMT_NONE},
+    .long_name = NULL_IF_CONFIG_SMALL("Flash Screen Video v1"),
 };

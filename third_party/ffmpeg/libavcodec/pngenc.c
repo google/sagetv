@@ -1,6 +1,6 @@
 /*
  * PNG image format
- * Copyright (c) 2003 Fabrice Bellard.
+ * Copyright (c) 2003 Fabrice Bellard
  *
  * This file is part of FFmpeg.
  *
@@ -20,8 +20,8 @@
  */
 #include "avcodec.h"
 #include "bytestream.h"
+#include "dsputil.h"
 #include "png.h"
-#include <dsputil.h>
 
 /* TODO:
  * - add 2, 4 and 16 bit depth support
@@ -199,7 +199,7 @@ static void png_write_chunk(uint8_t **f, uint32_t tag,
     crc = crc32(0, Z_NULL, 0);
     AV_WL32(tagbuf, tag);
     crc = crc32(crc, tagbuf, 4);
-    bytestream_put_be32(f, bswap_32(tag));
+    bytestream_put_be32(f, av_bswap32(tag));
     if (length > 0) {
         crc = crc32(crc, buf, length);
         memcpy(*f, buf, length);
@@ -232,7 +232,7 @@ static int png_write_row(PNGEncContext *s, const uint8_t *data, int size)
 static int encode_frame(AVCodecContext *avctx, unsigned char *buf, int buf_size, void *data){
     PNGEncContext *s = avctx->priv_data;
     AVFrame *pict = data;
-    AVFrame * const p= (AVFrame*)&s->picture;
+    AVFrame * const p= &s->picture;
     int bit_depth, color_type, y, len, row_size, ret, is_progressive;
     int bits_per_pixel, pass_row_size;
     int compression_level;
@@ -422,11 +422,11 @@ static int encode_frame(AVCodecContext *avctx, unsigned char *buf, int buf_size,
     goto the_end;
 }
 
-static int png_enc_init(AVCodecContext *avctx){
+static av_cold int png_enc_init(AVCodecContext *avctx){
     PNGEncContext *s = avctx->priv_data;
 
-    avcodec_get_frame_defaults((AVFrame*)&s->picture);
-    avctx->coded_frame= (AVFrame*)&s->picture;
+    avcodec_get_frame_defaults(&s->picture);
+    avctx->coded_frame= &s->picture;
     dsputil_init(&s->dsp, avctx);
 
     s->filter_type = av_clip(avctx->prediction_method, PNG_FILTER_VALUE_NONE, PNG_FILTER_VALUE_MIXED);
@@ -438,11 +438,12 @@ static int png_enc_init(AVCodecContext *avctx){
 
 AVCodec png_encoder = {
     "png",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_PNG,
     sizeof(PNGEncContext),
     png_enc_init,
     encode_frame,
     NULL, //encode_end,
-    .pix_fmts= (enum PixelFormat[]){PIX_FMT_RGB24, PIX_FMT_RGB32, PIX_FMT_PAL8, PIX_FMT_GRAY8, PIX_FMT_MONOBLACK, -1},
+    .pix_fmts= (const enum PixelFormat[]){PIX_FMT_RGB24, PIX_FMT_RGB32, PIX_FMT_PAL8, PIX_FMT_GRAY8, PIX_FMT_MONOBLACK, PIX_FMT_NONE},
+    .long_name= NULL_IF_CONFIG_SMALL("PNG image"),
 };

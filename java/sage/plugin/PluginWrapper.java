@@ -15,9 +15,13 @@
  */
 package sage.plugin;
 
+import sage.IOUtils;
+import sage.Pooler;
+import sage.Sage;
+import sage.SageTVPlugin;
+
 import java.io.DataInput;
 import java.io.DataOutput;
-import sage.*;
 
 /**
  * This class is used to hold all the additional meta information about a plugin that we may need to know at runtime for various reasons.
@@ -384,7 +388,7 @@ public class PluginWrapper
       Package pack = (Package) packages.get(i);
       dataOut.writeUTF(pack.type == null ? "" : pack.type);
       dataOut.writeUTF(pack.url == null ? "" : pack.url);
-      dataOut.writeUTF(pack.md5 == null ? "" : pack.md5);
+      dataOut.writeUTF(pack.rawMD5 == null ? "" : pack.rawMD5);
       dataOut.writeBoolean(pack.overwrite);
     }
     dataOut.writeInt(state);
@@ -525,18 +529,77 @@ public class PluginWrapper
     {
       this.type = type;
       this.url = url;
-      this.md5 = md5;
+      this.rawMD5 = md5;
       this.overwrite = overwrite;
     }
     public Package(){}
     public String type;
     public String url;
-    public String md5;
+    // MD5 is private, and we'll use the getMD5() method that will check if the MD5 is a URL and if so, it will
+    // get the MD5 from the URL and store it locally
+    private String rawMD5;
+    private String computedMD5;
     public boolean overwrite = true;
+
+    /**
+     * The rawMD5 field in the package can be empty, or, it can be a URL from which to download the MD5.
+     * If the rawMD5 is null, then we use the URL field and we append .md5 which is standard Maven practice.
+     *
+     * Calling this method will result in getting the associated MD5 for the package, either by using the rawMD5
+     * because it's valid, or by dynamically fetching the md5 from a remote URL.
+     *
+     * @return md5 for the package
+     */
+    public String getMD5()
+    {
+      // we have already figured out the MD5
+      if (computedMD5 !=null) return computedMD5;
+
+      // if it's a URL then get it
+      if (rawMD5!=null && (rawMD5.startsWith("http")||rawMD5.startsWith("file:")))
+      {
+        computedMD5 = IOUtils.getUrlAsString(rawMD5);
+      }
+      else if (rawMD5==null || rawMD5.trim().length()==0)
+      {
+        // md5 is empty, so get it using the base url
+        computedMD5 = IOUtils.getUrlAsString(url+".md5");
+      }
+      else
+      {
+        // we have a normal md5 string
+        computedMD5 = rawMD5;
+      }
+
+      if (computedMD5 !=null) computedMD5 = computedMD5.trim();
+
+      if (Sage.DBG && (computedMD5 ==null || computedMD5.length()==0))
+      {
+        System.out.println("Failed to get MD5 for Package: " + url + "; MD5: " + rawMD5);
+      }
+
+      return computedMD5;
+    }
+
+    /**
+     * Sets the
+     * @param md5
+     */
+    public void setRawMD5(String md5)
+    {
+      this.rawMD5=md5;
+      this.computedMD5=null;
+    }
+
+    public String getRawMD5()
+    {
+      return rawMD5;
+    }
 
     public String toString()
     {
-      return "Package[type=" + type + " url=" + url + " md5=" + md5 + " overwrite=" + overwrite + "]";
+      return "Package[type=" + type + " url=" + url + " md5=" + rawMD5 + " overwrite=" + overwrite + "]";
     }
+
   }
 }

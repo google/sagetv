@@ -33,7 +33,7 @@ public class MP4TextSubtitleHandler extends SubtitleHandler
   public void processHeaderInfo(byte[] configInfo)
   {
     // TODO: Get the real format information once we do stylized text
-    if (sage.Sage.DBG) System.out.println("MP4Text handler got config data");
+    if (SUB_DEBUG) System.out.println("MP4Text handler got config data");
 
     if (isTX3G)
     {
@@ -57,11 +57,22 @@ public class MP4TextSubtitleHandler extends SubtitleHandler
   {
     String rawText;
     int sizeOffset = 0;
-    if (subEntries.isEmpty())
+
+    subtitleLock.readLock();
+
+    try
     {
-      // Initialization data is 43 bytes; then 2 bytes for the string length...for regular MP4 text, it's variable for TX3G
-      sizeOffset = isTX3G ? tx3gHeaderSize : 43;
+      if (subEntries != null && subEntries.isEmpty())
+      {
+        // Initialization data is 43 bytes; then 2 bytes for the string length...for regular MP4 text, it's variable for TX3G
+        sizeOffset = isTX3G ? tx3gHeaderSize : 43;
+      }
     }
+    finally
+    {
+      subtitleLock.readLock().unlock();
+    }
+
     if (rawData == null || rawData.length < sizeOffset + 2)
       return false;
     int textLength = ((rawData[sizeOffset] & 0xFF) << 8) + (rawData[sizeOffset + 1] & 0xFF);

@@ -1,6 +1,6 @@
 /*
  * DXA demuxer
- * Copyright (c) 2007 Konstantin Shishkov.
+ * Copyright (c) 2007 Konstantin Shishkov
  *
  * This file is part of FFmpeg.
  *
@@ -19,6 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "libavutil/intreadwrite.h"
 #include "avformat.h"
 #include "riff.h"
 
@@ -35,9 +36,15 @@ typedef struct{
 
 static int dxa_probe(AVProbeData *p)
 {
+    int w, h;
+    if (p->buf_size < 15)
+        return 0;
+    w = AV_RB16(p->buf + 11);
+    h = AV_RB16(p->buf + 13);
     /* check file header */
     if (p->buf[0] == 'D' && p->buf[1] == 'E' &&
-        p->buf[2] == 'X' && p->buf[3] == 'A')
+        p->buf[2] == 'X' && p->buf[3] == 'A' &&
+        w && w <= 2048 && h && h <= 2048)
         return AVPROBE_SCORE_MAX;
     else
         return 0;
@@ -95,7 +102,7 @@ static int dxa_read_header(AVFormatContext *s, AVFormatParameters *ap)
         ast = av_new_stream(s, 0);
         if (!ast)
             return -1;
-        get_wav_header(pb, ast->codec, fsize);
+        ff_get_wav_header(pb, ast->codec, fsize);
         // find 'data' chunk
         while(url_ftell(pb) < c->vidpos && !url_feof(pb)){
             tag = get_le32(pb);
@@ -112,7 +119,7 @@ static int dxa_read_header(AVFormatContext *s, AVFormatParameters *ap)
     }
 
     /* now we are ready: build format streams */
-    st->codec->codec_type = CODEC_TYPE_VIDEO;
+    st->codec->codec_type = AVMEDIA_TYPE_VIDEO;
     st->codec->codec_id   = CODEC_ID_DXA;
     st->codec->width      = w;
     st->codec->height     = h;
@@ -204,7 +211,7 @@ static int dxa_read_packet(AVFormatContext *s, AVPacket *pkt)
 
 AVInputFormat dxa_demuxer = {
     "dxa",
-    "dxa",
+    NULL_IF_CONFIG_SMALL("DXA"),
     sizeof(DXAContext),
     dxa_probe,
     dxa_read_header,

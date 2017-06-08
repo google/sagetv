@@ -16,6 +16,9 @@
 package tv.sage.mod;
 
 import sage.SageConstants;
+import sage.io.BufferedSageFile;
+import sage.io.EncryptedSageFile;
+import sage.io.LocalSageFile;
 
 /**
  * Read a classic STV file of {@link tv.sage.ws.STVWidget}.
@@ -208,8 +211,7 @@ public class STVReader
   {
     java.util.ArrayList widgetv = new java.util.ArrayList();
 
-    sage.FasterRandomFile frf = new sage.FasterRandomFile(file, "rc", sage.Sage.I18N_CHARSET); // UTF-8
-    frf.setBufferSize(16*1024);
+    sage.io.SageDataFile frf = new sage.io.SageDataFile(new EncryptedSageFile(new BufferedSageFile(new LocalSageFile(file, true), 16384)), sage.Sage.I18N_CHARSET); // UTF-8
 
     try
     {
@@ -245,7 +247,7 @@ public class STVReader
       int size = -1;
       byte typecode = 0;
 
-      while (file.length() > frf.getFilePointer())
+      while (file.length() > frf.position())
       {
         int cmdLength = frf.readInt();
 
@@ -320,8 +322,7 @@ public class STVReader
 
   public AbstractWidget[] loadOpt() throws java.io.IOException
   {
-    sage.FasterRandomFile frf = new sage.FasterRandomFile(file, "r", sage.Sage.I18N_CHARSET); // UTF-8
-    frf.setBufferSize(16*1024);
+    sage.io.SageDataFile frf = new sage.io.SageDataFile(new sage.io.BufferedSageFile(new sage.io.LocalSageFile(file, true), 16384), sage.Sage.I18N_CHARSET); // UTF-8
     // This is a 2 pass process. We go through once to create all of the Widget objects
     // and then we go through again to setup all the contents and containers
     AbstractWidget[] rv = null;
@@ -344,11 +345,8 @@ public class STVReader
       {
         // encrypted DB file
 
-        // reopen with mode "rc"
-
-        frf.close();
-        frf = new sage.FasterRandomFile(file, "rc", sage.Sage.I18N_CHARSET);
-        frf.skipBytes(4);
+        // Re-wrap with encryption.
+        frf = new sage.io.SageDataFile(new EncryptedSageFile(frf.getSource()), sage.Sage.I18N_CHARSET);
       }
 
       if (version < 0x35 && version > 0x20)
@@ -361,7 +359,7 @@ public class STVReader
       int size = -1;
       byte typecode = 0;
 
-      while (file.length() > frf.getFilePointer())
+      while (file.length() > frf.position())
       {
         int cmdLength = frf.readInt();
 
@@ -435,7 +433,7 @@ public class STVReader
     return rv;
   }
 
-  private AbstractWidget loadWidget(byte typecode, sage.FastRandomFile in, boolean optimize) throws java.io.IOException
+  private AbstractWidget loadWidget(byte typecode, sage.io.SageDataFile in, boolean optimize) throws java.io.IOException
   {
     int id = in.readInt();
 

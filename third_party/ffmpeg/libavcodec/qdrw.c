@@ -20,12 +20,12 @@
  */
 
 /**
- * @file qdrw.c
+ * @file
  * Apple QuickDraw codec.
  */
 
+#include "libavutil/intreadwrite.h"
 #include "avcodec.h"
-#include "mpegvideo.h"
 
 typedef struct QdrawContext{
     AVCodecContext *avctx;
@@ -34,8 +34,10 @@ typedef struct QdrawContext{
 
 static int decode_frame(AVCodecContext *avctx,
                         void *data, int *data_size,
-                        const uint8_t *buf, int buf_size)
+                        AVPacket *avpkt)
 {
+    const uint8_t *buf = avpkt->data;
+    int buf_size = avpkt->size;
     QdrawContext * const a = avctx->priv_data;
     AVFrame * const p= (AVFrame*)&a->pic;
     uint8_t* outdata;
@@ -52,7 +54,7 @@ static int decode_frame(AVCodecContext *avctx,
         av_log(avctx, AV_LOG_ERROR, "get_buffer() failed\n");
         return -1;
     }
-    p->pict_type= I_TYPE;
+    p->pict_type= FF_I_TYPE;
     p->key_frame= 1;
 
     outdata = a->pic.data[0];
@@ -130,26 +132,33 @@ static int decode_frame(AVCodecContext *avctx,
     return buf_size;
 }
 
-static int decode_init(AVCodecContext *avctx){
+static av_cold int decode_init(AVCodecContext *avctx){
 //    QdrawContext * const a = avctx->priv_data;
-
-    if (avcodec_check_dimensions(avctx, avctx->width, avctx->height) < 0) {
-        return 1;
-    }
 
     avctx->pix_fmt= PIX_FMT_PAL8;
 
     return 0;
 }
 
+static av_cold int decode_end(AVCodecContext *avctx){
+    QdrawContext * const a = avctx->priv_data;
+    AVFrame *pic = &a->pic;
+
+    if (pic->data[0])
+        avctx->release_buffer(avctx, pic);
+
+    return 0;
+}
+
 AVCodec qdraw_decoder = {
     "qdraw",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_QDRAW,
     sizeof(QdrawContext),
     decode_init,
     NULL,
-    NULL,
+    decode_end,
     decode_frame,
     CODEC_CAP_DR1,
+    .long_name = NULL_IF_CONFIG_SMALL("Apple QuickDraw"),
 };

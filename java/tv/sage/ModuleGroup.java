@@ -269,43 +269,28 @@ public class ModuleGroup
 
   public void exportSTV(java.io.File file) throws tv.sage.SageException
   {
-    exportSTV(file, null);
-  }
-  public void exportSTV(java.io.File file, Object cryptoKeyObj) throws tv.sage.SageException
-  {
     sage.Widget[] allWidgs = getWidgets();
     if (sage.Sage.DBG) System.out.println("Compressing widgets to STV file: " + file);
     long fp;
     boolean optimize = file.toString().endsWith(".opt.stv");
     try
     {
-      byte[] cryptoKey = null;
-      if (cryptoKeyObj != null)
-      {
-        if (cryptoKeyObj instanceof byte[])
-          cryptoKey = (byte[]) cryptoKeyObj;
-        else if (cryptoKeyObj instanceof Object[])
-        {
-          Object[] objArr = (Object[]) cryptoKeyObj;
-          cryptoKey = new byte[objArr.length];
-          for (int i = 0; i < objArr.length; i++)
-            cryptoKey[i] = Byte.parseByte(objArr[i].toString());
-        }
-      }
       file.createNewFile();
-      sage.FastRandomFile widgetDBout = new sage.FasterRandomFile(file, cryptoKey == null ? "rwd" : "rwdc", sage.Sage.I18N_CHARSET);
-      if (cryptoKey != null) widgetDBout.setCrypto(cryptoKey);
+      sage.io.SageDataFile widgetDBout;
+
+      widgetDBout = new sage.io.SageDataFile(new sage.io.BufferedSageFile(new sage.io.LocalSageFile(file, "rwd")), sage.Sage.I18N_CHARSET);
+
       widgetDBout.writeUnencryptedByte((byte) 'W');
       widgetDBout.writeUnencryptedByte((byte) 'I');
       widgetDBout.writeUnencryptedByte((byte) (optimize ? 'X' : 'Z'));
       widgetDBout.flush();
 
       // The BAD_VERSION marker is to signify incompletely saved DB files.
-      long verPos = widgetDBout.getFilePointer();
+      long verPos = widgetDBout.position();
       widgetDBout.writeUnencryptedByte(sage.Wizard.BAD_VERSION);
       widgetDBout.flush();
 
-      fp = widgetDBout.getFilePointer();
+      fp = widgetDBout.position();
       widgetDBout.writeInt(Integer.MAX_VALUE);
       widgetDBout.writeByte(sage.Wizard.SIZE);
       widgetDBout.writeByte(sage.Wizard.WIDGET_CODE);
@@ -313,7 +298,7 @@ public class ModuleGroup
       sage.Wizard.logCmdLength(widgetDBout, fp);
       if (allWidgs.length > 0)
       {
-        fp = widgetDBout.getFilePointer();
+        fp = widgetDBout.position();
         widgetDBout.writeInt(Integer.MAX_VALUE);
         widgetDBout.writeByte(sage.Wizard.FULL_DATA);
         widgetDBout.writeByte(sage.Wizard.WIDGET_CODE);
@@ -358,10 +343,10 @@ public class ModuleGroup
         }
         sage.Wizard.logCmdLength(widgetDBout, fp);
       }
-      fp = widgetDBout.getFilePointer();
+      fp = widgetDBout.position();
       widgetDBout.setLength(fp);
       widgetDBout.seek(verPos);
-      widgetDBout.writeUnencryptedByte(cryptoKey != null ? (byte) 0x36 : (byte)0x20); // < 0x2F to signify unencrypted
+      widgetDBout.writeByte((byte)0x20); // < 0x2F to signify unencrypted
       widgetDBout.flush();
       widgetDBout.close();
     }

@@ -33,7 +33,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.Vector;
 
-public class Scheduler implements Runnable
+public class Scheduler implements SchedulerInterface
 {
   public static final long SCHEDULING_LOOKBEHIND = 180000L;// 3 min
   private static final float FUZZIFIER = 0.05f;//0.1f;
@@ -70,7 +70,7 @@ public class Scheduler implements Runnable
     prepped = false;
   }
 
-  boolean isPrepped() { return prepped; }
+  public boolean isPrepped() { return prepped; }
 
   private void addToDontSchedule(Airing addMe)
   {
@@ -372,7 +372,7 @@ public class Scheduler implements Runnable
     }
   }
 
-  void setClientDontKnowFlag(boolean x) { clientDontKnowFlag = x; }
+  public void setClientDontKnowFlag(boolean x) { clientDontKnowFlag = x; }
 
   public boolean areThereDontKnows()
   {
@@ -465,7 +465,7 @@ public class Scheduler implements Runnable
     return es == null ? new Vector<Airing>() : es.pubMustSee;
   }
 
-  void goodbye()
+  public void goodbye()
   {
     alive = false;
     synchronized (this)
@@ -631,10 +631,13 @@ public class Scheduler implements Runnable
           {
             // 2-2-05 Added the check for wasted so we don't schedule
             // things that are marked as don't like
+            // 5-26-17 JS: Removed must see requirement because it can cause
+            // us to have a conflict even when a future airing makes the
+            // outcome incorrect.
             if (getSchedulingStart(kitty[p]) >= desiredStartLookTime &&
                 god.areSameFavorite(kitty[p], mustAir) &&
-                wiz.getWastedForAiring(kitty[p]) == null &&
-                god.isMustSee(kitty[p]))
+                wiz.getWastedForAiring(kitty[p]) == null /*&&
+                god.isMustSee(kitty[p])*/)
               v.add(kitty[p]);
           }
         }
@@ -646,9 +649,12 @@ public class Scheduler implements Runnable
         {
           // 2-2-05 Added the check for wasted so we don't schedule
           // things that are marked as don't like
+          // 5-26-17 JS: Removed must see requirement because it can cause
+          // us to have a conflict even when a future airing makes the
+          // outcome incorrect.
           if (god.areSameFavorite(kitty[p], mustAir) &&
-              wiz.getWastedForAiring(kitty[p]) == null &&
-              god.isMustSee(kitty[p]))
+              wiz.getWastedForAiring(kitty[p]) == null /*&&
+              god.isMustSee(kitty[p])*/)
             v.add(kitty[p]);
         }
       }
@@ -1121,7 +1127,7 @@ public class Scheduler implements Runnable
         }
         if (appendage == null && currAirOptions.isEmpty())
         {
-          // Unschedulable with no hopes of mutating the schedule to accomdate it
+          // Unschedulable with no hopes of mutating the schedule to accommodate it
           // Check for what caused it to NOT get scheduled and if there's any ambiguous conflicts
           // in there, then add them to our pubUnresolvedConflicts list
           Vector<Airing> unwantedAirs = showSetMap.get(showSetMapKey);
@@ -1185,10 +1191,10 @@ public class Scheduler implements Runnable
           // BUT there were conflicts with mutable schedule entries, these are the ones that conflicts
           // with what's left in currAirOptions. No we need to find the conflict map of what's in the current
           // schedule for each of those air options. The first one that can create a complete schedule is the
-          // preferred one we'll use. We go through the progressively, if any of them CANNOT make a complete
+          // preferred one we'll use. We go through them progressively, if any of them CANNOT make a complete
           // schedule, they get removed from currAirOptions. If we go through them all and can't find any full
           // schedule permutations, then we are unable to schedule this one and must add it to the pubConflicts
-          // if its ambigious why this occurred
+          // if its ambiguous why this occurred
           boolean rearrangeSucceeded = false;
           Airing currAirOpt = null;
 
@@ -1963,7 +1969,7 @@ public class Scheduler implements Runnable
 
     /*
      * NOTE WE STILL NEED TO MANIPULATE THE SCHEDULE BY SWAPPING ANY ENCODERS THAT
-     * GIVE US AN ADVANTAGE. This only effects what were recording now more or less.
+     * GIVE US AN ADVANTAGE. This only effects what we're recording now more or less.
      * The problems we can address here are unnecessary promptings for channel changes.
      * The procedure we want to follow is that any encoders with desired encodings
      * should try to make 2 optimizations. No optimization can be done if the nextRecord
@@ -1971,7 +1977,7 @@ public class Scheduler implements Runnable
      * is if there's another encoder scheduled to record the show that's on immediately after the currRecord
      * and that show is a must see or MR, then swap that schedule entry to the forced encoder's schedule.
      * --this first optimization is unnecessary because the Seeker will enforce that by default and then
-     * the scheduler will rerun and fix itself to accomodate for that)
+     * the scheduler will rerun and fix itself to accommodate for that)
      * The next optimization is if there's a must see scheduled immediately after the currRecord (on a different station)
      * then try and swap that next record to another encoder so we don't have to prompt the user
      * unnecessarily about a channel change.
@@ -2035,7 +2041,7 @@ public class Scheduler implements Runnable
                     {
                       continue swap_encoder_loop;
                     }
-                    // We can't just use straight alingment or if it's off by a minute we will still get prompted.
+                    // We can't just use straight alignment or if it's off by a minute we will still get prompted.
                     // A good example is a program that starts one minute later.
                     // The old code was a straight ==, now we make sure the gap is bigger than 2 * the prompt advance.
                     if ((getSchedulingEnd(sortedEncs[i].currRecord) >= getSchedulingStart(otherMustAir) - 2*askAdvance) &&
@@ -2129,7 +2135,7 @@ public class Scheduler implements Runnable
     {
       potentials.sort();
 
-      // Build the redudancy map. This saves us a LOT of CPU time once they have any kind of IR built up because of its n^2 performance
+      // Build the redundancy map. This saves us a LOT of CPU time once they have any kind of IR built up because of its n^2 performance
       agentFileRedMap = new HashMap<Agent, List<Airing>>();
       agentSchedRedMap = new HashMap<Agent, List<Airing>>();
       for (int i = 0; i < wizFileCache.length; i++)

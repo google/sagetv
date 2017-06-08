@@ -127,7 +127,7 @@ public class ChannelAPI{
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         Channel c = getChannel(stack);
-        return Boolean.valueOf((c == null) ? true : (c.getStationID() == 0 || c.isViewable()));
+        return Boolean.valueOf((c == null) ? true : c.isViewable());
       }});
     rft.put(new PredefinedJEPFunction("Channel", "IsChannelViewableOnLineup", 2, new String[] { "Channel", "Lineup" })
     {

@@ -16,8 +16,11 @@
 package sage;
 
 import java.lang.reflect.Constructor;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import sage.Wizard.MaintenanceType;
+import sage.epg.sd.SDRipper;
 
 /*
  * Usage in other classes:
@@ -45,6 +48,10 @@ public final class EPG implements Runnable
   private static final String AUTODIAL = "autodial";
   private static final long ERROR_SLEEP = 1800000L;
   static final long MAINTENANCE_FREQ = Sage.MILLIS_PER_DAY;
+
+  public static final String EPG_SERVER_INVALID_KEY = "INVALID_KEY";
+  public static final String EPG_SERVER_NO_KEY = "NO_KEY";
+  public static final String EPG_SERVER_CONNECTION_FAILURE = "CONNECTION_FAILURE";
 
   /**
    * EPG state Enum
@@ -94,18 +101,18 @@ public final class EPG implements Runnable
 
     buildSourcesFromPrefs();
 
-    lineups = new java.util.HashMap();
-    serviceLevels = new java.util.HashMap();
-    lineupOverrides = new java.util.HashMap();
-    providerNameToIDCache = new java.util.HashMap();
-    physicalLineups = new java.util.HashMap();
-    physicalLineupOverrides = new java.util.HashMap();
+    lineups = new java.util.HashMap<Long, java.util.Map<Integer, String[]>>();
+    serviceLevels = new java.util.HashMap<Long, java.util.Map<Integer, Integer>>();
+    lineupOverrides = new java.util.HashMap<Long, java.util.Map<Integer, String[]>>();
+    providerNameToIDCache = new java.util.HashMap<String, String>();
+    physicalLineups = new java.util.HashMap<Long, java.util.Map<Integer, String[]>>();
+    physicalLineupOverrides = new java.util.HashMap<Long, java.util.Map<Integer, String[]>>();
 
     buildLineupsFromPrefs();
     String[] slKeys = Sage.keys(prefs + SERVICE_LEVELS + '/');
     for (int i = 0; i < slKeys.length; i++)
     {
-      java.util.Map currMap = parseChanMapString(Sage.get(prefs + SERVICE_LEVELS + '/' + slKeys[i], ""));
+      java.util.Map<Integer, Integer> currMap = parseChanMapString(Sage.get(prefs + SERVICE_LEVELS + '/' + slKeys[i], ""));
       if (!currMap.isEmpty())
       {
         try
@@ -140,7 +147,7 @@ public final class EPG implements Runnable
       }
     }
     logoDir.mkdirs();
-    logoMap = new java.util.HashMap();
+    logoMap = new java.util.HashMap<String, java.io.File>();
 
     /*colorMap = new java.util.HashMap();
 		String catColorPrefs = prefs + CATEGORY_COLORS_KEY + '/';
@@ -234,18 +241,22 @@ public final class EPG implements Runnable
   {
     String[] dsNames = Sage.childrenNames(dsPrefs);
     java.util.Arrays.sort(dsNames);
-    sources = new java.util.Vector();
+    sources = new java.util.Vector<EPGDataSource>();
     String customEpgSourceClass = Sage.get("epg/custom_data_source_class", "");
     for (int i = 0; i < dsNames.length; i++)
     {
       String currPrefs = dsPrefs + dsNames[i] + '/';
       String currClassStr = Sage.get(currPrefs + EPG_CLASS, null);
-      EPGDataSource newEPGDS = null;
+      EPGDataSource newEPGDS;
       try
       {
         if (!Sage.EMBEDDED && currClassStr != null && currClassStr.equals("Basic"))
         {
           sources.addElement(newEPGDS = new EPGDataSource(Integer.parseInt(dsNames[i])));
+        }
+        else if (currClassStr != null && currClassStr.equals(SDRipper.SOURCE_NAME))
+        {
+          sources.add(newEPGDS = new SDRipper(Integer.parseInt(dsNames[i])));
         }
         else if ((currClassStr != null && currClassStr.indexOf('.') != -1) ||
             customEpgSourceClass.length() > 0)
@@ -267,14 +278,14 @@ public final class EPG implements Runnable
       {
         System.out.println("ERROR: Exception creating " +
             currClassStr + " for pref " + currPrefs + " of " + e + " More:");
-        e.printStackTrace();
+        e.printStackTrace(System.out);
         Sage.removeNode(dsPrefs + dsNames[i]);
         continue;
       }
       // Check if there's a duplicate for this provider ID, and if so, remove it
       for (int j = 0; j < sources.size(); j++)
       {
-        EPGDataSource tempSource = (EPGDataSource) sources.get(j);
+        EPGDataSource tempSource = sources.get(j);
         if (tempSource == newEPGDS)
           continue;
         if (tempSource.getProviderID() == newEPGDS.getProviderID())
@@ -311,7 +322,7 @@ public final class EPG implements Runnable
         String[] lineupKeys = Sage.keys(prefs + CHANNEL_LINEUPS + '/');
         for (int i = 0; i < lineupKeys.length; i++)
         {
-          java.util.Map currMap = parseMultiChanMapString(Sage.get(prefs + CHANNEL_LINEUPS + '/' + lineupKeys[i], ""));
+          java.util.Map<Integer, String[]> currMap = parseMultiChanMapString(Sage.get(prefs + CHANNEL_LINEUPS + '/' + lineupKeys[i], ""));
           if (!currMap.isEmpty())
           {
             try
@@ -328,7 +339,7 @@ public final class EPG implements Runnable
         lineupKeys = Sage.keys(prefs + LINEUP_OVERRIDES + '/');
         for (int i = 0; i < lineupKeys.length; i++)
         {
-          java.util.Map currMap = parseMultiChanMapString(Sage.get(prefs + LINEUP_OVERRIDES + '/' + lineupKeys[i], ""));
+          java.util.Map<Integer, String[]> currMap = parseMultiChanMapString(Sage.get(prefs + LINEUP_OVERRIDES + '/' + lineupKeys[i], ""));
           if (!currMap.isEmpty())
           {
             try
@@ -340,16 +351,16 @@ public final class EPG implements Runnable
               lineupKeys[i] = Long.toString(Sage.convertProviderID(lineupKeys[i]));
             }
             lineupOverrides.put(new Long(lineupKeys[i]), currMap);
-            java.util.Map overMap = (java.util.Map)lineups.get(new Long(lineupKeys[i]));
+            java.util.Map<Integer, String[]> overMap = lineups.get(new Long(lineupKeys[i]));
             if (overMap == null)
-              lineups.put(new Long(lineupKeys[i]), overMap = new java.util.HashMap());
+              lineups.put(new Long(lineupKeys[i]), overMap = new java.util.HashMap<Integer, String[]>());
             overMap.putAll(currMap);
           }
         }
         lineupKeys = Sage.keys(prefs + PHYSICAL_CHANNEL_LINEUPS + '/');
         for (int i = 0; i < lineupKeys.length; i++)
         {
-          java.util.Map currMap = parseMultiChanMapString(Sage.get(prefs + PHYSICAL_CHANNEL_LINEUPS + '/' + lineupKeys[i], ""));
+          java.util.Map<Integer, String[]> currMap = parseMultiChanMapString(Sage.get(prefs + PHYSICAL_CHANNEL_LINEUPS + '/' + lineupKeys[i], ""));
           if (!currMap.isEmpty())
           {
             try
@@ -366,7 +377,7 @@ public final class EPG implements Runnable
         lineupKeys = Sage.keys(prefs + LINEUP_PHYSICAL_OVERRIDES + '/');
         for (int i = 0; i < lineupKeys.length; i++)
         {
-          java.util.Map currMap = parseMultiChanMapString(Sage.get(prefs + LINEUP_PHYSICAL_OVERRIDES + '/' + lineupKeys[i], ""));
+          java.util.Map<Integer, String[]> currMap = parseMultiChanMapString(Sage.get(prefs + LINEUP_PHYSICAL_OVERRIDES + '/' + lineupKeys[i], ""));
           if (!currMap.isEmpty())
           {
             try
@@ -378,9 +389,9 @@ public final class EPG implements Runnable
               lineupKeys[i] = Long.toString(Sage.convertProviderID(lineupKeys[i]));
             }
             physicalLineupOverrides.put(new Long(lineupKeys[i]), currMap);
-            java.util.Map overMap = (java.util.Map)physicalLineups.get(new Long(lineupKeys[i]));
+            java.util.Map<Integer, String[]> overMap = physicalLineups.get(new Long(lineupKeys[i]));
             if (overMap == null)
-              physicalLineups.put(new Long(lineupKeys[i]), overMap = new java.util.HashMap());
+              physicalLineups.put(new Long(lineupKeys[i]), overMap = new java.util.HashMap<Integer, String[]>());
             overMap.putAll(currMap);
           }
         }
@@ -400,17 +411,22 @@ public final class EPG implements Runnable
 
   void resetViewableStationsCache()
   {
-    synchronized (stationIDCacheLock)
+    stationIDCacheLock.writeLock().lock();
+    try
     {
       viewableStationIDCache = null;
       VideoFrame.clearSortedChannelLists();
+    }
+    finally
+    {
+      stationIDCacheLock.writeLock().unlock();
     }
     // NOTE: We didn't need this in our old UI because we would call RemoveUnusedLineups whenever someone was exiting the
     // channel setup UIs which would then kick the scheduler. Now that it's happening via backend processes we need to kick it
     // every time we change the enabled channels so it redoes the schedule and then also kicks the Seeker for what channels are viewable.
     if (!Sage.client)
     {
-      Scheduler.getInstance().kick(true);
+      SchedulerSelector.getInstance().kick(true);
     }
   }
 
@@ -449,14 +465,14 @@ public final class EPG implements Runnable
       // Our login criteria has changed so we need to clear out the
       // update IDs
       for (int i = 0; i < sources.size(); i++)
-        ((EPGDataSource) sources.elementAt(i)).reset();
+        sources.elementAt(i).reset();
     }
   }
 
   private java.io.File getLogoPathInternal(String name)
   {
     if (logoMap.containsKey(name))
-      return (java.io.File) logoMap.get(name);
+      return logoMap.get(name);
     java.io.File logoFile = new java.io.File(logoDir, name + ".gif");
     if (logoFile.isFile())
     {
@@ -596,7 +612,7 @@ public final class EPG implements Runnable
     {
       for (int i = 0; i < sources.size(); i++){
         try {
-          ((EPGDataSource) sources.elementAt(i)).reset();
+          sources.elementAt(i).reset();
         } catch (Throwable e) {
           System.out.println("EPG EXCEPTION OCCURRED: " + e);
           e.printStackTrace();
@@ -607,7 +623,7 @@ public final class EPG implements Runnable
     for (int i = 0; i < sources.size(); i++)
     {
       try {
-        ((EPGDataSource) sources.elementAt(i)).initDataScanInfo();
+        sources.elementAt(i).initDataScanInfo();
       } catch (Throwable e) {
         System.out.println("EPG EXCEPTION OCCURRED: " + e);
         e.printStackTrace();
@@ -615,7 +631,8 @@ public final class EPG implements Runnable
     }
     Wizard.MaintenanceType reqMaintenanceType=MaintenanceType.NONE;
     // Check for the default channel setup on the different sources
-    boolean[] didAdd = new boolean[1];
+    // JS 8/21/2016: This is no longer used.
+    //boolean[] didAdd = new boolean[1];
     boolean updateFinished = true;
     while (alive)
     {
@@ -627,7 +644,7 @@ public final class EPG implements Runnable
         if (reqMaintenanceType != MaintenanceType.NONE)
         {
           Carny.getInstance().kickHard();
-          Scheduler.getInstance().kick(false);
+          SchedulerSelector.getInstance().kick(false);
         }
 
         if (reqMaintenanceType != MaintenanceType.NONE
@@ -648,7 +665,7 @@ public final class EPG implements Runnable
         {
           for (int i = 0; (i < sources.size()) && alive; i++)
           {
-            long currWait = ((EPGDataSource) sources.elementAt(i)).getTimeTillUpdate();
+            long currWait = sources.elementAt(i).getTimeTillUpdate();
             minWait = Math.min(minWait, currWait);
             if (Sage.DBG) System.out.println(sources.elementAt(i) + " needs an update in " + Sage.durFormat(currWait));
           }
@@ -700,18 +717,18 @@ public final class EPG implements Runnable
           // Connect when we become active
           if (!autodial || Sage.connectToInternet())
           {
-            java.util.ArrayList highPriorityDownloads = new java.util.ArrayList();
+            java.util.List<EPGDataSource> highPriorityDownloads = new java.util.ArrayList<EPGDataSource>();
             synchronized (sources)
             {
               for (int i = 0; i < sources.size(); i++)
               {
-                if (!((EPGDataSource) sources.get(i)).isChanDownloadComplete())
+                if (!sources.get(i).isChanDownloadComplete())
                   highPriorityDownloads.add(sources.get(i));
               }
             }
             for (int i = 0; (i < highPriorityDownloads.size()) && alive; i++)
             {
-              currDS = (EPGDataSource) highPriorityDownloads.get(i);
+              currDS = highPriorityDownloads.get(i);
               synchronized (sources)
               {
                 if (!sources.contains(currDS))
@@ -749,7 +766,7 @@ public final class EPG implements Runnable
               {
                 if ((i < sources.size()) && alive)
                 {
-                  currDS = (EPGDataSource) sources.elementAt(i);
+                  currDS = sources.elementAt(i);
                 }
                 else
                 {
@@ -917,14 +934,14 @@ public final class EPG implements Runnable
     long rv = 0;
     for (int i = 0; i < sources.size(); i++)
     {
-      rv = Math.max(rv, ((EPGDataSource) sources.elementAt(i)).getLastRun());
+      rv = Math.max(rv, sources.elementAt(i).getLastRun());
     }
     return rv;
   }
 
   public EPGDataSource[] getDataSources()
   {
-    return (EPGDataSource[]) sources.toArray(new EPGDataSource[0]);
+    return sources.toArray(new EPGDataSource[sources.size()]);
   }
 
   public void addDataSource(EPGDataSource addMe)
@@ -937,7 +954,7 @@ public final class EPG implements Runnable
 
       // Abort all of the current downloads so we can pickup the new lineup quickly
       for (int i = 0; i < sources.size(); i++)
-        ((EPGDataSource) sources.get(i)).abortUpdate();
+        sources.get(i).abortUpdate();
     }
   }
 
@@ -962,9 +979,9 @@ public final class EPG implements Runnable
   {
     for (int i = 0; i < sources.size(); i++)
     {
-      if (((EPGDataSource) sources.elementAt(i)).getEPGSourceID() == id)
+      if (sources.elementAt(i).getEPGSourceID() == id)
       {
-        return (EPGDataSource) sources.elementAt(i);
+        return sources.elementAt(i);
       }
     }
     return null;
@@ -975,9 +992,9 @@ public final class EPG implements Runnable
     if (providerID == 0) return null;
     for (int i = 0; i < sources.size(); i++)
     {
-      if (providerID == ((EPGDataSource) sources.elementAt(i)).getProviderID())
+      if (providerID == sources.elementAt(i).getProviderID())
       {
-        return (EPGDataSource) sources.elementAt(i);
+        return sources.elementAt(i);
       }
     }
     return null;
@@ -988,9 +1005,9 @@ public final class EPG implements Runnable
     if (epgDSName == null || epgDSName.length() == 0) return 0;
     for (int i = 0; i < sources.size(); i++)
     {
-      if (epgDSName.equals(((EPGDataSource) sources.elementAt(i)).getName()))
+      if (epgDSName.equals(sources.elementAt(i).getName()))
       {
-        return ((EPGDataSource) sources.elementAt(i)).getProviderID();
+        return sources.elementAt(i).getProviderID();
       }
     }
     return 0;
@@ -1001,9 +1018,9 @@ public final class EPG implements Runnable
     if (epgDSName == null || epgDSName.length() == 0) return null;
     for (int i = 0; i < sources.size(); i++)
     {
-      if (epgDSName.equals(((EPGDataSource) sources.elementAt(i)).getName()))
+      if (epgDSName.equals(sources.elementAt(i).getName()))
       {
-        return (EPGDataSource) sources.elementAt(i);
+        return sources.elementAt(i);
       }
     }
     return null;
@@ -1041,16 +1058,16 @@ public final class EPG implements Runnable
     {
       synchronized (lineups)
       {
-        java.util.Map chanMap = (java.util.Map) lineups.get(new Long(providerID));
+        java.util.Map<Integer, String[]> chanMap = lineups.get(new Long(providerID));
         if (chanMap == null) return 0;
-        java.util.Iterator walker = chanMap.entrySet().iterator();
+        java.util.Iterator<java.util.Map.Entry<Integer, String[]>> walker = chanMap.entrySet().iterator();
         while (walker.hasNext())
         {
-          java.util.Map.Entry ent = (java.util.Map.Entry) walker.next();
-          String[] currNums = (String[]) ent.getValue();
+          java.util.Map.Entry<Integer, String[]> ent = walker.next();
+          String[] currNums = ent.getValue();
           for (int i = 0; i < currNums.length; i++)
             if (currNums[i].equals(channelNum))
-              return ((Integer) ent.getKey()).intValue();
+              return ent.getKey().intValue();
         }
       }
     }
@@ -1058,18 +1075,18 @@ public final class EPG implements Runnable
     {
       synchronized (lineups)
       {
-        java.util.Iterator walker0 = lineups.values().iterator();
+        java.util.Iterator<java.util.Map<Integer, String[]>> walker0 = lineups.values().iterator();
         while (walker0.hasNext())
         {
-          java.util.Map chanMap = (java.util.Map) walker0.next();
-          java.util.Iterator walker = chanMap.entrySet().iterator();
+          java.util.Map<Integer, String[]> chanMap = walker0.next();
+          java.util.Iterator<java.util.Map.Entry<Integer, String[]>> walker = chanMap.entrySet().iterator();
           while (walker.hasNext())
           {
-            java.util.Map.Entry ent = (java.util.Map.Entry) walker.next();
-            String[] currNums = (String[]) ent.getValue();
+            java.util.Map.Entry<Integer, String[]> ent = walker.next();
+            String[] currNums = ent.getValue();
             for (int i = 0; i < currNums.length; i++)
               if (currNums[i].equals(channelNum))
-                return ((Integer) ent.getKey()).intValue();
+                return ent.getKey().intValue();
           }
         }
       }
@@ -1085,22 +1102,22 @@ public final class EPG implements Runnable
       {
         synchronized (lineups)
         {
-          java.util.Map chanMap = (java.util.Map) physicalLineups.get(new Long(providerID));
-          java.util.Map logicalMap = (java.util.Map) lineups.get(new Long(providerID));
+          java.util.Map<Integer, String[]> chanMap = physicalLineups.get(new Long(providerID));
+          java.util.Map<Integer, String[]> logicalMap = lineups.get(new Long(providerID));
           if (chanMap != null && logicalMap != null)
           {
-            java.util.Iterator walker = chanMap.entrySet().iterator();
+            java.util.Iterator<java.util.Map.Entry<Integer, String[]>> walker = chanMap.entrySet().iterator();
             while (walker.hasNext())
             {
-              java.util.Map.Entry ent = (java.util.Map.Entry) walker.next();
+              java.util.Map.Entry<Integer, String[]> ent = walker.next();
               // Make sure this station is actually in the logical lineup as well
               if (!logicalMap.containsKey(ent.getKey()))
                 continue;
-              String[] currNums = (String[]) ent.getValue();
+              String[] currNums = ent.getValue();
               for (int i = 0; i < currNums.length; i++)
                 if ((!acceptAsPrefix && currNums[i].equals(channelNum)) ||
                     (acceptAsPrefix && currNums[i].startsWith(channelNum)))
-                  return ((Integer) ent.getKey()).intValue();
+                  return ent.getKey().intValue();
             }
           }
         }
@@ -1131,45 +1148,45 @@ public final class EPG implements Runnable
   }
 
   // 601 java.util.Map getLineup(long providerID)
-  public java.util.Map getLineup(long providerID)
+  public java.util.Map<Integer, String[]> getLineup(long providerID)
   {
-    return (java.util.Map) lineups.get(new Long(providerID));
+    return lineups.get(new Long(providerID));
   }
 
-  public void setLineup(long providerID, java.util.Map newMap)
+  public void setLineup(long providerID, java.util.Map<Integer, String[]> newMap)
   {
     lineups.put(new Long(providerID), newMap);
     Sage.put(prefs + CHANNEL_LINEUPS + '/' + providerID, createMultiChanMapString(newMap));
-    java.util.Map overrideMap = (java.util.Map) lineupOverrides.get(new Long(providerID));
+    java.util.Map<Integer, String[]> overrideMap = lineupOverrides.get(new Long(providerID));
     if (overrideMap != null)
       newMap.putAll(overrideMap);
     NetworkClient.distributePropertyChange(prefs + CHANNEL_LINEUPS + '/' + providerID);
     resetViewableStationsCache();
   }
 
-  public void setPhysicalLineup(long providerID, java.util.Map newMap)
+  public void setPhysicalLineup(long providerID, java.util.Map<Integer, String[]> newMap)
   {
     physicalLineups.put(new Long(providerID), newMap);
     Sage.put(prefs + PHYSICAL_CHANNEL_LINEUPS + '/' + providerID, createMultiChanMapString(newMap));
-    java.util.Map overrideMap = (java.util.Map) physicalLineupOverrides.get(new Long(providerID));
+    java.util.Map<Integer, String[]> overrideMap = physicalLineupOverrides.get(new Long(providerID));
     if (overrideMap != null)
       newMap.putAll(overrideMap);
     NetworkClient.distributePropertyChange(prefs + PHYSICAL_CHANNEL_LINEUPS + '/' + providerID);
     resetViewableStationsCache();
   }
 
-  public java.util.Map getPhysicalLineup(long providerID) {
-    return (java.util.Map) physicalLineups.get(new Long(providerID));
+  public java.util.Map<Integer, String[]> getPhysicalLineup(long providerID) {
+    return physicalLineups.get(new Long(providerID));
   }
 
-  public java.util.Map getOverrideMap(long providerID)
+  public java.util.Map<Integer, String[]> getOverrideMap(long providerID)
   {
-    return (java.util.Map) lineupOverrides.get(new Long(providerID));
+    return lineupOverrides.get(new Long(providerID));
   }
 
   public boolean isOverriden(long providerID, int stationID)
   {
-    java.util.Map overrideMap = (java.util.Map) lineupOverrides.get(new Long(providerID));
+    java.util.Map<Integer, String[]> overrideMap = lineupOverrides.get(new Long(providerID));
     if (overrideMap != null)
       return overrideMap.get(new Integer(stationID)) != null;
     return false;
@@ -1182,13 +1199,13 @@ public final class EPG implements Runnable
 
   public void setOverride(long providerID, int stationID, String[] chanNums)
   {
-    java.util.Map overrideMap = (java.util.Map) lineupOverrides.get(new Long(providerID));
+    java.util.Map<Integer, String[]> overrideMap = lineupOverrides.get(new Long(providerID));
     if (overrideMap == null)
-      lineupOverrides.put(new Long(providerID), overrideMap = new java.util.HashMap());
+      lineupOverrides.put(new Long(providerID), overrideMap = new java.util.HashMap<Integer, String[]>());
     overrideMap.put(new Integer(stationID), chanNums.clone());
-    java.util.Map lineMap = (java.util.Map) lineups.get(new Long(providerID));
+    java.util.Map<Integer, String[]> lineMap = lineups.get(new Long(providerID));
     if (lineMap == null)
-      lineups.put(new Long(providerID), lineMap = new java.util.HashMap());
+      lineups.put(new Long(providerID), lineMap = new java.util.HashMap<Integer, String[]>());
     lineMap.putAll(overrideMap);
     Sage.put(prefs + LINEUP_OVERRIDES + '/' + providerID, createMultiChanMapString(overrideMap));
     NetworkClient.distributePropertyChange(prefs + LINEUP_OVERRIDES + '/' + providerID);
@@ -1197,7 +1214,7 @@ public final class EPG implements Runnable
 
   public void clearOverride(long providerID, int stationID)
   {
-    java.util.Map overrideMap = (java.util.Map) lineupOverrides.get(new Long(providerID));
+    java.util.Map<Integer, String[]> overrideMap = lineupOverrides.get(new Long(providerID));
     if (overrideMap == null)
       return;
     overrideMap.remove(new Integer(stationID));
@@ -1211,13 +1228,13 @@ public final class EPG implements Runnable
 
   public void setPhysicalOverride(long providerID, int stationID, String chanNum)
   {
-    java.util.Map overrideMap = (java.util.Map) physicalLineupOverrides.get(new Long(providerID));
+    java.util.Map<Integer, String[]> overrideMap = physicalLineupOverrides.get(new Long(providerID));
     if (overrideMap == null)
-      physicalLineupOverrides.put(new Long(providerID), overrideMap = new java.util.HashMap());
+      physicalLineupOverrides.put(new Long(providerID), overrideMap = new java.util.HashMap<Integer, String[]>());
     overrideMap.put(new Integer(stationID), new String[] { chanNum });
-    java.util.Map lineMap = (java.util.Map) physicalLineups.get(new Long(providerID));
+    java.util.Map<Integer, String[]> lineMap = physicalLineups.get(new Long(providerID));
     if (lineMap == null)
-      physicalLineups.put(new Long(providerID), lineMap = new java.util.HashMap());
+      physicalLineups.put(new Long(providerID), lineMap = new java.util.HashMap<Integer, String[]>());
     lineMap.putAll(overrideMap);
     Sage.put(prefs + LINEUP_PHYSICAL_OVERRIDES + '/' + providerID, createMultiChanMapString(overrideMap));
     NetworkClient.distributePropertyChange(prefs + LINEUP_PHYSICAL_OVERRIDES + '/' + providerID);
@@ -1226,7 +1243,7 @@ public final class EPG implements Runnable
 
   public void clearPhysicalOverride(long providerID, int stationID)
   {
-    java.util.Map overrideMap = (java.util.Map) physicalLineupOverrides.get(new Long(providerID));
+    java.util.Map<Integer, String[]> overrideMap = physicalLineupOverrides.get(new Long(providerID));
     if (overrideMap == null)
       return;
     overrideMap.remove(new Integer(stationID));
@@ -1241,29 +1258,28 @@ public final class EPG implements Runnable
   public boolean isPhysicalOverriden(long providerID, int stationID)
   {
     java.util.Map overrideMap = (java.util.Map) physicalLineupOverrides.get(new Long(providerID));
-    if (overrideMap != null)
-      return overrideMap.get(new Integer(stationID)) != null;
-    return false;
+    return overrideMap != null && overrideMap.get(new Integer(stationID)) != null;
   }
 
-  public void setServiceLevels(long providerID, java.util.Map newMap)
+  public void setServiceLevels(long providerID, java.util.Map<Integer, Integer> newMap)
   {
     serviceLevels.put(new Long(providerID), newMap);
     Sage.put(prefs + SERVICE_LEVELS + '/' + providerID, createChanMapString(newMap));
     NetworkClient.distributePropertyChange(prefs + SERVICE_LEVELS + '/' + providerID);
   }
 
-  public java.util.Map getServiceLevels(long providerID) {
-    return (java.util.Map) serviceLevels.get(new Long(providerID));
+  public java.util.Map<Integer, Integer> getServiceLevels(long providerID)
+  {
+    return serviceLevels.get(new Long(providerID));
   }
 
   public String getChannel(long providerID, int stationID)
   {
     synchronized (lineups)
     {
-      java.util.Map chanMap = (java.util.Map) lineups.get(new Long(providerID));
+      java.util.Map<Integer, String[]> chanMap = lineups.get(new Long(providerID));
       if (chanMap == null) return "";
-      String[] inty = (String[]) chanMap.get(new Integer(stationID));
+      String[] inty = chanMap.get(new Integer(stationID));
       if (inty == null || inty.length == 0) return "";
       return inty[0];
     }
@@ -1273,10 +1289,10 @@ public final class EPG implements Runnable
   {
     synchronized (physicalLineups)
     {
-      java.util.Map chanMap = (java.util.Map) physicalLineups.get(new Long(providerID));
+      java.util.Map<Integer, String[]> chanMap = physicalLineups.get(new Long(providerID));
       if (chanMap != null)
       {
-        String[] inty = (String[]) chanMap.get(new Integer(stationID));
+        String[] inty = chanMap.get(new Integer(stationID));
         if (inty != null && inty.length > 0)
           return inty[0];
       }
@@ -1299,9 +1315,9 @@ public final class EPG implements Runnable
   {
     synchronized (lineups)
     {
-      java.util.Map chanMap = (java.util.Map) lineups.get(new Long(providerID));
+      java.util.Map<Integer, String[]> chanMap = lineups.get(new Long(providerID));
       if (chanMap == null) return new String[] { "" };
-      String[] inty = (String[]) chanMap.get(new Integer(stationID));
+      String[] inty = chanMap.get(new Integer(stationID));
       if (inty == null || inty.length == 0) return new String[] { "" };
       return inty;
     }
@@ -1309,9 +1325,9 @@ public final class EPG implements Runnable
 
   public int getServiceLevel(long providerID, int stationID)
   {
-    java.util.Map slMap = (java.util.Map) serviceLevels.get(new Long(providerID));
+    java.util.Map<Integer, Integer> slMap = serviceLevels.get(new Long(providerID));
     if (slMap == null) return 0;
-    Integer inty = (Integer) slMap.get(new Integer(stationID));
+    Integer inty = slMap.get(new Integer(stationID));
     if (inty == null) return 0;
     return inty.intValue();
   }
@@ -1320,21 +1336,21 @@ public final class EPG implements Runnable
   {
     synchronized (lineups)
     {
-      java.util.Map lineMap = (java.util.Map) lineups.get(new Long(providerID));
+      java.util.Map<Integer, String[]> lineMap = lineups.get(new Long(providerID));
       if (lineMap == null) return new int[0];
       int[] rv = new int[lineMap.keySet().size()];
-      java.util.Iterator walker = lineMap.keySet().iterator();
+      java.util.Iterator<Integer> walker = lineMap.keySet().iterator();
       int idx = 0;
       while (walker.hasNext())
-        rv[idx++] = ((Integer) walker.next()).intValue();
+        rv[idx++] = walker.next().intValue();
       return rv;
     }
   }
 
-  private static java.util.Map parseChanMapString(String str)
+  private static java.util.Map<Integer, Integer> parseChanMapString(String str)
   {
     java.util.StringTokenizer toker = new java.util.StringTokenizer(str, ";");
-    java.util.Map rv = new java.util.HashMap();
+    java.util.Map<Integer, Integer> rv = new java.util.HashMap<Integer, Integer>();
     while (toker.hasMoreTokens())
     {
       String sub = toker.nextToken();
@@ -1348,10 +1364,10 @@ public final class EPG implements Runnable
     return rv;
   }
 
-  private static java.util.Map parseMultiChanMapString(String str)
+  private static java.util.Map<Integer, String[]> parseMultiChanMapString(String str)
   {
     java.util.StringTokenizer toker = new java.util.StringTokenizer(str, ";");
-    java.util.Map rv = new java.util.HashMap();
+    java.util.Map<Integer, String[]> rv = new java.util.HashMap<Integer, String[]>();
     Wizard wiz = Wizard.getInstance();
     while (toker.hasMoreTokens())
     {
@@ -1373,9 +1389,9 @@ public final class EPG implements Runnable
     return rv;
   }
 
-  private static String createChanMapString(java.util.Map chanMap)
+  private static String createChanMapString(java.util.Map<Integer, Integer> chanMap)
   {
-    StringBuffer sb = new StringBuffer();
+    StringBuilder sb = new StringBuilder();
     java.util.Iterator walker = chanMap.entrySet().iterator();
     while (walker.hasNext())
     {
@@ -1388,16 +1404,16 @@ public final class EPG implements Runnable
     return sb.toString();
   }
 
-  private static String createMultiChanMapString(java.util.Map chanMap)
+  private static String createMultiChanMapString(java.util.Map<Integer, String[]> chanMap)
   {
-    StringBuffer sb = new StringBuffer();
-    java.util.Iterator walker = chanMap.entrySet().iterator();
+    StringBuilder sb = new StringBuilder();
+    java.util.Iterator<java.util.Map.Entry<Integer, String[]>> walker = chanMap.entrySet().iterator();
     while (walker.hasNext())
     {
-      java.util.Map.Entry next = (java.util.Map.Entry) walker.next();
+      java.util.Map.Entry<Integer, String[]> next = walker.next();
       sb.append(next.getKey());
       sb.append(',');
-      String[] nums = (String[]) next.getValue();
+      String[] nums = next.getValue();
       for (int i = 0; i < nums.length; i++)
       {
         sb.append(nums[i]);
@@ -1429,7 +1445,7 @@ public final class EPG implements Runnable
     long rv = Long.MAX_VALUE;
     for (int i = 0; (i < sources.size()) && alive; i++)
     {
-      long currWait = ((EPGDataSource) sources.elementAt(i)).getTimeTillUpdate();
+      long currWait = sources.elementAt(i).getTimeTillUpdate();
       rv = Math.min(rv, currWait);
     }
     return rv;
@@ -1441,13 +1457,13 @@ public final class EPG implements Runnable
   {
     int numValid = 0;
     for (int i = 0; i < sources.size(); i++)
-      if (((EPGDataSource) sources.elementAt(i)).getEnabled())
+      if (sources.elementAt(i).getEnabled())
         numValid++;
     long[] rv = new long[numValid];
     int j = 0;
     for (int i = 0; i < sources.size(); i++)
     {
-      EPGDataSource ds = (EPGDataSource) sources.elementAt(i);
+      EPGDataSource ds = sources.elementAt(i);
       if (ds.getEnabled())
         rv[j++] = ds.getProviderID();
     }
@@ -1458,34 +1474,36 @@ public final class EPG implements Runnable
   {
     String[] rv = new String[sources.size()];
     for (int i = 0; i < sources.size(); i++)
-      rv[i] = ((EPGDataSource) sources.elementAt(i)).getName();
+      rv[i] = sources.elementAt(i).getName();
     return rv;
   }
 
   private void createViewableStationIDCache()
   {
-    synchronized (stationIDCacheLock)
+    stationIDCacheLock.writeLock().lock();
+    try
     {
-      java.util.HashSet viewableStations = new java.util.HashSet();
+      java.util.HashSet<Integer> viewableStations = new java.util.HashSet<Integer>();
       for (int i = 0; i < sources.size(); i++)
       {
-        EPGDataSource ds = (EPGDataSource) sources.elementAt(i);
+        EPGDataSource ds = sources.elementAt(i);
         if (mmc.isProviderUsedAndActive(ds.getProviderID()))
         {
           // To undo anything we may have done by disabling it
           ds.setEnabled(true);
-          java.util.Map chanMap = (java.util.Map) lineups.get(new Long(ds.getProviderID()));
+          java.util.Map<Integer, String[]> chanMap = lineups.get(new Long(ds.getProviderID()));
           if (chanMap != null)
           {
-            java.util.Iterator walker = chanMap.entrySet().iterator();
+            java.util.Iterator<java.util.Map.Entry<Integer, String[]>> walker = chanMap.entrySet().iterator();
             while (walker.hasNext())
             {
-              java.util.Map.Entry ent = (java.util.Map.Entry) walker.next();
-              if (!ds.unavailStations.contains(ent.getKey()))
+              java.util.Map.Entry<Integer, String[]> ent = walker.next();
+              Integer key = ent.getKey();
+              if (!ds.unavailStations.contains(key))
               {
-                String[] val = (String[]) ent.getValue();
+                String[] val = ent.getValue();
                 if (val.length > 0 && val[0].length() > 0)
-                  viewableStations.add(ent.getKey());
+                  viewableStations.add(key);
               }
             }
           }
@@ -1494,23 +1512,47 @@ public final class EPG implements Runnable
           ds.setEnabled(false);
       }
       viewableStationIDCache = new int[viewableStations.size()];
-      java.util.Iterator walker = viewableStations.iterator();
+      java.util.Iterator<Integer> walker = viewableStations.iterator();
       int i = 0;
       while (walker.hasNext())
       {
-        viewableStationIDCache[i++] = ((Integer) walker.next()).intValue();
+        viewableStationIDCache[i++] = walker.next().intValue();
       }
       java.util.Arrays.sort(viewableStationIDCache);
+    }
+    finally
+    {
+      stationIDCacheLock.writeLock().unlock();
     }
   }
 
   public boolean canViewStation(int stationID)
   {
-    synchronized (stationIDCacheLock)
+    // There is significant contention on this lock when Carny is multi-threaded, so we now use a
+    // read/write lock.
+    stationIDCacheLock.readLock().lock();
+    try
+    {
+      if (viewableStationIDCache != null)
+        return java.util.Arrays.binarySearch(viewableStationIDCache, stationID) >= 0;
+    }
+    finally
+    {
+      stationIDCacheLock.readLock().unlock();
+    }
+
+    // This only happens when we change what's viewable which isn't that often for a normal user, so
+    // this is an acceptable performance loss.
+    stationIDCacheLock.writeLock().lock();
+    try
     {
       if (viewableStationIDCache == null)
         createViewableStationIDCache();
       return java.util.Arrays.binarySearch(viewableStationIDCache, stationID) >= 0;
+    }
+    finally
+    {
+      stationIDCacheLock.writeLock().unlock();
     }
   }
   /*for (int i = 0; i < sources.size(); i++)
@@ -1523,27 +1565,25 @@ public final class EPG implements Runnable
 		return false;
 	}*/
 
-  public String[][] getProviders(String zipCode, boolean[] didConnect)
+  public String[][] getProviders(String zipCode) throws EPGServerException
   {
     if (hasEPGPlugin())
     {
       updateEPGPluginObj();
       if (epgImportPlugin != null)
       {
-        if (didConnect != null && didConnect.length > 0)
-          didConnect[0] = true;
         return epgImportPlugin.getProviders(zipCode);
       }
       else
         return new String[0][0];
     }
     else
-      return WarlockRipper.getProviders(zipCode, didConnect);
+      return WarlockRipper.getProviders(zipCode);
   }
 
-  public String[] getProvidersAndCacheNames(String zipCode, boolean[] didConnect)
+  public String[] getProvidersAndCacheNames(String zipCode) throws EPGServerException
   {
-    String[][] temprv = getProviders(zipCode, didConnect);
+    String[][] temprv = getProviders(zipCode);
     if (temprv == null)
       return null;
     String[] rv = new String[temprv.length];
@@ -1555,27 +1595,25 @@ public final class EPG implements Runnable
     return rv;
   }
 
-  public String[][] getLocalMarkets(boolean[] didConnect)
+  public String[][] getLocalMarkets() throws EPGServerException
   {
     if (hasEPGPlugin())
     {
       updateEPGPluginObj();
       if (epgImportPlugin != null)
       {
-        if (didConnect != null && didConnect.length > 0)
-          didConnect[0] = true;
         return epgImportPlugin.getLocalMarkets();
       }
       else
         return new String[0][0];
     }
     else
-      return WarlockRipper.getLocalMarkets(didConnect);
+      return WarlockRipper.getLocalMarkets();
   }
 
-  public String[] getLocalMarketsAndCacheNames(boolean[] didConnect)
+  public String[] getLocalMarketsAndCacheNames() throws EPGServerException
   {
-    String[][] temprv = getLocalMarkets(didConnect);
+    String[][] temprv = getLocalMarkets();
     if (temprv == null)
       return null;
     String[] rv = new String[temprv.length];
@@ -1606,8 +1644,34 @@ public final class EPG implements Runnable
 
   public long getCachedProviderIDForName(String s)
   {
-    s = (String) providerNameToIDCache.get(s);
-    return (s==null)?0:Long.parseLong(s);
+    s = providerNameToIDCache.get(s);
+    return (s == null) ? 0 : Long.parseLong(s);
+  }
+
+  public static Object getProperty(String dataSource, String property, String parameter) throws EPGServerException
+  {
+    switch (dataSource)
+    {
+      case WarlockRipper.SOURCE_NAME:
+        return WarlockRipper.getProperty(property, parameter);
+      case SDRipper.SOURCE_NAME:
+        return SDRipper.getProperty(property, parameter);
+      default:
+        return "ERROR: Data source '" + dataSource + "' does not exist.";
+    }
+  }
+
+  public static Object setProperty(String dataSource, String property, String parameter) throws EPGServerException
+  {
+    switch (dataSource)
+    {
+      case WarlockRipper.SOURCE_NAME:
+        return WarlockRipper.setProperty(property, parameter);
+      case SDRipper.SOURCE_NAME:
+        return SDRipper.setProperty(property, parameter);
+      default:
+        return "ERROR: Data source '" + dataSource + "' does not exist.";
+    }
   }
 
   private Wizard wiz;
@@ -1617,7 +1681,7 @@ public final class EPG implements Runnable
   private String accessCode;
   private String zipCode;
 
-  private java.util.Vector sources;
+  private java.util.Vector<EPGDataSource> sources;
 
   private boolean downloadWhileInactive;
   private int downloadFrequency;
@@ -1631,25 +1695,26 @@ public final class EPG implements Runnable
   private EPGDataSource currDS;
   private boolean alive = true;
   private java.io.File logoDir;
-  private java.util.Map logoMap;
+  private java.util.Map<String, java.io.File> logoMap;
   //	private java.util.Map colorMap;
 
-  private Object stationIDCacheLock = new Object();
+  // Now that Carny is multi-threaded, there is significant reader contention for this cache.
+  private final ReadWriteLock stationIDCacheLock = new ReentrantReadWriteLock();
   private int[] viewableStationIDCache;
 
-  private java.util.Map lineups;
-  private java.util.Map lineupOverrides;
-  private java.util.Map serviceLevels;
+  private final java.util.Map<Long, java.util.Map<Integer, String[]>> lineups;
+  private final java.util.Map<Long, java.util.Map<Integer, String[]>> lineupOverrides;
+  private final java.util.Map<Long, java.util.Map<Integer, Integer>> serviceLevels;
 
-  private java.util.Map physicalLineups;
-  private java.util.Map physicalLineupOverrides;
+  private final java.util.Map<Long, java.util.Map<Integer, String[]>> physicalLineups;
+  private final java.util.Map<Long, java.util.Map<Integer, String[]>> physicalLineupOverrides;
 
   private String epgPluginString;
   private EPGImportPlugin epgImportPlugin;
 
   private long epgErrorSleepTime = 60000;
 
-  private java.util.Map providerNameToIDCache;
+  private java.util.Map<String, String> providerNameToIDCache;
 
   public String getEpgStateString(){
     return epgState.getReportingText();

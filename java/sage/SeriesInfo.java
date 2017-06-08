@@ -15,6 +15,7 @@
  */
 package sage;
 
+import sage.epg.sd.SDImages;
 import sage.media.format.MediaFormat;
 
 import java.io.DataInput;
@@ -122,6 +123,24 @@ public class SeriesInfo extends DBObject
       seriesImages = Pooler.EMPTY_INT_ARRAY;
       castImages = Pooler.EMPTY_LONG_ARRAY;
     }
+
+    if (ver >= 0x56)
+    {
+      int numURLs = in.readShort();
+      if (numURLs > Wizard.STUPID_SIZE)
+        throw new IOException("Stupid array size:" + numURLs);
+      imageURLs = (numURLs == 0) ? Pooler.EMPTY_2D_BYTE_ARRAY : new byte[numURLs][];
+      for (int i = 0; i < numURLs; i++)
+      {
+        int numURLLength = in.readShort();
+        if (numURLLength > Wizard.STUPID_SIZE)
+          throw new IOException("Stupid array size:" + numURLLength);
+        imageURLs[i] = new byte[numURLLength];
+        in.readFully(imageURLs[i], 0, numURLLength);
+      }
+    }
+    else if (imageURLs == null)
+      imageURLs = Pooler.EMPTY_2D_BYTE_ARRAY;
   }
 
   private void buildProps(String str)
@@ -207,6 +226,12 @@ public class SeriesInfo extends DBObject
     out.writeShort(castImages.length);
     for (int i = 0; i < castImages.length; i++)
       out.writeLong(castImages[i]);
+    out.writeShort(imageURLs.length);
+    for (int i = 0; i < imageURLs.length; i++)
+    {
+      out.writeShort(imageURLs[i].length);
+      out.write(imageURLs[i]);
+    }
   }
 
   @Override
@@ -241,6 +266,7 @@ public class SeriesInfo extends DBObject
     imageUrl = a.imageUrl;
     seriesImages = a.seriesImages;
     castImages = a.castImages;
+    imageURLs = a.imageURLs;
     super.update(fromMe);
   }
 
@@ -265,18 +291,25 @@ public class SeriesInfo extends DBObject
     return description;
   }
 
-  public boolean hasImage() { return seriesImages.length > 0 || imageUrl.length() > 0; }
+  public boolean hasImage() { return seriesImages.length > 0 || imageUrl.length() > 0 || imageURLs.length > 1; }
 
   public String getImageURL(boolean thumb)
   {
+    if (imageURLs.length > 1) return SDImages.getSeriesImageUrl(showcardID, imageURLs, 0, thumb);
     return (seriesImages.length > 0) ? getImageAsUrl(showcardID, seriesImages[0], thumb) : imageUrl;
   }
 
-  public int getImageCount() { return (seriesImages.length > 0) ? seriesImages.length : ((imageUrl.length() > 0) ? 1 : 0); }
+  public int getImageCount()
+  {
+    if (imageURLs.length > 1) return imageURLs.length - 1;
+    return (seriesImages.length > 0) ? seriesImages.length : ((imageUrl.length() > 0) ? 1 : 0);
+  }
 
   public String getImageURL(int index, boolean thumb)
   {
-    if (index < 0 || index >= seriesImages.length) {
+    if (imageURLs.length > 1) {
+      return SDImages.getSeriesImageUrl(showcardID, imageURLs, index, thumb);
+    } else if (index < 0 || index >= seriesImages.length) {
       return imageUrl;
     } else {
       return getImageAsUrl(showcardID, seriesImages[index], thumb);
@@ -473,7 +506,8 @@ public class SeriesInfo extends DBObject
         characters.length == testMe.characters.length &&
         seriesImages.length == testMe.seriesImages.length &&
         castImages.length == testMe.castImages.length &&
-        imageUrl.equals(testMe.imageUrl))
+        imageUrl.equals(testMe.imageUrl) &&
+        imageURLs.length == testMe.imageURLs.length)
     {
       for (int i = 0; i < people.length; i++)
         if (people[i] != testMe.people[i])
@@ -487,6 +521,15 @@ public class SeriesInfo extends DBObject
       for (int i = 0; i < castImages.length; i++)
         if (castImages[i] != testMe.castImages[i])
           return false;
+      for (int i = 0; i < imageURLs.length; i++)
+      {
+        if (imageURLs[i].length != testMe.imageURLs[i].length)
+          return false;
+        for (int j = 0; j < imageURLs[i].length; j++)
+          if (imageURLs[i][j] != testMe.imageURLs[i][j])
+            return false;
+      }
+
       return true;
     }
     else
@@ -568,6 +611,7 @@ public class SeriesInfo extends DBObject
   int[] seriesImages;
   long[] castImages;
   String imageUrl = "";
+  byte[][] imageURLs;
 
   // Calculated values
   String category;

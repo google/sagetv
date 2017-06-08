@@ -1,6 +1,6 @@
 /*
  * YUV4MPEG format
- * Copyright (c) 2001, 2002, 2003 Fabrice Bellard.
+ * Copyright (c) 2001, 2002, 2003 Fabrice Bellard
  *
  * This file is part of FFmpeg.
  *
@@ -29,6 +29,7 @@ struct frame_attributes {
     int top_field_first;
 };
 
+#if CONFIG_YUV4MPEGPIPE_MUXER
 static int yuv4_generate_header(AVFormatContext *s, char* buf)
 {
     AVStream *st;
@@ -43,8 +44,8 @@ static int yuv4_generate_header(AVFormatContext *s, char* buf)
 
     av_reduce(&raten, &rated, st->codec->time_base.den, st->codec->time_base.num, (1UL<<31)-1);
 
-    aspectn = st->codec->sample_aspect_ratio.num;
-    aspectd = st->codec->sample_aspect_ratio.den;
+    aspectn = st->sample_aspect_ratio.num;
+    aspectd = st->sample_aspect_ratio.den;
 
     if ( aspectn == 0 && aspectd == 1 ) aspectd = 0;  // 0:0 means unknown
 
@@ -61,7 +62,9 @@ static int yuv4_generate_header(AVFormatContext *s, char* buf)
         colorspace = " C411 XYSCSS=411";
         break;
     case PIX_FMT_YUV420P:
-        colorspace = (st->codec->codec_id == CODEC_ID_DVVIDEO)?" C420paldv XYSCSS=420PALDV":" C420mpeg2 XYSCSS=420MPEG2";
+        colorspace = (st->codec->chroma_sample_location == AVCHROMA_LOC_TOPLEFT)?" C420paldv XYSCSS=420PALDV":
+                     (st->codec->chroma_sample_location == AVCHROMA_LOC_LEFT)   ?" C420mpeg2 XYSCSS=420MPEG2":
+                     " C420jpeg XYSCSS=420JPEG";
         break;
     case PIX_FMT_YUV422P:
         colorspace = " C422 XYSCSS=422";
@@ -166,10 +169,9 @@ static int yuv4_write_header(AVFormatContext *s)
     return 0;
 }
 
-#ifdef CONFIG_YUV4MPEGPIPE_MUXER
 AVOutputFormat yuv4mpegpipe_muxer = {
     "yuv4mpegpipe",
-    "YUV4MPEG pipe format",
+    NULL_IF_CONFIG_SMALL("YUV4MPEG pipe format"),
     "",
     "y4m",
     sizeof(int),
@@ -193,6 +195,7 @@ static int yuv4_read_header(AVFormatContext *s, AVFormatParameters *ap)
     ByteIOContext *pb = s->pb;
     int width=-1, height=-1, raten=0, rated=0, aspectn=0, aspectd=0;
     enum PixelFormat pix_fmt=PIX_FMT_NONE,alt_pix_fmt=PIX_FMT_NONE;
+    enum AVChromaLocation chroma_sample_location = AVCHROMA_LOC_UNSPECIFIED;
     AVStream *st;
     struct frame_attributes *s1 = s->priv_data;
 
@@ -222,13 +225,16 @@ static int yuv4_read_header(AVFormatContext *s, AVFormatParameters *ap)
             tokstart=tokend;
             break;
         case 'C': // Color space
-            if (strncmp("420jpeg",tokstart,7)==0)
+            if (strncmp("420jpeg",tokstart,7)==0) {
                 pix_fmt = PIX_FMT_YUV420P;
-            else if (strncmp("420mpeg2",tokstart,8)==0)
+                chroma_sample_location = AVCHROMA_LOC_CENTER;
+            } else if (strncmp("420mpeg2",tokstart,8)==0) {
                 pix_fmt = PIX_FMT_YUV420P;
-            else if (strncmp("420paldv", tokstart, 8)==0)
+                chroma_sample_location = AVCHROMA_LOC_LEFT;
+            } else if (strncmp("420paldv", tokstart, 8)==0) {
                 pix_fmt = PIX_FMT_YUV420P;
-            else if (strncmp("411", tokstart, 3)==0)
+                chroma_sample_location = AVCHROMA_LOC_TOPLEFT;
+            } else if (strncmp("411", tokstart, 3)==0)
                 pix_fmt = PIX_FMT_YUV411P;
             else if (strncmp("422", tokstart, 3)==0)
                 pix_fmt = PIX_FMT_YUV422P;
@@ -322,15 +328,17 @@ static int yuv4_read_header(AVFormatContext *s, AVFormatParameters *ap)
     }
 
     st = av_new_stream(s, 0);
-    st = s->streams[0];
+    if(!st)
+        return AVERROR(ENOMEM);
     st->codec->width = width;
     st->codec->height = height;
     av_reduce(&raten, &rated, raten, rated, (1UL<<31)-1);
     av_set_pts_info(st, 64, rated, raten);
     st->codec->pix_fmt = pix_fmt;
-    st->codec->codec_type = CODEC_TYPE_VIDEO;
+    st->codec->codec_type = AVMEDIA_TYPE_VIDEO;
     st->codec->codec_id = CODEC_ID_RAWVIDEO;
-    st->codec->sample_aspect_ratio= (AVRational){aspectn, aspectd};
+    st->sample_aspect_ratio= (AVRational){aspectn, aspectd};
+    st->codec->chroma_sample_location = chroma_sample_location;
 
     return 0;
 }
@@ -372,11 +380,6 @@ static int yuv4_read_packet(AVFormatContext *s, AVPacket *pkt)
     return 0;
 }
 
-static int yuv4_read_close(AVFormatContext *s)
-{
-    return 0;
-}
-
 static int yuv4_probe(AVProbeData *pd)
 {
     /* check file header */
@@ -386,15 +389,14 @@ static int yuv4_probe(AVProbeData *pd)
         return 0;
 }
 
-#ifdef CONFIG_YUV4MPEGPIPE_DEMUXER
+#if CONFIG_YUV4MPEGPIPE_DEMUXER
 AVInputFormat yuv4mpegpipe_demuxer = {
     "yuv4mpegpipe",
-    "YUV4MPEG pipe format",
+    NULL_IF_CONFIG_SMALL("YUV4MPEG pipe format"),
     sizeof(struct frame_attributes),
     yuv4_probe,
     yuv4_read_header,
     yuv4_read_packet,
-    yuv4_read_close,
     .extensions = "y4m"
 };
 #endif

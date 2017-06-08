@@ -28,11 +28,12 @@ enum profile_e
 {
     PROFILE_BASELINE = 66,
     PROFILE_MAIN     = 77,
-    PROFILE_EXTENTED = 88,
+    PROFILE_EXTENDED = 88,
     PROFILE_HIGH    = 100,
     PROFILE_HIGH10  = 110,
     PROFILE_HIGH422 = 122,
-    PROFILE_HIGH444 = 144
+    PROFILE_HIGH444 = 144,
+    PROFILE_HIGH444_PREDICTIVE = 244,
 };
 
 enum cqm4_e
@@ -111,10 +112,31 @@ typedef struct
         int i_chroma_loc_bottom;
 
         int b_timing_info_present;
-        int i_num_units_in_tick;
-        int i_time_scale;
+        uint32_t i_num_units_in_tick;
+        uint32_t i_time_scale;
         int b_fixed_frame_rate;
 
+        int b_nal_hrd_parameters_present;
+        int b_vcl_hrd_parameters_present;
+
+        struct
+        {
+            int i_cpb_cnt;
+            int i_bit_rate_scale;
+            int i_cpb_size_scale;
+            int i_bit_rate_value;
+            int i_cpb_size_value;
+            int i_bit_rate_unscaled;
+            int i_cpb_size_unscaled;
+            int b_cbr_hrd;
+
+            int i_initial_cpb_removal_delay_length;
+            int i_cpb_removal_delay_length;
+            int i_dpb_output_delay_length;
+            int i_time_offset_length;
+        } hrd;
+
+        int b_pic_struct_present;
         int b_bitstream_restriction;
         int b_motion_vectors_over_pic_boundaries;
         int i_max_bytes_per_pic_denom;
@@ -141,8 +163,8 @@ typedef struct
     int b_pic_order;
     int i_num_slice_groups;
 
-    int i_num_ref_idx_l0_active;
-    int i_num_ref_idx_l1_active;
+    int i_num_ref_idx_l0_default_active;
+    int i_num_ref_idx_l1_default_active;
 
     int b_weighted_pred;
     int b_weighted_bipred;

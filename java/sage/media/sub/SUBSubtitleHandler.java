@@ -15,13 +15,14 @@
  */
 package sage.media.sub;
 
+import java.util.ArrayList;
+
 /**
  *
  * @author Narflex
  */
 public class SUBSubtitleHandler extends SubtitleHandler
 {
-
   /** Creates a new instance of SUBSubtitleHandler */
   public SUBSubtitleHandler(sage.media.format.ContainerFormat inFormat)
   {
@@ -38,18 +39,32 @@ public class SUBSubtitleHandler extends SubtitleHandler
     // If there's multiple subtitle tracks; then there has to be multiple SUB files
     sage.media.format.SubpictureFormat[] subs = mediaFormat.getSubpictureFormats(sage.media.format.MediaFormat.SUB);
     getLanguages();
+    final StringBuilder sb = new StringBuilder();
+
     for (int i = 0; i < subs.length; i++)
     {
-      java.io.File subFile = null;
+      final java.io.File subFile = new java.io.File(subs[i].getPath());
       java.io.BufferedReader inStream = null;
       try
       {
-        subFile = getLoadableSubtitleFile(sourceFile, new java.io.File(subs[i].getPath()));
-        subEntries = new java.util.Vector();
-        subLangEntryMap.put(subLangs[i], subEntries);
+        //subFile = getLoadableSubtitleFile(sourceFile, new java.io.File(subs[i].getPath()));
 
-        // Now read in the SUB file and fill up the subEntries Vector
-        inStream = sage.IOUtils.openReaderDetectCharset(subFile, sage.Sage.I18N_CHARSET);
+        java.util.List<SubtitleEntry> newSubLang = new ArrayList<SubtitleEntry>();
+        subLangEntryMap.put(subLangs[i], newSubLang);
+
+        subtitleLock.writeLock().lock();
+
+        try
+        {
+          subEntries = newSubLang;
+        }
+        finally
+        {
+          subtitleLock.writeLock().unlock();
+        }
+
+        // Now read in the SUB file and fill up the subEntries List
+        inStream = sage.IOUtils.openReaderDetectCharset(subFile, sage.Sage.I18N_CHARSET, sourceFile.isLocalFile());
         String line = inStream.readLine();
         // IMPORTANT: There's a few different formats that can be in a .sub file; so check for which one it is
         // The 2 I've found are MicroDVD and SubViewer
@@ -96,13 +111,34 @@ public class SUBSubtitleHandler extends SubtitleHandler
                   catch (NumberFormatException nfe)
                   {
                   }
-                  if (sage.Sage.DBG) System.out.println("MicroDVD .sub format using fps=" + fps);
+                  if (SUB_DEBUG) System.out.println("MicroDVD .sub format using fps=" + fps);
                 }
                 if (addMe)
                 {
                   str = str.replace('|', '\n');
-                  subEntries.add(new SubtitleEntry(str, Math.round(f1*1000L/fps), Math.round((f2 - f1)*1000L/fps)));
-                  if (sage.Sage.DBG) System.out.println("Added new MicroDVD Sub entry: " + subEntries.lastElement());
+
+                  subtitleLock.writeLock().lock();
+
+                  try
+                  {
+                    newSubLang.add(new SubtitleEntry(str, Math.round(f1 * 1000L / fps), Math.round((f2 - f1) * 1000L / fps)));
+                  }
+                  finally
+                  {
+                    subtitleLock.writeLock().unlock();
+                  }
+
+                  subtitleLock.readLock().lock();
+
+                  try
+                  {
+                    if (SUB_DEBUG) System.out.println("Added new MicroDVD Sub entry: " +
+                        (newSubLang.size() > 0 ? newSubLang.get(newSubLang.size() - 1) : ""));
+                  }
+                  finally
+                  {
+                    subtitleLock.readLock().unlock();
+                  }
                 }
               }
             }
@@ -145,7 +181,7 @@ public class SUBSubtitleHandler extends SubtitleHandler
               break;
             }while(true);
             if (line == null) break;
-            StringBuffer sb = new StringBuffer();
+            sb.setLength(0);
             line = inStream.readLine();
             while (line != null && (line = line.trim()).length() > 0)
             {
@@ -174,8 +210,19 @@ public class SUBSubtitleHandler extends SubtitleHandler
             if (sb.length() > 0)
             {
               // Add this new Subtitle Entry
-              if (sage.Sage.DBG) System.out.println("Found new SUB subtitle entry in=" + inTime + " dur=" + duration + " text=" + sb);
-              subEntries.add(new SubtitleEntry(sb.toString(), inTime, duration));
+              if (SUB_DEBUG) System.out.println("Found new SUB subtitle entry in=" + inTime + " dur=" + duration + " text=" + sb);
+
+              subtitleLock.writeLock().lock();
+
+              try
+              {
+                newSubLang.add(new SubtitleEntry(sb.toString(), inTime, duration));
+              }
+              finally
+              {
+                subtitleLock.writeLock().unlock();
+              }
+
             }
             if (line != null) // it's the blank line
               line = inStream.readLine();
@@ -190,12 +237,10 @@ public class SUBSubtitleHandler extends SubtitleHandler
       catch (java.io.IOException e)
       {
         if (sage.Sage.DBG) System.out.println("ERROR loading subtitle file from " + subs[i] + " of " + e);
-        if (sage.Sage.DBG) e.printStackTrace();
+        if (sage.Sage.DBG) e.printStackTrace(System.out);
       }
       finally
       {
-        if (subFile != null && !sourceFile.isLocalFile())
-          subFile.delete();
         if (inStream != null)
         {
           try

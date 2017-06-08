@@ -1161,7 +1161,7 @@ public class UIManager implements Runnable, UIClient
         }
         // Don't reset MVP/PS UIs on upgrade of a server or they'll keep getting reset every time they connect
         // until the server is restarted!
-        if (!Sage.EMBEDDED && (fileStr == null || (Sage.getBoolean("wizard/revert_stv_on_upgrade", true) && ((SageTV.upgrade &&
+        if (!Sage.EMBEDDED && (fileStr == null || (Sage.getBoolean("wizard/revert_stv_on_upgrade", false) && ((SageTV.upgrade &&
             getUIClientType() != UIClient.REMOTE_UI) || (getUIClientType() == UIClient.REMOTE_UI && !SAGE.equals(get("ui/last_version", "")))))))
         {
           fileStr = new File(System.getProperty("user.dir"),
@@ -1643,7 +1643,7 @@ public class UIManager implements Runnable, UIClient
         // to view that aren't being currently recorded.
         int numEncoders = MMC.getInstance().getConfiguredInputs().length;
         int lastStationID = vf.getBestLastStationID();
-        MediaFile[] currFile = Seeker.getInstance().getCurrRecordFiles();
+        MediaFile[] currFile = SeekerSelector.getInstance().getCurrRecordFiles();
         if (Sage.DBG) System.out.println("#CurrRecs=" + currFile.length + " #Encoders=" + numEncoders);
         for (int z = VideoFrame.getEnablePC() ? 0 : 1; z < 3; z++)
         {
@@ -2338,7 +2338,7 @@ public class UIManager implements Runnable, UIClient
   {
     if (isTaskbar)
     {
-      MediaFile[] currRecs = Seeker.getInstance().getCurrRecordFiles();
+      MediaFile[] currRecs = SeekerSelector.getInstance().getCurrRecordFiles();
       String tipString = (currRecs.length > 0 ?
           (Sage.rez("SageTV") + "-" + Sage.rez("Recording") + " " + currRecs[0].getContentAiring().getShortString()) :
             Sage.rez("SageTV"));

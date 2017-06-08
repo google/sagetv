@@ -1,0 +1,9 @@
+{
+  "response": "SCHEDULE_QUEUED",
+  "code": 7100,
+  "serverID": "20141201.1",
+  "message": "The schedule you requested has been queued for generation but is not yet ready for download. Retry.",
+  "datetime": "2014-12-04T20:38:15Z",
+  "stationID": "50475",
+  "retryTime": "2014-12-04T20:48:15Z"
+}

@@ -21,6 +21,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "libavutil/intreadwrite.h"
 #include "avcodec.h"
 #include "s3tc.h"
 
@@ -28,7 +29,7 @@ typedef struct TXDContext {
     AVFrame picture;
 } TXDContext;
 
-static int txd_init(AVCodecContext *avctx) {
+static av_cold int txd_init(AVCodecContext *avctx) {
     TXDContext *s = avctx->priv_data;
 
     avcodec_get_frame_defaults(&s->picture);
@@ -38,7 +39,8 @@ static int txd_init(AVCodecContext *avctx) {
 }
 
 static int txd_decode_frame(AVCodecContext *avctx, void *data, int *data_size,
-                            const uint8_t *buf, int buf_size) {
+                            AVPacket *avpkt) {
+    const uint8_t *buf = avpkt->data;
     TXDContext * const s = avctx->priv_data;
     AVFrame *picture = data;
     AVFrame * const p = &s->picture;
@@ -143,7 +145,7 @@ unsupported:
     return -1;
 }
 
-static int txd_end(AVCodecContext *avctx) {
+static av_cold int txd_end(AVCodecContext *avctx) {
     TXDContext *s = avctx->priv_data;
 
     if (s->picture.data[0])
@@ -154,13 +156,14 @@ static int txd_end(AVCodecContext *avctx) {
 
 AVCodec txd_decoder = {
     "txd",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_TXD,
     sizeof(TXDContext),
     txd_init,
     NULL,
     txd_end,
     txd_decode_frame,
-    0,
-    NULL
+    CODEC_CAP_DR1,
+    NULL,
+    .long_name = NULL_IF_CONFIG_SMALL("Renderware TXD (TeXture Dictionary) image"),
 };

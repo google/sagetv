@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#ifndef FFMPEG_SHA1_H
-#define FFMPEG_SHA1_H
+#ifndef AVUTIL_SHA1_H
+#define AVUTIL_SHA1_H
 
 #include <stdint.h>
 
@@ -27,8 +27,31 @@ extern const int av_sha1_size;
 
 struct AVSHA1;
 
+/**
+ * Initialize SHA-1 hashing.
+ *
+ * @param context pointer to the function context (of size av_sha_size)
+ * @deprecated use av_sha_init() instead
+ */
 void av_sha1_init(struct AVSHA1* context);
+
+/**
+ * Update hash value.
+ *
+ * @param context hash function context
+ * @param data    input data to update hash with
+ * @param len     input data length
+ * @deprecated use av_sha_update() instead
+ */
 void av_sha1_update(struct AVSHA1* context, const uint8_t* data, unsigned int len);
+
+/**
+ * Finish hashing and output digest value.
+ *
+ * @param context hash function context
+ * @param digest  buffer where output digest value is stored
+ * @deprecated use av_sha_final() instead
+ */
 void av_sha1_final(struct AVSHA1* context, uint8_t digest[20]);
 
-#endif /* FFMPEG_SHA1_H */
+#endif /* AVUTIL_SHA1_H */

@@ -80,8 +80,40 @@
 	frq:000 rate:0 fec_rate_in:3  pol:1
 
 "OPTUS D1 (160.0 E)"
+	frq:12267000 rate:22500 mod:32 fec_rate_in:2 pol:1
+	frq:12295000 rate:22500 mod:32 fec_rate_in:3 pol:1
+	frq:12331000 rate:22500 mod:32 fec_rate_in:2 pol:1
+	frq:12358000 rate:22500 mod:32 fec_rate_in:2 pol:1
+	frq:12394000 rate:22500 fec_rate_in:3 pol:1
+	frq:12421000 rate:22500 fec_rate_in:3 pol:1
 	frq:12456000 rate:22500 fec_rate_in:3 pol:1
 	frq:12483000 rate:22500 fec_rate_in:3 pol:1
+	frq:12519000 rate:22500 fec_rate_in:3 pol:1
+	frq:12546000 rate:22500 fec_rate_in:3 pol:1
+	frq:12581000 rate:22500 fec_rate_in:3 pol:1
+	frq:12608000 rate:22500 fec_rate_in:3 pol:1
+	frq:12644000 rate:22500 fec_rate_in:3 pol:1
+	frq:12671000 rate:22500 fec_rate_in:3 pol:1
+	frq:12707000 rate:22500 fec_rate_in:3 pol:1
+	frq:12734000 rate:22500 fec_rate_in:3 pol:1
+
+"OPTUS D1 (160.0 E) New Zealand"
+	frq:12267000 rate:22500 mod:32 fec_rate_in:2 pol:1
+	frq:12295000 rate:22500 mod:32 fec_rate_in:3 pol:1
+	frq:12331000 rate:22500 mod:32 fec_rate_in:2 pol:1
+	frq:12358000 rate:22500 mod:32 fec_rate_in:2 pol:1
+	frq:12394000 rate:22500 fec_rate_in:3 pol:1
+	frq:12421000 rate:22500 fec_rate_in:3 pol:1
+	frq:12456000 rate:22500 fec_rate_in:3 pol:1
+	frq:12483000 rate:22500 fec_rate_in:3 pol:1
+	frq:12519000 rate:22500 fec_rate_in:3 pol:1
+	frq:12546000 rate:22500 fec_rate_in:3 pol:1
+	frq:12581000 rate:22500 fec_rate_in:3 pol:1
+	frq:12608000 rate:22500 fec_rate_in:3 pol:1
+	frq:12644000 rate:22500 fec_rate_in:3 pol:1
+	frq:12671000 rate:22500 fec_rate_in:3 pol:1
+	frq:12707000 rate:22500 fec_rate_in:3 pol:1
+	frq:12734000 rate:22500 fec_rate_in:3 pol:1
 
 "OPTUS C1 (156.0 E)"
 	frq:12305000 rate:30000 fec_rate_in:3 pol:1

@@ -20,7 +20,7 @@
  */
 
 /**
- * @file kmvc.c
+ * @file
  * Karl Morton's Video Codec decoder
  */
 
@@ -224,9 +224,10 @@ static void kmvc_decode_inter_8x8(KmvcContext * ctx, const uint8_t * src, int w,
         }
 }
 
-static int decode_frame(AVCodecContext * avctx, void *data, int *data_size, const uint8_t * buf,
-                        int buf_size)
+static int decode_frame(AVCodecContext * avctx, void *data, int *data_size, AVPacket *avpkt)
 {
+    const uint8_t *buf = avpkt->data;
+    int buf_size = avpkt->size;
     KmvcContext *const ctx = avctx->priv_data;
     uint8_t *out, *src;
     int i;
@@ -338,14 +339,12 @@ static int decode_frame(AVCodecContext * avctx, void *data, int *data_size, cons
 /*
  * Init kmvc decoder
  */
-static int decode_init(AVCodecContext * avctx)
+static av_cold int decode_init(AVCodecContext * avctx)
 {
     KmvcContext *const c = avctx->priv_data;
     int i;
 
     c->avctx = avctx;
-
-    c->pic.data[0] = NULL;
 
     if (avctx->width > 320 || avctx->height > 200) {
         av_log(avctx, AV_LOG_ERROR, "KMVC supports frames <= 320x200\n");
@@ -390,7 +389,7 @@ static int decode_init(AVCodecContext * avctx)
 /*
  * Uninit kmvc decoder
  */
-static int decode_end(AVCodecContext * avctx)
+static av_cold int decode_end(AVCodecContext * avctx)
 {
     KmvcContext *const c = avctx->priv_data;
 
@@ -404,11 +403,13 @@ static int decode_end(AVCodecContext * avctx)
 
 AVCodec kmvc_decoder = {
     "kmvc",
-    CODEC_TYPE_VIDEO,
+    AVMEDIA_TYPE_VIDEO,
     CODEC_ID_KMVC,
     sizeof(KmvcContext),
     decode_init,
     NULL,
     decode_end,
-    decode_frame
+    decode_frame,
+    CODEC_CAP_DR1,
+    .long_name = NULL_IF_CONFIG_SMALL("Karl Morton's video codec"),
 };

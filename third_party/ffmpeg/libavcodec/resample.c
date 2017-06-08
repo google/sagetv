@@ -1,6 +1,6 @@
 /*
  * samplerate conversion for both audio and video
- * Copyright (c) 2000 Fabrice Bellard.
+ * Copyright (c) 2000 Fabrice Bellard
  *
  * This file is part of FFmpeg.
  *
@@ -20,13 +20,23 @@
  */
 
 /**
- * @file resample.c
+ * @file
  * samplerate conversion for both audio and video
  */
 
 #include "avcodec.h"
+#include "audioconvert.h"
+#include "opt.h"
 
 struct AVResampleContext;
+
+static const char *context_to_name(void *ptr)
+{
+    return "audioresample";
+}
+
+static const AVOption options[] = {{NULL}};
+static const AVClass audioresample_context_class = { "ReSampleContext", context_to_name, options, LIBAVUTIL_VERSION_INT };
 
 struct ReSampleContext {
     struct AVResampleContext *resample_context;
@@ -35,6 +45,11 @@ struct ReSampleContext {
     float ratio;
     /* channel convert */
     int input_channels, output_channels, filter_channels;
+    AVAudioConvert *convert_ctx[2];
+    enum SampleFormat sample_fmt[2]; ///< input and output sample format
+    unsigned sample_size[2];         ///< size of one sample in sample_fmt
+    short *buffer[2];                ///< buffers used for conversion to S16
+    unsigned buffer_size[2];         ///< sizes of allocated buffers
 };
 
 /* n1: number of samples */
@@ -95,21 +110,7 @@ static void multichannel_split(short **outputs, short *input, int n, int chancou
     for(i=0;i<n;i++) 
     {
         for(j=0;j<chancount;j++)
-        {
             outputs[j][i] = *input++;
-        }
-        // HACK to get around the fact decode/encode don't expect same channel order
-        if(chancount==6)
-        {   // input is lfe, left, center, right, left surround, right surround 
-            // output is left, center, right, left surround, right surround, lfe
-            j=outputs[0][i];
-            outputs[0][i]=outputs[1][i];
-            outputs[1][i]=outputs[2][i];
-            outputs[2][i]=outputs[3][i];
-            outputs[3][i]=outputs[4][i];
-            outputs[4][i]=outputs[5][i];
-            outputs[5][i]=j;
-        }
     }
 }
 
@@ -120,9 +121,7 @@ static void multichannel_mux(short *output, short **inputs, int n, int chancount
     for(i=0;i<n;i++) 
     {
         for(j=0;j<chancount;j++)
-        {
             *output++ = inputs[j][i];
-        }
     }
 }
 
@@ -143,18 +142,17 @@ static void ac3_5p1_mux(short *output, short *input1, short *input2, int n)
     }
 }
 
-ReSampleContext *audio_resample_init(int output_channels, int input_channels,
-                                      int output_rate, int input_rate)
+ReSampleContext *av_audio_resample_init(int output_channels, int input_channels,
+                                        int output_rate, int input_rate,
+                                        enum SampleFormat sample_fmt_out,
+                                        enum SampleFormat sample_fmt_in,
+                                        int filter_length, int log2_phase_count,
+                                        int linear, double cutoff)
 {
     ReSampleContext *s;
 
-    if ( input_channels!=output_channels && input_channels > 2 )
+    if ( input_channels > 6)
       {
-        av_log(NULL, AV_LOG_ERROR, "Resampling with input channels greater than 2 unsupported if input count is not output count.");
-        return NULL;
-      }
-    if ( input_channels > 6 || output_channels > 6 )
-    {
         av_log(NULL, AV_LOG_ERROR, "Resampling can't handle more than 6 channels.");
         return NULL;
       }
@@ -175,20 +173,61 @@ ReSampleContext *audio_resample_init(int output_channels, int input_channels,
     if (s->output_channels < s->filter_channels)
         s->filter_channels = s->output_channels;
 
+    s->sample_fmt [0] = sample_fmt_in;
+    s->sample_fmt [1] = sample_fmt_out;
+    s->sample_size[0] = av_get_bits_per_sample_format(s->sample_fmt[0])>>3;
+    s->sample_size[1] = av_get_bits_per_sample_format(s->sample_fmt[1])>>3;
+
+    if (s->sample_fmt[0] != SAMPLE_FMT_S16) {
+        if (!(s->convert_ctx[0] = av_audio_convert_alloc(SAMPLE_FMT_S16, 1,
+                                                         s->sample_fmt[0], 1, NULL, 0))) {
+            av_log(s, AV_LOG_ERROR,
+                   "Cannot convert %s sample format to s16 sample format\n",
+                   avcodec_get_sample_fmt_name(s->sample_fmt[0]));
+            av_free(s);
+            return NULL;
+        }
+    }
+
+    if (s->sample_fmt[1] != SAMPLE_FMT_S16) {
+        if (!(s->convert_ctx[1] = av_audio_convert_alloc(s->sample_fmt[1], 1,
+                                                         SAMPLE_FMT_S16, 1, NULL, 0))) {
+            av_log(s, AV_LOG_ERROR,
+                   "Cannot convert s16 sample format to %s sample format\n",
+                   avcodec_get_sample_fmt_name(s->sample_fmt[1]));
+            av_audio_convert_free(s->convert_ctx[0]);
+            av_free(s);
+            return NULL;
+        }
+    }
+
 /*
- * ac3 output is the only case where filter_channels could be greater than 2.
+ * AC-3 output is the only case where filter_channels could be greater than 2.
  * input channels can't be greater than 2, so resample the 2 channels and then
  * expand to 6 channels after the resampling.
  */
     if(input_channels!=output_channels && s->filter_channels>2)
       s->filter_channels = 2;
 
-    av_log(NULL, AV_LOG_ERROR, "s->filter_channels %d\n", s->filter_channels);
 #define TAPS 16
-    s->resample_context= av_resample_init(output_rate, input_rate, TAPS, 10, 0, 0.8);
+    s->resample_context= av_resample_init(output_rate, input_rate,
+                         filter_length, log2_phase_count, linear, cutoff);
+
+    *(const AVClass**)s->resample_context = &audioresample_context_class;
 
     return s;
 }
+
+#if LIBAVCODEC_VERSION_MAJOR < 53
+ReSampleContext *audio_resample_init(int output_channels, int input_channels,
+                                     int output_rate, int input_rate)
+{
+    return av_audio_resample_init(output_channels, input_channels,
+                                  output_rate, input_rate,
+                                  SAMPLE_FMT_S16, SAMPLE_FMT_S16,
+                                  TAPS, 10, 0, 0.8);
+}
+#endif
 
 /* resample audio. 'nb_samples' is the number of input samples */
 /* XXX: optimize it ! */
@@ -198,12 +237,59 @@ int audio_resample(ReSampleContext *s, short *output, short *input, int nb_sampl
     short *bufin[6];
     short *bufout[6];
     short *buftmp2[6], *buftmp3[6];
+    short *output_bak = NULL;
     int lenout;
 
     if (s->input_channels == s->output_channels && s->ratio == 1.0 && 0) {
         /* nothing to do */
         memcpy(output, input, nb_samples * s->input_channels * sizeof(short));
         return nb_samples;
+    }
+
+    if (s->sample_fmt[0] != SAMPLE_FMT_S16) {
+        int istride[1] = { s->sample_size[0] };
+        int ostride[1] = { 2 };
+        const void *ibuf[1] = { input };
+        void       *obuf[1];
+        unsigned input_size = nb_samples*s->input_channels*2;
+
+        if (!s->buffer_size[0] || s->buffer_size[0] < input_size) {
+            av_free(s->buffer[0]);
+            s->buffer_size[0] = input_size;
+            s->buffer[0] = av_malloc(s->buffer_size[0]);
+            if (!s->buffer[0]) {
+                av_log(s->resample_context, AV_LOG_ERROR, "Could not allocate buffer\n");
+                return 0;
+            }
+        }
+
+        obuf[0] = s->buffer[0];
+
+        if (av_audio_convert(s->convert_ctx[0], obuf, ostride,
+                             ibuf, istride, nb_samples*s->input_channels) < 0) {
+            av_log(s->resample_context, AV_LOG_ERROR, "Audio sample format conversion failed\n");
+            return 0;
+        }
+
+        input  = s->buffer[0];
+    }
+
+    lenout= 4*nb_samples * s->ratio + 16;
+
+    if (s->sample_fmt[1] != SAMPLE_FMT_S16) {
+        output_bak = output;
+
+        if (!s->buffer_size[1] || s->buffer_size[1] < lenout) {
+            av_free(s->buffer[1]);
+            s->buffer_size[1] = lenout;
+            s->buffer[1] = av_malloc(s->buffer_size[1]);
+            if (!s->buffer[1]) {
+                av_log(s->resample_context, AV_LOG_ERROR, "Could not allocate buffer\n");
+                return 0;
+            }
+        }
+
+        output = s->buffer[1];
     }
 
     /* XXX: move those malloc to resample init code */
@@ -214,11 +300,8 @@ int audio_resample(ReSampleContext *s, short *output, short *input, int nb_sampl
     }
 
     /* make some zoom to avoid round pb */
-    lenout= 4*nb_samples * s->ratio + 16;
     for(j=0;j<s->filter_channels;j++)
-    {
         bufout[j]= (short*) av_malloc( lenout * sizeof(short) );
-    }
 
     if (s->input_channels == 2 &&
         s->output_channels == 1) {
@@ -260,23 +343,36 @@ int audio_resample(ReSampleContext *s, short *output, short *input, int nb_sampl
         ac3_5p1_mux(output, buftmp3[0], buftmp3[1], nb_samples1);
     }
 
+    if (s->sample_fmt[1] != SAMPLE_FMT_S16) {
+        int istride[1] = { 2 };
+        int ostride[1] = { s->sample_size[1] };
+        const void *ibuf[1] = { output };
+        void       *obuf[1] = { output_bak };
+
+        if (av_audio_convert(s->convert_ctx[1], obuf, ostride,
+                             ibuf, istride, nb_samples1*s->output_channels) < 0) {
+            av_log(s->resample_context, AV_LOG_ERROR, "Audio sample format convertion failed\n");
+            return 0;
+        }
+    }
+
     for(i=0; i<s->filter_channels; i++)
         av_free(bufin[i]);
 
     for(j=0;j<s->filter_channels;j++)
-    {
         av_free(bufout[j]);
-    }
     return nb_samples1;
 }
 
 void audio_resample_close(ReSampleContext *s)
 {
-    int j;
+	int j;
     av_resample_close(s->resample_context);
     for(j=0; j<s->filter_channels; j++)
-    {
         av_freep(&s->temp[j]);
-    }
+    av_freep(&s->buffer[0]);
+    av_freep(&s->buffer[1]);
+    av_audio_convert_free(s->convert_ctx[0]);
+    av_audio_convert_free(s->convert_ctx[1]);
     av_free(s);
 }

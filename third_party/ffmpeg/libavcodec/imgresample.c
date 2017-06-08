@@ -1,6 +1,6 @@
 /*
  * High quality image resampling with polyphase filters
- * Copyright (c) 2001 Fabrice Bellard.
+ * Copyright (c) 2001 Fabrice Bellard
  *
  * This file is part of FFmpeg.
  *
@@ -25,10 +25,11 @@
  */
 
 #include "avcodec.h"
-#include "swscale.h"
 #include "dsputil.h"
+#include "imgconvert.h"
+#include "libswscale/swscale.h"
 
-#ifdef HAVE_ALTIVEC
+#if HAVE_ALTIVEC
 #include "ppc/imgresample_altivec.h"
 #endif
 
@@ -48,12 +49,12 @@
 #define LINE_BUF_HEIGHT (NB_TAPS * 4)
 
 struct SwsContext {
-    AVClass *av_class;
+    const AVClass *av_class;
     struct ImgReSampleContext *resampling_ctx;
     enum PixelFormat src_pix_fmt, dst_pix_fmt;
 };
 
-struct ImgReSampleContext {
+typedef struct ImgReSampleContext {
     int iwidth, iheight, owidth, oheight;
     int topBand, bottomBand, leftBand, rightBand;
     int padtop, padbottom, padleft, padright;
@@ -62,7 +63,7 @@ struct ImgReSampleContext {
     DECLARE_ALIGNED_8(int16_t, h_filters[NB_PHASES][NB_TAPS]); /* horizontal filters */
     DECLARE_ALIGNED_8(int16_t, v_filters[NB_PHASES][NB_TAPS]); /* vertical filters */
     uint8_t *line_buf;
-};
+} ImgReSampleContext;
 
 void av_build_filter(int16_t *filter, double factor, int tap_count, int phase_count, int scale, int type);
 
@@ -152,9 +153,9 @@ static void v_resample(uint8_t *dst, int dst_width, const uint8_t *src,
     }
 }
 
-#ifdef HAVE_MMX
+#if HAVE_MMX
 
-#include "i386/mmx.h"
+#include "x86/mmx.h"
 
 #define FILTER4(reg) \
 {\
@@ -182,7 +183,7 @@ static void h_resample_fast4_mmx(uint8_t *dst, int dst_width,
     int src_pos, phase;
     const uint8_t *s;
     int16_t *filter;
-    mmx_t tmp;
+    uint64_t tmp;
 
     src_pos = src_start;
     pxor_r2r(mm7, mm7);
@@ -199,13 +200,13 @@ static void h_resample_fast4_mmx(uint8_t *dst, int dst_width,
         packuswb_r2r(mm7, mm3);
         packuswb_r2r(mm7, mm2);
         movq_r2m(mm0, tmp);
-        dst[0] = tmp.ub[0];
+        dst[0] = tmp & 0xFF;
         movq_r2m(mm1, tmp);
-        dst[1] = tmp.ub[0];
+        dst[1] = tmp & 0xFF;
         movq_r2m(mm2, tmp);
-        dst[2] = tmp.ub[0];
+        dst[2] = tmp & 0xFF;
         movq_r2m(mm3, tmp);
-        dst[3] = tmp.ub[0];
+        dst[3] = tmp & 0xFF;
         dst += 4;
         dst_width -= 4;
     }
@@ -213,7 +214,7 @@ static void h_resample_fast4_mmx(uint8_t *dst, int dst_width,
         FILTER4(mm0);
         packuswb_r2r(mm7, mm0);
         movq_r2m(mm0, tmp);
-        dst[0] = tmp.ub[0];
+        dst[0] = tmp & 0xFF;
         dst++;
         dst_width--;
     }
@@ -223,17 +224,14 @@ static void h_resample_fast4_mmx(uint8_t *dst, int dst_width,
 static void v_resample4_mmx(uint8_t *dst, int dst_width, const uint8_t *src,
                             int wrap, int16_t *filter)
 {
-    int sum, i, v;
+    int sum, i;
     const uint8_t *s;
-    mmx_t tmp;
-    mmx_t coefs[4];
+    uint64_t tmp;
+    uint64_t coefs[4];
 
     for(i=0;i<4;i++) {
-        v = filter[i];
-        coefs[i].uw[0] = v;
-        coefs[i].uw[1] = v;
-        coefs[i].uw[2] = v;
-        coefs[i].uw[3] = v;
+        tmp = filter[i];
+        coefs[i] = (tmp<<48) + (tmp<<32) + (tmp<<16) + tmp;
     }
 
     pxor_r2r(mm7, mm7);
@@ -261,7 +259,7 @@ static void v_resample4_mmx(uint8_t *dst, int dst_width, const uint8_t *src,
         packuswb_r2r(mm7, mm0);
         movq_r2m(mm0, tmp);
 
-        *(uint32_t *)dst = tmp.ud[0];
+        *(uint32_t *)dst = tmp & 0xFFFFFFFF;
         dst += 4;
         s += 4;
         dst_width -= 4;
@@ -342,8 +340,8 @@ static void h_resample(uint8_t *dst, int dst_width, const uint8_t *src,
     } else {
         n = dst_width;
     }
-#ifdef HAVE_MMX
-    if ((mm_flags & MM_MMX) && NB_TAPS == 4)
+#if HAVE_MMX
+    if ((mm_flags & FF_MM_MMX) && NB_TAPS == 4)
         h_resample_fast4_mmx(dst, n,
                              src, src_width, src_start, src_incr, filters);
     else
@@ -399,46 +397,39 @@ static void component_resample(ImgReSampleContext *s,
         }
         /* apply vertical filter */
         phase_y = get_phase(src_y);
-
-		if ((2 << POS_FRAC_BITS) == s->v_incr)
-		{
-			// Do a straight copy, don't bother to resample in the vertical dimension. That way
-			// we can avoid deinterlacing before we do the resample and just take fields.
-			memcpy(output, s->line_buf + ring_y*owidth, owidth);
-		}
-		else
-		{
-#ifdef HAVE_MMX
+        
+        if ((2 << POS_FRAC_BITS) == s->v_incr)
+        {
+            // Do a straight copy, don't bother to resample in the vertical dimension. That way
+            // we can avoid deinterlacing before we do the resample and just take fields.
+            memcpy(output, s->line_buf + ring_y*owidth, owidth);
+        }
+        else
+        {
+#if HAVE_MMX
         /* desactivated MMX because loss of precision */
-        if ((mm_flags & MM_MMX) && NB_TAPS == 4 && 0)
+        if ((mm_flags & FF_MM_MMX) && NB_TAPS == 4 && 0)
             v_resample4_mmx(output, owidth,
                             s->line_buf + (ring_y - NB_TAPS + 1) * owidth, owidth,
                             &s->v_filters[phase_y][0]);
         else
 #endif
-#ifdef HAVE_ALTIVEC
-            if ((mm_flags & MM_ALTIVEC) && NB_TAPS == 4 && FILTER_BITS <= 6)
-                v_resample16_altivec(output, owidth,
-                                s->line_buf + (ring_y - NB_TAPS + 1) * owidth, owidth,
-                                &s->v_filters[phase_y][0]);
+#if HAVE_ALTIVEC
+        if ((mm_flags & FF_MM_ALTIVEC) && NB_TAPS == 4 && FILTER_BITS <= 6)
+            v_resample16_altivec(output, owidth,
+                                 s->line_buf + (ring_y - NB_TAPS + 1) * owidth,
+                                 owidth, &s->v_filters[phase_y][0]);
         else
 #endif
             v_resample(output, owidth,
                        s->line_buf + (ring_y - NB_TAPS + 1) * owidth, owidth,
                        &s->v_filters[phase_y][0]);
-		}
+        }
 
         src_y += s->v_incr;
 
         output += owrap;
     }
-}
-
-ImgReSampleContext *img_resample_init(int owidth, int oheight,
-                                      int iwidth, int iheight)
-{
-    return img_resample_full_init(owidth, oheight, iwidth, iheight,
-            0, 0, 0, 0, 0, 0, 0, 0);
 }
 
 ImgReSampleContext *img_resample_full_init(int owidth, int oheight,
@@ -457,7 +448,7 @@ ImgReSampleContext *img_resample_full_init(int owidth, int oheight,
     if (!s)
         return NULL;
     if((unsigned)owidth >= UINT_MAX / (LINE_BUF_HEIGHT + NB_TAPS))
-        return NULL;
+        goto fail;
     s->line_buf = av_mallocz(owidth * (LINE_BUF_HEIGHT + NB_TAPS));
     if (!s->line_buf)
         goto fail;
@@ -494,6 +485,13 @@ fail:
     return NULL;
 }
 
+ImgReSampleContext *img_resample_init(int owidth, int oheight,
+                                      int iwidth, int iheight)
+{
+    return img_resample_full_init(owidth, oheight, iwidth, iheight,
+            0, 0, 0, 0, 0, 0, 0, 0);
+}
+
 void img_resample(ImgReSampleContext *s,
                   AVPicture *output, const AVPicture *input)
 {
@@ -522,6 +520,13 @@ void img_resample_close(ImgReSampleContext *s)
     av_free(s);
 }
 
+static const char *context_to_name(void* ptr)
+{
+    return "imgconvert";
+}
+
+static const AVClass context_class = { "imgresample", context_to_name, NULL };
+
 struct SwsContext *sws_getContext(int srcW, int srcH, int srcFormat,
                                   int dstW, int dstH, int dstFormat,
                                   int flags, SwsFilter *srcFilter,
@@ -530,17 +535,16 @@ struct SwsContext *sws_getContext(int srcW, int srcH, int srcFormat,
     struct SwsContext *ctx;
 
     ctx = av_malloc(sizeof(struct SwsContext));
-    if (ctx)
-        ctx->av_class = av_mallocz(sizeof(AVClass));
-    if (!ctx || !ctx->av_class) {
+    if (!ctx) {
         av_log(NULL, AV_LOG_ERROR, "Cannot allocate a resampling context!\n");
 
         return NULL;
     }
+    ctx->av_class = &context_class;
 
     if ((srcH != dstH) || (srcW != dstW)) {
         if ((srcFormat != PIX_FMT_YUV420P) || (dstFormat != PIX_FMT_YUV420P)) {
-            av_log(NULL, AV_LOG_INFO, "PIX_FMT_YUV420P will be used as an intermediate format for rescaling\n");
+            av_log(ctx, AV_LOG_INFO, "PIX_FMT_YUV420P will be used as an intermediate format for rescaling\n");
         }
         ctx->resampling_ctx = img_resample_init(dstW, dstH, srcW, srcH);
     } else {
@@ -566,7 +570,6 @@ void sws_freeContext(struct SwsContext *ctx)
     } else {
         av_free(ctx->resampling_ctx);
     }
-    av_free(ctx->av_class);
     av_free(ctx);
 }
 
@@ -644,7 +647,7 @@ int sws_scale(struct SwsContext *ctx, uint8_t* src[], int srcStride[],
                             &src_pict, ctx->src_pix_fmt,
                             ctx->resampling_ctx->iwidth, ctx->resampling_ctx->iheight) < 0) {
 
-                av_log(NULL, AV_LOG_ERROR, "pixel format conversion not handled\n");
+                av_log(ctx, AV_LOG_ERROR, "pixel format conversion not handled\n");
                 res = -1;
                 goto the_end;
             }
@@ -683,7 +686,7 @@ int sws_scale(struct SwsContext *ctx, uint8_t* src[], int srcStride[],
                         resampled_picture, current_pix_fmt,
                         ctx->resampling_ctx->owidth, ctx->resampling_ctx->oheight) < 0) {
 
-            av_log(NULL, AV_LOG_ERROR, "pixel format conversion not handled\n");
+            av_log(ctx, AV_LOG_ERROR, "pixel format conversion not handled\n");
 
             res = -1;
             goto the_end;
@@ -739,7 +742,7 @@ static void dump_filter(int16_t *filter)
     }
 }
 
-#ifdef HAVE_MMX
+#if HAVE_MMX
 int mm_flags;
 #endif
 
@@ -795,7 +798,7 @@ int main(int argc, char **argv)
         }
     }
     save_pgm("/tmp/in.pgm", img, XSIZE, YSIZE);
-    for(i=0;i<sizeof(factors)/sizeof(float);i++) {
+    for(i=0;i<FF_ARRAY_ELEMS(factors);i++) {
         fact = factors[i];
         xsize = (int)(XSIZE * fact);
         ysize = (int)((YSIZE - 100) * fact);
@@ -811,12 +814,12 @@ int main(int argc, char **argv)
     }
 
     /* mmx test */
-#ifdef HAVE_MMX
+#if HAVE_MMX
     av_log(NULL, AV_LOG_INFO, "MMX test\n");
     fact = 0.72;
     xsize = (int)(XSIZE * fact);
     ysize = (int)(YSIZE * fact);
-    mm_flags = MM_MMX;
+    mm_flags = FF_MM_MMX;
     s = img_resample_init(xsize, ysize, XSIZE, YSIZE);
     component_resample(s, img1, xsize, xsize, ysize,
                        img, XSIZE, XSIZE, YSIZE);

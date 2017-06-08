@@ -21,23 +21,51 @@
  */
 
 /**
- * @file libgsm.c
+ * @file
  * Interface to libgsm for gsm encoding/decoding
  */
 
 // The idiosyncrasies of GSM-in-WAV are explained at http://kbs.cs.tu-berlin.de/~jutta/toast.html
 
 #include "avcodec.h"
-#include <gsm.h>
+#include <gsm/gsm.h>
 
 // gsm.h misses some essential constants
 #define GSM_BLOCK_SIZE 33
 #define GSM_MS_BLOCK_SIZE 65
 #define GSM_FRAME_SIZE 160
 
-static int libgsm_init(AVCodecContext *avctx) {
-    if (avctx->channels > 1 || avctx->sample_rate != 8000 || avctx->bit_rate != 13000)
+static av_cold int libgsm_init(AVCodecContext *avctx) {
+    if (avctx->channels > 1) {
+        av_log(avctx, AV_LOG_ERROR, "Mono required for GSM, got %d channels\n",
+               avctx->channels);
         return -1;
+    }
+
+    if(avctx->codec->decode){
+        if(!avctx->channels)
+            avctx->channels= 1;
+
+        if(!avctx->sample_rate)
+            avctx->sample_rate= 8000;
+
+        avctx->sample_fmt = SAMPLE_FMT_S16;
+    }else{
+        if (avctx->sample_rate != 8000) {
+            av_log(avctx, AV_LOG_ERROR, "Sample rate 8000Hz required for GSM, got %dHz\n",
+                avctx->sample_rate);
+            if(avctx->strict_std_compliance > FF_COMPLIANCE_UNOFFICIAL)
+                return -1;
+        }
+        if (avctx->bit_rate != 13000 /* Official */ &&
+            avctx->bit_rate != 13200 /* Very common */ &&
+            avctx->bit_rate != 0 /* Unknown; a.o. mov does not set bitrate when decoding */ ) {
+            av_log(avctx, AV_LOG_ERROR, "Bitrate 13000bps required for GSM, got %dbps\n",
+                avctx->bit_rate);
+            if(avctx->strict_std_compliance > FF_COMPLIANCE_UNOFFICIAL)
+                return -1;
+        }
+    }
 
     avctx->priv_data = gsm_create();
 
@@ -60,7 +88,8 @@ static int libgsm_init(AVCodecContext *avctx) {
     return 0;
 }
 
-static int libgsm_close(AVCodecContext *avctx) {
+static av_cold int libgsm_close(AVCodecContext *avctx) {
+    av_freep(&avctx->coded_frame);
     gsm_destroy(avctx->priv_data);
     avctx->priv_data = NULL;
     return 0;
@@ -85,30 +114,35 @@ static int libgsm_encode_frame(AVCodecContext *avctx,
 
 AVCodec libgsm_encoder = {
     "libgsm",
-    CODEC_TYPE_AUDIO,
+    AVMEDIA_TYPE_AUDIO,
     CODEC_ID_GSM,
     0,
     libgsm_init,
     libgsm_encode_frame,
     libgsm_close,
+    .sample_fmts = (const enum SampleFormat[]){SAMPLE_FMT_S16,SAMPLE_FMT_NONE},
+    .long_name = NULL_IF_CONFIG_SMALL("libgsm GSM"),
 };
 
 AVCodec libgsm_ms_encoder = {
     "libgsm_ms",
-    CODEC_TYPE_AUDIO,
+    AVMEDIA_TYPE_AUDIO,
     CODEC_ID_GSM_MS,
     0,
     libgsm_init,
     libgsm_encode_frame,
     libgsm_close,
+    .sample_fmts = (const enum SampleFormat[]){SAMPLE_FMT_S16,SAMPLE_FMT_NONE},
+    .long_name = NULL_IF_CONFIG_SMALL("libgsm GSM Microsoft variant"),
 };
 
 static int libgsm_decode_frame(AVCodecContext *avctx,
                                void *data, int *data_size,
-                               uint8_t *buf, int buf_size) {
-
-    if(buf_size < avctx->block_align) return 0;
-
+                               AVPacket *avpkt) {
+    const uint8_t *buf = avpkt->data;
+    int buf_size = avpkt->size;
+    *data_size = 0; /* In case of error */
+    if(buf_size < avctx->block_align) return -1;
     switch(avctx->codec_id) {
     case CODEC_ID_GSM:
         if(gsm_decode(avctx->priv_data,buf,data)) return -1;
@@ -124,22 +158,24 @@ static int libgsm_decode_frame(AVCodecContext *avctx,
 
 AVCodec libgsm_decoder = {
     "libgsm",
-    CODEC_TYPE_AUDIO,
+    AVMEDIA_TYPE_AUDIO,
     CODEC_ID_GSM,
     0,
     libgsm_init,
     NULL,
     libgsm_close,
     libgsm_decode_frame,
+    .long_name = NULL_IF_CONFIG_SMALL("libgsm GSM"),
 };
 
 AVCodec libgsm_ms_decoder = {
     "libgsm_ms",
-    CODEC_TYPE_AUDIO,
+    AVMEDIA_TYPE_AUDIO,
     CODEC_ID_GSM_MS,
     0,
     libgsm_init,
     NULL,
     libgsm_close,
     libgsm_decode_frame,
+    .long_name = NULL_IF_CONFIG_SMALL("libgsm GSM Microsoft variant"),
 };
