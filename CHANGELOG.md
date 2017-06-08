@@ -1,7 +1,7 @@
 # Change Log
 
 ## Version 9.1.4 (??)
-* Fix: Schedules Direct deleted accounts were not handled correctly.
+* Fix: Schedules Direct deleted lineups were not removed from accounts correctly.
 * Change: The SRT subtitle monitoring thread now uses Pooler.
 
 ## Version 9.1.3 (2017-05-30)
