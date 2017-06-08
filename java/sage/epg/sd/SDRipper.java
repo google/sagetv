@@ -842,7 +842,10 @@ public class SDRipper extends EPGDataSource
 
     screenFormatBuilder.append(lineup.getName());
 
-    if (!lineup.getName().equals(lineup.getLocation()))
+    // When a lineup is deleted, location is null.
+    if (lineup.getLocation() == null)
+      screenFormatBuilder.append(" - ").append(lineup.getLineup());
+    else if (!lineup.getName().equals(lineup.getLocation()))
       screenFormatBuilder.append(" - ").append(lineup.getLocation());
 
     return screenFormatBuilder.toString();
@@ -913,7 +916,7 @@ public class SDRipper extends EPGDataSource
       // either way.
       if (lineupName.equals(compareLineupName + " - " + lineup.getLineup()) || compareLineupName.equals(lineupName))
       {
-        int returnValue = session.deleteLineup(lineup.getUri());
+        int returnValue = session.deleteLineup(lineup);
         if (Sage.DBG) System.out.println("SDEPG Deleted lineup '" + lineupName + "' with " + returnValue + " changes remaining.");
         return returnValue;
       }
