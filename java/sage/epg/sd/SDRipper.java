@@ -728,7 +728,11 @@ public class SDRipper extends EPGDataSource
         // Remove any lineups we already have added to the account.
         for (SDAccountLineup accountLineup : accountLineups.getLineups())
         {
-          if (accountLineup.getUri().equals(lineup.getUri())) {
+          // 06/09/2017 JS: We were using getURI() here, but when a lineup is deleted, the URI does
+          // not exist and would throw a null pointer exception. getLineup() is always existential
+          // according to the API and is equally unique, so we are using that instead.
+          if (accountLineup.getLineup().equals(lineup.getLineup()))
+          {
             lineupName = null;
             break;
           }
