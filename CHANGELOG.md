@@ -1,5 +1,10 @@
 # Change Log
 
+## Version 9.1.4 (??)
+* Fix: Schedules Direct deleted lineups were not removed from accounts correctly.
+* Fix: When checking for existing lineups and a deleted lineup exists, a null pointer exception was thrown.
+* Change: The SRT subtitle monitoring thread now uses Pooler.
+
 ## Version 9.1.3 (2017-05-30)
 * Fix: A missing space in an if test causes the Linux start script to fail.
 

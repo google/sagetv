@@ -16,6 +16,7 @@
 package sage.media.sub;
 
 import sage.MediaFile;
+import sage.Pooler;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -45,8 +46,8 @@ public class SRTSubtitleHandler extends SubtitleHandler
   private volatile long inDemand = -1;
   // Set to determine if we need to start a thread to continuously monitor this file for new entries.
   private boolean monitorFile = false;
-  // Thread used to monitor TV files for new subtitles.
-  private Thread monitorThread = null;
+  // This is set if we are actively monitoring a TV file for new subtitles.
+  private boolean monitoringFile = false;
   // These are used if the file will be monitored for changes.
   private BufferedReader readers[] = new BufferedReader[0];
   // These are used to make sure that if a file keeps having I/O errors that we eventually stop
@@ -131,8 +132,9 @@ public class SRTSubtitleHandler extends SubtitleHandler
     }
     else
     {
+      monitoringFile = true;
       // Since we are creating a new thread either way, load the subtitles asynchronously.
-      monitorThread = new Thread(new Runnable()
+      Runnable execute = new Runnable()
       {
         @Override
         public void run()
@@ -191,11 +193,9 @@ public class SRTSubtitleHandler extends SubtitleHandler
             }
           }
         }
-      });
+      };
 
-      monitorThread.setDaemon(true);
-      monitorThread.setName("SRTSubtitleMonitor");
-      monitorThread.start();
+      Pooler.execute(execute, "SRTSubtitleMonitor");
     }
   }
 
@@ -449,7 +449,7 @@ public class SRTSubtitleHandler extends SubtitleHandler
   {
     long next = super.getTimeTillUpdate(currMediaTime);
 
-    if (monitorThread == null)
+    if (!monitoringFile)
       return next;
 
     if (next == NO_MORE_SUBS_LONG_WAIT)
@@ -500,10 +500,9 @@ public class SRTSubtitleHandler extends SubtitleHandler
     // the monitoring thread to get it to stop sleeping and check for an update immediately.
     synchronized (srtLock)
     {
-      if (monitorThread != null)
+      if (monitoringFile)
       {
         cleanup = true;
-        monitorThread.interrupt();
       }
     }
   }
