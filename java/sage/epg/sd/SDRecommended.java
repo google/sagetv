@@ -352,13 +352,17 @@ public class SDRecommended
     int currentShow = 0;
     while (true)
     {
-      int showCount = 0;
       for (; currentShow < shows.length; currentShow++)
       {
         // 4999 because we could be adding as many as two entries per iteration.
         if (lookupShows.size() >= 4999)
         {
-          currentShow--;
+          // 6/11/2017 JS: We can arrive here without actually adding anything to lookupShows which
+          // then results in currentShow becoming -1 which isn't a valid index. It turns out we
+          // don't need to decrement the number here because if we loop back to this for loop it
+          // will start with the current value of currentShow. The former code was actually being
+          // redundant and potentially ranking a random show higher than it actually deserved.
+          //currentShow--;
           break;
         }
 
@@ -375,7 +379,6 @@ public class SDRecommended
         {
           lookupShows.add("SH" + externalId.substring(2, externalId.length() - 2));
         }
-        showCount++;
       }
 
       if (lookupShows.size() == 0)
