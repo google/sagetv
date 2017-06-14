@@ -1,5 +1,8 @@
 # Change Log
 
+## Version 9.1.5 (??)
+* Fix: Carny throws a null pointer exception if a show has a null title.
+
 ## Version 9.1.4 (2017-06-11)
 * Fix: Schedules Direct deleted lineups were not removed from accounts correctly.
 * Fix: When checking for existing lineups and a deleted lineup exists, a null pointer exception was thrown.
