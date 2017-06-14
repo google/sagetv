@@ -2712,7 +2712,9 @@ public final class Carny implements Runnable
 
           // Skip this stuff
           Show show = agentPot.getShow();
-          if ((show != null && show.title.equalsIgnoreCase(paidProgRez)) || wiz.isNoShow(agentPot.showID))
+          // The show title can be null.
+          if ((show != null && show.title != null && show.title.equalsIgnoreCase(paidProgRez)) ||
+            wiz.isNoShow(agentPot.showID))
             continue;
 
           callback.addAirSet(agentPot);
