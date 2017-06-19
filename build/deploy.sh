@@ -79,9 +79,13 @@ echo "SageTV version ${VERSION} uploaded to Bintray"
 # if we have github key configured that now tag and push this release
 if [ ! -z "${GITHUB_KEY}" ] ; then
     echo "Tagging Release ${TAG}"
-    git config --global user.email "${GITHUB_EMAIL}"
-    git config --global user.name "${GITHUB_USER}"
-    git tag $TAG
-    git push --quiet https://$GITHUB_KEY@github.com/google/sagetv $TAG > /dev/null 2>&1
-    echo "Tagged ${VERSION} in GitHub"
+    git config user.email "${GITHUB_EMAIL}"
+    git config user.name "${GITHUB_USER}"
+    git tag ${TAG}
+    git push --quiet https://${GITHUB_KEY}@github.com/google/sagetv ${TAG} > /dev/null 2>&1
+    if [ $? -eq 0 ]; then
+        echo "Tagged ${VERSION} in GitHub"
+    else
+        echo "Failed to TAG ${VERSION} and push to GitHub.  Release is still published, though."
+    fi
 fi
