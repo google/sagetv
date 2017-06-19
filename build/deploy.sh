@@ -35,25 +35,16 @@ if [ "${TRAVIS_PULL_REQUEST}" != "false" ]; then
     exit 0
 fi
 
-MAJOR_VERSION=`grep MAJOR_VERSION ../java/sage/Version.java | grep -o [0-9]*`
-MINOR_VERSION=`grep MINOR_VERSION ../java/sage/Version.java | grep -o [0-9]*`
-MICRO_VERSION=`grep MICRO_VERSION ../java/sage/Version.java | grep -o [0-9]*`
+MAJOR_VERSION=`grep MAJOR_VERSION java/sage/Version.java | grep -o [0-9]*`
+MINOR_VERSION=`grep MINOR_VERSION java/sage/Version.java | grep -o [0-9]*`
+MICRO_VERSION=`grep MICRO_VERSION java/sage/Version.java | grep -o [0-9]*`
 VERSION=${VERSION:-${MAJOR_VERSION}.${MINOR_VERSION}.${MICRO_VERSION}}
-
-if [ -z "${BINTRAY_API}" ] ; then
-    echo "Deploy Failed! BINTRAY_API not set"
-    exit 1
-fi
-
-if [ -z "${BINTRAY_USER}" ] ; then
-    echo "Deploy Failed! BINTRAY_USER not set"
-    exit 1
-fi
 
 if git log -1 --pretty=%B | grep -F "[ci release]" ; then
     echo "Releasing ${VERSION} of SageTV"
 else
     echo "Not a release build.  Exiting."
+    # just for testing
     if [ -z "${FORCE_RELEASE}" ] ; then
         exit 0
     else
@@ -66,6 +57,16 @@ if git tag -l "${TAG}" | grep "${TAG}" ; then
     echo "Version ${VERSION} already exists"
 else
     echo "Version ${VERSION} Appears to be OK"
+fi
+
+if [ -z "${BINTRAY_API}" ] ; then
+    echo "Deploy Failed! BINTRAY_API not set"
+    exit 1
+fi
+
+if [ -z "${BINTRAY_USER}" ] ; then
+    echo "Deploy Failed! BINTRAY_USER not set"
+    exit 1
 fi
 
 echo "Uploading ${VERSION} to Bintray"
