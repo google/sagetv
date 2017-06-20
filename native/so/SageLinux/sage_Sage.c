@@ -43,7 +43,7 @@ static void sysOutPrint(JNIEnv *env, const char* cstr, ...)
     va_list args;
     va_start(args, cstr);
     char buf[1024*2];
-    vsprintf(buf, cstr, args);
+    vsnprintf(buf, sizeof(buf), cstr, args);
     va_end(args);
     jstring jstr = (*env)->NewStringUTF(env, buf);
     if(cls==NULL)
