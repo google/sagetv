@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <features.h>
@@ -44,8 +45,6 @@
 
 #define BUFFERSIZE 188 * 16
 
-#define DEBUGFirewire
-
 static void sysOutPrint(JNIEnv *env, const char *cstr, ...) {
   jthrowable oldExcept = (*env)->ExceptionOccurred(env);
   if (oldExcept) (*env)->ExceptionClear(env);
@@ -69,11 +68,11 @@ static void sysOutPrint(JNIEnv *env, const char *cstr, ...) {
 }
 
 typedef struct FirewireCaptureDev {
-  FILE *fd;  // file to write the captured data to
-  long circFileSize;
+  FILE *output_file;  // file to write the captured data to
+  size_t circFileSize;
   char devName[256];
   unsigned char buf[BUFFERSIZE];
-  long circWritePos;
+  size_t circWritePos;
   raw1394handle_t handle;
   octlet_t guid;
   int port;
@@ -99,7 +98,7 @@ static octlet_t get_guid(raw1394handle_t handle, nodeid_t node) {
   offset = CSR_REGISTER_BASE + CSR_CONFIG_ROM + 0x10;
   raw1394_read(handle, node, offset, sizeof(quadlet_t), &quadlet);
   quadlet = htonl(quadlet);
-  guid += quadlet;
+  guid |= quadlet;
 
   return guid;
 }
@@ -113,37 +112,37 @@ static int write_packet(unsigned char *data, int len, unsigned int dropped,
     if (CDev->circFileSize) {
       if (CDev->circWritePos == CDev->circFileSize) {
         // Wrap it now
-        fseek(CDev->fd, 0, 0);
+        fseek(CDev->output_file, 0, 0);
         CDev->circWritePos = 0;
       }
       if (CDev->circWritePos + numbytes <= CDev->circFileSize) {
         // No wrapping this time
-        if (fwrite(data + bufSkip, 1, numbytes, CDev->fd) == EOF) {
+        if (fwrite(data + bufSkip, 1, numbytes, CDev->output_file) == EOF) {
           return -1;
         }
         CDev->circWritePos += numbytes;
       } else {
         if (fwrite(data + bufSkip, 1, CDev->circFileSize - CDev->circWritePos,
-                   CDev->fd) == EOF) {
+                   CDev->output_file) == EOF) {
           return -1;
         }
         int remBytes = numbytes - (CDev->circFileSize - CDev->circWritePos);
         // Wrap it now
-        fseek(CDev->fd, 0, 0);
+        fseek(CDev->output_file, 0, 0);
         CDev->circWritePos = 0;
         if (fwrite(data + bufSkip + (numbytes - remBytes), 1, remBytes,
-                   CDev->fd) == EOF) {
+                   CDev->output_file) == EOF) {
           return -1;
         }
       }
     } else {
-      if (fwrite(data + bufSkip, 1, numbytes, CDev->fd) == -1) {
+      if (fwrite(data + bufSkip, 1, numbytes, CDev->output_file) == -1) {
         return -1;
       }
     }
   }
   CDev->datalen += len;
-  fflush(CDev->fd);
+  fflush(CDev->output_file);
   return 0;
 }
 
@@ -183,21 +182,23 @@ void throwEncodingException(JNIEnv *env, jint errCode) {
  */
 JNIEXPORT jlong JNICALL Java_sage_FirewireCaptureDevice_createEncoder0(
     JNIEnv *env, jobject jo, jstring jdevname) {
-#ifdef DEBUGFirewire
   sysOutPrint(env, "Firewire create Encoder.\n");
-#endif
   struct raw1394_portinfo portinfo[16];
-  int nports, port, i, device;
+  int nports, port, device;
   quadlet_t guid_lo, guid_hi;
+
   FirewireCaptureDev *CDev =
       (FirewireCaptureDev *)malloc(sizeof(FirewireCaptureDev));
+  if (!CDev) {
+    throwEncodingException(env, __LINE__);
+    return 0;
+  }
+
   const char *cdevname = (*env)->GetStringUTFChars(env, jdevname, NULL);
-  strcpy(CDev->devName, cdevname);
+  snprintf(CDev->devName, sizeof(CDev->devName), "%s", cdevname);
   (*env)->ReleaseStringUTFChars(env, jdevname, cdevname);
 
-#ifdef DEBUGFirewire
   sysOutPrint(env, "Firewire scanning in %s.\n", CDev->devName);
-#endif
 
   if (sscanf(CDev->devName, "Firewire GUID %08x %08x", &guid_hi, &guid_lo) !=
       2) {
@@ -210,11 +211,8 @@ JNIEXPORT jlong JNICALL Java_sage_FirewireCaptureDevice_createEncoder0(
   CDev->guid <<= 32;
   CDev->guid |= guid_lo;
 
-#ifdef DEBUGFirewire
   sysOutPrint(env, "Firewire GUID %08x %08x\n", (quadlet_t)(CDev->guid >> 32),
               (quadlet_t)(CDev->guid & 0xffffffff));
-  fflush(stdout);
-#endif
 
   if (!(CDev->handle = raw1394_new_handle())) {
     throwEncodingException(env, __LINE__);
@@ -245,11 +243,9 @@ JNIEXPORT jlong JNICALL Java_sage_FirewireCaptureDevice_createEncoder0(
   }
 
   if (CDev->node == -1) {
-#ifdef DEBUGFirewire
     sysOutPrint(env, "Couldn't find GUID %08x %08x\n",
                 (quadlet_t)(CDev->guid >> 32),
                 (quadlet_t)(CDev->guid & 0xffffffff));
-#endif
     throwEncodingException(env, __LINE__);
     raw1394_destroy_handle(CDev->handle);
     free(CDev);
@@ -258,11 +254,9 @@ JNIEXPORT jlong JNICALL Java_sage_FirewireCaptureDevice_createEncoder0(
 
   raw1394_set_port(CDev->handle, CDev->port);
 
-#ifdef DEBUGFirewire
   sysOutPrint(env, "Found GUID %08x %08x on port %d node %d\n",
               (quadlet_t)(CDev->guid >> 32),
               (quadlet_t)(CDev->guid & 0xffffffff), CDev->port, CDev->node);
-#endif
   return (jlong)CDev;
 }
 
@@ -273,18 +267,16 @@ JNIEXPORT jlong JNICALL Java_sage_FirewireCaptureDevice_createEncoder0(
  */
 JNIEXPORT jboolean JNICALL Java_sage_FirewireCaptureDevice_setupEncoding0(
     JNIEnv *env, jobject jo, jlong ptr, jstring jfilename, jlong circSize) {
-#ifdef DEBUGFirewire
   sysOutPrint(env, "Firewire setup encoding.\n");
-#endif
   if (ptr) {
     FirewireCaptureDev *CDev = (FirewireCaptureDev *)ptr;
     CDev->circFileSize = (long)circSize;
 
     const char *cfilename = (*env)->GetStringUTFChars(env, jfilename, NULL);
-    CDev->fd = fopen(cfilename, "wb");
+    CDev->output_file = fopen(cfilename, "wb");
     CDev->datalen = 0;
     (*env)->ReleaseStringUTFChars(env, jfilename, cfilename);
-    if (!CDev->fd) {
+    if (!CDev->output_file) {
       throwEncodingException(env, __LINE__);
       return JNI_FALSE;
     }
@@ -307,21 +299,19 @@ JNIEXPORT jboolean JNICALL Java_sage_FirewireCaptureDevice_setupEncoding0(
  */
 JNIEXPORT jboolean JNICALL Java_sage_FirewireCaptureDevice_switchEncoding0(
     JNIEnv *env, jobject jo, jlong ptr, jstring jfilename) {
-#ifdef DEBUGFirewire
   sysOutPrint(env, "Firewire switch encoding.\n");
-#endif
   // Change the output file to be this new file
   if (ptr) {
     FirewireCaptureDev *CDev = (FirewireCaptureDev *)ptr;
-    if (CDev->fd) {
-      fclose(CDev->fd);
-      CDev->fd = 0;
+    if (CDev->output_file) {
+      fclose(CDev->output_file);
+      CDev->output_file = NULL;
     }
     // Open up the file we're going to write to
     const char *cfilename = (*env)->GetStringUTFChars(env, jfilename, NULL);
-    CDev->fd = fopen(cfilename, "wb");
+    CDev->output_file = fopen(cfilename, "wb");
     (*env)->ReleaseStringUTFChars(env, jfilename, cfilename);
-    if (!CDev->fd) {
+    if (!CDev->output_file) {
       throwEncodingException(env,
                              __LINE__ /*sage_EncodingException_FILESYSTEM*/);
       return JNI_FALSE;
@@ -337,25 +327,23 @@ JNIEXPORT jboolean JNICALL Java_sage_FirewireCaptureDevice_switchEncoding0(
  */
 JNIEXPORT jboolean JNICALL Java_sage_FirewireCaptureDevice_closeEncoding0(
     JNIEnv *env, jobject jo, jlong ptr) {
-#ifdef DEBUGFirewire
   sysOutPrint(env, "Firewire close encoding.\n");
-#endif
   if (ptr) {
     FirewireCaptureDev *CDev = (FirewireCaptureDev *)ptr;
     if (CDev->mpeg) {
       iec61883_mpeg2_close(CDev->mpeg);
       CDev->mpeg = NULL;
     }
-    if (CDev->fd) {
-      fclose(CDev->fd);
-      CDev->fd = 0;
+    if (CDev->output_file) {
+      fclose(CDev->output_file);
+      CDev->output_file = NULL;
     }
     iec61883_cmp_disconnect(CDev->handle, CDev->node, CDev->oplug,
                             raw1394_get_local_id(CDev->handle), CDev->iplug,
                             CDev->channel, CDev->bandwidth);
     return JNI_TRUE;
-  } else
-    return JNI_FALSE;
+  }
+  return JNI_FALSE;
 }
 
 /*
@@ -365,9 +353,7 @@ JNIEXPORT jboolean JNICALL Java_sage_FirewireCaptureDevice_closeEncoding0(
  */
 JNIEXPORT void JNICALL Java_sage_FirewireCaptureDevice_destroyEncoder0(
     JNIEnv *env, jobject jo, jlong ptr) {
-#ifdef DEBUGFirewire
   sysOutPrint(env, "Firewire Destroy encoder.\n");
-#endif
   if (ptr) {
     FirewireCaptureDev *CDev = (FirewireCaptureDev *)ptr;
     raw1394_destroy_handle(CDev->handle);
@@ -385,42 +371,31 @@ JNIEXPORT jint JNICALL Java_sage_FirewireCaptureDevice_eatEncoderData0(
   if (ptr) {
     FirewireCaptureDev *CDev = (FirewireCaptureDev *)ptr;
 
-    int readMore = 1;
     int numbytes = 0;
-    while (readMore)  // for now we don't loop
-    {
-      if (CDev->mpeg) {
-        int fd = raw1394_get_fd(CDev->handle);
-        struct timeval tv;
-        fd_set rfds;
-        int result = 0;
+    if (CDev->mpeg) {
+      int fd = raw1394_get_fd(CDev->handle);
+      struct timeval tv;
+      fd_set rfds;
+      int result = 0;
 
-        FD_ZERO(&rfds);
-        FD_SET(fd, &rfds);
-        tv.tv_sec = 0;
-        tv.tv_usec = 20000;
+      FD_ZERO(&rfds);
+      FD_SET(fd, &rfds);
+      tv.tv_sec = 0;
+      tv.tv_usec = 20000;
 
-        if (select(fd + 1, &rfds, NULL, NULL, &tv) > 0)
-          result = raw1394_loop_iterate(CDev->handle);
-        numbytes = CDev->datalen;
-        CDev->datalen = 0;
-      } else {
-        usleep(100000);
-      }
-      readMore = 0;
+      if (select(fd + 1, &rfds, NULL, NULL, &tv) > 0)
+        result = raw1394_loop_iterate(CDev->handle);
+      numbytes = CDev->datalen;
+      CDev->datalen = 0;
+    } else {
+      usleep(100000);
     }
 
-#ifdef DEBUGFirewire
     sysOutPrint(env, "eatEncoderData0 %d\n", numbytes);
-#endif
     return numbytes;
   }
   return 0;
 }
-
-//#define AVC1394_SUBUNIT_TYPE_PANEL (9 << 19)
-#define AVC1394_PASSTHROUGH_COMMAND \
-  0x000007C00 /* PASS THROUGH subunit command */
 
 /*
  * Class:     sage_FirewireCaptureDevice
@@ -430,15 +405,11 @@ JNIEXPORT jint JNICALL Java_sage_FirewireCaptureDevice_eatEncoderData0(
 JNIEXPORT jboolean JNICALL Java_sage_FirewireCaptureDevice_setChannel0(
     JNIEnv *env, jobject jo, jlong ptr, jstring jchan) {
   const char *chann = (*env)->GetStringUTFChars(env, jchan, NULL);
-#ifdef DEBUGFirewire
   sysOutPrint(env, "Firewire setChannel0\n");
-#endif
   if (!ptr) return JNI_FALSE;
   FirewireCaptureDev *CDev = (FirewireCaptureDev *)ptr;
 
-#ifdef DEBUGFirewire
   sysOutPrint(env, "Firewire set channel %s.\n", chann);
-#endif
 
   int channel = atoi(chann);
   (*env)->ReleaseStringUTFChars(env, jchan, chann);
@@ -464,7 +435,7 @@ JNIEXPORT jboolean JNICALL Java_sage_FirewireCaptureDevice_setChannel0(
     quadlet_t *response;
 
     request[0] = AVC1394_CTYPE_CONTROL | AVC1394_SUBUNIT_TYPE_PANEL |
-                 AVC1394_SUBUNIT_ID_0 | AVC1394_PASSTHROUGH_COMMAND |
+                 AVC1394_SUBUNIT_ID_0 | AVC1394_PANEL_COMMAND_PASS_THROUGH |
                  0x67;  // Press
     request[1] = 0x040000FF | (channel << 8);
     request[2] = 0xFF000000;
@@ -475,8 +446,8 @@ JNIEXPORT jboolean JNICALL Java_sage_FirewireCaptureDevice_setChannel0(
       sysOutPrint(env, "67 push response %08X\n", response[0]);
 
     request[0] = AVC1394_CTYPE_CONTROL | AVC1394_SUBUNIT_TYPE_PANEL |
-                 AVC1394_SUBUNIT_ID_0 | AVC1394_PASSTHROUGH_COMMAND | 0x67 |
-                 0x80;  // Release
+                 AVC1394_SUBUNIT_ID_0 | AVC1394_PANEL_COMMAND_PASS_THROUGH |
+                 0x67 | 0x80;  // Release
     request[1] = 0x040000FF | (channel << 8);
     request[2] = 0xFF000000;
     // set the channel
@@ -496,9 +467,7 @@ JNIEXPORT jboolean JNICALL Java_sage_FirewireCaptureDevice_setChannel0(
 JNIEXPORT jboolean JNICALL Java_sage_FirewireCaptureDevice_setInput0(
     JNIEnv *env, jobject jo, jlong ptr, jint inputType, jint inputIndex,
     jstring tunerMode, jint countryCode, jint videoFormatCode) {
-#ifdef DEBUGFirewire
   sysOutPrint(env, "Firewire SetInput\n");
-#endif
   if (!ptr) return JNI_FALSE;
 
   FirewireCaptureDev *CDev = (FirewireCaptureDev *)ptr;
@@ -518,9 +487,7 @@ JNIEXPORT jboolean JNICALL Java_sage_FirewireCaptureDevice_setInput0(
 JNIEXPORT jboolean JNICALL Java_sage_FirewireCaptureDevice_setEncoding0(
     JNIEnv *env, jobject jo, jlong ptr, jstring jencName,
     jobject encodePropsMap) {
-#ifdef DEBUGFirewire
   sysOutPrint(env, "Firewire SetEncoding\n");
-#endif
   return JNI_TRUE;
 }
 
@@ -532,16 +499,9 @@ JNIEXPORT jboolean JNICALL Java_sage_FirewireCaptureDevice_setEncoding0(
 JNIEXPORT jintArray JNICALL Java_sage_FirewireCaptureDevice_updateColors0(
     JNIEnv *env, jobject jo, jlong ptr, jint brightness, jint contrast,
     jint huey, jint saturation, jint sharpness) {
-#ifdef DEBUGFirewire
   sysOutPrint(env, "Firewire updateColors0 b=%d c=%d h=%d s=%d\n", brightness,
               contrast, huey, saturation);
-#endif
-  jint retColors[5];
-  retColors[0] = 0;
-  retColors[1] = 0;
-  retColors[2] = 0;
-  retColors[3] = 0;
-  retColors[4] = 0;
+  jint retColors[5] = {0};
   jintArray rv = (*env)->NewIntArray(env, 5);
   (*env)->SetIntArrayRegion(env, rv, 0, 5, retColors);
   return rv;
@@ -552,7 +512,7 @@ Java_sage_LinuxFirewireCaptureManager_ListFirewireNodes0(JNIEnv *env,
                                                          jobject jo) {
   raw1394handle_t handle;
   int device;
-  int nports, port, i;
+  int nports, port;
   struct raw1394_portinfo portinfo[16];
   jstring result;
   char *firewirestring = NULL;
@@ -603,7 +563,7 @@ Java_sage_LinuxFirewireCaptureManager_AvailableFirewireDevice0(
     JNIEnv *env, jobject jo, jstring jdevname) {
   raw1394handle_t handle;
   int device;
-  int nports, port, i;
+  int nports, port;
   struct raw1394_portinfo portinfo[16];
   jstring result;
   quadlet_t guid_lo, guid_hi;
@@ -622,10 +582,8 @@ Java_sage_LinuxFirewireCaptureManager_AvailableFirewireDevice0(
   devguid <<= 32;
   devguid |= guid_lo;
 
-#ifdef DEBUGFirewire
   sysOutPrint(env, "Searching for firewire GUID %08x %08x\n",
               (quadlet_t)(devguid >> 32), (quadlet_t)(devguid & 0xffffffff));
-#endif
 
   if (!(handle = raw1394_new_handle())) {
     return JNI_FALSE;
@@ -645,11 +603,9 @@ Java_sage_LinuxFirewireCaptureManager_AvailableFirewireDevice0(
       octlet_t guid = get_guid(handle, 0xffc0 | device);
       if (guid == devguid) {
         raw1394_destroy_handle(handle);
-#ifdef DEBUGFirewire
         sysOutPrint(env, "Found firewire GUID %08x %08x\n",
                     (quadlet_t)(devguid >> 32),
                     (quadlet_t)(devguid & 0xffffffff));
-#endif
         return JNI_TRUE;
       }
     }
