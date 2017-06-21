@@ -14,36 +14,21 @@
  * limitations under the License.
  */
 #include <arpa/inet.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <features.h>
-#include <getopt.h>
-#include <inttypes.h>
 #include <libavc1394/avc1394.h>
 #include <libiec61883/iec61883.h>
 #include <libraw1394/csr.h>
 #include <libraw1394/raw1394.h>
-#include <linux/types.h>
-#include <math.h>
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/errno.h>
-#include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/time.h>
-#include <sys/timeb.h>
 #include <sys/types.h>
-#include <sys/types.h>
-#include <sys/un.h>
-#include <time.h>
 #include <unistd.h>
 
 #include "sage_EncodingException.h"
 #include "sage_FirewireCaptureDevice.h"
-
-#define BUFFERSIZE 188 * 16
 
 static void sysOutPrint(JNIEnv *env, const char *cstr, ...) {
   jthrowable oldExcept = (*env)->ExceptionOccurred(env);
@@ -71,7 +56,6 @@ typedef struct FirewireCaptureDev {
   FILE *output_file;  // file to write the captured data to
   size_t circFileSize;
   char devName[256];
-  unsigned char buf[BUFFERSIZE];
   size_t circWritePos;
   raw1394handle_t handle;
   octlet_t guid;
