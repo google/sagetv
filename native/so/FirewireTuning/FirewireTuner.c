@@ -14,37 +14,17 @@
  * limitations under the License.
  */
 #include "FirewireTuner.h"
-#include <errno.h>
-#include <fcntl.h>
-#include <features.h>
-#include <getopt.h>
-#include <inttypes.h>
 #include <libavc1394/avc1394.h>
 #include <libiec61883/iec61883.h>
 #include <libraw1394/csr.h>
 #include <libraw1394/raw1394.h>
-#include <linux/types.h>
-#include <math.h>
 #include <netinet/in.h>
-#include <signal.h>
-#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/errno.h>
-#include <sys/ioctl.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/timeb.h>
-#include <sys/types.h>
-#include <sys/types.h>
-#include <sys/un.h>
-#include <time.h>
-#include <unistd.h>
 
 // Exposes the devices as remotes instead...
 #define RemoteInterface
-#define RemoteDebug
 
 static void DebugLogging(const char *cstr, ...) {
 #ifdef RemoteDebug
@@ -60,13 +40,12 @@ static void DebugLogging(const char *cstr, ...) {
 static char *newstr(char *str) {
   char *str2 = (char *)malloc(strlen(str) + 1);
   if (str2 == NULL) return NULL;
-  memset(str2, 0, strlen(str) + 1);
   strcpy(str2, str);
   return str2;
 }
 
 #ifdef RemoteInterface
-octlet_t tunerguid;
+static octlet_t tunerguid;
 #endif
 
 typedef struct FirewireTunerDev {
@@ -75,9 +54,6 @@ typedef struct FirewireTunerDev {
   int port;
   int node;
 } FirewireTunerDev;
-
-#define AVC1394_PASSTHROUGH_COMMAND \
-  0x000007C00 /* PASS THROUGH subunit command */
 
 static octlet_t get_guid(raw1394handle_t handle, nodeid_t node) {
   quadlet_t quadlet;
@@ -105,7 +81,7 @@ static FirewireTunerDev *createTuner(int tuningdevice)
 {
   struct raw1394_portinfo portinfo[16];
   int nports, port, device;
-  // quadlet_t guid_lo, guid_hi;
+
   FirewireTunerDev *CDev = (FirewireTunerDev *)malloc(sizeof(FirewireTunerDev));
 
   if (!(CDev->handle = raw1394_new_handle())) {
@@ -140,7 +116,6 @@ static FirewireTunerDev *createTuner(int tuningdevice)
         }
       }
 #else
-      // octlet_t guid = get_guid(tmphandle, 0xffc0 | device);
       if ((device & 0x3f) != (raw1394_get_local_id(tmphandle) & 0x3f)) {
         if (tuningdevice == 0) {
           CDev->node = 0xffc0 | device;
@@ -169,49 +144,51 @@ static void closeTuner(FirewireTunerDev *CDev) {
 }
 
 static int setChannel(FirewireTunerDev *CDev, int channel) {
-  DebugLogging("before power\n");
-  {
-    quadlet_t request[3];
-    quadlet_t *response;
+  quadlet_t request[3];
+  quadlet_t *response;
 
-    request[0] = AVC1394_CTYPE_CONTROL | AVC1394_SUBUNIT_TYPE_UNIT |
-                 AVC1394_SUBUNIT_ID_IGNORE | AVC1394_COMMAND_POWER |
-                 AVC1394_CMD_OPERAND_POWER_ON;
-    // power up the unit
-    DebugLogging("avc1394 transaction %X %X %X\n", CDev->handle,
-                 CDev->node & 0x3F, request[0]);
-    response = avc1394_transaction_block(CDev->handle, CDev->node & 0x3F,
-                                         request, 1, 1);
-    if (response != NULL) DebugLogging("power response %08X\n", response[0]);
+  DebugLogging("Sending power command\n");
+  // power up the unit
+  request[0] = AVC1394_CTYPE_CONTROL | AVC1394_SUBUNIT_TYPE_UNIT |
+               AVC1394_SUBUNIT_ID_IGNORE | AVC1394_COMMAND_POWER |
+               AVC1394_CMD_OPERAND_POWER_ON;
+  response = avc1394_transaction_block(CDev->handle, CDev->node & 0x3F,
+                                       request, 1, 1);
+  if (response != NULL) {
+    DebugLogging("power response %08X\n", response[0]);
   }
-  DebugLogging("after power\nbefore press\n");
-  {
-    quadlet_t request[3];
-    quadlet_t *response;
+  avc1394_transaction_block_close(CDev->handle);
+  response = NULL;
 
-    request[0] = AVC1394_CTYPE_CONTROL | AVC1394_SUBUNIT_TYPE_PANEL |
-                 AVC1394_SUBUNIT_ID_0 | AVC1394_PASSTHROUGH_COMMAND |
-                 0x67;  // Press
-    request[1] = 0x040000FF | (channel << 8);
-    request[2] = 0xFF000000;
-    // set the channel
-    response = avc1394_transaction_block(CDev->handle, CDev->node & 0x3F,
-                                         request, 3, 1);
-    if (response != NULL) DebugLogging("67 push response %08X\n", response[0]);
-
-    DebugLogging("after push \n");
-    request[0] = AVC1394_CTYPE_CONTROL | AVC1394_SUBUNIT_TYPE_PANEL |
-                 AVC1394_SUBUNIT_ID_0 | AVC1394_PASSTHROUGH_COMMAND | 0x67 |
-                 0x80;  // Release
-    request[1] = 0x040000FF | (channel << 8);
-    request[2] = 0xFF000000;
-    // set the channel
-    response = avc1394_transaction_block(CDev->handle, CDev->node & 0x3F,
-                                         request, 3, 1);
-    if (response != NULL)
-      DebugLogging("67 release response %08X\n", response[0]);
+  // set the channel with push then release command
+  DebugLogging("Sending press command\n");
+  request[0] = AVC1394_CTYPE_CONTROL | AVC1394_SUBUNIT_TYPE_PANEL |
+               AVC1394_SUBUNIT_ID_0 | AVC1394_PANEL_COMMAND_PASS_THROUGH |
+               0x67;  // Press
+  request[1] = 0x040000FF | (channel << 8);
+  request[2] = 0xFF000000;
+  response = avc1394_transaction_block(CDev->handle, CDev->node & 0x3F,
+                                       request, 3, 1);
+  if (response != NULL) {
+    DebugLogging("67 push response %08X\n", response[0]);
   }
-  DebugLogging("set channel done\n");
+  avc1394_transaction_block_close(CDev->handle);
+  response = NULL;
+
+  DebugLogging("Sending release command\n");
+  request[0] = AVC1394_CTYPE_CONTROL | AVC1394_SUBUNIT_TYPE_PANEL |
+               AVC1394_SUBUNIT_ID_0 | AVC1394_PANEL_COMMAND_PASS_THROUGH |
+               0x67 | 0x80;  // Release
+  request[1] = 0x040000FF | (channel << 8);
+  request[2] = 0xFF000000;
+  response = avc1394_transaction_block(CDev->handle, CDev->node & 0x3F,
+                                       request, 3, 1);
+  if (response != NULL) {
+    DebugLogging("67 release response %08X\n", response[0]);
+  }
+  avc1394_transaction_block_close(CDev->handle);
+  response = NULL;
+
   return 1;
 }
 
@@ -244,7 +221,7 @@ static int AddFirewireNodes(remote **head) {
     for (device = 0; device < raw1394_get_nodecount(tmphandle); device++) {
       octlet_t guid = get_guid(tmphandle, 0xffc0 | device);
       if ((device & 0x3f) != (raw1394_get_local_id(tmphandle) & 0x3f)) {
-        sprintf(nodename, "Firewire STB %08X%08X", (quadlet_t)(guid >> 32),
+        snprintf(nodename, sizeof(nodename), "Firewire STB %08X%08X", (quadlet_t)(guid >> 32),
                 (quadlet_t)(guid & 0xffffffff));
         DebugLogging("Adding remote %s\n", nodename);
         AddRemote(CreateRemote(newstr(nodename)), head);
@@ -255,8 +232,6 @@ static int AddFirewireNodes(remote **head) {
   raw1394_destroy_handle(handle);
   return 0;
 }
-
-typedef struct { int devicenum; } FirewireData;
 
 int NeedBitrate(void) { return 0; }
 
@@ -281,9 +256,7 @@ remote *CreateRemote(char *Name) {
   Remote = (struct remote *)malloc(
       sizeof(struct remote));  // allocate space for a remote structure
   if (Remote == NULL) {
-    ////TRACE("malloc failed in CREATE_REMOTE()...Exiting!!!\n");
-    // PostQuitMessage(0);
-    return Remote;
+    return NULL;
   }
   Remote->name = Name;  // copy values
   Remote->carrier_freq = 0;
@@ -299,9 +272,7 @@ command *CreateCommand(char *Name) {
   Com = (struct command *)malloc(
       sizeof(struct command));  // allocate space for a command structure
   if (Com == NULL) {
-    ////TRACE("malloc failed in CREATE_COMMAND()...Exiting!!!\n");
-    // PostQuitMessage(0);
-    return Com;
+    return NULL;
   }
   Com->name = Name;  // copy values
   Com->next = NULL;
@@ -390,7 +361,7 @@ void InitDevice() {}
 command *RecordCommand(int devHandle, unsigned char *Name) { return 0; }
 
 void send_command(char *cmd, char *recvBuf, int *recvSize) {
-  DebugLogging("Send command %s\n", cmd);
+  DebugLogging("Send command %s unimplemented\n", cmd);
 }
 
 void PlayCommand(int devHandle, remote *remote, unsigned char *name,
@@ -428,8 +399,7 @@ int CanMacroTune(void) { return 1; }
 
 void MacroTune(int devHandle, int channel) {
   FirewireTunerDev *CDev;
-  DebugLogging("MacroTune %d\n", channel);
-  DebugLogging("devHandle %d\n", devHandle);
+  DebugLogging("MacroTune %d on device %d\n", channel, devHandle);
 
 #ifdef RemoteInterface
   CDev = createTuner(tunerguid);

@@ -28,14 +28,14 @@ struct pattern {
 typedef struct pattern pattern;
 
 struct command {
-  unsigned char *name;
+  char *name;
   struct pattern *pattern;
   struct command *next;
 };
 typedef struct command command;
 
 struct remote {
-  unsigned char *name;
+  char *name;
   unsigned long carrier_freq;
   unsigned bit_time;
   struct command *command;
