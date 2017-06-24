@@ -400,46 +400,49 @@ JNIEXPORT jboolean JNICALL Java_sage_FirewireCaptureDevice_setChannel0(
 
   if (channel == 0) return JNI_TRUE;
 
-  {
-    quadlet_t request[3];
-    quadlet_t *response;
+  quadlet_t request[3];
+  quadlet_t *response;
 
-    request[0] = AVC1394_CTYPE_CONTROL | AVC1394_SUBUNIT_TYPE_UNIT |
-                 AVC1394_SUBUNIT_ID_IGNORE | AVC1394_COMMAND_POWER |
-                 AVC1394_CMD_OPERAND_POWER_ON;
-    // power up the unit
-    response = avc1394_transaction_block(CDev->handle, CDev->node & 0x3F,
-                                         request, 1, 1);
-    if (response != NULL)
-      sysOutPrint(env, "power response %08X\n", response[0]);
+  // power up the unit
+  request[0] = AVC1394_CTYPE_CONTROL | AVC1394_SUBUNIT_TYPE_UNIT |
+                AVC1394_SUBUNIT_ID_IGNORE | AVC1394_COMMAND_POWER |
+                AVC1394_CMD_OPERAND_POWER_ON;
+  response = avc1394_transaction_block(CDev->handle, CDev->node & 0x3F,
+                                        request, 1, 1);
+  if (response != NULL) {
+    sysOutPrint(env, "power response %08X\n", response[0]);
   }
+  avc1394_transaction_block_close(CDev->handle);
+  response = NULL;
 
-  {
-    quadlet_t request[3];
-    quadlet_t *response;
+  // set the channel with push then release command
+  request[0] = AVC1394_CTYPE_CONTROL | AVC1394_SUBUNIT_TYPE_PANEL |
+                AVC1394_SUBUNIT_ID_0 | AVC1394_PANEL_COMMAND_PASS_THROUGH |
+                0x67;  // Press
+  request[1] = 0x040000FF | (channel << 8);
+  request[2] = 0xFF000000;
 
-    request[0] = AVC1394_CTYPE_CONTROL | AVC1394_SUBUNIT_TYPE_PANEL |
-                 AVC1394_SUBUNIT_ID_0 | AVC1394_PANEL_COMMAND_PASS_THROUGH |
-                 0x67;  // Press
-    request[1] = 0x040000FF | (channel << 8);
-    request[2] = 0xFF000000;
-    // set the channel
-    response = avc1394_transaction_block(CDev->handle, CDev->node & 0x3F,
-                                         request, 3, 1);
-    if (response != NULL)
-      sysOutPrint(env, "67 push response %08X\n", response[0]);
-
-    request[0] = AVC1394_CTYPE_CONTROL | AVC1394_SUBUNIT_TYPE_PANEL |
-                 AVC1394_SUBUNIT_ID_0 | AVC1394_PANEL_COMMAND_PASS_THROUGH |
-                 0x67 | 0x80;  // Release
-    request[1] = 0x040000FF | (channel << 8);
-    request[2] = 0xFF000000;
-    // set the channel
-    response = avc1394_transaction_block(CDev->handle, CDev->node & 0x3F,
-                                         request, 3, 1);
-    if (response != NULL)
-      sysOutPrint(env, "67 release response %08X\n", response[0]);
+  response = avc1394_transaction_block(CDev->handle, CDev->node & 0x3F,
+                                        request, 3, 1);
+  if (response != NULL) {
+    sysOutPrint(env, "67 push response %08X\n", response[0]);
   }
+  avc1394_transaction_block_close(CDev->handle);
+  response = NULL;
+
+  request[0] = AVC1394_CTYPE_CONTROL | AVC1394_SUBUNIT_TYPE_PANEL |
+                AVC1394_SUBUNIT_ID_0 | AVC1394_PANEL_COMMAND_PASS_THROUGH |
+                0x67 | 0x80;  // Release
+  request[1] = 0x040000FF | (channel << 8);
+  request[2] = 0xFF000000;
+  response = avc1394_transaction_block(CDev->handle, CDev->node & 0x3F,
+                                        request, 3, 1);
+  if (response != NULL) {
+    sysOutPrint(env, "67 release response %08X\n", response[0]);
+  }
+  avc1394_transaction_block_close(CDev->handle);
+  response = NULL;
+
   return JNI_TRUE;
 }
 
