@@ -728,7 +728,11 @@ public class SDRipper extends EPGDataSource
         // Remove any lineups we already have added to the account.
         for (SDAccountLineup accountLineup : accountLineups.getLineups())
         {
-          if (accountLineup.getUri().equals(lineup.getUri())) {
+          // 06/09/2017 JS: We were using getURI() here, but when a lineup is deleted, the URI does
+          // not exist and would throw a null pointer exception. getLineup() is always existential
+          // according to the API and is equally unique, so we are using that instead.
+          if (accountLineup.getLineup().equals(lineup.getLineup()))
+          {
             lineupName = null;
             break;
           }
@@ -842,7 +846,10 @@ public class SDRipper extends EPGDataSource
 
     screenFormatBuilder.append(lineup.getName());
 
-    if (!lineup.getName().equals(lineup.getLocation()))
+    // When a lineup is deleted, location is null.
+    if (lineup.getLocation() == null)
+      screenFormatBuilder.append(" - ").append(lineup.getLineup());
+    else if (!lineup.getName().equals(lineup.getLocation()))
       screenFormatBuilder.append(" - ").append(lineup.getLocation());
 
     return screenFormatBuilder.toString();
@@ -913,7 +920,7 @@ public class SDRipper extends EPGDataSource
       // either way.
       if (lineupName.equals(compareLineupName + " - " + lineup.getLineup()) || compareLineupName.equals(lineupName))
       {
-        int returnValue = session.deleteLineup(lineup.getUri());
+        int returnValue = session.deleteLineup(lineup);
         if (Sage.DBG) System.out.println("SDEPG Deleted lineup '" + lineupName + "' with " + returnValue + " changes remaining.");
         return returnValue;
       }

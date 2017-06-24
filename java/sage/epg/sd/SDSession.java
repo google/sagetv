@@ -26,6 +26,7 @@ import sage.epg.sd.gson.stream.JsonWriter;
 import sage.epg.sd.json.headend.SDHeadend;
 import sage.epg.sd.json.images.SDImage;
 import sage.epg.sd.json.images.SDProgramImages;
+import sage.epg.sd.json.lineup.SDAccountLineup;
 import sage.epg.sd.json.lineup.SDAccountLineups;
 import sage.epg.sd.json.locale.SDLanguage;
 import sage.epg.sd.json.locale.SDRegion;
@@ -71,6 +72,8 @@ public abstract class SDSession
   private static final String GET_CELEBRITY_IMAGES = URL_VERSIONED + "/metadata/celebrity/";
   // Get supported sports that are in progress.
   private static final String GET_IN_PROGRESS_SPORT = URL_VERSIONED + "/metadata/stillRunning/";
+  // Delete a lineup that is no longer being updated.
+  private static final String DELETE_ACCOUNT_LINEUP = URL_VERSIONED + "/lineups/";
 
   // The character set to be used for outgoing communications.
   protected static final Charset OUT_CHARSET = StandardCharsets.UTF_8;
@@ -790,14 +793,19 @@ public abstract class SDSession
   /**
    * Delete a lineup from account.
    *
-   * @param uri The URI provided by a lineup from <code>getLineups()</code>.
+   * @param lineup A lineup provided by {@link #getAccountLineups()}.
    * @return The number of account changes remaining.
    * @throws IOException If there is an I/O related error.
    * @throws SDException If there is a problem working with Schedules Direct.
    */
-  public int deleteLineup(String uri) throws IOException, SDException
+  public int deleteLineup(SDAccountLineup lineup) throws IOException, SDException
   {
-    URL url = new URL(URL_BASE + uri);
+    URL url;
+    if (lineup.getUri() != null)
+      url = new URL(URL_BASE + lineup.getUri());
+    else
+      url = new URL(DELETE_ACCOUNT_LINEUP + lineup.getLineup());
+
     JsonObject reply = deleteAuthJson(url, JsonObject.class);
 
     JsonElement codeElement = reply.get("code");
