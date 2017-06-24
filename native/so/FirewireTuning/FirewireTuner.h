@@ -18,53 +18,50 @@
 extern "C" {
 #endif
 
-struct pattern
-{
-    unsigned bit_length;
-    unsigned length;
-    char r_flag;
-    unsigned char *bytes;
-    struct pattern *next;
+struct pattern {
+  unsigned bit_length;
+  unsigned length;
+  char r_flag;
+  unsigned char *bytes;
+  struct pattern *next;
 };
 typedef struct pattern pattern;
 
-struct command 
-{
-    unsigned char *name;
-    struct pattern *pattern;
-    struct command *next;
+struct command {
+  char *name;
+  struct pattern *pattern;
+  struct command *next;
 };
 typedef struct command command;
 
-struct remote 
-{
-    unsigned char *name;
-    unsigned long carrier_freq;
-    unsigned bit_time;
-    struct command *command;
-    struct remote *next;
+struct remote {
+  char *name;
+  unsigned long carrier_freq;
+  unsigned bit_time;
+  struct command *command;
+  struct remote *next;
 };
 
 typedef struct remote remote;
 
 int CanMacroTune(void);
-void MacroTune(int,int);
+void MacroTune(int, int);
 
 int NeedBitrate(void);
 int NeedCarrierFrequency(void);
-const char* DeviceName();
+const char *DeviceName();
 int OpenDevice(int ComPort);
-void CloseDevice(void*);
+void CloseDevice(void *);
 unsigned long FindBitRate(int);
 unsigned long FindCarrierFrequency(int);
 struct remote *CreateRemote(char *Name);
 void AddRemote(struct remote *Remote, struct remote **head);
 void AddCommand(struct command *Command, struct command **Command_List);
-void SaveRemotes(remote *head, const char* pszPathName);
-struct remote *LoadRemotes(const char* pszPathName);
+void SaveRemotes(remote *head, const char *pszPathName);
+struct remote *LoadRemotes(const char *pszPathName);
 void InitDevice();
-command* RecordCommand(int devHandle, unsigned char *Name);
-void PlayCommand (int,remote *remote, unsigned char *name, int tx_repeats);
+command *RecordCommand(int devHandle, unsigned char *Name);
+void PlayCommand(int, remote *remote, unsigned char *name, int tx_repeats);
 void FreeRemotes(remote **head);
 
 #ifdef __cplusplus
