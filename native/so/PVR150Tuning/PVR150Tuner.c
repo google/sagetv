@@ -28,7 +28,43 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-void ACL_Delay(unsigned int delay) {
+typedef struct {
+  int i2cfile;
+  unsigned char IRData[0x60 * 83];
+} IRBlasterData;
+
+typedef struct {
+  char *keyname;
+  int keynum;
+} KeyMaps;
+
+static KeyMaps Keys[] = {{"0", 0},  {"1", 1}, {"2", 2}, {"3", 3}, {"4", 4},
+                         {"5", 5}, {"6", 6}, {"7", 7}, {"8", 8},  {"9", 9},
+                         {"POWER", 10}, {"ENTER", 15},
+                         {NULL, -1}};
+
+static unsigned char IRBlasterInit[] = {
+    0x60, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x0C, // 0x00
+    0x00, 0x0C, 0x60, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x10
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x20
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x30
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x40
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0x50
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00                                // 0x60
+};
+
+static void DebugLogging(const char* cstr, ...)
+{
+  // TODO implement logic to forward to log system
+}
+
+static void ACL_Delay(unsigned int delay) {
   struct timeval tv;
   int rv = 1;
   tv.tv_sec = delay / 1000000;
@@ -40,31 +76,6 @@ void ACL_Delay(unsigned int delay) {
   }
 }
 
-typedef struct {
-  int i2cfile;
-  unsigned char IRData[0x60 * 83];
-} IRBlasterData;
-
-typedef struct {
-  char *keyname;
-  int keynum;
-} KeyMaps;
-
-static KeyMaps Keys[] = {{"0", 0},  {"1", 1}, {"2", 2},      {"3", 3},
-                         {"4", 4},  {"5", 5}, {"6", 6},      {"7", 7},
-                         {"8", 8},  {"9", 9}, {"POWER", 10}, {"ENTER", 15},
-                         {NULL, -1}};
-
-static unsigned char IRBlasterInit[] = {
-    0x60, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x0C, 0x00, 0x0C, 0x60, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0,    00,   0x00, 0x00};
 
 static int i2creadarray(int i2cfile, int addr, int len, unsigned char *array) {
   struct i2c_msg i2cmsg[2];
@@ -118,6 +129,7 @@ static int writeI2CDataArray(int i2cfile, unsigned char *array, int len) {
   }
   return 0;
 }
+
 int NeedBitrate(void) { return 0; }
 
 int NeedCarrierFrequency(void) { return 0; }
@@ -130,18 +142,18 @@ void *OpenDevice(int ComPort) {
   char i2cfilename[256];
   int res;
 
-  sprintf(i2cfilename, "/dev/i2c/%d", i2cnumber);
+  snprintf(i2cfilename, sizeof(i2cfilename), "/dev/i2c/%d", i2cnumber);
 
   if ((i2cfile = open(i2cfilename, O_RDWR)) < 0) {
-    sprintf(i2cfilename, "/dev/i2c-%d", i2cnumber);
+    snprintf(i2cfilename, sizeof(i2cfilename), "/dev/i2c-%d", i2cnumber);
     if ((i2cfile = open(i2cfilename, O_RDWR)) < 0) {
-      fprintf(stderr, "Could not open IrBlaster %d\n", ComPort);
+      DebugLogging("Could not open IrBlaster %d\n", ComPort);
       return (0);
     }
   }
   int addr = 0x70;
   if (ioctl(i2cfile, I2C_SLAVE, addr) < 0) {
-    fprintf(stderr, "error setting slave address\n");
+    DebugLogging("error setting slave address\n");
     close(i2cfile);
     return (0);
   }
@@ -153,22 +165,22 @@ void *OpenDevice(int ComPort) {
   ACL_Delay(10 * 1000);
   res = 0;
   if (i2creadarray(i2cfile, 0, 4, (unsigned char *)&res) < 0) {
-    fprintf(stderr, "error reading back status\n");
+    DebugLogging("error reading back status\n");
     close(i2cfile);
     return (0);
   }
-  fprintf(stderr, "Initialized IRBlaster %08X\n", res);
+  DebugLogging("Initialized IRBlaster %08X\n", res);
   IRBlasterData *irb = malloc(sizeof(IRBlasterData));
   if (irb == NULL) return (void *)irb;
+  memset(irb, 0, sizeof(*irb));
 
   irb->i2cfile = i2cfile;
-  memset(irb->IRData, 0, sizeof(0x60 * 83));
   return (void *)irb;
 }
 
 void CloseDevice(void *devHandle) {
   if (devHandle == 0) {
-    fprintf(stderr, "CloseDevice handle is NULL\n");
+    DebugLogging("CloseDevice handle is NULL\n");
     return;
   }
   IRBlasterData *irb = (IRBlasterData *)devHandle;
@@ -180,15 +192,13 @@ unsigned long FindBitRate(void *devhandle) { return 0; }
 
 unsigned long FindCarrierFrequency(void *devHandle) { return 0; }
 
-remote *CreateRemote(unsigned char *Name) {
+remote *CreateRemote(char *Name) {
   remote *Remote;
 
   Remote = (struct remote *)malloc(
       sizeof(struct remote));  // allocate space for a remote structure
   if (Remote == NULL) {
-    ////TRACE("malloc failed in CREATE_REMOTE()...Exiting!!!\n");
-    // PostQuitMessage(0);
-    return Remote;
+    return NULL;
   }
   Remote->name = Name;  // copy values
   Remote->carrier_freq = 0;
@@ -198,15 +208,13 @@ remote *CreateRemote(unsigned char *Name) {
   return Remote;  // return pointer to remote structure
 }
 
-command *CreateCommand(unsigned char *Name) {
+command *CreateCommand(char *Name) {
   struct command *Com;  // pointer to new command structure
 
   Com = (struct command *)malloc(
       sizeof(struct command));  // allocate space for a command structure
   if (Com == NULL) {
-    ////TRACE("malloc failed in CREATE_COMMAND()...Exiting!!!\n");
-    // PostQuitMessage(0);
-    return Com;
+    return NULL;
   }
   Com->name = Name;  // copy values
   Com->next = NULL;
@@ -248,16 +256,15 @@ void AddCommand(struct command *Command, struct command **Command_List) {
   }
 }
 
-static unsigned char *newstr(char *str) {
+static char *newstr(char *str) {
   char *str2 = (char *)malloc(strlen(str) + 1);
   if (str2 == NULL) return NULL;
-  memset(str2, 0, strlen(str) + 1);
   strcpy(str2, str);
   return str2;
 }
 
 remote *LoadRemotes(const char *pszPathName) {
-  fprintf(stderr, "LoadRemotes\n");
+  DebugLogging("LoadRemotes\n");
   remote *head = NULL;
   if (pszPathName) {
     AddRemote(CreateRemote(newstr((char *)pszPathName)), &head);
@@ -284,22 +291,24 @@ remote *LoadRemotes(const char *pszPathName) {
   while ((remoteentry = readdir(remotedir)) != NULL) {
     if (strcmp(remoteentry->d_name, ".") != 0 &&
         strcmp(remoteentry->d_name, "..") != 0) {
-      fprintf(stderr, "adding remote %s\n", remoteentry->d_name);
+      DebugLogging("adding remote %s\n", remoteentry->d_name);
       AddRemote(CreateRemote(newstr(remoteentry->d_name)), &head);
     }
   }
+  closedir(remotedir);
+  remotedir = NULL;
   return head;
 }
 
 void InitDevice() {}
 
-command *RecordCommand(void *devHandle, unsigned char *Name) { return 0; }
+command *RecordCommand(void *devHandle, char *Name) { return 0; }
 
 void send_command(char *cmd, char *recvBuf, int *recvSize) {
-  fprintf(stderr, "Send command %s\n", cmd);
+  DebugLogging("Send command %s unimplemented\n", cmd);
 }
 
-void PlayCommand(void *devHandle, remote *remote, unsigned char *name,
+void PlayCommand(void *devHandle, remote *remote, char *name,
                  int tx_repeats) {
   IRBlasterData *irb = (IRBlasterData *)devHandle;
   FILE *remotefile;
@@ -308,14 +317,14 @@ void PlayCommand(void *devHandle, remote *remote, unsigned char *name,
   int codenum = -1;
   int pos = 0;
   int res, data;
-  int j;
+  int repeat_instance;
   unsigned char ircode[0x63];
   char remotefilename[512];
   int maxcount = 0;
   if (devHandle == 0) return;
 
   i2cfile = irb->i2cfile;
-  fprintf(stderr, "PlayCommand %s\n", name);
+  DebugLogging("PlayCommand %s\n", name);
 
   memset(ircode, 0, 0x63);
 
@@ -328,7 +337,7 @@ void PlayCommand(void *devHandle, remote *remote, unsigned char *name,
   }
 
   if (codenum == -1) {
-    fprintf(stderr, "Could not find key name in remote list\n");
+    DebugLogging("Could not find key name in remote list\n");
     return;
   }
 
@@ -336,22 +345,22 @@ void PlayCommand(void *devHandle, remote *remote, unsigned char *name,
   remotefile = fopen(remotefilename, "rb");
 
   if (remotefile == NULL) {
-    fprintf(stderr, "Could not open remote file\n");
+    DebugLogging("Could not open remote file\n");
     return;
   }
 
   fseek(remotefile, 0x60 * codenum, SEEK_SET);
 
-  fread(ircode, 0x60, 1, remotefile);
+  if (fread(ircode, 0x60, 1, remotefile) != 1) {
+    DebugLogging("Could not read ir code from remote file\n");
+    fclose(remotefile);
+    return;
+  }
+
   fclose(remotefile);
 
-  for (j = 0; j < tx_repeats; j++) {
+  for (repeat_instance = 0; repeat_instance < tx_repeats; repeat_instance++) {
     writeI2CDataArray(i2cfile, &ircode[0], 0x63);
-    /*        for(i=0;i<0x60;i+=4)
-            {
-                res = i2cwritearray(i2cfile, 1+i, 0x4, &ircode[0+i]);
-            }
-            res = i2cwritearray(i2cfile, 0x61, 3, &ircode[0x60]);*/
 
     ACL_Delay(10 * 1000);
     data = 0x40;
@@ -359,7 +368,7 @@ void PlayCommand(void *devHandle, remote *remote, unsigned char *name,
     ACL_Delay(10 * 1000);
     res = 0;
     if (i2creadarray(i2cfile, 0, 1, (unsigned char *)&res) < 0) {
-      fprintf(stderr, "error\n");
+      DebugLogging("error writing i2c remote command\n");
     }
     ACL_Delay(10 * 1000);
     data = 0x80;
@@ -404,4 +413,4 @@ void FreeRemotes(remote **head) {
 
 int CanMacroTune(void) { return 0; }
 
-void MacroTune(int devHandle, int channel) { fprintf(stderr, "MacroTune\n"); }
+void MacroTune(int devHandle, int channel) { DebugLogging("MacroTune\n"); }

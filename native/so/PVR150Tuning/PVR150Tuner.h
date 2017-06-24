@@ -28,14 +28,14 @@ struct pattern {
 typedef struct pattern pattern;
 
 struct command {
-  unsigned char *name;
+  char *name;
   struct pattern *pattern;
   struct command *next;
 };
 typedef struct command command;
 
 struct remote {
-  unsigned char *name;
+  char *name;
   unsigned long carrier_freq;
   unsigned bit_time;
   struct command *command;
@@ -54,14 +54,14 @@ void *OpenDevice(int ComPort);
 void CloseDevice(void *);
 unsigned long FindBitRate(void *);
 unsigned long FindCarrierFrequency(void *);
-struct remote *CreateRemote(unsigned char *Name);
+struct remote *CreateRemote(char *Name);
 void AddRemote(struct remote *Remote, struct remote **head);
 void AddCommand(struct command *Command, struct command **Command_List);
 void SaveRemotes(remote *head, const char *pszPathName);
 struct remote *LoadRemotes(const char *pszPathName);
 void InitDevice();
-command *RecordCommand(void *, unsigned char *Name);
-void PlayCommand(void *, remote *remote, unsigned char *name, int tx_repeats);
+command *RecordCommand(void *, char *Name);
+void PlayCommand(void *, remote *remote, char *name, int tx_repeats);
 void FreeRemotes(remote **head);
 
 #ifdef __cplusplus
