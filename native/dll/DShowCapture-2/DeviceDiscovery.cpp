@@ -344,7 +344,8 @@ BOOL CheckFakeBDACrossBar( JNIEnv *env, char* capFiltName, int CapFiltNum, char*
 static int PurgeNameList( JNIEnv *env, DEVNAME* DevName, int numDev, REFCLSID devClass )
 {
 	int i, j, num=0;
-	char szDeviceType[64];
+	char szDeviceType[64]; 
+    slog((env, "KSF PurgeNameList() Entry: 1st DevName '%s', numDev to purge = %d \r\n", DevName[0].FriendlyName, numDev));
 	if ( devClass == AM_KSCATEGORY_CAPTURE )
 	{
 		for ( i = 0; i<numDev; i++ )
@@ -376,10 +377,27 @@ static int PurgeNameList( JNIEnv *env, DEVNAME* DevName, int numDev, REFCLSID de
 	return j;
 }
 
+/*  Purpose: Merge devices in DevName1[] into DevName[].  
+        Resultant DevName[] will not contain duplicate device:hardware_loc entries.
+
+    DevName (in/out) - pointer to an existing array of devices
+    numDev (in) - # of elements in DevName[]
+    DevName1 (in) - pointer to an array of new devices which are candidates to be added to DevName[]
+    numDev1 (in) - # of elements in DevName1[]
+
+    Return: resultant number of elements in DevName[]
+
+    Notes: Generally assumes that there will only be a single device at a given hardware_loc.
+        Handles a few special cases that DO have multiple devices at a given hardware_loc.
+        "hybrid" tuners will have multiple devices at a given hardware_loc, but they can't
+        be used at the same time.
+    */
 static int MergeNameList( JNIEnv *env, DEVNAME* DevName, int numDev, DEVNAME* DevName1, int numDev1 )
 {
 	int i, j, k, num;
-	num = numDev;
+	num = numDev; 
+    slog((env, "KSF MergeNameList() Entry: 1st DevName '%s', numDev %d, 1st DevName1 '%s', numDev1 %d \r\n", 
+        DevName[0].FriendlyName, numDev, DevName1[0].FriendlyName, numDev1));
 	for ( i = 0; i<numDev1; i++ )
 	{
 		//ZQ hard code for anysee tuner
@@ -422,22 +440,35 @@ static int MergeNameList( JNIEnv *env, DEVNAME* DevName, int numDev, DEVNAME* De
 
 
 			for ( j = 0; j<numDev; j++ )
-			{
-				if ( !strcmp( DevName[j].hardware_loc, DevName1[i].hardware_loc ) )
+			{ 
+                slog((env, "KSF FriendlyName '%s' at '%s', compare loc '%s', i=%d, j=%d \r\n", 
+                    DevName1[i].FriendlyName, DevName1[i].hardware_loc, DevName[j].hardware_loc, i, j));
+				if ( !strcmp( DevName[j].hardware_loc, DevName1[i].hardware_loc ) ) // break if hardware_loc matches
 					break;
 			}
 			
-			//ZQ hard code for anysee tuner
+			// hard code for multiple tuners which are found at the same hardware_loc
 			if ( j < numDev )
 			{
+                //ZQ hard code for anysee tuner
 				//Anysee hybrid tuners share the same loc (USB) 
 				if ( !strncmp( DevName[j].FriendlyName, "anysee BDA Digital Tuner", 22 ) )
 					j = numDev;
+
+                /* KSF: hard code for WinTV-quadHD, which has 2 BDA Reciever Components 
+                 * (885 TS Capture, 885 TS Capture 2) at each of it's 2 PCIe hardware locations.
+                 * "Hauppauge WinTV 885 TS Capture" has already been found at this hardware_loc; 
+                 * following lines added for 2nd dev.
+                 * NOTE: use i, not j (as above)
+                 */
+                else if (!strncmp(DevName1[i].FriendlyName, "Hauppauge WinTV 885 TS Capture 2", 32))
+                    j = numDev;
 			}
 
 			//not found the same device
 			if ( j >= numDev )
-			{
+			{     
+                slog((env, "KSF adding device '%s' i=%d, j=%d, num=%d \r\n", DevName1[i].FriendlyName, i, j, num));
 				strncpy( DevName[num].FriendlyName, DevName1[i].FriendlyName, sizeof(DevName[num].FriendlyName)-1 );
 				strncpy( DevName[num].hardware_loc, DevName1[i].hardware_loc, sizeof(DevName[num].hardware_loc)-1 );
 				DevName[num].index = 0;

@@ -48,29 +48,29 @@ extern "C" {
 #undef sage_DShowCaptureDevice_HDPVR_ENCODER_MASK
 #define sage_DShowCaptureDevice_HDPVR_ENCODER_MASK 1048576L
 #undef sage_DShowCaptureDevice_RAW_AV_CAPTURE_MASK
-#define sage_DShowCaptureDevice_RAW_AV_CAPTURE_MASK 256L
+#define sage_DShowCaptureDevice_RAW_AV_CAPTURE_MASK 256L        // 0x100
 #undef sage_DShowCaptureDevice_MPEG_VIDEO_ONLY_CAPTURE_MASK
-#define sage_DShowCaptureDevice_MPEG_VIDEO_ONLY_CAPTURE_MASK 512L
+#define sage_DShowCaptureDevice_MPEG_VIDEO_ONLY_CAPTURE_MASK 512L   // 0x200
 #undef sage_DShowCaptureDevice_MPEG_VIDEO_RAW_AUDIO_CAPTURE_MASK
-#define sage_DShowCaptureDevice_MPEG_VIDEO_RAW_AUDIO_CAPTURE_MASK 1024L
+#define sage_DShowCaptureDevice_MPEG_VIDEO_RAW_AUDIO_CAPTURE_MASK 1024L // 0x400
 #undef sage_DShowCaptureDevice_MPEG_AV_CAPTURE_MASK
-#define sage_DShowCaptureDevice_MPEG_AV_CAPTURE_MASK 2048L
+#define sage_DShowCaptureDevice_MPEG_AV_CAPTURE_MASK 2048L      // 0x800
 #undef sage_DShowCaptureDevice_LIVE_PREVIEW_MASK
-#define sage_DShowCaptureDevice_LIVE_PREVIEW_MASK 4096L
+#define sage_DShowCaptureDevice_LIVE_PREVIEW_MASK 4096L         // 0x1000
 #undef sage_DShowCaptureDevice_MPEG_PURE_CAPTURE_MASK
-#define sage_DShowCaptureDevice_MPEG_PURE_CAPTURE_MASK 8192L
+#define sage_DShowCaptureDevice_MPEG_PURE_CAPTURE_MASK 8192L    // 0x2000
 #undef sage_DShowCaptureDevice_RAW_VIDEO_CAPTURE_MASK
-#define sage_DShowCaptureDevice_RAW_VIDEO_CAPTURE_MASK 16384L
+#define sage_DShowCaptureDevice_RAW_VIDEO_CAPTURE_MASK 16384L   // 0x4000
 #undef sage_DShowCaptureDevice_BDA_VIDEO_CAPTURE_MASK
-#define sage_DShowCaptureDevice_BDA_VIDEO_CAPTURE_MASK 32768L
+#define sage_DShowCaptureDevice_BDA_VIDEO_CAPTURE_MASK 32768L   // 0x8000
 #undef sage_DShowCaptureDevice_BDA_CAPTURE_TUNER_MASK
-#define sage_DShowCaptureDevice_BDA_CAPTURE_TUNER_MASK 65536L
+#define sage_DShowCaptureDevice_BDA_CAPTURE_TUNER_MASK 65536L   // 0x10000
 #undef sage_DShowCaptureDevice_BDA_NETWORK_TUNER_MASK
-#define sage_DShowCaptureDevice_BDA_NETWORK_TUNER_MASK 131072L
+#define sage_DShowCaptureDevice_BDA_NETWORK_TUNER_MASK 131072L  // 0x20000
 #undef sage_DShowCaptureDevice_BDA_RECEIVER_COMPONENT_MASK
-#define sage_DShowCaptureDevice_BDA_RECEIVER_COMPONENT_MASK 262144L
+#define sage_DShowCaptureDevice_BDA_RECEIVER_COMPONENT_MASK 262144L // 0x40000
 #undef sage_DShowCaptureDevice_BDA_VIRTUAL_TUNER_MASK
-#define sage_DShowCaptureDevice_BDA_VIRTUAL_TUNER_MASK 524288L
+#define sage_DShowCaptureDevice_BDA_VIRTUAL_TUNER_MASK 524288L  // 0x80000
 #undef sage_DShowCaptureDevice_FM_RADIO_FREQ_MAX
 #define sage_DShowCaptureDevice_FM_RADIO_FREQ_MAX 108100000L
 #undef sage_DShowCaptureDevice_FM_RADIO_FREQ_MIN
