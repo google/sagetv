@@ -59,6 +59,11 @@ public class DVBCaptureDevice extends CaptureDevice implements Runnable
     }
   }
 
+  public int getSignalStrength()
+  {
+    return isLoaded() ? getSignalStrength0(pHandle) : 0;
+  }
+
   public boolean isLoaded()
   {
     return pHandle != 0;
@@ -461,6 +466,7 @@ public class DVBCaptureDevice extends CaptureDevice implements Runnable
   private native String scanChannel0(long ptr, String num, String country, int streamFormat);
 
   private native String getBroadcastStandard0(long ptr);
+  private native int getSignalStrength0(long ptr);
 
   public static native String getCardModelUIDForDevice(String device);
 

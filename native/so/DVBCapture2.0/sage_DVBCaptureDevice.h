@@ -110,13 +110,20 @@ JNIEXPORT jboolean JNICALL Java_sage_DVBCaptureDevice_setEncoding0
  */
 JNIEXPORT jintArray JNICALL Java_sage_DVBCaptureDevice_updateColors0
   (JNIEnv *, jobject, jlong, jint, jint, jint, jint, jint);
-  
+
 /* Class:     sage_DVBCaptureDevice
  * Method:    scanChannel0
  * Signature: (Ljava/lang/String;)[Ljava/lang/String;
  */
 JNIEXPORT APISTRING JNICALL Java_sage_DVBCaptureDevice_scanChannel0
 	(JNIEnv *env, jobject jo, jlong capInfo, APISTRING jnum, APISTRING jcountry, jint streamType );
+
+/* Class:     sage_DVBCaptureDevice
+ * Method:    getSignalStrength0
+ * Signature: (J)I
+ */
+JNIEXPORT jint JNICALL Java_sage_DVBCaptureDevice_getSignalStrength0
+  (JNIEnv *, jobject, jlong);
 
 #ifdef __cplusplus
 }
