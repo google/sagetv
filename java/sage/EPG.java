@@ -129,8 +129,7 @@ public final class EPG implements Runnable
     if (SageTV.upgradeFromLite)
     {
       logoDir = new java.io.File(Sage.getPath("data", "ChannelLogos"));
-      if (!Sage.EMBEDDED)
-        Sage.put(prefs + LOGO_DIR, logoDir.toString());
+      Sage.put(prefs + LOGO_DIR, logoDir.toString());
     }
     else
     {
@@ -138,8 +137,7 @@ public final class EPG implements Runnable
       if (logoDirStr == null)
       {
         logoDir = new java.io.File(Sage.getPath("data", "ChannelLogos"));
-        if (!Sage.EMBEDDED)
-          Sage.put(prefs + LOGO_DIR, logoDir.toString());
+        Sage.put(prefs + LOGO_DIR, logoDir.toString());
       }
       else
       {
@@ -250,7 +248,7 @@ public final class EPG implements Runnable
       EPGDataSource newEPGDS;
       try
       {
-        if (!Sage.EMBEDDED && currClassStr != null && currClassStr.equals("Basic"))
+        if (currClassStr != null && currClassStr.equals("Basic"))
         {
           sources.addElement(newEPGDS = new EPGDataSource(Integer.parseInt(dsNames[i])));
         }

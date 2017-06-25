@@ -542,7 +542,7 @@ public class CaptureDeviceInput
       sage.media.format.ContainerFormat cf;
       // We don't know what it is in this case aside from container, so it'll get set through a message callback
       cf = new sage.media.format.ContainerFormat();
-      if (Sage.getBoolean(prefs + "encode_digital_tv_as_program_stream", !Sage.EMBEDDED))
+      if (Sage.getBoolean(prefs + "encode_digital_tv_as_program_stream", true))
         cf.setFormatName(sage.media.format.MediaFormat.MPEG2_PS);
       else
         cf.setFormatName(sage.media.format.MediaFormat.MPEG2_TS);

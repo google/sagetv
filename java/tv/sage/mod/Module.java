@@ -155,7 +155,6 @@ public class Module implements tv.sage.Modular
 
   public String getUID()
   {
-    if (sage.Sage.EMBEDDED) return null;
     long uidCount = backupUIDCount;
     if (!batchLoad && sage.Sage.getRawProperties() != null)
       uidCount = sage.Sage.getLong("studio/widget_uid_counter", 1);

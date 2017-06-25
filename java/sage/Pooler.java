@@ -264,10 +264,7 @@ public class Pooler
           if (t instanceof OutOfMemoryError)
           {
             // On embedded just terminate the JVM and let it autorestart if we are out of memory
-            if (Sage.EMBEDDED)
-              System.exit(1);
-            else
-              sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createOOMMsg());
+            sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createOOMMsg());
           }
         }
       }

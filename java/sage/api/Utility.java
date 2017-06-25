@@ -101,14 +101,7 @@ public class Utility {
         final String keyStr = getString(stack);
         if (topParent != null)
         {
-          if (Sage.EMBEDDED)
-          {
-            stack.getUIMgrSafe().getRouter().submitUserEvent(new UserEvent(
-                stack.getUIMgrSafe().getRouter().getEventCreationTime(),
-                UserEvent.ANYTHING, -1, keyStr.equals("Backspace") ? java.awt.event.KeyEvent.VK_BACK_SPACE : 0,
-                    0, (keyStr.equals("Backspace") ? '\b' : keyStr.charAt(0))));
-          }
-          else if (system)
+          if (system)
           {
             if (java.awt.EventQueue.isDispatchThread())
             {
@@ -1521,7 +1514,7 @@ public class Utility {
               ((NativeImageAllocator) renderEngine).preloadImage(mi);
             }
           }
-          else if (!Sage.EMBEDDED && (Sage.getBoolean("ui/disable_native_image_loader", false) ||
+          else if ((Sage.getBoolean("ui/disable_native_image_loader", false) ||
               (stack.getUIMgr() != null && stack.getUIMgr().getUIClientType() == UIClient.LOCAL)))
           {
             // Only do this for Java2D rendering locally. Do NOT do it for extenders or placeshifters
@@ -1529,7 +1522,7 @@ public class Utility {
             ((MetaImage) o).getJavaImage(0);
             ((MetaImage) o).removeJavaRef(0);
           }
-          else if (!Sage.EMBEDDED && (renderEngine instanceof MiniClientSageRenderer) &&
+          else if ((renderEngine instanceof MiniClientSageRenderer) &&
               ((MiniClientSageRenderer)renderEngine).getGfxScalingCaps() == 0)
 
           {
@@ -1565,7 +1558,6 @@ public class Utility {
         int width = getInt(stack);
         java.io.File file = getFile(stack);
         Object o = stack.pop();
-        if (Sage.EMBEDDED) return Boolean.FALSE;
         if (o instanceof MetaImage)
         {
           MetaImage mi = (MetaImage) o;
@@ -1677,7 +1669,6 @@ public class Utility {
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         Object o = stack.pop();
-        if (Sage.EMBEDDED) return null;
         if (!(o instanceof MetaImage))
         {
           o = MetaImage.getMetaImage(o == null ? null : o.toString(), stack.getUIComponent());
@@ -1707,7 +1698,6 @@ public class Utility {
         int h = getInt(stack);
         int w = getInt(stack);
         Object o = stack.pop();
-        if (Sage.EMBEDDED) return null;
         if (!(o instanceof MetaImage))
         {
           o = MetaImage.getMetaImage(o == null ? null : o.toString(), stack.getUIComponent());
@@ -2337,7 +2327,6 @@ public class Utility {
         int h = getInt(stack);
         int w = getInt(stack);
         java.awt.image.BufferedImage bi = (java.awt.image.BufferedImage) stack.pop();
-        if (Sage.EMBEDDED) return null;
         return alpha ? ImageUtils.createBestScaledImage(bi, w, h) : ImageUtils.createBestOpaqueScaledImage(bi, w, h);
       }});
     rft.put(new PredefinedJEPFunction("Utility", "LocalizeString", new String[] { "EnglishText" })
@@ -2363,7 +2352,7 @@ public class Utility {
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         try
         {
-          if (Sage.WINDOWS_OS || Sage.MAC_OS_X || Sage.EMBEDDED)
+          if (Sage.WINDOWS_OS || Sage.MAC_OS_X)
             return java.net.InetAddress.getLocalHost().getHostAddress();
           else
             return LinuxUtils.getIPAddress();
@@ -2395,25 +2384,6 @@ public class Utility {
        * @declaration public String GetSubnetMask();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        if (Sage.EMBEDDED) {
-          try
-          {
-            String eth0Info = IOUtils.exec(new String[] { "ifconfig", Sage.getBoolean("UseWireless", false) ? Sage.get("WirelessInterface", "ra0") :
-              Sage.get("NetworkInterface", "eth0") });
-            int idx0 = eth0Info.indexOf("Mask:");
-            if (idx0 != -1)
-            {
-              int idx1 = eth0Info.indexOf("\n", idx0);
-              if (idx1 != -1)
-              {
-                return eth0Info.substring(idx0 + "Mask:".length(), idx1).trim();
-              }
-            }
-          }catch(Throwable e)
-          {
-            System.out.println("ERROR:" + e);
-          }
-        }
         return "255.255.255.0";
       }});
     rft.put(new PredefinedJEPFunction("Utility", "GetGatewayAddress")
@@ -2426,27 +2396,6 @@ public class Utility {
        * @declaration public String GetGatewayAddress();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        if (Sage.EMBEDDED) {
-          try
-          {
-            String eth0Info = IOUtils.exec(new String[] { "route" });
-            java.util.StringTokenizer toker = new java.util.StringTokenizer(eth0Info, "\r\n");
-            while (toker.hasMoreTokens())
-            {
-              String currToke = toker.nextToken();
-              if (currToke.startsWith("default") && currToke.indexOf(Sage.getBoolean("UseWireless", false) ? Sage.get("WirelessInterface", "ra0") :
-                Sage.get("NetworkInterface", "eth0")) != -1)
-              {
-                toker = new java.util.StringTokenizer(currToke, " \t");
-                toker.nextToken();
-                return toker.nextToken();
-              }
-            }
-          }catch(Throwable e)
-          {
-            System.out.println("ERROR:" + e);
-          }
-        }
         return "0.0.0.0";
       }});
     rft.put(new PredefinedJEPFunction("Utility", "GetDNSAddress")
@@ -2459,22 +2408,6 @@ public class Utility {
        * @declaration public String GetDNSAddress();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        if (Sage.EMBEDDED) {
-          try
-          {
-            java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.FileReader("/etc/resolv.conf"));
-            String line = reader.readLine();
-            while (line != null)
-            {
-              if (line.startsWith("nameserver"))
-                return line.substring("nameserver".length() + 1).trim();
-              line = reader.readLine();
-            }
-          }catch(Throwable e)
-          {
-            System.out.println("ERROR:" + e);
-          }
-        }
         return "0.0.0.0";
       }});
     rft.put(new PredefinedJEPFunction("Utility", "GuessMajorFileType", new String[] { "Filename" }, true)
@@ -3107,7 +3040,7 @@ public class Utility {
        * @declaration public java.util.Map ScanWirelessAPs();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return Sage.EMBEDDED ? LinuxUtils.scanForWifiAPs(Sage.get("WirelessInterface", "ra0")) : new java.util.HashMap();
+        return new java.util.HashMap();
       }});
     rft.put(new PredefinedJEPFunction("Utility", "ReformatDeviceAtPathAsEXT3", 1, new String[]{"DrivePath"}, true)
     {
@@ -3122,123 +3055,7 @@ public class Utility {
        * @declaration public int ReformatDeviceAtPathAsEXT3(String DrivePath);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        if (!SageConstants.PVR || !Sage.EMBEDDED || !Sage.LINUX_OS)
-          return new Integer(-1);
-
-        // Steps to perform
-        // -determine the device that is actually mounted at this path and what its true mount point is
-        // -unmount that path, but remember it
-        // -unmount any other paths for other partitions on the device
-        // -repartition the device to have a single ext3 partition
-        // -format that ext3 partition
-        // -mount the device again at the desired path
-
-        // determine the device that is actually mounted at this path and what its true mount point is
-        // We do this by running mounts and then looking at each entry to determine the match. Since the mounted dirs can have spaces in them,
-        // we need to work from the front & back of the string to find the actual mount directory. We also only look at ones that are on /dev/sd*
-        String requestedPath = getString(stack);
-        if (Sage.DBG) System.out.println("Requested REFORMAT of drive mounted at path: " + requestedPath);
-        if (requestedPath == null) return new Integer(-1);
-        String allMountInfo = IOUtils.exec(new String[] { "mount" }, true, true);
-        java.util.StringTokenizer toker = new java.util.StringTokenizer(allMountInfo, "\r\n");
-        String realDevice = null;
-        String mountPath = null;
-        while (toker.hasMoreTokens())
-        {
-          String singleMount = toker.nextToken();
-          if (singleMount.startsWith("/dev/sd"))
-          {
-            int idx1 = singleMount.indexOf(" on ");
-            realDevice = singleMount.substring(0, idx1);
-            idx1 += 4;
-            int idx2 = singleMount.lastIndexOf('(');
-            idx2 = singleMount.lastIndexOf(" type ", idx2);
-            mountPath = singleMount.substring(idx1, idx2);
-            if (requestedPath.startsWith(mountPath))
-            {
-              if (Sage.DBG) System.out.println("Found matching mount point at path " + mountPath + " for device " + realDevice);
-              break;
-            }
-            else
-            {
-              realDevice = mountPath = null;
-            }
-          }
-        }
-        if (mountPath == null || realDevice == null) return new Integer(-1);
-
-        // unmount that path, but remember it
-        if (IOUtils.exec2(new String[] { "umount", mountPath }) != 0)
-        {
-          if (Sage.DBG) System.out.println("ERROR could not unmount the path at: " + mountPath);
-          return new Integer(-2);
-        }
-
-        // unmount any other paths for other partitions on the device
-        if (realDevice.length() > 8)
-        {
-          String devicePrefix = realDevice.substring(0, 8);
-          toker = new java.util.StringTokenizer(allMountInfo, "\r\n");
-          while (toker.hasMoreTokens())
-          {
-            String singleMount = toker.nextToken();
-            if (singleMount.startsWith(devicePrefix))
-            {
-              int idx1 = singleMount.indexOf(" on ");
-              String altDevice = singleMount.substring(0, idx1);
-              if (!altDevice.equals(realDevice))
-              {
-                idx1 += 4;
-                int idx2 = singleMount.lastIndexOf('(');
-                idx2 = singleMount.lastIndexOf(" type ", idx2);
-                String altMountPath = singleMount.substring(idx1, idx2);
-                if (Sage.DBG) System.out.println("Found alternate partition on device for formatting, unmount it path=" + altMountPath + " dev=" + altDevice);
-                if (IOUtils.exec2(new String[] { "umount", altMountPath }) != 0)
-                {
-                  if (Sage.DBG) System.out.println("ERROR could not unmount the path at: " + altMountPath);
-                  return new Integer(-2);
-                }
-              }
-            }
-          }
-          realDevice = devicePrefix;
-        }
-
-        // repartition the device to have a single ext3 partition
-        // Destroy the partitions existing on it first
-        if (Sage.DBG) System.out.println("Zeroing out the first 512 bytes of the disk at " + realDevice + " ...");
-        IOUtils.exec2(new String[] { "sh", "-c", "dd if=/dev/zero of=" + realDevice + " count=1 bs=512" }, true);
-        // Create the single ext3 partition
-        if (Sage.DBG) System.out.println("Creating the partition table on the disk " + realDevice + " to be a single ext3 partition...");
-        if (IOUtils.exec2(new String[] { "sh", "-c", "echo ',,83' | sfdisk " + realDevice }, true) != 0)
-        {
-          if (Sage.DBG) System.out.println("ERROR running sfdisk!");
-          return new Integer(-3);
-        }
-        // Zero out the partition in case of issues with it
-        if (Sage.DBG) System.out.println("Zeroing out the first 512 bytes of the new partition at " + realDevice + "1 ...");
-        IOUtils.exec2(new String[] { "sh", "-c", "dd if=/dev/zero of=" + realDevice + "1 count=1 bs=512" }, true);
-
-        // format that ext3 partition....this could take awhile...
-        if (Sage.DBG) System.out.println("Formatting the new partition at " + realDevice + "1 to be EXT3....this could take awhile...");
-        if (IOUtils.exec2(new String[] { "mke2fs", "-j", realDevice + "1" }, true) != 0)
-        {
-          if (Sage.DBG) System.out.println("ERROR running mke2fs!");
-          return new Integer(-3);
-        }
-
-        if (Sage.DBG) System.out.println("Mounting the newly formatted drive back to " + mountPath);
-        if (IOUtils.mountExternalDrive(realDevice.substring(5) + "1", mountPath))
-        {
-          if (Sage.DBG) System.out.println("DONE with disk partition, format and mounting!");
-          new java.io.File(requestedPath).mkdirs(); // in case it was a subdirectory
-          return new Integer(0);
-        }
-        else
-        {
-          if (Sage.DBG) System.out.println("FAILED mounting!");
-          return new Integer(-4);
-        }
+        return new Integer(-1);
       }});
     rft.put(new PredefinedJEPFunction("Utility", "ConvertNteChars", 1, new String[]{"NteString"})
     {

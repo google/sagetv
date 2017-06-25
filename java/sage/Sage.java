@@ -89,7 +89,6 @@ public final class Sage
   public static boolean LINUX_IS_ROOT = false; // will be true if SageTV Linux is running as 'root'
   public static boolean MAC_OS_X = false;
   public static boolean VISTA_OS = false; // if this is true, then WINDOWS_OS is also true
-  public static boolean EMBEDDED = false;
 
   /**
    * Testing is set to true when the sage.testing System Property is set.  TESTING has a special meaning
@@ -113,7 +112,6 @@ public final class Sage
   static
   {
     TESTING = "true".equalsIgnoreCase(System.getProperty("sage.testing"));
-    EMBEDDED = System.getProperty("sage.embedded") != null;
     WINDOWS_OS = System.getProperty("os.name").toLowerCase().indexOf("windows") != -1;
     MAC_OS_X = System.getProperty("os.name").toLowerCase().indexOf("mac os x") != -1;
     LINUX_OS = !WINDOWS_OS && !MAC_OS_X;
@@ -124,12 +122,6 @@ public final class Sage
     else
       sage.Native.loadLibrary("Sage");
 
-    if (EMBEDDED)
-    {
-      WINDOWS_OS = false;
-      LINUX_OS = true;
-      USE_HIRES_TIME = false;
-    }
     baseSystemTime = System.currentTimeMillis();
     // prevents SageTV initialization when the Native libraries are not loaded (or can't be loaded)
     if (!Native.NATIVE_FAILED)
@@ -561,7 +553,7 @@ public final class Sage
     else
     {
       setSystemTime0(x);
-      if (LINUX_OS && !Sage.EMBEDDED)
+      if (LINUX_OS)
       {
         // This is needed to synchronize the hardware clock to the system clock so that our
         // clock update is not lost the next time we reboot.
@@ -580,10 +572,6 @@ public final class Sage
   }
   public static String getFileSystemTypeX(String root, boolean skipSeekerSMBCheck)
   {
-    if (!skipSeekerSMBCheck && Sage.LINUX_OS && Sage.EMBEDDED && SeekerSelector.getInstance().isSmbMountedFolder(new File(root)))
-    {
-      return "SMB"; // for performance related problems with SMB type detection on embedded
-    }
     String rv = getFileSystemType(root);
     if (rv != null && rv.startsWith("0x"))
     {
@@ -765,13 +753,80 @@ public final class Sage
     }
     PrintStream redir = null;
     final File outputFile = new File(logFileDir, prefix + "_0.txt");
-    if (EMBEDDED)
+
+    if(Sage.LINUX_OS && linuxConsumeStdinout)
+    { // For Linux daemon mode
+      try
+      {
+        redir = new PrintStream(new BufferedOutputStream(
+            new FileOutputStream(outputFile)), loggingFlushEachEntry)
+        {
+          public synchronized void print(String s)
+          {
+            super.print(df() + ' ' + (threadDebug ? ("[" + Thread.currentThread().getName() + "@" + Integer.toString(Thread.currentThread().hashCode(), 16) + "] ") : "") + s);
+          }
+          public synchronized void println(String s)
+          {
+            super.println(s);
+            if (logFileRolloverSize > 0 && outputFile.length() > logFileRolloverSize)
+            {
+              try
+              {
+                close();
+              }
+              catch (Exception e){}
+              rolloverLogs(prefix);
+            }
+          }
+        };
+        if (!TESTING)
+        {
+          System.out.close();
+          System.err.close();
+          System.setOut(redir);
+          System.setErr(redir);
+        }
+      }
+      catch (IOException e)
+      {
+        System.err.println("ERROR redirecting:" + e);
+        return;
+      }
+    }
+    else
     {
       try
       {
-        redir = new MyPrinter(prefix, outputFile, new BufferedOutputStream(
-            new FileOutputStream(outputFile)), false);
-
+        redir = new PrintStream(new BufferedOutputStream(
+            new FileOutputStream(outputFile)), loggingFlushEachEntry)
+        {
+          public synchronized void print(String s)
+          {
+            s = df() + ' ' + (threadDebug ? ("[" + Thread.currentThread().getName() + "@" + Integer.toString(Thread.currentThread().hashCode(), 16) + "] ") : "") + s;
+            super.print(s);
+            if (stdOutHandle == 0)
+              System.err.print(s);
+            else
+              Sage.printlnx(s);
+          }
+          public synchronized void println(String s)
+          {
+            super.println(s);
+            if (stdOutHandle == 0)
+              System.err.println();
+            else
+              Sage.printlnx("\r\n");
+            if (logFileRolloverSize > 0 && outputFile.length() > logFileRolloverSize)
+            {
+              try
+              {
+                close();
+              }
+              catch (Exception e){}
+              rolloverLogs(prefix);
+            }
+          }
+        };
         if (!TESTING)
         {
           System.setOut(redir);
@@ -783,95 +838,6 @@ public final class Sage
       {
         System.err.println("ERROR redirecting:" + e);
         return;
-      }
-    }
-    else
-    {
-      if(Sage.LINUX_OS && linuxConsumeStdinout)
-      { // For Linux daemon mode
-        try
-        {
-          redir = new PrintStream(new BufferedOutputStream(
-              new FileOutputStream(outputFile)), loggingFlushEachEntry)
-          {
-            public synchronized void print(String s)
-            {
-              super.print(df() + ' ' + (threadDebug ? ("[" + Thread.currentThread().getName() + "@" + Integer.toString(Thread.currentThread().hashCode(), 16) + "] ") : "") + s);
-            }
-            public synchronized void println(String s)
-            {
-              super.println(s);
-              if (logFileRolloverSize > 0 && outputFile.length() > logFileRolloverSize)
-              {
-                try
-                {
-                  close();
-                }
-                catch (Exception e){}
-                rolloverLogs(prefix);
-              }
-            }
-          };
-          if (!TESTING)
-          {
-            System.out.close();
-            System.err.close();
-            System.setOut(redir);
-            System.setErr(redir);
-          }
-        }
-        catch (IOException e)
-        {
-          System.err.println("ERROR redirecting:" + e);
-          return;
-        }
-      }
-      else
-      {
-        try
-        {
-          redir = new PrintStream(new BufferedOutputStream(
-              new FileOutputStream(outputFile)), loggingFlushEachEntry)
-          {
-            public synchronized void print(String s)
-            {
-              s = df() + ' ' + (threadDebug ? ("[" + Thread.currentThread().getName() + "@" + Integer.toString(Thread.currentThread().hashCode(), 16) + "] ") : "") + s;
-              super.print(s);
-              if (stdOutHandle == 0)
-                System.err.print(s);
-              else
-                Sage.printlnx(s);
-            }
-            public synchronized void println(String s)
-            {
-              super.println(s);
-              if (stdOutHandle == 0)
-                System.err.println();
-              else
-                Sage.printlnx(Sage.EMBEDDED ? "\n" : "\r\n");
-              if (logFileRolloverSize > 0 && outputFile.length() > logFileRolloverSize)
-              {
-                try
-                {
-                  close();
-                }
-                catch (Exception e){}
-                rolloverLogs(prefix);
-              }
-            }
-          };
-          if (!TESTING)
-          {
-            System.setOut(redir);
-            if (stdOutHandle != 0)
-              System.setErr(redir);
-          }
-        }
-        catch (IOException e)
-        {
-          System.err.println("ERROR redirecting:" + e);
-          return;
-        }
       }
     }
   }
@@ -904,7 +870,7 @@ public final class Sage
     }
     public synchronized void println(String s)
     {
-      s = df() + ' ' + (threadDebug ? ("[" + Thread.currentThread().getName() + "-" + Thread.currentThread().getId() + "] ") : "") + s + (Sage.EMBEDDED ? "\n" : "\r\n");
+      s = df() + ' ' + (threadDebug ? ("[" + Thread.currentThread().getName() + "-" + Thread.currentThread().getId() + "] ") : "") + s + ("\r\n");
       super.print(s);
       System.err.print(s);
       if (logFileRolloverSize > 0 && outputFile.length() > logFileRolloverSize)
@@ -926,7 +892,7 @@ public final class Sage
 
   static void setupRedirections(String prefix)
   {
-    logFileRolloverSize = Sage.getLong("logfile_rollover_size", Sage.EMBEDDED ? 1000000 : 10000000);
+    logFileRolloverSize = Sage.getLong("logfile_rollover_size", 10000000);
     loggingFlushEachEntry = getBoolean("logging_flush_each_entry", true);
     linuxConsumeStdinout = getBoolean("linux/consume_main_stdout_stdin", true);
     NUM_OUTPUT_FILES = Math.max(2, getInt("num_logfiles_to_keep", 4)) - 1;
@@ -951,7 +917,7 @@ public final class Sage
         public synchronized void println(String s)
         {
           super.println(s);
-          Sage.printlnx(Sage.EMBEDDED ? "\n" : "\r\n");
+          Sage.printlnx("\r\n");
         }
       };
 
@@ -964,8 +930,7 @@ public final class Sage
   }
 
   public static boolean isHeadless() {
-    return Sage.EMBEDDED ||
-        Boolean.getBoolean("java.awt.headless")
+    return Boolean.getBoolean("java.awt.headless")
         || (mainHwnd == 0 && WINDOWS_OS) ||
         getBoolean("force_headless_mode", false);
   }
@@ -1007,7 +972,6 @@ public final class Sage
           -107, 17, -16, -1, -73, 109, 8, -64, 37, -19, -17, 2, 46, -113, -114, 37, 105,
           -11, -43, -56, -66, 60, 10, 39, 64, 116, 19, -27, 5, 76, 23, -76, -70, -65, 45, -27, 87, 6, -57 };
       q = magicKey;
-      if (EMBEDDED) System.out.println("Main has started");
       mainHwnd = Long.parseLong(args[0]);
       stdOutHandle = Long.parseLong(args[1]);
       int idx = args[3].indexOf(' ');
@@ -1107,7 +1071,6 @@ public final class Sage
       System.setProperty("sun.java2d.d3d", "false"); // needed for JRE1.6
       System.setProperty("sun.awt.nopixfmt", "false"); // required if running as a service
 
-      if (DBG) System.out.println("EMBEDDED=" + EMBEDDED);
       // For linux we'd use
       //-Dsun.java2d.pmoffscreen=true/false
 
@@ -1168,8 +1131,8 @@ public final class Sage
       if (DBG) System.out.println("JVM version=" + System.getProperty("java.version"));
       if (DBG) System.out.println("OS=" + System.getProperty("os.name") + " " + System.getProperty("os.version"));
       if (DBG) System.out.println("client=" + client);
-      if (DBG && !Sage.EMBEDDED) System.out.println("locale=" + userLocale);
-      if (!Sage.EMBEDDED) Sage.putBoolean("client", client);
+      if (DBG) System.out.println("locale=" + userLocale);
+      Sage.putBoolean("client", client);
       long startupDelay = Sage.getLong("startup_delay", 0);
       if (startupDelay > 0)
       {
@@ -1180,7 +1143,7 @@ public final class Sage
         Sage.setupSystemHooks0(Sage.mainHwnd);
 
       exitingJARFiles = new HashSet<String>();
-      File[] jarFiles = new File(EMBEDDED ? "/rw/JARs" : "JARs").listFiles();
+      File[] jarFiles = new File("JARs").listFiles();
       List<URL> jarurls = new ArrayList<URL>(jarFiles == null ? 0 : jarFiles.length);
       for (int i = 0; jarFiles != null && i < jarFiles.length; i++)
       {
@@ -1191,31 +1154,13 @@ public final class Sage
         }
       }
       extClassLoader = new MyURLClassLoader(jarurls.toArray(new URL[0]));
-      if (!Sage.EMBEDDED && !isHeadless() && (!systemStartup || !appName.equals("sagetv") ||
+      if (!isHeadless() && (!systemStartup || !appName.equals("sagetv") ||
           Sage.getInt("ui/startup_type", 0) != 2) &&
           !Sage.getBoolean("ui/windowless", false))
       {
         masterWindow = new SpecialWindow(appName.equals("recorder") ? "SageTV Recorder Video" :
           (isTrueClient() ? (Sage.rez("SageTV") + " Client") : Sage.rez("SageTV")), getInt("ui/window_title_style", Sage.VISTA_OS ? SageTVWindow.PLATFORM_TITLE_STYLE : 0));
         splashAndLicense();
-      }
-
-      // Load the BouncyCastle security provider for embedded
-      if (EMBEDDED)
-      {
-        if (Sage.DBG) System.out.println("Attempting to add BouncyCastle security provider...");
-        try
-        {
-          Provider bcProv = (Provider) Class.forName("org.bouncycastle.jce.provider.BouncyCastleProvider").newInstance();
-          if (bcProv != null)
-            Security.addProvider(bcProv);
-          if (Sage.DBG) System.out.println("Successfully added BouncyCastle security provider!");
-        }
-        catch (Throwable t)
-        {
-          System.out.println("ERROR Was not able to load the BouncyCastle security provider of:" + t);
-          t.printStackTrace();
-        }
       }
 
       if (Sage.DBG)
@@ -1286,7 +1231,7 @@ public final class Sage
   private static Label splashText;
   private static void splashAndLicense()
   {
-    if (!Sage.EMBEDDED && (!SageConstants.LITE || Sage.getBoolean("ui/show_splash_screen", true)))
+    if ((!SageConstants.LITE || Sage.getBoolean("ui/show_splash_screen", true)))
     {
       splashWindow = new Window(masterWindow);
       splashWindow.setLayout(new BorderLayout());
@@ -1328,35 +1273,25 @@ public final class Sage
   private static Object splashLock = new Object();
   static void hideSplash()
   {
-    if (!Sage.EMBEDDED)
+    synchronized (splashLock)
     {
-      synchronized (splashLock)
+      if (splashWindow != null)
       {
-        if (splashWindow != null)
-        {
-          splashWindow.setVisible(false);
-          splashWindow.removeAll();
-          splashWindow.setBounds(0, 0, 0, 0);
-          splashWindow.dispose();
-          splashWindow = null;
-          splashText = null;
-        }
+        splashWindow.setVisible(false);
+        splashWindow.removeAll();
+        splashWindow.setBounds(0, 0, 0, 0);
+        splashWindow.dispose();
+        splashWindow = null;
+        splashText = null;
       }
     }
   }
 
   static void setSplashText(String x)
   {
-    if (!Sage.EMBEDDED)
-    {
-      Label tempL = splashText;
-      if (tempL != null)
-        tempL.setText(x);
-    }
-    else if (!Sage.client)
-    {
-      SageTV.writeOutStateInfo(null, x, null);
-    }
+    Label tempL = splashText;
+    if (tempL != null)
+      tempL.setText(x);
     if (Sage.DBG) System.out.println("Splash: " + x);
     SageTV.writeOutWatchdogFile();
   }
@@ -1452,8 +1387,6 @@ public final class Sage
           while (walker.hasNext())
           {
             UIManager theUI = walker.next();
-            if (Sage.EMBEDDED && Seeker.LOCAL_PROCESS_CLIENT.equals(theUI.getLocalUIClientName()))
-              continue;
             theUI.fullyRefreshCurrUI();
           }
         }

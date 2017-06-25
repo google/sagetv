@@ -381,7 +381,7 @@ public class ZImage extends ZComp
     //		clipRect.x -= boundsf.x;
     //		clipRect.y -= boundsf.y;
     // Special case where we need to crop the image when clipping is disabled
-    if (!Sage.EMBEDDED && cropToFill && reality.getUIMgr().disableParentClip())
+    if (cropToFill && reality.getUIMgr().disableParentClip())
       clipRectToBounds(clipRect, xoff, yoff);
 
     // We'll have to do the translation here instead of passing it into the RenderingOp.
@@ -433,18 +433,18 @@ public class ZImage extends ZComp
       }
 
       // Check to see if we should let the renderer do the scaling insets itself so it can cache it more efficiently
-      boolean doScalingInsetsNow = Sage.EMBEDDED || reality.getRenderType() == ZRoot.NATIVE3DRENDER || (reality.getRenderType() == ZRoot.REMOTE2DRENDER &&
+      boolean doScalingInsetsNow = reality.getRenderType() == ZRoot.NATIVE3DRENDER || (reality.getRenderType() == ZRoot.REMOTE2DRENDER &&
           (((MiniClientSageRenderer)reality.getRenderEngine()).getGfxScalingCaps() & MiniClientSageRenderer.GFX_SCALING_HW) != 0 &&
           !Sage.getBoolean("ui/enable_hardware_scaling_cache", false));
 
       if (scalingInsets != null && ((scalingInsets.top + scalingInsets.bottom + 2 < fullTargetHeight) ||
           (scalingInsets.left + scalingInsets.right + 2 < fullTargetWidth)) && cornerArc <= 0 &&
-          (Sage.EMBEDDED || Sage.getBoolean("ui/enable_scaling_insets", true)))
+          (Sage.getBoolean("ui/enable_scaling_insets", true)))
       {
         // See what kind of scaling to apply to the destination of the scaling insets
         int realityHeight = reality.getHeight();
         int realityWidth = reality.getWidth();
-        if (Sage.EMBEDDED || (reality.getRenderEngine() instanceof Java2DSageRenderer &&
+        if ((reality.getRenderEngine() instanceof Java2DSageRenderer &&
             ((Java2DSageRenderer) reality.getRenderEngine()).hasOSDRenderer()) || reality.getRenderType() == ZRoot.REMOTE2DRENDER)
         {
           realityHeight = reality.getHeight();

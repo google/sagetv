@@ -64,7 +64,7 @@ public class ZLabel extends ZComp
     if (fontScaleState == lastFontScaleState && dynamicFont != null)
       return false;
     lastFontScaleState = fontScaleState;
-    if (Sage.EMBEDDED || (reality.getRenderEngine() instanceof Java2DSageRenderer &&
+    if ((reality.getRenderEngine() instanceof Java2DSageRenderer &&
         ((Java2DSageRenderer) reality.getRenderEngine()).hasOSDRenderer()) || reality.getRenderType() == ZRoot.REMOTE2DRENDER)
     {
       realityHeight = reality.getHeight();
@@ -336,7 +336,7 @@ public class ZLabel extends ZComp
     java.awt.geom.Rectangle2D.Float trueBoundsf = getTrueBoundsf();
     java.awt.geom.Rectangle2D viewableArea = (scrollParent == null) ?
         trueBoundsf : scrollParent.getTrueBoundsf().createIntersection(trueBoundsf);
-    boolean hideCroppedText = !(Sage.EMBEDDED || reality.getUIMgr().getBoolean("ui/show_cropped_text", true));
+    boolean hideCroppedText = !(reality.getUIMgr().getBoolean("ui/show_cropped_text", true));
     if (hideCroppedText &&
         ((viewableArea.getHeight() < dynamicFont.getHeight()/2 && !fitToSize) ||
             (scrollParent != null && viewableArea.getHeight() < dynamicFont.getHeight()*0.9f)))
@@ -843,7 +843,7 @@ public class ZLabel extends ZComp
   private boolean isShadowingText()
   {
     if (subtitleText) return shadowText;
-    if (!Sage.EMBEDDED && reality.getUIMgr().getBoolean("ui/text_shadow_always", false))
+    if (reality.getUIMgr().getBoolean("ui/text_shadow_always", false))
       return true;
     if (reality.getTextShadowNever())
       return false;
@@ -963,7 +963,7 @@ public class ZLabel extends ZComp
           }
         }
       }
-      else if (!Sage.EMBEDDED && evt.getKeyCode() == java.awt.event.KeyEvent.VK_INSERT && evt.getKeyModifiers() == java.awt.event.KeyEvent.SHIFT_MASK)
+      else if (evt.getKeyCode() == java.awt.event.KeyEvent.VK_INSERT && evt.getKeyModifiers() == java.awt.event.KeyEvent.SHIFT_MASK)
       {
         // Paste test into the text widget
         try

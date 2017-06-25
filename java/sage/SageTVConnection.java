@@ -403,7 +403,7 @@ public class SageTVConnection implements Runnable, Wizard.XctSyncClient, Carny.P
       outStream.write("MODE\r\n".getBytes()); // 1 is crypto, 0 is not
       outStream.flush();
       String tempString = readLineBytes(inStream);
-      if (!Sage.EMBEDDED && "1".equals(tempString))
+      if ("1".equals(tempString))
       {
         byte[] allcryptbits = (byte[])(SageConstants.LITE ? UIManager.a : Sage.q);
         byte[] bcryptbits = new byte[CIPHER_KEY_SIZE/8];
@@ -474,39 +474,9 @@ public class SageTVConnection implements Runnable, Wizard.XctSyncClient, Carny.P
         throw new java.io.IOException("Client has the wrong version:" + mySock.toString());
       }
       // Don't use encrypted C/S connections at all anymore (they apparently got broke somewhere anyhow)
-      if (Sage.EMBEDDED || true)
-      {
-        outStream.write("0\r\n".getBytes(Sage.BYTE_CHARSET));
-        outStream.flush();
-      }
-      else
-      {
-        outStream.write("1\r\n".getBytes(Sage.BYTE_CHARSET));
-        outStream.flush();
-        byte[] allcryptbits = (byte[])(SageConstants.LITE ? UIManager.a : Sage.q);
-        byte[] bcryptbits = new byte[CIPHER_KEY_SIZE/8];
-        System.arraycopy(allcryptbits, 0, bcryptbits, 0, CIPHER_KEY_SIZE/8);
-        byte[] ivbits = new byte[8];
-        System.arraycopy(allcryptbits, CIPHER_KEY_SIZE/8, ivbits, 0, 8);
-        javax.crypto.Cipher encryptCipher, decryptCipher;
-        try
-        {
-          javax.crypto.spec.SecretKeySpec skeySpec = new javax.crypto.spec.SecretKeySpec(bcryptbits, CIPHER_TYPE);
-          encryptCipher = javax.crypto.Cipher.getInstance(CIPHER_TYPE + "/CFB8/NoPadding");
-          encryptCipher.init(javax.crypto.Cipher.ENCRYPT_MODE, skeySpec,
-              new javax.crypto.spec.IvParameterSpec(ivbits));
-          decryptCipher = javax.crypto.Cipher.getInstance(CIPHER_TYPE + "/CFB8/NoPadding");
-          decryptCipher.init(javax.crypto.Cipher.DECRYPT_MODE, skeySpec,
-              new javax.crypto.spec.IvParameterSpec(ivbits));
-        }
-        catch (Exception e)
-        {
-          throw new java.io.IOException("ERROR NETWORKING SYSTEM:" + e);
-        }
-        underlyingOutStream = new javax.crypto.CipherOutputStream(underlyingOutStream, encryptCipher);
-        underlyingInStream = new javax.crypto.CipherInputStream(underlyingInStream, decryptCipher);
+      outStream.write("0\r\n".getBytes(Sage.BYTE_CHARSET));
+      outStream.flush();
 
-      }
       tempString = readLineBytes(inStream);
       if (tempString == null)
       {
@@ -1221,26 +1191,13 @@ public class SageTVConnection implements Runnable, Wizard.XctSyncClient, Carny.P
     Catbert.distributeHookToLocalUIs("RecordingScheduleChanged", null);
 
     // Not the most efficient way in the world, but much easier than the other options
-    if (!Sage.EMBEDDED)
-    {
-      java.awt.EventQueue.invokeLater(new Runnable()
+    java.awt.EventQueue.invokeLater(new Runnable()
       {
         public void run()
         {
           VideoFrame.kickAll();
         }
       });
-    }
-    else
-    {
-      Pooler.execute(new Runnable()
-      {
-        public void run()
-        {
-          VideoFrame.kickAll();
-        }
-      });
-    }
   }
 
   // This is a broadcast message, no response is needed
@@ -1376,21 +1333,7 @@ public class SageTVConnection implements Runnable, Wizard.XctSyncClient, Carny.P
       String uiContext = null;
       if (Sage.client)
       {
-        if (Sage.EMBEDDED)
-        {
-          java.util.Iterator walker = UIManager.getUIIterator();
-          while (walker.hasNext())
-          {
-            UIManager testUI = (UIManager) walker.next();
-            if (!Seeker.LOCAL_PROCESS_CLIENT.equals(testUI.getLocalUIClientName()))
-            {
-              uiContext = testUI.getLocalUIClientName();
-              break;
-            }
-          }
-        }
-        else
-          uiContext = Seeker.LOCAL_PROCESS_CLIENT;
+        uiContext = Seeker.LOCAL_PROCESS_CLIENT;
       }
       // If this is being executed on the client by a server; then we can use our local UI context since that's the only valid one on a client
       Object rv = Catbert.evaluateAction(uiContext, methodName, args);
@@ -3638,7 +3581,7 @@ public class SageTVConnection implements Runnable, Wizard.XctSyncClient, Carny.P
 
   public String getClientID()
   {
-    return Sage.EMBEDDED ? clientKey : null;
+    return null;
   }
 
   public int getPendingXctCount()
@@ -3876,63 +3819,43 @@ public class SageTVConnection implements Runnable, Wizard.XctSyncClient, Carny.P
     {
       // Just in case a null gets in here; it's much better to write it out as an empty string than to simply crash with an exception
       if (s == null) s = "";
-      if (Sage.EMBEDDED)
+      int strlen = s.length();
+      int utflen = 0;
+      int c = 0;
+
+      for (int i = 0; i < strlen; i++) {
+        c = s.charAt(i);
+        if ((c >= 0x0001) && (c <= 0x007F)) {
+          utflen++;
+        } else if (c > 0x07FF) {
+          utflen += 3;
+        } else {
+          utflen += 2;
+        }
+      }
+
+      if (utflen >= 0xFFFF)
       {
-        // With some embedded VMs, it's actually faster to do it this way if they also store
-        // a native UTF-8 byte representation in memory.
-        byte[] tempB = s.getBytes(Sage.I18N_CHARSET);
-        int len = tempB.length;
-        if (len > 0xFFFF)
-        {
-          writeShort(0xFFFF);
-          writeInt(len);
-        }
-        else
-        {
-          writeShort(len);
-        }
-        write(tempB);
+        innerStream.write((byte)0xFF);
+        innerStream.write((byte)0xFF);
+        writeInt(utflen);
       }
       else
       {
-        int strlen = s.length();
-        int utflen = 0;
-        int c = 0;
-
-        for (int i = 0; i < strlen; i++) {
-          c = s.charAt(i);
-          if ((c >= 0x0001) && (c <= 0x007F)) {
-            utflen++;
-          } else if (c > 0x07FF) {
-            utflen += 3;
-          } else {
-            utflen += 2;
-          }
-        }
-
-        if (utflen >= 0xFFFF)
-        {
-          innerStream.write((byte)0xFF);
-          innerStream.write((byte)0xFF);
-          writeInt(utflen);
-        }
-        else
-        {
-          innerStream.write((byte) ((utflen >>> 8) & 0xFF));
-          innerStream.write((byte) ((utflen >>> 0) & 0xFF));
-        }
-        for (int i = 0; i < strlen; i++) {
-          c = s.charAt(i);//charr[i];
-          if ((c >= 0x0001) && (c <= 0x007F)) {
-            innerStream.write((byte) c);
-          } else if (c > 0x07FF) {
-            innerStream.write((byte) (0xE0 | ((c >> 12) & 0x0F)));
-            innerStream.write((byte) (0x80 | ((c >>  6) & 0x3F)));
-            innerStream.write((byte) (0x80 | ((c >>  0) & 0x3F)));
-          } else {
-            innerStream.write((byte) (0xC0 | ((c >>  6) & 0x1F)));
-            innerStream.write((byte) (0x80 | ((c >>  0) & 0x3F)));
-          }
+        innerStream.write((byte) ((utflen >>> 8) & 0xFF));
+        innerStream.write((byte) ((utflen >>> 0) & 0xFF));
+      }
+      for (int i = 0; i < strlen; i++) {
+        c = s.charAt(i);//charr[i];
+        if ((c >= 0x0001) && (c <= 0x007F)) {
+          innerStream.write((byte) c);
+        } else if (c > 0x07FF) {
+          innerStream.write((byte) (0xE0 | ((c >> 12) & 0x0F)));
+          innerStream.write((byte) (0x80 | ((c >>  6) & 0x3F)));
+          innerStream.write((byte) (0x80 | ((c >>  0) & 0x3F)));
+        } else {
+          innerStream.write((byte) (0xC0 | ((c >>  6) & 0x1F)));
+          innerStream.write((byte) (0x80 | ((c >>  0) & 0x3F)));
         }
       }
     }

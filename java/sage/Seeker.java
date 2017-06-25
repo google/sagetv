@@ -150,10 +150,10 @@ public class Seeker implements Hunter
     prefs = SEEKER_KEY + '/';
     autoImportIgnorePaths = Sage.parseCommaDelimSet(Sage.get(prefs + AUTO_IMPORT_IGNORE_PATHS, ""));
     autoImportAddedNetPaths = Sage.parseCommaDelimSet(Sage.get(prefs + AUTO_IMPORT_ADDED_NETWORK_PATHS, ""));
-    delayForNextLibScan = Sage.getLong("seeker/delay_before_library_scan", Sage.EMBEDDED ? 30000 : 0);
+    delayForNextLibScan = Sage.getLong("seeker/delay_before_library_scan", 0);
     // Dir monitor has been added for embedded, so we can put this back at a huge number since they should never be needed. But just to
     // cover any corner cases we may somehow miss...we'll keep it at every 24 hours so any problems would be fixed within a day.
-    libScanPeriod = Sage.getLong("seeker/library_scan_period", Sage.EMBEDDED ? (Sage.MILLIS_PER_DAY) : (2 * Sage.MILLIS_PER_HR));
+    libScanPeriod = Sage.getLong("seeker/library_scan_period", (2 * Sage.MILLIS_PER_HR));
     //leadTime = Sage.getLong(prefs + LEAD_TIME, 0/*2*MINUTE*/);
     // 8/12/03 Lead times != 0 screw up multituner forced watch control because recordings get started
     // before the force watch can take control of them like it should
@@ -214,7 +214,7 @@ public class Seeker implements Hunter
       {
         picLibFileExts.add(SUPPORTED_PICTURE_EXTENSIONS[i]);
         Sage.put(prefs + PICTURE_LIBRARY_IMPORT_FILENAME_EXTENSIONS,
-            Sage.get(prefs + PICTURE_LIBRARY_IMPORT_FILENAME_EXTENSIONS, Sage.EMBEDDED ? ".jpg,.gif,.jpeg,.jpe,.png" : "") + "," + SUPPORTED_PICTURE_EXTENSIONS[i]);
+            Sage.get(prefs + PICTURE_LIBRARY_IMPORT_FILENAME_EXTENSIONS, "") + "," + SUPPORTED_PICTURE_EXTENSIONS[i]);
       }
     }
     if (Sage.getBoolean("seeker/disable_bmp_picture_imports", true))
@@ -232,7 +232,7 @@ public class Seeker implements Hunter
       {
         musicLibFileExts.add(SUPPORTED_MUSIC_EXTENSIONS[i]);
         Sage.put(prefs + MUSIC_LIBRARY_IMPORT_FILENAME_EXTENSIONS,
-            Sage.get(prefs + MUSIC_LIBRARY_IMPORT_FILENAME_EXTENSIONS, Sage.EMBEDDED ? ".mp3,.wav,.wma,.aac,.m4a,.flac,.ogg,.ac3" : "") + "," + SUPPORTED_MUSIC_EXTENSIONS[i]);
+            Sage.get(prefs + MUSIC_LIBRARY_IMPORT_FILENAME_EXTENSIONS, "") + "," + SUPPORTED_MUSIC_EXTENSIONS[i]);
       }
     }
     toker = new StringTokenizer(Sage.get(prefs + PLAYLIST_IMPORT_FILENAME_EXTENSIONS,
@@ -255,19 +255,9 @@ public class Seeker implements Hunter
       {
         vidLibFileExts.add(SUPPORTED_VIDEO_EXTENSIONS[i]);
         Sage.put(prefs + VIDEO_LIBRARY_IMPORT_FILENAME_EXTENSIONS,
-            Sage.get(prefs + VIDEO_LIBRARY_IMPORT_FILENAME_EXTENSIONS, Sage.EMBEDDED ?
-                ".mpg,.mpeg,.mp2,.mpeg2,.mpe,.avi,.divx,.mpg1,.ts,.wmv,.asf,.wm,.tivo,.m2t,.vob,.flv,.mp4,.mov,.trp,.m4v,.ogm,.3gp,.mkv" : "") +
+            Sage.get(prefs + VIDEO_LIBRARY_IMPORT_FILENAME_EXTENSIONS, "") +
                 "," + SUPPORTED_VIDEO_EXTENSIONS[i]);
       }
-    }
-    if (Sage.EMBEDDED)
-    {
-      Sage.put(prefs + PICTURE_LIBRARY_IMPORT_FILENAME_EXTENSIONS,
-          Sage.get(prefs + PICTURE_LIBRARY_IMPORT_FILENAME_EXTENSIONS, ".jpg,.gif,.jpeg,.jpe,.png"));
-      Sage.put(prefs + MUSIC_LIBRARY_IMPORT_FILENAME_EXTENSIONS,
-          Sage.get(prefs + MUSIC_LIBRARY_IMPORT_FILENAME_EXTENSIONS, ".mp3,.wav,.wma,.aac,.m4a,.flac,.ogg,.ac3"));
-      Sage.put(prefs + VIDEO_LIBRARY_IMPORT_FILENAME_EXTENSIONS,
-          ".mpg,.mpeg,.mp2,.mpeg2,.mpe,.avi,.divx,.mpg1,.ts,.wmv,.asf,.wm,.m2t,.vob,.flv,.mp4,.mov,.trp,.m4v,.ogm,.3gp,.mkv,.m2ts,.dvr-ms,.mts,.tp");
     }
     String archiveDirStrs = "";
     if (Sage.WINDOWS_OS && !Sage.isHeadless())
@@ -374,8 +364,7 @@ public class Seeker implements Hunter
       }
     }
 
-    if (!Sage.EMBEDDED)
-      writeStoragePrefs();
+    writeStoragePrefs();
 
     if (Sage.LINUX_OS || Sage.MAC_OS_X)
     {
@@ -431,50 +420,48 @@ public class Seeker implements Hunter
 
     performFullContentReindex = (Wizard.GENERATE_MEDIA_MASK || Sage.getBoolean("force_full_content_reindex", false)) &&
         !Sage.getBoolean("disable_full_content_reindex", false);
-    performPicLibReindex = !Sage.EMBEDDED && !Sage.getBoolean("completed_exif_parser_import", false);
+    performPicLibReindex = !Sage.getBoolean("completed_exif_parser_import", false);
     FSManager.getInstance(); // make sure ignore files are set properly
     checkDirsForFiles(true);
     // If this setting doesn't exist then this is an upgrade that has this as a new feature so do the embedding of the data now
-    boolean addMpegMetadataNow = !Sage.EMBEDDED && (Sage.get("seeker/mpeg_metadata_embedding", null) == null);
+    boolean addMpegMetadataNow = (Sage.get("seeker/mpeg_metadata_embedding", null) == null);
     if (addMpegMetadataNow && Sage.DBG) System.out.println("Seeker is embedding MPEG metadata into all existing recordings now");
 
 
     // Check to make sure the default DVD/CD drive MF is created
-    if (!Sage.EMBEDDED)
+    boolean hasDefaultDVDMF = false;
+    MediaFile[] myFiles = wiz.getFiles();
+    for (int i = 0; i < myFiles.length; i++)
     {
-      boolean hasDefaultDVDMF = false;
-      MediaFile[] myFiles = wiz.getFiles();
-      for (int i = 0; i < myFiles.length; i++)
+      if (myFiles[i].generalType == MediaFile.MEDIAFILE_DEFAULT_DVD_DRIVE)
+        hasDefaultDVDMF = true;
+      if (myFiles[i].generalType == MediaFile.MEDIAFILE_LOCAL_PLAYBACK)
       {
-        if (myFiles[i].generalType == MediaFile.MEDIAFILE_DEFAULT_DVD_DRIVE)
-          hasDefaultDVDMF = true;
-        if (myFiles[i].generalType == MediaFile.MEDIAFILE_LOCAL_PLAYBACK)
-        {
-          // Old legacy stuff
-          wiz.removeMediaFile(myFiles[i]);
-        }
-        else if (!Sage.client && (performPicLibReindex || performFullContentReindex) && myFiles[i].isTV())
-        {
-          // The pic lib reindex also means we need to reindex TS files for PID detection
-          // Check for format redetection in the TV files in the DB
-          checkForDataReimport("", myFiles[i]);
-        }
-        else if (addMpegMetadataNow && !Sage.client && myFiles[i].isTV() && !myFiles[i].isAnyLiveStream())
-        {
-          sage.media.format.MpegMetadata.addMediaFileMetadata(myFiles[i]);
-        }
+        // Old legacy stuff
+        wiz.removeMediaFile(myFiles[i]);
       }
-      if (addMpegMetadataNow)
-        Sage.putBoolean("seeker/mpeg_metadata_embedding", true);
-      if (!hasDefaultDVDMF && SageConstants.LIBRARY_FUNCTION)
+      else if (!Sage.client && (performPicLibReindex || performFullContentReindex) && myFiles[i].isTV())
       {
-        MediaFile dvdMF = wiz.addMediaFileSpecial(MediaFile.MEDIAFILE_DEFAULT_DVD_DRIVE, null, null,
-            DBObject.MEDIA_MASK_DVD, null);
-        if (Sage.DBG) System.out.println("Setup DVD Drive: " + dvdMF);
+        // The pic lib reindex also means we need to reindex TS files for PID detection
+        // Check for format redetection in the TV files in the DB
+        checkForDataReimport("", myFiles[i]);
+      }
+      else if (addMpegMetadataNow && !Sage.client && myFiles[i].isTV() && !myFiles[i].isAnyLiveStream())
+      {
+        sage.media.format.MpegMetadata.addMediaFileMetadata(myFiles[i]);
       }
     }
+    if (addMpegMetadataNow)
+      Sage.putBoolean("seeker/mpeg_metadata_embedding", true);
+    if (!hasDefaultDVDMF && SageConstants.LIBRARY_FUNCTION)
+    {
+      MediaFile dvdMF = wiz.addMediaFileSpecial(MediaFile.MEDIAFILE_DEFAULT_DVD_DRIVE, null, null,
+          DBObject.MEDIA_MASK_DVD, null);
+      if (Sage.DBG) System.out.println("Setup DVD Drive: " + dvdMF);
+    }
 
-    if (!Sage.EMBEDDED && !Sage.client && !SageConstants.LITE)
+
+    if (!Sage.client && !SageConstants.LITE)
     {
       FileExportPlugin testPlugin = null;
       if (Sage.WINDOWS_OS && !Sage.getBoolean(prefs + "disable_roxio_export_plugin", true))
@@ -549,10 +536,7 @@ public class Seeker implements Hunter
       synchronized (sage.media.format.FormatParser.FORMAT_DETECT_MOUNT_DIR)
       {
         File mountDir;
-        if (Sage.EMBEDDED)
-          mountDir = FSManager.getInstance().requestISOMount(new File(orgS), sage.media.format.FormatParser.FORMAT_DETECT_MOUNT_DIR);
-        else
-          mountDir = FSManager.getInstance().requestISOMount(new File(orgS));
+        mountDir = FSManager.getInstance().requestISOMount(new File(orgS));
         if (mountDir != null)
         {
           // Check for a BluRay folder structure
@@ -586,7 +570,7 @@ public class Seeker implements Hunter
 
   public boolean isAutoImportEnabled()
   {
-    return Sage.EMBEDDED && Sage.getBoolean("seeker/autoimport_enabled", false);
+    return false;
   }
 
   private static boolean checkFileAccess(File f)
@@ -610,7 +594,7 @@ public class Seeker implements Hunter
   // related to the main Seeker data structures that would require a sync lock.
   private void checkDirsForFiles(boolean scanVidDirs)
   {
-    if (!SageConstants.LIBRARY_FUNCTION || (Sage.EMBEDDED && !SageConstants.PVR)) return;
+    if (!SageConstants.LIBRARY_FUNCTION) return;
     if (Sage.DBG) System.out.println("Checking video directories for new files");
     // Move any video files out of our directory that we don't know about anymore.
     MediaFile[] myFiles = wiz.getFiles();
@@ -1061,8 +1045,6 @@ public class Seeker implements Hunter
     boolean hasDefaultDVDMF = false;
     for (int i = 0; i < myFiles.length; i++)
     {
-      if (Sage.EMBEDDED && (i%100)==0)
-        controlImportCPUUsage();
       if (myFiles[i].generalType == MediaFile.MEDIAFILE_DEFAULT_DVD_DRIVE)
       {
         hasDefaultDVDMF = true;
@@ -1155,7 +1137,6 @@ public class Seeker implements Hunter
             for (int j = 0; servers != null && j < servers.length && maxDirCount > 0; j++)
             {
               // Pause a bit here to prevent memory issues we've seen in embedded testing (was 100, but we saw it again)
-              if (Sage.EMBEDDED) try{Thread.sleep(250);}catch(Exception e){}
               // Skip ourself
               if (myHostname.equalsIgnoreCase(servers[j].getServer()))
                 continue;
@@ -1241,7 +1222,7 @@ public class Seeker implements Hunter
       writeArchiveDirsProps();
     }
 
-    if (Sage.getBoolean("seeker/enforce_minimum_import_sizes", Sage.EMBEDDED))
+    if (Sage.getBoolean("seeker/enforce_minimum_import_sizes", false))
     {
       minMusicImportSize = Sage.getLong("seeker/min_file_size_music_import", 50*1024);
       minPicImportSize = Sage.getLong("seeker/min_file_size_pic_import", 50*1024);
@@ -1312,7 +1293,7 @@ public class Seeker implements Hunter
       lastThroughLibScanTime = Sage.time();
       doThoroughLibScan = false;
     }
-    if (!hasDefaultDVDMF && !Sage.EMBEDDED)
+    if (!hasDefaultDVDMF)
     {
       MediaFile dvdMF = wiz.addMediaFileSpecial(MediaFile.MEDIAFILE_DEFAULT_DVD_DRIVE, null, null,
           DBObject.MEDIA_MASK_DVD, null);
@@ -1437,7 +1418,7 @@ public class Seeker implements Hunter
       List<MediaFile> newlyAddedFiles, Map<String, MediaFile> accountedFileMap,
       MediaFile[] startMediaFileList, List<Object[]> playlistsToProcess)
   {
-    if (prepped || Sage.EMBEDDED)
+    if (prepped)
       controlImportCPUUsage();
 
     // If this is a video storage directory then skip it so we don't double import (if it's video)
@@ -1465,8 +1446,6 @@ public class Seeker implements Hunter
       Arrays.sort(testFiles);
     for (int i = 0; (testFiles != null) && i < testFiles.length; i++)
     {
-      if (Sage.EMBEDDED && (i%5)==4)
-        controlImportCPUUsage();
       // If we need to restart the lib scan then just bail
       if (needsAnImport || disableLibraryScanning) return;
 
@@ -2773,9 +2752,7 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
       }
 
       // Store the metadata information in the recorded file
-      if (Sage.EMBEDDED)
-        es.switcherFile.saveMetadataPropertiesFile();
-      else if (Sage.getBoolean("seeker/mpeg_metadata_embedding", true))
+      if (Sage.getBoolean("seeker/mpeg_metadata_embedding", true))
         sage.media.format.MpegMetadata.addMediaFileMetadata(es.switcherFile);
       if (!es.switcherFile.isAnyLiveStream())
         PluginEventManager.postEvent(PluginEventManager.RECORDING_COMPLETED,
@@ -2939,9 +2916,7 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
         }
 
         // Store the metadata information in the recorded file
-        if (Sage.EMBEDDED)
-          es.currRecordFile.saveMetadataPropertiesFile();
-        else if (Sage.getBoolean("seeker/mpeg_metadata_embedding", true))
+        if (Sage.getBoolean("seeker/mpeg_metadata_embedding", true))
           sage.media.format.MpegMetadata.addMediaFileMetadata(es.currRecordFile);
         if (!es.currRecordFile.isAnyLiveStream())
           PluginEventManager.postEvent(PluginEventManager.RECORDING_COMPLETED,
@@ -3011,7 +2986,7 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
       // NARFLEX: Updated on 10/30/06 to ignore files that have a zero station ID since those are from conversions and
       // we don't want to auto-delete those.
       if (!mFiles[i].isTV() || mFiles[i].archive || god.isDoNotDestroy(mFiles[i]) ||
-          wiz.getManualRecord(mFiles[i].getContentAiring()) != null || (mFiles[i].getContentAiring().getStationID() == 0 && !Sage.EMBEDDED))
+          wiz.getManualRecord(mFiles[i].getContentAiring()) != null || (mFiles[i].getContentAiring().getStationID() == 0))
         continue;
       Agent fileAgent = god.getCauseAgent(mFiles[i].getContentAiring());
       if (fileAgent != null && fileAgent.getAgentFlag(Agent.KEEP_AT_MOST_MASK) != 0)
@@ -3203,7 +3178,7 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
       for (int i = 0; i < mFiles.length; i++)
         if (mFiles[i].archive || !mFiles[i].isTV() || safeAirs.contains(mFiles[i].getContentAiring()) ||
             (god.isDoNotDestroy(mFiles[i]) && (mFiles[i].isCompleteRecording() || mFiles[i].getContentAiring().getSchedulingEnd() > Sage.time())) ||
-            wiz.getManualRecord(mFiles[i].getContentAiring()) != null || (mFiles[i].getContentAiring().getStationID() == 0 && !Sage.EMBEDDED))
+            wiz.getManualRecord(mFiles[i].getContentAiring()) != null || (mFiles[i].getContentAiring().getStationID() == 0))
           mFiles[i] = null;
 
       Arrays.sort(mFiles, getMediaFileComparator());
@@ -3384,7 +3359,7 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
       if (((god.isDoNotDestroy(mFiles[i]) && (mFiles[i].isCompleteRecording() ||
              mFiles[i].getContentAiring().getSchedulingEnd() > Sage.time())) ||
              wiz.getManualRecord(mFiles[i].getContentAiring()) != null ||
-             (mFiles[i].getContentAiring().getStationID() == 0 && !Sage.EMBEDDED))) {
+             (mFiles[i].getContentAiring().getStationID() == 0))) {
         mFiles[i] = null;
         continue;
       }
@@ -3396,17 +3371,8 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
     VideoStorage[] currStores = videoStore.toArray(new VideoStorage[0]);
     for (int i = 0; i < currStores.length; i++)
     {
-      if (Sage.EMBEDDED && SageConstants.PVR && SageConstants.ENFORCE_EMBEDDED_RESTRICTIONS
-          && Sage.LINUX_OS)
-      {
-        if ("EXT3".equals(Sage.getFileSystemTypeX(currStores[i].videoDir.getAbsolutePath())))
-          validFormatsFound = true;
-        else
-          continue;
-      }
-      else
-        validFormatsFound = true;
-      if (currStores[i].fileSpaceReserves.isEmpty() && !Sage.EMBEDDED)
+      validFormatsFound = true;
+      if (currStores[i].fileSpaceReserves.isEmpty())
       {
         // Nothing being written to this store so nothing to delete
         // Except on embedded...then we need to be sure they have room for
@@ -3634,26 +3600,7 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
   private void controlImportCPUUsage()
   {
     // If the user isn't doing anything then don't bother controlling CPU usage
-    if (!Sage.EMBEDDED || Sage.time() - ServerPowerManagement.getInstance().getLastActivityTime() < 30000 || VideoFrame.isPlayinAny())
-    {
-      try{Thread.sleep(Sage.EMBEDDED ? 500 : 30);}catch (Exception e){}
-    }
-    // We no longer need this on embedded since we don't run a UI on the server system
-    else if (Sage.EMBEDDED && UIManager.getNonLocalUICount() == 0 && false)
-    {
-      // Check to also make sure there aren't external miniclient processes running who need more CPU
-      long currTime = Sage.time();
-      if (currTime - lastExternalProcessCheck > EXTERNAL_PROCESS_CHECK_PERIOD)
-      {
-        int res = IOUtils.exec2(new String[] { "sh", "-c", "pidof miniclient" });
-        externalProcessesNeedCpu = (res == 0);
-        lastExternalProcessCheck = currTime;
-      }
-      if (externalProcessesNeedCpu)
-      {
-        try{Thread.sleep(Sage.EMBEDDED ? 500 : 30);}catch (Exception e){}
-      }
-    }
+    try{Thread.sleep(30);}catch (Exception e){}
   }
 
   public void run()
@@ -3669,12 +3616,6 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
       clientGCCleanup();
       return;
     }
-
-    if (Sage.EMBEDDED && Sage.LINUX_OS)
-      LinuxUtils.updateSmbConfig(true);
-
-    if (Sage.EMBEDDED && Sage.LINUX_OS)
-      launchDirMonitor();
 
     seekerThread = Thread.currentThread();
     canRecord = false;
@@ -3703,12 +3644,6 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
             lastDumpTime = testTime;
           }
           try{Thread.sleep(60000);}catch(Exception e){}
-          // if we are still hung now...just terminate the JVM and let it restart if we are embedded
-          if (Sage.EMBEDDED && lastSeekerWakeupTime == lastDumpTime && lastDumpTime != 0)
-          {
-            System.out.println("SEEKER HAS BEEN LOCKED UP - SYSTEM IS IN A BAD STATE - FORCE TERMINATE THE JVM AND LET THE BABYSITTER RESTART IT");
-            System.exit(-1);
-          }
         }
       }
     };
@@ -3795,7 +3730,7 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
                 if (Sage.DBG) System.out.println("DISKSPACE INADEQUATE: Seeker cannot continue recording.");
                 // THIS HAPPENS AS THE RESULT OF AN ERROR MORE OFTEN THAN ANYTHING ELSE, SO LETS
                 // NOT STOP RECORDING IN THIS SITUATION ANYMORE.
-                if (Sage.EMBEDDED || Sage.getBoolean("seeker/treat_diskspace_warnings_as_serious", !Sage.WINDOWS_OS))
+                if (Sage.getBoolean("seeker/treat_diskspace_warnings_as_serious", !Sage.WINDOWS_OS))
                 {
                   Catbert.distributeHookToAll("MediaPlayerError", new Object[] { Sage.rez("Capture"),
                       Sage.rez("OUT_OF_DISKSPACE_WARNING") });
@@ -4020,11 +3955,7 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
         // Try to post a system message on this
         if (throwy instanceof OutOfMemoryError)
         {
-          // On embedded just terminate the JVM and let it autorestart if we are out of memory
-          if (Sage.EMBEDDED)
-            System.exit(1);
-          else
-            sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createOOMMsg());
+          sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createOOMMsg());
         }
       }
     }
@@ -4698,15 +4629,14 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
               (currOverlaps == leastMustSeeOverlaps &&
               (es.capDev.getMerit()*200 + es.capDev.getHighestQualityConfiguredInputType() > highestMerit ||
                   (es.capDev.getMerit()*200 + es.capDev.getHighestQualityConfiguredInputType() == highestMerit &&
-                  (Sage.EMBEDDED || (tempRecord == null ? 0 : calcW(tempRecord)) < lowestWPSameMerit)))))
+                  ((tempRecord == null ? 0 : calcW(tempRecord)) < lowestWPSameMerit)))))
           {
             if (currTimeUntilNextMustSee > maxTimeUntilNextMustSee)
             {
               leastMustSeeOverlaps = currOverlaps;
               highestMerit = es.capDev.getMerit()*200 + es.capDev.getHighestQualityConfiguredInputType();
               highestES = es;
-              if (!Sage.EMBEDDED)
-                lowestWPSameMerit = tempRecord == null ? 0 : calcW(tempRecord);
+              lowestWPSameMerit = tempRecord == null ? 0 : calcW(tempRecord);
               maxTimeUntilNextMustSee = currTimeUntilNextMustSee;
               if (desireLevel > 0)
               {
@@ -5607,8 +5537,8 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
 
     } while (lastSetSize != unifiedStationSet.size() && !tryUs.isEmpty());
 
-    long defaultStartPadding = Sage.getLong("default_mr_start_padding", Sage.EMBEDDED ? 5*Sage.MILLIS_PER_MIN : 0);
-    long defaultStopPadding = Sage.getLong("default_mr_stop_padding", Sage.EMBEDDED ? 5*Sage.MILLIS_PER_MIN : 0);
+    long defaultStartPadding = Sage.getLong("default_mr_start_padding", 0);
+    long defaultStopPadding = Sage.getLong("default_mr_stop_padding", 0);
     long requestedStart = recAir.getStartTime() - defaultStartPadding;
     long requestedStop = recAir.getEndTime() + defaultStopPadding;
     long requestedDuration = requestedStop - requestedStart;
@@ -6152,8 +6082,6 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
       {
         notifyAll();
       }
-      if (Sage.EMBEDDED)
-        Carny.getInstance().kick();
     }
   }
 
@@ -6930,16 +6858,6 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
     {
       videoDir = new File(inVideoDir).getAbsoluteFile();
       boolean diskOK = true;
-      if (Sage.EMBEDDED && SageConstants.PVR && Sage.LINUX_OS)
-      {
-        // Verify that this is a vaild mounted filesystem
-        String fsType = Sage.getFileSystemTypeX(videoDir.getAbsolutePath(), true);
-        if (SageConstants.ENFORCE_EMBEDDED_RESTRICTIONS && !fsType.equals("EXT3"))
-        {
-          if (Sage.DBG) System.out.println("ERROR Detected video recording directory " + videoDir + " with invalid partition type of " + fsType + " this directory will NOT be used!");
-          diskOK = false;
-        }
-      }
       // Be CAREFUL to not create directories in /tmp/external for offline USB drives or we'll crash the system by filling up RAM w/ a recording!
       if (diskOK)
         IOUtils.safemkdirs(videoDir);

@@ -91,7 +91,7 @@ public class MetaImage
   private static LocalCacheFileTracker localCacheFileTracker;
   private static final int NUM_ASYNC_LOADER_THREADS = Sage.getInt("async_loader_num_threads", 3);
   private static final int URL_IMAGE_LOAD_DELAY = 150;//Sage.getInt("url_image_load_delay", 750);
-  private static final boolean ENABLE_JPEG_AUTOROTATE = Sage.getBoolean("autorotate_jpeg_images", !Sage.EMBEDDED);
+  private static final boolean ENABLE_JPEG_AUTOROTATE = Sage.getBoolean("autorotate_jpeg_images", true);
   private static final int MAX_CACHED_URL_IMAGES = Sage.getInt("num_cached_url_images", 1000);
   private static final boolean ENABLE_OFFLINE_URL_CACHE =
       SageConstants.PVR && Sage.get("ui/thumbnail_folder", "GeneratedThumbnails").length() > 0;
@@ -106,17 +106,10 @@ public class MetaImage
     mi.initDataStructures(1);
     mi.permanent = true;
     mi.sourceHasAlpha = true;
-    if (!Sage.EMBEDDED)
-      mi.setJavaImage(ImageUtils.getNullImage(), 0, 0);
+    mi.setJavaImage(ImageUtils.getNullImage(), 0, 0);
     mi.setRawImage(sage.media.image.ImageLoader.getNullImage(), 0, 0);
     globalImageCache.put(null, mi);
     cleanupURLImageCache();
-
-    if ( Sage.EMBEDDED) {
-      localCacheFileTracker=new LocalCacheFileTracker(
-          Sage.getInt("local_cached_image_files/max_num_items", 1000),
-          Sage.getInt("local_cached_image_files/max_total_file_size", 20 * 1024 * 1024));
-    }
   }
 
   /**
@@ -844,7 +837,7 @@ public class MetaImage
       {
         // Also store the string version for fast access later
         // NOTE: We can't do this because with relative paths and multiple STVs this could be ambiguous now
-        if (Sage.EMBEDDED || widgFile == null || !testFile.getAbsolutePath().startsWith(widgFile.toString()))
+        if (widgFile == null || !testFile.getAbsolutePath().startsWith(widgFile.toString()))
           globalImageCache.put(orgSrc, strMetaImage);
         else if (uiMgr != null)
           uiMgr.saveUICachedMetaImage(orgSrc, strMetaImage);
@@ -886,11 +879,6 @@ public class MetaImage
           if (Sage.DBG) System.out.println("Error accessing image file " + src + " of " + e);
           return globalImageCache.get(null);
         }
-        finally
-        {
-          if (Sage.EMBEDDED && src.toString().startsWith("smb://"))
-            FSManager.getInstance().releaseLocalSMBAccess(src.toString());
-        }
       }
     }
     synchronized (globalImageCache)
@@ -904,14 +892,14 @@ public class MetaImage
 
   private static boolean isURLString(String s)
   {
-    return s != null && (s.startsWith("http:") || s.startsWith("https:") || s.startsWith("ftp:") || (!Sage.EMBEDDED && s.startsWith("smb:")));
+    return s != null && (s.startsWith("http:") || s.startsWith("https:") || s.startsWith("ftp:") || s.startsWith("smb:"));
   }
 
   private static URL getURLForString(String s)
   {
     if (s == null) return null;
     URLStreamHandler handler = null;
-    if (!Sage.EMBEDDED && s.startsWith("smb://"))
+    if (s.startsWith("smb://"))
     {
       try
       {
@@ -1135,7 +1123,7 @@ public class MetaImage
     MetaImage cachedImage = globalImageCache.get(removedFile);
     if (cachedImage != null && !cachedImage.permanent)
     {
-      if (cachedImage.localCacheFile != null && (!Sage.EMBEDDED || (cachedImage.src != null && !cachedImage.src.toString().startsWith("smb://"))))
+      if (cachedImage.localCacheFile != null)
         cachedImage.deleteLocalCacheFile();
       // Narflex: We can't synchronize here because then we're going MetaImage->CacheLock which is against the sync rules!
       //synchronized (cachedImage)
@@ -1157,13 +1145,10 @@ public class MetaImage
     width = new int[num];
     height = new int[num];
     imageOption = new Object[num];
-    if (!Sage.EMBEDDED)
-    {
-      javaImage = new Image[num];
-      lastUsedJava = new long[num];
-      javaMemSize = new int[num];
-      javaRefCount = new int[num];
-    }
+    javaImage = new Image[num];
+    lastUsedJava = new long[num];
+    javaMemSize = new int[num];
+    javaRefCount = new int[num];
     rawImage = new sage.media.image.RawImage[num];
     lastUsedRaw = new long[num];
     rawMemSize = new int[num];
@@ -1192,21 +1177,18 @@ public class MetaImage
     Object[] newimageOption = new Object[newNumImages];
     System.arraycopy(imageOption, 0, newimageOption, 0, imageOption.length);
     imageOption = newimageOption;
-    if (!Sage.EMBEDDED)
-    {
-      Image[] newjavaImage = new Image[newNumImages];
-      System.arraycopy(javaImage, 0, newjavaImage, 0, javaImage.length);
-      javaImage = newjavaImage;
-      long[] newlastUsedJava = new long[newNumImages];
-      System.arraycopy(lastUsedJava, 0, newlastUsedJava, 0, lastUsedJava.length);
-      lastUsedJava = newlastUsedJava;
-      int[] newjavaMemSize = new int[newNumImages];
-      System.arraycopy(javaMemSize, 0, newjavaMemSize, 0, javaMemSize.length);
-      javaMemSize = newjavaMemSize;
-      int[] newjavaRefCount = new int[newNumImages];
-      System.arraycopy(javaRefCount, 0, newjavaRefCount, 0, javaRefCount.length);
-      javaRefCount = newjavaRefCount;
-    }
+    Image[] newjavaImage = new Image[newNumImages];
+    System.arraycopy(javaImage, 0, newjavaImage, 0, javaImage.length);
+    javaImage = newjavaImage;
+    long[] newlastUsedJava = new long[newNumImages];
+    System.arraycopy(lastUsedJava, 0, newlastUsedJava, 0, lastUsedJava.length);
+    lastUsedJava = newlastUsedJava;
+    int[] newjavaMemSize = new int[newNumImages];
+    System.arraycopy(javaMemSize, 0, newjavaMemSize, 0, javaMemSize.length);
+    javaMemSize = newjavaMemSize;
+    int[] newjavaRefCount = new int[newNumImages];
+    System.arraycopy(javaRefCount, 0, newjavaRefCount, 0, javaRefCount.length);
+    javaRefCount = newjavaRefCount;
     sage.media.image.RawImage[] newrawImage = new sage.media.image.RawImage[newNumImages];
     System.arraycopy(rawImage, 0, newrawImage, 0, rawImage.length);
     rawImage = newrawImage;
@@ -1883,7 +1865,7 @@ public class MetaImage
       // shouldn't occur here aside from other errors in our code anyways....but at least this will maintain the proper reference count then
       // since the caller won't receive an unexpected exception
     }
-    if (!Sage.EMBEDDED && !permanent && (nia instanceof DirectX9SageRenderer) && !(src instanceof WeakReference))
+    if (!permanent && (nia instanceof DirectX9SageRenderer) && !(src instanceof WeakReference))
     {
       if (javaRefCount[imageIndex] == 0)
       {
@@ -1987,7 +1969,7 @@ public class MetaImage
                   }
                   if (DEBUG_MI && mi.rawRefCount[i] > 0) outstandingRefs++;
                 }
-                else if (!Sage.EMBEDDED)
+                else
                 {
                   if (mi.javaRefCount[i] <= 0 && mi.javaImage[i] != null && mi.lastUsedJava[i] < oldest &&
                       mi.javaMemSize[i] != 0)
@@ -1998,20 +1980,6 @@ public class MetaImage
                   }
                   if (DEBUG_MI && mi.javaRefCount[i] > 0) outstandingRefs++;
                 }
-              }
-              else
-              {
-                if (nid == null)
-                  nid = mi.getNativeImageData(nia);
-                if (nid.nativeRefCount[i] <= 0 && nid.nativeImage[i] != 0 && nid.lastUsedNative[i] < oldest)
-                {
-                  oldest = nid.lastUsedNative[i];
-                  oldestImage = mi;
-                  oldestIndex = i;
-                }
-                if (DEBUG_MI && nid.nativeRefCount[i] > 0) outstandingRefs++;
-                //if (nid.nativeRefCount[i] > 0)
-                //	System.out.println("Native Ref Still Exists For:" + mi.src);
               }
             }
           }
@@ -2249,7 +2217,7 @@ public class MetaImage
   {
     // Since we can't easily determine the size of an image before we load it, we manage
     // the raw cache retroactively to handle this.
-    int cacheScale = Sage.getInt("ui/system_memory_2dimage_cache_scale", Sage.EMBEDDED ? 1 : 2);
+    int cacheScale = Sage.getInt("ui/system_memory_2dimage_cache_scale", 2);
     long cacheSize = Sage.getLong("ui/system_memory_2dimage_cache_size", 16000000)*cacheScale - reservedAmount;
     long cacheLimit = Sage.getLong("ui/system_memory_2dimage_cache_limit", 20000000)*cacheScale - reservedAmount;
     // NOTE: Always allow at least a certain number of images to be cached. This way if they
@@ -2308,8 +2276,7 @@ public class MetaImage
           numReleased += releaseNativeImages(nativeAllocData[i].nia.get());
       }
     }
-    if (!Sage.EMBEDDED)
-      releaseJavaImages();
+    releaseJavaImages();
     releaseRawImages();
     destroyed = true;
   }
@@ -2412,12 +2379,9 @@ public class MetaImage
       sb.append(width[i] + "x" + height[i]);
       if (imageOption[i] != null)
         sb.append(" Option=" + imageOption[i]);
-      if (!Sage.EMBEDDED)
-      {
-        sb.append(" javaImage=" + (javaImage[i] != null));
-        sb.append(" javaMem=" + javaMemSize[i]);
-        sb.append(" jref=" + javaRefCount[i]);
-      }
+      sb.append(" javaImage=" + (javaImage[i] != null));
+      sb.append(" javaMem=" + javaMemSize[i]);
+      sb.append(" jref=" + javaRefCount[i]);
       //sb.append(" nativeImage=" + (nativeImage[i] != 0));
       //sb.append(" nativeMem=" + nativeMemSize[i]);
       //sb.append(" nref=" + nativeRefCount[i] + " ");
@@ -2429,186 +2393,6 @@ public class MetaImage
   public boolean isNullOrFailed()
   {
     return (globalImageCache.get(null) == this) || loadFailed || src == null;
-  }
-
-  // Returns an Object[] { InputStream, Long } that can be read that correspond to this image resource; the Long
-  // is the amount of bytes that are OK to read, we do this as one call to reduce I/O w/ some sources
-  // Returns null if it can't load it properly
-  // The caller MUST close the InputStream that is returned to it
-  public Object[] getSourceAsStream() throws IOException
-  {
-    if (!Sage.EMBEDDED) throw new UnsupportedOperationException("MetaImage.getSourceAsStream is only supported on embedded platforms!");
-    if (src instanceof MetaFont)
-      return null;
-    else if (localCacheFile != null && localCacheFile.isFile() && localCacheFile.length() > 0)
-    {
-      return new Object[] { new FileInputStream(localCacheFile), new Long(localCacheFile.length()) };
-    }
-    else if (src instanceof String && src.toString().startsWith("smb://"))
-    {
-      String localPath = FSManager.getInstance().requestLocalSMBAccess(src.toString());
-      if (localPath == null)
-        return null;
-      // Access will be retained for 3 minutes at least; which is way longer then we need to do the corresponding transfer
-      FSManager.getInstance().releaseLocalSMBAccess(src.toString());
-      localCacheFile = new File(localPath);
-      return new Object[] { new FileInputStream(localCacheFile), new Long(localCacheFile.length()) };
-    }
-    else if (src instanceof String)
-    {
-      URL resURL = getClass().getClassLoader().getResource(src.toString());
-      URLConnection urlConn = resURL.openConnection();
-      long length = urlConn.getContentLength();
-      if (length <= 0)
-        return null;
-      return new Object[] { urlConn.getInputStream(), new Long(length) };
-    }
-    else if (src instanceof URL)
-    {
-      URLConnection urlConn = ((URL) src).openConnection();
-      urlConn.setConnectTimeout(30000);
-      urlConn.setReadTimeout(30000);
-      long length = urlConn.getContentLength();
-      if (length <= 0)
-        return null;
-      return new Object[] { urlConn.getInputStream(), new Long(length) };
-    }
-    else if (src instanceof File)
-    {
-      File f = (File) src;
-      return new Object[] { new FileInputStream(f), new Long(f.length()) };
-    }
-    else if (src instanceof MediaFile)
-    {
-      MediaFile mf = (MediaFile) src;
-      File localSrcFile = mf.getFile(0);
-      if (mf.isLocalFile() || !Sage.client/*isTrueClient()*/) // optimize for pseudo-clients
-      {
-        return new Object[] { new FileInputStream(localSrcFile), new Long(localSrcFile.length()) };
-      }
-      else
-      {
-        byte[] imageBytes = mf.copyToLocalMemory(localSrcFile, 0, 0, null);
-        ByteArrayInputStream bais = new ByteArrayInputStream(imageBytes);
-        return new Object[] { bais, new Long(imageBytes.length) };
-      }
-    }
-    else if (src instanceof MediaFileThumbnail)
-    {
-      try
-      {
-        MediaFileThumbnail mft = (MediaFileThumbnail) src;
-        File localSrcFile = mft.mf.getSpecificThumbnailFile();
-        if ((mft.mf.isLocalFile() || !Sage.client) && !mft.mf.isThumbnailEmbedded())
-        {
-          return new Object[] { new FileInputStream(localSrcFile), new Long(localSrcFile.length()) };
-        }
-        else
-        {
-          return mft.mf.loadEmbeddedThumbnailDataAsStream();
-        }
-      }
-      catch (IOException e)
-      {
-        if (Sage.DBG) System.out.println("ERROR reading file " + src + " of:" + e);
-        return null;
-      }
-    }
-    else if (src instanceof Album)
-    {
-      MediaFile mf = findMediaFileForAlbum();
-      if (mf != null)
-      {
-        return mf.loadEmbeddedThumbnailDataAsStream();
-      }
-    }
-    return null;
-  }
-
-  // Returns an Object[] { File, Long, Long, Boolean } that can be read locally that correspond to this image resource; the 1st Long
-  // is the offset to start reading from in the file, the second is the amount of bytes that are OK to read, we do this as one call to reduce I/O w/ some sources
-  // Boolean item is true if the caller should delete the file after using it
-  // Returns null if it can't load it properly
-  public Object[] getSourceAsLocalFile()
-  {
-    if (!Sage.EMBEDDED) throw new UnsupportedOperationException("MetaImage.getSourceAsLocalFile is only supported on embedded platforms!");
-    if (src instanceof MetaFont)
-      return null;
-    else if (localCacheFile != null && localCacheFile.isFile() && localCacheFile.length() > 0)
-    {
-      if ( localCacheFileTracker!=null )
-        localCacheFileTracker.touch(this);
-
-      return new Object[] { localCacheFile, new Long(0), new Long(localCacheFile.length()), Boolean.FALSE };
-    }
-    else if (src instanceof String && src.toString().startsWith("smb://"))
-    {
-      String localPath = FSManager.getInstance().requestLocalSMBAccess(src.toString());
-      if (localPath == null)
-        return null;
-      // Access will be retained for 3 minutes at least; which is way longer then we need to do the corresponding transfer
-      FSManager.getInstance().releaseLocalSMBAccess(src.toString());
-      localCacheFile = new File(localPath);
-      return new Object[] { localCacheFile, new Long(0), new Long(localCacheFile.length()), Boolean.FALSE };
-    }
-    else if (src instanceof String)
-    {
-      return null;
-    }
-    else if (src instanceof URL)
-    {
-      return null;
-    }
-    else if (src instanceof File)
-    {
-      File f = (File) src;
-      return new Object[] { f, new Long(0), new Long(f.length()), Boolean.FALSE };
-    }
-    else if (src instanceof MediaFile)
-    {
-      MediaFile mf = (MediaFile) src;
-      File localSrcFile = mf.getFile(0);
-      if (mf.isLocalFile() || !Sage.client/*isTrueClient()*/) // optimize for pseudo-clients
-      {
-        return new Object[] { localSrcFile, new Long(0), new Long(localSrcFile.length()), Boolean.FALSE };
-      }
-      else
-      {
-        try
-        {
-          File tmpFile = File.createTempFile(TEMP_CACHE_IMAGE_PREFIX, TEMP_CACHE_IMAGE_SUFFIX);
-          mf.copyToLocalStorage(tmpFile);
-          return new Object[] { tmpFile, new Long(0), new Long(tmpFile.length()), Boolean.TRUE };
-        }
-        catch (IOException ioe)
-        {
-          if (Sage.DBG) System.out.println("ERROR creating local temp copy of MediaFile of:" + ioe);
-        }
-        return null;
-      }
-    }
-    else if (src instanceof MediaFileThumbnail)
-    {
-      MediaFileThumbnail mft = (MediaFileThumbnail) src;
-      File localSrcFile = mft.mf.getSpecificThumbnailFile();
-      if ((mft.mf.isLocalFile() || !Sage.client) && !mft.mf.isThumbnailEmbedded())
-      {
-        return new Object[] { localSrcFile, new Long(0), new Long(localSrcFile.length()), Boolean.FALSE };
-      }
-      else
-      {
-        return mft.mf.loadEmbeddedThumbnailDataAsLocalFile();
-      }
-    }
-    else if (src instanceof Album)
-    {
-      MediaFile mf = findMediaFileForAlbum();
-      if (mf != null)
-      {
-        return mf.loadEmbeddedThumbnailDataAsLocalFile();
-      }
-    }
-    return null;
   }
 
   public byte[] getSourceAsBytes()
@@ -2843,18 +2627,15 @@ public class MetaImage
               ((MiniClientSageRenderer) uiMgr.getRootPanel().getRenderEngine()).getGfxScalingCaps() == MiniClientSageRenderer.GFX_SCALING_HW))
         return false;
     }
-    if (!Sage.EMBEDDED)
+    for (int i = 0; javaImage != null && i < javaImage.length; i++)
     {
-      for (int i = 0; javaImage != null && i < javaImage.length; i++)
-      {
-        if (javaImage[i] != null)
-          return true;
-      }
-      for (int i = 0; rawImage != null && i < rawImage.length; i++)
-      {
-        if (rawImage[i] != null)
-          return true;
-      }
+      if (javaImage[i] != null)
+        return true;
+    }
+    for (int i = 0; rawImage != null && i < rawImage.length; i++)
+    {
+      if (rawImage[i] != null)
+        return true;
     }
     return false;
   }
@@ -2969,7 +2750,7 @@ public class MetaImage
       if (src instanceof MetaFont)
       {
         MetaFont fonty = (MetaFont) src;
-        if (!Sage.EMBEDDED && javaImage[imageIndex] instanceof BufferedImage && !loadFailed)
+        if (javaImage[imageIndex] instanceof BufferedImage && !loadFailed)
         {
           if (Sage.DBG) System.out.println("Creating RawImage for Font from cached Java image - " + src);
           // If we've got a Java copy just create the raw copy from that since it's faster
@@ -2980,7 +2761,7 @@ public class MetaImage
           setRawImage(fonty.loadRawFontImage(SageRenderer.getAcceleratedFont(fonty), imageIndex), imageIndex, rawCacheReserve);
         rawCacheReserve = 0;
       }
-      else if (!Sage.EMBEDDED && hasScaledInsets(imageIndex))
+      else if (hasScaledInsets(imageIndex))
       {
         sage.media.image.RawImage rawy = getRawImage(0);
         if (Sage.DBG) System.out.println("Creating RawImage with scaled insets from raw copy for " + src);
@@ -3003,7 +2784,7 @@ public class MetaImage
           removeRawRef(0);
           rawCacheReserve = 0;
         }
-        else if (!Sage.EMBEDDED && javaImage[imageIndex] instanceof BufferedImage && !loadFailed &&
+        else if (javaImage[imageIndex] instanceof BufferedImage && !loadFailed &&
             sage.media.image.RawImage.canCreateRawFromJava((BufferedImage) javaImage[imageIndex]))
         {
           if (Sage.DBG) System.out.println("Creating copy of Java image to RawImage of size " + getWidth(imageIndex) + "x" +
@@ -3012,7 +2793,7 @@ public class MetaImage
           removeJavaRef(imageIndex);
           rawCacheReserve = 0;
         }
-        else if (!Sage.EMBEDDED && javaImage[0] instanceof BufferedImage && !loadFailed &&
+        else if (javaImage[0] instanceof BufferedImage && !loadFailed &&
             sage.media.image.RawImage.canCreateRawFromJava((BufferedImage) javaImage[0]))
         {
           BufferedImage buffy = (BufferedImage) getJavaImage(0);
@@ -3024,7 +2805,7 @@ public class MetaImage
           removeJavaRef(0);
           rawCacheReserve = 0;
         }
-        else if (!Sage.EMBEDDED && src instanceof WeakReference)
+        else if (src instanceof WeakReference)
         {
           Image img = (Image) ((WeakReference<?>)src).get();
           BufferedImage buffImg;
@@ -3190,99 +2971,52 @@ public class MetaImage
             boolean flipY = ((Boolean) srcVec.get(4)).booleanValue();
             int diffuseIdx = diffuseImage.getImageIndex(targetWidth, targetHeight);
             sage.media.image.RawImage diffuseRaw = diffuseImage.getRawImage(diffuseIdx);
-            if (!Sage.EMBEDDED)
+
+            ByteBuffer targetBuff = ByteBuffer.allocateDirect(targetWidth * targetHeight * 4);
+            ByteBuffer srcBuff = srcRaw.getROData();
+            ByteBuffer diffuseBuff = diffuseRaw.getROData();
+            targetBuff.clear();
+            int srcWidth4 = 4*srcRaw.getWidth();
+            for (int y = offy; y < offy + targetHeight; y++)
             {
-              ByteBuffer targetBuff = ByteBuffer.allocateDirect(targetWidth * targetHeight * 4);
-              ByteBuffer srcBuff = srcRaw.getROData();
-              ByteBuffer diffuseBuff = diffuseRaw.getROData();
-              targetBuff.clear();
-              int srcWidth4 = 4*srcRaw.getWidth();
-              for (int y = offy; y < offy + targetHeight; y++)
+              int srcoff = y*srcWidth4;
+              int dstoff = y*4*targetWidth;
+              int targetPos = dstoff;
+              if (flipY)
+                targetBuff.position(targetPos = ((targetHeight - (y - offy) - 1)*4*targetWidth));
+              for (int x = offx; x < offx + targetWidth; x++)
               {
-                int srcoff = y*srcWidth4;
-                int dstoff = y*4*targetWidth;
-                int targetPos = dstoff;
-                if (flipY)
-                  targetBuff.position(targetPos = ((targetHeight - (y - offy) - 1)*4*targetWidth));
-                for (int x = offx; x < offx + targetWidth; x++)
+                int srcoff2 = srcoff + 4*x;
+                int dstoff2 = dstoff + 4*(x - offx);
+                if (flipX)
+                  targetBuff.position(targetPos + (targetWidth - (x - offx) - 1) * 4);
+                targetBuff.put((byte)((((srcBuff.get(srcoff2) & 0xFF) * (diffuseBuff.get(dstoff2) & 0xFF)) / 255) & 0xFF));
+                if (hasDiffuseColor)
                 {
-                  int srcoff2 = srcoff + 4*x;
-                  int dstoff2 = dstoff + 4*(x - offx);
-                  if (flipX)
-                    targetBuff.position(targetPos + (targetWidth - (x - offx) - 1) * 4);
-                  targetBuff.put((byte)((((srcBuff.get(srcoff2) & 0xFF) * (diffuseBuff.get(dstoff2) & 0xFF)) / 255) & 0xFF));
-                  if (hasDiffuseColor)
-                  {
-                    targetBuff.put((byte)((((srcBuff.get(srcoff2 + 1) & 0xFF) * (diffuseBuff.get(dstoff2 + 1) & 0xFF) * diffuseR) / 65025) & 0xFF));
-                    targetBuff.put((byte)((((srcBuff.get(srcoff2 + 2) & 0xFF) * (diffuseBuff.get(dstoff2 + 2) & 0xFF) * diffuseG) / 65025) & 0xFF));
-                    targetBuff.put((byte)((((srcBuff.get(srcoff2 + 3) & 0xFF) * (diffuseBuff.get(dstoff2 + 3) & 0xFF) * diffuseB) / 65025) & 0xFF));
-                  }
-                  else
-                  {
-                    targetBuff.put((byte)((((srcBuff.get(srcoff2 + 1) & 0xFF) * (diffuseBuff.get(dstoff2 + 1) & 0xFF)) / 255) & 0xFF));
-                    targetBuff.put((byte)((((srcBuff.get(srcoff2 + 2) & 0xFF) * (diffuseBuff.get(dstoff2 + 2) & 0xFF)) / 255) & 0xFF));
-                    targetBuff.put((byte)((((srcBuff.get(srcoff2 + 3) & 0xFF) * (diffuseBuff.get(dstoff2 + 3) & 0xFF)) / 255) & 0xFF));
-                  }
+                  targetBuff.put((byte)((((srcBuff.get(srcoff2 + 1) & 0xFF) * (diffuseBuff.get(dstoff2 + 1) & 0xFF) * diffuseR) / 65025) & 0xFF));
+                  targetBuff.put((byte)((((srcBuff.get(srcoff2 + 2) & 0xFF) * (diffuseBuff.get(dstoff2 + 2) & 0xFF) * diffuseG) / 65025) & 0xFF));
+                  targetBuff.put((byte)((((srcBuff.get(srcoff2 + 3) & 0xFF) * (diffuseBuff.get(dstoff2 + 3) & 0xFF) * diffuseB) / 65025) & 0xFF));
+                }
+                else
+                {
+                  targetBuff.put((byte)((((srcBuff.get(srcoff2 + 1) & 0xFF) * (diffuseBuff.get(dstoff2 + 1) & 0xFF)) / 255) & 0xFF));
+                  targetBuff.put((byte)((((srcBuff.get(srcoff2 + 2) & 0xFF) * (diffuseBuff.get(dstoff2 + 2) & 0xFF)) / 255) & 0xFF));
+                  targetBuff.put((byte)((((srcBuff.get(srcoff2 + 3) & 0xFF) * (diffuseBuff.get(dstoff2 + 3) & 0xFF)) / 255) & 0xFF));
                 }
               }
-              srcImage.removeRawRef(0);
-              diffuseImage.removeRawRef(diffuseIdx);
-              sage.media.image.RawImage img0 = new sage.media.image.RawImage(targetWidth, targetHeight, targetBuff, true,
-                  4 * targetWidth, true);
-              setRawImage(img0, 0, rawCacheReserve);
-              if (imageIndex != 0)
-              {
-                // Now that we have the 0-index image cached; we can just use our standard raw image scaler to get the other one
-                setRawImage(sage.media.image.ImageLoader.scaleRawImage(img0, getWidth(imageIndex), getHeight(imageIndex)), imageIndex, rawCacheReserve);
-              }
-              rawCacheReserve = 0;
             }
-            else
+            srcImage.removeRawRef(0);
+            diffuseImage.removeRawRef(diffuseIdx);
+            sage.media.image.RawImage img0 = new sage.media.image.RawImage(targetWidth, targetHeight, targetBuff, true,
+                4 * targetWidth, true);
+            setRawImage(img0, 0, rawCacheReserve);
+            if (imageIndex != 0)
             {
-              byte[] targetBuff = new byte[targetWidth * targetHeight * 4];
-              byte[] srcBuff = srcRaw.getDataArr();
-              byte[] diffuseBuff = diffuseRaw.getDataArr();
-              int srcWidth4 = 4*srcRaw.getWidth();
-              int targetIdx = 0;
-              for (int y = offy; y < offy + targetHeight; y++)
-              {
-                int srcoff = y*srcWidth4;
-                int dstoff = y*4*targetWidth;
-                int targetPos = dstoff;
-                if (flipY)
-                  targetIdx = targetPos = ((targetHeight - (y - offy) - 1)*4*targetWidth);
-                for (int x = offx; x < offx + targetWidth; x++)
-                {
-                  int srcoff2 = srcoff + 4*x;
-                  int dstoff2 = dstoff + 4*(x - offx);
-                  if (flipX)
-                    targetIdx = targetPos + (targetWidth - (x - offx) - 1) * 4;
-                  targetBuff[targetIdx++] = (byte)((((srcBuff[srcoff2] & 0xFF) * (diffuseBuff[dstoff2] & 0xFF)) / 255) & 0xFF);
-                  if (hasDiffuseColor)
-                  {
-                    targetBuff[targetIdx++] = (byte)((((srcBuff[srcoff2 + 1] & 0xFF) * (diffuseBuff[dstoff2 + 1] & 0xFF) * diffuseR) / 65025) & 0xFF);
-                    targetBuff[targetIdx++] = (byte)((((srcBuff[srcoff2 + 2] & 0xFF) * (diffuseBuff[dstoff2 + 2] & 0xFF) * diffuseG) / 65025) & 0xFF);
-                    targetBuff[targetIdx++] = (byte)((((srcBuff[srcoff2 + 3] & 0xFF) * (diffuseBuff[dstoff2 + 3] & 0xFF) * diffuseB) / 65025) & 0xFF);
-                  }
-                  else
-                  {
-                    targetBuff[targetIdx++] = (byte)((((srcBuff[srcoff2 + 1] & 0xFF) * (diffuseBuff[dstoff2 + 1] & 0xFF)) / 255) & 0xFF);
-                    targetBuff[targetIdx++] = (byte)((((srcBuff[srcoff2 + 2] & 0xFF) * (diffuseBuff[dstoff2 + 2] & 0xFF)) / 255) & 0xFF);
-                    targetBuff[targetIdx++] = (byte)((((srcBuff[srcoff2 + 3] & 0xFF) * (diffuseBuff[dstoff2 + 3] & 0xFF)) / 255) & 0xFF);
-                  }
-                }
-              }
-              srcImage.removeRawRef(0);
-              diffuseImage.removeRawRef(diffuseIdx);
-              setRawImage(new sage.media.image.RawImage(targetWidth, targetHeight, targetBuff, true,
-                  4 * targetWidth), 0, rawCacheReserve);
-              rawCacheReserve = 0;
-              if (imageIndex != 0)
-              {
-                // Now that we have the 0-index image cached; we can just use our standard raw image scaler to get the other one
-                return getRawImage(imageIndex);
-              }
+              // Now that we have the 0-index image cached; we can just use our standard raw image scaler to get the other one
+              setRawImage(sage.media.image.ImageLoader.scaleRawImage(img0, getWidth(imageIndex), getHeight(imageIndex)), imageIndex, rawCacheReserve);
             }
+            rawCacheReserve = 0;
+
           }
           else
           {
@@ -3293,78 +3027,39 @@ public class MetaImage
             int targetHeight = srcRaw.getHeight();
             boolean flipX = ((Boolean) srcVec.get(3)).booleanValue();
             boolean flipY = ((Boolean) srcVec.get(4)).booleanValue();
-            if (!Sage.EMBEDDED)
+            ByteBuffer targetBuff = ByteBuffer.allocateDirect(targetWidth * targetHeight * 4);
+            ByteBuffer srcBuff = srcRaw.getROData();
+            targetBuff.clear();
+            for (int y = 0; y < targetHeight; y++)
             {
-              ByteBuffer targetBuff = ByteBuffer.allocateDirect(targetWidth * targetHeight * 4);
-              ByteBuffer srcBuff = srcRaw.getROData();
-              targetBuff.clear();
-              for (int y = 0; y < targetHeight; y++)
+              int dstoff = y*4*targetWidth;
+              int targetPos = dstoff;
+              if (flipY)
+                targetBuff.position(targetPos = ((targetHeight - y - 1)*4*targetWidth));
+              for (int x = 0; x < targetWidth; x++)
               {
-                int dstoff = y*4*targetWidth;
-                int targetPos = dstoff;
-                if (flipY)
-                  targetBuff.position(targetPos = ((targetHeight - y - 1)*4*targetWidth));
-                for (int x = 0; x < targetWidth; x++)
+                int dstoff2 = dstoff + 4*x;
+                if (flipX)
+                  targetBuff.position(targetPos + (targetWidth - x - 1) * 4);
+                targetBuff.put(srcBuff.get(dstoff2));
+                if (hasDiffuseColor)
                 {
-                  int dstoff2 = dstoff + 4*x;
-                  if (flipX)
-                    targetBuff.position(targetPos + (targetWidth - x - 1) * 4);
-                  targetBuff.put(srcBuff.get(dstoff2));
-                  if (hasDiffuseColor)
-                  {
-                    targetBuff.put((byte)(((srcBuff.get(dstoff2 + 1) & 0xFF) * diffuseR / 255) & 0xFF));
-                    targetBuff.put((byte)(((srcBuff.get(dstoff2 + 2) & 0xFF) * diffuseR / 255) & 0xFF));
-                    targetBuff.put((byte)(((srcBuff.get(dstoff2 + 3) & 0xFF) * diffuseR / 255) & 0xFF));
-                  }
-                  else
-                  {
-                    targetBuff.put(srcBuff.get(dstoff2 + 1));
-                    targetBuff.put(srcBuff.get(dstoff2 + 2));
-                    targetBuff.put(srcBuff.get(dstoff2 + 3));
-                  }
+                  targetBuff.put((byte)(((srcBuff.get(dstoff2 + 1) & 0xFF) * diffuseR / 255) & 0xFF));
+                  targetBuff.put((byte)(((srcBuff.get(dstoff2 + 2) & 0xFF) * diffuseR / 255) & 0xFF));
+                  targetBuff.put((byte)(((srcBuff.get(dstoff2 + 3) & 0xFF) * diffuseR / 255) & 0xFF));
+                }
+                else
+                {
+                  targetBuff.put(srcBuff.get(dstoff2 + 1));
+                  targetBuff.put(srcBuff.get(dstoff2 + 2));
+                  targetBuff.put(srcBuff.get(dstoff2 + 3));
                 }
               }
-              srcImage.removeRawRef(srcImgIdx);
-              setRawImage(new sage.media.image.RawImage(targetWidth, targetHeight, targetBuff, true,
-                  4 * targetWidth, true), imageIndex, rawCacheReserve);
-              rawCacheReserve = 0;
             }
-            else
-            {
-              byte[] targetBuff = new byte[targetWidth * targetHeight * 4];
-              byte[] srcBuff = srcRaw.getDataArr();
-              int targetIdx = 0;
-              for (int y = 0; y < targetHeight; y++)
-              {
-                int dstoff = y*4*targetWidth;
-                int targetPos = dstoff;
-                if (flipY)
-                  targetIdx = targetPos = ((targetHeight - y - 1)*4*targetWidth);
-                for (int x = 0; x < targetWidth; x++)
-                {
-                  int dstoff2 = dstoff + 4*x;
-                  if (flipX)
-                    targetIdx = targetPos + (targetWidth - x - 1) * 4;
-                  targetBuff[targetIdx++] = srcBuff[dstoff2];
-                  if (hasDiffuseColor)
-                  {
-                    targetBuff[targetIdx++] = (byte)(((srcBuff[dstoff2 + 1] & 0xFF) * diffuseR / 255) & 0xFF);
-                    targetBuff[targetIdx++] = (byte)(((srcBuff[dstoff2 + 2] & 0xFF) * diffuseR / 255) & 0xFF);
-                    targetBuff[targetIdx++] = (byte)(((srcBuff[dstoff2 + 3] & 0xFF) * diffuseR / 255) & 0xFF);
-                  }
-                  else
-                  {
-                    targetBuff[targetIdx++] = srcBuff[dstoff2 + 1];
-                    targetBuff[targetIdx++] = srcBuff[dstoff2 + 2];
-                    targetBuff[targetIdx++] = srcBuff[dstoff2 + 3];
-                  }
-                }
-              }
-              srcImage.removeRawRef(srcImgIdx);
-              setRawImage(new sage.media.image.RawImage(targetWidth, targetHeight, targetBuff, true,
-                  4 * targetWidth), imageIndex, rawCacheReserve);
-              rawCacheReserve = 0;
-            }
+            srcImage.removeRawRef(srcImgIdx);
+            setRawImage(new sage.media.image.RawImage(targetWidth, targetHeight, targetBuff, true,
+                4 * targetWidth, true), imageIndex, rawCacheReserve);
+            rawCacheReserve = 0;
           }
         }
       }
@@ -3450,9 +3145,9 @@ public class MetaImage
       {
         MetaImage mi = walker.next();
         System.out.println("#" + x + " src=" + mi.src);
-        for (int i = 0; i < (Sage.EMBEDDED ? mi.rawImage.length : mi.javaImage.length); i++)
+        for (int i = 0; i < mi.javaImage.length; i++)
         {
-          if (!Sage.EMBEDDED && mi.javaImage[i] != null)
+          if (mi.javaImage[i] != null)
           {
             System.out.println("Java " + mi.width[i] + "x" + mi.height[i] +
                 " size=" + mi.javaMemSize[i]/1024 + "KB age=" + (Sage.eventTime() - mi.lastUsedJava[i])/1000.0 + " sec");
@@ -3484,117 +3179,108 @@ public class MetaImage
   private boolean loadCacheFile()
   {
     File myCacheFile = null;
-    if (Sage.EMBEDDED && src.toString().startsWith("smb://"))
-    {
-      String localPath = FSManager.getInstance().requestLocalSMBAccess(src.toString());
-      if (localPath == null)
-        localCacheFile = null;
-      else
-        localCacheFile = new File(localPath);
-    }
-    else
-    {
-      try
-      {
-        boolean usePermCache = ENABLE_OFFLINE_URL_CACHE && src instanceof URL;
-        if (usePermCache)
-        {
-          myCacheFile = new File(MediaFile.THUMB_FOLDER, "url-" + convertToAsciiName(src.toString()));
-          if (myCacheFile.isFile() && myCacheFile.length() > 0)
-          {
-            myCacheFile.setLastModified(Sage.time()); // so we know which are the oldest
-            localCacheFile = myCacheFile;
-            return true; // already cached on disk
-          }
-        }
-        InputStream is = null;
-        if (src instanceof String)
-          is = getClass().getClassLoader().getResourceAsStream((String) src);
-        else
-        {
-          HttpURLConnection.setFollowRedirects(true);
-          URL myURL = (URL) src;
-          URLConnection myURLConn;
-          try
-          {
-            while (true)
-            {
-              lastUrlLoadTime = Sage.eventTime();
-              myURLConn = myURL.openConnection();
-              myURLConn.setConnectTimeout(30000);
-              myURLConn.setReadTimeout(30000);
-              is = myURLConn.getInputStream();
-              if (myURLConn instanceof HttpURLConnection)
-              {
-                HttpURLConnection httpConn = (HttpURLConnection) myURLConn;
-                if (httpConn.getResponseCode() / 100 == 3)
-                {
-                  if (Sage.DBG) System.out.println("Internally processing HTTP redirect...");
-                  is.close();
-                  myURL = new URL(httpConn.getHeaderField("Location:"));
-                  continue;
-                }
-              }
-              break;
-            }
-          }
-          catch (Exception e)
-          {
-            if (Sage.DBG) System.out.println("ERROR with URL \"" + src + "\" download of:" + e);
-            try{
-              if (is != null)
-                is.close();
-            }catch (Exception e3){}
-            is = null;
-          }
-        }
-        if (is != null)
-        {
-          File tmpCacheFile = null;
-          try
-          {
-            if (!usePermCache)
-              myCacheFile = getNewLocalCacheFile();
-            else
-              tmpCacheFile = File.createTempFile(TEMP_CACHE_IMAGE_PREFIX, TEMP_CACHE_IMAGE_SUFFIX, MediaFile.THUMB_FOLDER);
-            FileOutputStream fos = new FileOutputStream(tmpCacheFile != null ? tmpCacheFile : myCacheFile);
-            byte[] buf = new byte[16384];
-            if (Sage.DBG) System.out.println("Downloading-2 URL " + src + " to local cache file: " + myCacheFile + " id=" + System.identityHashCode(this));
-            int numRead = is.read(buf);
-            while (numRead != -1)
-            {
-              fos.write(buf, 0, numRead);
-              numRead = is.read(buf);
-            }
-            fos.close();
-            // touch tracker to check the file size
-            if ( localCacheFileTracker!=null )
-              localCacheFileTracker.touch(this);
-          }
-          finally
-          {
-            if (usePermCache && tmpCacheFile != null)
-            {
-              if (!tmpCacheFile.renameTo(myCacheFile))
-                tmpCacheFile.delete(); // this should only fail if something else is in the process of doing this from another thread
-            }
-            localCacheFile = myCacheFile;
-            is.close();
 
-            if (localCacheFileTracker != null) {
-              // tell local cache tracker to update the file size
-              localCacheFileTracker.checkFileSize(this);
+    try
+    {
+      boolean usePermCache = ENABLE_OFFLINE_URL_CACHE && src instanceof URL;
+      if (usePermCache)
+      {
+        myCacheFile = new File(MediaFile.THUMB_FOLDER, "url-" + convertToAsciiName(src.toString()));
+        if (myCacheFile.isFile() && myCacheFile.length() > 0)
+        {
+          myCacheFile.setLastModified(Sage.time()); // so we know which are the oldest
+          localCacheFile = myCacheFile;
+          return true; // already cached on disk
+        }
+      }
+      InputStream is = null;
+      if (src instanceof String)
+        is = getClass().getClassLoader().getResourceAsStream((String) src);
+      else
+      {
+        HttpURLConnection.setFollowRedirects(true);
+        URL myURL = (URL) src;
+        URLConnection myURLConn;
+        try
+        {
+          while (true)
+          {
+            lastUrlLoadTime = Sage.eventTime();
+            myURLConn = myURL.openConnection();
+            myURLConn.setConnectTimeout(30000);
+            myURLConn.setReadTimeout(30000);
+            is = myURLConn.getInputStream();
+            if (myURLConn instanceof HttpURLConnection)
+            {
+              HttpURLConnection httpConn = (HttpURLConnection) myURLConn;
+              if (httpConn.getResponseCode() / 100 == 3)
+              {
+                if (Sage.DBG) System.out.println("Internally processing HTTP redirect...");
+                is.close();
+                myURL = new URL(httpConn.getHeaderField("Location:"));
+                continue;
+              }
             }
+            break;
+          }
+        }
+        catch (Exception e)
+        {
+          if (Sage.DBG) System.out.println("ERROR with URL \"" + src + "\" download of:" + e);
+          try{
+            if (is != null)
+              is.close();
+          }catch (Exception e3){}
+          is = null;
+        }
+      }
+      if (is != null)
+      {
+        File tmpCacheFile = null;
+        try
+        {
+          if (!usePermCache)
+            myCacheFile = getNewLocalCacheFile();
+          else
+            tmpCacheFile = File.createTempFile(TEMP_CACHE_IMAGE_PREFIX, TEMP_CACHE_IMAGE_SUFFIX, MediaFile.THUMB_FOLDER);
+          FileOutputStream fos = new FileOutputStream(tmpCacheFile != null ? tmpCacheFile : myCacheFile);
+          byte[] buf = new byte[16384];
+          if (Sage.DBG) System.out.println("Downloading-2 URL " + src + " to local cache file: " + myCacheFile + " id=" + System.identityHashCode(this));
+          int numRead = is.read(buf);
+          while (numRead != -1)
+          {
+            fos.write(buf, 0, numRead);
+            numRead = is.read(buf);
+          }
+          fos.close();
+          // touch tracker to check the file size
+          if ( localCacheFileTracker!=null )
+            localCacheFileTracker.touch(this);
+        }
+        finally
+        {
+          if (usePermCache && tmpCacheFile != null)
+          {
+            if (!tmpCacheFile.renameTo(myCacheFile))
+              tmpCacheFile.delete(); // this should only fail if something else is in the process of doing this from another thread
+          }
+          localCacheFile = myCacheFile;
+          is.close();
+
+          if (localCacheFileTracker != null) {
+            // tell local cache tracker to update the file size
+            localCacheFileTracker.checkFileSize(this);
           }
         }
       }
-      catch (Exception e)
-      {
-        if (Sage.DBG) System.out.println("Error creating cached image data from URL \"" + src + "\" of:" + e);
-        deleteLocalCacheFile();
-        return false;
-      }
     }
+    catch (Exception e)
+    {
+      if (Sage.DBG) System.out.println("Error creating cached image data from URL \"" + src + "\" of:" + e);
+      deleteLocalCacheFile();
+      return false;
+    }
+
     return localCacheFile != null && localCacheFile.isFile();
   }
 
@@ -3674,7 +3360,6 @@ public class MetaImage
     }
     catch (IOException ioe)
     {
-      if (Sage.EMBEDDED) throw ioe;
       if (sage.Sage.DBG) System.out.println("ERROR LOADING NATIVE IMAGE, REVERTING TO JAVA LOAD for: " + imgFile);
       BufferedImage javaImage = ImageUtils.rotateImage(ImageUtils.fullyLoadImage(new File(imgFile)), rotation);
       if (javaImage != null)
@@ -3951,11 +3636,6 @@ public class MetaImage
           }
           String urlStr = (String) currJob[0];
           ResourceLoadListener loadNotifier = (ResourceLoadListener) currJob[1];
-          while (Sage.EMBEDDED && loadNotifier.getUIMgr().areUIActionsBeingProcessed(false))
-          {
-            // Hold off on this processing on limited resource systems if we're trying to respond to a user action
-            try{Thread.sleep(10);}catch(Exception e){}
-          }
           if (loadNotifier.loadStillNeeded(urlStr))
           {
             // Check if we're in the process of loading this one still
@@ -3997,8 +3677,7 @@ public class MetaImage
               if (!rv.loadCacheFile())
               {
                 rv.setRawImage(sage.media.image.ImageLoader.getNullImage(), 0, 0);
-                if (!Sage.EMBEDDED)
-                  rv.setJavaImage(ImageUtils.getNullImage(), 0, 0);
+                rv.setJavaImage(ImageUtils.getNullImage(), 0, 0);
               }
               else
               {

@@ -124,14 +124,8 @@ public final class ThreadMonitor extends Thread
           {
             ThreadCpuInfo cpuInfo = new ThreadCpuInfo();
             cpuInfo.threadId = threadId;
-            if (Sage.EMBEDDED)
-            {
-              cpuInfo.cpuMillis = getCpuTimeMs(threadId);
-            } else
-            {
-              // non-embedded systems can use threadBean to get cpuTime
-              cpuInfo.cpuMillis = threadBean.getThreadCpuTime(threadId) / 1000000;
-            }
+            // non-embedded systems can use threadBean to get cpuTime
+            cpuInfo.cpuMillis = threadBean.getThreadCpuTime(threadId) / 1000000;
             Long lastCpuTimeL = cpuTimeByThreadId.get(threadId);
             long lastCpuTime = lastCpuTimeL == null ? 0 : lastCpuTimeL.longValue();
             cpuInfo.cpuPercent = (cpuInfo.cpuMillis - lastCpuTime) * 100 / intervalTime;

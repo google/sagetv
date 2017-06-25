@@ -29,9 +29,9 @@ public final class NetworkCaptureDevice extends CaptureDevice
     host = Sage.get(prefs + ENCODING_HOST, "");
     hostName = host.substring(0, host.indexOf(':'));
     hostPort = Integer.parseInt(host.substring(host.indexOf(':') + 1));
-    fastNetSwitch = (Sage.EMBEDDED && isDeviceOnThisMachine()) || Sage.getBoolean(prefs + "fast_network_encoder_switch", false);
+    fastNetSwitch = Sage.getBoolean(prefs + "fast_network_encoder_switch", false);
     // local network encoders on embedded will send messages about their format info
-    dynamicFormat = !Sage.EMBEDDED || !isDeviceOnThisMachine() || Sage.getBoolean("embedded_network_encoder_dynamic_format", true);
+    dynamicFormat = true;
 
     // In case this network encoder was running before we started up due to a crash in SageTV we should
     // tell it to stop what it's doing (as long as its configured for use)
@@ -151,7 +151,7 @@ public final class NetworkCaptureDevice extends CaptureDevice
       String res = Sage.readLineBytes(inStream);
       if (Sage.DBG && NETWORK_ENCODER_DEBUG) System.out.println("MMC received response from " + host + " of " + res);
       lastCommTime = Sage.eventTime();
-      if (version < 2 && (!Sage.EMBEDDED || !isDeviceOnThisMachine()))
+      if (version < 2)
         closeConnection();
       return res;
     }
@@ -208,8 +208,7 @@ public final class NetworkCaptureDevice extends CaptureDevice
     MediaServer ms = SageTV.getMediaServer();
     if (ms != null)
     {
-      if (!Sage.EMBEDDED)
-        ms.addToUploadList(uploadFile, randy);
+      ms.addToUploadList(uploadFile, randy);
       return randy;
     }
     else
@@ -345,9 +344,7 @@ public final class NetworkCaptureDevice extends CaptureDevice
 
   public int getSignalStrength()
   {
-    if (!Sage.EMBEDDED || !isDeviceOnThisMachine())
-      return super.getSignalStrength();
-    return (int) submitLongHostRequest("GET_SIGNAL_STRENGTH " + getNetworkSourceName());
+    return super.getSignalStrength();
   }
 
   public long getRecordedBytes()
@@ -389,7 +386,7 @@ public final class NetworkCaptureDevice extends CaptureDevice
                 Scheduler.getInstance().kick(false);
                 break;
               }
-              try{Thread.sleep((Sage.EMBEDDED) ? 1000 : 15000);}catch(Exception e){}
+              try{Thread.sleep(15000);}catch(Exception e){}
             }
             launchedMonitorThread = false;
           }
@@ -473,7 +470,7 @@ public final class NetworkCaptureDevice extends CaptureDevice
   // Returns true for CaptureDevice implementations that can do data scanning on the specified input
   public boolean doesDataScanning()
   {
-    return Sage.EMBEDDED && isDeviceOnThisMachine();
+    return false;
   }
   // (for EPG data at this time), the input will be from this capture device AND if that input actually wants
   // a data scan to be performed

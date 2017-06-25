@@ -164,18 +164,6 @@ public class ModuleGroup
       }
 
       java.io.File file = new java.io.File(stvFilename);
-      if (sage.Sage.EMBEDDED && stvFilename.equals(cachedModuleName) && cachedModule != null &&
-          cachedModule.lastModified() < timestampCachedModule &&
-          timestampCachedModuleFile >= file.lastModified())
-      {
-        if (sage.Sage.DBG) System.out.println("Using cached STV module to speed loading!");
-        moduleMap.put(cachedModule.name(), cachedModule);
-
-        defaultModule = cachedModule;
-        cachedModule.setModuleGroup(this);
-        return;
-      }
-
       // Peek at the first 3 bytes of the file to see if it's an STV file
       boolean isSTVFile = isWIZFile(file);
       //			java.io.FileInputStream fis = null;
@@ -218,15 +206,6 @@ public class ModuleGroup
       moduleMap.put(mod.name(), mod);
 
       defaultModule = mod;
-      if (sage.Sage.EMBEDDED)
-      {
-        mod.setModuleGroup(this);
-
-        cachedModuleName = stvFilename;
-        timestampCachedModule = sage.Sage.time();
-        cachedModule = mod;
-        timestampCachedModuleFile = file.lastModified() + 10000; //offset it to account for filesystem differences
-      }
     }
     else // XML
     {

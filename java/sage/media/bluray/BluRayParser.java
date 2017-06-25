@@ -280,15 +280,8 @@ public class BluRayParser
 			// We need to use FFMPEG here because our internal detector doesn't deal with the stv:// protocol
 			sage.media.format.ContainerFormat ourCf;
 			// NOTE: THIS WILL NOT WORK PROPERLY IN FAT CLIENT EMBEDDED MODE; BUT WE CAN FIX THAT LATER!
-			if (sage.Sage.EMBEDDED)
-			{
-				ourCf = sage.media.format.FormatParser.getFileFormat(new java.io.File(streamDir, mplsObj.playlistItems[0].itemClips[0].clipName + (doesUseShortFilenames() ? ".MTS" : ".m2ts")));
-			}
-			else
-			{
-				ourCf = sage.media.format.FormatParser.getFFMPEGFileFormat((remoteHostname == null ? "" : ("stv://" + remoteHostname + "/")) +
-					new java.io.File(streamDir, mplsObj.playlistItems[0].itemClips[0].clipName + (doesUseShortFilenames() ? ".MTS" : ".m2ts")).getAbsolutePath());
-			}
+      ourCf = sage.media.format.FormatParser.getFFMPEGFileFormat((remoteHostname == null ? "" : ("stv://" + remoteHostname + "/")) +
+        new java.io.File(streamDir, mplsObj.playlistItems[0].itemClips[0].clipName + (doesUseShortFilenames() ? ".MTS" : ".m2ts")).getAbsolutePath());
 			if (ourCf != null)
 			{
 				sage.media.format.AudioFormat[] ffAudios = ourCf.getAudioFormats();

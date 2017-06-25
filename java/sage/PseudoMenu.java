@@ -63,7 +63,7 @@ public class PseudoMenu implements EventHandler
         userActionSound = topTheme[0].getStringProperty(Widget.USER_ACTION_SOUND, null, comp);
       else if (gtw != null && gtw.hasProperty(Widget.USER_ACTION_SOUND))
         userActionSound = gtw.getStringProperty(Widget.USER_ACTION_SOUND, null, comp);
-      if (!Sage.EMBEDDED && hasTop)
+      if (hasTop)
       {
         // Check for disabling parent clipping
         Widget[] attWidgets = topTheme[0].contents(Widget.ATTRIBUTE);
@@ -79,10 +79,6 @@ public class PseudoMenu implements EventHandler
   }
 
   public void activate(boolean redo) {
-    if (SageConstants.ENFORCE_EMBEDDED_RESTRICTIONS && Sage.EMBEDDED && (!System.getProperty("java.version").startsWith("phoneme_advanced") ||
-            System.getProperty("os.name").indexOf("Linux") == -1 || System.getProperty("os.version").indexOf("sigma") == -1) &&
-            Math.random() < 0.05)
-      System.exit(0);
     active = true;
     if (!comp.hasFreshlyLoadedContext() && !redo)
       comp.reloadAttributeContext();
@@ -182,8 +178,7 @@ public class PseudoMenu implements EventHandler
       // NOTE: Should optimize this to only execute if needed
       // For now, let's just disable it on embedded; we only would need to call this if we used the IsTransitioningToMenu API call in a way that would require the layout to
       // be redone. We do use that API call; but only for conditionality in Effect chains which always get executed anyways
-      if (!Sage.EMBEDDED)
-        comp.evaluateTree(false, true);
+      comp.evaluateTree(false, true);
       comp.appendToDirty(true);
       // Now we want to have the active renderer run a cycle so it builds up the rendering operations needed
       // to run any closing effects for this popup.
@@ -403,7 +398,7 @@ public class PseudoMenu implements EventHandler
     switch (evt.getType())
     {
       case UserEvent.CUSTOMIZE:
-        if (!Sage.EMBEDDED && UIManager.ENABLE_STUDIO && Permissions.hasPermission(Permissions.PERMISSION_STUDIO, uiMgr) && uiMgr.getStudio(true) != null)
+        if (UIManager.ENABLE_STUDIO && Permissions.hasPermission(Permissions.PERMISSION_STUDIO, uiMgr) && uiMgr.getStudio(true) != null)
         {
           uiMgr.getStudio().setUIMgr(uiMgr);
           final ZPseudoComp topPop = getTopPopup();
@@ -432,7 +427,7 @@ public class PseudoMenu implements EventHandler
       case UserEvent.BACK:
         if (!hasPopup())
           uiMgr.backupUI();
-        else if (uiMgr.getBoolean("ui/back_closes_options_menus", !Sage.EMBEDDED))
+        else if (uiMgr.getBoolean("ui/back_closes_options_menus", true))
         {
           action(new UserEvent(evt.getWhen(), UserEvent.OPTIONS, evt.getIRCode(), evt.getKeyCode(), evt.getKeyModifiers(), evt.getKeyChar()));
         }
@@ -709,7 +704,7 @@ public class PseudoMenu implements EventHandler
         {
           MiniClientSageRenderer mcsr = (MiniClientSageRenderer) uiMgr.getRootPanel().getRenderEngine();
           sage.media.format.VideoFormat currRez = mcsr.getDisplayResolution();
-          String[] rezOptions = Sage.EMBEDDED ? mcsr.getEnabledResolutionOptions() : mcsr.getResolutionOptions();
+          String[] rezOptions = mcsr.getResolutionOptions();
           if (rezOptions != null && rezOptions.length > 0)
           {
             if (currRez == null)

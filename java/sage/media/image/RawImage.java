@@ -25,7 +25,6 @@ public class RawImage
   /** Creates a new instance of RawImage */
   public RawImage(int width, int height, byte[] data, boolean hasAlpha, int stride)
   {
-    if (!ImageLoader.EMBEDDED) throw new UnsupportedOperationException("RawImage objects with byte[] backed data is only supported on embedded.");
     this.width = width;
     this.height = height;
     this.dataArr = data;
@@ -35,7 +34,6 @@ public class RawImage
 
   public RawImage(int width, int height, java.nio.ByteBuffer data, boolean hasAlpha, int stride)
   {
-    if (ImageLoader.EMBEDDED) throw new UnsupportedOperationException("RawImage objects with ByteBuffer backed data is not supported on embedded.");
     this.width = width;
     this.height = height;
     this.dataBuff = data;
@@ -45,7 +43,6 @@ public class RawImage
 
   public RawImage(int width, int height, java.nio.ByteBuffer data, boolean hasAlpha, int stride, boolean javaAlloced)
   {
-    if (ImageLoader.EMBEDDED) throw new UnsupportedOperationException("RawImage objects with ByteBuffer backed data is not supported on embedded.");
     this.width = width;
     this.height = height;
     this.dataBuff = data;
@@ -62,7 +59,6 @@ public class RawImage
 
   public RawImage(java.awt.image.BufferedImage bi)
   {
-    if (ImageLoader.EMBEDDED) throw new UnsupportedOperationException("RawImage object creation from BufferedImage objects is not supported on embedded");
     if (bi.getType() != java.awt.image.BufferedImage.TYPE_INT_ARGB_PRE && bi.getType() != java.awt.image.BufferedImage.TYPE_INT_ARGB)
     {
       throw new IllegalArgumentException("Can only create RawImages from ARGB_PRE BIs, was given: " + bi.getType());
@@ -105,7 +101,6 @@ public class RawImage
   // For multithreading we need to give each caller a new buffer object to handle the positions; but share the same data
   public java.nio.ByteBuffer getROData()
   {
-    if (ImageLoader.EMBEDDED) throw new UnsupportedOperationException("RawImage.getROData() is not supported on EMBEDDED");
     dataBuff.mark(); // GCJ needs this or it throws an exception
     java.nio.ByteBuffer rv = dataBuff.asReadOnlyBuffer();
     rv.rewind();
@@ -124,7 +119,6 @@ public class RawImage
 
   public java.awt.image.BufferedImage convertToBufferedImage()
   {
-    if (ImageLoader.EMBEDDED) throw new UnsupportedOperationException("THIS API DOES NOT EXIST IN EMBEDDED MODE!");
     java.awt.image.BufferedImage rv = new java.awt.image.BufferedImage(width, height, java.awt.image.BufferedImage.TYPE_INT_ARGB_PRE);
     // NOTE: THIS MAY HAVE ISSUES WITH DIFFERENT ENDIANS ON VARIOUS PLATFORMS
     java.nio.ByteBuffer tempData = getROData();
@@ -136,16 +130,12 @@ public class RawImage
   // If true, the native buffer data should NOT be freed
   public boolean isInternalAlloc()
   {
-    return ImageLoader.EMBEDDED || internalAlloc;
+    return internalAlloc;
   }
 
   public String toString()
   {
-    if (ImageLoader.EMBEDDED)
-      return "RawImage[" + width + "x" + height + " alpha=" + hasAlpha + " stride=" + stride + " dataPtr=" + dataArr
-          + "]";
-    else
-      return "RawImage[" + width + "x" + height + " alpha=" + hasAlpha + " stride=" + stride + " bufferCapacity=" +
+    return "RawImage[" + width + "x" + height + " alpha=" + hasAlpha + " stride=" + stride + " bufferCapacity=" +
       (dataBuff != null ? dataBuff.capacity() : 0) + "]";
   }
 
@@ -155,5 +145,5 @@ public class RawImage
   private java.nio.ByteBuffer dataBuff;
   private boolean hasAlpha;
   private int stride; // in bytes
-  private boolean internalAlloc = ImageLoader.EMBEDDED;
+  private boolean internalAlloc = false;
 }

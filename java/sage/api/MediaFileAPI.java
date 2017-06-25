@@ -1163,7 +1163,7 @@ public class MediaFileAPI {
                 if (Sage.DBG) System.out.println("Successfully regenerated thumbnail and inserted it into exif header!");
                 MetaImage.clearFromCache(new MetaImage.MediaFileThumbnail(mf));
                 // In case the offset/size changed for some unknown reason, this is very low overhead to reparse the JPEG file
-                mf.reinitializeMetadata(true, true, mf.getName().substring(0, mf.getName().length() - (Sage.EMBEDDED ? mf.getShow().getEpisodeName().length() : srcFile.getName().length())));
+                mf.reinitializeMetadata(true, true, mf.getName().substring(0, mf.getName().length() - (srcFile.getName().length())));
                 if (Sage.DBG) System.out.println("MF reinitialized to:" + mf);
               }
               else
@@ -1279,7 +1279,7 @@ public class MediaFileAPI {
       }
     }
 
-    mf.reinitializeMetadata(true, false, mf.getName().substring(0, mf.getName().length() - (Sage.EMBEDDED ? mf.getShow().getEpisodeName().length() : srcFile.getName().length())));
+    mf.reinitializeMetadata(true, false, mf.getName().substring(0, mf.getName().length() - (srcFile.getName().length())));
     if (Sage.DBG) System.out.println("MF reinitialized to:" + mf);
     MetaImage.clearFromCache(mf);
     return true;

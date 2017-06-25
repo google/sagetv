@@ -45,7 +45,7 @@ public abstract class Translator
 
   static String translateText(String s, boolean dText)
   {
-    if (sage.Sage.EMBEDDED || sage.Sage.getRawProperties() == null) return s;
+    if (sage.Sage.getRawProperties() == null) return s;
     synchronized (lock)
     {
       if (reset)

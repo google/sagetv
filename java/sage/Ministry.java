@@ -137,22 +137,19 @@ public class Ministry implements Runnable
   {
     jobCounter = Sage.getInt(NEXT_JOB_ID, 1);
 
-    if (!Sage.EMBEDDED)
+    for (int i = 0; i < DEAD_FORMAT_NAMES.length; i++)
+      Sage.remove("transcoder/formats/" + DEAD_FORMAT_NAMES[i]);
+    for (int i = 0; i < PREDEFINED_TRANSCODER_FORMATS.length; i++)
+      Sage.put("transcoder/formats/" + PREDEFINED_TRANSCODER_FORMATS[i][0], PREDEFINED_TRANSCODER_FORMATS[i][1]);
+    if (MMC.getInstance().isNTSCVideoFormat())
     {
-      for (int i = 0; i < DEAD_FORMAT_NAMES.length; i++)
-        Sage.remove("transcoder/formats/" + DEAD_FORMAT_NAMES[i]);
-      for (int i = 0; i < PREDEFINED_TRANSCODER_FORMATS.length; i++)
-        Sage.put("transcoder/formats/" + PREDEFINED_TRANSCODER_FORMATS[i][0], PREDEFINED_TRANSCODER_FORMATS[i][1]);
-      if (MMC.getInstance().isNTSCVideoFormat())
-      {
-        for (int i = 0; i < PREDEFINED_TRANSCODER_FORMATS_NTSC.length; i++)
-          Sage.put("transcoder/formats/" + PREDEFINED_TRANSCODER_FORMATS_NTSC[i][0], PREDEFINED_TRANSCODER_FORMATS_NTSC[i][1]);
-      }
-      else
-      {
-        for (int i = 0; i < PREDEFINED_TRANSCODER_FORMATS_PAL.length; i++)
-          Sage.put("transcoder/formats/" + PREDEFINED_TRANSCODER_FORMATS_PAL[i][0], PREDEFINED_TRANSCODER_FORMATS_PAL[i][1]);
-      }
+      for (int i = 0; i < PREDEFINED_TRANSCODER_FORMATS_NTSC.length; i++)
+        Sage.put("transcoder/formats/" + PREDEFINED_TRANSCODER_FORMATS_NTSC[i][0], PREDEFINED_TRANSCODER_FORMATS_NTSC[i][1]);
+    }
+    else
+    {
+      for (int i = 0; i < PREDEFINED_TRANSCODER_FORMATS_PAL.length; i++)
+        Sage.put("transcoder/formats/" + PREDEFINED_TRANSCODER_FORMATS_PAL[i][0], PREDEFINED_TRANSCODER_FORMATS_PAL[i][1]);
     }
   }
 
@@ -210,20 +207,17 @@ public class Ministry implements Runnable
     try{Thread.sleep(5000);}catch(Exception e){}
 
     if (Sage.DBG) System.out.println("Ministry is starting");
-    if (!Sage.EMBEDDED)
+    // Look for any MediaFiles which we should mark as transcoded immediately
+    MediaFile[] mfs = Wizard.getInstance().getFiles();
+    for (int i = 0; i < mfs.length; i++)
     {
-      // Look for any MediaFiles which we should mark as transcoded immediately
-      MediaFile[] mfs = Wizard.getInstance().getFiles();
-      for (int i = 0; i < mfs.length; i++)
+      MediaFile mf = mfs[i];
+      if (doesFileAlwaysRequireTranscoding(mf))
       {
-        MediaFile mf = mfs[i];
-        if (doesFileAlwaysRequireTranscoding(mf))
-        {
-          if (Sage.DBG) System.out.println("Added for transcoding:" + mf);
-          sage.media.format.ContainerFormat cf = new sage.media.format.ContainerFormat();
-          cf.setFormatName(sage.media.format.MediaFormat.AVI);
-          waitingForConversion.add(new DShowTranscodeJob(mf, "AVI", cf, true, null));
-        }
+        if (Sage.DBG) System.out.println("Added for transcoding:" + mf);
+        sage.media.format.ContainerFormat cf = new sage.media.format.ContainerFormat();
+        cf.setFormatName(sage.media.format.MediaFormat.AVI);
+        waitingForConversion.add(new DShowTranscodeJob(mf, "AVI", cf, true, null));
       }
     }
 
@@ -527,38 +521,35 @@ public class Ministry implements Runnable
 
   public void submitForPotentialTranscoding(MediaFile mf)
   {
-    if (!Sage.EMBEDDED)
+    if (doesFileAlwaysRequireTranscoding(mf))
     {
-      if (doesFileAlwaysRequireTranscoding(mf))
+      synchronized (waitingForConversion)
       {
-        synchronized (waitingForConversion)
+        for (int i = 0; i < waitingForConversion.size(); i++)
         {
-          for (int i = 0; i < waitingForConversion.size(); i++)
-          {
-            TranscodeJob tj = (TranscodeJob) waitingForConversion.get(i);
-            if (tj.getMediaFile() == mf)
-              return;
-          }
-          if (Sage.DBG) System.out.println("Added for transcoding:" + mf);
-          sage.media.format.ContainerFormat cf = new sage.media.format.ContainerFormat();
-          cf.setFormatName(sage.media.format.MediaFormat.AVI);
-          waitingForConversion.add(new DShowTranscodeJob(mf, "AVI", cf, true, null));
+          TranscodeJob tj = (TranscodeJob) waitingForConversion.get(i);
+          if (tj.getMediaFile() == mf)
+            return;
         }
-        kick();
+        if (Sage.DBG) System.out.println("Added for transcoding:" + mf);
+        sage.media.format.ContainerFormat cf = new sage.media.format.ContainerFormat();
+        cf.setFormatName(sage.media.format.MediaFormat.AVI);
+        waitingForConversion.add(new DShowTranscodeJob(mf, "AVI", cf, true, null));
       }
-      else
+      kick();
+    }
+    else
+    {
+      // Check for a Favorite auto conversion
+      String targetFormat = Carny.getInstance().getAutoConvertFormat(mf);
+      if (targetFormat != null && targetFormat.length() > 0)
       {
-        // Check for a Favorite auto conversion
-        String targetFormat = Carny.getInstance().getAutoConvertFormat(mf);
-        if (targetFormat != null && targetFormat.length() > 0)
-        {
-          if (Sage.DBG) System.out.println("Setting up automatic Favorite conversion to format " + targetFormat + " for " + mf);
-          java.io.File destDir = Carny.getInstance().getAutoConvertDest(mf);
-          if (destDir != null)
-            destDir.mkdirs();
-          addTranscodeJob(mf, targetFormat, getPredefinedTargetFormat(targetFormat),
-              destDir, Carny.getInstance().isDeleteAfterConversion(mf), 0, 0);
-        }
+        if (Sage.DBG) System.out.println("Setting up automatic Favorite conversion to format " + targetFormat + " for " + mf);
+        java.io.File destDir = Carny.getInstance().getAutoConvertDest(mf);
+        if (destDir != null)
+          destDir.mkdirs();
+        addTranscodeJob(mf, targetFormat, getPredefinedTargetFormat(targetFormat),
+            destDir, Carny.getInstance().isDeleteAfterConversion(mf), 0, 0);
       }
     }
   }

@@ -175,44 +175,6 @@ public class ShowAPI {
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         Object obj = stack.pop();
         Show s = getShowObj(obj);
-        if (Sage.EMBEDDED && s != null && (s.getMediaMask() & DBObject.MEDIA_MASK_PICTURE) != 0)
-        {
-          String desc = s.getDesc();
-          if (desc.length() > 0)
-            return desc; // The Show already has a description loaded
-          synchronized (this)
-          {
-            if (s == lastShowUsed)
-              return lastDesc;
-          }
-          // This is a picture file we're getting the description for, see if it's a JPEG so we can load it
-          Airing[] airList = Wizard.getInstance().getAirings(s, 0);
-          if (airList.length == 1)
-          {
-            MediaFile mf = Wizard.getInstance().getFileForAiring(airList[0]);
-            if (mf != null)
-            {
-              if (sage.media.format.MediaFormat.JPEG.equals(mf.getContainerFormat()))
-              {
-                // Found a JPEG w/ no description; try to load it from the file itself
-                try
-                {
-                  sage.media.format.ReadMetadata exifParser = new sage.media.format.ReadMetadata(mf.getFile(0));
-                  synchronized (this)
-                  {
-                    lastShowUsed = s;
-                    lastDesc = exifParser.toString();
-                    return lastDesc;
-                  }
-                }
-                catch (Exception e)
-                {
-                  // This can happen if there's no metdata in the JPEG file, so don't always log the error
-                }
-              }
-            }
-          }
-        }
         if (s != null)
           return s.getDesc();
         // Also check for a SeriesInfo

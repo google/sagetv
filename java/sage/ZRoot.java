@@ -35,19 +35,16 @@ public class ZRoot extends java.awt.Canvas
     super();
     uiMgr = inUIMgr;
     vf = uiMgr.getVideoFrame();
-    if (!Sage.EMBEDDED)
-    {
-      addComponentListener(this);
-      addMouseListener(this);
-      addMouseMotionListener(this);
-      addHierarchyListener(this);
-      vf.addMouseListeners(this);
-      vf.addMouseMotionListeners(this);
-    }
+    addComponentListener(this);
+    addMouseListener(this);
+    addMouseMotionListener(this);
+    addHierarchyListener(this);
+    vf.addMouseListeners(this);
+    vf.addMouseMotionListeners(this);
 
     alive = true;
 
-    if (Sage.EMBEDDED || uiMgr.getBoolean("ui/remote_render", false))
+    if (uiMgr.getBoolean("ui/remote_render", false))
     {
       renderType = REMOTE2DRENDER;
       uiMgr.putBoolean("ui/accelerated_rendering", false);
@@ -129,13 +126,10 @@ public class ZRoot extends java.awt.Canvas
             java.awt.Rectangle currRenderRect = null;
             synchronized (finalRenderThreadLock)
             {
-              boolean currentlyHidden = Sage.EMBEDDED ? (rootComp == null) :
-                (getParent() == null || (!isShowing() && requiresWindow()));
+              boolean currentlyHidden = (getParent() == null || (!isShowing() && requiresWindow()));
               // We stop processing the current effect animatiion if we see that the AR is going to run. On PC systems we don't do this because
               // we have much better parallel processing there. Either GPU/CPU or server/extender. But on embedded systems everything is very reliant
               // on a single main CPU; and we get much better UI performance by just stopping this processing in that case.
-              if (Sage.EMBEDDED && effectsNeedProcessing && !lockedEffectRunning && uiMgr.areUIActionsBeingProcessed(true))
-                effectsNeedProcessing = false;
 
               if (currentlyHidden ||
                   (renderNeeded == null && renderEngine.hasConsumedNextDisplayList() && finalAnims.isEmpty() && !finalAnimsNeedProcessing && !effectsNeedProcessing))
@@ -410,7 +404,7 @@ public class ZRoot extends java.awt.Canvas
 
   public boolean requiresWindow()
   {
-    return !Sage.EMBEDDED && uiMgr.getGlobalFrame() != null && !uiMgr.getBoolean("hide_java_ui_window", Sage.LINUX_OS) &&
+    return uiMgr.getGlobalFrame() != null && !uiMgr.getBoolean("hide_java_ui_window", Sage.LINUX_OS) &&
         (!(renderEngine instanceof Java2DSageRenderer) || !((Java2DSageRenderer) renderEngine).hasOSDRenderer());
   }
   private static boolean checked;
@@ -653,12 +647,10 @@ public class ZRoot extends java.awt.Canvas
 
   public void update(java.awt.Graphics g)
   {
-    if (Sage.EMBEDDED) return;
     paint(g);
   }
   public void paint(java.awt.Graphics g)
   {
-    if (Sage.EMBEDDED) return;
     //System.out.println("ZRoot.paint(g) called");
     // The active renderer seems to not repaint the obscured
     // area corectly, but the passive seems to work great even alongside the active one
@@ -737,7 +729,7 @@ public class ZRoot extends java.awt.Canvas
         if (THREADING_DBG && Sage.DBG) System.out.println("ActiveRender at the root of its cycle");
         long waitTime = FRAME_TIME;
         boolean[] ranCycle = new boolean[] { false };
-        if (Sage.EMBEDDED ? (rootComp != null) : (getParent() != null && (isShowing() || !requiresWindow())))
+        if ((getParent() != null && (isShowing() || !requiresWindow())))
         {
           // This needs to be synced just like anything else that relies on the UI structure
           long currTime = Sage.eventTime();
@@ -922,7 +914,7 @@ public class ZRoot extends java.awt.Canvas
     long startCpu = Sage.getCpuTime();
     if (THREADING_DBG && Sage.DBG) System.out.println("ACTIVE starting layout... dirtyArea=" + dirtyArea + " rootDirty=" +
         rootComp.needsLayout() + " arcyclewait=" + waitingOnARCycleID + " this=" + this);
-    if (getWidth() <= 0 || getHeight() <= 0 || (!Sage.EMBEDDED && ((!isShowing() && requiresWindow()) || getParent() == null)))
+    if (getWidth() <= 0 || getHeight() <= 0 || (((!isShowing() && requiresWindow()) || getParent() == null)))
     {
       synchronized (activeRenderThreadLock)
       {
@@ -1095,7 +1087,7 @@ public class ZRoot extends java.awt.Canvas
         displayList = new java.util.ArrayList();
         if (targetDirty == null)
         {
-          if (!Sage.EMBEDDED && uiMgr.disableParentClip())
+          if (uiMgr.disableParentClip())
             targetDirty = new java.awt.geom.Rectangle2D.Float(-rootComp.getWidth(), -rootComp.getHeight(), 3*rootComp.getWidth(), 3*rootComp.getHeight());
           else
             targetDirty = new java.awt.geom.Rectangle2D.Float(0, 0, rootComp.getWidth(), rootComp.getHeight());
@@ -1164,7 +1156,7 @@ public class ZRoot extends java.awt.Canvas
             if (ro.isVideoOp())
             {
               lastRenderVideoRect = ro.destRect;
-              if (!Sage.EMBEDDED && uiMgr.areLayersEnabled() && renderEngine instanceof DirectX9SageRenderer && !vf.isNonBlendableVideoPlayerLoaded())
+              if (uiMgr.areLayersEnabled() && renderEngine instanceof DirectX9SageRenderer && !vf.isNonBlendableVideoPlayerLoaded())
               {
                 // We need to do the BG surface in this case so that the post-compositing works in the renderer
                 surfOrAnimOps = true;
@@ -1405,7 +1397,7 @@ public class ZRoot extends java.awt.Canvas
     if (preparedYet) return;
     preparedYet = true;
     // Make the buffers the size of the screen, the clip rect will take care of the rest
-    if (!Sage.EMBEDDED && uiMgr.getGlobalFrame() != null)
+    if (uiMgr.getGlobalFrame() != null)
     {
       java.awt.Dimension scrSize = uiMgr.getScreenSize();
       if (renderType == NATIVE3DRENDER)
@@ -1623,7 +1615,7 @@ public class ZRoot extends java.awt.Canvas
 
   private void showTipWindow()
   {
-    if (Sage.EMBEDDED || lastMouseSrc == null || lastMouseSrc.getTip() == null)
+    if (lastMouseSrc == null || lastMouseSrc.getTip() == null)
     {
       return;
     }
@@ -1748,7 +1740,7 @@ public class ZRoot extends java.awt.Canvas
   public boolean isAcceleratedDrawing() { return renderType == NATIVE3DRENDER; }
   public boolean setAcceleratedDrawing(boolean x, boolean permanent)
   {
-    if (Sage.EMBEDDED || renderType == REMOTE2DRENDER || Sage.MAC_OS_X) return false;
+    if (renderType == REMOTE2DRENDER || Sage.MAC_OS_X) return false;
     if (Sage.WINDOWS_OS && renderEngine instanceof Java2DSageRenderer && ((Java2DSageRenderer) renderEngine).hasOSDRenderer() && x)
       return false;
     if (permanent)
@@ -1822,13 +1814,10 @@ public class ZRoot extends java.awt.Canvas
   private long cachedHWND;
   public long getHWND()
   {
-    if (!Sage.EMBEDDED)
-    {
-      //if (!Sage.WINDOWS_OS)
-      //	cachedHWND = 1;
-      if (cachedHWND == 0)
-        cachedHWND = UIUtils.getHWND(this);
-    }
+    //if (!Sage.WINDOWS_OS)
+    //	cachedHWND = 1;
+    if (cachedHWND == 0)
+      cachedHWND = UIUtils.getHWND(this);
     //		if (cachedHWND == 0)
     //			Thread.dumpStack();
     return cachedHWND;

@@ -287,27 +287,7 @@ public class IOUtils
       currParent = currParent.getParentFile();
       numParents++;
     }
-    if (Sage.EMBEDDED)
-    {
-      String pathStr = f.getAbsolutePath();
-      boolean useOurCheck = false;
-      if (pathStr.startsWith("/var/media/") || pathStr.startsWith("/tmp/external/"))
-      {
-        numParents -= 3;
-        useOurCheck = true;
-      }
-      else if (pathStr.startsWith("/tmp/sagetv_shares/"))
-      {
-        numParents -= 4;
-        useOurCheck = true;
-      }
-      if (useOurCheck)
-      {
-        while (numParents-- > 0 && f != null)
-          f = f.getParentFile();
-        return f;
-      }
-    }
+
     if (currParent.toString().equals("\\\\") || (Sage.MAC_OS_X && f.toString().startsWith("/Volumes")))
     {
       // UNC Pathname, add the computer name and share name to get the actual root folder
@@ -501,12 +481,6 @@ public class IOUtils
       if (byteOutput)
       {
         return baos;
-      }
-      if (Sage.EMBEDDED)
-      {
-        // If we don't use the default encoding here then some chars don't get converted right and the string is truncated.
-        // The test case is the Aeon Flux .mov file in DemoContent
-        return baos.toString();
       }
       try
       {
@@ -740,50 +714,26 @@ public class IOUtils
   }
   public static java.net.InetAddress getSubnetMask(java.net.InetAddress adapterAddr)
   {
-    if (Sage.EMBEDDED)
+    String ipAddrInfo = exec(new String[] { Sage.WINDOWS_OS ? "ipconfig" : "ifconfig"});
+    java.util.regex.Pattern patty = java.util.regex.Pattern.compile("255\\.255\\.[0-9]+\\.[0-9]+");
+    java.util.regex.Matcher matchy = patty.matcher(ipAddrInfo);
+    try
     {
-      try
+      int adapterIndex = (adapterAddr == null) ? -1 : ipAddrInfo.indexOf(adapterAddr.getHostAddress());
+      while (matchy.find())
       {
-        String eth0Info = IOUtils.exec(new String[] { "ifconfig", "eth0" });
-        int idx0 = eth0Info.indexOf("Mask:");
-        if (idx0 != -1)
-        {
-          int idx1 = eth0Info.indexOf("\n", idx0);
-          if (idx1 != -1)
-          {
-            return java.net.InetAddress.getByName(eth0Info.substring(idx0 + "Mask:".length(), idx1).trim());
-          }
-        }
-        return java.net.InetAddress.getByName("255.255.255.0");
-      }catch(Throwable e)
-      {
-        System.out.println("ERROR:" + e);
+        String currMatch = matchy.group();
+        if ("255.255.255.255".equals(currMatch))
+          continue; // ignore the subnet masks that restrict all since they're not what we want
+        // Make sure we're on the network adapter of interest
+        if (matchy.start() > adapterIndex)
+          return java.net.InetAddress.getByName(currMatch);
       }
-      return null;
+      return java.net.InetAddress.getByName("255.255.255.0");
     }
-    else
+    catch (java.net.UnknownHostException e)
     {
-      String ipAddrInfo = exec(new String[] { Sage.WINDOWS_OS ? "ipconfig" : "ifconfig"});
-      java.util.regex.Pattern patty = java.util.regex.Pattern.compile("255\\.255\\.[0-9]+\\.[0-9]+");
-      java.util.regex.Matcher matchy = patty.matcher(ipAddrInfo);
-      try
-      {
-        int adapterIndex = (adapterAddr == null) ? -1 : ipAddrInfo.indexOf(adapterAddr.getHostAddress());
-        while (matchy.find())
-        {
-          String currMatch = matchy.group();
-          if ("255.255.255.255".equals(currMatch))
-            continue; // ignore the subnet masks that restrict all since they're not what we want
-          // Make sure we're on the network adapter of interest
-          if (matchy.start() > adapterIndex)
-            return java.net.InetAddress.getByName(currMatch);
-        }
-        return java.net.InetAddress.getByName("255.255.255.0");
-      }
-      catch (java.net.UnknownHostException e)
-      {
-        throw new RuntimeException(e);
-      }
+      throw new RuntimeException(e);
     }
   }
 
@@ -1301,10 +1251,7 @@ public class IOUtils
       smbPath = smbPath.substring(4);
     // Check if the mount is already done
     String grepStr;
-    if (Sage.EMBEDDED)
-      grepStr = "mount -t cifs | grep -i \"" + localPath  + "\"";
-    else
-      grepStr = "mount -t smbfs | grep -i \"" + localPath  + "\"";
+    grepStr = "mount -t smbfs | grep -i \"" + localPath  + "\"";
     if (IOUtils.exec2(new String[] { "sh", "-c", grepStr }) == 0)
     {
       //if (Sage.DBG) System.out.println("SMB Mount already exists");
@@ -1328,124 +1275,46 @@ public class IOUtils
           smbPath = "//" + smbPath.substring(authIdx + 1);
         }
       }
-      if (!Sage.EMBEDDED)
+
+      String smbOptions;
+      if (Sage.LINUX_OS)
       {
-        String smbOptions;
-        if (Sage.LINUX_OS)
-        {
-          if (smbUser != null)
-            smbOptions = "username=" + smbUser + ",password=" + smbPass + ",iocharset=utf8";
-          else
-            smbOptions = "guest,iocharset=utf8";
-        }
+        if (smbUser != null)
+          smbOptions = "username=" + smbUser + ",password=" + smbPass + ",iocharset=utf8";
         else
-        {
-          if (smbUser != null)
-            smbOptions = smbUser + ":" + smbPass;
-          else
-            smbOptions = "guest:";
-        }
-        // check to see if property exists if it doesn't check for smbmount with "which" command
-        if (IOUtils.has_smbmount == null)
-        {
-            String result = IOUtils.exec(new String[] {"which", "smbmount"});
-            // if nothing returned from "which" command then smbmount is not present so set property false
-            if (result == null || result.length() == 0)
-            {
-                IOUtils.has_smbmount = Boolean.FALSE;
-            } else {
-                IOUtils.has_smbmount = Boolean.TRUE;
-            }
-        }
-        // set execution variable based on static Boolean value
-        String execSMBMount = IOUtils.has_smbmount ? "smbmount" : "mount.cifs";
-        if (IOUtils.exec2(Sage.LINUX_OS ? new String[] { execSMBMount, smbPath, localPath , "-o", smbOptions } :
-          new String[] { "mount_smbfs", "-N", "//" + smbOptions + "@" + smbPath.substring(2), localPath}) == 0)
-        {
-          if (Sage.DBG) System.out.println("SMB Mount Succeeded");
-          return SMB_MOUNT_SUCCEEDED;
-        }
-        else
-        {
-          if (Sage.DBG) System.out.println("SMB Mount Failed");
-          return SMB_MOUNT_FAILED;
-        }
+          smbOptions = "guest,iocharset=utf8";
       }
       else
       {
-        // Resolve the SMB name to an IP address since we don't have proper NetBIOS resolution on this
-        // device.
-        String netbiosName = smbPath.substring(2, smbPath.indexOf('/', 3));
-        String smbShareName = smbPath.substring(smbPath.indexOf('/', 3) + 1);
-        if (smbShareName.endsWith("/"))
-          smbShareName = smbShareName.substring(0, smbShareName.length() - 1);
-        String tmpSmbPath = smbPath;
-        try
-        {
-          tmpSmbPath = "//" + jcifs.netbios.NbtAddress.getByName(netbiosName).getHostAddress() +
-              smbPath.substring(smbPath.indexOf('/', 3));
-          if (Sage.DBG) System.out.println("Updated SMB path with IP address to be: " + tmpSmbPath);
-        }
-        catch (java.net.UnknownHostException uhe)
-        {
-          if (Sage.DBG) System.out.println("Error with NETBIOS naming lookup of:" + uhe);
-          uhe.printStackTrace();
-          // If we can't resolve the netbios name then there's no way the mount will succeed so don't bother
-          // since sometimes mount.cifs can hang if it can't resolve something appropriately
-          return SMB_MOUNT_FAILED;
-        }
-        String smbOptions;
-        if (Sage.LINUX_OS)
-        {
-          if (smbUser != null)
-            smbOptions = "username=" + smbUser + ",password=" + smbPass + ",iocharset=utf8,nounix";
-          else
-            smbOptions = "guest,iocharset=utf8,nounix";
-        }
+        if (smbUser != null)
+          smbOptions = smbUser + ":" + smbPass;
         else
-        {
-          if (smbUser != null)
-            smbOptions = smbUser + ":" + smbPass;
-          else
-            smbOptions = "guest:";
-        }
-        int smbRes;
-        if ((smbRes = IOUtils.exec2(Sage.LINUX_OS ? new String[] { "mount.cifs", tmpSmbPath, localPath , "-o", smbOptions } :
-          new String[] { "mount_smbfs", "-N", "//" + smbOptions + "@" + smbPath.substring(2), localPath})) == 0)
-        {
-          if (Sage.DBG) System.out.println("SMB Mount Succeeded");
-          return SMB_MOUNT_SUCCEEDED;
-        }
-        else
-        {
-          if (Sage.DBG) System.out.println("SMB Mount Failed res=" + smbRes);
-          if (Sage.LINUX_OS && smbUser == null)
+          smbOptions = "guest:";
+      }
+      // check to see if property exists if it doesn't check for smbmount with "which" command
+      if (IOUtils.has_smbmount == null)
+      {
+          String result = IOUtils.exec(new String[] {"which", "smbmount"});
+          // if nothing returned from "which" command then smbmount is not present so set property false
+          if (result == null || result.length() == 0)
           {
-            if (Sage.DBG) System.out.println("Retrying SMB mount with share access...");
-            smbOptions = "username=share,guest,iocharset=utf8";
-            if ((smbRes = IOUtils.exec2(new String[] { "mount.cifs", tmpSmbPath, localPath , "-o", smbOptions })) == 0)
-            {
-              if (Sage.DBG) System.out.println("SMB Mount Succeeded");
-              return SMB_MOUNT_SUCCEEDED;
-            }
-            else
-            {
-              if (Sage.DBG) System.out.println("Retrying SMB mount with share access(2)...");
-              smbOptions = "username=" + smbShareName + ",guest,iocharset=utf8";
-              if ((smbRes = IOUtils.exec2(new String[] { "mount.cifs", tmpSmbPath, localPath , "-o", smbOptions })) == 0)
-              {
-                if (Sage.DBG) System.out.println("SMB Mount Succeeded");
-                return SMB_MOUNT_SUCCEEDED;
-              }
-              else
-              {
-                if (Sage.DBG) System.out.println("SMB Mount Failed res=" + smbRes);
-                return SMB_MOUNT_FAILED;
-              }
-            }
+              IOUtils.has_smbmount = Boolean.FALSE;
+          } else {
+              IOUtils.has_smbmount = Boolean.TRUE;
           }
-          return SMB_MOUNT_FAILED;
-        }
+      }
+      // set execution variable based on static Boolean value
+      String execSMBMount = IOUtils.has_smbmount ? "smbmount" : "mount.cifs";
+      if (IOUtils.exec2(Sage.LINUX_OS ? new String[] { execSMBMount, smbPath, localPath , "-o", smbOptions } :
+        new String[] { "mount_smbfs", "-N", "//" + smbOptions + "@" + smbPath.substring(2), localPath}) == 0)
+      {
+        if (Sage.DBG) System.out.println("SMB Mount Succeeded");
+        return SMB_MOUNT_SUCCEEDED;
+      }
+      else
+      {
+        if (Sage.DBG) System.out.println("SMB Mount Failed");
+        return SMB_MOUNT_FAILED;
       }
     }
   }
@@ -1615,7 +1484,7 @@ public class IOUtils
           // Cp1252 is a superset of ISO-8859-1; so it's preferable to use it since it'll decode more characters...BUT we really should
           // just use the platform default instead; that's generally what people will be using from a text editor.
           // And embedded doesn't support Cp1252, so we need to remove that from there and just use ISO-8859-1
-          targetCharset = Sage.EMBEDDED ? Sage.BYTE_CHARSET : null;
+          targetCharset = null;
         }
       }
 
@@ -1798,28 +1667,15 @@ public class IOUtils
     {
       if (sfRes.equals(NTFS_MOUNTABLE_PARTITION_TYPES[i]))
       {
-        if (Sage.EMBEDDED)
-        {
-          if (IOUtils.exec2(new String[] {"/usr/local/bin/ntfs-3g", "/dev/" + devPath, mountPath, "-o", "nls=utf8,noatime"}) == 0)
-            return true;
-        }
-        else if (IOUtils.exec2(new String[] {"mount", "/dev/" + devPath, mountPath, "-o", "nls=utf8,noatime"}) == 0)
+        if (IOUtils.exec2(new String[] {"mount", "/dev/" + devPath, mountPath, "-o", "nls=utf8,noatime"}) == 0)
           return true;
       }
     }
     if (devPath.length() == 3)
     {
       // This is for NTFS mounting since we mount the disk and not the partitions
-      if (Sage.EMBEDDED)
-      {
-        if (IOUtils.exec2(new String[] {"/usr/local/bin/ntfs-3g", "/dev/" + devPath, mountPath, "-o", "nls=utf8,noatime"}) == 0)
-          return true;
-      }
-      else
-      {
-        if (IOUtils.exec2(new String[] {"mount", "/dev/" + devPath, mountPath, "-o", "nls=utf8,noatime"}) == 0)
-          return true;
-      }
+      if (IOUtils.exec2(new String[] {"mount", "/dev/" + devPath, mountPath, "-o", "nls=utf8,noatime"}) == 0)
+        return true;
     }
     if (IOUtils.exec2(new String[] {"mount", "/dev/" + devPath, mountPath, "-o", "noatime"}) == 0)
       return true;

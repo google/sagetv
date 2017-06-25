@@ -32,99 +32,6 @@ public class NewStorageDeviceDetector implements Runnable
     deviceMap = new java.util.HashMap();
     mountMap = new java.util.HashMap();
     nameSerialMap = new java.util.Properties();
-
-    if (Sage.EMBEDDED && Sage.LINUX_OS)
-    {
-      // Build the map so we know we have unique names for drives that are identical make/model/size
-      serialProp = Sage.get("linux/usb_name_serial_map", "");
-      java.util.StringTokenizer toker = new java.util.StringTokenizer(serialProp, "|");
-      while (toker.hasMoreTokens())
-      {
-        String pair = toker.nextToken();
-        int idx = pair.indexOf(",");
-        if (idx != -1 && !"undefined".equals(pair.substring(0, idx)))
-          nameSerialMap.setProperty(pair.substring(idx + 1), pair.substring(0, idx));
-      }
-      // Setup the USB device mappings now in case they're used for critical storage
-      final String extDevRoot = Sage.EMBEDDED ? "/tmp" : SageTV.LINUX_ROOT_MEDIA_PATH;
-      final java.util.Set mountedDevs = new java.util.HashSet();
-      java.util.HashSet protectedDevices = new java.util.HashSet();
-      String protectedStrs = Sage.get("linux/protected_devices", "");
-      toker = new java.util.StringTokenizer(protectedStrs, ",;");
-      while (toker.hasMoreTokens())
-        protectedDevices.add(toker.nextToken());
-
-      // Find any other protected devices (i.e. sata/scsi drives)
-      java.io.File[] devFiles = new java.io.File("/sys/block").listFiles();
-      for (int i = 0; devFiles != null && i < devFiles.length; i++)
-      {
-        String name = devFiles[i].getName();
-        if (name.startsWith("sd") && name.length() > 2)
-        {
-          // Check the device path inside of here to see if it's a SATA internal drive
-          try
-          {
-            if (new java.io.File(devFiles[i], "device").getCanonicalPath().indexOf("SATA") != -1 ||
-                new java.io.File(devFiles[i], "device").getCanonicalPath().indexOf("ahci") != -1)
-            {
-              if (Sage.DBG) System.out.println("Found SATA HDD to ignore in external device mount checking of: " + name);
-              protectedDevices.add(name);
-
-              // Don't bother trying to mount the HDD ourselves anymore...this happens at the platform level
-              if (false)
-              {
-                if (Sage.DBG) System.out.println("Mounting SATA HDD " + name + "1 at /var/media");
-                IOUtils.mountExternalDrive(name + "1", "/var/media", true);
-              }
-            }
-          }
-          catch (java.io.IOException ioe)
-          {
-            if (Sage.DBG) System.out.println("Error resolving canon path: " + ioe);
-          }
-        }
-      }
-      if (Sage.getBoolean("enable_hotplug_storage_detector", true))
-      {
-        int devMapSizeStart = deviceMap.size();
-        java.util.ArrayList seekerNotifies = new java.util.ArrayList();
-        for (int i = 0; devFiles != null && i < devFiles.length; i++)
-        {
-          String name = devFiles[i].getName();
-          if (protectedDevices.contains(name))
-            continue;
-          if (name.startsWith("sd") && name.length() > 2)
-          {
-            boolean foundParts = false;
-            java.io.File[] subFiles = devFiles[i].listFiles();
-            for (int j = 0; subFiles != null && j < subFiles.length; j++)
-            {
-              name = subFiles[j].getName();
-              if (name.startsWith("sd") && name.length() > 3)
-              {
-                foundParts = true;
-                mountLinuxDevice(name, extDevRoot, null, null, false, seekerNotifies);
-              }
-            }
-            if (!foundParts)
-            {
-              // For NTFS there's no partitions, only the device, so try to mount just the device
-              mountLinuxDevice(devFiles[i].getName(), extDevRoot, null, null, false, seekerNotifies);
-            }
-          }
-        }
-        for (int i = 0; i < seekerNotifies.size(); i++)
-        {
-          Object[] currInfo = (Object[]) seekerNotifies.get(i);
-          if (!Sage.client && SeekerSelector.getInstance().isAutoImportEnabled() && UIManager.getNonLocalUICount() == 0)
-          {
-            if (Sage.DBG) System.out.println("Automatically adding USB device to import path since no UI is available for prompting...");
-            SeekerSelector.getInstance().addArchiveDirectory(currInfo[0].toString(), Seeker.ALL_DIR_MASK);
-          }
-          Catbert.distributeHookToLocalUIs("StorageDeviceAdded", new Object[] { currInfo[0], currInfo[1] });
-        }
-      }
-    }
   }
 
   // Keys are the 'pretty' names of the devices and the values are the actual mounted paths used to explore that device
@@ -202,111 +109,7 @@ public class NewStorageDeviceDetector implements Runnable
   {
     String specialName = "";
     String mountTarget = name;
-    if (Sage.EMBEDDED)
-    {
-      java.io.BufferedReader fr = null;
-      String devName = name;
-      if (devName.length() > 3)
-        devName = devName.substring(0, 3);
-      try
-      {
-        fr = new java.io.BufferedReader(new java.io.FileReader("/sys/block/" + devName + "/device/vendor"));
-        specialName += fr.readLine().trim() + " ";
-      }
-      catch (java.io.IOException e)
-      {
-        if (Sage.DBG) System.out.println("Error reading device vendor:" + e);
-      }
-      finally
-      {
-        if (fr != null)
-        {
-          try{fr.close();}catch(Exception e2){}
-        }
-      }
-      try
-      {
-        fr = new java.io.BufferedReader(new java.io.FileReader("/sys/block/" + devName + "/device/model"));
-        specialName += fr.readLine().trim() + " ";
-      }
-      catch (java.io.IOException e)
-      {
-        if (Sage.DBG) System.out.println("Error reading device model:" + e);
-      }
-      finally
-      {
-        if (fr != null)
-        {
-          try{fr.close();}catch(Exception e2){}
-        }
-      }
-      try
-      {
-        fr = new java.io.BufferedReader(new java.io.FileReader("/sys/block/" + devName + "/size"));
-        long size = Long.parseLong(fr.readLine()) / 2; // convert from 512 byte to 1k blocks
-        if (size > 1024*1024)
-          specialName += "(" + (size + 512*1024)/(1024*1024) + " GB)";
-        else
-          specialName += "(" + (size + 512)/1024 + " MB)";
-      }
-      catch (Exception e)
-      {
-        if (Sage.DBG) System.out.println("Error reading device size:" + e);
-      }
-      finally
-      {
-        if (fr != null)
-        {
-          try{fr.close();}catch(Exception e2){}
-        }
-      }
-      // Check for partition numbering so we have unique names for multi-partition mounts
-      char lastChar = name.charAt(name.length() - 1);
-      if (Character.isDigit(lastChar) && lastChar != '1')
-      {
-        specialName += " (" + lastChar + ")";
-      }
-      specialName = specialName.trim();
-      // Now get the serial # for this USB device
-      String ueventData = IOUtils.getFileAsString(new java.io.File("/sys/block/" + devName + "/uevent"));
-      String newSerial = "undefined";
-      String oldSerial = "undefined";
-      if (ueventData != null)
-      {
-        int idx = ueventData.indexOf("PHYSDEVPATH=");
-        if (idx != -1)
-        {
-          String busPath = ueventData.substring(idx + 12);
-          idx = busPath.indexOf("usb");
-          if (idx != -1)
-          {
-            idx = busPath.indexOf('/', idx + 1);
-            if (idx != -1)
-            {
-              idx = busPath.indexOf('/', idx + 1);
-              if (idx != -1)
-              {
-                busPath = busPath.substring(0, idx + 1);
-                java.io.File serialFile = new java.io.File("/sys" + busPath + "serial");
-                if (serialFile.isFile())
-                  oldSerial = IOUtils.getFileAsString(serialFile);
-                // Use the udev HDD serial technique
-                newSerial = IOUtils.exec(new String[] { "./vol_id", "-u",
-                    "/dev/" + (name.endsWith("/") ? name.substring(0, name.length() - 1) : name) }, true, true);
-                if (newSerial == null || newSerial.length() == 0)
-                  newSerial = "undefined";
-                else
-                  newSerial = newSerial.trim();
-                if (oldSerial != null)
-                  oldSerial = oldSerial.trim();
-              }
-            }
-          }
-        }
-      }
-      //			if (Sage.DBG) System.out.println("User device name: " + specialName);
-      mountTarget = getMountName(specialName, newSerial, oldSerial);
-    }
+
     java.io.File newDir = new java.io.File(extDevRoot + "/external/" + mountTarget + "/");
     if (mountedDevs != null && mountedDevs.contains(name) && (!extraMountCheck || IOUtils.isExternalDriveMounted(name, newDir.toString())))
       accountedDevs.add(name);
@@ -354,7 +157,7 @@ public class NewStorageDeviceDetector implements Runnable
   {
     // Check /dev/sdXX for new devices and when they show up then mount
     // them in the /var/media/external/sdXX paths.
-    final String extDevRoot = Sage.EMBEDDED ? "/tmp" : SageTV.LINUX_ROOT_MEDIA_PATH;
+    final String extDevRoot = SageTV.LINUX_ROOT_MEDIA_PATH;
     final java.util.Set mountedDevs = new java.util.HashSet();
     Runtime.getRuntime().addShutdownHook(new Thread()
     {
@@ -384,118 +187,56 @@ public class NewStorageDeviceDetector implements Runnable
       protectedDevices.add(toker.nextToken());
 
     // Find any other protected devices (i.e. sata/scsi drives)
-    if (!Sage.EMBEDDED)
+    java.io.File[] devIdFiles = new java.io.File("/dev/disk/by-id").listFiles();
+    for (int i = 0; devIdFiles != null && i < devIdFiles.length; i++)
     {
-      java.io.File[] devIdFiles = new java.io.File("/dev/disk/by-id").listFiles();
-      for (int i = 0; devIdFiles != null && i < devIdFiles.length; i++)
+      try
       {
-        try
-        {
-          if (devIdFiles[i].getName().startsWith("scsi"))
-            protectedDevices.add(devIdFiles[i].getCanonicalFile().getName());
-        }
-        catch (java.io.IOException e)
-        {
-          if (Sage.DBG) System.out.println("Error resolving canon path:" + e);
-        }
+        if (devIdFiles[i].getName().startsWith("scsi"))
+          protectedDevices.add(devIdFiles[i].getCanonicalFile().getName());
       }
+      catch (java.io.IOException e)
+      {
+        if (Sage.DBG) System.out.println("Error resolving canon path:" + e);
+      }
+    }
 
-      // Remove our USB boot drive if we're a NAS
-      if (Sage.getBoolean("linux/enable_nas", false))
-      {
-        String usbBootDev = IOUtils.exec(new String[] { "tbutil", "findsig", "0x53414745"});
-        if (usbBootDev != null)
-        {
-          usbBootDev = new java.io.File(usbBootDev).getName();
-          if (Sage.DBG) System.out.println("Found USB boot device; adding it to protected list:" + usbBootDev);
-          protectedDevices.add(usbBootDev);
-          // Also add any partitions from the device
-          String[] devFiles = new java.io.File("/dev").list();
-          for (int i = 0; devFiles != null && i < devFiles.length; i++)
-          {
-            if (devFiles[i].startsWith(usbBootDev))
-            {
-              if (Sage.DBG) System.out.println("Found USB boot device partition; adding it to protected list:" + devFiles[i]);
-              protectedDevices.add(devFiles[i]);
-            }
-          }
-        }
-      }
-    }
-    else
+    // Remove our USB boot drive if we're a NAS
+    if (Sage.getBoolean("linux/enable_nas", false))
     {
-      java.io.File[] devFiles = new java.io.File("/sys/block").listFiles();
-      for (int i = 0; devFiles != null && i < devFiles.length; i++)
+      String usbBootDev = IOUtils.exec(new String[] { "tbutil", "findsig", "0x53414745"});
+      if (usbBootDev != null)
       {
-        String name = devFiles[i].getName();
-        if (name.startsWith("sd") && name.length() > 2)
+        usbBootDev = new java.io.File(usbBootDev).getName();
+        if (Sage.DBG) System.out.println("Found USB boot device; adding it to protected list:" + usbBootDev);
+        protectedDevices.add(usbBootDev);
+        // Also add any partitions from the device
+        String[] devFiles = new java.io.File("/dev").list();
+        for (int i = 0; devFiles != null && i < devFiles.length; i++)
         {
-          // Check the device path inside of here to see if it's a SATA internal drive
-          try
+          if (devFiles[i].startsWith(usbBootDev))
           {
-            if (new java.io.File(devFiles[i], "device").getCanonicalPath().indexOf("SATA") != -1 ||
-                new java.io.File(devFiles[i], "device").getCanonicalPath().indexOf("ahci") != -1)
-            {
-              if (Sage.DBG) System.out.println("Found SATA HDD to ignore in external device mount checking of: " + name);
-              protectedDevices.add(name);
-            }
-          }
-          catch (java.io.IOException ioe)
-          {
-            if (Sage.DBG) System.out.println("Error resolving canon path: " + ioe);
+            if (Sage.DBG) System.out.println("Found USB boot device partition; adding it to protected list:" + devFiles[i]);
+            protectedDevices.add(devFiles[i]);
           }
         }
       }
     }
+
     java.util.Set accountedDevs = new java.util.HashSet();
     boolean extraMountCheck = false;
     while (true)
     {
       accountedDevs.clear();
-      if (Sage.EMBEDDED)
+      java.io.File[] devFiles = new java.io.File("/dev").listFiles();
+      for (int i = 0; devFiles != null && i < devFiles.length; i++)
       {
-        int devMapSizeStart = deviceMap.size();
-        java.io.File[] devFiles = new java.io.File("/sys/block").listFiles();
-        for (int i = 0; devFiles != null && i < devFiles.length; i++)
+        String name = devFiles[i].getName();
+        if (protectedDevices.contains(name))
+          continue;
+        if (name.startsWith("sd") && name.length() > 3)
         {
-          String name = devFiles[i].getName();
-          if (protectedDevices.contains(name))
-            continue;
-          if (name.startsWith("sd") && name.length() > 2)
-          {
-            boolean foundParts = false;
-            java.io.File[] subFiles = devFiles[i].listFiles();
-            for (int j = 0; subFiles != null && j < subFiles.length; j++)
-            {
-              name = subFiles[j].getName();
-              if (name.startsWith("sd") && name.length() > 3)
-              {
-                foundParts = true;
-                mountLinuxDevice(name, extDevRoot, mountedDevs, accountedDevs, extraMountCheck, null);
-              }
-            }
-            if (!foundParts)
-            {
-              // For NTFS there's no partitions, only the device, so try to mount just the device
-              mountLinuxDevice(devFiles[i].getName(), extDevRoot, mountedDevs, accountedDevs, extraMountCheck, null);
-            }
-          }
-        }
-        if (deviceMap.size() != devMapSizeStart && !Sage.client)
-          LinuxUtils.updateSmbConfig(false);
-      }
-      else
-      {
-        java.io.File[] devFiles = new java.io.File("/dev").listFiles();
-        for (int i = 0; devFiles != null && i < devFiles.length; i++)
-        {
-          String name = devFiles[i].getName();
-          if (protectedDevices.contains(name))
-            continue;
-          if (name.startsWith("sd") && name.length() > 3)
-          {
-            mountLinuxDevice(name, extDevRoot, mountedDevs, accountedDevs, extraMountCheck, null);
-          }
+          mountLinuxDevice(name, extDevRoot, mountedDevs, accountedDevs, extraMountCheck, null);
         }
       }
       mountedDevs.removeAll(accountedDevs);
@@ -540,7 +281,6 @@ public class NewStorageDeviceDetector implements Runnable
             {
               if (!Sage.client)
               {
-                LinuxUtils.updateSmbConfig(true);
                 SeekerSelector.getInstance().scanLibrary(false);
               }
               extraMountCheck = true; // in case we unmounted something that changed device ID

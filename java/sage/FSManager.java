@@ -22,7 +22,7 @@ package sage;
 public class FSManager implements Runnable
 {
   private static final String DELETE_QUEUE_PROP = "linux/delete_queue";
-  private static final long PROGRESSIVE_DELETE_INCREMENT = Sage.getLong("linux/progressive_delete_increment", (Sage.EMBEDDED ? 50 :250)*1024*1024);
+  private static final long PROGRESSIVE_DELETE_INCREMENT = Sage.getLong("linux/progressive_delete_increment", 250*1024*1024);
   private static final long PROGRESSIVE_DELETE_WAIT = Sage.getLong("linux/progressive_delete_wait", 1500);
 
   /**
@@ -67,33 +67,6 @@ public class FSManager implements Runnable
           Library.getInstance().addIgnoreFile(newF);
         else*/
           Seeker.getInstance().addIgnoreFile(newF);
-      }
-    }
-    // Make sure we mount the hard drive as early as possible if we know it's there; the Seeker needs this for its lib scan
-    if (Sage.EMBEDDED && Sage.LINUX_OS)
-    {
-      String hddProp = Sage.get("linux/installed_hdd", "");
-      if (hddProp != null && hddProp.length() > 0)
-      {
-        if (Sage.DBG) System.out.println("Found HDD property: " + hddProp);
-        if (new java.io.File(hddProp).exists())
-        {
-          if (IOUtils.mountExternalDrive(hddProp.substring(5)/*Remove /dev/*/, SageTV.LINUX_ROOT_MEDIA_PATH))
-          {
-            if (Sage.DBG) System.out.println("Sucessfully mounted the HDD! (or it's already mounted)");
-            localHDD = new java.io.File(SageTV.LINUX_ROOT_MEDIA_PATH);
-          }
-          else
-          {
-            if (Sage.DBG) System.out.println("FAILED mounting the HDD; clear the property!");
-            Sage.put("linux/installed_hdd", "");
-          }
-        }
-        else
-        {
-          if (Sage.DBG) System.out.println("HDD device does not exist; clear the property");
-          Sage.put("linux/installed_hdd", "");
-        }
       }
     }
   }
@@ -158,32 +131,10 @@ public class FSManager implements Runnable
         // Do our encoder HALT detection here so we can run it more frequent than what the Seeker does
         seeky.checkForEncoderHalts();
 
-        if (!Sage.EMBEDDED)
-        {
-          // Also do our RAID array check as well
-          systemStorageScan();
-        }
+        // Also do our RAID array check as well
+        systemStorageScan();
       }
       try{Thread.sleep(checkPeriod);}catch(Exception e){}
-    }
-  }
-
-  private void recheckForHDD()
-  {
-    if (localHDD == null && Sage.EMBEDDED && Sage.LINUX_OS)
-    {
-      String hddProp = Sage.get("linux/installed_hdd", "");
-      if (hddProp != null && hddProp.length() > 0)
-      {
-        if (new java.io.File(hddProp).exists())
-        {
-          if (IOUtils.exec2(new String[] { "sh", "-c", "mount | grep " + hddProp + " | grep " + SageTV.LINUX_ROOT_MEDIA_PATH }) == 0)
-          {
-            if (Sage.DBG) System.out.println("Found mounted HDD (done async from our load-time mount)");
-            localHDD = new java.io.File(SageTV.LINUX_ROOT_MEDIA_PATH);
-          }
-        }
-      }
     }
   }
 
@@ -265,12 +216,11 @@ public class FSManager implements Runnable
   // This may also return an smb:// URL for network paths
   public String requestLargeTempStorageDir(long minFreeSpace)
   {
-    if (!Sage.EMBEDDED || !Sage.LINUX_OS)
+    if (!Sage.LINUX_OS)
       return System.getProperty("java.io.tmpdir");
     else
     {
       if (Sage.DBG) System.out.println("Searching for temp storage w/ minimum size: " + minFreeSpace);
-      recheckForHDD(); // in case it got installed on this run
       // Try the HDD, then USB and finally the network
       if (localHDD != null)
       {
@@ -416,9 +366,12 @@ public class FSManager implements Runnable
           mountDir = new java.io.File(System.getProperty("java.io.tmpdir"), "dvdmount-" + uiOrigin.getLocalUIClientName());
       }
       mountDir.mkdirs();
-      if (Sage.EMBEDDED)
+      if (!Sage.LINUX_IS_ROOT)
       {
-        if (IOUtils.exec2(new String[] { Sage.get("linux/dvdmounter", "mount"), isoFile.getAbsolutePath(), mountDir.getAbsolutePath() }, true) != 0)
+        // mount requires root permissions
+        // the sagetv user needs to be in the sudoers list
+        // NOTE mount command is NOT resolved in properties because sudo is being used
+        if (IOUtils.exec2(new String[]{"sudo","-n", "mount", isoFile.getAbsolutePath(), mountDir.getAbsolutePath(), "-o", "loop,ro"}, true) != 0)
         {
           if (Sage.DBG) System.out.println("FAILED mounting ISO image " + isoFile + " to " + mountDir);
           return null;
@@ -426,24 +379,10 @@ public class FSManager implements Runnable
       }
       else
       {
-        if (!Sage.LINUX_IS_ROOT)
+        if (IOUtils.exec2(new String[]{Sage.get("linux/dvdmounter", "mount"), isoFile.getAbsolutePath(), mountDir.getAbsolutePath(), "-o", "loop"}, true) != 0)
         {
-          // mount requires root permissions
-          // the sagetv user needs to be in the sudoers list
-          // NOTE mount command is NOT resolved in properties because sudo is being used
-          if (IOUtils.exec2(new String[]{"sudo","-n", "mount", isoFile.getAbsolutePath(), mountDir.getAbsolutePath(), "-o", "loop,ro"}, true) != 0)
-          {
-            if (Sage.DBG) System.out.println("FAILED mounting ISO image " + isoFile + " to " + mountDir);
-            return null;
-          }
-        }
-        else
-        {
-          if (IOUtils.exec2(new String[]{Sage.get("linux/dvdmounter", "mount"), isoFile.getAbsolutePath(), mountDir.getAbsolutePath(), "-o", "loop"}, true) != 0)
-          {
-            if (Sage.DBG) System.out.println("FAILED mounting ISO image " + isoFile + " to " + mountDir);
-            return null;
-          }
+          if (Sage.DBG) System.out.println("FAILED mounting ISO image " + isoFile + " to " + mountDir);
+          return null;
         }
       }
       return mountDir;
@@ -480,39 +419,10 @@ public class FSManager implements Runnable
     {
       // Figure out which loop device is being used so we can properly stop it so the unmount
       // actually works
-      if (Sage.EMBEDDED)
-      {
-        String loopDev = null;
-        String mountDetails = IOUtils.exec(new String[] {"sh", "-c", "mount | grep " + mountDir.getName()}, true, true, true);
-        if (mountDetails != null && mountDetails.length() > 0)
-        {
-          int idx = mountDetails.indexOf(' ');
-          if (idx != -1)
-          {
-            loopDev = mountDetails.substring(0, idx).trim();
-          }
-        }
-        IOUtils.exec2(new String[] { "umount", mountDir.getAbsolutePath() }, false);
-        if (loopDev != null)
-        {
-          // Wait a tad or this won't work
-          try{Thread.sleep(200);}catch(Exception e){}
-          if (Sage.DBG) System.out.println("Stopping loop device after ISO unmount: " + loopDev);
-          if (IOUtils.exec2(new String[] { "losetup", "-d", loopDev }) != 0)
-          {
-            // Wait a little longer and try one more time
-            try{Thread.sleep(400);}catch(Exception e){}
-            IOUtils.exec2(new String[] { "losetup", "-d", loopDev });
-          }
-        }
-      }
+      if (Sage.LINUX_IS_ROOT)
+        IOUtils.exec2(new String[]{"umount", mountDir.getAbsolutePath()}, false);
       else
-      {
-        if (Sage.LINUX_IS_ROOT)
-          IOUtils.exec2(new String[]{"umount", mountDir.getAbsolutePath()}, false);
-        else
-          IOUtils.exec2(new String[]{"sudo", "-n", "umount", mountDir.getAbsolutePath()}, false);
-      }
+        IOUtils.exec2(new String[]{"sudo", "-n", "umount", mountDir.getAbsolutePath()}, false);
       mountDir.delete();
     }
   }
@@ -535,7 +445,7 @@ public class FSManager implements Runnable
       if (!f.delete())
       {
         // Don't use a delete queue for failed deletions on embedded systems since we're not managing recordings there
-        if (f.isFile() && f.canWrite() && !Sage.EMBEDDED)
+        if (f.isFile() && f.canWrite())
         {
           if (Sage.DBG) System.out.println("Failed deleting file; put it into the async delete queue and try to do it later: " + f);
           return addToDeleteQueue(f);

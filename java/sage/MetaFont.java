@@ -34,7 +34,7 @@ public abstract class MetaFont
    */
   public static final int ITALIC	= 2;
 
-  private static final boolean USE_JAVA_FONTS = !Sage.EMBEDDED && Sage.getBoolean("ui/disable_freetype_fonts", false);
+  private static final boolean USE_JAVA_FONTS = Sage.getBoolean("ui/disable_freetype_fonts", false);
   public static MetaFont getFont(String fontName, int fontStyle, int fontSize)
   {
     if (USE_JAVA_FONTS)
@@ -47,18 +47,6 @@ public abstract class MetaFont
       }
       catch (Throwable e)
       {
-        if (Sage.EMBEDDED)
-        {
-          if (Sage.DBG) System.out.println("MISSING FONT: " + fontName + " style=" + fontStyle + " using DejaVuSans instead");
-          try
-          {
-            return new FreetypeFont("fonts/DejaVuSans", fontStyle, fontSize);
-          }
-          catch (Throwable t)
-          {
-            throw new RuntimeException("ERROR in font system:" + t);
-          }
-        }
         if (Sage.DBG && !(e instanceof java.io.FileNotFoundException)) System.out.println("Error loading Freetype Font; trying to load Java font instead; error=" + e);
         return new JavaFont(fontName, fontStyle, fontSize);
       }

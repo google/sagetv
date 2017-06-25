@@ -349,12 +349,9 @@ public class ChannelAPI{
             return MetaImage.getMetaImage(c.getLogoUrl(index, imageTypeNum), stack.getUIComponent());
           }
 
-          if (!Sage.EMBEDDED)
-          {
-            MetaImage userLogo = EPG.getInstance().getLogo(c.getName(), stack.getUIComponent());
-            if (userLogo != null)
-              return userLogo;
-          }
+          MetaImage userLogo = EPG.getInstance().getLogo(c.getName(), stack.getUIComponent());
+          if (userLogo != null)
+            return userLogo;
 
           if (c.getLogoCount(imageTypeNum) > index)
             return MetaImage.getMetaImage(c.getLogoUrl(index, imageTypeNum), stack.getUIComponent());

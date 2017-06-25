@@ -158,44 +158,41 @@ public class CorePluginManager implements Runnable
     loadMyPlugins();
     if (Sage.DBG) System.out.println("LOADED PLUGINS=" + myPlugins.values());
 
-    if (!Sage.EMBEDDED)
+    // Only SageTV servers host plugin repository information...but nonlocal clients
+    // also need to check for plugin updates and post a system message about it.
+    if (!Sage.client || Sage.isNonLocalClient())
     {
-      // Only SageTV servers host plugin repository information...but nonlocal clients
-      // also need to check for plugin updates and post a system message about it.
-      if (!Sage.client || Sage.isNonLocalClient())
+      Thread t = new Thread(this, "PluginRepoUpdater");
+      t.setDaemon(true);
+      t.setPriority(Thread.MIN_PRIORITY);
+      t.start();
+    }
+
+    // Servers and true clients do their own file tracking, the pseudoclient does not
+    if (!Sage.client || Sage.isNonLocalClient())
+    {
+      fileTracker = new SageProperties(false);
+      fileTracker.setupPrefs("filetracker.properties", null);
+      fileTrackerFilekeys = new java.util.HashMap();
+      String[] filekeys = fileTracker.keys("filekeys");
+      for (int i = 0; i < filekeys.length; i++)
       {
-        Thread t = new Thread(this, "PluginRepoUpdater");
-        t.setDaemon(true);
-        t.setPriority(Thread.MIN_PRIORITY);
-        t.start();
+        // This sets up a reverse map so we can go to filename->filekey
+        fileTrackerFilekeys.put(fileTracker.get("filekeys/" + filekeys[i], ""), filekeys[i]);
+        try
+        {
+          fileKeyCounter = Math.max(fileKeyCounter, Integer.parseInt(filekeys[i]));
+        }
+        catch (NumberFormatException nfe)
+        {
+          if (Sage.DBG) System.out.println("ERROR invalid numeric constant in filetracker.properties for filekey of: " + filekeys[i]);
+        }
       }
 
-      // Servers and true clients do their own file tracking, the pseudoclient does not
-      if (!Sage.client || Sage.isNonLocalClient())
+      java.util.Iterator walker = myPlugins.values().iterator();
+      while (walker.hasNext())
       {
-        fileTracker = new SageProperties(false);
-        fileTracker.setupPrefs("filetracker.properties", null);
-        fileTrackerFilekeys = new java.util.HashMap();
-        String[] filekeys = fileTracker.keys("filekeys");
-        for (int i = 0; i < filekeys.length; i++)
-        {
-          // This sets up a reverse map so we can go to filename->filekey
-          fileTrackerFilekeys.put(fileTracker.get("filekeys/" + filekeys[i], ""), filekeys[i]);
-          try
-          {
-            fileKeyCounter = Math.max(fileKeyCounter, Integer.parseInt(filekeys[i]));
-          }
-          catch (NumberFormatException nfe)
-          {
-            if (Sage.DBG) System.out.println("ERROR invalid numeric constant in filetracker.properties for filekey of: " + filekeys[i]);
-          }
-        }
-
-        java.util.Iterator walker = myPlugins.values().iterator();
-        while (walker.hasNext())
-        {
-          verifyPluginInstall((PluginWrapper) walker.next());
-        }
+        verifyPluginInstall((PluginWrapper) walker.next());
       }
     }
   }
@@ -794,7 +791,7 @@ public class CorePluginManager implements Runnable
   File getLocalPluginFile(String localFileName)
   {
     String name = new File(localFileName).getName(); // just ensures that name doesn't include a path.
-    return new java.io.File(Sage.EMBEDDED ? "/rw/sage/" + name : name);
+    return new java.io.File(name);
   }
 
   // Returns true if the refresh succeeded

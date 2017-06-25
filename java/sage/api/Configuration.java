@@ -2143,8 +2143,6 @@ public class Configuration{
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         boolean isPAL;
         Sage.putInt("mmc/video_format_code", (isPAL = "PAL".equalsIgnoreCase(getString(stack))) ? 8 : 1);
-        if (Sage.EMBEDDED)
-          Sage.put("TV_STANDARD", isPAL ? "PAL" : "NTSC");
         return null;
       }});
     rft.put(new PredefinedJEPFunction("Configuration", "GetAnalogVideoFormat", true)
@@ -3491,7 +3489,7 @@ public class Configuration{
        * @declaration public boolean GetCurrentlyAiringProgramsStartLive();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return Boolean.valueOf(Sage.getBoolean("videoframe/force_live_playback_on_currently_airing_programs", Sage.EMBEDDED));
+        return Boolean.valueOf(Sage.getBoolean("videoframe/force_live_playback_on_currently_airing_programs", false));
       }});
     /*
 		rft.put(new PredefinedJEPFunction("Configuration", "", 0)
