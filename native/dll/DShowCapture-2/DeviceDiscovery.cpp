@@ -345,7 +345,7 @@ static int PurgeNameList( JNIEnv *env, DEVNAME* DevName, int numDev, REFCLSID de
 {
 	int i, j, num=0;
 	char szDeviceType[64]; 
-    slog((env, "KSF PurgeNameList() Entry: 1st DevName '%s', numDev to purge = %d \r\n", DevName[0].FriendlyName, numDev));
+    // slog((env, "PurgeNameList() Entry: DevName[0] '%s', numDev to purge = %d \r\n", DevName[0].FriendlyName, numDev));
 	if ( devClass == AM_KSCATEGORY_CAPTURE )
 	{
 		for ( i = 0; i<numDev; i++ )
@@ -387,17 +387,19 @@ static int PurgeNameList( JNIEnv *env, DEVNAME* DevName, int numDev, REFCLSID de
 
     Return: resultant number of elements in DevName[]
 
-    Notes: Generally assumes that there will only be a single device at a given hardware_loc.
-        Handles a few special cases that DO have multiple devices at a given hardware_loc.
-        "hybrid" tuners will have multiple devices at a given hardware_loc, but they can't
-        be used at the same time.
+    Notes: Overall, the general assumtion is that a given Video Capture Source will only have a 
+        single BDA Reciever Component associated with it at the Source's hardware_loc.
+        "Hybrid" Video Capture Sources have multiple Receivers at a given hardware_loc, 
+        but they can't be used at the same time.
+        Here we also handle a few special cases that DO have multiple Receivers associated with
+        a single Video Capture Source (at one hardware_loc) that CAN be used at the same time.
     */
 static int MergeNameList( JNIEnv *env, DEVNAME* DevName, int numDev, DEVNAME* DevName1, int numDev1 )
 {
 	int i, j, k, num;
 	num = numDev; 
-    slog((env, "KSF MergeNameList() Entry: 1st DevName '%s', numDev %d, 1st DevName1 '%s', numDev1 %d \r\n", 
-        DevName[0].FriendlyName, numDev, DevName1[0].FriendlyName, numDev1));
+    slog((env, "MergeNameList() Entry: DevName[0] '%s', numDev=%d, new DevName1[0] '%s', numDev1=%d \r\n", 
+        DevName[0].FriendlyName, numDev, DevName1[0].FriendlyName, numDev1));  // KSF
 	for ( i = 0; i<numDev1; i++ )
 	{
 		//ZQ hard code for anysee tuner
@@ -438,16 +440,15 @@ static int MergeNameList( JNIEnv *env, DEVNAME* DevName, int numDev, DEVNAME* De
 				}
 			}	
 
-
+            // Is this new device already in the array of previously-added devices?
 			for ( j = 0; j<numDev; j++ )
 			{ 
-                slog((env, "KSF FriendlyName '%s' at '%s', compare loc '%s', i=%d, j=%d \r\n", 
-                    DevName1[i].FriendlyName, DevName1[i].hardware_loc, DevName[j].hardware_loc, i, j));
-				if ( !strcmp( DevName[j].hardware_loc, DevName1[i].hardware_loc ) ) // break if hardware_loc matches
-					break;
+                // slog((env, "FriendlyName '%s' at '%s', compare loc '%s', i=%d, j=%d \r\n", DevName1[i].FriendlyName, DevName1[i].hardware_loc, DevName[j].hardware_loc, i, j)); // KSF
+				if ( !strcmp( DevName[j].hardware_loc, DevName1[i].hardware_loc ) )
+					break; // break if hardware_loc matches
 			}
 			
-			// hard code for multiple tuners which are found at the same hardware_loc
+			// Special case: hard code for multiple Receivers which are found at the same hardware_loc
 			if ( j < numDev )
 			{
                 //ZQ hard code for anysee tuner
@@ -455,11 +456,12 @@ static int MergeNameList( JNIEnv *env, DEVNAME* DevName, int numDev, DEVNAME* De
 				if ( !strncmp( DevName[j].FriendlyName, "anysee BDA Digital Tuner", 22 ) )
 					j = numDev;
 
-                /* KSF: hard code for WinTV-quadHD, which has 2 BDA Reciever Components 
-                 * (885 TS Capture, 885 TS Capture 2) at each of it's 2 PCIe hardware locations.
+                /* KSF: hard code for Hauppauge WinTV-quadHD, which has 2 BDA Reciever Components 
+                 * (885 TS Capture, 885 TS Capture 2) for both of it's 2 Video Capture Sources
+                 "  (i.e., at both of it's 2 PCIe hardware locations).
                  * "Hauppauge WinTV 885 TS Capture" has already been found at this hardware_loc; 
                  * following lines added for 2nd dev.
-                 * NOTE: use i, not j (as above)
+                 * NOTE: comparison here uses index i, not j (unlike anysee BDA, above)
                  */
                 else if (!strncmp(DevName1[i].FriendlyName, "Hauppauge WinTV 885 TS Capture 2", 32))
                     j = numDev;
@@ -468,7 +470,7 @@ static int MergeNameList( JNIEnv *env, DEVNAME* DevName, int numDev, DEVNAME* De
 			//not found the same device
 			if ( j >= numDev )
 			{     
-                slog((env, "KSF adding device '%s' i=%d, j=%d, num=%d \r\n", DevName1[i].FriendlyName, i, j, num));
+                // slog((env, "Adding device '%s' i=%d, j=%d, num=%d \r\n", DevName1[i].FriendlyName, i, j, num)); // KSF
 				strncpy( DevName[num].FriendlyName, DevName1[i].FriendlyName, sizeof(DevName[num].FriendlyName)-1 );
 				strncpy( DevName[num].hardware_loc, DevName1[i].hardware_loc, sizeof(DevName[num].hardware_loc)-1 );
 				DevName[num].index = 0;

@@ -114,7 +114,7 @@ JNIEXPORT jint JNICALL Java_sage_DShowCaptureDevice_isCaptureDeviceValid0
 	char capFiltName[256];
 	const char* tempCapFiltName = env->GetStringUTFChars(videoCapFiltName, NULL);
 	strncpy( capFiltName, tempCapFiltName, sizeof(capFiltName) );  
-    slog((env, "KSF isCaptureDeviceValid0() Entry: videoCapFiltName %s, Num %d \r\n", capFiltName, videoCapFiltNum));
+    // slog((env, "isCaptureDeviceValid0() Entry: videoCapFiltName %s, Num %d \r\n", capFiltName, videoCapFiltNum));
 	env->ReleaseStringUTFChars(videoCapFiltName, tempCapFiltName);
 	if ( HasTunerTag( capFiltName ) )
 	{
@@ -224,7 +224,7 @@ JNIEXPORT jintArray JNICALL Java_sage_DShowCaptureDevice_getCrossbarConnections0
 	char capFiltName[256];
 	const char* tempCapFiltName = env->GetStringUTFChars(videoCapFiltName, NULL);
 	strncpy( capFiltName, tempCapFiltName, sizeof(capFiltName) );  
-    slog((env, "KSF getCrossbarConnections0() Entry: capFiltName %s, videoCapFiltNum %d \r\n", capFiltName, videoCapFiltNum));
+    // slog((env, "getCrossbarConnections0() Entry: capFiltName %s, videoCapFiltNum %d \r\n", capFiltName, videoCapFiltNum));
 	env->ReleaseStringUTFChars(videoCapFiltName, tempCapFiltName);
 	//processing passed in configure name with tag<...>
 	if ( HasTunerTag( capFiltName ) )
@@ -613,7 +613,7 @@ JNIEXPORT jint JNICALL Java_sage_DShowCaptureDevice_getDeviceCaps0
 	int newCaptureType = 0;
 	const char* tempCapFiltName = env->GetStringUTFChars(videoCapFiltName, NULL);
 	strncpy( capFiltName, tempCapFiltName, sizeof(capFiltName) ); 
-    slog((env, "KSF getDeviceCaps0() Entry: capFiltName %s, videoCapFiltNum %d \r\n", capFiltName, videoCapFiltNum));
+    // slog((env, "getDeviceCaps0() Entry: capFiltName %s, videoCapFiltNum %d \r\n", capFiltName, videoCapFiltNum));
 	env->ReleaseStringUTFChars(videoCapFiltName, tempCapFiltName);
 	if ( HasTunerTag( capFiltName ) )
 	{
@@ -747,7 +747,7 @@ JNIEXPORT jint JNICALL Java_sage_DShowCaptureDevice_getDeviceCaps0
 		} 
 
 		if ( !isHybridCapture ) {
-			hasBDAInput = CheckFakeBDACrossBar( env, capFiltName, videoCapFiltNum, NULL, 0 );  // KSF what about > 1 ???
+			hasBDAInput = CheckFakeBDACrossBar( env, capFiltName, videoCapFiltNum, NULL, 0 );  // can return > 1
 			slog((env, "BDA CaptureDetail:0x%x; hasBDAInput:0x%x; BDA type:0x%x\r\n", detailsCaptureMask, hasBDAInput, BDAInputType ) );
 		}
 		else
@@ -1052,8 +1052,7 @@ BOOL CheckFakeBDACrossBar( JNIEnv *env, char* capFiltName, int CapFiltNum, char*
 	CLSID CapClassidCategory;
     DEVICE_DRV_INF  BDACaptureDrvInfo;
 	DEVICE_DRV_INF  VideoCaptureDrvInfo;
-    slog((env, "KSF CheckFakeBDACrossBar Entry: capFiltName %s, CapFiltNum %d, BDAFiltDevName %s \r\n", 
-        capFiltName, CapFiltNum, BDAFiltDevName)); 
+    // slog((env, "CheckFakeBDACrossBar Entry: capFiltName %s, CapFiltNum %d, BDAFiltDevName %s \r\n", capFiltName, CapFiltNum, BDAFiltDevName)); 
     try
 	{
 		IBaseFilter* pFilter = NULL;
@@ -1083,12 +1082,10 @@ BOOL CheckFakeBDACrossBar( JNIEnv *env, char* capFiltName, int CapFiltNum, char*
         {
             GetDeviceInfo(devName, &VideoCaptureDrvInfo);
             strncpy(BDAFiltDevName, devName, BDAFiltDevNameSize);
-            slog((env, "BDA capture is found on location:'%s' id:'%s' for %s-%d (%s) (it's a BDA only).\r\n",
+            slog((env, "BDA capture is found on location:'%s' id:'%s' for %s-%d (%s) (it's a BDA only). CapClassCat= %s \r\n",
                 VideoCaptureDrvInfo.hardware_loc, VideoCaptureDrvInfo.hardware_id,
-                capFiltName, CapFiltNum, devName));
+                capFiltName, CapFiltNum, devName, (CapClassidCategory == KSCATEGORY_BDA_RECEIVER_COMPONENT) ? "Rcvr" : "Network"));
             //nTunerIndex = GetTunerNum( env, devName, CapClassidCategory, &VideoCaptureDrvInfo );
-            slog((env, "KSF VideoCaptureDrvInfo.device_desc:'%s' CapClass = %s \r\n", 
-                VideoCaptureDrvInfo.device_desc, (CapClassidCategory == KSCATEGORY_BDA_RECEIVER_COMPONENT) ? "Rcvr" : "Network"));  
             return 1;
 		}
 		GetDeviceInfo( devName, &VideoCaptureDrvInfo );
@@ -1191,6 +1188,6 @@ BOOL CheckFakeBDACrossBar( JNIEnv *env, char* capFiltName, int CapFiltNum, char*
 	for ( int i = 0; i<MAX_BDA_TUNER_NUM; i++ )
 	  if ( captureArray[i] ) delete captureArray[i];
 
-	return hasBDAInput; // KSF defined as BOOL, but actually returns int !!
+	return hasBDAInput; // defined as BOOL, but actually returns values > 1
 }
 
