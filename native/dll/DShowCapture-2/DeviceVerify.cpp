@@ -106,14 +106,15 @@ void RemoveTunerTag( char* filterName )
 JNIEXPORT jint JNICALL Java_sage_DShowCaptureDevice_isCaptureDeviceValid0
   (JNIEnv *env, jobject jo, jstring videoCapFiltName, jint videoCapFiltNum)
 {
-	if (videoCapFiltName == NULL || env->GetStringLength(videoCapFiltName) == 0)
+    if (videoCapFiltName == NULL || env->GetStringLength(videoCapFiltName) == 0)
 	{
 		slog((env, "Capture device name is not specified\r\n"));
 		return sage_DShowCaptureDevice_DEVICE_NO_EXIST;
 	}
 	char capFiltName[256];
 	const char* tempCapFiltName = env->GetStringUTFChars(videoCapFiltName, NULL);
-	strncpy( capFiltName, tempCapFiltName, sizeof(capFiltName) );
+	strncpy( capFiltName, tempCapFiltName, sizeof(capFiltName) );  
+    // slog((env, "isCaptureDeviceValid0() Entry: videoCapFiltName %s, Num %d \r\n", capFiltName, videoCapFiltNum));
 	env->ReleaseStringUTFChars(videoCapFiltName, tempCapFiltName);
 	if ( HasTunerTag( capFiltName ) )
 	{
@@ -222,7 +223,8 @@ JNIEXPORT jintArray JNICALL Java_sage_DShowCaptureDevice_getCrossbarConnections0
 {
 	char capFiltName[256];
 	const char* tempCapFiltName = env->GetStringUTFChars(videoCapFiltName, NULL);
-	strncpy( capFiltName, tempCapFiltName, sizeof(capFiltName) );
+	strncpy( capFiltName, tempCapFiltName, sizeof(capFiltName) );  
+    // slog((env, "getCrossbarConnections0() Entry: capFiltName %s, videoCapFiltNum %d \r\n", capFiltName, videoCapFiltNum));
 	env->ReleaseStringUTFChars(videoCapFiltName, tempCapFiltName);
 	//processing passed in configure name with tag<...>
 	if ( HasTunerTag( capFiltName ) )
@@ -610,7 +612,8 @@ JNIEXPORT jint JNICALL Java_sage_DShowCaptureDevice_getDeviceCaps0
 	char capFiltName[256];
 	int newCaptureType = 0;
 	const char* tempCapFiltName = env->GetStringUTFChars(videoCapFiltName, NULL);
-	strncpy( capFiltName, tempCapFiltName, sizeof(capFiltName) );
+	strncpy( capFiltName, tempCapFiltName, sizeof(capFiltName) ); 
+    // slog((env, "getDeviceCaps0() Entry: capFiltName %s, videoCapFiltNum %d \r\n", capFiltName, videoCapFiltNum));
 	env->ReleaseStringUTFChars(videoCapFiltName, tempCapFiltName);
 	if ( HasTunerTag( capFiltName ) )
 	{
@@ -710,7 +713,7 @@ JNIEXPORT jint JNICALL Java_sage_DShowCaptureDevice_getDeviceCaps0
 				//hasCaptureDetails = false;
 				hasCaptureDetails = true;
 				isHybridCapture = false;
-				detailsCaptureMask = 0x00500;
+				detailsCaptureMask = 0x00500; // sage_DShowCaptureDevice_MPEG_VIDEO_RAW_AUDIO_CAPTURE_MASK | sage_DShowCaptureDevice_RAW_AV_CAPTURE_MASK
 				detailsChipsetMask = 0;
 				slog((env, "A HVR-1250/1255/1550 analog tuner is found.\r\n" ));				
 
@@ -718,7 +721,7 @@ JNIEXPORT jint JNICALL Java_sage_DShowCaptureDevice_getDeviceCaps0
 			if ( strstr( CaptureDrvInfo.device_desc, "PVR-160") )
 			{
 				isHybridCapture = false;
-				detailsCaptureMask = 0x000800;
+				detailsCaptureMask = 0x000800;  // sage_DShowCaptureDevice_MPEG_AV_CAPTURE_MASK
 				detailsChipsetMask = 0;
 				slog((env, "A PVR-160 is found.\r\n" ));
 			} else
@@ -727,7 +730,7 @@ JNIEXPORT jint JNICALL Java_sage_DShowCaptureDevice_getDeviceCaps0
 			{
 				isHybridCapture = false;
 				hasCaptureDetails = false;
-				detailsCaptureMask = 0x000800;
+				detailsCaptureMask = 0x000800;  // sage_DShowCaptureDevice_MPEG_AV_CAPTURE_MASK
 				detailsChipsetMask = 0;
 				BDAInputType = sage_DShowCaptureDevice_BDA_DVB_S|sage_DShowCaptureDevice_BDA_DVB_T;
 				slog((env, "A boundle card is found (Analog+DVB-T+DVB-S), DVB-T|DVB-S added into source.\r\n" ) );
@@ -736,7 +739,7 @@ JNIEXPORT jint JNICALL Java_sage_DShowCaptureDevice_getDeviceCaps0
 			{
 				isHybridCapture = false;
 				hasCaptureDetails = false;
-				detailsCaptureMask = 0x000800;
+				detailsCaptureMask = 0x000800;  // sage_DShowCaptureDevice_MPEG_AV_CAPTURE_MASK
 				detailsChipsetMask = 0;
 				BDAInputType = sage_DShowCaptureDevice_BDA_DVB_C|sage_DShowCaptureDevice_BDA_DVB_T;
 				slog((env, "A boundle card is found, DVB-T|DVB-C added into source.\r\n" ) );
@@ -744,7 +747,7 @@ JNIEXPORT jint JNICALL Java_sage_DShowCaptureDevice_getDeviceCaps0
 		} 
 
 		if ( !isHybridCapture ) {
-			hasBDAInput = CheckFakeBDACrossBar( env, capFiltName, videoCapFiltNum, NULL, 0 );
+			hasBDAInput = CheckFakeBDACrossBar( env, capFiltName, videoCapFiltNum, NULL, 0 );  // can return > 1
 			slog((env, "BDA CaptureDetail:0x%x; hasBDAInput:0x%x; BDA type:0x%x\r\n", detailsCaptureMask, hasBDAInput, BDAInputType ) );
 		}
 		else
@@ -760,7 +763,7 @@ JNIEXPORT jint JNICALL Java_sage_DShowCaptureDevice_getDeviceCaps0
 			{
 				isHybridCapture = false;
 				hasCaptureDetails = false;
-				detailsCaptureMask = 0x000800;
+				detailsCaptureMask = 0x000800;  // sage_DShowCaptureDevice_MPEG_AV_CAPTURE_MASK
 				detailsChipsetMask = 0;
 				BDAInputType = sage_DShowCaptureDevice_BDA_DVB_S|sage_DShowCaptureDevice_BDA_DVB_T;
 				slog((env, "A boundle card is found (Analog+DVB-T+DVB-S), DVB-T|DVB-S added into source.\r\n" ) );
@@ -1049,7 +1052,8 @@ BOOL CheckFakeBDACrossBar( JNIEnv *env, char* capFiltName, int CapFiltNum, char*
 	CLSID CapClassidCategory;
     DEVICE_DRV_INF  BDACaptureDrvInfo;
 	DEVICE_DRV_INF  VideoCaptureDrvInfo;
-	try
+    // slog((env, "CheckFakeBDACrossBar Entry: capFiltName %s, CapFiltNum %d, BDAFiltDevName %s \r\n", capFiltName, CapFiltNum, BDAFiltDevName)); 
+    try
 	{
 		IBaseFilter* pFilter = NULL;
 		HRESULT hr = FindFilterByName(&pFilter, AM_KSCATEGORY_CAPTURE,
@@ -1074,15 +1078,15 @@ BOOL CheckFakeBDACrossBar( JNIEnv *env, char* capFiltName, int CapFiltNum, char*
 			return FALSE;
 		}
 		//it's a BDA device
-		if ( CapClassidCategory == KSCATEGORY_BDA_RECEIVER_COMPONENT || CapClassidCategory == KSCATEGORY_BDA_NETWORK_TUNER )
-		{
-			GetDeviceInfo( devName, &VideoCaptureDrvInfo );
-			strncpy( BDAFiltDevName, devName, BDAFiltDevNameSize );
-			slog((env, "BDA capture is found on location:'%s' id:'%s' for %s-%d (%s) (it's a BDA only).\r\n", 
-				        VideoCaptureDrvInfo.hardware_loc, VideoCaptureDrvInfo.hardware_id,
-						capFiltName, CapFiltNum, devName  ) );
-		    //nTunerIndex = GetTunerNum( env, devName, CapClassidCategory, &VideoCaptureDrvInfo );
-			return 1;
+        if (CapClassidCategory == KSCATEGORY_BDA_RECEIVER_COMPONENT || CapClassidCategory == KSCATEGORY_BDA_NETWORK_TUNER)
+        {
+            GetDeviceInfo(devName, &VideoCaptureDrvInfo);
+            strncpy(BDAFiltDevName, devName, BDAFiltDevNameSize);
+            slog((env, "BDA capture is found on location:'%s' id:'%s' for %s-%d (%s) (it's a BDA only). CapClassCat= %s \r\n",
+                VideoCaptureDrvInfo.hardware_loc, VideoCaptureDrvInfo.hardware_id,
+                capFiltName, CapFiltNum, devName, (CapClassidCategory == KSCATEGORY_BDA_RECEIVER_COMPONENT) ? "Rcvr" : "Network"));
+            //nTunerIndex = GetTunerNum( env, devName, CapClassidCategory, &VideoCaptureDrvInfo );
+            return 1;
 		}
 		GetDeviceInfo( devName, &VideoCaptureDrvInfo );
 		if ( VideoCaptureDrvInfo.hardware_loc[0] == 0x0 )
@@ -1184,6 +1188,6 @@ BOOL CheckFakeBDACrossBar( JNIEnv *env, char* capFiltName, int CapFiltNum, char*
 	for ( int i = 0; i<MAX_BDA_TUNER_NUM; i++ )
 	  if ( captureArray[i] ) delete captureArray[i];
 
-	return hasBDAInput;
+	return hasBDAInput; // defined as BOOL, but actually returns values > 1
 }
 
