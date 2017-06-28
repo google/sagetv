@@ -777,7 +777,7 @@ public abstract class SDSession
   /**
    * Add a new lineup to account.
    *
-   * @param id The URI provided by a lineup from {@link SDHeadendLineup#getLineup()}.
+   * @param id The ID provided by a lineup from {@link SDHeadendLineup#getLineup()}.
    * @return The number of account changes remaining.
    * @throws IOException If there is an I/O related error.
    * @throws SDException If there is a problem working with Schedules Direct.
