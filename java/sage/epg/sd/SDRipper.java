@@ -108,6 +108,7 @@ public class SDRipper extends EPGDataSource
 
   public static final String SOURCE_LABEL = " (sdepg)";
   private static final String SOURCE_LINEUP_ID = "epg_sd_name";
+  private static final String ADD_LINEUP_BY_ID = "Add lineup by ID...";
 
   // This is the preferred rating body. You would only be interested in changing this if you live in
   // another country and want to see a more familiar rating system.
@@ -388,6 +389,8 @@ public class SDRipper extends EPGDataSource
       {
         case "AddLineup":
           return addLineupToAccount(value);
+        case "AddLineupByID":
+          return addLineupToAccountByID(value);
         case "DeleteLineup":
           return deleteLineupFromAccount(value);
         case "CurrentRegion":
@@ -484,7 +487,7 @@ public class SDRipper extends EPGDataSource
 
   public static String[] getRegions() throws IOException, SDException
   {
-    String returnValue[];
+    List<String> returnValue;
 
     refreshCountryRegionCache();
 
@@ -492,21 +495,28 @@ public class SDRipper extends EPGDataSource
 
     try
     {
-      returnValue = new String[regions.length];
+      returnValue = new ArrayList<>(regions.length);
       int i = 0;
       for (SDRegion region : regions)
       {
-        returnValue[i++] = region.getRegion();
+        // ZZZ correlates with a legacy feature of Schedules Direct for satellite feeds. It doesn't
+        // currently return anything and it doesn't appear that it will ever be used for anything.
+        // We can return this to the list if that changes in the future, but for now it's better to
+        // not have it.
+        if (!region.getRegion().equals("ZZZ"))
+          returnValue.add(region.getRegion());
       }
+      // Add the option to add by ID if you already know what the ID is.
+      returnValue.add(ADD_LINEUP_BY_ID);
     }
     finally
     {
       sessionLock.readLock().unlock();
     }
 
-    if (Sage.DBG) System.out.println("SDEPG Returning regions: " + Arrays.toString(returnValue));
+    if (Sage.DBG) System.out.println("SDEPG Returning regions: " + returnValue);
 
-    return returnValue;
+    return returnValue.toArray(Pooler.EMPTY_STRING_ARRAY);
   }
 
   public static String[] getCountries(String region) throws IOException, SDException
@@ -965,6 +975,19 @@ public class SDRipper extends EPGDataSource
     int returnValue = ensureSession().addLineup(lineup.getUri());
     if (Sage.DBG) System.out.println("SDEPG Added lineup '" + lineupName + "' with " + returnValue + " changes remaining.");
     return returnValue;
+  }
+
+  /**
+   * Add a lineup to the Schedules Direct account.
+   *
+   * @param lineupID The ID of the lineup as provided by {@link SDHeadendLineup#getLineup()}.
+   * @return The number of account add/remove changes remaining.
+   * @throws IOException If there is an I/O related error.
+   * @throws SDException If there is a problem working with Schedules Direct.
+   */
+  public static int addLineupToAccountByID(String lineupID) throws IOException, SDException
+  {
+    return ensureSession().addLineupByID(lineupID);
   }
 
   /**
