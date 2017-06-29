@@ -924,8 +924,7 @@ public class SageTV implements Runnable
             {
               byte[] data = packet.getData();
               // If we're on EMBEDDED this is also fat client discovery if [4]==99
-              if (data[0] == 'S' && data[1] == 'T' && data[2] == 'V' && data[3] == 1 &&
-                  data[4] == 99)
+              if (data[0] == 'S' && data[1] == 'T' && data[2] == 'V' && data[3] == 1)
               {
                 data[3]= (byte)2;
                 data[4] = 1;

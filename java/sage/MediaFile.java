@@ -1241,7 +1241,6 @@ public class MediaFile extends DBObject implements SegmentedFile
         }
         long airTime = getRecordTime();
         long airDur = getRecordDuration();
-        // We added IE & IM for imported episodes & movies, per request of BMT developer stuckless
         if (fileFormat != null && isTV() && fileFormat.hasMetadata(MediaFormat.META_AIRING_TIME) &&
             fileFormat.hasMetadata(MediaFormat.META_AIRING_DURATION))
         {
@@ -1317,7 +1316,7 @@ public class MediaFile extends DBObject implements SegmentedFile
         infoAiringID = myAiring.id;
         // We don't mark TV recordings as 'TV' when they're imported on the embedded system because we have no
         // TV specific display menus...but we still want to handle multi-segment imports properly
-        if (isTV()) // We added IE & IM for imported episodes & movies, per request of BMT developer stuckless
+        if (isTV())
         {
           // Attempt to recover other segments if this is a multisegment recording
           // The special case we have to deal with is when we're using episodes in filenames
@@ -3427,15 +3426,7 @@ public class MediaFile extends DBObject implements SegmentedFile
     thumbnailSize = mf.thumbnailSize;
     name = mf.name;
     createWatchCount = mf.createWatchCount;
-    List<VideoFrame> vfs = null;
-    boolean reloadMediaPlayer = false;
     fileFormat = mf.fileFormat;
-    if (reloadMediaPlayer)
-    {
-      if (Sage.DBG) System.out.println("RELOADING media player because it's using a file that's just underwent a significant format change");
-      for (int i = 0; i < vfs.size(); i++)
-        vfs.get(i).reloadFile();
-    }
     super.update(fromMe);
   }
 

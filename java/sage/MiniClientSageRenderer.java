@@ -1105,7 +1105,7 @@ public class MiniClientSageRenderer extends SageRenderer
       try
       {
         setupDigitalResolutions(true);
-        if (!"None".equalsIgnoreCase(hdmiAutodetectedConnector) && uiMgr.getBoolean("hdmi_always_select_best", true) &&
+        if (!"None".equalsIgnoreCase(hdmiAutodetectedConnector) && uiMgr.getBoolean("hdmi_always_select_best", false) &&
             preferredResolutions.length > 0)
         {
           currRes = preferredResolutions[preferredResolutions.length - 1];

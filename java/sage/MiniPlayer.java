@@ -3373,6 +3373,8 @@ public class MiniPlayer implements DVDMediaPlayer
       }
       long t2 = Sage.eventTime();
       pushedBytes += size;
+      if (bwDebug && Sage.DBG && numPushedBuffers % 50 == 0 && t2 > lastTime && size > 0)
+        System.out.println("BW=" + ((pushedBytes * 8000) / (t2 - lastTime)) + " numPushes=" + numPushes + " numWaits=" + numWaits);
       numPushes++;
       if (size == 0 || !pushMode || (!useAsyncReplies && freeSpace <= pushBufferSize))
       {

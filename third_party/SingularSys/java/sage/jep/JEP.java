@@ -418,7 +418,7 @@ public final class JEP {
       return result;
     }
 
-    if (fastNodes != null)
+    if (fastNodes != null && !hasError())
     {
       CommandEvaluator ce = getCEFromPool();
       try

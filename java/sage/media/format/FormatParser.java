@@ -932,7 +932,7 @@ public class FormatParser
               System.out.println("BAD AR Format info:" + e + " str=" + nextStr);
             }
           }
-          else if (nextStr.startsWith("PAR"))
+          else if (nextStr.startsWith("PAR")  && !foundAR)
           {
             pastPixFmt = true;
             int darIdx = nextStr.indexOf("DAR");

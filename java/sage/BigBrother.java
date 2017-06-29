@@ -184,7 +184,7 @@ public class BigBrother
     }
     Watched prior = Wizard.getInstance().getWatch(a);
     if (prior != null) Wizard.getInstance().removeWatched(prior);
-    if (a.isTV() && Carny.getInstance().isLoveAir(a))
+    if (a.isTV())
       Carny.getInstance().submitJob(new Object[] { Carny.WATCH_CLEAR_JOB, a });
     triggerWatchedChangeEvent(a);
   }
@@ -224,7 +224,7 @@ public class BigBrother
         Wizard.getInstance().addWatched(a, (a.isDVD() || a.isBluRay()) ? 0 : a.getStartTime(),
             (a.isDVD() || a.isBluRay()) ? a.getDuration() : a.getEndTime(),
                 0, 0);
-        if (a.isTV() && Carny.getInstance().isLoveAir(a))
+        if (a.isTV())
           Carny.getInstance().submitJob(new Object[] { Carny.WATCH_MARK_JOB, a });
         triggerWatchedChangeEvent(a);
       }
@@ -271,7 +271,7 @@ public class BigBrother
           {
             if (s != null)
               s.setLastWatched(a.time);
-            if (a.isTV() && Carny.getInstance().isLoveAir(a))
+            if (a.isTV())
               Carny.getInstance().submitJob(new Object[] { Carny.WATCH_REAL_JOB, a });
           }
           triggerWatchedChangeEvent(a);
