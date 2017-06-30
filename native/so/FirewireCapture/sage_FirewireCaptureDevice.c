@@ -178,6 +178,7 @@ JNIEXPORT jlong JNICALL Java_sage_FirewireCaptureDevice_createEncoder0(
     return 0;
   }
 
+  memset(CDev, 0, sizeof(*CDev));
   const char *cdevname = (*env)->GetStringUTFChars(env, jdevname, NULL);
   snprintf(CDev->devName, sizeof(CDev->devName), "%s", cdevname);
   (*env)->ReleaseStringUTFChars(env, jdevname, cdevname);
@@ -213,17 +214,16 @@ JNIEXPORT jlong JNICALL Java_sage_FirewireCaptureDevice_createEncoder0(
 
   CDev->node = -1;
   for (port = 0; port < nports; port++) {
-    if (raw1394_set_port(CDev->handle, port) < 0) {
-      continue;
-    }
+    raw1394handle_t handle = raw1394_new_handle_on_port(port);
 
-    for (device = 0; device < raw1394_get_nodecount(CDev->handle); device++) {
-      octlet_t guid = get_guid(CDev->handle, 0xffc0 | device);
+    for (device = 0; device < raw1394_get_nodecount(handle); device++) {
+      octlet_t guid = get_guid(handle, 0xffc0 | device);
       if (guid == CDev->guid) {
         CDev->node = 0xffc0 | device;
         CDev->port = port;
       }
     }
+    raw1394_destroy_handle(handle);
   }
 
   if (CDev->node == -1) {
@@ -238,7 +238,7 @@ JNIEXPORT jlong JNICALL Java_sage_FirewireCaptureDevice_createEncoder0(
 
   raw1394_set_port(CDev->handle, CDev->port);
 
-  sysOutPrint(env, "Found GUID %08x %08x on port %d node %d\n",
+  sysOutPrint(env, "Firewire found GUID %08x %08x on port %d node %d\n",
               (quadlet_t)(CDev->guid >> 32),
               (quadlet_t)(CDev->guid & 0xffffffff), CDev->port, CDev->node);
   return (jlong)CDev;
@@ -358,7 +358,7 @@ JNIEXPORT jint JNICALL Java_sage_FirewireCaptureDevice_eatEncoderData0(
     int numbytes = 0;
     if (CDev->mpeg) {
       int fd = raw1394_get_fd(CDev->handle);
-      struct timeval tv;
+      struct timeval tv = {};
       fd_set rfds;
       int result = 0;
 
@@ -375,7 +375,9 @@ JNIEXPORT jint JNICALL Java_sage_FirewireCaptureDevice_eatEncoderData0(
       usleep(100000);
     }
 
+#ifdef VERBOSE_DEBUG
     sysOutPrint(env, "eatEncoderData0 %d\n", numbytes);
+#endif
     return numbytes;
   }
   return 0;
@@ -497,26 +499,25 @@ JNIEXPORT jintArray JNICALL Java_sage_FirewireCaptureDevice_updateColors0(
 JNIEXPORT jstring JNICALL
 Java_sage_LinuxFirewireCaptureManager_ListFirewireNodes0(JNIEnv *env,
                                                          jobject jo) {
-  raw1394handle_t handle;
+  raw1394handle_t main_handle;
   int device;
   int nports, port;
   struct raw1394_portinfo portinfo[16];
   jstring result;
   char *firewirestring = NULL;
 
-  if (!(handle = raw1394_new_handle())) {
+  if (!(main_handle = raw1394_new_handle())) {
     return (*env)->NewStringUTF(env, "");
   }
 
-  if ((nports = raw1394_get_port_info(handle, portinfo, 16)) < 0) {
-    raw1394_destroy_handle(handle);
+  if ((nports = raw1394_get_port_info(main_handle, portinfo, 16)) < 0) {
+    raw1394_destroy_handle(main_handle);
     return (*env)->NewStringUTF(env, "");
   }
+  raw1394_destroy_handle(main_handle);
 
   for (port = 0; port < nports; port++) {
-    if (raw1394_set_port(handle, port) < 0) {
-      continue;
-    }
+    raw1394handle_t handle = raw1394_new_handle_on_port(port);
 
     for (device = 0; device < raw1394_get_nodecount(handle); device++) {
       octlet_t guid = get_guid(handle, 0xffc0 | device);
@@ -534,6 +535,7 @@ Java_sage_LinuxFirewireCaptureManager_ListFirewireNodes0(JNIEnv *env,
                 (quadlet_t)(guid & 0xffffffff));
       }
     }
+    raw1394_destroy_handle(handle);
   }
   if (firewirestring != NULL) {
     result = (*env)->NewStringUTF(env, firewirestring);
@@ -541,14 +543,13 @@ Java_sage_LinuxFirewireCaptureManager_ListFirewireNodes0(JNIEnv *env,
   } else {
     result = (*env)->NewStringUTF(env, "");
   }
-  raw1394_destroy_handle(handle);
   return result;
 }
 
 JNIEXPORT jboolean JNICALL
 Java_sage_LinuxFirewireCaptureManager_AvailableFirewireDevice0(
     JNIEnv *env, jobject jo, jstring jdevname) {
-  raw1394handle_t handle;
+  raw1394handle_t main_handle;
   int device;
   int nports, port;
   struct raw1394_portinfo portinfo[16];
@@ -572,19 +573,18 @@ Java_sage_LinuxFirewireCaptureManager_AvailableFirewireDevice0(
   sysOutPrint(env, "Searching for firewire GUID %08x %08x\n",
               (quadlet_t)(devguid >> 32), (quadlet_t)(devguid & 0xffffffff));
 
-  if (!(handle = raw1394_new_handle())) {
+  if (!(main_handle = raw1394_new_handle())) {
     return JNI_FALSE;
   }
 
-  if ((nports = raw1394_get_port_info(handle, portinfo, 16)) < 0) {
-    raw1394_destroy_handle(handle);
+  if ((nports = raw1394_get_port_info(main_handle, portinfo, 16)) < 0) {
+    raw1394_destroy_handle(main_handle);
     return JNI_FALSE;
   }
+  raw1394_destroy_handle(main_handle);
 
   for (port = 0; port < nports; port++) {
-    if (raw1394_set_port(handle, port) < 0) {
-      continue;
-    }
+    raw1394handle_t handle = raw1394_new_handle_on_port(port);
 
     for (device = 0; device < raw1394_get_nodecount(handle); device++) {
       octlet_t guid = get_guid(handle, 0xffc0 | device);
@@ -596,7 +596,7 @@ Java_sage_LinuxFirewireCaptureManager_AvailableFirewireDevice0(
         return JNI_TRUE;
       }
     }
+    raw1394_destroy_handle(handle);
   }
-  raw1394_destroy_handle(handle);
   return JNI_FALSE;
 }
