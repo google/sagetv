@@ -1981,6 +1981,20 @@ public class MetaImage
                   if (DEBUG_MI && mi.javaRefCount[i] > 0) outstandingRefs++;
                 }
               }
+              else
+              {
+                if (nid == null)
+                  nid = mi.getNativeImageData(nia);
+                if (nid.nativeRefCount[i] <= 0 && nid.nativeImage[i] != 0 && nid.lastUsedNative[i] < oldest)
+                {
+                  oldest = nid.lastUsedNative[i];
+                  oldestImage = mi;
+                  oldestIndex = i;
+                }
+                if (DEBUG_MI && nid.nativeRefCount[i] > 0) outstandingRefs++;
+                //if (nid.nativeRefCount[i] > 0)
+                //	System.out.println("Native Ref Still Exists For:" + mi.src);
+              }
             }
           }
         }

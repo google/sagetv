@@ -22,16 +22,6 @@ package sage.media.image;
 public class RawImage
 {
   // These images have premultiplied alpha and 4 bytes per pixel in ARGB format.
-  /** Creates a new instance of RawImage */
-  public RawImage(int width, int height, byte[] data, boolean hasAlpha, int stride)
-  {
-    this.width = width;
-    this.height = height;
-    this.dataArr = data;
-    this.hasAlpha = hasAlpha;
-    this.stride = stride;
-  }
-
   public RawImage(int width, int height, java.nio.ByteBuffer data, boolean hasAlpha, int stride)
   {
     this.width = width;
@@ -93,11 +83,6 @@ public class RawImage
     return dataBuff;
   }
 
-  public byte[] getDataArr()
-  {
-    return dataArr;
-  }
-
   // For multithreading we need to give each caller a new buffer object to handle the positions; but share the same data
   public java.nio.ByteBuffer getROData()
   {
@@ -141,7 +126,6 @@ public class RawImage
 
   private int width;
   private int height;
-  private byte[] dataArr;
   private java.nio.ByteBuffer dataBuff;
   private boolean hasAlpha;
   private int stride; // in bytes

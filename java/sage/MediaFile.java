@@ -3412,8 +3412,7 @@ public class MediaFile extends DBObject implements SegmentedFile
     if (infoAiringID != mf.infoAiringID)
       myAiring = null;
     infoAiringID = mf.infoAiringID;
-    if (SageConstants.PVR)
-      videoDirectory = new String(mf.videoDirectory);
+    videoDirectory = new String(mf.videoDirectory);
     host = mf.host;
     encodedBy = mf.encodedBy;
     //mediaType = mf.mediaType;
@@ -3438,8 +3437,7 @@ public class MediaFile extends DBObject implements SegmentedFile
   private void checkForTVFileConversion(String externalID)
   {
     // Check for conversion to a TV file. This is true if it uses TMS data for the Show IDs
-    if (SageConstants.PVR
-        && Sage.getBoolean("enable_converting_imported_videos_to_tv_recordings", true)
+    if (Sage.getBoolean("enable_converting_imported_videos_to_tv_recordings", true)
         && (externalID.startsWith("EP") || externalID.startsWith("SH") ||
             externalID.startsWith("SP") || externalID.startsWith("MV") || externalID.startsWith("DT") ||
             externalID.startsWith("IE") || externalID.startsWith("IM"))) // We added IE & IM for imported episodes & movies, per request of BMT developer stuckless

@@ -616,10 +616,7 @@ public class NetworkClient
         numReconnects = 0;
         sleepThisTime = 7500;
       }
-      if (connectionState != CS_STATE_NOT_INITIALIZED && connectionState != CS_STATE_FULLY_CONNECTED)
-      {
-        try{Thread.sleep(sleepThisTime);}catch(Exception e){}
-      }
+      try{Thread.sleep(sleepThisTime);}catch(Exception e){}
       sleepThisTime *= 2;
 
       if (Sage.autodiscoveredServer)

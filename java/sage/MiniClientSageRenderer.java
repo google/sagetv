@@ -3456,138 +3456,135 @@ public class MiniClientSageRenderer extends SageRenderer
           image.removeRawRef(imageIndex);
         }
       }
-      // if we don't have this as a buffered image, we need to convert it
-      java.awt.image.BufferedImage tempBuf;
-      java.awt.Image javaImage = image.getJavaImage(imageIndex);
-      try
+      else
       {
-        pauseIfNotRenderingThread();
-        if (!(javaImage instanceof java.awt.image.BufferedImage) ||
+        // if we don't have this as a buffered image, we need to convert it
+        java.awt.image.BufferedImage tempBuf;
+        java.awt.Image javaImage = image.getJavaImage(imageIndex);
+        try
+        {
+          pauseIfNotRenderingThread();
+          if (!(javaImage instanceof java.awt.image.BufferedImage) ||
             ((((java.awt.image.BufferedImage) javaImage).getType() !=
-            java.awt.image.BufferedImage.TYPE_INT_ARGB) &&
-            (((java.awt.image.BufferedImage) javaImage).getType() !=
-            java.awt.image.BufferedImage.TYPE_INT_ARGB_PRE)))
-        {
-          if (!(javaImage instanceof java.awt.image.BufferedImage))
-            ImageUtils.ensureImageIsLoaded(javaImage);
-          tempBuf = ImageUtils.createBestImage(javaImage);
-        }
-        else
-        {
-          tempBuf = (java.awt.image.BufferedImage)javaImage;
-        }
-        if (tempBuf.isAlphaPremultiplied() != PREMULTIPLY_ALPHA && image.hasAlpha())
-        {
-          if (Sage.DBG)
-            System.out.println((PREMULTIPLY_ALPHA ? "" : "Un-") + "Premultiplying alpha for BuffImage...");
-          pauseIfNotRenderingThread();
-          tempBuf.coerceData(PREMULTIPLY_ALPHA);
-          if (Sage.DBG)
-            System.out.println("Done " + (PREMULTIPLY_ALPHA ? "" : "Un-") + "Premultiplying alpha for BuffImage...");
-        }
-        int width = image.getWidth(imageIndex);
-        int height = image.getHeight(imageIndex);
-        if (Sage.DBG && DEBUG_NATIVE2D) System.out.println("Trying to load image " +
-            image.getSource() + " width: "+width+" height: "+height);
-
-        if (!allowRawImageTransfer)
-        {
-          // Save the image as a PNG and then transfer that (but do a quick check for a JPEG filename
-          // and use JPEG in that case)
-          String imgSrcName = image.getLcSourcePathname();
-          boolean doJpegTransfer = false;
-          if (imgSrcName.endsWith(".jpg") || imgSrcName.endsWith(".jpeg"))
-            doJpegTransfer = true;
-          java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
-          pauseIfNotRenderingThread();
-          try
+              java.awt.image.BufferedImage.TYPE_INT_ARGB) &&
+              (((java.awt.image.BufferedImage) javaImage).getType() !=
+                java.awt.image.BufferedImage.TYPE_INT_ARGB_PRE)))
           {
-            javax.imageio.ImageIO.write(tempBuf, doJpegTransfer ? "jpg" : "png", baos);
+            if (!(javaImage instanceof java.awt.image.BufferedImage))
+              ImageUtils.ensureImageIsLoaded(javaImage);
+            tempBuf = ImageUtils.createBestImage(javaImage);
+          } else
+          {
+            tempBuf = (java.awt.image.BufferedImage) javaImage;
           }
-          catch (java.io.IOException e)
+          if (tempBuf.isAlphaPremultiplied() != PREMULTIPLY_ALPHA && image.hasAlpha())
           {
-            System.out.println("ERROR with ImageIO Library! " + e);
-          }
-          synchronized (MetaImage.getNiaCacheLock(this))
-          {
-            while((nativePtr = prepImageMini(width, height, "")) == 0)
-            {
-              Object[] oldestImage =
-                  MetaImage.getLeastRecentlyUsedImage(this, image, imageIndex);
-              if (oldestImage == null)
-              {
-                return false;
-              }
-              ((MetaImage) oldestImage[0]).clearNativePointer(this,
-                  ((Integer) oldestImage[1]).intValue());
-            }
-          }
-          if (nativePtr == -1 && isMediaExtender()) // failed allocation on a dead connection
-            return false;
-          if (advImageCaching)
-          {
-            pauseIfNotRenderingThread(true);
-            loadImageCompressedMini(nativePtr, baos.toByteArray());
-          }
-          else
-          {
+            if (Sage.DBG)
+              System.out.println((PREMULTIPLY_ALPHA ? "" : "Un-") + "Premultiplying alpha for BuffImage...");
             pauseIfNotRenderingThread();
-            nativePtr = loadImageCompressedMini(nativePtr, baos.toByteArray());
+            tempBuf.coerceData(PREMULTIPLY_ALPHA);
+            if (Sage.DBG)
+              System.out.println("Done " + (PREMULTIPLY_ALPHA ? "" : "Un-") + "Premultiplying alpha for BuffImage...");
           }
-        }
-        else
-        {
-          if (advImageCaching)
+          int width = image.getWidth(imageIndex);
+          int height = image.getHeight(imageIndex);
+          if (Sage.DBG && DEBUG_NATIVE2D) System.out.println("Trying to load image " +
+            image.getSource() + " width: " + width + " height: " + height);
+
+          if (!allowRawImageTransfer)
           {
-            synchronized (clientHandleCounterLock)
+            // Save the image as a PNG and then transfer that (but do a quick check for a JPEG filename
+            // and use JPEG in that case)
+            String imgSrcName = image.getLcSourcePathname();
+            boolean doJpegTransfer = false;
+            if (imgSrcName.endsWith(".jpg") || imgSrcName.endsWith(".jpeg"))
+              doJpegTransfer = true;
+            java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+            pauseIfNotRenderingThread();
+            try
             {
-              nativePtr = clientHandleCounter++;
+              javax.imageio.ImageIO.write(tempBuf, doJpegTransfer ? "jpg" : "png", baos);
+            } catch (java.io.IOException e)
+            {
+              System.out.println("ERROR with ImageIO Library! " + e);
             }
-            loadImageTargetedMini((int)nativePtr, width, height, optimizeFontMem ? IMAGE_FORMAT_8BPP : IMAGE_FORMAT_ARGB32);
-          }
-          else
-          {
             synchronized (MetaImage.getNiaCacheLock(this))
             {
-              while((nativePtr = loadImageMini(width, height, optimizeFontMem ? IMAGE_FORMAT_8BPP : IMAGE_FORMAT_ARGB32)) == 0)
+              while ((nativePtr = prepImageMini(width, height, "")) == 0)
               {
                 Object[] oldestImage =
-                    MetaImage.getLeastRecentlyUsedImage(this, image, imageIndex);
+                  MetaImage.getLeastRecentlyUsedImage(this, image, imageIndex);
                 if (oldestImage == null)
                 {
                   return false;
                 }
                 ((MetaImage) oldestImage[0]).clearNativePointer(this,
-                    ((Integer) oldestImage[1]).intValue());
+                  ((Integer) oldestImage[1]).intValue());
               }
             }
-          }
-          if (nativePtr == -1 && isMediaExtender()) // failed allocation on a dead connection
-            return false;
-
-          int posv=0;
-          int [] texturedata =
-              ((java.awt.image.DataBufferInt)
-                  tempBuf.getRaster().getDataBuffer()).getData();
-          while(posv<height)
+            if (nativePtr == -1 && isMediaExtender()) // failed allocation on a dead connection
+              return false;
+            if (advImageCaching)
+            {
+              pauseIfNotRenderingThread(true);
+              loadImageCompressedMini(nativePtr, baos.toByteArray());
+            } else
+            {
+              pauseIfNotRenderingThread();
+              nativePtr = loadImageCompressedMini(nativePtr, baos.toByteArray());
+            }
+          } else
           {
-            pauseIfNotRenderingThread();
-            if (!loadImageLineMini(nativePtr, posv, width, width*posv,
+            if (advImageCaching)
+            {
+              synchronized (clientHandleCounterLock)
+              {
+                nativePtr = clientHandleCounter++;
+              }
+              loadImageTargetedMini((int) nativePtr, width, height, optimizeFontMem ? IMAGE_FORMAT_8BPP : IMAGE_FORMAT_ARGB32);
+            } else
+            {
+              synchronized (MetaImage.getNiaCacheLock(this))
+              {
+                while ((nativePtr = loadImageMini(width, height, optimizeFontMem ? IMAGE_FORMAT_8BPP : IMAGE_FORMAT_ARGB32)) == 0)
+                {
+                  Object[] oldestImage =
+                    MetaImage.getLeastRecentlyUsedImage(this, image, imageIndex);
+                  if (oldestImage == null)
+                  {
+                    return false;
+                  }
+                  ((MetaImage) oldestImage[0]).clearNativePointer(this,
+                    ((Integer) oldestImage[1]).intValue());
+                }
+              }
+            }
+            if (nativePtr == -1 && isMediaExtender()) // failed allocation on a dead connection
+              return false;
+
+            int posv = 0;
+            int[] texturedata =
+              ((java.awt.image.DataBufferInt)
+                tempBuf.getRaster().getDataBuffer()).getData();
+            while (posv < height)
+            {
+              pauseIfNotRenderingThread();
+              if (!loadImageLineMini(nativePtr, posv, width, width * posv,
                 texturedata))
-              break;
-            posv+=1;
+                break;
+              posv += 1;
+            }
+            //						try{clientOutStream.flush();}catch(Exception e){}
           }
-          //						try{clientOutStream.flush();}catch(Exception e){}
-        }
-        if (nativePtr != 0)
+          if (nativePtr != 0)
+          {
+            image.setNativePointer(this, imageIndex, nativePtr,
+              width * height * 4);
+          }
+        } finally
         {
-          image.setNativePointer(this, imageIndex, nativePtr,
-              width*height*4);
+          image.removeJavaRef(imageIndex);
         }
-      }
-      finally
-      {
-        image.removeJavaRef(imageIndex);
       }
     }
     return (nativePtr != 0);

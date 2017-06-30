@@ -216,55 +216,7 @@ public class FSManager implements Runnable
   // This may also return an smb:// URL for network paths
   public String requestLargeTempStorageDir(long minFreeSpace)
   {
-    if (!Sage.LINUX_OS)
-      return System.getProperty("java.io.tmpdir");
-    else
-    {
-      if (Sage.DBG) System.out.println("Searching for temp storage w/ minimum size: " + minFreeSpace);
-      // Try the HDD, then USB and finally the network
-      if (localHDD != null)
-      {
-        java.io.File stvTmpDir = new java.io.File(localHDD, ".sagetv");
-        if (stvTmpDir.isDirectory() || stvTmpDir.mkdirs())
-        {
-          if (Sage.getDiskFreeSpace(stvTmpDir.toString()) > minFreeSpace)
-            return stvTmpDir.toString();
-          else
-            stvTmpDir.delete();
-        }
-      }
-      if (SageTV.getHotplugStorageDetector() != null && SageTV.getHotplugStorageDetector().getDeviceMap() != null)
-      {
-        java.util.ArrayList storageList = new java.util.ArrayList(SageTV.getHotplugStorageDetector().getDeviceMap().values());
-        for (int i = 0; i < storageList.size(); i++)
-        {
-          java.io.File testFile = (java.io.File) storageList.get(i);
-          java.io.File stvTmpDir = new java.io.File(testFile, ".sagetv");
-          if (stvTmpDir.isDirectory() || stvTmpDir.mkdirs())
-          {
-            if (Sage.getDiskFreeSpace(stvTmpDir.toString()) > minFreeSpace)
-              return stvTmpDir.toString();
-            else
-              stvTmpDir.delete();
-          }
-        }
-      }
-
-      java.io.File[] netMounts = SeekerSelector.getInstance().getSmbMountedFolders();
-      for (int i = 0; i < netMounts.length; i++)
-      {
-        java.io.File stvTmpDir = new java.io.File(netMounts[i], ".sagetv");
-        if (stvTmpDir.isDirectory() || stvTmpDir.mkdirs())
-        {
-          if (Sage.getDiskFreeSpace(stvTmpDir.toString()) > minFreeSpace)
-            return "smb://" + stvTmpDir.toString().substring(Sage.get("linux/smb_mount_root", "/tmp/sagetv_shares/").length());
-          else
-            stvTmpDir.delete();
-        }
-      }
-      // Sometimes we just don't have an option!
-      return null;
-    }
+    return System.getProperty("java.io.tmpdir");
   }
 
   // Returns the mount point for the ISO file
