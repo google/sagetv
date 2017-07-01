@@ -65,7 +65,7 @@ public class FileTransfer extends SystemTask
     orgDestFile = destFile;
     if (Sage.DBG) System.out.println("Transfer requested for files src=" + srcFileStr + " dest=" + destFile);
     UIManager uiMgr = (UIManager) uiMgrWeak.get();
-    remoteUIXfer = uiMgr.getUIClientType() == UIClient.REMOTE_UI && uiMgr.hasRemoteFSSupport() && !Sage.EMBEDDED;
+    remoteUIXfer = uiMgr.getUIClientType() == UIClient.REMOTE_UI && uiMgr.hasRemoteFSSupport();
     smbMountHolder = null;
     if (srcFileStr.startsWith("smb://"))
     {

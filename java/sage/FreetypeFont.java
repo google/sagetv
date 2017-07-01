@@ -90,7 +90,7 @@ public class FreetypeFont extends MetaFont
       }
       else
       {
-        if (!new java.io.File(fontPath).isFile() && !Sage.EMBEDDED)
+        if (!new java.io.File(fontPath).isFile())
         {
           throw new java.io.FileNotFoundException();
         }
@@ -457,10 +457,7 @@ public class FreetypeFont extends MetaFont
     int i = 0;
     // See if the cache file exists :
     java.io.File cacheFile;
-    if (Sage.EMBEDDED)
-      cacheFile = new java.io.File("/rw/sage/fontcache_"+width+"x"+height+"_"+hashCode()+"_size_"+size+"_style_"+style);
-    else
-      cacheFile = new java.io.File(System.getProperty("user.dir"), "fontcache" + java.io.File.separator + width+"x"+height+"_"+hashCode()+"_size_"+size+"_style_"+style);
+    cacheFile = new java.io.File(System.getProperty("user.dir"), "fontcache" + java.io.File.separator + width+"x"+height+"_"+hashCode()+"_size_"+size+"_style_"+style);
     if (cacheFile.isFile())
     {
       // Verify the number of glyph
@@ -623,8 +620,6 @@ public class FreetypeFont extends MetaFont
 
   public java.awt.image.BufferedImage loadJavaFontImage(SageRenderer.CachedFontGlyphs cacheData, int imageIndex)
   {
-    if (Sage.EMBEDDED)
-      throw new UnsupportedOperationException("Not yet implemented");
     int x = 0;
     int y = 0;
     int maxHeightForRow = 0;
@@ -691,7 +686,7 @@ public class FreetypeFont extends MetaFont
 
     if (Sage.DBG) System.out.println("Rendered new font to raw cache index=" + imageIndex + " font=" + this);
 
-    if (!Sage.EMBEDDED && Sage.getBoolean("ui/dump_font_cache", false))
+    if (Sage.getBoolean("ui/dump_font_cache", false))
     {
       try
       {

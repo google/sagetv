@@ -75,19 +75,9 @@ public class AWTThreadWatcher extends Thread
                 " Hang Detected - hang time = " + (Sage.eventTime() - lastCheckSubmitTime) + " UILocker=" +
                 uiMgr.getUILockHolder());
 
-            if((stackDumperMeth != null || Sage.EMBEDDED) && delayToDumpAllThreads > 0 && (Sage.eventTime() - lastCheckSubmitTime) > delayToDumpAllThreads)
+            if(stackDumperMeth != null && delayToDumpAllThreads > 0 && (Sage.eventTime() - lastCheckSubmitTime) > delayToDumpAllThreads)
             {
-              if (Sage.EMBEDDED)
-              {
-                if (!dumpedThreadStates)
-                {
-                  // Avoid doing this repeatedly on embedded since it's much more heavyweight
-                  dumpThreadStates();
-                  dumpedThreadStates = true;
-                }
-              }
-              else
-                dumpThreadStates();
+              dumpThreadStates();
             }
           }
         }
@@ -148,49 +138,34 @@ public class AWTThreadWatcher extends Thread
 
   public static void dumpThreadStates()
   {
-    if (Sage.EMBEDDED)
+    if (stackDumperMeth == null)
     {
-      IOUtils.exec(new String[] { "sh", "-c", "kill -3 `pidof java`"});
-      if (Sage.client)
-      {
-        if (Sage.DBG) System.out.println("SageTV client sending command to server to dump its thread states since we were hung and it may be the cause...");
-        try
-        {
-          SageTV.api("DumpServerThreadStates", null);
-        }catch (Throwable t){}
-      }
-    }
-    else
-    {
-      if (stackDumperMeth == null)
-      {
-        try
-        {
-          stackDumperMeth = Thread.class.getDeclaredMethod("getAllStackTraces", new Class[0]);
-        }
-        catch (Throwable thr)
-        {
-          System.out.println("Stack dumping disabled because we can't reflect the dump method!:" + thr);
-        }
-      }
-      if (stackDumperMeth == null) return;
       try
       {
-        java.util.Map mappy = (java.util.Map)stackDumperMeth.invoke(null, (Object[])null);//Thread.getAllStackTraces();
-        java.util.Iterator walker = mappy.entrySet().iterator();
-        while (walker.hasNext())
-        {
-          java.util.Map.Entry ent = (java.util.Map.Entry) walker.next();
-          System.out.println("" + ent.getKey());
-          StackTraceElement[] stack = (StackTraceElement[]) ent.getValue();
-          for (int i = 0; i < stack.length; i++)
-            System.out.println("\t"+stack[i].toString());
-        }
+        stackDumperMeth = Thread.class.getDeclaredMethod("getAllStackTraces", new Class[0]);
       }
       catch (Throwable thr)
       {
-        System.out.println("ERROR dumping thread stacks of:" + thr);
+        System.out.println("Stack dumping disabled because we can't reflect the dump method!:" + thr);
       }
+    }
+    if (stackDumperMeth == null) return;
+    try
+    {
+      java.util.Map mappy = (java.util.Map)stackDumperMeth.invoke(null, (Object[])null);//Thread.getAllStackTraces();
+      java.util.Iterator walker = mappy.entrySet().iterator();
+      while (walker.hasNext())
+      {
+        java.util.Map.Entry ent = (java.util.Map.Entry) walker.next();
+        System.out.println("" + ent.getKey());
+        StackTraceElement[] stack = (StackTraceElement[]) ent.getValue();
+        for (int i = 0; i < stack.length; i++)
+          System.out.println("\t"+stack[i].toString());
+      }
+    }
+    catch (Throwable thr)
+    {
+      System.out.println("ERROR dumping thread stacks of:" + thr);
     }
   }
   private static java.lang.reflect.Method stackDumperMeth = null;

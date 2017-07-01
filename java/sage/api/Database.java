@@ -24,7 +24,7 @@ import sage.*;
  */
 public class Database {
   private Database() {}
-  private static final boolean USE_COLLATOR_SORTING = Sage.getBoolean("use_collator_sorting", !Sage.EMBEDDED);
+  private static final boolean USE_COLLATOR_SORTING = Sage.getBoolean("use_collator_sorting", true);
   private static boolean TRIM_PRONOUNS_IN_SORTING = sage.Sage.getBoolean("ui/ignore_the_when_sorting", true);
   private static String[] pronounsToTrim = new String[] { "the ", "a ", "an " };
   private static void updateTrimPronouns()

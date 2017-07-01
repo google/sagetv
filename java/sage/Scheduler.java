@@ -396,7 +396,7 @@ public class Scheduler implements SchedulerInterface
       Pooler.execute(new Runnable() {
         public void run() {
           try {
-            Thread.sleep(Sage.EMBEDDED ? 2500 : 250);
+            Thread.sleep(250);
           } catch (Exception e) {}
           synchronized (Scheduler.this) {
             Scheduler.this.notifyAll();
@@ -703,7 +703,7 @@ public class Scheduler implements SchedulerInterface
     cachedSchedStarts.clear();
     cachedSchedEnds.clear();
     long schedUpdateStartTime = Sage.eventTime();
-    if (Sage.DBG) System.out.println("Scheduler.updateSchedule() called " + (Sage.EMBEDDED ? "" :
+    if (Sage.DBG) System.out.println("Scheduler.updateSchedule() called " + (
       (" manual=" + Arrays.asList(wiz.getManualRecords()) + " schedules=" + encoderScheduleMap +
           " scheduleRandSize=" + scheduleRandoms.size())));
 
@@ -995,7 +995,7 @@ public class Scheduler implements SchedulerInterface
       }
     }
     potentials.clear();
-    boolean irEnabled = !Sage.EMBEDDED || !Seeker.getInstance().getDisableProfilerRecording();
+    boolean irEnabled = true;
 
     for (int i = 0; i < lookaheadAirs.length; i++)
     {
@@ -1391,7 +1391,7 @@ public class Scheduler implements SchedulerInterface
                 permsChecked++;
                 if (permsChecked > conflict_resolution_search_depth ||
                     (Sage.eventTime() - iterStartTime > conflict_resolution_search_time &&
-                        (Sage.EMBEDDED || permsChecked > conflict_resolution_search_min_for_timeout))) // just in case, then we just abandon this as an option
+                        (permsChecked > conflict_resolution_search_min_for_timeout))) // just in case, then we just abandon this as an option
                 {
                   if (SDBG) System.out.println("Scheduler is abandoning this evaluation-2: Lost " +
                       (Sage.eventTime() - iterStartTime) + " millis before scheduler abandon");
@@ -2082,7 +2082,7 @@ public class Scheduler implements SchedulerInterface
 
     for (EncoderSchedule es : encoderScheduleMap.values())
     {
-      if (Sage.DBG && !Sage.EMBEDDED) System.out.println("MUST SEE FINAL-" + es.capDev + "-" + es.mustSee.toString());
+      if (Sage.DBG) System.out.println("MUST SEE FINAL-" + es.capDev + "-" + es.mustSee.toString());
 
       // SCHEDULE CLEANUP 7/22/03
       // Removal of anything from the schedule that's not in the must see & is not
@@ -2290,7 +2290,7 @@ public class Scheduler implements SchedulerInterface
     }
     // The schedule should now contain the best full airings coming on in the future.
     // Hoorahhh for Duff Gardens!!!!!!!!
-    if (Sage.DBG && !Sage.EMBEDDED)
+    if (Sage.DBG)
     {
       System.out.println("COMPLETE SCHEDULE-----**&^%&*-------COMPLETE SCHEDULE");
       for (EncoderSchedule es : encoderScheduleMap.values())

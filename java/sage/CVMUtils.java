@@ -21,20 +21,4 @@ package sage;
  */
 public class CVMUtils
 {
-  static
-  {
-    if (Sage.EMBEDDED)
-    {
-      try
-      {
-        sage.Native.loadLibrary("CVMUtils");
-      }
-      catch (Throwable t)
-      {
-        System.out.println("ERROR Could not load library for CVMUtils!!!! " + t);
-        t.printStackTrace();
-      }
-    }
-  }
-  public static native int reloadNameserverCache();
 }

@@ -23,7 +23,7 @@ public class PVR150Input implements SageTVInputPlugin
 
   public PVR150Input()
   {
-    if (!loadedLib && !Sage.EMBEDDED)
+    if (!loadedLib)
     {
       sage.Native.loadLibrary("PVR150Input");
       loadedLib = true;

@@ -682,13 +682,8 @@ public class WidgetAPI {
        * @declaration public java.io.File GetDefaultSTVFile();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        if (Sage.EMBEDDED)
-        {
-          return new java.io.File("/app/sage/STVs/Cheetah/Cheetah.opt.stv");
-        }
-        else
-          return new java.io.File(System.getProperty("user.dir"), "STVs" + java.io.File.separatorChar +
-              ("SageTV7" + java.io.File.separatorChar + "SageTV7.xml"));
+        return new java.io.File(System.getProperty("user.dir"), "STVs" + java.io.File.separatorChar +
+            ("SageTV7" + java.io.File.separatorChar + "SageTV7.xml"));
 
       }});
     rft.put(new PredefinedJEPFunction("Widget", "GetUIWidgetContext")

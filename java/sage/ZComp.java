@@ -368,9 +368,9 @@ public class ZComp
        int diffuseColor, float alphaFactor, float xoff, float yoff, int flags)
    {
      boolean inRegion = clipRect.intersects(boundsf);
-     if (!inRegion && (Sage.EMBEDDED || !reality.getUIMgr().disableParentClip())) return;
+     if (!inRegion && !reality.getUIMgr().disableParentClip()) return;
      float orgclipx=clipRect.x, orgclipy=clipRect.y, orgclipw=clipRect.width, orgcliph=clipRect.height;
-     if (Sage.EMBEDDED || !reality.getUIMgr().disableParentClip())
+     if (!reality.getUIMgr().disableParentClip())
        clipRectToBounds(clipRect, xoff, yoff);
      if (numKids > 0)
      {

@@ -937,61 +937,15 @@ public class MiniClientSageRenderer extends SageRenderer
           }
           // We're in danger of going beyond a maximum texture size limit, so scale the image
           // down on the server first.
-          if (!Sage.EMBEDDED)
-          {
-            float xScale = Math.min(currTextureLimit,
-                op.texture.getWidth(op.textureIndex))/((float)op.texture.getWidth(op.textureIndex));
-            float yScale = Math.min(currTextureLimit,
-                op.texture.getHeight(op.textureIndex))/((float)op.texture.getHeight(op.textureIndex));
-            xScale = yScale = Math.min(xScale, yScale);
-            op.scaleSrc(xScale, yScale);
-            op.textureIndex = op.texture.getImageIndex(Math.round(xScale *
-                op.texture.getWidth(op.textureIndex)), Math.round(yScale *
-                    op.texture.getHeight(op.textureIndex)));
-          }
-          else
-          {
-            float xScaleN = Math.min(currTextureLimit, op.texture.getWidth(op.textureIndex));
-            float xScaleD = op.texture.getWidth(op.textureIndex);
-            float yScaleN = Math.min(currTextureLimit, op.texture.getHeight(op.textureIndex));
-            float yScaleD = op.texture.getHeight(op.textureIndex);
-            if (yScaleD*xScaleN < yScaleN*xScaleD)
-            {
-              yScaleN = xScaleN;
-              yScaleD = xScaleD;
-            }
-            else
-            {
-              xScaleN = yScaleN;
-              xScaleD = yScaleD;
-            }
-            if (canDoScalingImageDecode && op.texture.isJPEG())
-            {
-              // This mode only scales by 1/2, 1/4 or 1/8 so figure out which'll get us to the desired dimension
-              int maxDim = Math.max(op.texture.getWidth(op.textureIndex), op.texture.getHeight(op.textureIndex));
-              yScaleN = xScaleN = 1;
-              if (maxDim / 2 < currTextureLimit)
-                yScaleD = xScaleD = 2;
-              else if (maxDim / 4 < currTextureLimit)
-                yScaleD = xScaleD = 4;
-              else
-                yScaleD = xScaleD = 8;
-            }
-            else if (!op.texture.isTIFF())
-            {
-              // Don't allow the server to scale images itself since it can blow the memory, so just display
-              // nothing instead
-              if (Sage.DBG) System.out.println("Not displaying image: " + op.texture + " because its size exceeds the maximum dimensions");
-              op.texture = MetaImage.getMetaImage((String) null);
-              op.textureIndex = 0;
-              op.srcRect.setRect(0, 0, op.texture.getWidth(0), op.texture.getHeight(0));
-              continue;
-            }
-            op.scaleSrc(xScaleN/xScaleD, yScaleN/yScaleD);
-            op.textureIndex = op.texture.getImageIndex((int)Math.ceil(xScaleN *
-                op.texture.getWidth(op.textureIndex)/ xScaleD), (int)Math.ceil(yScaleN *
-                    op.texture.getHeight(op.textureIndex)/ yScaleD));
-          }
+          float xScale = Math.min(currTextureLimit,
+              op.texture.getWidth(op.textureIndex))/((float)op.texture.getWidth(op.textureIndex));
+          float yScale = Math.min(currTextureLimit,
+              op.texture.getHeight(op.textureIndex))/((float)op.texture.getHeight(op.textureIndex));
+          xScale = yScale = Math.min(xScale, yScale);
+          op.scaleSrc(xScale, yScale);
+          op.textureIndex = op.texture.getImageIndex(Math.round(xScale *
+              op.texture.getWidth(op.textureIndex)), Math.round(yScale *
+                  op.texture.getHeight(op.textureIndex)));
         }
       }
       else if (op.isTextOp() && useImageMapsForText)
@@ -1151,7 +1105,7 @@ public class MiniClientSageRenderer extends SageRenderer
       try
       {
         setupDigitalResolutions(true);
-        if (!"None".equalsIgnoreCase(hdmiAutodetectedConnector) && uiMgr.getBoolean("hdmi_always_select_best", Sage.EMBEDDED) &&
+        if (!"None".equalsIgnoreCase(hdmiAutodetectedConnector) && uiMgr.getBoolean("hdmi_always_select_best", false) &&
             preferredResolutions.length > 0)
         {
           currRes = preferredResolutions[preferredResolutions.length - 1];
@@ -1450,11 +1404,8 @@ public class MiniClientSageRenderer extends SageRenderer
     java.awt.geom.Rectangle2D.Float tempClipRect =
         new java.awt.geom.Rectangle2D.Float();
 
-    if (Sage.EMBEDDED)
-      recvr.waitForAllReplies();
     establishRenderThread();
-    if (!Sage.EMBEDDED)
-      precacheImages();
+    precacheImages();
     lastPixelRenderCount = 0;
     lastPixelInputCount = 0;
     aliveAnims = false;
@@ -2114,11 +2065,8 @@ public class MiniClientSageRenderer extends SageRenderer
     {
       java.awt.Rectangle srcRect = (java.awt.Rectangle) cachedTextStringSurface.srcRect.clone();
       Sage.clipSrcDestRects(cr, srcRect, targetRect);
-      if (!Sage.EMBEDDED)
-      {
-        lastPixelRenderCount += targetRect.width * targetRect.height;
-        lastPixelInputCount += srcRect.width * srcRect.height;
-      }
+      lastPixelRenderCount += targetRect.width * targetRect.height;
+      lastPixelInputCount += srcRect.width * srcRect.height;
       drawTexturedRectMini(targetRect.x, targetRect.y, targetRect.width, targetRect.height, cachedTextStringSurface.handle,
           srcRect.x, srcRect.y, srcRect.width, srcRect.height, getCompositedColor(java.awt.Color.white, op.alphaFactor * currEffectAlpha), true);
     }
@@ -2393,11 +2341,8 @@ public class MiniClientSageRenderer extends SageRenderer
         op.destRect.y-op.srcRect.y,
         op.primitive.shapeWidth,
         op.primitive.shapeHeight);
-    if (!Sage.EMBEDDED)
-    {
-      lastPixelRenderCount += op.primitive.shapeWidth * op.primitive.shapeHeight;
-      lastPixelInputCount += op.primitive.shapeWidth * op.primitive.shapeHeight;
-    }
+    lastPixelRenderCount += op.primitive.shapeWidth * op.primitive.shapeHeight;
+    lastPixelInputCount += op.primitive.shapeWidth * op.primitive.shapeHeight;
     if (currXform != null && !xformRenderSupport)
       MathUtils.transformRectCoords(frect, currXform, frect);
     if (cr.width > 0 && cr.height > 0)
@@ -2931,49 +2876,7 @@ public class MiniClientSageRenderer extends SageRenderer
   public void present(java.awt.Rectangle clipRect)
   {
     flipBufferMini((aliveAnims || (master.getNextAnimationTime() - Sage.eventTime() < 2000)) ? 0 : 1);
-    if (Sage.EMBEDDED)
-    {
-      // Set this at the end of rendering so the transparency of the GFX plane is setup properly before we put the new image
-      // into the video plane
-      if (pendingHiResSurfHandleToSet != 0)
-      {
-        if (pendingVidSurfCoords != null)
-        {
-          if ((gfxVideoPropsSupportMask & VIDEO_MODE_MASK_TL_ORIGIN) != 0)
-          {
-            // Clip the video rectangles to be within the screen bounds; this leads to more accurate scaling and positioning of the surfaces
-            java.awt.Rectangle srcRect = new java.awt.Rectangle(pendingVidSurfCoords[0], pendingVidSurfCoords[1], pendingVidSurfCoords[2], pendingVidSurfCoords[3]);
-            java.awt.Rectangle destRect = new java.awt.Rectangle(pendingVidSurfCoords[4], pendingVidSurfCoords[5], pendingVidSurfCoords[6], pendingVidSurfCoords[7]);
-            Sage.clipSrcDestRects(new java.awt.Rectangle(0, 0, 4096, 4096), srcRect, destRect);
-            setVideoPropertiesMini(((pendingHiResSurfHandleToSet != lastUsedHighResSurf) ? VIDEO_MODE_MASK_HANDLE : 0) |
-                VIDEO_MODE_MASK_OUTPUT | VIDEO_MODE_MASK_SOURCE | VIDEO_MODE_MASK_TL_ORIGIN,
-                srcRect.x, srcRect.y, srcRect.width, srcRect.height,
-                destRect.x, destRect.y, destRect.width, destRect.height, pendingVidSurfCoords[8], pendingHiResSurfHandleToSet);
-          }
-          else
-          {
-            setVideoPropertiesMini(((pendingHiResSurfHandleToSet != lastUsedHighResSurf) ? VIDEO_MODE_MASK_HANDLE : 0) |
-                VIDEO_MODE_MASK_OUTPUT | VIDEO_MODE_MASK_SOURCE,
-                pendingVidSurfCoords[0], pendingVidSurfCoords[1],
-                pendingVidSurfCoords[2], pendingVidSurfCoords[3], pendingVidSurfCoords[4], pendingVidSurfCoords[5], pendingVidSurfCoords[6],
-                pendingVidSurfCoords[7], pendingVidSurfCoords[8], pendingHiResSurfHandleToSet);
-          }
-          lastUsedHighResSurf = pendingHiResSurfHandleToSet;
-        }
-        else if (lastUsedHighResSurf != pendingHiResSurfHandleToSet)
-        {
-          setVideoPropertiesMini(VIDEO_MODE_MASK_HANDLE, 0, 0, 0, 0, 0, 0, 0, 0,
-              0, pendingHiResSurfHandleToSet);
-          lastUsedHighResSurf = pendingHiResSurfHandleToSet;
-        }
-      }
-      else if (lastUsedHighResSurf != 0)
-      {
-        setVideoPropertiesMini(VIDEO_MODE_MASK_HANDLE, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0);
-        lastUsedHighResSurf = 0;
-      }
-    }
+
     lastPresentTime = Sage.eventTime();
     markAnimationStartTimes();
     // Fix all of the start times for the animations that account for the delay in rendering this frame
@@ -2986,8 +2889,6 @@ public class MiniClientSageRenderer extends SageRenderer
         et.fixStartTime(startDiff);
       }
     }
-    if (Sage.EMBEDDED)
-      releaseRenderThread();
   }
 
   public void cleanupRenderer()
@@ -3098,175 +2999,7 @@ public class MiniClientSageRenderer extends SageRenderer
         image.removeNativeRef(this, 0);
       }
     }
-    else if (Sage.EMBEDDED && ((imageIndex == 0  || (canDoScalingImageDecode && (image.isJPEG() || image.isTIFF()))) &&
-        allowCompImageTransfer && !(image.getSource() instanceof MetaFont) && !(image.getSource() instanceof java.util.Vector) &&
-        !(image.getSource() instanceof java.lang.ref.WeakReference) && !image.isNullOrFailed()))
-    {
-      // If it's image index 0 & we're not doing raw transfer then we can just transfer the original source image data.
-      // Otherwise we have to transfer the actual Java image recompressed with PNG because we
-      // won't be sure what it is.
-      int width = image.getWidth(imageIndex);
-      int height = image.getHeight(imageIndex);
-      int imageType = optimizeFontMem ? IMAGE_FORMAT_8BPP : IMAGE_FORMAT_ARGB32;
-      // Load it into the YUV texture storage space if that's available and we're decoding a JPEG
-      pauseIfNotRenderingThread();
-      synchronized (MetaImage.getNiaCacheLock(this))
-      {
-        if (!hasOfflineCache && (highResSurfCaps == YUV_CACHE_UNIFIED ||
-            (highResSurfCaps == YUV_CACHE_SEPARATE && !uiMgr.getVideoFrame().isLoadingOrLoadedFile())) && image.isJPEG())
-        {
-          imageType = IMAGE_FORMAT_HIRESYUV;
-          while ((nativePtr = loadImageMini(width, height, imageType)) == 0)
-          {
-            if (highResSurfCaps == YUV_CACHE_SEPARATE)
-            {
-              if (highResSurfaceData.isEmpty())
-              {
-                imageType = IMAGE_FORMAT_ARGB32; // fallback if we can't allocate'
-                break;
-              }
-              if (Sage.DBG) System.out.println("Unloading high res texture to make room for a new one-1");
-              Object[] killData = (Object[]) highResSurfaceData.get(0);
-              MetaImage killMe = (MetaImage) killData[0];
-              killMe.clearNativePointer(this, ((Integer)killData[1]).intValue());
-            }
-            else
-            {
-              Object[] oldestImage =
-                  MetaImage.getLeastRecentlyUsedImage(this, image, imageIndex);
-              if (oldestImage == null)
-              {
-                imageType = IMAGE_FORMAT_ARGB32; // fallback if we can't allocate'
-                break;
-              }
-              ((MetaImage) oldestImage[0]).clearNativePointer(this,
-                  ((Integer) oldestImage[1]).intValue());
-            }
-          }
-          highResSurfaceData.add(new Object[] { image, new Integer(imageIndex) });
-          highResSurfaceHandles.add(new Long(nativePtr));
-          if (Sage.DBG) System.out.println("Allocated image-2 for " + image.getSource() + " width=" + width + " height=" + height + " ptr=" + nativePtr);
-        }
-        if (nativePtr == 0)
-        {
-          while((nativePtr = (hasOfflineCache ? prepImageMini(width, height, image.getUniqueResourceID(imageIndex)) :
-            loadImageMini(width, height, imageType))) == 0)
-          {
-            Object[] oldestImage =
-                MetaImage.getLeastRecentlyUsedImage(this, image, imageIndex);
-            if (oldestImage == null)
-            {
-              return false;
-            }
-            ((MetaImage) oldestImage[0]).clearNativePointer(this,
-                ((Integer) oldestImage[1]).intValue());
-          }
-          if (Sage.DBG) System.out.println("Allocated image-3 for " + image.getSource() + " width=" + width + " height=" + height + " ptr=" + nativePtr);
-        }
-      }
-      if (nativePtr == -1) // failed allocation over a dead connection
-        return false;
-      if (nativePtr < 0 && hasOfflineCache)
-      {
-        // This means it was in the cache and it's returning the handle * -1
-        nativePtr *= -1;
-      }
-      else
-      {
-        pauseIfNotRenderingThread();
-        boolean directLoad = false;
-        if (allowDirectImageLoading)
-        {
-          Object[] imageSource = image.getSourceAsLocalFile();
-          if (imageSource != null)
-          {
-            directLoad = true;
-            if (Thread.currentThread() == renderingThread)
-            {
-              if (Sage.DBG) System.out.println("Loading compressed image directly from: " + image.getSource() + " width=" + width + " height=" + height + " size=" + ((Long) imageSource[2]).longValue() +
-                  " file=" + imageSource[0] + " ptr=" + nativePtr);
-              nativePtr = loadImageDirectMini(nativePtr, (java.io.File) imageSource[0], ((Long) imageSource[1]).longValue(), ((Long) imageSource[2]).longValue());
-            }
-            else
-            {
-              if (Sage.DBG) System.out.println("Loading compressed image directly (async) from: " + image.getSource() + " width=" + width + " height=" + height + " size=" + ((Long) imageSource[2]).longValue() +
-                  " file=" + imageSource[0] + " ptr=" + nativePtr);
-              loadImageDirectAsyncMini(nativePtr, (java.io.File) imageSource[0], ((Long) imageSource[1]).longValue(), ((Long) imageSource[2]).longValue());
-              // Now we wait for confirmation on this call
-              Long targetPtr = new Long(nativePtr);
-              synchronized (asyncLoadConfirms)
-              {
-                while (master.isAlive() && !asyncLoadConfirms.containsKey(targetPtr))
-                {
-                  try
-                  {
-                    asyncLoadConfirms.wait(500);
-                  }
-                  catch (InterruptedException ie){}
-                }
-              }
-              Integer loadRes = (Integer) asyncLoadConfirms.remove(targetPtr);
-              if (loadRes == null || loadRes.intValue() != 0)
-              {
-                if (Sage.DBG) System.out.println("Async load image direct failed for " + image.getSource() + " res=" + loadRes + " width=" + width + " height=" + height);
-                nativePtr = 0;
-              }
-              else
-              {
-                if (Sage.DBG) System.out.println("Async load image direct completed for " + image.getSource() + " width=" + width + " height=" + height);
-              }
-            }
-            // Cleanup a tempfile that was used here if appropriate
-            if (imageSource.length >= 4 && ((Boolean) imageSource[3]).booleanValue())
-              ((java.io.File) imageSource[0]).delete();
-          }
-        }
-        if (!directLoad)
-        {
-          java.io.InputStream closeMe = null;
-          try
-          {
-            Object[] imageStream = image.getSourceAsStream();
-            if (imageStream != null)
-            {
-              closeMe = (java.io.InputStream) imageStream[0];
-              long size = ((Long) imageStream[1]).longValue();
-              if (Sage.DBG) System.out.println("Loading compressed image from: " + image.getSource() + " width=" + width + " height=" + height + " ptr=" + nativePtr);
-              nativePtr = loadImageCompressedMini(nativePtr, closeMe, (int) size);
-            }
-          }
-          catch (java.io.IOException e)
-          {
-            if (Sage.DBG) System.out.println("Error loading compressed image resource of: " + e);
-            if (Sage.DBG) e.printStackTrace();
-          }
-          finally
-          {
-            if (closeMe != null)
-            {
-              try { closeMe.close(); }catch(Exception e2){}
-              closeMe = null;
-            }
-          }
-        }
-        /*				byte[] compImgData = null;
-				java.io.ByteArrayOutputStream baos = image.getSourceAsBAOS();
-				if (baos != null)
-					compImgData = baos.toByteArray();
-				if (compImgData != null)
-				{
-					if (Sage.DBG) System.out.println("Loading compressed image from: " + image.getSource() + " width=" + width + " height=" + height +
-						" imageIndex=" + imageIndex);
-					nativePtr = loadImageCompressedMini(nativePtr, compImgData);
-				}*/
-      }
-      if (nativePtr != 0)
-      {
-        image.setNativePointer(this, imageIndex, nativePtr,
-            width*height*(imageType == IMAGE_FORMAT_HIRESYUV ? 2 : 4));
-      }
-    }
-    else if (!Sage.EMBEDDED && (imageIndex == 0 && !allowRawImageTransfer && !(image.getSource() instanceof MetaFont) &&
+    else if ((imageIndex == 0 && !allowRawImageTransfer && !(image.getSource() instanceof MetaFont) &&
         !(image.getSource() instanceof java.lang.ref.WeakReference) && !(image.getSource() instanceof java.util.Vector) &&
         !image.isNullOrFailed() && image.getRotation() == 0))
     {
@@ -3398,14 +3131,9 @@ public class MiniClientSageRenderer extends SageRenderer
           Object imgSrc = image.getSource();
           try
           {
-            if (Sage.EMBEDDED)
-              tightImage = sage.media.image.ImageLoader.loadResizedImageFromFile((imgSrc instanceof MediaFile) ? ((MediaFile) imgSrc).getFile(0).toString() :
-                ((java.io.File) imgSrc).getAbsolutePath(),
-                -targetImgWidth, targetImgHeight);
-            else
-              tightImage = sage.media.image.ImageLoader.loadResizedRotatedImageFromFile((imgSrc instanceof MediaFile) ? ((MediaFile) imgSrc).getFile(0).toString() :
-                ((java.io.File) imgSrc).getAbsolutePath(),
-                targetImgWidth, targetImgHeight, 16, image.getRotation());
+            tightImage = sage.media.image.ImageLoader.loadResizedRotatedImageFromFile((imgSrc instanceof MediaFile) ? ((MediaFile) imgSrc).getFile(0).toString() :
+              ((java.io.File) imgSrc).getAbsolutePath(),
+              targetImgWidth, targetImgHeight, 16, image.getRotation());
           }
           catch (Exception e)
           {
@@ -3426,84 +3154,55 @@ public class MiniClientSageRenderer extends SageRenderer
           if (Sage.DBG) System.out.println("About to start loading the YUV image into the video plane...");
           int w2 = targetImgWidth;
           int posv=0;
-          if (Sage.EMBEDDED)
-          {
-            byte[] tempData = tightImage.getDataArr();
-            while(posv<targetImgHeight*2)
-            {
-              pauseIfNotRenderingThread();
-              // We need to sync around this whole thing in case something with texture batching comes in during
-              // the middle of it and interrupts what's going on.
-              synchronized (this)
-              {
-                if (!loadImageLineMini(newVidSurf, posv, w2, posv*w2, tempData))
-                  break;
-                if (renderingThread != Thread.currentThread())
-                {
-                  // If we let this buffer build up too much then when it flushes it can cause a delay for the final renderer
-                  // The 24k number was arbitrary; based on testing I did it seemed to be good
-                  if (sockBuf.position() > 24*1024)
-                  {
-                    try
-                    {
-                      sendBufferNow();
-                    }catch (java.io.IOException e){}
-                  }
-                }
-              }
-              posv+=1;
-            }
-          }
-          else
-          {
-            byte[] nativeImgBuff = (byte[])nativeImgBuffTL.get();
-            if (nativeImgBuff == null || nativeImgBuff.length < w2)
-            {
-              nativeImgBuff = new byte[Math.max(720, targetImgWidth)*2];
-              nativeImgBuffTL.set(nativeImgBuff);
-            }
-            java.nio.ByteBuffer tempData = tightImage.getROData();
-            int dataLeftToLoadThisFrame = 102400;
-            while(posv<targetImgHeight*2)
-            {
-              // When we're actively animating, only load 100k of data per-frame
-              boolean activeAnims = (effectAnimationsActive || master.isARBuildingDL() || master.isActiveRenderGoingToRun(false) || nextDisplayList != null) &&
-                  (renderingThread != Thread.currentThread());
-              tempData.get(nativeImgBuff, 0, w2);
-              pauseIfNotRenderingThread();
-              // We need to sync around this whole thing in case something with texture batching comes in during
-              // the middle of it and interrupts what's going on.
-              synchronized (this)
-              {
-                if (!loadImageLineMini(newVidSurf, posv, w2, 0, nativeImgBuff))
-                  break;
-              }
-              if (activeAnims)
-              {
-                dataLeftToLoadThisFrame -= w2;
-                if (dataLeftToLoadThisFrame < 0)
-                {
-                  synchronized (this)
-                  {
-                    try
-                    {
-                      // Clean up any batched texture commands
-                      if (textureBatchLimit > 0)
-                        checkTextureBatchLimit(true);
-                      if (sockBuf.position() > 0)
-                        sendBufferNow();
-                    }catch (java.io.IOException e){}
 
-                  }
-                  waitUntilNextFrameComplete(100);
-                  dataLeftToLoadThisFrame = 102400;
-                }
-              }
-              else
-                dataLeftToLoadThisFrame = 102400;
-              posv+=1;
-            }
+          byte[] nativeImgBuff = (byte[])nativeImgBuffTL.get();
+          if (nativeImgBuff == null || nativeImgBuff.length < w2)
+          {
+            nativeImgBuff = new byte[Math.max(720, targetImgWidth)*2];
+            nativeImgBuffTL.set(nativeImgBuff);
           }
+          java.nio.ByteBuffer tempData = tightImage.getROData();
+          int dataLeftToLoadThisFrame = 102400;
+          while(posv<targetImgHeight*2)
+          {
+            // When we're actively animating, only load 100k of data per-frame
+            boolean activeAnims = (effectAnimationsActive || master.isARBuildingDL() || master.isActiveRenderGoingToRun(false) || nextDisplayList != null) &&
+                (renderingThread != Thread.currentThread());
+            tempData.get(nativeImgBuff, 0, w2);
+            pauseIfNotRenderingThread();
+            // We need to sync around this whole thing in case something with texture batching comes in during
+            // the middle of it and interrupts what's going on.
+            synchronized (this)
+            {
+              if (!loadImageLineMini(newVidSurf, posv, w2, 0, nativeImgBuff))
+                break;
+            }
+            if (activeAnims)
+            {
+              dataLeftToLoadThisFrame -= w2;
+              if (dataLeftToLoadThisFrame < 0)
+              {
+                synchronized (this)
+                {
+                  try
+                  {
+                    // Clean up any batched texture commands
+                    if (textureBatchLimit > 0)
+                      checkTextureBatchLimit(true);
+                    if (sockBuf.position() > 0)
+                      sendBufferNow();
+                  }catch (java.io.IOException e){}
+
+                }
+                waitUntilNextFrameComplete(100);
+                dataLeftToLoadThisFrame = 102400;
+              }
+            }
+            else
+              dataLeftToLoadThisFrame = 102400;
+            posv+=1;
+          }
+
           //					try{clientOutStream.flush();}catch(Exception e){}
           if (Sage.DBG) System.out.println("Done loading the YUV image into the video plane (" + newVidSurf + ")...");
           pauseIfNotRenderingThread();
@@ -3543,125 +3242,80 @@ public class MiniClientSageRenderer extends SageRenderer
           return false;
         int w4 = width*4;
         int posv=0;
-        if (Sage.EMBEDDED)
-        {
-          byte[] tempData = tightImage.getDataArr();
-          while(posv<height)
-          {
-            if (optimizeFontMem)
-            {
-              if (fontXferBuf == null || fontXferBuf.length < w4)
-                fontXferBuf = new byte[w4];
-              // Just fill in every 4th byte
-              for (int i = 0; i < width; i++)
-                fontXferBuf[4 * i] = tempData[posv * width + i];
-            }
-            pauseIfNotRenderingThread();
-            // We need to sync around this whole thing in case something with texture batching comes in during
-            // the middle of it an interrupts what's going on.
-            synchronized (this)
-            {
-              if (optimizeFontMem)
-              {
-                if (!loadImageLineMini(nativePtr, posv, w4, 0, fontXferBuf))
-                  break;
-              }
-              else
-              {
-                if (!loadImageLineMini(nativePtr, posv, w4, posv*w4,
-                    tempData))
-                  break;
-              }
-              if (renderingThread != Thread.currentThread())
-              {
-                // If we let this buffer build up too much then when it flushes it can cause a delay for the final renderer
-                // The 24k number was arbitrary; based on testing I did it seemed to be good
-                if (sockBuf.position() > 24*1024)
-                {
-                  try
-                  {
-                    sendBufferNow();
-                  }catch (java.io.IOException e){}
-                }
-              }
-            }
-            posv+=1;
-          }
-        }
-        else
-        {
-          // We don't want to use the buffer from the image to transfer one line at a time because
-          // if we do that it'll do a socket write on each line which is WAY slower than having the double
-          // memory copy associated with not doing that
-          byte[] nativeImgBuff = (byte[])nativeImgBuffTL.get();
-          if (nativeImgBuff == null || nativeImgBuff.length < w4)
-          {
-            nativeImgBuff = new byte[Math.max(720, width)*4];
-            nativeImgBuffTL.set(nativeImgBuff);
-          }
-          java.nio.ByteBuffer tempData = tightImage.getROData();
-          int dataLeftToLoadThisFrame = 102400;
-          while(posv<height)
-          {
-            tempData.get(nativeImgBuff, 0, w4);
-            if (!PREMULTIPLY_ALPHA)
-            {
-              // Un-premultiply the alpha for this image before we transfer it...ick!!
-              for (int i = 0; i < w4; i += 4)
-              {
-                int alpha = nativeImgBuff[i] & 0xFF;
-                if (alpha < 0xFF && alpha > 0)
-                {
-                  nativeImgBuff[i + 1] = (byte)((((nativeImgBuff[i + 1] & 0xFF)*255)/alpha));
-                  nativeImgBuff[i + 2] = (byte)((((nativeImgBuff[i + 2] & 0xFF)*255)/alpha));
-                  nativeImgBuff[i + 3] = (byte)((((nativeImgBuff[i + 3] & 0xFF)*255)/alpha));
-                }
-              }
-            }
-            // When we're actively animating, only load 100k of data per-frame
-            boolean activeAnims = (effectAnimationsActive || master.isARBuildingDL() || master.isActiveRenderGoingToRun(false) || nextDisplayList != null) &&
-                (renderingThread != Thread.currentThread());
-            pauseIfNotRenderingThread();
-            // We need to sync around this whole thing in case something with texture batching comes in during
-            // the middle of it an interrupts what's going on.
-            synchronized (this)
-            {
-              if (!loadImageLineMini(nativePtr, posv, w4, 0,
-                  nativeImgBuff))
-                break;
-            }
-            if (activeAnims)
-            {
-              dataLeftToLoadThisFrame -= w4;
-              if (dataLeftToLoadThisFrame < 0)
-              {
-                synchronized (this)
-                {
-                  try
-                  {
-                    // Clean up any batched texture commands
-                    if (textureBatchLimit > 0)
-                      checkTextureBatchLimit(true);
-                    if (sockBuf.position() > 0)
-                      sendBufferNow();
-                  }catch (java.io.IOException e){}
 
-                }
-                waitUntilNextFrameComplete(100);
-                dataLeftToLoadThisFrame = 102400;
+
+        // We don't want to use the buffer from the image to transfer one line at a time because
+        // if we do that it'll do a socket write on each line which is WAY slower than having the double
+        // memory copy associated with not doing that
+        byte[] nativeImgBuff = (byte[])nativeImgBuffTL.get();
+        if (nativeImgBuff == null || nativeImgBuff.length < w4)
+        {
+          nativeImgBuff = new byte[Math.max(720, width)*4];
+          nativeImgBuffTL.set(nativeImgBuff);
+        }
+        java.nio.ByteBuffer tempData = tightImage.getROData();
+        int dataLeftToLoadThisFrame = 102400;
+        while(posv<height)
+        {
+          tempData.get(nativeImgBuff, 0, w4);
+          if (!PREMULTIPLY_ALPHA)
+          {
+            // Un-premultiply the alpha for this image before we transfer it...ick!!
+            for (int i = 0; i < w4; i += 4)
+            {
+              int alpha = nativeImgBuff[i] & 0xFF;
+              if (alpha < 0xFF && alpha > 0)
+              {
+                nativeImgBuff[i + 1] = (byte)((((nativeImgBuff[i + 1] & 0xFF)*255)/alpha));
+                nativeImgBuff[i + 2] = (byte)((((nativeImgBuff[i + 2] & 0xFF)*255)/alpha));
+                nativeImgBuff[i + 3] = (byte)((((nativeImgBuff[i + 3] & 0xFF)*255)/alpha));
               }
             }
-            else
-              dataLeftToLoadThisFrame = 102400;
-            posv+=1;
           }
+          // When we're actively animating, only load 100k of data per-frame
+          boolean activeAnims = (effectAnimationsActive || master.isARBuildingDL() || master.isActiveRenderGoingToRun(false) || nextDisplayList != null) &&
+              (renderingThread != Thread.currentThread());
+          pauseIfNotRenderingThread();
+          // We need to sync around this whole thing in case something with texture batching comes in during
+          // the middle of it an interrupts what's going on.
+          synchronized (this)
+          {
+            if (!loadImageLineMini(nativePtr, posv, w4, 0,
+                nativeImgBuff))
+              break;
+          }
+          if (activeAnims)
+          {
+            dataLeftToLoadThisFrame -= w4;
+            if (dataLeftToLoadThisFrame < 0)
+            {
+              synchronized (this)
+              {
+                try
+                {
+                  // Clean up any batched texture commands
+                  if (textureBatchLimit > 0)
+                    checkTextureBatchLimit(true);
+                  if (sockBuf.position() > 0)
+                    sendBufferNow();
+                }catch (java.io.IOException e){}
+
+              }
+              waitUntilNextFrameComplete(100);
+              dataLeftToLoadThisFrame = 102400;
+            }
+          }
+          else
+            dataLeftToLoadThisFrame = 102400;
+          posv+=1;
         }
+
         //				try{clientOutStream.flush();}catch(Exception e){}
         pauseIfNotRenderingThread();
         if (nativePtr != 0)
         {
           image.setNativePointer(this, imageIndex, nativePtr,
-              width*height*((optimizeFontMem && Sage.EMBEDDED) ? 1 : 4));
+              width*height*4);
         }
       }
       finally
@@ -3738,7 +3392,7 @@ public class MiniClientSageRenderer extends SageRenderer
               doJpegTransfer = true;
             byte[] compImgData;
             // The premultiply state should have no effect on this since we're encoding it as a PNG
-            if (!Sage.EMBEDDED && !doJpegTransfer)
+            if (!doJpegTransfer)
             {
               // We need to make a version that does not have premultiplied alpha and then compress
               // that before we send it.
@@ -3802,7 +3456,7 @@ public class MiniClientSageRenderer extends SageRenderer
           image.removeRawRef(imageIndex);
         }
       }
-      else if (!Sage.EMBEDDED)
+      else
       {
         // if we don't have this as a buffered image, we need to convert it
         java.awt.image.BufferedImage tempBuf;
@@ -3811,18 +3465,17 @@ public class MiniClientSageRenderer extends SageRenderer
         {
           pauseIfNotRenderingThread();
           if (!(javaImage instanceof java.awt.image.BufferedImage) ||
-              ((((java.awt.image.BufferedImage) javaImage).getType() !=
+            ((((java.awt.image.BufferedImage) javaImage).getType() !=
               java.awt.image.BufferedImage.TYPE_INT_ARGB) &&
               (((java.awt.image.BufferedImage) javaImage).getType() !=
-              java.awt.image.BufferedImage.TYPE_INT_ARGB_PRE)))
+                java.awt.image.BufferedImage.TYPE_INT_ARGB_PRE)))
           {
             if (!(javaImage instanceof java.awt.image.BufferedImage))
               ImageUtils.ensureImageIsLoaded(javaImage);
             tempBuf = ImageUtils.createBestImage(javaImage);
-          }
-          else
+          } else
           {
-            tempBuf = (java.awt.image.BufferedImage)javaImage;
+            tempBuf = (java.awt.image.BufferedImage) javaImage;
           }
           if (tempBuf.isAlphaPremultiplied() != PREMULTIPLY_ALPHA && image.hasAlpha())
           {
@@ -3836,7 +3489,7 @@ public class MiniClientSageRenderer extends SageRenderer
           int width = image.getWidth(imageIndex);
           int height = image.getHeight(imageIndex);
           if (Sage.DBG && DEBUG_NATIVE2D) System.out.println("Trying to load image " +
-              image.getSource() + " width: "+width+" height: "+height);
+            image.getSource() + " width: " + width + " height: " + height);
 
           if (!allowRawImageTransfer)
           {
@@ -3851,23 +3504,22 @@ public class MiniClientSageRenderer extends SageRenderer
             try
             {
               javax.imageio.ImageIO.write(tempBuf, doJpegTransfer ? "jpg" : "png", baos);
-            }
-            catch (java.io.IOException e)
+            } catch (java.io.IOException e)
             {
               System.out.println("ERROR with ImageIO Library! " + e);
             }
             synchronized (MetaImage.getNiaCacheLock(this))
             {
-              while((nativePtr = prepImageMini(width, height, "")) == 0)
+              while ((nativePtr = prepImageMini(width, height, "")) == 0)
               {
                 Object[] oldestImage =
-                    MetaImage.getLeastRecentlyUsedImage(this, image, imageIndex);
+                  MetaImage.getLeastRecentlyUsedImage(this, image, imageIndex);
                 if (oldestImage == null)
                 {
                   return false;
                 }
                 ((MetaImage) oldestImage[0]).clearNativePointer(this,
-                    ((Integer) oldestImage[1]).intValue());
+                  ((Integer) oldestImage[1]).intValue());
               }
             }
             if (nativePtr == -1 && isMediaExtender()) // failed allocation on a dead connection
@@ -3876,14 +3528,12 @@ public class MiniClientSageRenderer extends SageRenderer
             {
               pauseIfNotRenderingThread(true);
               loadImageCompressedMini(nativePtr, baos.toByteArray());
-            }
-            else
+            } else
             {
               pauseIfNotRenderingThread();
               nativePtr = loadImageCompressedMini(nativePtr, baos.toByteArray());
             }
-          }
-          else
+          } else
           {
             if (advImageCaching)
             {
@@ -3891,49 +3541,47 @@ public class MiniClientSageRenderer extends SageRenderer
               {
                 nativePtr = clientHandleCounter++;
               }
-              loadImageTargetedMini((int)nativePtr, width, height, optimizeFontMem ? IMAGE_FORMAT_8BPP : IMAGE_FORMAT_ARGB32);
-            }
-            else
+              loadImageTargetedMini((int) nativePtr, width, height, optimizeFontMem ? IMAGE_FORMAT_8BPP : IMAGE_FORMAT_ARGB32);
+            } else
             {
               synchronized (MetaImage.getNiaCacheLock(this))
               {
-                while((nativePtr = loadImageMini(width, height, optimizeFontMem ? IMAGE_FORMAT_8BPP : IMAGE_FORMAT_ARGB32)) == 0)
+                while ((nativePtr = loadImageMini(width, height, optimizeFontMem ? IMAGE_FORMAT_8BPP : IMAGE_FORMAT_ARGB32)) == 0)
                 {
                   Object[] oldestImage =
-                      MetaImage.getLeastRecentlyUsedImage(this, image, imageIndex);
+                    MetaImage.getLeastRecentlyUsedImage(this, image, imageIndex);
                   if (oldestImage == null)
                   {
                     return false;
                   }
                   ((MetaImage) oldestImage[0]).clearNativePointer(this,
-                      ((Integer) oldestImage[1]).intValue());
+                    ((Integer) oldestImage[1]).intValue());
                 }
               }
             }
             if (nativePtr == -1 && isMediaExtender()) // failed allocation on a dead connection
               return false;
 
-            int posv=0;
-            int [] texturedata =
-                ((java.awt.image.DataBufferInt)
-                    tempBuf.getRaster().getDataBuffer()).getData();
-            while(posv<height)
+            int posv = 0;
+            int[] texturedata =
+              ((java.awt.image.DataBufferInt)
+                tempBuf.getRaster().getDataBuffer()).getData();
+            while (posv < height)
             {
               pauseIfNotRenderingThread();
-              if (!loadImageLineMini(nativePtr, posv, width, width*posv,
-                  texturedata))
+              if (!loadImageLineMini(nativePtr, posv, width, width * posv,
+                texturedata))
                 break;
-              posv+=1;
+              posv += 1;
             }
             //						try{clientOutStream.flush();}catch(Exception e){}
           }
           if (nativePtr != 0)
           {
             image.setNativePointer(this, imageIndex, nativePtr,
-                width*height*4);
+              width * height * 4);
           }
-        }
-        finally
+        } finally
         {
           image.removeJavaRef(imageIndex);
         }
@@ -3993,57 +3641,14 @@ public class MiniClientSageRenderer extends SageRenderer
         mi.getHeight(0) > currMaxTextureDim)
     {
       int newIdex;
-      if (!Sage.EMBEDDED)
-      {
-        float xScale = Math.min(currMaxTextureDim,
-            mi.getWidth(0))/((float)mi.getWidth(0));
-        float yScale = Math.min(currMaxTextureDim,
-            mi.getHeight(0))/((float)mi.getHeight(0));
-        xScale = yScale = Math.min(xScale, yScale);
-        newIdex = mi.getImageIndex(Math.round(xScale *
-            mi.getWidth(0)), Math.round(yScale * mi.getHeight(0)));
-      }
-      else
-      {
-        int xScaleN = Math.min(currMaxTextureDim, mi.getWidth(0));
-        int xScaleD = mi.getWidth(0);
-        int yScaleN = Math.min(currMaxTextureDim, mi.getHeight(0));
-        int yScaleD = mi.getHeight(0);
-        if (yScaleD*xScaleN < yScaleN*xScaleD)
-        {
-          yScaleN = xScaleN;
-          yScaleD = xScaleD;
-        }
-        else
-        {
-          xScaleN = yScaleN;
-          xScaleD = yScaleD;
-        }
-        if (canDoScalingImageDecode && mi.getSource() instanceof MediaFile &&
-            sage.media.format.MediaFormat.JPEG.equals(((MediaFile)mi.getSource()).getContainerFormat()))
-        {
-          // This mode only scales by 1/2, 1/4 or 1/8 so figure out which'll get us to the desired dimension
-          int maxDim = Math.max(mi.getWidth(0), mi.getHeight(0));
-          xScaleN = yScaleN = 1;
-          if (maxDim / 2 < currMaxTextureDim)
-            xScaleD = yScaleD = 2;
-          else if (maxDim / 4 < currMaxTextureDim)
-            xScaleD = yScaleD = 4;
-          else
-            xScaleD = yScaleD = 8;
-        }
-        else if (Sage.EMBEDDED && !mi.isTIFF())
-        {
-          // Don't allow the server to scale images itself since it can blow the memory, so just display
-          // nothing instead
-          if (Sage.DBG) System.out.println("Not preloading image: " + mi + " because its size exceeds the maximum dimensions");
-          return;
-        }
+      float xScale = Math.min(currMaxTextureDim,
+          mi.getWidth(0))/((float)mi.getWidth(0));
+      float yScale = Math.min(currMaxTextureDim,
+          mi.getHeight(0))/((float)mi.getHeight(0));
+      xScale = yScale = Math.min(xScale, yScale);
+      newIdex = mi.getImageIndex(Math.round(xScale *
+          mi.getWidth(0)), Math.round(yScale * mi.getHeight(0)));
 
-        newIdex = mi.getImageIndex((xScaleN *
-            mi.getWidth(0) + (xScaleD-1)/*RoundUp*/) / xScaleD,
-            (yScaleN * mi.getHeight(0) + (yScaleD-1)/*RoundUp*/) / yScaleD);
-      }
       mi.getNativeImage(this, newIdex);
       mi.removeNativeRef(this, newIdex);
     }
@@ -4174,7 +3779,7 @@ public class MiniClientSageRenderer extends SageRenderer
       // Check if it's a local connection. We do this by seeing if it's on the same subnet as us
       byte[] localIP = clientSocket.socket().getLocalAddress().getAddress();
       byte[] remoteIP = clientSocket.socket().getInetAddress().getAddress();
-      byte[] subnetMask = IOUtils.getSubnetMask(Sage.EMBEDDED ? null : clientSocket.socket().getLocalAddress()).getAddress();
+      byte[] subnetMask = IOUtils.getSubnetMask(clientSocket.socket().getLocalAddress()).getAddress();
       if ((localIP[0] & subnetMask[0]) != (remoteIP[0] & subnetMask[0]) ||
           (localIP[1] & subnetMask[1]) != (remoteIP[1] & subnetMask[1]) ||
           (localIP[2] & subnetMask[2]) != (remoteIP[2] & subnetMask[2]) ||
@@ -4222,11 +3827,9 @@ public class MiniClientSageRenderer extends SageRenderer
         sendGetPropertyAsync("GFX_TEXTURE_BATCH_LIMIT");
         sendGetPropertyAsync("VIDEO_ADVANCED_ASPECT_LIST");
         sendGetPropertyAsync("GFX_SUPPORTED_RESOLUTIONS");
-        if (!Sage.EMBEDDED)
-          sendGetPropertyAsync("GFX_SUPPORTED_RESOLUTIONS_DIGITAL");
+        sendGetPropertyAsync("GFX_SUPPORTED_RESOLUTIONS_DIGITAL");
         sendGetPropertyAsync("GFX_RESOLUTION");
-        if (!Sage.EMBEDDED)
-          sendGetPropertyAsync("GFX_HDMI_MODE");
+        sendGetPropertyAsync("GFX_HDMI_MODE");
         sendGetPropertyAsync("GFX_COMPOSITE");
         sendGetPropertyAsync("GFX_COLORKEY");
         sendGetPropertyAsync("AUDIO_OUTPUTS");
@@ -4327,8 +3930,6 @@ public class MiniClientSageRenderer extends SageRenderer
         if (bitmapFormatProp != null && bitmapFormatProp.length() > 0)
         {
           allowRawImageTransfer = false;
-          if (Sage.EMBEDDED)
-            allowCompImageTransfer = false;
           java.util.StringTokenizer toker = new java.util.StringTokenizer(bitmapFormatProp, ",");
           while (toker.hasMoreTokens())
           {
@@ -4351,19 +3952,15 @@ public class MiniClientSageRenderer extends SageRenderer
             }
             else
             {
-              if (!Sage.EMBEDDED && (compImageFormat == null || "PNG".equalsIgnoreCase(currToke) || !"PNG".equalsIgnoreCase(compImageFormat)))
+              if ((compImageFormat == null || "PNG".equalsIgnoreCase(currToke) || !"PNG".equalsIgnoreCase(compImageFormat)))
                 compImageFormat = currToke;
-              else if (Sage.EMBEDDED && ("PNG".equalsIgnoreCase(currToke) || "JPG".equalsIgnoreCase(currToke) || "JPEG".equalsIgnoreCase(currToke)))
-                allowCompImageTransfer = true;
             }
           }
         }
-        if (!localConnection && (Sage.EMBEDDED || compImageFormat != null) && allowRawImageTransfer)
+        if (!localConnection && compImageFormat != null && allowRawImageTransfer)
         {
           if (Sage.DBG) System.out.println("Disabling raw image transfer for this client since we're not on a local network");
           allowRawImageTransfer = false;
-          if (Sage.EMBEDDED)
-            allowCompImageTransfer = true;
         }
 
         String gfxScaleProp = recvr.getStringReply();
@@ -4503,8 +4100,7 @@ public class MiniClientSageRenderer extends SageRenderer
           }
         }
 
-        if (!Sage.EMBEDDED)
-          setupDigitalResolutions(false);
+        setupDigitalResolutions(false);
 
         String rezProp = recvr.getStringReply();
         if (Sage.DBG) System.out.println("MiniClient GFX_RESOLUTION=" + rezProp);
@@ -4528,11 +4124,8 @@ public class MiniClientSageRenderer extends SageRenderer
           maxTextureDim = Math.max(displayResolution.getWidth(), displayResolution.getHeight());
         }
 
-        if (!Sage.EMBEDDED)
-        {
-          hdmiAutodetectedConnector = recvr.getStringReply();
-          if (Sage.DBG) System.out.println("MiniClient GFX_HDMI_MODE=" + hdmiAutodetectedConnector);
-        }
+        hdmiAutodetectedConnector = recvr.getStringReply();
+        if (Sage.DBG) System.out.println("MiniClient GFX_HDMI_MODE=" + hdmiAutodetectedConnector);
 
         // The default composite mode is blending
         String compositeProp = recvr.getStringReply();
@@ -4662,7 +4255,7 @@ public class MiniClientSageRenderer extends SageRenderer
 
         String openUrlInit = recvr.getStringReply();
         if (Sage.DBG) System.out.println("MiniClient OPENURL_INIT=" + openUrlInit);
-        needsInitDriver = !Sage.EMBEDDED || !(openUrlInit != null && "TRUE".equalsIgnoreCase(openUrlInit));
+        needsInitDriver = !(openUrlInit != null && "TRUE".equalsIgnoreCase(openUrlInit));
 
         String frameStep = recvr.getStringReply();
         if (Sage.DBG) System.out.println("MiniClient FRAME_STEP=" + frameStep);
@@ -4688,21 +4281,10 @@ public class MiniClientSageRenderer extends SageRenderer
             java.util.Set indexedColorSet = new java.util.HashSet();
             byte[] rawBuffA = null;
             java.nio.ByteBuffer rawBuffB = null;
-            if (Sage.EMBEDDED)
+            rawBuffB = rawCursor.getROData();
+            for (int j = 0; j < rawBuffB.capacity(); j+=4)
             {
-              rawBuffA = rawCursor.getDataArr();
-              for (int j = 0; j < rawBuffA.length; j+=4)
-              {
-                indexedColorSet.add(new Integer(((rawBuffA[j] & 0xFF) << 24) | ((rawBuffA[j+1]&0xFF) << 16) | ((rawBuffA[j+2]&0xFF)<<8) | (rawBuffA[j+3]&0xFF)));
-              }
-            }
-            else
-            {
-              rawBuffB = rawCursor.getROData();
-              for (int j = 0; j < rawBuffB.capacity(); j+=4)
-              {
-                indexedColorSet.add(new Integer(rawBuffB.getInt(j)));
-              }
+              indexedColorSet.add(new Integer(rawBuffB.getInt(j)));
             }
             java.util.HashMap indexMap = new java.util.HashMap();
             java.util.Iterator walker = indexedColorSet.iterator();
@@ -4740,26 +4322,14 @@ public class MiniClientSageRenderer extends SageRenderer
               indexMap.put(new Integer(intColor), new Integer(j));
             }
             // Now build the indexed color cursor information
-            if (Sage.EMBEDDED)
+            for (int j = 0, k = 64; j < rawBuffB.capacity(); j+=4, k++)
             {
-              for (int j = 0, k = 64; j < rawBuffA.length; j+=4, k++)
-              {
-                Integer indexValue1 = (Integer)indexMap.get(new Integer(((rawBuffA[j] & 0xFF) << 24) | ((rawBuffA[j+1]&0xFF) << 16) | ((rawBuffA[j+2]&0xFF)<<8) | (rawBuffA[j+3]&0xFF)));
-                j+=4;
-                Integer indexValue2 = (Integer)indexMap.get(new Integer(((rawBuffA[j] & 0xFF) << 24) | ((rawBuffA[j+1]&0xFF) << 16) | ((rawBuffA[j+2]&0xFF)<<8) | (rawBuffA[j+3]&0xFF)));
-                currData[k] = (byte)((((indexValue1.intValue() & 0x0F) << 4) | (indexValue2.intValue() & 0x0F)) & 0xFF);
-              }
+              Integer indexValue1 = (Integer)indexMap.get(new Integer(rawBuffB.getInt(j)));
+              j+=4;
+              Integer indexValue2 = (Integer)indexMap.get(new Integer(rawBuffB.getInt(j)));
+              currData[k] = (byte)((((indexValue1.intValue() & 0x0F) << 4) | (indexValue2.intValue() & 0x0F)) & 0xFF);
             }
-            else
-            {
-              for (int j = 0, k = 64; j < rawBuffB.capacity(); j+=4, k++)
-              {
-                Integer indexValue1 = (Integer)indexMap.get(new Integer(rawBuffB.getInt(j)));
-                j+=4;
-                Integer indexValue2 = (Integer)indexMap.get(new Integer(rawBuffB.getInt(j)));
-                currData[k] = (byte)((((indexValue1.intValue() & 0x0F) << 4) | (indexValue2.intValue() & 0x0F)) & 0xFF);
-              }
-            }
+
             waitCursorData[i] = currData;
             currCursorImage.removeRawRef(0);
           }
@@ -4835,7 +4405,7 @@ public class MiniClientSageRenderer extends SageRenderer
 
         String zipStat = recvr.getStringReply();
         if (Sage.DBG) System.out.println("MiniClient ZLIB_COMM=" + zipStat);
-        zipSocks = !Sage.EMBEDDED && zipStat != null && "true".equalsIgnoreCase(zipStat);
+        zipSocks = zipStat != null && "true".equalsIgnoreCase(zipStat);
 
         String offlineCacheData = recvr.getStringReply();
         if (Sage.DBG) System.out.println("MiniClient OFFLINE_CACHE_CONTENTS=" + offlineCacheData);
@@ -4850,7 +4420,7 @@ public class MiniClientSageRenderer extends SageRenderer
 
         String advCacheProp = recvr.getStringReply();
         if (Sage.DBG) System.out.println("MiniClient ADVANCED_IMAGE_CACHING=" + advCacheProp);
-        advImageCaching = !Sage.EMBEDDED && advCacheProp != null && "true".equalsIgnoreCase(advCacheProp);
+        advImageCaching = advCacheProp != null && "true".equalsIgnoreCase(advCacheProp);
 
         arProp = recvr.getStringReply();
         if (Sage.DBG) System.out.println("MiniClient VIDEO_ADVANCED_ASPECT=" + arProp);
@@ -4882,11 +4452,8 @@ public class MiniClientSageRenderer extends SageRenderer
         }
 
         // Tell the client they can do reconnects if they want to
-        if (!Sage.EMBEDDED)
-        {
-          if (Sage.DBG) System.out.println("MiniClient sending RECONNECT_SUPPORTED=TRUE");
-          sendSetProperty("RECONNECT_SUPPORTED", "TRUE");
-        }
+        if (Sage.DBG) System.out.println("MiniClient sending RECONNECT_SUPPORTED=TRUE");
+        sendSetProperty("RECONNECT_SUPPORTED", "TRUE");
 
         if (zipSocks && textureBatchLimit == 0)
         {
@@ -4897,26 +4464,20 @@ public class MiniClientSageRenderer extends SageRenderer
           zout.setFlushMode(com.jcraft.jzlib.JZlib.Z_SYNC_FLUSH);
         }
 
-        if (Sage.EMBEDDED)
-          setupDigitalResolutions(true);
-
         // Tell it what our aspect ratio is (it can ignore sets on properties it doesn't understand)
         if (Sage.DBG) System.out.println("MiniClient sending GFX_ASPECT=" + vf.getDisplayAspectRatio());
         sendSetProperty("GFX_ASPECT", Float.toString(lastSetDAR = vf.getDisplayAspectRatio()));
 
-        if (!Sage.EMBEDDED)
-        {
-          remotelyTransferFonts = !useImageMapsForText && "REMOTEFONTS".equalsIgnoreCase(textModeProp) &&
-              System.getProperty("java.version").startsWith("1.5");
+        remotelyTransferFonts = !useImageMapsForText && "REMOTEFONTS".equalsIgnoreCase(textModeProp) &&
+            System.getProperty("java.version").startsWith("1.5");
 
-          if (remotelyTransferFonts)
+        if (remotelyTransferFonts)
+        {
+          int propRV = sendSetProperty("GFX_FONTSERVER", "TRUE");
+          if (propRV != 0)
           {
-            int propRV = sendSetProperty("GFX_FONTSERVER", "TRUE");
-            if (propRV != 0)
-            {
-              System.out.println("MiniClient did not accept the font server property, errcode=" + propRV);
-              remotelyTransferFonts = false;
-            }
+            System.out.println("MiniClient did not accept the font server property, errcode=" + propRV);
+            remotelyTransferFonts = false;
           }
         }
         if (subtitleSupport)
@@ -5621,11 +5182,8 @@ public class MiniClientSageRenderer extends SageRenderer
       if (Sage.DBG && DEBUG_NATIVE2D) System.out.println("T+C drawTexturedRectMini src=(" + srcx +","+srcy+","+srcwidth+","+srcheight+
           ")" + " dest=("+x+","+y+","+width+","+height+")");
     }
-    if (!Sage.EMBEDDED)
-    {
-      lastPixelRenderCount += Math.abs(width * height);
-      lastPixelInputCount += Math.abs(srcwidth * srcheight);
-    }
+    lastPixelRenderCount += Math.abs(width * height);
+    lastPixelInputCount += Math.abs(srcwidth * srcheight);
     try
     {
       int maxPixelsW = 100; // at 125 and higher we had corruption in HDMI
@@ -5726,11 +5284,8 @@ public class MiniClientSageRenderer extends SageRenderer
       if (Sage.DBG && DEBUG_NATIVE2D) System.out.println("T+C drawTexturedDiffusedRectMini src=(" + srcx +","+srcy+","+srcwidth+","+srcheight+
           ")" + " dest=("+x+","+y+","+width+","+height+")");
     }
-    if (!Sage.EMBEDDED)
-    {
-      lastPixelRenderCount += Math.abs(width * height);
-      lastPixelInputCount += Math.abs(srcwidth * srcheight);
-    }
+    lastPixelRenderCount += Math.abs(width * height);
+    lastPixelInputCount += Math.abs(srcwidth * srcheight);
     try
     {
       prepUICmdHeader(64, width * height <= 100000);
@@ -6077,10 +5632,8 @@ public class MiniClientSageRenderer extends SageRenderer
       {
         int len = Math.min(dataLen, sockBuf.remaining());
         sockBuf.put(data, data.length - dataLen, len);
-        if (Sage.EMBEDDED)
-          sendBufferNow();
         dataLen -= len;
-        if (!Sage.EMBEDDED && (dataLen > 0 || !advImageCaching))
+        if (dataLen > 0 || !advImageCaching)
           sendBufferNow();
       }
 
@@ -6411,60 +5964,54 @@ public class MiniClientSageRenderer extends SageRenderer
       prepUICmdHeader(8);
       sockBuf.putInt(GFXCMD_FLIPBUFFER << CMD_LEN_BITS | 4);
       sockBuf.putInt(steadyState);
-      if (!Sage.EMBEDDED)
+
+      // Set this at the end of rendering so the transparency of the GFX plane is setup properly before we put the new image
+      // into the video plane
+      if (pendingHiResSurfHandleToSet != 0)
       {
-        // Set this at the end of rendering so the transparency of the GFX plane is setup properly before we put the new image
-        // into the video plane
-        if (pendingHiResSurfHandleToSet != 0)
+        if (pendingVidSurfCoords != null)
         {
-          if (pendingVidSurfCoords != null)
+          if ((gfxVideoPropsSupportMask & VIDEO_MODE_MASK_TL_ORIGIN) != 0)
           {
-            if ((gfxVideoPropsSupportMask & VIDEO_MODE_MASK_TL_ORIGIN) != 0)
-            {
-              // Clip the video rectangles to be within the screen bounds; this leads to more accurate scaling and positioning of the surfaces
-              java.awt.Rectangle srcRect = new java.awt.Rectangle(pendingVidSurfCoords[0], pendingVidSurfCoords[1], pendingVidSurfCoords[2], pendingVidSurfCoords[3]);
-              java.awt.Rectangle destRect = new java.awt.Rectangle(pendingVidSurfCoords[4], pendingVidSurfCoords[5], pendingVidSurfCoords[6], pendingVidSurfCoords[7]);
-              Sage.clipSrcDestRects(new java.awt.Rectangle(0, 0, 4096, 4096), srcRect, destRect);
-              setVideoPropertiesMini(((pendingHiResSurfHandleToSet != lastUsedHighResSurf) ? VIDEO_MODE_MASK_HANDLE : 0) |
-                  VIDEO_MODE_MASK_OUTPUT | VIDEO_MODE_MASK_SOURCE | VIDEO_MODE_MASK_TL_ORIGIN,
-                  srcRect.x, srcRect.y, srcRect.width, srcRect.height,
-                  destRect.x, destRect.y, destRect.width, destRect.height, pendingVidSurfCoords[8], pendingHiResSurfHandleToSet);
-            }
-            else
-            {
-              setVideoPropertiesMini(((pendingHiResSurfHandleToSet != lastUsedHighResSurf) ? VIDEO_MODE_MASK_HANDLE : 0) |
-                  VIDEO_MODE_MASK_OUTPUT | VIDEO_MODE_MASK_SOURCE,
-                  pendingVidSurfCoords[0], pendingVidSurfCoords[1],
-                  pendingVidSurfCoords[2], pendingVidSurfCoords[3], pendingVidSurfCoords[4], pendingVidSurfCoords[5], pendingVidSurfCoords[6],
-                  pendingVidSurfCoords[7], pendingVidSurfCoords[8], pendingHiResSurfHandleToSet);
-            }
-            lastUsedHighResSurf = pendingHiResSurfHandleToSet;
+            // Clip the video rectangles to be within the screen bounds; this leads to more accurate scaling and positioning of the surfaces
+            java.awt.Rectangle srcRect = new java.awt.Rectangle(pendingVidSurfCoords[0], pendingVidSurfCoords[1], pendingVidSurfCoords[2], pendingVidSurfCoords[3]);
+            java.awt.Rectangle destRect = new java.awt.Rectangle(pendingVidSurfCoords[4], pendingVidSurfCoords[5], pendingVidSurfCoords[6], pendingVidSurfCoords[7]);
+            Sage.clipSrcDestRects(new java.awt.Rectangle(0, 0, 4096, 4096), srcRect, destRect);
+            setVideoPropertiesMini(((pendingHiResSurfHandleToSet != lastUsedHighResSurf) ? VIDEO_MODE_MASK_HANDLE : 0) |
+                VIDEO_MODE_MASK_OUTPUT | VIDEO_MODE_MASK_SOURCE | VIDEO_MODE_MASK_TL_ORIGIN,
+                srcRect.x, srcRect.y, srcRect.width, srcRect.height,
+                destRect.x, destRect.y, destRect.width, destRect.height, pendingVidSurfCoords[8], pendingHiResSurfHandleToSet);
           }
-          else if (lastUsedHighResSurf != pendingHiResSurfHandleToSet)
+          else
           {
-            setVideoPropertiesMini(VIDEO_MODE_MASK_HANDLE, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, pendingHiResSurfHandleToSet);
-            lastUsedHighResSurf = pendingHiResSurfHandleToSet;
+            setVideoPropertiesMini(((pendingHiResSurfHandleToSet != lastUsedHighResSurf) ? VIDEO_MODE_MASK_HANDLE : 0) |
+                VIDEO_MODE_MASK_OUTPUT | VIDEO_MODE_MASK_SOURCE,
+                pendingVidSurfCoords[0], pendingVidSurfCoords[1],
+                pendingVidSurfCoords[2], pendingVidSurfCoords[3], pendingVidSurfCoords[4], pendingVidSurfCoords[5], pendingVidSurfCoords[6],
+                pendingVidSurfCoords[7], pendingVidSurfCoords[8], pendingHiResSurfHandleToSet);
           }
+          lastUsedHighResSurf = pendingHiResSurfHandleToSet;
         }
-        else if (lastUsedHighResSurf != 0)
+        else if (lastUsedHighResSurf != pendingHiResSurfHandleToSet)
         {
           setVideoPropertiesMini(VIDEO_MODE_MASK_HANDLE, 0, 0, 0, 0, 0, 0, 0, 0,
-              0, 0);
-          lastUsedHighResSurf = 0;
+              0, pendingHiResSurfHandleToSet);
+          lastUsedHighResSurf = pendingHiResSurfHandleToSet;
         }
       }
-      sendBufferNow();
-      if (!Sage.EMBEDDED)
+      else if (lastUsedHighResSurf != 0)
       {
-        releaseRenderThread();
-        if (advImageCaching)
-          recvr.discardIntReply();
-        else
-          recvr.getIntReply();
+        setVideoPropertiesMini(VIDEO_MODE_MASK_HANDLE, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0);
+        lastUsedHighResSurf = 0;
       }
-      else
+
+      sendBufferNow();
+      releaseRenderThread();
+      if (advImageCaching)
         recvr.discardIntReply();
+      else
+        recvr.getIntReply();
     }catch(Exception e)
     {
       connectionError();
@@ -6719,7 +6266,7 @@ public class MiniClientSageRenderer extends SageRenderer
       hand = new Long(loadFontMini(name, style, size));
       if (hand.longValue() != 0)
         nativeFontMap.put(fontName, hand);
-      else if (!Sage.EMBEDDED && remotelyTransferFonts)
+      else if (remotelyTransferFonts)
       {
         // NOTE NOTE NOTE Narflex
         // This is VERY BAD to do but I couldn't find an alternative. This is HIGHLY version
@@ -6778,7 +6325,7 @@ public class MiniClientSageRenderer extends SageRenderer
     // When an error occurs on the connection we don't immediately destroy everything since the client may try to reconnect.
     // A normal reconnect would kill their old session; so if they don't support the new logic then we're fine.
     // We also don't allow reconnects if the event channel is encrypted or we haven't started the first frame of rendering.
-    if (renderStartTime == 0 || recvr.isEncryptionOn() || !SageTV.isAlive() || sentUIMgrKill || Sage.EMBEDDED)
+    if (renderStartTime == 0 || recvr.isEncryptionOn() || !SageTV.isAlive() || sentUIMgrKill)
     {
       killUIMgrAsync();
       return true;
@@ -7032,9 +6579,7 @@ public class MiniClientSageRenderer extends SageRenderer
 
   public String getDetailedResolution(String x)
   {
-    if (!Sage.EMBEDDED) return null;
-    Object o = resolutionNameMap.get(x);
-    return (o == null) ? null : o.toString();
+    return null;
   }
 
   public boolean supportsPushBufferSeeking()
@@ -7140,9 +6685,7 @@ public class MiniClientSageRenderer extends SageRenderer
   }
   public String[] getEnabledResolutionOptions()
   {
-    if (!Sage.EMBEDDED) return null;
-    fixEnabledResCache();
-    return cachedEnabledResOptions;
+    return null;
   }
 
   public String[] getPreferredResolutionOptions()
@@ -7157,9 +6700,7 @@ public class MiniClientSageRenderer extends SageRenderer
 
   public sage.media.format.VideoFormat[] getEnabledResolutionFormats()
   {
-    if (!Sage.EMBEDDED) return null;
-    fixEnabledResCache();
-    return cachedEnabledFormatOptions;
+    return null;
   }
 
   public static java.awt.Dimension parseResolution(String s)
@@ -7410,7 +6951,7 @@ public class MiniClientSageRenderer extends SageRenderer
 
   public boolean hasRemoteFSSupport()
   {
-    return remoteFSSupport && (!Sage.EMBEDDED || !isMediaExtender());
+    return remoteFSSupport;
   }
 
   public synchronized int fsCreateDirectory(String pathName)
@@ -7724,7 +7265,7 @@ public class MiniClientSageRenderer extends SageRenderer
             long currSize = Math.min(xferSize, 16384);
             // Increase the connection timeout for this operation to deal with low bandwidth connections
             TimeoutHandler.registerTimeout(timeout * 10, sake);
-            if (!Sage.EMBEDDED && Sage.LINUX_OS && xferData.offset + xferData.progress >= Integer.MAX_VALUE)
+            if (Sage.LINUX_OS && xferData.offset + xferData.progress >= Integer.MAX_VALUE)
             {
               // NOTE: Due to Java using the sendfile kernel API call to do the transfer,
               // there's a 32-bit limitation here. This is very unfortunate. But since it's
@@ -7921,7 +7462,7 @@ public class MiniClientSageRenderer extends SageRenderer
 
   private long mediaPlayerDelay;
 
-  private int maxTextureDim = Sage.EMBEDDED ? 1920 : 1024;
+  private int maxTextureDim = 1024;
 
   private MiniUIClientReceiver recvr;
 
@@ -8486,7 +8027,7 @@ public class MiniClientSageRenderer extends SageRenderer
               case REMOTE_FS_HOTPLUG_INSERT_EVENT_REPLY_TYPE:
               case REMOTE_FS_HOTPLUG_REMOVE_EVENT_REPLY_TYPE:
                 // Ignore these if we don't support the remote filesystem on that client
-                if (remoteFSSupport && !Sage.EMBEDDED)
+                if (remoteFSSupport)
                 {
                   int s1 = recvBuf.getShort() & 0xFFFF;
                   byte[] b1 = new byte[s1];

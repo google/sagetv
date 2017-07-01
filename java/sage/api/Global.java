@@ -605,7 +605,7 @@ public class Global {
        * @declaration public long GetApplicationLaunchTime();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return new Long(Sage.EMBEDDED ? (Sage.time() - (Sage.eventTime() - SageTV.getInstanceStartTime())) : SageTV.getInstanceStartTime());
+        return new Long(SageTV.getInstanceStartTime());
       }});
     rft.put(new PredefinedJEPFunction("Global", "GetFocusContext")
     {
@@ -1797,10 +1797,6 @@ public class Global {
             continue;
           rv.add(foo.getLocalUIClientName());
         }
-        if (Sage.EMBEDDED && !Sage.client)
-        {
-          return NetworkClient.getConnectedClientIDs();
-        }
         return rv.toArray(Pooler.EMPTY_STRING_ARRAY);
       }});
     rft.put(new PredefinedJEPFunction("Global", "GetUIContextName")
@@ -2527,7 +2523,7 @@ public class Global {
        * @declaration public void CachePlaceshifterLogin();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        if (!Sage.EMBEDDED && stack.getUIMgr() != null && stack.getUIMgr().getUIClientType() == UIClient.REMOTE_UI &&
+        if (stack.getUIMgr() != null && stack.getUIMgr().getUIClientType() == UIClient.REMOTE_UI &&
             stack.getUIMgr().getRootPanel().getRenderEngine() instanceof MiniClientSageRenderer)
         {
           ((MiniClientSageRenderer)stack.getUIMgr().getRootPanel().getRenderEngine()).cacheAuthenticationNow();
@@ -2544,7 +2540,7 @@ public class Global {
        * @declaration public boolean CanCachePlaceshifterLogin();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        if (!Sage.EMBEDDED && stack.getUIMgr() != null && stack.getUIMgr().getUIClientType() == UIClient.REMOTE_UI &&
+        if (stack.getUIMgr() != null && stack.getUIMgr().getUIClientType() == UIClient.REMOTE_UI &&
             stack.getUIMgr().getRootPanel().getRenderEngine() instanceof MiniClientSageRenderer)
         {
           return Boolean.valueOf(((MiniClientSageRenderer)stack.getUIMgr().getRootPanel().getRenderEngine()).canCacheAuthentication());
@@ -2707,13 +2703,7 @@ public class Global {
        * @declaration public String GetDisplayResolutionDetails(String Resolution);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        if (!Sage.EMBEDDED)
-          getString(stack);
-        else if (stack.getUIMgr() != null && stack.getUIMgr().getUIClientType() == UIClient.REMOTE_UI &&
-            stack.getUIMgr().getRootPanel().getRenderEngine() instanceof MiniClientSageRenderer)
-        {
-          return ((MiniClientSageRenderer)stack.getUIMgr().getRootPanel().getRenderEngine()).getDetailedResolution(getString(stack));
-        }
+        getString(stack);
         return null;
       }});
     rft.put(new PredefinedJEPFunction("Global", "GetPreferredDisplayResolutions")
@@ -2789,8 +2779,6 @@ public class Global {
           data[1] = 'T';
           data[2] = 'V';
           data[3] = 1;
-          if (Sage.EMBEDDED)
-            data[4] = 99; // to indicate we also accept embedded servers where we run as a fat client
           pack.setLength(32);
           sock.setBroadcast(true);
           // Find the broadcast address for this subnet.
@@ -2806,33 +2794,15 @@ public class Global {
             if (pack.getLength() >= 4)
             {
               if (Sage.DBG) System.out.println("Discovery packet received:" + pack);
-              if (data[0] == 'S' && data[1] == 'T' && data[2] == 'V' && (data[3] == 2 || (data[3] == 3 && Sage.EMBEDDED)))
+              if (data[0] == 'S' && data[1] == 'T' && data[2] == 'V' && data[3] == 2)
               {
                 // Make sure it's not us
                 String had = pack.getAddress().getHostAddress();
-                if (!IOUtils.isLocalhostAddress(pack.getAddress()) && (!Sage.EMBEDDED || !pack.getAddress().getHostAddress().equals(LinuxUtils.getIPAddress())))
+                if (!IOUtils.isLocalhostAddress(pack.getAddress()))
                 {
                   StringBuffer si = new StringBuffer();
-                  String theName = Sage.EMBEDDED ? null : pack.getAddress().getHostName();
-                  if (Sage.EMBEDDED)
-                  {
-                    try
-                    {
-                      jcifs.netbios.NbtAddress[] netadds = jcifs.netbios.NbtAddress.getAllByAddress(had);
-                      for (int i = 0; i < netadds.length; i++)
-                      {
-                        if (!netadds[i].isGroupAddress())
-                        {
-                          theName = netadds[i].getHostName();
-                          break;
-                        }
-                      }
-                    }
-                    catch (java.net.UnknownHostException uhe)
-                    {
-                      System.out.println("Error in netbios naming discovery:" + uhe);
-                    }
-                  }
+                  String theName = pack.getAddress().getHostName();
+
                   si.append(theName == null ? had : theName);
                   si.append(";");
                   si.append(had);
@@ -2881,7 +2851,7 @@ public class Global {
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception
       {
-        return Sage.EMBEDDED ? Boolean.TRUE : Boolean.FALSE;
+        return Boolean.FALSE;
       }
     });
     rft.put(new PredefinedJEPFunction("Global", "IsEmbeddedServer", true)
@@ -2897,7 +2867,7 @@ public class Global {
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception
       {
-        return Sage.EMBEDDED ? Boolean.TRUE : Boolean.FALSE;
+        return Boolean.FALSE;
       }
     });
     rft.put(new PredefinedJEPFunction("Global", "IsPVR", true)
@@ -3011,30 +2981,6 @@ public class Global {
        * @declaration public void PrepareForFirmwareLoad();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        if (!Sage.EMBEDDED) return null;
-        if (Sage.DBG) System.out.println("Preparing the system for a firmware load...free all the memory we can...");
-        if (Sage.DBG) System.out.println("MemStats-1: Used=" + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())/1000000 +
-            "MB Total=" + Runtime.getRuntime().totalMemory()/1000000 + "MB Max=" + Runtime.getRuntime().maxMemory()/1000000 + "MB");
-        SeekerSelector.getInstance().disableLibraryScanning();
-        // Kill the process for recording as well
-        IOUtils.exec2(new String[] { "sh", "-c", "kill `pidof SGMRecording`"}, true);
-        if (stack.getUIMgrSafe() != null)
-          stack.getUIMgrSafe().clearMenuCache();
-        Wizard.getInstance().freeAllDBMemory();
-        if (Sage.DBG) System.out.println("MemStats-2: Used=" + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())/1000000 +
-            "MB Total=" + Runtime.getRuntime().totalMemory()/1000000 + "MB Max=" + Runtime.getRuntime().maxMemory()/1000000 + "MB");
-        System.gc();
-        try{Thread.sleep(750);}catch(Exception e){}
-        if (Sage.DBG) System.out.println("MemStats-3: Used=" + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())/1000000 +
-            "MB Total=" + Runtime.getRuntime().totalMemory()/1000000 + "MB Max=" + Runtime.getRuntime().maxMemory()/1000000 + "MB");
-        System.gc();
-        try{Thread.sleep(750);}catch(Exception e){}
-        if (Sage.DBG) System.out.println("MemStats-4: Used=" + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())/1000000 +
-            "MB Total=" + Runtime.getRuntime().totalMemory()/1000000 + "MB Max=" + Runtime.getRuntime().maxMemory()/1000000 + "MB");
-        System.gc();
-        try{Thread.sleep(750);}catch(Exception e){}
-        if (Sage.DBG) System.out.println("MemStats-5: Used=" + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())/1000000 +
-            "MB Total=" + Runtime.getRuntime().totalMemory()/1000000 + "MB Max=" + Runtime.getRuntime().maxMemory()/1000000 + "MB");
         return null;
       }});
     rft.put(new PredefinedJEPFunction("Global", "AreScreenshotsSupported")
@@ -3048,7 +2994,7 @@ public class Global {
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         UIManager uiMgr = stack.getUIMgr();
-        if (!Sage.EMBEDDED && uiMgr != null && uiMgr.getUIClientType() == UIClient.REMOTE_UI)
+        if (uiMgr != null && uiMgr.getUIClientType() == UIClient.REMOTE_UI)
         {
           return ((MiniClientSageRenderer) uiMgr.getRootPanel().getRenderEngine()).supportsScreenshots() ? Boolean.TRUE : Boolean.FALSE;
         }
@@ -3068,7 +3014,7 @@ public class Global {
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         UIManager uiMgr = stack.getUIMgr();
         java.io.File f = getFile(stack);
-        if (!Sage.EMBEDDED && uiMgr != null && uiMgr.getUIClientType() == UIClient.REMOTE_UI)
+        if (uiMgr != null && uiMgr.getUIClientType() == UIClient.REMOTE_UI)
         {
           return ((MiniClientSageRenderer) uiMgr.getRootPanel().getRenderEngine()).saveScreenshotToFile(f) ? Boolean.TRUE : Boolean.FALSE;
         }
@@ -3084,7 +3030,7 @@ public class Global {
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception
       {
-        return Sage.EMBEDDED ? null : stack.getUIMgrSafe().getEmbeddedPanel();
+        return stack.getUIMgrSafe().getEmbeddedPanel();
       }
     });
     rft.put(new PredefinedJEPFunction("Global", "SetEmbeddedPanelBounds", new String[] { "x", "y", "width", "height"})
@@ -3105,8 +3051,7 @@ public class Global {
         float w = getFloat(stack);
         float y = getFloat(stack);
         float x = getFloat(stack);
-        if (!Sage.EMBEDDED)
-          stack.getUIMgrSafe().setEmbeddedBounds(x, y, w, h);
+        stack.getUIMgrSafe().setEmbeddedBounds(x, y, w, h);
         return null;
       }
     });
@@ -3140,25 +3085,7 @@ public class Global {
        */
 
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        if (!Sage.client || !Sage.EMBEDDED || SageTV.neddy == null)
-          return null;
-        int progress = SageTV.neddy.getConnectionState();
-        if (progress == NetworkClient.CS_STATE_SERVER_LOADING)
-          return Sage.rez("CS_STATE_SERVER_LOADING");
-        else if (progress == NetworkClient.CS_STATE_SERVER_NOT_FOUND)
-          return Sage.rez("CS_STATE_SERVER_NOT_FOUND");
-        else if (progress == NetworkClient.CS_STATE_CONNECTION_ESTABLISHING)
-          return Sage.rez("CS_STATE_CONNECTION_ESTABLISHING");
-        else if (progress == NetworkClient.CS_STATE_FULLY_CONNECTED)
-          return Sage.rez("CS_STATE_FULLY_CONNECTED");
-        else if (progress == NetworkClient.CS_STATE_NOT_INITIALIZED)
-          return Sage.rez("CS_STATE_NOT_INITIALIZED");
-        else if (progress == NetworkClient.CS_STATE_UNAUTHORIZED_CLIENT)
-          return Sage.rez("CS_STATE_UNAUTHORIZED_CLIENT");
-        else if (progress == NetworkClient.CS_STATE_VERSION_MISMATCH)
-          return Sage.rez("CS_STATE_VERSION_MISMATCH");
-        else
-          return null;
+        return null;
       }});
 
     /**

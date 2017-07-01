@@ -184,7 +184,7 @@ public class BigBrother
     }
     Watched prior = Wizard.getInstance().getWatch(a);
     if (prior != null) Wizard.getInstance().removeWatched(prior);
-    if (a.isTV() && (!Sage.EMBEDDED || Carny.getInstance().isLoveAir(a)))
+    if (a.isTV())
       Carny.getInstance().submitJob(new Object[] { Carny.WATCH_CLEAR_JOB, a });
     triggerWatchedChangeEvent(a);
   }
@@ -202,7 +202,7 @@ public class BigBrother
       long realWatchStart, long realWatchEnd, int titleNum, boolean checkOnly)
   {
     if (!SageConstants.LIBRARY_FUNCTION) return true;
-    if (!Sage.EMBEDDED && !SageConstants.LITE)
+    if (!SageConstants.LITE)
       ((byte[])Sage.q)[32] = (byte) (((byte[])Sage.q)[11] * ((byte[])Sage.q)[25]); // piracy protection
     if (a == null) return false;
     // Only track watches for TV & Video Airings & DVDs/BDs
@@ -224,7 +224,7 @@ public class BigBrother
         Wizard.getInstance().addWatched(a, (a.isDVD() || a.isBluRay()) ? 0 : a.getStartTime(),
             (a.isDVD() || a.isBluRay()) ? a.getDuration() : a.getEndTime(),
                 0, 0);
-        if (a.isTV() && (!Sage.EMBEDDED || Carny.getInstance().isLoveAir(a)))
+        if (a.isTV())
           Carny.getInstance().submitJob(new Object[] { Carny.WATCH_MARK_JOB, a });
         triggerWatchedChangeEvent(a);
       }
@@ -235,7 +235,7 @@ public class BigBrother
     long watchedDur = airWatchEnd - airWatchStart;
     boolean rv = false;
     Watched priorWatch = Wizard.getInstance().getWatch(a);
-    if (watchedDur > MIN_WATCH_TIME || (Sage.EMBEDDED && priorWatch != null))
+    if (watchedDur > MIN_WATCH_TIME)
     {
       // It's not so short we ignore it.
       // See if we want to apply this to the show or not
@@ -271,7 +271,7 @@ public class BigBrother
           {
             if (s != null)
               s.setLastWatched(a.time);
-            if (a.isTV() && (!Sage.EMBEDDED || Carny.getInstance().isLoveAir(a)))
+            if (a.isTV())
               Carny.getInstance().submitJob(new Object[] { Carny.WATCH_REAL_JOB, a });
           }
           triggerWatchedChangeEvent(a);

@@ -86,7 +86,7 @@ public class NetworkClient
     catch (java.net.UnknownHostException e)
     {
       cleanupFailedClientConnection();
-      if (!Sage.EMBEDDED && popupError)
+      if (popupError)
         MySwingUtils.showWrappedMessageDialog(Sage.rez("Network_Cannot_Connect_Error") + " (0)",
             Sage.rez("Network_Error"), javax.swing.JOptionPane.ERROR_MESSAGE);
       System.out.println("Error establishing server connection to " + serverName + " of:" + e);
@@ -96,7 +96,7 @@ public class NetworkClient
     catch (java.net.ConnectException e)
     {
       cleanupFailedClientConnection();
-      if (!Sage.EMBEDDED && popupError)
+      if (popupError)
         MySwingUtils.showWrappedMessageDialog(Sage.rez("Network_Cannot_Connect_Error") + " (1)",
             Sage.rez("Network_Error"), javax.swing.JOptionPane.ERROR_MESSAGE);
       System.out.println("Error establishing server connection to " + serverName + " of:" + e);
@@ -108,7 +108,7 @@ public class NetworkClient
       cleanupFailedClientConnection();
       if (e.getMessage() != null && e.getMessage().startsWith("BAD_LICENSE"))
       {
-        if (!Sage.EMBEDDED && popupError)
+        if (popupError)
         {
           MySwingUtils.showWrappedMessageDialog(Sage.rez("Network_License_Error"),
               Sage.rez("Network_Error"), javax.swing.JOptionPane.ERROR_MESSAGE);
@@ -118,7 +118,7 @@ public class NetworkClient
       }
       else if (e.getMessage() != null && e.getMessage().startsWith("VERSION_ERR"))
       {
-        if (!Sage.EMBEDDED && popupError)
+        if (popupError)
         {
           MySwingUtils.showWrappedMessageDialog(Sage.rez("Network_Version_Error"),
               Sage.rez("Network_Error"), javax.swing.JOptionPane.ERROR_MESSAGE);
@@ -128,7 +128,7 @@ public class NetworkClient
       }
       else
       {
-        if (!Sage.EMBEDDED && popupError)
+        if (popupError)
         {
           MySwingUtils.showWrappedMessageDialog(Sage.rez("Network_Cannot_Connect_Error") + " (2)",
               Sage.rez("Network_Error"), javax.swing.JOptionPane.ERROR_MESSAGE);
@@ -141,7 +141,7 @@ public class NetworkClient
     catch (Throwable e)
     {
       cleanupFailedClientConnection();
-      if (!Sage.EMBEDDED && popupError)
+      if (popupError)
         MySwingUtils.showWrappedMessageDialog(Sage.rez("Network_Cannot_Connect_Error") + " (2)",
             Sage.rez("Network_Error"), javax.swing.JOptionPane.ERROR_MESSAGE);
       System.out.println("Error establishing server connection to " + serverName + " of:" + e);
@@ -199,30 +199,10 @@ public class NetworkClient
           NetworkClient oldConn = (NetworkClient) clientMap.get(clientName);
           oldConn.fullCleanup();
           clientMap.remove(clientName);
-          if (Sage.EMBEDDED)
-            clientIDMap.remove(oldConn.clientID);
         }
 
         // Before we do this; we need to check to see if another client has already connected and only done the first
         // part of its initialization. If so; we don't want to block it on completion of the second part.
-        if (Sage.EMBEDDED && !clientMap.isEmpty())
-        {
-          java.util.Iterator walker = clientMap.entrySet().iterator();
-          while (walker.hasNext())
-          {
-            java.util.Map.Entry currEnt = (java.util.Map.Entry) walker.next();
-            NetworkClient nc = (NetworkClient) currEnt.getValue();
-            if (!nc.alive && nc.serverNotifier == null && nc.clientListener != null &&
-                nc.createTime > Sage.time() - 30000)
-            {
-              if (Sage.DBG) System.out.println("SageTV server connection manager found a half-initialized client that connected w/in the past 30 seconds..." +
-                  "abort this new client connection so we can let it finish itself up before we do our load which may time it out.");
-              stvconn.cleanup();
-              stvconn = null;
-              return;
-            }
-          }
-        }
 
         // Narflex - 5/14/2012 - I added a synchronized (clientMap) around this block of code because if you don't then if a property
         // change on the server occurs during the initializeListenerData process after that process has done the property sync,
@@ -239,11 +219,6 @@ public class NetworkClient
         neddy.clientListener = stvconn;
         neddy.clientName = stvconn.getClientName();
         clientMap.put(clientName, neddy);
-        if (Sage.EMBEDDED)
-        {
-          neddy.clientID = stvconn.getClientID();
-          clientIDMap.put(neddy.clientID, neddy);
-        }
         java.util.Vector myPropXfers = pendingPropXfers;
         pendingPropXfers = null;
         if (!myPropXfers.isEmpty())
@@ -441,14 +416,6 @@ public class NetworkClient
         if (clientMap.get(clientName) == this)
           clientMap.remove(clientName);
       }
-      if (Sage.EMBEDDED)
-      {
-        synchronized (clientIDMap)
-        {
-          if (clientIDMap.get(clientID) == this)
-            clientIDMap.remove(clientID);
-        }
-      }
       // Trigger cleanup of the watch file map
       SeekerSelector.getInstance().kick();
     }
@@ -592,7 +559,7 @@ public class NetworkClient
     {
       if (restoring || !alive) return; // protect against circularities
     }
-    if (!Sage.EMBEDDED && java.awt.EventQueue.isDispatchThread())
+    if (java.awt.EventQueue.isDispatchThread())
     {
       Pooler.execute(new Runnable(){public void run(){ restoreClientServerConnection(); } });
       return;
@@ -614,8 +581,6 @@ public class NetworkClient
     while (walker.hasNext())
     {
       UIManager theUI = (UIManager) walker.next();
-      if (Sage.EMBEDDED && Seeker.LOCAL_PROCESS_CLIENT.equals(theUI.getLocalUIClientName()))
-        continue;
       uiClientMenuMap.put(theUI, theUI.getCurrUI());
 
       // Be sure we can reload the state of the media player as well
@@ -642,26 +607,22 @@ public class NetworkClient
 
     // Now we're totally disconnected from the server and can start the rebuilding...
     int numReconnects = 0;
-    long sleepThisTime = Sage.EMBEDDED ? 2000 : 15000;
+    long sleepThisTime = 15000;
     while (!connect(Sage.preferredServer, false))
     {
       numReconnects++;
       if (numReconnects > 5)
       {
         numReconnects = 0;
-        sleepThisTime = Sage.EMBEDDED ? 2000 : 7500;
+        sleepThisTime = 7500;
       }
-      if (!Sage.EMBEDDED || (connectionState != CS_STATE_NOT_INITIALIZED && connectionState != CS_STATE_FULLY_CONNECTED))
-      {
-        try{Thread.sleep(sleepThisTime);}catch(Exception e){}
-      }
-      if (!Sage.EMBEDDED)
-        sleepThisTime *= 2;
+      try{Thread.sleep(sleepThisTime);}catch(Exception e){}
+      sleepThisTime *= 2;
 
       if (Sage.autodiscoveredServer)
       {
         // The IP of the server may have changed...so rediscover it
-        ServerInfo[] currServers = discoverServers(Sage.EMBEDDED ? 2000 : 5000);
+        ServerInfo[] currServers = discoverServers(5000);
         if (currServers.length > 0 && !Sage.preferredServer.equals(currServers[0].address) && currServers[0].ready)
         {
           if (Sage.DBG) System.out.println("Redid discovery of SageTV server oldIP=" + Sage.preferredServer + " newIP=" + currServers[0].address);
@@ -710,8 +671,6 @@ public class NetworkClient
     while (walker.hasNext())
     {
       UIManager theUI = (UIManager) walker.next();
-      if (Sage.EMBEDDED && Seeker.LOCAL_PROCESS_CLIENT.equals(theUI.getLocalUIClientName()))
-        continue;
       PseudoMenu startUI = (PseudoMenu) uiClientMenuMap.get(theUI);
       if (startUI != null)
       {
@@ -871,7 +830,7 @@ public class NetworkClient
 
   public static boolean isConnectedClientContext(String context)
   {
-    return clientMap.containsKey(context) || (Sage.EMBEDDED && clientIDMap.containsKey(context));
+    return clientMap.containsKey(context);
   }
 
   public static ServerInfo[] discoverServers(int discoveryTimeout)
@@ -896,17 +855,9 @@ public class NetworkClient
       data[0] = 'S';
       data[1] = 'T';
       data[2] = 'V';
-      if (!Sage.EMBEDDED)
-      {
-        data[3] = Version.MAJOR_VERSION;
-        data[4] = Version.MINOR_VERSION;
-        data[5] = Version.MICRO_VERSION;
-      }
-      else
-      {
-        data[3] = 1;
-        data[4] = 99;
-      }
+      data[3] = Version.MAJOR_VERSION;
+      data[4] = Version.MINOR_VERSION;
+      data[5] = Version.MICRO_VERSION;
       pack.setLength(32);
       sock.setBroadcast(true);
       // Find the broadcast address for this subnet.
@@ -914,7 +865,7 @@ public class NetworkClient
       //			int lastIdx = myIP.lastIndexOf('.');
       //			myIP = myIP.substring(0, lastIdx) + ".255";
       pack.setAddress(java.net.InetAddress.getByName("255.255.255.255"));
-      pack.setPort(Sage.EMBEDDED ? 31100 : Sage.getInt("discovery_port", 8270));
+      pack.setPort(Sage.getInt("discovery_port", 8270));
       sock.send(pack);
       long startTime = Sage.eventTime();
       do
@@ -922,7 +873,7 @@ public class NetworkClient
         int currTimeout = (int)Math.max(1, (startTime + discoveryTimeout) - Sage.eventTime());
         sock.setSoTimeout(currTimeout);
         sock.receive(pack);
-        if (pack.getLength() >= 9 && !Sage.EMBEDDED)
+        if (pack.getLength() >= 9)
         {
           if (Sage.DBG) System.out.println("Discovery packet received:" + pack + " from " + pack.getSocketAddress());
           ServerInfo si = new ServerInfo();
@@ -944,48 +895,6 @@ public class NetworkClient
               if (Sage.DBG) System.out.println("Added server info:" + si);
               servers.add(si);
             }
-          }
-        }
-        else if (pack.getLength() >= 13 && Sage.EMBEDDED)
-        {
-          if (Sage.DBG) System.out.println("Discovery packet received:" + pack + " from " + pack.getSocketAddress());
-          if (data[0] == 'S' && data[1] == 'T' && data[2] == 'V' && (data[3] == 3 || data[3] == 4))
-          {
-            // Check if we have a forced server we need to use
-            String forcedServer = Sage.get("forced_server_serial", "");
-            if (forcedServer.length() > 0)
-            {
-              StringBuffer serverSerial = new StringBuffer();
-              if (pack.getLength() == 15)
-              {
-                for (int i = 5; i < 13; i++)
-                {
-                  if (data[i] != 0)
-                    serverSerial.append((char) (data[i] & 0xFF));
-                  else
-                    break;
-                }
-              }
-              else
-              {
-                for (int i = 15; i < pack.getLength(); i++)
-                {
-                  if (data[i] != 0)
-                    serverSerial.append((char) (data[i] & 0xFF));
-                  else
-                    break;
-                }
-              }
-              if (Sage.DBG) System.out.println("Comparing forced server serial of \"" + forcedServer + "\" against received \"" +
-                  serverSerial + "\" match=" + (serverSerial.toString().equals(forcedServer)));
-              if (!serverSerial.toString().equals(forcedServer))
-                continue;
-            }
-            ServerInfo si = new ServerInfo();
-            si.address = pack.getAddress().getHostAddress();
-            si.port = SageTV.DEFAULT_SAGETV_PORT;
-            si.ready = data[3] == 3; // 4 indicates loading still
-            servers.add(si);
           }
         }
       } while (true);//startTime + discoveryTimeout > Sage.eventTime());
@@ -1014,13 +923,6 @@ public class NetworkClient
   }
 
   public static String translateClientNameForID(String clientId) {
-    if (Sage.EMBEDDED)
-    {
-      NetworkClient neddy = (NetworkClient)clientIDMap.get(clientId);
-      if(neddy != null) {
-        return neddy.clientName;
-      }
-    }
     return clientId;
   }
 
@@ -1029,10 +931,7 @@ public class NetworkClient
     NetworkClient neddy = (NetworkClient) clientMap.get(uiContext);
     if (neddy == null)
     {
-      if (Sage.EMBEDDED)
-        neddy = (NetworkClient) clientIDMap.get(uiContext);
-      if (neddy == null)
-        return null;
+      return null;
     }
     SageTVConnection listy = neddy.serverNotifier;
     if (listy != null)

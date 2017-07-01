@@ -27,8 +27,8 @@ public class WarlockRipper extends EPGDataSource
   private static final String SERVER_ADDRESS = "server_address";
   public static final int STANDARD_TIMEOUT = 120000; // two minutes
 
-  private static final long SLEEP_DELAY = Sage.EMBEDDED ? 800 : 200;
-  private static final long SLEEP_MOD = Sage.EMBEDDED ? 50 : 200;
+  private static final long SLEEP_DELAY = 200;
+  private static final long SLEEP_MOD = 200;
 
   private static long lastServerConnectTime = Sage.time(); // for tracking duration of connection failures
   private static final long FAILURE_DUR_FOR_NOTIFICATION = 2*Sage.MILLIS_PER_DAY;
@@ -202,11 +202,6 @@ public class WarlockRipper extends EPGDataSource
         if (EPG_DEBUG) wr.write(tempString + "\r\n");
 
         int idx = tempString.indexOf(' ');
-        if (Sage.EMBEDDED)
-        {
-          if (tempString.indexOf("Digital Broadcast") == -1)
-            continue;
-        }
         rv[numValid][0] = tempString.substring(0, idx);
         rv[numValid][1] = tempString.substring(idx + 1);
         numValid++;

@@ -420,39 +420,36 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
     subtitleDelay = uiMgr.getLong("subtitle/delay", 0);
 
     liveControl = false;
-    if (!Sage.EMBEDDED)
+    setBackground(java.awt.Color.black);
+
+    if (Sage.WINDOWS_OS)
     {
-      setBackground(java.awt.Color.black);
-
-      if (Sage.WINDOWS_OS)
+      // NOTE NOTE NOTE WE SHOULD ENSURE THAT ANY LIVE INPUTS ARE MUTED AT THIS POINT
+      // ZQ. I mute mixer src on DShowCapture, if TV audio goes through audio card ZQ.
+      // ZQ.
+      if (uiMgr.getBoolean("videoframe/mute_line_in_on_startup", false))
       {
-        // NOTE NOTE NOTE WE SHOULD ENSURE THAT ANY LIVE INPUTS ARE MUTED AT THIS POINT
-        // ZQ. I mute mixer src on DShowCapture, if TV audio goes through audio card ZQ.
-        // ZQ.
-        if (uiMgr.getBoolean("videoframe/mute_line_in_on_startup", false))
-        {
-          System.out.println( "setLiveMute Line In got called" );
-          DShowLivePlayer.setLiveMute0(-1, true);
-        }
-
+        System.out.println( "setLiveMute Line In got called" );
+        DShowLivePlayer.setLiveMute0(-1, true);
       }
-      dvdMouseListener = new java.awt.event.MouseAdapter()
-      {
-        public void mouseReleased(java.awt.event.MouseEvent evt)
-        {
-          if (areDvdButtonsVisible())
-            playbackControl(DVD_CONTROL_MOUSE_CLICK, evt.getX(), evt.getY());
-        }
-      };
-      dvdMouseMotionListener = new java.awt.event.MouseMotionAdapter()
-      {
-        public void mouseMoved(java.awt.event.MouseEvent evt)
-        {
-          if (areDvdButtonsVisible())
-            playbackControl(DVD_CONTROL_MOUSE_HOVER, evt.getX(), evt.getY());
-        }
-      };
+
     }
+    dvdMouseListener = new java.awt.event.MouseAdapter()
+    {
+      public void mouseReleased(java.awt.event.MouseEvent evt)
+      {
+        if (areDvdButtonsVisible())
+          playbackControl(DVD_CONTROL_MOUSE_CLICK, evt.getX(), evt.getY());
+      }
+    };
+    dvdMouseMotionListener = new java.awt.event.MouseMotionAdapter()
+    {
+      public void mouseMoved(java.awt.event.MouseEvent evt)
+      {
+        if (areDvdButtonsVisible())
+          playbackControl(DVD_CONTROL_MOUSE_HOVER, evt.getX(), evt.getY());
+      }
+    };
 
     if (uiMgr.getUIClientType() == UIClient.REMOTE_UI)
     {
@@ -1453,7 +1450,7 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
               continue;
             }
 
-            if (!Sage.EMBEDDED && matchingDevice != null && recordTimeAdjust == 0)
+            if (matchingDevice != null && recordTimeAdjust == 0)
             {
               // We can't use instanceof because on SageTVClient the capture device object is different; so check the name instead
               String cdevname = matchingDevice.getCaptureDeviceName();
@@ -1642,7 +1639,7 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
     long rv = 0;
     if (networkEncoderPlayback)
     {
-      rv = uiMgr.getLong(prefs + NETWORK_ENCODING_TO_PLAYBACK_DELAY, Sage.EMBEDDED ? 0 : 1500);
+      rv = uiMgr.getLong(prefs + NETWORK_ENCODING_TO_PLAYBACK_DELAY, 1500);
     }
     else
     {
@@ -2302,7 +2299,7 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
               targetTime = Sage.time() - newDur;
             }
 
-            if (Sage.getBoolean("videoframe/force_live_playback_on_currently_airing_programs", Sage.EMBEDDED))
+            if (Sage.getBoolean("videoframe/force_live_playback_on_currently_airing_programs", false))
             {
               if (Sage.DBG) System.out.println("Disabling resume from last watched point and force to live");
               targetTime = Sage.time();
@@ -2363,11 +2360,8 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
 
           if (currFile.isDVD() && !currFile.isBluRay())
           {
-            if (!Sage.EMBEDDED)
-            {
-              addMouseListeners(dvdMouseListener);
-              addMouseMotionListeners(dvdMouseMotionListener);
-            }
+            addMouseListeners(dvdMouseListener);
+            addMouseMotionListeners(dvdMouseMotionListener);
             targetTime = 0;
           }
           else if (currFile.isBluRay())
@@ -2392,14 +2386,14 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
           }
 
           // Do any native video format resolution switching that's required
-          if (render != null && (Sage.EMBEDDED ? render.getEnabledResolutionOptions() : render.getResolutionOptions()) != null &&
-              (Sage.EMBEDDED ? render.getEnabledResolutionOptions().length : render.getResolutionOptions().length) > 0 &&
+          if (render != null && (render.getResolutionOptions()) != null &&
+              (render.getResolutionOptions().length) > 0 &&
               uiMgr.getBoolean("native_output_resolution_switching", false) && !watchMe.isMusic())
           {
             sage.media.format.VideoFormat targetFormat = watchMe.getFileFormat() != null ? watchMe.getFileFormat().getVideoFormat() : null;
             // We choose a format that matches i/p and the vertical resolution exactly. If no such format
             // exists then we choose the format with the highest vertical resolution preferring p over i.
-            sage.media.format.VideoFormat[] resOptions = Sage.EMBEDDED ? render.getEnabledResolutionFormats() : render.getResolutionFormats();
+            sage.media.format.VideoFormat[] resOptions = render.getResolutionFormats();
             sage.media.format.VideoFormat bestMatchedChoice = null;
             sage.media.format.VideoFormat bestCloseChoice = null;
             for (int i = 0; i < resOptions.length; i++)
@@ -2575,8 +2569,7 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
             }
           }
 
-          if (!Sage.EMBEDDED)
-            videoComp.setVisible(true);
+          videoComp.setVisible(true);
 
           if (player != null)
             player.setMute(globalMute);
@@ -3651,14 +3644,11 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
     MediaPlayer myPlaya = player;
     if (myPlaya != null)
       myPlaya.inactiveFile();
-    if (!Sage.EMBEDDED)
+    videoComp.setVisible(false);
+    if (isDVD())
     {
-      videoComp.setVisible(false);
-      if (isDVD())
-      {
-        removeMouseListeners(dvdMouseListener);
-        removeMouseMotionListeners(dvdMouseMotionListener);
-      }
+      removeMouseListeners(dvdMouseListener);
+      removeMouseMotionListeners(dvdMouseMotionListener);
     }
     long theDur = getDurationMillis();
     long theTime = getMediaTimeMillis();
@@ -3684,11 +3674,11 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
       if (uiMgr.getRootPanel().getRenderEngine() instanceof MiniClientSageRenderer)
       {
         render = (MiniClientSageRenderer) uiMgr.getRootPanel().getRenderEngine();
-        if (render != null && (Sage.EMBEDDED ? render.getEnabledResolutionOptions() : render.getResolutionOptions()) != null &&
-            (Sage.EMBEDDED ? render.getEnabledResolutionOptions().length : render.getResolutionOptions().length) > 0 &&
+        if (render != null && (render.getResolutionOptions()) != null &&
+            (render.getResolutionOptions().length) > 0 &&
             uiMgr.getBoolean("native_output_resolution_switching", false) && (currFile == null || !currFile.isMusic()))
         {
-          sage.media.format.VideoFormat[] resOptions = Sage.EMBEDDED ? render.getEnabledResolutionFormats() : render.getResolutionFormats();
+          sage.media.format.VideoFormat[] resOptions = render.getResolutionFormats();
           sage.media.format.VideoFormat bestChoice = null;
           for (int i = 0; i < resOptions.length; i++)
           {
@@ -3779,7 +3769,7 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
     if (!hasFile()) return; // pointless
     if (Sage.DBG) System.out.println("Preparing the media player for a reload...");
     // We need to wait until this job is processed so the resources are cleaned up in the player
-    if (!Sage.EMBEDDED && Sage.WINDOWS_OS && java.awt.EventQueue.isDispatchThread())
+    if (Sage.WINDOWS_OS && java.awt.EventQueue.isDispatchThread())
       throw new InternalError("Cannot call VideoFrame.prepareForReload from the Event Thread!");
     // If Watch() was called from the STV and then CloseAndWaitUntilClosed() was called it's possible that
     // submitting the Close_MF job won't do anything and will be ignored. Therefore we need to hold up
@@ -4009,7 +3999,7 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
   {
     globalMute = x;
     MediaPlayer mp = player;
-    if (!Sage.EMBEDDED && uiMgr.getBoolean("media_player_uses_system_mute", false))
+    if (uiMgr.getBoolean("media_player_uses_system_mute", false))
     {
       try
       {
@@ -4022,7 +4012,7 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
 
   public boolean getMute()
   {
-    if (!Sage.EMBEDDED && uiMgr.getBoolean("media_player_uses_system_mute", false))
+    if (uiMgr.getBoolean("media_player_uses_system_mute", false))
     {
       try
       {
@@ -4266,7 +4256,7 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
   public boolean isLivePreview()
   {
     MediaPlayer playa = player;
-    if (!Sage.EMBEDDED && playa != null && (playa instanceof DShowLivePlayer || playa instanceof DShowSharedLiveMediaPlayer || playa instanceof MacLivePlayer))
+    if (playa != null && (playa instanceof DShowLivePlayer || playa instanceof DShowSharedLiveMediaPlayer || playa instanceof MacLivePlayer))
       return true;
     else
       return false;
@@ -4607,8 +4597,6 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
 
   public void closeAndWait()
   {
-    if (Sage.client && Sage.EMBEDDED && Seeker.LOCAL_PROCESS_CLIENT.equals(uiMgr.getLocalUIClientName()))
-      return; // this has no active VF thread
     //		if (Sage.WINDOWS_OS && java.awt.EventQueue.isDispatchThread())
     //			throw new InternalError("Cannot call VideoFrame.closeAndWait from the Event Thread!");
     // If Watch() was called from the STV and then CloseAndWaitUntilClosed() was called it's possible that
@@ -4620,7 +4608,7 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
       try{Thread.sleep(50);}catch(Exception e){}
     }
     VFJob newJob = new VFJob(CLOSE_MF);
-    newJob.useSyncClose = (!Sage.EMBEDDED && Sage.WINDOWS_OS && java.awt.EventQueue.isDispatchThread());
+    newJob.useSyncClose = (Sage.WINDOWS_OS && java.awt.EventQueue.isDispatchThread());
     synchronized (queueLock)
     {
       submitJob(newJob);
@@ -4632,7 +4620,7 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
         if (!watchQueue.contains(newJob) || !alive)
           break;
       }
-      if (!Sage.EMBEDDED && Sage.WINDOWS_OS && asyncJobInWait != null && java.awt.EventQueue.isDispatchThread())
+      if (Sage.WINDOWS_OS && asyncJobInWait != null && java.awt.EventQueue.isDispatchThread())
       {
         // This is a deadlock situation unless we do something about it. The best approach is
         // to process the job that the VF is waiting on, and then process our close job (and also remove it from the queue).
@@ -4914,25 +4902,22 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
 
   protected void createVideoHShiftTimer()
   {
-    if (!Sage.EMBEDDED)
+    videoHShiftTimer = new java.util.TimerTask()
     {
-      videoHShiftTimer = new java.util.TimerTask()
+      public void run()
       {
-        public void run()
+        java.awt.EventQueue.invokeLater(new Runnable()
         {
-          java.awt.EventQueue.invokeLater(new Runnable()
+          public void run()
           {
-            public void run()
-            {
-              videoComp.invalidate();
-              validate();
-              uiMgr.trueValidate();
-            }
-          });
-        }
-      };
-      uiMgr.addTimerTask(videoHShiftTimer, 0, videoHShiftFreq/1000);
-    }
+            videoComp.invalidate();
+            validate();
+            uiMgr.trueValidate();
+          }
+        });
+      }
+    };
+    uiMgr.addTimerTask(videoHShiftTimer, 0, videoHShiftFreq/1000);
   }
 
   public boolean areDvdButtonsVisible()
@@ -4971,31 +4956,6 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
     {
       if (mediaPlayerSetup == STBX25XX_MEDIA_PLAYER_SETUP)
       {
-        if (Sage.EMBEDDED && !Sage.getBoolean("ignore_codec_compatibility", false))
-        {
-          // Also verify codec compatibility here so we can throw an error up before file playback starts
-          sage.media.format.ContainerFormat cf = theFile.getFileFormat();
-          MiniClientSageRenderer mcsr = (MiniClientSageRenderer) uiMgr.getRootPanel().getRenderEngine();
-          if (cf != null && mcsr != null)
-          {
-            sage.media.format.VideoFormat vidFormat = cf.getVideoFormat();
-            if (vidFormat != null && !mcsr.isSupportedVideoCodec(vidFormat.getFormatName()))
-            {
-              if (Sage.DBG) System.out.println("ERROR: Unsupported video codec, cannot playback file: " + theFile);
-              return false;
-            }
-            sage.media.format.AudioFormat audFormat = cf.getAudioFormat();
-            // When FFMPEG tells us the codec is 0X0000 (or some other number); that doesn't necessarily
-            // mean we can't play it...so don't reject it in that case. I have files that audio plays fine on
-            // that show up with codecs like that.
-            if (audFormat != null && !audFormat.getFormatName().toLowerCase().startsWith("0x") &&
-                !mcsr.isSupportedAudioCodec(audFormat.getFormatName()))
-            {
-              if (Sage.DBG) System.out.println("ERROR: Unsupported audio codec, cannot playback file: " + theFile);
-              return false;
-            }
-          }
-        }
         if (theFile.isDVD())
         {
           // Check if it's a Placeshifter, if it is then DVD playback is not supported
@@ -5960,7 +5920,7 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
 
   private static MediaFile[] cachedSortedMusicFiles;
   private static long cachedSortedMusicFilesTimestamp;
-  private static final boolean USE_COLLATOR_SORTING = Sage.getBoolean("use_collator_sorting", !Sage.EMBEDDED);
+  private static final boolean USE_COLLATOR_SORTING = Sage.getBoolean("use_collator_sorting", true);
   public static final java.util.Comparator musicFileComparator =
       new java.util.Comparator()
   {

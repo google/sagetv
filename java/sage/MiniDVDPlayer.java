@@ -269,8 +269,6 @@ public class MiniDVDPlayer implements DVDMediaPlayer, MiniDVDPlayerIdentifier
     {
       // This is an ISO image instead of a DVD directory; so mount it and then change the file path to be the image
       java.io.File mountDir = null;
-      if (Sage.EMBEDDED)
-        mountDir = new java.io.File("/tmp/dvdmount");
       mountDir = FSManager.getInstance().requestISOMount(file, uiMgr, mountDir);
       if (mountDir == null)
       {

@@ -59,9 +59,9 @@ public class FormatParser
     { "AC-3 / 0X332D6361", MediaFormat.AC3 },
   };
 
-  private static final long MPEG_PARSER_SEARCH_LENGTH = sage.Sage.EMBEDDED ? 10*1024*1024 : 30*1024*1024;
+  private static final long MPEG_PARSER_SEARCH_LENGTH = 30*1024*1024;
   private static boolean DISABLE_FORMAT_DETECTION = false;
-  private static boolean MINIMIZE_EXIF_MEM_USAGE = sage.Sage.EMBEDDED;
+  private static boolean MINIMIZE_EXIF_MEM_USAGE = false;
   public static final java.io.File FORMAT_DETECT_MOUNT_DIR = new java.io.File("/tmp/formatmount");
   private static String substituteName(String s)
   {
@@ -126,9 +126,7 @@ public class FormatParser
       {
         synchronized (FORMAT_DETECT_MOUNT_DIR)
         {
-          java.io.File mountDir = sage.Sage.EMBEDDED ?
-              sage.FSManager.getInstance().requestISOMount(f, FORMAT_DETECT_MOUNT_DIR) :
-                sage.FSManager.getInstance().requestISOMount(f, (java.io.File)null);
+          java.io.File mountDir = sage.FSManager.getInstance().requestISOMount(f, (java.io.File)null);
               if (mountDir != null)
               {
                 // Check for a BluRay folder structure
@@ -187,12 +185,6 @@ public class FormatParser
             System.out.println("Re-detecting file format due to bad MPEG detection, file=" + f + " formatDetected=" + myFormat);
           }
         }
-      }
-
-      if (sage.Sage.EMBEDDED && f.getAbsolutePath().startsWith("/var/media/tv/"))
-      {
-        if (sage.Sage.DBG) System.out.println("Skipping external format detector and returning null format since we are analyzing a TV recording.");
-        return null;
       }
 
       if (sage.Sage.DBG) System.out.println("Now using external format detector for: " + f);
@@ -909,8 +901,7 @@ public class FormatParser
         boolean foundAR = false;
         // fps is last for video on desktop
         // bitrate is last for video on embedded
-        while ((sage.Sage.EMBEDDED && nextStr.indexOf(" kb/s") == -1) ||
-            (!sage.Sage.EMBEDDED && nextStr.indexOf(" fps") == -1 && nextStr.indexOf(" tbr") == -1))
+        while ((nextStr.indexOf(" fps") == -1 && nextStr.indexOf(" tbr") == -1))
         {
           nextStr = nextStr.trim();
           if ("interlaced".equals(nextStr))
@@ -941,7 +932,7 @@ public class FormatParser
               System.out.println("BAD AR Format info:" + e + " str=" + nextStr);
             }
           }
-          else if (nextStr.startsWith("PAR") && (!foundAR || sage.Sage.EMBEDDED))
+          else if (nextStr.startsWith("PAR")  && !foundAR)
           {
             pastPixFmt = true;
             int darIdx = nextStr.indexOf("DAR");
@@ -962,7 +953,7 @@ public class FormatParser
               }
             }
           }
-          else if (nextStr.indexOf(" kb/s") != -1 && !sage.Sage.EMBEDDED)
+          else if (nextStr.indexOf(" kb/s") != -1)
           {
             try
             {
@@ -1004,39 +995,18 @@ public class FormatParser
             break;
         }
 
-        if (!sage.Sage.EMBEDDED)
+        // We want the 'tbr' for MPEG2Video and the 'fps' for all other content (based on testing)
+        float betterFps = extractFpsFromFFMPEGStreamInfo(currStreamInfo, MediaFormat.MPEG2_VIDEO.equals(newFormat.getFormatName()) ? 2 : 1);
+        if ((betterFps == 0 || betterFps >= 100) && !MediaFormat.MPEG2_VIDEO.equals(newFormat.getFormatName()))
+          betterFps = extractFpsFromFFMPEGStreamInfo(currStreamInfo, 2); // if fps isn't there or is bad, then get tbr
+        if (betterFps != 0)
         {
-          // We want the 'tbr' for MPEG2Video and the 'fps' for all other content (based on testing)
-          float betterFps = extractFpsFromFFMPEGStreamInfo(currStreamInfo, MediaFormat.MPEG2_VIDEO.equals(newFormat.getFormatName()) ? 2 : 1);
-          if ((betterFps == 0 || betterFps >= 100) && !MediaFormat.MPEG2_VIDEO.equals(newFormat.getFormatName()))
-            betterFps = extractFpsFromFFMPEGStreamInfo(currStreamInfo, 2); // if fps isn't there or is bad, then get tbr
-          if (betterFps != 0)
-          {
-            // The 'fps' framerate is really what we want unless it's not specified, then we use the frame time information instead
-            newFormat.setFps(betterFps);
-            newFormat.setFpsDen(0);
-            newFormat.setFpsNum(0);
-          }
+          // The 'fps' framerate is really what we want unless it's not specified, then we use the frame time information instead
+          newFormat.setFps(betterFps);
+          newFormat.setFpsDen(0);
+          newFormat.setFpsNum(0);
         }
-        else
-        {
-          if (nextStr.indexOf(" kb/s") != -1)
-          {
-            try
-            {
-              int newRate = Integer.parseInt(nextStr.substring(0, nextStr.indexOf(" kb/s"))) * 1000;
-              if (newRate != 104857000) // This is FFFF for MPEG2 video which means it can't find it correctly
-                newFormat.setBitrate(newRate);
-            }
-            catch (NumberFormatException e)
-            {
-              System.out.println("Error parsing bitrate of:" + e + " str=" + nextStr);
-            }
-          }
 
-          if (newFormat.getFps() == 0)
-            newFormat.setFps(extractFpsFromFFMPEGStreamInfo(currStreamInfo, 1));
-        }
         String streamID = extractStreamPESIDFromFFMPEGStreamInfo(currStreamInfo);
         if (streamID != null)
           newFormat.setId(streamID);

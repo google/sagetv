@@ -448,7 +448,7 @@ public class STVReader
       name = in.readUTF();
       propCount--;
     }
-    boolean allowSyms = sage.Sage.getBoolean("studio/preserve_widget_symbols_on_import", !sage.Sage.EMBEDDED);
+    boolean allowSyms = sage.Sage.getBoolean("studio/preserve_widget_symbols_on_import", true);
     for (int i = 0; i < propCount; i++)
     {
       if (optimize)

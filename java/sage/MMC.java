@@ -76,12 +76,6 @@ public class MMC
 
     capDevMgrs = new java.util.ArrayList();
     globalEncoderMap = new java.util.HashMap();
-    if (Sage.EMBEDDED)
-    {
-      // Be sure the video format properties are sync'd properly
-      if ("PAL".equals(Sage.get("TV_STANDARD", null)) && isNTSCVideoFormat())
-        Sage.putInt(prefs + VIDEO_FORMAT_CODE, 8);
-    }
   }
 
   private void init()

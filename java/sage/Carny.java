@@ -58,13 +58,13 @@ public final class Carny implements Runnable
   private static final String MAP_DENSITY = "carny_map_density";
   static final String CARNY_KEY = "carny";
 
-  private static final long LOOKAHEAD = Sage.EMBEDDED ? 10*24*60*60*1000L : 14*24*60*60*1000L;
+  private static final long LOOKAHEAD = 14*24*60*60*1000L;
   /*
    * NOTE: I CHANGED THIS ON 7/22/03. I THINK IT'S WHY ITS RECORDING
    * EXTRA STUFF, BECAUSE ANYTHING WILL COME THROUGH WITH AT LEAST THIS PROBABILITY
    */
   private static final float MIN_WP = 0;//1e-6f;
-  public static final long SLEEP_PERIOD = Sage.EMBEDDED ? 120 : 30;
+  public static final long SLEEP_PERIOD = 30;
   // The processor count is used to limit the number of threads we will spin up for agent processing.
   public static final int PROCESSOR_COUNT = Math.max(Runtime.getRuntime().availableProcessors(), 1);
 
@@ -120,7 +120,7 @@ public final class Carny implements Runnable
     jobs = new Vector<Object[]>();
     alive = true;
     wiz = Wizard.getInstance();
-    trends = Sage.EMBEDDED ? new int[0] : new int[] { Agent.TITLE_MASK | Agent.FIRSTRUN_MASK, Agent.TITLE_MASK | Agent.RERUN_MASK,
+    trends = new int[] { Agent.TITLE_MASK | Agent.FIRSTRUN_MASK, Agent.TITLE_MASK | Agent.RERUN_MASK,
         Agent.CHANNEL_MASK | Agent.CATEGORY_MASK,
         Agent.NETWORK_MASK | Agent.CATEGORY_MASK, Agent.ACTOR_MASK,
         Agent.CHANNEL_MASK | Agent.PR_MASK, Agent.CATEGORY_MASK | Agent.PR_MASK };
@@ -232,12 +232,9 @@ public final class Carny implements Runnable
 
   void incWatchCount()
   {
-    if (!Sage.EMBEDDED)
+    synchronized (GLOBAL_WATCH_COUNT)
     {
-      synchronized (GLOBAL_WATCH_COUNT)
-      {
-        Sage.putInt(prefs + GLOBAL_WATCH_COUNT, ++globalWatchCount);
-      }
+      Sage.putInt(prefs + GLOBAL_WATCH_COUNT, ++globalWatchCount);
     }
   }
 
@@ -249,10 +246,7 @@ public final class Carny implements Runnable
     if (wCount >= globalWatchCount)
     {
       globalWatchCount = wCount + 1;
-      if (!Sage.EMBEDDED)
-      {
-        Sage.putInt(prefs + GLOBAL_WATCH_COUNT, globalWatchCount);
-      }
+      Sage.putInt(prefs + GLOBAL_WATCH_COUNT, globalWatchCount);
     }
   }
 
@@ -295,8 +289,8 @@ public final class Carny implements Runnable
       wiz.releaseWriteLock(Wizard.AGENT_CODE);
     }
 
-    long defaultFavoriteStartPadding = Sage.getLong("default_favorite_start_padding", Sage.EMBEDDED ? 5*Sage.MILLIS_PER_MIN : 0);
-    long defaultFavoriteStopPadding = Sage.getLong("default_favorite_stop_padding", Sage.EMBEDDED ? 5*Sage.MILLIS_PER_MIN : 0);
+    long defaultFavoriteStartPadding = Sage.getLong("default_favorite_start_padding", 0);
+    long defaultFavoriteStopPadding = Sage.getLong("default_favorite_stop_padding", 0);
     if (defaultFavoriteStartPadding != 0)
     {
       rv.setStartPadding(defaultFavoriteStartPadding);
@@ -945,7 +939,7 @@ public final class Carny implements Runnable
     // and be able to modify the information the agent is based on.
     Show s = wasteAir.getShow();
     // We don't track 'wasted' objects on embedded so disable that here
-    if (s == null || !wasteAir.isTV() || Sage.EMBEDDED) return;
+    if (s == null || !wasteAir.isTV()) return;
     Stringer stit = s.title;
     Agent[] allAgents = wiz.getAgents();
     StringBuilder sbCache = new StringBuilder();

@@ -123,7 +123,7 @@ public class Wizard implements EPGDBPublic2
   private static final int MAX_DB_ERRORS_TO_LOG = 1000;
 
 
-  public static boolean COMPACT_DB = Sage.EMBEDDED;
+  public static boolean COMPACT_DB = false;
 
   private static boolean validateObjs = true;
   private boolean REPAIR_CATEGORIES = false;
@@ -498,7 +498,7 @@ public class Wizard implements EPGDBPublic2
     prefsRoot = WIZARD_KEY + '/';
     nextID = Sage.getInt(prefsRoot + NEXT_UID, 1);
     // on embedded the clock may not be set yet so don't bork this setting
-    lastMaintenance = Sage.EMBEDDED ? Sage.getLong(prefsRoot + LAST_MAINTENANCE, 0) : Math.min(Sage.time(), Sage.getLong(prefsRoot + LAST_MAINTENANCE, 0));
+    lastMaintenance = Math.min(Sage.time(), Sage.getLong(prefsRoot + LAST_MAINTENANCE, 0));
     noDataMaxLen = Sage.getLong(prefsRoot + NODATA_MAX_LEN, 2*Sage.MILLIS_PER_HR);
     noDataMaxRuleDur = Sage.getLong(prefsRoot + NODATA_DUR_FOR_MAXRULE, 2*Sage.MILLIS_PER_DAY);
     listeners = new Vector<XctSyncClient>();
@@ -563,14 +563,6 @@ public class Wizard implements EPGDBPublic2
     {
       god = Carny.getInstance();
       standalone = inStandalone;
-      if (Sage.EMBEDDED)
-      {
-        // Create the FSManager now in case we need to load the Wiz file from the hard drive or other external storage
-        // We no longer need this since the NewStorageDeviceDetector handles HDD mounting
-        //FSManager.getInstance();
-        // Make sure the external storage manager is created as well
-        NewStorageDeviceDetector.getInstance();
-      }
       String fileStr = (dbFilename != null) ? dbFilename : Sage.get(prefsRoot + DB_FILE, null);
       if (fileStr == null || fileStr.length() == 0)
       {
@@ -627,12 +619,9 @@ public class Wizard implements EPGDBPublic2
         fileStr = Sage.initialSTV;
       if (fileStr == null)
       {
-        if (!Sage.EMBEDDED)
-        {
-          widgetDBFile = new File(System.getProperty("user.dir"),
-              "STVs" + File.separatorChar + ("SageTV7" + File.separatorChar + "SageTV7.xml"));
-          Sage.put(prefsRoot + WIDGET_DB_FILE, widgetDBFile.toString());
-        }
+        widgetDBFile = new File(System.getProperty("user.dir"),
+            "STVs" + File.separatorChar + ("SageTV7" + File.separatorChar + "SageTV7.xml"));
+        Sage.put(prefsRoot + WIDGET_DB_FILE, widgetDBFile.toString());
       }
       else
       {
@@ -696,40 +685,6 @@ public class Wizard implements EPGDBPublic2
       flusher.setDaemon(true);
       flusher.start();
     }
-    // If we have PVR mode enabled; then the EPG thread will do DB maintenance...if we also do it here then there can be synchronization problems where
-    // patching the hole in the airing table will be done at the same time as an EPG update.
-    if (Sage.EMBEDDED && !SageConstants.PVR && !Sage.client)
-    {
-      Thread maintainer = new Thread("DB-Maintainer")
-      {
-        @Override
-        public void run()
-        {
-          // Be sure we're well into startup first so we can access mounts/shares for backup if needed
-          try{Thread.sleep(55000);}catch(Exception e){}
-          while (true)
-          {
-            try{Thread.sleep(5000);}catch(Exception e){}
-            if (numUncompXcts > NUM_TRANSACTIONS_TO_COMPRESS && !SeekerSelector.getInstance().isDoingImportScan())
-            {
-              if (Sage.DBG) System.out.println("Setting overflow marker because we've exceeded the # of xcts for a re-save: num=" + numUncompXcts);
-              flashOverflow = true;
-            }
-            if (flashOverflow || maintenanceNeeded)
-            {
-              maintenanceNeeded = false;
-              if (Sage.DBG) System.out.println("Performing DB maintenance due to " + (flashOverflow ? "flash data rollover" : "notification"));
-              maintenance();
-              // This gets cleared in saveDBFile now instead
-              //flashOverflow = false;
-            }
-          }
-        }
-      };
-      maintainer.setPriority(Thread.MIN_PRIORITY);
-      maintainer.setDaemon(true);
-      maintainer.start();
-    }
     primed = true;
   }
 
@@ -752,10 +707,7 @@ public class Wizard implements EPGDBPublic2
       {
         try
         {
-          if (Sage.EMBEDDED)
-            dbout.flush();
-          else
-            dbout.sync();
+          dbout.sync();
         }
         catch (Exception e){}
       }
@@ -788,7 +740,7 @@ public class Wizard implements EPGDBPublic2
     Sage.putInt(prefsRoot + NOSHOW_ID, noShowID = noShow.id);
   }
 
-  void mpause() { if (primed) { try{Thread.sleep(Sage.EMBEDDED ? 300 : 50);}catch(Exception e){} } }
+  void mpause() { if (primed) { try{Thread.sleep(50);}catch(Exception e){} } }
 
   void maintenance()
   {
@@ -867,7 +819,6 @@ public class Wizard implements EPGDBPublic2
             {
               if (watchAir.isTV())
               {
-                if (!Sage.EMBEDDED || BigBrother.isFullWatch(currWatch))
                 toSave.add(watchAir);
               }
               else if (watchAir.isVideo())
@@ -1123,7 +1074,7 @@ public class Wizard implements EPGDBPublic2
         for (int i = 0; i < noShowAirsToAdd.size(); i++)
         {
           airTable.add(noShowAirsToAdd.get(i), logMaintenanceXcts);
-          if (i % (Sage.EMBEDDED ? 50 :300) == 0 || getMaxPendingClientXcts() > 8)
+          if (i % 300 == 0 || getMaxPendingClientXcts() > 8)
             mpause();
           waitUntilDBClientSyncsComplete();
         }
@@ -1132,7 +1083,7 @@ public class Wizard implements EPGDBPublic2
         for (int i = 0; i < noDataToFixDur.size(); i++)
         {
           fixNoDataDuration(noDataToFixDur.get(i), logMaintenanceXcts);
-          if (i % (Sage.EMBEDDED ? 50 :300) == 0 || getMaxPendingClientXcts() > 8)
+          if (i % 300 == 0 || getMaxPendingClientXcts() > 8)
             mpause();
           waitUntilDBClientSyncsComplete();
         }
@@ -2526,7 +2477,7 @@ public class Wizard implements EPGDBPublic2
 
   void startSeq(boolean recover)
   {
-    if (!Sage.client && SageTV.upgrade && !"".equals(SageTV.upgradedFromVersion) && !Sage.EMBEDDED)
+    if (!Sage.client && SageTV.upgrade && !"".equals(SageTV.upgradedFromVersion))
     {
       if (Sage.DBG) System.out.println("Backing up DB file for upgrade...");
       try
@@ -2605,7 +2556,7 @@ public class Wizard implements EPGDBPublic2
       }
       else if (!Sage.client && dbFile != null)
       {
-        String mode = !Sage.EMBEDDED ? "rwd" : "rw";
+        String mode = "rwd";
         // 128k was chosen from observing most random writes are typically less than this distance
         // behind the actual write buffer. The original default of 64k would often miss even with
         // the optimizer trying to compensate for the last miss since the misses were more than 64k
@@ -2780,7 +2731,7 @@ public class Wizard implements EPGDBPublic2
   public synchronized int getNextWizID()
   {
     nextID++;
-    if (!Sage.EMBEDDED) Sage.putInt(prefsRoot + NEXT_UID, nextID);
+    Sage.putInt(prefsRoot + NEXT_UID, nextID);
     return nextID - 1;
   }
 
@@ -2795,7 +2746,7 @@ public class Wizard implements EPGDBPublic2
       if (idExists >= nextID)
       {
         nextID = idExists + 1;
-        if (!Sage.EMBEDDED) Sage.putInt(prefsRoot + NEXT_UID, nextID);
+        Sage.putInt(prefsRoot + NEXT_UID, nextID);
       }
     }
     else
@@ -2805,7 +2756,7 @@ public class Wizard implements EPGDBPublic2
         if (idExists >= nextID)
         {
           nextID = idExists + 1;
-          if (!Sage.EMBEDDED) Sage.putInt(prefsRoot + NEXT_UID, nextID);
+          Sage.putInt(prefsRoot + NEXT_UID, nextID);
         }
       }
     }
@@ -3217,7 +3168,7 @@ public class Wizard implements EPGDBPublic2
       releaseWriteLock(SERIESINFO_CODE);
     }
     // only fix legacy shows on non-embedded
-    if (fixupShows && !Sage.EMBEDDED)
+    if (fixupShows)
     {
       if (Sage.DBG) System.out.println("Fixing existing Show objects for new SeriesInfo data legacyID=" + series.legacySeriesID + " showcardID=" + series.showcardID +
           " " + series);
@@ -7275,20 +7226,12 @@ public class Wizard implements EPGDBPublic2
   {
     if (dbBackupFile == null || dbFile == null) return false;
     // Restore a backup copy
-    if (!Sage.EMBEDDED)
-    {
-      int x = 0;
-      File corruptWizFile = new File(dbFile.getParentFile(), dbFile.getName() + ".corrupt" + (x++));
-      while (corruptWizFile.isFile())
-        corruptWizFile = new File(dbFile.getParentFile(), dbFile.getName() + ".corrupt" + (x++));
-      if (!dbFile.renameTo(corruptWizFile))
-        return false;
-    }
-    else
-    {
-      // Don't do a .corrupt copy on embedded since it would use too much space
-      dbFile.delete();
-    }
+    int x = 0;
+    File corruptWizFile = new File(dbFile.getParentFile(), dbFile.getName() + ".corrupt" + (x++));
+    while (corruptWizFile.isFile())
+      corruptWizFile = new File(dbFile.getParentFile(), dbFile.getName() + ".corrupt" + (x++));
+    if (!dbFile.renameTo(corruptWizFile))
+      return false;
     if (!dbBackupFile.renameTo(dbFile))
     {
       try
@@ -7563,21 +7506,17 @@ public class Wizard implements EPGDBPublic2
       if (nextID > SERVER_INIT_ID_BOUNDARY)
       {
         File safeBackupFile = null;
-        if (!Sage.EMBEDDED)
+        // Make a backup of the Wiz file before we do this, be sure not to overwrite anything
+        safeBackupFile = new File(dbFile.getParentFile(), "Wiz.bin.PRECOMPRESSED_IDS");
+        int fooNum = 1;
+        while (safeBackupFile.isFile())
         {
-          // Make a backup of the Wiz file before we do this, be sure not to overwrite anything
-          safeBackupFile = new File(dbFile.getParentFile(), "Wiz.bin.PRECOMPRESSED_IDS");
-          int fooNum = 1;
-          while (safeBackupFile.isFile())
-          {
-            safeBackupFile =  new File(safeBackupFile.getParentFile(), "Wiz.bin.PRECOMPRESSED_IDS" + fooNum);
-            fooNum++;
-          }
+          safeBackupFile =  new File(safeBackupFile.getParentFile(), "Wiz.bin.PRECOMPRESSED_IDS" + fooNum);
+          fooNum++;
         }
         try
         {
-          if (!Sage.EMBEDDED)
-            IOUtils.copyFile(dbFile, safeBackupFile);
+          IOUtils.copyFile(dbFile, safeBackupFile);
           System.out.println("DATABASE ID ROLLOVER POTENTIAL - REBUILDING IDS OF ALL OBJECTS");
           nextID = 1;
           idTranslation = new HashMap<Integer, Integer>();
@@ -7592,7 +7531,7 @@ public class Wizard implements EPGDBPublic2
       {
         long fileLength = dbFile.length();
         // The SageTVLite Wiz DB files are not encrypted
-        if (SageTV.upgradeFromLite || LITE || Sage.EMBEDDED)
+        if (SageTV.upgradeFromLite || LITE)
           in = new SageDataFile(new BufferedSageFile(
               new LocalSageFile(dbFile, true),
               BufferedSageFile.READ_BUFFER_SIZE),
@@ -7974,14 +7913,9 @@ public class Wizard implements EPGDBPublic2
         }
       }
       // Looks cleaner and creates one less string for !Sage.EMBEDDED.
-      String fileMode = !Sage.EMBEDDED ? "rwd" : "rw";
+      String fileMode = "rwd";
       if(!backupFailed) {
         int dbWriteFlags = 0;
-        // I'm leaving this false for now as it introduces a DB incompatibility for downgrades, but
-        // if I get word that setting a property on the entire fleet of devices like this is easy then I'll
-        // turn this on.
-        if (Sage.EMBEDDED && Sage.getBoolean("wizard/use_dbindex_opt_write", false))
-          dbWriteFlags = Wizard.WRITE_OPT_USE_ARRAY_INDICES;
 
         long startSaveTime = Sage.eventTime();
         File realDBFile = dbFile;
@@ -9021,19 +8955,6 @@ public class Wizard implements EPGDBPublic2
 
   public void compressDBIfNeeded()
   {
-    if (Sage.EMBEDDED && numUncompXcts > NUM_TRANSACTIONS_TO_COMPRESS)
-    {
-      if (Sage.DBG) System.out.println("Performing Save on DB file outside of maintenance because we have " + numUncompXcts + " pending");
-      try
-      {
-        saveDBFile();
-      }
-      catch (IOException e)
-      {
-        System.out.println("SERIOUS ERROR: Exception during saving of the database:" + e);
-        e.printStackTrace();
-      }
-    }
   }
 
   public void waitUntilDBClientSyncsComplete()
@@ -9191,7 +9112,7 @@ public class Wizard implements EPGDBPublic2
   // 07/13/2012 Codefu: Add flag to turn off lucene, even on fat
   static boolean disableLucene = Sage.client ? true : (Sage.getBoolean("wizard/disable_lucene", false) || Sage.getBoolean("db_perf_analysis", false));
   static class LuceneIndex {
-    static final Boolean diskIndex = Sage.getBoolean("wizard/lucene_disk", Sage.EMBEDDED); // set to TRUE for disk testing on a desktop
+    static final Boolean diskIndex = Sage.getBoolean("wizard/lucene_disk", false); // set to TRUE for disk testing on a desktop
     static final Boolean diskIndexRunning = diskIndex && Sage.getBoolean("wizard/lucene_running_disk", false);
     static final String INDEX_BASE_PATH = "/rw/";
     static final String INDEX_RUNNING_PATH = "lucene-run/";
@@ -9756,9 +9677,6 @@ public class Wizard implements EPGDBPublic2
                     ((float) (count * 100) / transactionCount), transactionCount, index.insertions,
                     (float) index.insertionTime / index.insertions, index.insertionTime));
               }
-              if(Sage.EMBEDDED) {
-                try { Thread.sleep(LUCENE_SHOW_INSERTION_THROTTLE_TIME); } catch (InterruptedException e) {}
-              }
             }
             if (deletions > 0) {
               index.reopenReaderIfNeeded();
@@ -9858,9 +9776,6 @@ public class Wizard implements EPGDBPublic2
                     "%3.2f%% / %d work queue, %d inserted @ %.2f ms/peep avg [tot:%dms]",
                     ((float) (count * 100) / transactionCount), transactionCount, index.insertions,
                     (float) index.insertionTime / index.insertions, index.insertionTime));
-              }
-              if(Sage.EMBEDDED) {
-                try { Thread.sleep(LUCENE_PERSON_INSERTION_THROTTLE_TIME); } catch (InterruptedException e) {}
               }
             }
             if (deletions > 0) {

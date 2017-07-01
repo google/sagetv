@@ -277,38 +277,24 @@ public class MsgManager implements Runnable
     for (int i = 0; i < capDevs.length; i++)
     {
       String testDevName;
-      if (Sage.EMBEDDED && capDevs[i] instanceof sage.NetworkCaptureDevice)
+      testDevName = (capDevs[i] instanceof sage.DVBCaptureDevice) ?
+          ((sage.DVBCaptureDevice) capDevs[i]).getLinuxVideoDevice() : capDevs[i].getCaptureDeviceName();
+          if (capDevs[i].getCaptureDeviceNum() == devNum && srcName.equals(testDevName) &&
+              !capDevs[i].isNetworkEncoder())
+          {
+            return capDevs[i];
+          }
+    }
+    // Try network capture devices now too
+    for (int i = 0; i < capDevs.length; i++)
+    {
+      String testDevName;
+      if (capDevs[i] instanceof sage.NetworkCaptureDevice)
       {
         testDevName = ((sage.NetworkCaptureDevice) capDevs[i]).getNetworkSourceName();
         if (srcName.equals(testDevName))
         {
           return capDevs[i];
-        }
-      }
-      else
-      {
-        testDevName = (capDevs[i] instanceof sage.DVBCaptureDevice) ?
-            ((sage.DVBCaptureDevice) capDevs[i]).getLinuxVideoDevice() : capDevs[i].getCaptureDeviceName();
-            if (capDevs[i].getCaptureDeviceNum() == devNum && srcName.equals(testDevName) &&
-                !capDevs[i].isNetworkEncoder())
-            {
-              return capDevs[i];
-            }
-      }
-    }
-    if (!Sage.EMBEDDED)
-    {
-      // Try network capture devices now too
-      for (int i = 0; i < capDevs.length; i++)
-      {
-        String testDevName;
-        if (capDevs[i] instanceof sage.NetworkCaptureDevice)
-        {
-          testDevName = ((sage.NetworkCaptureDevice) capDevs[i]).getNetworkSourceName();
-          if (srcName.equals(testDevName))
-          {
-            return capDevs[i];
-          }
         }
       }
     }
@@ -430,12 +416,11 @@ public class MsgManager implements Runnable
   {
     if (Sage.client) return;
     // Load all the existing messages from the message log file
-    java.io.File msgFile = new java.io.File(Sage.EMBEDDED ? ("/rw/sage/" + STV_MSG_FILE) : Sage.getLogPath(STV_MSG_FILE));
+    java.io.File msgFile = new java.io.File(Sage.getLogPath(STV_MSG_FILE));
     if (!msgFile.isFile())
     {
       // Check for the autobackup file
-      java.io.File backupMsgFile = new java.io.File(Sage.EMBEDDED ? ("/rw/sage/" + STV_MSG_FILE + ".autobackup") :
-        Sage.getLogPath(STV_MSG_FILE + ".autobackup"));
+      java.io.File backupMsgFile = new java.io.File(Sage.getLogPath(STV_MSG_FILE + ".autobackup"));
       if (!backupMsgFile.isFile() || !backupMsgFile.renameTo(msgFile))
         return;
     }
@@ -475,9 +460,8 @@ public class MsgManager implements Runnable
   {
     if (Sage.client) return;
     // Save all the exsiting messages to the message log file
-    java.io.File msgFile = new java.io.File(Sage.EMBEDDED ? ("/rw/sage/" + STV_MSG_FILE) : Sage.getLogPath(STV_MSG_FILE));
-    java.io.File backupMsgFile = new java.io.File(Sage.EMBEDDED ? ("/rw/sage/" + STV_MSG_FILE + ".autobackup") :
-      Sage.getLogPath(STV_MSG_FILE + ".autobackup"));
+    java.io.File msgFile = new java.io.File(Sage.getLogPath(STV_MSG_FILE));
+    java.io.File backupMsgFile = new java.io.File(Sage.getLogPath(STV_MSG_FILE + ".autobackup"));
     java.io.PrintWriter outStream = null;
     try
     {
