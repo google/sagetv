@@ -20,7 +20,7 @@ public class PVR350OSDRenderingPlugin implements OSDRenderingPlugin
 	private static boolean loadedLib = false;
 	public PVR350OSDRenderingPlugin()
 	{
-		if (!loadedLib && !SageConstants.LITE)
+		if (!loadedLib)
 		{
 			sage.Native.loadLibrary("PVR350OSDPlugin");
 			loadedLib = true;

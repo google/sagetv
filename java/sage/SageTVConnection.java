@@ -405,7 +405,7 @@ public class SageTVConnection implements Runnable, Wizard.XctSyncClient, Carny.P
       String tempString = readLineBytes(inStream);
       if ("1".equals(tempString))
       {
-        byte[] allcryptbits = (byte[])(SageConstants.LITE ? UIManager.a : Sage.q);
+        byte[] allcryptbits = (byte[])(Sage.q);
         byte[] bcryptbits = new byte[CIPHER_KEY_SIZE/8];
         System.arraycopy(allcryptbits, 0, bcryptbits, 0, CIPHER_KEY_SIZE/8);
         byte[] ivbits = new byte[8];

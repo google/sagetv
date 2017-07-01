@@ -952,7 +952,6 @@ public final class Sage
 
   public static void b(String[] args) throws Throwable
   {
-    if (!SageConstants.LITE)
       startup(args);
   }
 
@@ -1181,7 +1180,7 @@ public final class Sage
 
   public static boolean isTrueClient()
   {
-    return client && !SageConstants.LITE && !"localhost".equals(Sage.preferredServer) && !"127.0.0.1".equals(Sage.preferredServer);
+    return client && !"localhost".equals(Sage.preferredServer) && !"127.0.0.1".equals(Sage.preferredServer);
   }
   // This is true for SageTVClient instances that are connected to a server at a different machine....this is slightly different
   // than the isTrueClient functionality because this one detects when the same IP is used. This is for protection relating to
@@ -1231,43 +1230,38 @@ public final class Sage
   private static Label splashText;
   private static void splashAndLicense()
   {
-    if ((!SageConstants.LITE || Sage.getBoolean("ui/show_splash_screen", true)))
+    splashWindow = new Window(masterWindow);
+    splashWindow.setLayout(new BorderLayout());
+    Image theImage = null;
+    String splashImageName;
+    if (Sage.get("ui/splash_image", null) != null)
     {
-      splashWindow = new Window(masterWindow);
-      splashWindow.setLayout(new BorderLayout());
-      Image theImage = null;
-      String splashImageName;
-      if (SageConstants.LITE)
-        theImage = ImageUtils.fullyLoadImage("images/splashlite.gif");
-      else if (Sage.get("ui/splash_image", null) != null)
-      {
-        theImage = Toolkit.getDefaultToolkit().createImage(Sage.get("ui/splash_image", null));
-        ImageUtils.ensureImageIsLoaded(theImage);
-      }
-      else
-      {
-        theImage = ImageUtils.fullyLoadImage(isTrueClient() ? "images/splashclient.gif" : "images/splash.gif");
-      }
-      ActiveImage splashImage = new ActiveImage(theImage);
-      splashWindow.add(splashImage, "Center");
-      splashText = new Label(Sage.rez("Module_Init", new Object[] { "Application" }), Label.CENTER)
-      {
-        public void paint(Graphics g)
-        {
-          super.paint(g);
-          g.setColor(Color.black);
-          g.drawRect(0, 0, getWidth()-1, getHeight()-1);
-        }
-      };
-      splashText.setBackground(new Color(42, 103, 190));
-      splashText.setForeground(Color.white);
-      splashWindow.add(splashText, "South");
-      Dimension scrSize = Toolkit.getDefaultToolkit().getScreenSize();
-      splashWindow.pack();
-      Point center = GraphicsEnvironment.getLocalGraphicsEnvironment().getCenterPoint();
-      splashWindow.setLocation(center.x - splashWindow.getWidth()/2, center.y - splashWindow.getHeight()/2);
-      splashWindow.setVisible(true);
+      theImage = Toolkit.getDefaultToolkit().createImage(Sage.get("ui/splash_image", null));
+      ImageUtils.ensureImageIsLoaded(theImage);
     }
+    else
+    {
+      theImage = ImageUtils.fullyLoadImage(isTrueClient() ? "images/splashclient.gif" : "images/splash.gif");
+    }
+    ActiveImage splashImage = new ActiveImage(theImage);
+    splashWindow.add(splashImage, "Center");
+    splashText = new Label(Sage.rez("Module_Init", new Object[] { "Application" }), Label.CENTER)
+    {
+      public void paint(Graphics g)
+      {
+        super.paint(g);
+        g.setColor(Color.black);
+        g.drawRect(0, 0, getWidth()-1, getHeight()-1);
+      }
+    };
+    splashText.setBackground(new Color(42, 103, 190));
+    splashText.setForeground(Color.white);
+    splashWindow.add(splashText, "South");
+    Dimension scrSize = Toolkit.getDefaultToolkit().getScreenSize();
+    splashWindow.pack();
+    Point center = GraphicsEnvironment.getLocalGraphicsEnvironment().getCenterPoint();
+    splashWindow.setLocation(center.x - splashWindow.getWidth()/2, center.y - splashWindow.getHeight()/2);
+    splashWindow.setVisible(true);
   }
 
   private static Object splashLock = new Object();

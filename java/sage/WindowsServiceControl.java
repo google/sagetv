@@ -98,7 +98,7 @@ public class WindowsServiceControl implements ActionListener
       if (ptr == 0)
       {
         ptr = installService0("SageTV", new java.io.File(System.getProperty("user.dir"),
-            SageConstants.LITE ? "SageTVLiteService.exe" : "SageTVService.exe").getAbsolutePath());
+            "SageTVService.exe").getAbsolutePath());
         if (ptr == 0)
           javax.swing.JOptionPane.showMessageDialog(f, rez("Service_Install_Error"));
       }
@@ -301,8 +301,7 @@ public class WindowsServiceControl implements ActionListener
     gbc.gridheight = 1;
     gbc.anchor = gbc.CENTER;
     gbc.insets = new Insets(4, 4, 4, 4);
-    pane.add(new JLabel(new ImageIcon(!SageConstants.LITE
-        ? "STVs\\SageTV3\\SageLogo256.png" : "STVs\\SageTVLite\\SageLogo256.png")), gbc);
+    pane.add(new JLabel(new ImageIcon("STVs\\SageTV3\\SageLogo256.png")), gbc);
     gbc.gridy++;
     gbc.ipadx = gbc.ipady = 4;
     pane.add(enabledLabel, gbc);

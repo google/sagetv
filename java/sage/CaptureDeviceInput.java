@@ -314,20 +314,6 @@ public class CaptureDeviceInput
       oldInput.providerID = 0;
       oldInput.writePrefs();
       NetworkClient.distributeRecursivePropertyChange(oldInput.prefs);
-      if (SageConstants.LITE)
-      {
-        // Find any other devices configured and unconfigure them
-        CaptureDeviceInput[] theInputs = MMC.getInstance().getConfiguredInputs();
-        for (int i = 0; i < theInputs.length; i++)
-        {
-          if (theInputs[i].capDev != capDev)
-          {
-            theInputs[i].providerID = 0;
-            theInputs[i].writePrefs();
-            NetworkClient.distributeRecursivePropertyChange(theInputs[i].prefs);
-          }
-        }
-      }
     }
     providerID = inProvID;
     writePrefs();

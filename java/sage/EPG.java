@@ -126,23 +126,15 @@ public final class EPG implements Runnable
         serviceLevels.put(new Long(slKeys[i]), currMap);
       }
     }
-    if (SageTV.upgradeFromLite)
+    String logoDirStr = Sage.get(prefs + LOGO_DIR, null);
+    if (logoDirStr == null)
     {
       logoDir = new java.io.File(Sage.getPath("data", "ChannelLogos"));
       Sage.put(prefs + LOGO_DIR, logoDir.toString());
     }
     else
     {
-      String logoDirStr = Sage.get(prefs + LOGO_DIR, null);
-      if (logoDirStr == null)
-      {
-        logoDir = new java.io.File(Sage.getPath("data", "ChannelLogos"));
-        Sage.put(prefs + LOGO_DIR, logoDir.toString());
-      }
-      else
-      {
-        logoDir = new java.io.File(logoDirStr);
-      }
+      logoDir = new java.io.File(logoDirStr);
     }
     logoDir.mkdirs();
     logoMap = new java.util.HashMap<String, java.io.File>();

@@ -341,7 +341,7 @@ public class STVReader
 
       if (sage.Sage.DBG) System.out.println("Modules: STVReader load W I Z 0x" + Integer.toHexString(version));
 
-      if (version >= 0x2F || SageConstants.LITE)
+      if (version >= 0x2F)
       {
         // encrypted DB file
 

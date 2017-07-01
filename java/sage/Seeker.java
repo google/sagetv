@@ -199,7 +199,7 @@ public class Seeker implements Hunter
     }
 
     chanWaitAskAdv = Sage.getLong(prefs + CHANNEL_CHANGE_ASK_ADVANCE, 5*Sage.MILLIS_PER_MIN);
-    disableProfilerRecs = SageConstants.LITE || Sage.getBoolean(prefs + DISABLE_PROFILER_RECORDING, true);
+    disableProfilerRecs = Sage.getBoolean(prefs + DISABLE_PROFILER_RECORDING, true);
     dtvMajorMinorChans = Sage.getBoolean(prefs + USE_DTV_MAJOR_MINOR_CHANNELS, false);
     toker = new StringTokenizer(Sage.get(prefs + PICTURE_LIBRARY_IMPORT_FILENAME_EXTENSIONS,
         ".jpg,.gif,.jpeg,.jpe,.png"), ",");
@@ -302,10 +302,7 @@ public class Seeker implements Hunter
           "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", "CommonMusic");
       if (s != null && s.length() > 0)
         defaultArchiveDirs += new File(s).getAbsolutePath() + "," + MUSIC_DIR_MASK + ";";
-      if (SageConstants.LITE && SageConstants.LIBRARY_FUNCTION)
-        Sage.put(prefs + ARCHIVE_DIRECTORY, archiveDirStrs = defaultArchiveDirs);
-      else
-        archiveDirStrs = Sage.get(prefs + ARCHIVE_DIRECTORY, defaultArchiveDirs);
+      archiveDirStrs = Sage.get(prefs + ARCHIVE_DIRECTORY, defaultArchiveDirs);
     }
     else if (Sage.MAC_OS_X)
     {
@@ -461,7 +458,7 @@ public class Seeker implements Hunter
     }
 
 
-    if (!Sage.client && !SageConstants.LITE)
+    if (!Sage.client)
     {
       FileExportPlugin testPlugin = null;
       if (Sage.WINDOWS_OS && !Sage.getBoolean(prefs + "disable_roxio_export_plugin", true))
@@ -6075,7 +6072,7 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
   public boolean getDisableProfilerRecording() { return disableProfilerRecs; }
   public void setDisableProfilerRecording(boolean x)
   {
-    if (!SageConstants.LITE && x != disableProfilerRecs)
+    if (x != disableProfilerRecs)
     {
       Sage.putBoolean(prefs + DISABLE_PROFILER_RECORDING, disableProfilerRecs = x);
       synchronized (this)

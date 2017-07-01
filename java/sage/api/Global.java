@@ -730,9 +730,7 @@ public class Global {
        * @declaration public java.util.Vector GetSageCommandNames();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        java.util.Vector rv = new java.util.Vector(java.util.Arrays.asList(
-            (SageConstants.LITE && false)
-            ? UserEvent.LITE_PRETTY_UENAMES : UserEvent.PRETTY_UENAMES));
+        java.util.Vector rv = new java.util.Vector(java.util.Arrays.asList(UserEvent.PRETTY_UENAMES));
         rv.remove(0); // ?
         rv.remove(0); // ?
         rv.remove(rv.size() - 1); // Anything

@@ -676,7 +676,7 @@ public class Catbert
           overallLastErrorTime = Sage.time();
         }
       }
-      if (!SageConstants.LITE && Sage.q != null)
+      if (Sage.q != null)
         ((byte[])Sage.q)[6] = (byte) (((byte[])Sage.q)[112] + ((byte[])Sage.q)[45]); // piracy protection
     }
     if (!(rv instanceof AsyncTaskID))

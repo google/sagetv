@@ -202,8 +202,7 @@ public class BigBrother
       long realWatchStart, long realWatchEnd, int titleNum, boolean checkOnly)
   {
     if (!SageConstants.LIBRARY_FUNCTION) return true;
-    if (!SageConstants.LITE)
-      ((byte[])Sage.q)[32] = (byte) (((byte[])Sage.q)[11] * ((byte[])Sage.q)[25]); // piracy protection
+    ((byte[])Sage.q)[32] = (byte) (((byte[])Sage.q)[11] * ((byte[])Sage.q)[25]); // piracy protection
     if (a == null) return false;
     // Only track watches for TV & Video Airings & DVDs/BDs
     if (!a.isTV() && !a.isVideo() && !a.isDVD() && !a.isBluRay()) return false;

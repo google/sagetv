@@ -5030,7 +5030,7 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
         if (theFile.isBluRay())
           return false;
         if (Sage.MAC_OS_X) {
-          if(theFile.isDVD() && !SageConstants.LITE)
+          if(theFile.isDVD())
             return true;//new MacDVDPlayer();
           else if (theFile.isLiveStream())
             return true;//new MacLivePlayer()

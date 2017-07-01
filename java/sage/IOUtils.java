@@ -1526,7 +1526,7 @@ public class IOUtils
 
   public static byte[] getCryptoKeys()
   {
-    return (byte[]) (SageConstants.LITE ? UIManager.a : Sage.q);
+    return (byte[]) (Sage.q);
   }
 
   public static String calcMD5(java.io.File f)
