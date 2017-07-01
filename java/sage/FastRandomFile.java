@@ -32,7 +32,7 @@ public class FastRandomFile implements java.io.DataOutput, java.io.DataInput
       mode = mode.substring(0, mode.length() - 1);
     raf = new java.io.RandomAccessFile(name, mode);
     if (crypto)
-      cryptoKeys = (byte[]) (SageConstants.LITE ? UIManager.a : Sage.q);
+      cryptoKeys = (byte[]) (Sage.q);
   }
 
   public FastRandomFile(java.io.File file, String mode, String inCharset) throws java.io.IOException
@@ -43,7 +43,7 @@ public class FastRandomFile implements java.io.DataOutput, java.io.DataInput
       mode = mode.substring(0, mode.length() - 1);
     raf = new java.io.RandomAccessFile(file, mode);
     if (crypto)
-      cryptoKeys = (byte[]) (SageConstants.LITE ? UIManager.a : Sage.q);
+      cryptoKeys = (byte[]) (Sage.q);
   }
 
   public void setCrypto(byte[] crypt)

@@ -255,7 +255,6 @@ public final class Carny implements Runnable
       Person person, int role, String rated, String year, String pr, String network,
       String chanName, int slotType, int[] timeslots, String keyword)
   {
-    if (SageConstants.LITE) return null;
     Agent rv = null;
     try {
       wiz.acquireWriteLock(Wizard.AGENT_CODE);
@@ -397,7 +396,6 @@ public final class Carny implements Runnable
       Person person, int role, String rated, String year, String pr, String network,
       String chanName, int slotType, int[] timeslots, String keyword)
   {
-    if (SageConstants.LITE) return null;
     if (fav == null) return null;
     List<Agent> allFavs = new ArrayList<Agent>();
     Agent oldFav = (Agent) fav.clone();
@@ -572,7 +570,6 @@ public final class Carny implements Runnable
   }
   public void removeFavorite(Agent fav)
   {
-    if (SageConstants.LITE) return;
     if (Sage.DBG) System.out.println("Removing Favorite: " + fav);
     List<Agent> allFavs = new ArrayList<Agent>();
     try {
@@ -771,7 +768,7 @@ public final class Carny implements Runnable
   private void submitWasteJob(Airing air, boolean doWaste, boolean manual)
   {
     // Don't track Wasted for non-TV content
-    if (SageConstants.LITE || !air.isTV()) return;
+    if (!air.isTV()) return;
     if (doWaste)
     {
       wiz.addWasted(air, manual);

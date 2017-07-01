@@ -191,8 +191,7 @@ public class UIManager implements Runnable, UIClient
   private static native int getCursorPosY0();
 
   public static final boolean ANTIALIAS = true;
-  public static final String SAGE = (SageConstants.LITE && false)
-      ? ("SageTVLite V" + Version.VERSION) : ("SageTV V" + Version.VERSION);
+  public static final String SAGE = ("SageTV V" + Version.VERSION);
   public static final DecimalFormat floatFormat = new DecimalFormat("0.###");
 
   public static final int NO_STARTUP = 0;
@@ -2800,13 +2799,6 @@ public class UIManager implements Runnable, UIClient
     }
   }
 
-  // SageTV Lite entry point
-  public static void c(String[] args) throws Throwable
-  {
-    if (SageConstants.LITE)
-      Sage.startup(args);
-  }
-
   public void setIgnoreAllEvents(boolean x)
   {
     ignoreAllEvents = x;
@@ -2826,7 +2818,7 @@ public class UIManager implements Runnable, UIClient
 
   public STVEditor getStudio(boolean createIfNotThere)
   {
-    if (!SageConstants.LITE && ENABLE_STUDIO
+    if (ENABLE_STUDIO
         && (!Sage.isHeadless() || Sage.getBoolean("allow_studio_in_headless",false))
         && Permissions.hasPermission(Permissions.PERMISSION_STUDIO, this))
     {

@@ -1105,7 +1105,6 @@ catch (java.io.IOException e)
   }
   public static boolean hasOSDRenderer(UIManager uiMgr)
   {
-    if (SageConstants.LITE) return false;
     // Check for the old property setting
     String oldPref = uiMgr.get("videoframe/" + ENABLE_PVR350_OSD, null);
     if (oldPref != null)

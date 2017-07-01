@@ -278,7 +278,7 @@ public class EventRouter implements	java.awt.event.MouseListener,
     //if (uiMgr.getUIClientType() == UIClient.REMOTE_UI)
     //	inputPlugins.add(new MiniInput());
     String extraPlugins = uiMgr.get("input_plugin_classes", "");
-    if (!SageConstants.LITE && extraPlugins.length() > 0)
+    if (extraPlugins.length() > 0)
     {
       java.util.StringTokenizer toker = new java.util.StringTokenizer(extraPlugins, ",");
       while (toker.hasMoreTokens())

@@ -15,9 +15,6 @@
  */
 package sage;
 
-import static sage.SageConstants.LITE;
-
-
 import sage.Catbert.AsyncTaskID;
 
 import java.util.ArrayList;
@@ -115,7 +112,6 @@ public class SageTV implements Runnable
   private static SageTV chosenOne = null;
   public static SageTV getInstance() { return chosenOne; }
   public static boolean upgrade = false;
-  public static boolean upgradeFromLite = false;
   public static String upgradedFromVersion = "";
   public static String system = "SageTV";
   public static boolean knownLocalhostClient = false;
@@ -134,9 +130,6 @@ public class SageTV implements Runnable
       }
     }
     upgrade = !UIManager.SAGE.equals(Sage.get("version", ""));
-    if (!LITE && upgrade && Sage.get("version", "").indexOf("SageTVLite") != -1)
-      upgradeFromLite = true;
-
     if (upgrade && !"".equals(Sage.get("version", "")))
     {
       upgradedFromVersion = Sage.get("version", "");
@@ -250,7 +243,7 @@ public class SageTV implements Runnable
       Wizard.prime();
       Sage.setSplashText(Sage.rez("Module_Init", new Object[] { Sage.isTrueClient() ?
           Sage.rez("SageTV_Connection") : Sage.rez("SageTV_Service")}));
-      if (LITE || goAheadWithDeadServer)
+      if (goAheadWithDeadServer)
       {
         if (Sage.isTrueClient())
         {
@@ -363,15 +356,12 @@ public class SageTV implements Runnable
         mmc.addCaptureDeviceManager(new ClientCaptureManager());
       else
       {
-        if (!LITE)
-        {
-          mmc.addCaptureDeviceManager(new NetworkEncoderManager());
-          if ((Sage.MAC_OS_X || Sage.LINUX_OS)) {
-            try {
-              mmc.addCaptureDeviceManager(new HDHomeRunCaptureManager());
-            } catch (Throwable t) {
-              System.out.println("ERROR instantiating HDHomeRun capture manager: " + t);
-            }
+        mmc.addCaptureDeviceManager(new NetworkEncoderManager());
+        if ((Sage.MAC_OS_X || Sage.LINUX_OS)) {
+          try {
+            mmc.addCaptureDeviceManager(new HDHomeRunCaptureManager());
+          } catch (Throwable t) {
+            System.out.println("ERROR instantiating HDHomeRun capture manager: " + t);
           }
         }
         if (Sage.WINDOWS_OS)
@@ -401,7 +391,7 @@ public class SageTV implements Runnable
             System.out.println("ERROR instantiating Mac native capture manager: " + t);
           }
         }
-        else if (!LITE)
+        else
         {
           String customCapDevMgr = Sage.get("mmc/custom_capture_device_mgr", "");
           if (customCapDevMgr.length() > 0)
@@ -472,7 +462,7 @@ public class SageTV implements Runnable
       }
     });
 
-    if (!LITE && !Sage.getBoolean("disable_carny_init", false))
+    if (!Sage.getBoolean("disable_carny_init", false))
       god.lengthyInit(true);
     //		System.gc();
 
@@ -507,13 +497,10 @@ public class SageTV implements Runnable
       t.setPriority(Thread.MIN_PRIORITY);
       t.start();
 
-      if (!LITE)
-      {
-        t = new Thread(god, "Carny");
-        t.setDaemon(true);
-        t.setPriority(Thread.MIN_PRIORITY);
-        t.start();
-      }
+      t = new Thread(god, "Carny");
+      t.setDaemon(true);
+      t.setPriority(Thread.MIN_PRIORITY);
+      t.start();
     }
 
     /*
@@ -523,7 +510,7 @@ public class SageTV implements Runnable
     // We always need the local server for the cases when we have to send active files through the MediaServer
     localServerEnabled = !Sage.client;//Sage.isHeadless();
     // Disable the non-local server for now for the embedded systems
-    serverEnabled = SageConstants.PVR && !LITE && !Sage.client && Sage.getBoolean("enable_server", true);
+    serverEnabled = SageConstants.PVR && !Sage.client && Sage.getBoolean("enable_server", true);
     // Narflex - 02/24/2012 - Since we now have Qian's server code handling all the streaming there should no
     // longer be any reason why we run these servers on SageTVClient on embedded aside from if we added
     // filedownloader playback support later (7818 and 42024 servers)
@@ -574,7 +561,7 @@ public class SageTV implements Runnable
     if (!Sage.isHeadless())
       java.awt.EventQueue.invokeLater(UIManager.getLocalUI());
 
-    if (SageConstants.PVR && !LITE && !Sage.client && Sage.getBoolean("enable_encoding_server", false))
+    if (SageConstants.PVR && !Sage.client && Sage.getBoolean("enable_encoding_server", false))
     {
       String portsString = Sage.get("encoding_server_port", "6969");
       java.util.StringTokenizer toker = new java.util.StringTokenizer(portsString, ",;");
@@ -611,7 +598,7 @@ public class SageTV implements Runnable
     readyForClientConnections = true;
 
     // Setup the 'new device' scanner for hotplugged storage devices
-    if (!LITE && SageConstants.LIBRARY_FUNCTION)
+    if (SageConstants.LIBRARY_FUNCTION)
     {
       hotplugStorageDetector = NewStorageDeviceDetector.getInstance();
       if (Sage.getBoolean("enable_hotplug_storage_detector", true))
@@ -769,7 +756,7 @@ public class SageTV implements Runnable
   }
   private static void launchExtraServers()
   {
-    if (!LITE && SageConstants.SERVER_FUNCTION)
+    if (SageConstants.SERVER_FUNCTION)
     {
       Thread t = new Thread("SageTVDiscoveryServer")
       {

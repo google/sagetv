@@ -297,27 +297,6 @@ public class DShowCaptureManager implements CaptureDeviceManager
     }
 
     capDevs = (DShowCaptureDevice[]) encoderMap.values().toArray(new DShowCaptureDevice[0]);
-
-    if (SageConstants.LITE)
-    {
-      boolean foundConfiguredInput = false;
-      for (int i = 0; i < capDevs.length; i++)
-      {
-        DShowCaptureDevice testEncoder = capDevs[i];
-        if (testEncoder.hasConfiguredInput())
-        {
-          if (foundConfiguredInput)
-          {
-            // Unconfigure all inputs on this device, this is not allowed
-            CaptureDeviceInput[] cdis = testEncoder.getInputs();
-            for (int j = 0; j < cdis.length; j++)
-              cdis[j].setProvider(0);
-          }
-          else
-            foundConfiguredInput = true;
-        }
-      }
-    }
   }
 
   public void freeResources()

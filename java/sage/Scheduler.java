@@ -346,7 +346,7 @@ public class Scheduler implements SchedulerInterface
         // with the current record issue.
         updateSchedule(Sage.time());
         if (!prepped) // once we're prepped, stay that way
-          prepped = (SageConstants.LITE || god.isPrepped());
+          prepped = (god.isPrepped());
       }
       catch (Throwable throwy)
       {

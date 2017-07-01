@@ -15,8 +15,6 @@
  */
 package sage;
 
-import static sage.SageConstants.LITE;
-
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -573,16 +571,6 @@ public class Wizard implements EPGDBPublic2
       {
         dbFile = new File(fileStr);
       }
-      if (SageTV.upgradeFromLite)
-      {
-        // The Wiz file location needs to be changed in the properties file
-        File newDBFile = new File(System.getProperty("user.dir"), dbFile.getName());
-        if (newDBFile.isFile())
-        {
-          dbFile = newDBFile;
-          Sage.put(prefsRoot + DB_FILE, dbFile.toString());
-        }
-      }
       if (!dbFile.isFile() && dbFile.getParentFile() != null)
       {
         dbFile.getParentFile().mkdirs();
@@ -599,16 +587,6 @@ public class Wizard implements EPGDBPublic2
       }
       if (Sage.DBG) System.out.println("dbFile=" + dbFile + "(" + dbFile.length() + ") dbBackupFile=" + dbBackupFile +
           "(" + dbBackupFile.length() + ")");
-      if (SageTV.upgradeFromLite)
-      {
-        // The Wiz file location needs to be changed in the properties file
-        File newDBFile = new File(System.getProperty("user.dir"), dbBackupFile.getName());
-        if (newDBFile.isFile())
-        {
-          dbBackupFile = newDBFile;
-          Sage.put(prefsRoot + DB_BACKUP_FILE, dbBackupFile.toString());
-        }
-      }
       if (!dbBackupFile.isFile() && dbBackupFile.getParentFile() != null)
       {
         dbBackupFile.getParentFile().mkdirs();
@@ -631,7 +609,7 @@ public class Wizard implements EPGDBPublic2
       if (widgetDBFile != null)
       {
         // Make sure we have a Widgets file loaded, check 3 levels deep from where the Wiz file is stored
-        if (!LITE && !widgetDBFile.isFile())
+        if (!widgetDBFile.isFile())
         {
           File foundSTVFile = searchForSTVFile(dbFile.getParentFile(), 3);
           if (foundSTVFile != null)
@@ -7530,17 +7508,10 @@ public class Wizard implements EPGDBPublic2
       try
       {
         long fileLength = dbFile.length();
-        // The SageTVLite Wiz DB files are not encrypted
-        if (SageTV.upgradeFromLite || LITE)
-          in = new SageDataFile(new BufferedSageFile(
-              new LocalSageFile(dbFile, true),
-              BufferedSageFile.READ_BUFFER_SIZE),
-              Sage.I18N_CHARSET);
-        else
-          in = new SageDataFile(new EncryptedSageFile(new BufferedSageFile(
-              new LocalSageFile(dbFile, true),
-              BufferedSageFile.READ_BUFFER_SIZE)),
-              Sage.I18N_CHARSET);
+        in = new SageDataFile(new EncryptedSageFile(new BufferedSageFile(
+            new LocalSageFile(dbFile, true),
+            BufferedSageFile.READ_BUFFER_SIZE)),
+            Sage.I18N_CHARSET);
 
         // Testing shows the DB loads 5% faster if this is false...not much of an optimization, but it helps
         //in.setOptimizeReadFully(false);
