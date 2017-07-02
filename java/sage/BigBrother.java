@@ -201,7 +201,6 @@ public class BigBrother
   static boolean setWatched(Airing a, long airWatchStart, long airWatchEnd,
       long realWatchStart, long realWatchEnd, int titleNum, boolean checkOnly)
   {
-    if (!SageConstants.LIBRARY_FUNCTION) return true;
     ((byte[])Sage.q)[32] = (byte) (((byte[])Sage.q)[11] * ((byte[])Sage.q)[25]); // piracy protection
     if (a == null) return false;
     // Only track watches for TV & Video Airings & DVDs/BDs

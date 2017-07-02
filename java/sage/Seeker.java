@@ -450,7 +450,7 @@ public class Seeker implements Hunter
     }
     if (addMpegMetadataNow)
       Sage.putBoolean("seeker/mpeg_metadata_embedding", true);
-    if (!hasDefaultDVDMF && SageConstants.LIBRARY_FUNCTION)
+    if (!hasDefaultDVDMF)
     {
       MediaFile dvdMF = wiz.addMediaFileSpecial(MediaFile.MEDIAFILE_DEFAULT_DVD_DRIVE, null, null,
           DBObject.MEDIA_MASK_DVD, null);
@@ -591,7 +591,6 @@ public class Seeker implements Hunter
   // related to the main Seeker data structures that would require a sync lock.
   private void checkDirsForFiles(boolean scanVidDirs)
   {
-    if (!SageConstants.LIBRARY_FUNCTION) return;
     if (Sage.DBG) System.out.println("Checking video directories for new files");
     // Move any video files out of our directory that we don't know about anymore.
     MediaFile[] myFiles = wiz.getFiles();
@@ -930,7 +929,7 @@ public class Seeker implements Hunter
   private long lastSeekerGCTime;
   private void libraryImportScan()
   {
-    if (Sage.client || disableLibraryScanning || !SageConstants.LIBRARY_FUNCTION) return;
+    if (Sage.client || disableLibraryScanning) return;
     synchronized (importLock)
     {
       needsAnImport = true;
@@ -1026,7 +1025,6 @@ public class Seeker implements Hunter
 
   private void importLibraryFiles()
   {
-    if (!SageConstants.LIBRARY_FUNCTION) return;
     // Check to see if a full reindex has been set to go
     if (!performFullContentReindex && Sage.getBoolean("force_full_content_reindex", false) && !Sage.getBoolean("disable_full_content_reindex", false))
     {
