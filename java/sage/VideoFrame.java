@@ -4999,11 +4999,11 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
           return false;
         if (theFile.isLiveStream())
           return true;//new DShowLivePlayer();
-        else if (theFile.isDVD() && SageConstants.LIBRARY_FUNCTION)
+        else if (theFile.isDVD())
           return true;//new DShowDVDPlayer();
         else if (theFile.isLiveBufferedStream() && theFile.isMusic() && SageConstants.PVR)
           return true;//new DShowRadioPlayer();
-        else if (theFile.isMusic() && SageConstants.LIBRARY_FUNCTION)
+        else if (theFile.isMusic())
           return true;//new DShowMusicPlayer();
         else if (theFile.isVideo() && MediaFile.isMPEG2LegacySubtype(theFile.getLegacyMediaSubtype()))
           return true; //new DShowTVPlayer();
@@ -5051,7 +5051,7 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
   {
     if (Sage.DBG) System.out.println("VideoFrame creating new media player for file:" + theFile);
     String mpPlugin = getPluginClassForFile(theFile);
-    if (SageConstants.LIBRARY_FUNCTION && mpPlugin.length() > 0)
+    if (mpPlugin.length() > 0)
     {
       try
       {
@@ -5100,11 +5100,11 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
     {
       if (theFile.isLiveStream())
         return new DShowLivePlayer();
-      else if (theFile.isDVD() && SageConstants.LIBRARY_FUNCTION)
+      else if (theFile.isDVD())
         return new DShowDVDPlayer();
       else if (theFile.isLiveBufferedStream() && theFile.isMusic() && SageConstants.PVR)
         return new DShowRadioPlayer();
-      else if (theFile.isMusic() && SageConstants.LIBRARY_FUNCTION && ((!sage.media.format.MediaFormat.AAC.equals(theFile.getPrimaryAudioFormat()) &&
+      else if (theFile.isMusic() && ((!sage.media.format.MediaFormat.AAC.equals(theFile.getPrimaryAudioFormat()) &&
           !sage.media.format.MediaFormat.VORBIS.equals(theFile.getPrimaryAudioFormat()) &&
           !sage.media.format.MediaFormat.FLAC.equals(theFile.getPrimaryAudioFormat()) &&
           !sage.media.format.MediaFormat.ALAC.equals(theFile.getPrimaryAudioFormat()) &&
@@ -5157,7 +5157,7 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
     else
     {
       if (Sage.MAC_OS_X) {
-        if(theFile.isDVD() && SageConstants.LIBRARY_FUNCTION)
+        if(theFile.isDVD())
           return new MacDVDPlayer();
         else if (theFile.isLiveStream())
           return new MacLivePlayer();

@@ -23,7 +23,5 @@ public final class SageConstants
   }
 
   public static final boolean PVR = true;
-  public static final boolean SERVER_FUNCTION = true;
-  public static final boolean LIBRARY_FUNCTION = true;
   public static final int BUILD_VERSION = 441;
 }

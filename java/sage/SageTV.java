@@ -415,8 +415,7 @@ public class SageTV implements Runnable
     mySeeker = SeekerSelector.prime();
     //		System.gc();
 
-    if (SageConstants.LIBRARY_FUNCTION)
-      Ministry.getInstance();
+    Ministry.getInstance();
     if (Sage.WINDOWS_OS)
       DShowTVPlayer.autoOptimize(true);
 
@@ -479,7 +478,7 @@ public class SageTV implements Runnable
     }
 
 
-    if (!Sage.client && SageConstants.LIBRARY_FUNCTION)
+    if (!Sage.client)
       Ministry.getInstance().spawn();
 
     /*		t = new Thread(VideoFrame.getInstance(), "VideoFrame");
@@ -552,7 +551,7 @@ public class SageTV implements Runnable
     }
 
     // Don't launch the servers that could allow a UI connection until we've got the seeker intialized
-    if (SageConstants.SERVER_FUNCTION && (serverEnabled || localServerEnabled))
+    if (serverEnabled || localServerEnabled)
     {
       launchServer();
       launchExtraServers();
@@ -598,47 +597,45 @@ public class SageTV implements Runnable
     readyForClientConnections = true;
 
     // Setup the 'new device' scanner for hotplugged storage devices
-    if (SageConstants.LIBRARY_FUNCTION)
+    hotplugStorageDetector = NewStorageDeviceDetector.getInstance();
+    if (Sage.getBoolean("enable_hotplug_storage_detector", true))
     {
-      hotplugStorageDetector = NewStorageDeviceDetector.getInstance();
-      if (Sage.getBoolean("enable_hotplug_storage_detector", true))
-      {
-        t = new Thread(hotplugStorageDetector, "HotplugStorage");
-        t.setDaemon(true);
-        t.setPriority(Thread.MIN_PRIORITY);
-        t.start();
-      }
-
-      // Now instantiate the main objects that handle generalized SageTV Plugins
-      if (Sage.DBG) System.out.println("Loading all core plugins...");
-      sage.plugin.CorePluginManager.getInstance();
-      if (Sage.DBG) System.out.println("Starting all core plugins...");
-      sage.plugin.CorePluginManager.getInstance().startAllPlugins();
-      if (Sage.DBG) System.out.println("Done starting core plugins.");
-
-      // Launch any extra threads to load services that the user defined
-      String extraThreads = Sage.get("load_at_startup_runnable_classes", "");
-      java.util.StringTokenizer toker = new java.util.StringTokenizer(extraThreads, ";");
-      while (toker.hasMoreTokens())
-      {
-        String x = toker.nextToken();
-        x = x.replaceAll(" ", ""); // bugfix for nielm because this is a common config error
-        try
-        {
-          if (Sage.DBG) System.out.println("Loading startup runnable:" + x);
-          Runnable r = (Runnable) Class.forName(x, true, Sage.extClassLoader).newInstance();
-          t = new Thread(r, "Startup-" + x);
-          t.setDaemon(true);
-          t.start();
-          if (Sage.DBG) System.out.println("Loaded startup runnable:" + x);
-        }
-        catch (Throwable e)
-        {
-          System.out.println("ERROR Loading startup runnable extension of:" + e);
-        }
-      }
-      sage.plugin.PluginEventManager.postEvent(sage.plugin.PluginEventManager.ALL_PLUGINS_LOADED, (Object[]) null);
+      t = new Thread(hotplugStorageDetector, "HotplugStorage");
+      t.setDaemon(true);
+      t.setPriority(Thread.MIN_PRIORITY);
+      t.start();
     }
+
+    // Now instantiate the main objects that handle generalized SageTV Plugins
+    if (Sage.DBG) System.out.println("Loading all core plugins...");
+    sage.plugin.CorePluginManager.getInstance();
+    if (Sage.DBG) System.out.println("Starting all core plugins...");
+    sage.plugin.CorePluginManager.getInstance().startAllPlugins();
+    if (Sage.DBG) System.out.println("Done starting core plugins.");
+
+    // Launch any extra threads to load services that the user defined
+    String extraThreads = Sage.get("load_at_startup_runnable_classes", "");
+    java.util.StringTokenizer toker = new java.util.StringTokenizer(extraThreads, ";");
+    while (toker.hasMoreTokens())
+    {
+      String x = toker.nextToken();
+      x = x.replaceAll(" ", ""); // bugfix for nielm because this is a common config error
+      try
+      {
+        if (Sage.DBG) System.out.println("Loading startup runnable:" + x);
+        Runnable r = (Runnable) Class.forName(x, true, Sage.extClassLoader).newInstance();
+        t = new Thread(r, "Startup-" + x);
+        t.setDaemon(true);
+        t.start();
+        if (Sage.DBG) System.out.println("Loaded startup runnable:" + x);
+      }
+      catch (Throwable e)
+      {
+        System.out.println("ERROR Loading startup runnable extension of:" + e);
+      }
+    }
+    sage.plugin.PluginEventManager.postEvent(sage.plugin.PluginEventManager.ALL_PLUGINS_LOADED, (Object[]) null);
+
     sage.plugin.PluginEventManager.getInstance().startup();
     allPluginsLoaded = true;
 
@@ -694,7 +691,6 @@ public class SageTV implements Runnable
   }
   private static void launchServer()
   {
-    if (!SageConstants.SERVER_FUNCTION) return;
     Thread t = new Thread("SageTVServer")
     {
       public void run()
@@ -756,124 +752,121 @@ public class SageTV implements Runnable
   }
   private static void launchExtraServers()
   {
-    if (SageConstants.SERVER_FUNCTION)
+    Thread t = new Thread("SageTVDiscoveryServer")
     {
-      Thread t = new Thread("SageTVDiscoveryServer")
+      public void run()
       {
-        public void run()
+        discoverySocket = null;
+        while (alive && (serverEnabled || localServerEnabled) && discoverySocket == null)
         {
-          discoverySocket = null;
-          while (alive && (serverEnabled || localServerEnabled) && discoverySocket == null)
+          try
           {
-            try
-            {
-              discoverySocket = new java.net.DatagramSocket(Sage.getInt("discovery_port", 8270));
-              //discoverySocket.setBroadcast(true);
-            }
-            catch (java.io.IOException e)
-            {
-              System.out.println("Error creating discovery socket:" + e);
-              try{Thread.sleep(15000);}catch(Exception e1){}
-            }
+            discoverySocket = new java.net.DatagramSocket(Sage.getInt("discovery_port", 8270));
+            //discoverySocket.setBroadcast(true);
           }
-          if (Sage.DBG) System.out.println("SageTVDiscoveryServer was instantiated.");
-          while (alive && (serverEnabled || localServerEnabled) && discoverySocket != null)
+          catch (java.io.IOException e)
           {
-            try
+            System.out.println("Error creating discovery socket:" + e);
+            try{Thread.sleep(15000);}catch(Exception e1){}
+          }
+        }
+        if (Sage.DBG) System.out.println("SageTVDiscoveryServer was instantiated.");
+        while (alive && (serverEnabled || localServerEnabled) && discoverySocket != null)
+        {
+          try
+          {
+            java.net.DatagramPacket packet = new java.net.DatagramPacket(new byte[512], 512);
+            discoverySocket.receive(packet);
+            if (Sage.DBG) System.out.println("Server got broadcast packet: " + packet);
+            if (alive && serverEnabled)
             {
-              java.net.DatagramPacket packet = new java.net.DatagramPacket(new byte[512], 512);
-              discoverySocket.receive(packet);
-              if (Sage.DBG) System.out.println("Server got broadcast packet: " + packet);
-              if (alive && serverEnabled)
+              // The first 3 bytes should be STV, and then the next 3 bytes are the version info.
+              // It sends 32 bytes so we don't have issues with not having enough data for it to flush or whatever
+              if (packet.getLength() >= 6)
               {
-                // The first 3 bytes should be STV, and then the next 3 bytes are the version info.
-                // It sends 32 bytes so we don't have issues with not having enough data for it to flush or whatever
-                if (packet.getLength() >= 6)
+                byte[] data = packet.getData();
+                if (data[0] == 'S' && data[1] == 'T' && data[2] == 'V')
                 {
-                  byte[] data = packet.getData();
-                  if (data[0] == 'S' && data[1] == 'T' && data[2] == 'V')
+                  byte majVer = data[3];
+                  byte minVer = data[4];
+                  byte buildVer = data[5];
+                  if (majVer > Sage.CLIENT_COMPATIBLE_MAJOR_VERSION ||
+                      (majVer == Sage.CLIENT_COMPATIBLE_MAJOR_VERSION &&
+                      (minVer > Sage.CLIENT_COMPATIBLE_MINOR_VERSION ||
+                          (minVer == Sage.CLIENT_COMPATIBLE_MINOR_VERSION &&
+                          buildVer >= Sage.CLIENT_COMPATIBLE_MICRO_VERSION))))
                   {
-                    byte majVer = data[3];
-                    byte minVer = data[4];
-                    byte buildVer = data[5];
-                    if (majVer > Sage.CLIENT_COMPATIBLE_MAJOR_VERSION ||
-                        (majVer == Sage.CLIENT_COMPATIBLE_MAJOR_VERSION &&
-                        (minVer > Sage.CLIENT_COMPATIBLE_MINOR_VERSION ||
-                            (minVer == Sage.CLIENT_COMPATIBLE_MINOR_VERSION &&
-                            buildVer >= Sage.CLIENT_COMPATIBLE_MICRO_VERSION))))
-                    {
-                      // Compatible version, send back the response with our version info in there
-                      data[3] = Version.MAJOR_VERSION;
-                      data[4] = Version.MINOR_VERSION;
-                      data[5] = Version.MICRO_VERSION;
-                      // 2 bytes for the port
-                      int sagetvport = Sage.getInt(SAGETV_PORT, DEFAULT_SAGETV_PORT);
-                      data[6] = (byte)((sagetvport >> 8) & 0xFF);
-                      data[7] = (byte)(sagetvport & 0xFF);
-                      // Use the hostname for our description currently
-                      String desc = SageTV.hostname;
-                      byte[] descBytes = desc.getBytes(Sage.I18N_CHARSET);
-                      data[8] = (byte)descBytes.length;
-                      System.arraycopy(descBytes, 0, data, 9, descBytes.length);
-                      data[9+descBytes.length]=1;
-                      packet.setLength(9 + descBytes.length + 1);
-                      if (Sage.DBG) System.out.println("Server sent back discovery data:" + packet);
-                      discoverySocket.send(packet);
-                    }
+                    // Compatible version, send back the response with our version info in there
+                    data[3] = Version.MAJOR_VERSION;
+                    data[4] = Version.MINOR_VERSION;
+                    data[5] = Version.MICRO_VERSION;
+                    // 2 bytes for the port
+                    int sagetvport = Sage.getInt(SAGETV_PORT, DEFAULT_SAGETV_PORT);
+                    data[6] = (byte)((sagetvport >> 8) & 0xFF);
+                    data[7] = (byte)(sagetvport & 0xFF);
+                    // Use the hostname for our description currently
+                    String desc = SageTV.hostname;
+                    byte[] descBytes = desc.getBytes(Sage.I18N_CHARSET);
+                    data[8] = (byte)descBytes.length;
+                    System.arraycopy(descBytes, 0, data, 9, descBytes.length);
+                    data[9+descBytes.length]=1;
+                    packet.setLength(9 + descBytes.length + 1);
+                    if (Sage.DBG) System.out.println("Server sent back discovery data:" + packet);
+                    discoverySocket.send(packet);
                   }
                 }
               }
             }
-            catch (java.io.IOException e)
-            {
-              if (alive)
-                System.out.println("Error w/SageTV client connection:" + e);
-              try{Thread.sleep(100);}catch(Exception e1){} // if its closing, let it close
-            }
           }
-          try
+          catch (java.io.IOException e)
           {
-            discoverySocket.close();
-          }catch (Exception e){}
+            if (alive)
+              System.out.println("Error w/SageTV client connection:" + e);
+            try{Thread.sleep(100);}catch(Exception e1){} // if its closing, let it close
+          }
         }
-      };
-      t.setDaemon(true);
-      t.start();
-
-      if (serverEnabled && Sage.getBoolean("enable_media_extender_server", true))
-      {
-        launchMiniDiscoveryServer();
-        miniServer = new MiniServer();
-        miniServer.StartServer();
-
-        // Does the registration with the Locator system. It has a property which it reads that allows disabling of it.
         try
         {
-          locatorClient = new sage.locator.LocatorRegistrationClient();
+          discoverySocket.close();
+        }catch (Exception e){}
+      }
+    };
+    t.setDaemon(true);
+    t.start();
+
+    if (serverEnabled && Sage.getBoolean("enable_media_extender_server", true))
+    {
+      launchMiniDiscoveryServer();
+      miniServer = new MiniServer();
+      miniServer.StartServer();
+
+      // Does the registration with the Locator system. It has a property which it reads that allows disabling of it.
+      try
+      {
+        locatorClient = new sage.locator.LocatorRegistrationClient();
+      }
+      catch (Exception e)
+      {
+        System.out.println("ERROR: Unable to create Locator registration client:" + e);
+      }
+
+      // Setup our UPnP router manager
+      if (psnatmgr == null)
+      {
+        try
+        {
+          psnatmgr = (AbstractedService)Class.forName("sage.upnp.PlaceshifterNATManager").newInstance();
+          psnatmgr.start();
         }
         catch (Exception e)
         {
-          System.out.println("ERROR: Unable to create Locator registration client:" + e);
-        }
-
-        // Setup our UPnP router manager
-        if (psnatmgr == null)
-        {
-          try
-          {
-            psnatmgr = (AbstractedService)Class.forName("sage.upnp.PlaceshifterNATManager").newInstance();
-            psnatmgr.start();
-          }
-          catch (Exception e)
-          {
-            System.out.println("ERROR instantiating sage.upnp.PlaceshifterNATManager of " + e);
-          }
+          System.out.println("ERROR instantiating sage.upnp.PlaceshifterNATManager of " + e);
         }
       }
-      else if (localServerEnabled)
-      {
-        MiniClientSageRenderer.startUIServer(serverEnabled);
-      }
+    }
+    else if (localServerEnabled)
+    {
+      MiniClientSageRenderer.startUIServer(serverEnabled);
     }
   }
 
