@@ -486,15 +486,14 @@ public class MediaFile extends DBObject implements SegmentedFile
       out.writeLong(times[2*i]);
       out.writeLong(times[2*i + 1]);
     }
-    if (!Wizard.COMPACT_DB || SageConstants.PVR)
-      out.writeUTF(videoDirectory);
+    out.writeUTF(videoDirectory);
     if (!Wizard.COMPACT_DB)
     {
       out.writeUTF(name);
       out.writeBoolean(archive);
       out.writeBoolean(true); // padding to help avoid reversing db encryption algorithms
     }
-    else if (SageConstants.PVR)
+    else
       out.writeBoolean(archive);
     out.writeInt(infoAiringID);
     if (!Wizard.COMPACT_DB)
@@ -504,7 +503,7 @@ public class MediaFile extends DBObject implements SegmentedFile
       out.writeByte((byte)0); // Media type
       out.writeByte((byte)0); // Media subtype
     }
-    else if (SageConstants.PVR)
+    else
       out.writeUTF(encodedBy);
     out.writeByte(generalType);
     out.writeByte(acquisitionTech);

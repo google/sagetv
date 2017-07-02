@@ -126,7 +126,7 @@ public class FSManager implements Runnable
           }
         }
       }
-      if (!Sage.client && SageConstants.PVR)
+      if (!Sage.client)
       {
         // Do our encoder HALT detection here so we can run it more frequent than what the Seeker does
         seeky.checkForEncoderHalts();
