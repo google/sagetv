@@ -208,7 +208,7 @@ public class Wizard implements EPGDBPublic2
   // 85 fixed Wizard bug where we were loading using BYTE_CHARSET instead of I18N_CHARSET
   // 86 added support for encoded Schedules Direct image URLs for Channel, Show and SeriesInfo objects
   // 87 added support for encoded Schedules Direct image URLs for Person
-  public static byte VERSION = SageConstants.PVR ? 0x57 : 0x46;
+  public static byte VERSION = 0x57;
   public static final byte BAD_VERSION = 0x00;
 
   // This flag is to deal with the problem where we used 32-bit ints for Airing durations in compact DB mode. For PVR
@@ -440,17 +440,11 @@ public class Wizard implements EPGDBPublic2
 
   static
   {
-    if (SageConstants.PVR)
-      WRITE_ORDER = new byte[] { YEAR_CODE, NETWORK_CODE, TITLE_CODE, CHANNEL_CODE, BONUS_CODE, PEOPLE_CODE, SUBCATEGORY_CODE,
-        RATED_CODE, PR_CODE, ER_CODE, CATEGORY_CODE, PRIME_TITLE_CODE,
-        SHOW_CODE, AIRING_CODE, MANUAL_CODE, MEDIAFILE_CODE, WATCH_CODE, AGENT_CODE,
-        WASTED_CODE, PLAYLIST_CODE, TVEDITORIAL_CODE, SERIESINFO_CODE, USERRECORD_CODE };
-    else
-      WRITE_ORDER = new byte[] { YEAR_CODE, NETWORK_CODE, TITLE_CODE, CHANNEL_CODE, BONUS_CODE, PEOPLE_CODE, SUBCATEGORY_CODE,
-        RATED_CODE, PR_CODE, ER_CODE, CATEGORY_CODE, PRIME_TITLE_CODE,
-        SHOW_CODE, AIRING_CODE, MANUAL_CODE, MEDIAFILE_CODE, WATCH_CODE, AGENT_CODE,
-        WASTED_CODE, PLAYLIST_CODE, TVEDITORIAL_CODE, SERIESINFO_CODE };
-  }
+    WRITE_ORDER = new byte[] { YEAR_CODE, NETWORK_CODE, TITLE_CODE, CHANNEL_CODE, BONUS_CODE, PEOPLE_CODE, SUBCATEGORY_CODE,
+      RATED_CODE, PR_CODE, ER_CODE, CATEGORY_CODE, PRIME_TITLE_CODE,
+      SHOW_CODE, AIRING_CODE, MANUAL_CODE, MEDIAFILE_CODE, WATCH_CODE, AGENT_CODE,
+      WASTED_CODE, PLAYLIST_CODE, TVEDITORIAL_CODE, SERIESINFO_CODE, USERRECORD_CODE };
+ }
   private static final Object instanceLock = new Object();
 
   private static class WizardHolder
@@ -2386,8 +2380,7 @@ public class Wizard implements EPGDBPublic2
       }
     }
 
-    if (SageConstants.PVR)
-      god.submitJob(new Object[] { Carny.STD_JOB, null });
+    god.submitJob(new Object[] { Carny.STD_JOB, null });
 
     // Only update maintenance time for a Full maintenance
     if ( maintenanceType == MaintenanceType.FULL ){
@@ -2489,7 +2482,7 @@ public class Wizard implements EPGDBPublic2
       if (!dbBackupFile.isFile() || dbBackupFile.length() == 0)
         saveNow = true;
       long loadEnd = Sage.time();
-      if (!Sage.client && SageConstants.PVR)
+      if (!Sage.client)
       {
         if (Sage.getBoolean(prefsRoot + CLEAR_PROFILE, false))
         {

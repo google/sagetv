@@ -337,78 +337,72 @@ public class SageTV implements Runnable
     // all of the plugin objects are actually loaded.
     sage.plugin.PluginEventManager.getInstance();
 
-    if (SageConstants.PVR)
-    {
-      Sage.setSplashText(Sage.rez("Module_Init", new Object[] { Sage.rez("EPG") }));
-      guide = EPG.prime();
-      //		System.gc();
-      Sage.setSplashText(Sage.rez("Module_Init", new Object[] { Sage.rez("Profiler") }));
-      god = Carny.prime();
-      sage.msg.MsgManager.getInstance();
-      System.gc();
-      Sage.setSplashText(Sage.rez("Module_Init", new Object[] { Sage.rez("Acquisition_System") }));
-      mmc = MMC.getInstance();
-    }
+    Sage.setSplashText(Sage.rez("Module_Init", new Object[] { Sage.rez("EPG") }));
+    guide = EPG.prime();
+    //		System.gc();
+    Sage.setSplashText(Sage.rez("Module_Init", new Object[] { Sage.rez("Profiler") }));
+    god = Carny.prime();
+    sage.msg.MsgManager.getInstance();
+    System.gc();
+    Sage.setSplashText(Sage.rez("Module_Init", new Object[] { Sage.rez("Acquisition_System") }));
+    mmc = MMC.getInstance();
 
-    if (SageConstants.PVR)
+    if (Sage.client)
+      mmc.addCaptureDeviceManager(new ClientCaptureManager());
+    else
     {
-      if (Sage.client)
-        mmc.addCaptureDeviceManager(new ClientCaptureManager());
+      mmc.addCaptureDeviceManager(new NetworkEncoderManager());
+      if ((Sage.MAC_OS_X || Sage.LINUX_OS)) {
+        try {
+          mmc.addCaptureDeviceManager(new HDHomeRunCaptureManager());
+        } catch (Throwable t) {
+          System.out.println("ERROR instantiating HDHomeRun capture manager: " + t);
+        }
+      }
+      if (Sage.WINDOWS_OS)
+        mmc.addCaptureDeviceManager(new DShowCaptureManager());
+      else if (Sage.LINUX_OS)
+      {
+        if (!Sage.getBoolean("linux/enable_vweb_capture",false))
+        {
+          mmc.addCaptureDeviceManager(new LinuxIVTVCaptureManager());
+        }
+        if (!Sage.getBoolean("linux/disable_dvb_capture",false))
+        {
+          mmc.addCaptureDeviceManager(new LinuxDVBCaptureManager());
+        }
+        if (Sage.getBoolean("linux/enable_firewire_capture",false))
+        {
+          mmc.addCaptureDeviceManager(new LinuxFirewireCaptureManager());
+        }
+      }
+      else if (Sage.MAC_OS_X)
+      {
+        // TODO: roll Trinity into MacNative...
+        mmc.addCaptureDeviceManager(new MacTrinityCaptureManager());
+        try {
+          mmc.addCaptureDeviceManager(new MacNativeCaptureManager());
+        } catch (Throwable t) {
+          System.out.println("ERROR instantiating Mac native capture manager: " + t);
+        }
+      }
       else
       {
-        mmc.addCaptureDeviceManager(new NetworkEncoderManager());
-        if ((Sage.MAC_OS_X || Sage.LINUX_OS)) {
-          try {
-            mmc.addCaptureDeviceManager(new HDHomeRunCaptureManager());
-          } catch (Throwable t) {
-            System.out.println("ERROR instantiating HDHomeRun capture manager: " + t);
-          }
-        }
-        if (Sage.WINDOWS_OS)
-          mmc.addCaptureDeviceManager(new DShowCaptureManager());
-        else if (Sage.LINUX_OS)
+        String customCapDevMgr = Sage.get("mmc/custom_capture_device_mgr", "");
+        if (customCapDevMgr.length() > 0)
         {
-          if (!Sage.getBoolean("linux/enable_vweb_capture",false))
+          try
           {
-            mmc.addCaptureDeviceManager(new LinuxIVTVCaptureManager());
+            mmc.addCaptureDeviceManager((CaptureDeviceManager)Class.forName(customCapDevMgr).newInstance());
           }
-          if (!Sage.getBoolean("linux/disable_dvb_capture",false))
+          catch (Exception e)
           {
-            mmc.addCaptureDeviceManager(new LinuxDVBCaptureManager());
-          }
-          if (Sage.getBoolean("linux/enable_firewire_capture",false))
-          {
-            mmc.addCaptureDeviceManager(new LinuxFirewireCaptureManager());
-          }
-        }
-        else if (Sage.MAC_OS_X)
-        {
-          // TODO: roll Trinity into MacNative...
-          mmc.addCaptureDeviceManager(new MacTrinityCaptureManager());
-          try {
-            mmc.addCaptureDeviceManager(new MacNativeCaptureManager());
-          } catch (Throwable t) {
-            System.out.println("ERROR instantiating Mac native capture manager: " + t);
-          }
-        }
-        else
-        {
-          String customCapDevMgr = Sage.get("mmc/custom_capture_device_mgr", "");
-          if (customCapDevMgr.length() > 0)
-          {
-            try
-            {
-              mmc.addCaptureDeviceManager((CaptureDeviceManager)Class.forName(customCapDevMgr).newInstance());
-            }
-            catch (Exception e)
-            {
-              System.out.println("ERROR instantiating custom capture device mgr \"" + customCapDevMgr + "\" of " + e);
-            }
+            System.out.println("ERROR instantiating custom capture device mgr \"" + customCapDevMgr + "\" of " + e);
           }
         }
       }
-      mmc.prime();
     }
+    mmc.prime();
 
     //		System.gc();
     Sage.setSplashText(Sage.rez("Module_Init", new Object[] { Sage.rez("SageTV_Core") }));
@@ -469,13 +463,10 @@ public class SageTV implements Runnable
     //t.setDaemon(true);
     t.start();
 
-    if (SageConstants.PVR)
-    {
-      sage.msg.MsgManager.getInstance().init();
-      t = new Thread(sage.msg.MsgManager.getInstance(), "MsgManager");
-      t.setDaemon(true);
-      t.start();
-    }
+    sage.msg.MsgManager.getInstance().init();
+    t = new Thread(sage.msg.MsgManager.getInstance(), "MsgManager");
+    t.setDaemon(true);
+    t.start();
 
 
     if (!Sage.client)
@@ -489,18 +480,15 @@ public class SageTV implements Runnable
     //t.setDaemon(true);
     //t.start();
 
-    if (SageConstants.PVR)
-    {
-      t = new Thread(guide, "EPG");
-      t.setDaemon(true);
-      t.setPriority(Thread.MIN_PRIORITY);
-      t.start();
+    t = new Thread(guide, "EPG");
+    t.setDaemon(true);
+    t.setPriority(Thread.MIN_PRIORITY);
+    t.start();
 
-      t = new Thread(god, "Carny");
-      t.setDaemon(true);
-      t.setPriority(Thread.MIN_PRIORITY);
-      t.start();
-    }
+    t = new Thread(god, "Carny");
+    t.setDaemon(true);
+    t.setPriority(Thread.MIN_PRIORITY);
+    t.start();
 
     /*
      * NOTE: We have to launch the MediaServer before the Seeker finished it's startup. Otherwise a network encoder could try
@@ -509,7 +497,7 @@ public class SageTV implements Runnable
     // We always need the local server for the cases when we have to send active files through the MediaServer
     localServerEnabled = !Sage.client;//Sage.isHeadless();
     // Disable the non-local server for now for the embedded systems
-    serverEnabled = SageConstants.PVR && !Sage.client && Sage.getBoolean("enable_server", true);
+    serverEnabled = !Sage.client && Sage.getBoolean("enable_server", true);
     // Narflex - 02/24/2012 - Since we now have Qian's server code handling all the streaming there should no
     // longer be any reason why we run these servers on SageTVClient on embedded aside from if we added
     // filedownloader playback support later (7818 and 42024 servers)
@@ -518,13 +506,10 @@ public class SageTV implements Runnable
       launchMediaServer();
     }
 
-    if (SageConstants.PVR)
-    {
-      t = new Thread(myScheduler = SchedulerSelector.getInstance(), "Scheduler");
-      t.setDaemon(true);
-      t.setPriority(Thread.MIN_PRIORITY);
-      t.start();
-    }
+    t = new Thread(myScheduler = SchedulerSelector.getInstance(), "Scheduler");
+    t.setDaemon(true);
+    t.setPriority(Thread.MIN_PRIORITY);
+    t.start();
 
     if (Sage.WINDOWS_OS || Sage.MAC_OS_X)
     {
@@ -544,7 +529,7 @@ public class SageTV implements Runnable
     Sage.setSplashText(Sage.rez("SageTV_Init_Wait"));
     int maxSeekWait = 30000; // Up this back to 30 seconds from 10....if there's a really nasty schedule I want to be sure it's generated
     // before we go into the UI and fail to display default video.
-    while (!Sage.client && !mySeeker.isPrepped() && maxSeekWait > 0 && SageConstants.PVR && mmc.getConfiguredCaptureDevices().length > 0)
+    while (!Sage.client && !mySeeker.isPrepped() && maxSeekWait > 0 && mmc.getConfiguredCaptureDevices().length > 0)
     {
       try{Thread.sleep(250);}catch(Exception e){}
       maxSeekWait -= 250;
@@ -560,7 +545,7 @@ public class SageTV implements Runnable
     if (!Sage.isHeadless())
       java.awt.EventQueue.invokeLater(UIManager.getLocalUI());
 
-    if (SageConstants.PVR && !Sage.client && Sage.getBoolean("enable_encoding_server", false))
+    if (!Sage.client && Sage.getBoolean("enable_encoding_server", false))
     {
       String portsString = Sage.get("encoding_server_port", "6969");
       java.util.StringTokenizer toker = new java.util.StringTokenizer(portsString, ",;");
@@ -1212,8 +1197,7 @@ public class SageTV implements Runnable
     if (mmc != null)
       mmc.goodbye();
     if (Sage.DBG) System.out.println("Killed MMC.");
-    if (SageConstants.PVR)
-      sage.msg.MsgManager.getInstance().kill();
+    sage.msg.MsgManager.getInstance().kill();
     java.util.Iterator uiWalker = UIManager.getUIIterator();
     while (uiWalker.hasNext())
       ((UIManager) uiWalker.next()).goodbye();

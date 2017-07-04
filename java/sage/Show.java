@@ -699,15 +699,12 @@ public final class Show extends DBObject
     out.writeInt((year == null) ? 0 : (useLookupIdx ? year.lookupIdx : year.id));
     out.writeInt((pr == null) ? 0 : (useLookupIdx ? pr.lookupIdx : pr.id));
 
-    if (!Wizard.COMPACT_DB || SageConstants.PVR)
-    {
-      if (!Wizard.COMPACT_DB)
-        out.writeInt(bonuses.length);
-      else
-        out.writeShort(bonuses.length);
-      for (int i = 0; i < bonuses.length; i++)
-        out.writeInt(useLookupIdx ? bonuses[i].lookupIdx : bonuses[i].id);
-    }
+    if (!Wizard.COMPACT_DB)
+      out.writeInt(bonuses.length);
+    else
+      out.writeShort(bonuses.length);
+    for (int i = 0; i < bonuses.length; i++)
+      out.writeInt(useLookupIdx ? bonuses[i].lookupIdx : bonuses[i].id);
 
     long lastWatchedData = lastWatched;
     if (dontLike) {

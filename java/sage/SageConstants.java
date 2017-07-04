@@ -22,6 +22,5 @@ public final class SageConstants
     // Non-instantiable
   }
 
-  public static final boolean PVR = true;
   public static final int BUILD_VERSION = 441;
 }

@@ -93,8 +93,7 @@ public class MetaImage
   private static final int URL_IMAGE_LOAD_DELAY = 150;//Sage.getInt("url_image_load_delay", 750);
   private static final boolean ENABLE_JPEG_AUTOROTATE = Sage.getBoolean("autorotate_jpeg_images", true);
   private static final int MAX_CACHED_URL_IMAGES = Sage.getInt("num_cached_url_images", 1000);
-  private static final boolean ENABLE_OFFLINE_URL_CACHE =
-      SageConstants.PVR && Sage.get("ui/thumbnail_folder", "GeneratedThumbnails").length() > 0;
+  private static final boolean ENABLE_OFFLINE_URL_CACHE = Sage.get("ui/thumbnail_folder", "GeneratedThumbnails").length() > 0;
   private static final boolean DELETE_TRACKED_LOCAL_CACHE_FILE_ON_IMAGE_LOAD = false;
   private static final long URL_RETRY_TIMEOUT_MILLIS =
       Sage.getLong("images_retry_timeout_mins", 5) * Sage.MILLIS_PER_MIN;

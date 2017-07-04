@@ -2870,7 +2870,7 @@ public class Global {
     });
     rft.put(new PredefinedJEPFunction("Global", "IsPVR", true)
     {
-      boolean forcedPVRMode = SageConstants.PVR;
+      boolean forcedPVRMode = true;
       {
         String res = Sage.get("forced_pvr_mode", null);
         if (res != null)

@@ -5001,7 +5001,7 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
           return true;//new DShowLivePlayer();
         else if (theFile.isDVD())
           return true;//new DShowDVDPlayer();
-        else if (theFile.isLiveBufferedStream() && theFile.isMusic() && SageConstants.PVR)
+        else if (theFile.isLiveBufferedStream() && theFile.isMusic())
           return true;//new DShowRadioPlayer();
         else if (theFile.isMusic())
           return true;//new DShowMusicPlayer();
@@ -5102,7 +5102,7 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
         return new DShowLivePlayer();
       else if (theFile.isDVD())
         return new DShowDVDPlayer();
-      else if (theFile.isLiveBufferedStream() && theFile.isMusic() && SageConstants.PVR)
+      else if (theFile.isLiveBufferedStream() && theFile.isMusic())
         return new DShowRadioPlayer();
       else if (theFile.isMusic() && ((!sage.media.format.MediaFormat.AAC.equals(theFile.getPrimaryAudioFormat()) &&
           !sage.media.format.MediaFormat.VORBIS.equals(theFile.getPrimaryAudioFormat()) &&

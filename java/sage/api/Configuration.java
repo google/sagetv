@@ -1868,7 +1868,7 @@ public class Configuration{
        * @declaration public boolean IsSageTVServerEnabled();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return Boolean.valueOf(Sage.getBoolean("enable_server", SageConstants.PVR));
+        return Boolean.valueOf(Sage.getBoolean("enable_server", true));
       }});
     rft.put(new PredefinedJEPFunction("Configuration", "SetSageTVServerEnabled", 1, new String[]{"Enabled"}, true)
     {

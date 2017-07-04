@@ -517,13 +517,9 @@ public class Airing extends DBObject implements Schedulable
   {
     super.write(out, flags);
     out.writeInt(showID);
-    if (!Wizard.COMPACT_DB || SageConstants.PVR)
-      out.writeInt(stationID);
+    out.writeInt(stationID);
     out.writeLong(time);
-    if (!Wizard.COMPACT_DB || SageConstants.PVR)
-      out.writeLong(duration);
-    else
-      out.writeInt((int)duration);
+    out.writeLong(duration);
     out.writeByte(partsB);
     out.writeInt(miscB);
     out.writeByte(prB);

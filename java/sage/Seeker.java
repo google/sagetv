@@ -174,7 +174,7 @@ public class Seeker implements Hunter
         {}
       }
     }
-    if (videoStore.isEmpty() && SageConstants.PVR)
+    if (videoStore.isEmpty())
     {
       if (Sage.WINDOWS_OS && !Sage.isHeadless())
         videoStore.add(new VideoStorage(Sage.VISTA_OS ? new File(Sage.readStringValue(Sage.HKEY_CURRENT_USER,
@@ -323,7 +323,7 @@ public class Seeker implements Hunter
       defaultArchiveDirs += new File("/Users/Shared/SageTV/Video").getAbsolutePath() + "," + VIDEO_DIR_MASK + ";";
       archiveDirStrs = Sage.get(prefs + ARCHIVE_DIRECTORY, defaultArchiveDirs);
     }
-    else if (Sage.LINUX_OS && SageConstants.PVR)
+    else if (Sage.LINUX_OS)
     {
       String defaultArchiveDirs = SageTV.LINUX_ROOT_MEDIA_PATH + "/videos" + "," + VIDEO_DIR_MASK + ";";
       new File(SageTV.LINUX_ROOT_MEDIA_PATH + "/videos").mkdirs();
@@ -410,7 +410,7 @@ public class Seeker implements Hunter
 
   private void init()
   {
-    mmcPresent = Sage.getBoolean(prefs + MMC_PRESENT, true) && (Sage.MAC_OS_X || mmc.getCaptureDeviceNames().length > 0) && !Sage.client && SageConstants.PVR;
+    mmcPresent = Sage.getBoolean(prefs + MMC_PRESENT, true) && (Sage.MAC_OS_X || mmc.getCaptureDeviceNames().length > 0) && !Sage.client;
     defaultQuality = MMC.cleanQualityName(Sage.get(prefs + DEFAULT_RECORDING_QUALITY, Sage.rez("Great")));
 
     fastMuxSwitch = Sage.getBoolean(prefs + FAST_MUX_SWITCH, true);
@@ -1417,20 +1417,17 @@ public class Seeker implements Hunter
       controlImportCPUUsage();
 
     // If this is a video storage directory then skip it so we don't double import (if it's video)
-    if (SageConstants.PVR)
-    {
-      File[] vidDirs = getVideoStoreDirectories();
-      for (int i = 0; i < vidDirs.length; i++)
-        if (vidDirs[i].equals(importDir))
+    File[] vidDirs = getVideoStoreDirectories();
+    for (int i = 0; i < vidDirs.length; i++)
+      if (vidDirs[i].equals(importDir))
+      {
+        importMask = importMask & ~VIDEO_DIR_MASK;
+        if (importMask == 0)
         {
-          importMask = importMask & ~VIDEO_DIR_MASK;
-          if (importMask == 0)
-          {
-            if (Sage.DBG) System.out.println("Skipping video import dir that's also a recording dir:" + vidDirs[i]);
-            return;
-          }
+          if (Sage.DBG) System.out.println("Skipping video import dir that's also a recording dir:" + vidDirs[i]);
+          return;
         }
-    }
+      }
 
     String[] testFiles = importDir.list();
     String importDirPath = importDir.getAbsolutePath();
@@ -3311,7 +3308,7 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
     if (!Sage.getBoolean("seeker/disable_video_directory_verifications", false))
       verifyFiles(false, true);
 
-    if (!sched.isPrepped() || !SageConstants.PVR) return true;
+    if (!sched.isPrepped()) return true;
 
     enforceKeepAtMost();
 
@@ -3621,8 +3618,7 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
 
     long altExpireTime = Sage.LINUX_OS ? Sage.getLong("window_size", 0) : 0;
 
-    if (SageConstants.PVR)
-      verifyFiles(true, false);
+    verifyFiles(true, false);
 
     Thread watchdog = new Thread("SeekerWatchdog")
     {
