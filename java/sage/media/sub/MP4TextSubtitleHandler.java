@@ -58,7 +58,7 @@ public class MP4TextSubtitleHandler extends SubtitleHandler
     String rawText;
     int sizeOffset = 0;
 
-    subtitleLock.readLock();
+    subtitleLock.readLock().lock();
 
     try
     {
