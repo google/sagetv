@@ -51,9 +51,6 @@ INCLUDE= -I../Native2.0/NativeCore
 CFLAGS=-fPIC -D_FILE_OFFSET_BITS=64 -Wall -Wno-missing-braces -DLinux $(INCLUDE) $(JSDK) $(DEBUG)
 
 TARGETDIR=../../lib/NativeCore
-ifdef TARGET
-	TARGETDIR=/sage/lib
-endif
 
 SRCS=Channel.c ChannelDataMng.c
 OBJS= $(addsuffix .o, $(basename $(SRCS)))

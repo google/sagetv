@@ -1,8 +1,17 @@
+JDK_HOME ?= /usr/local/j2sdk
 
-JAVA_HOME ?= /usr/local/j2sdk
+ifdef TARGET
+        CROSS_PREFIX:=$(TARGET)-
+else
+        CROSS_PREFIX:=
+endif
+CC:=$(CROSS_PREFIX)gcc
+LD:=$(CROSS_PREFIX)ld
+AR:=$(CROSS_PREFIX)ar
+RANLIB:=$(CROSS_PREFIX)ranlib
+STRIP:=$(CROSS_PREFIX)strip
 
-CC=gcc
-CFLAGS = -c -fPIC -I$(JAVA_HOME)/include/ -I$(JAVA_HOME)/include/linux -D_FILE_OFFSET_BITS=64
+CFLAGS = -c -fPIC -I$(JDK_HOME)/include/ -I$(JDK_HOME)/include/linux -D_FILE_OFFSET_BITS=64
 
 all: PVR150Tuner.so
 

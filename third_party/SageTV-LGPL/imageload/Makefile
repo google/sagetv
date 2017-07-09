@@ -1,9 +1,16 @@
-
 JDK_HOME ?= /usr/local/j2sdk
 
-CC=gcc
+ifdef TARGET
+        CROSS_PREFIX:=$(TARGET)-
+else
+        CROSS_PREFIX:=
+endif
+CC:=$(CROSS_PREFIX)gcc
+LD:=$(CROSS_PREFIX)ld
+AR:=$(CROSS_PREFIX)ar
+RANLIB:=$(CROSS_PREFIX)ranlib
+STRIP:=$(CROSS_PREFIX)strip
 CFLAGS = -g -c -fPIC -I$(JDK_HOME)/include/ -I$(JDK_HOME)/include/linux -DO_BINARY=0 -Dstricmp=strcasecmp -I../../../native/include
-BINDIR=/usr/local/bin
 
 OBJFILES=sage_media_image_ImageLoader.o imageload.o
 
