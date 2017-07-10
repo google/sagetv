@@ -279,7 +279,7 @@ public class VobSubSubtitleHandler extends SubtitleHandler
       currMediaTime += delay;
     int rv = 0;
 
-    subtitleLock.writeLock();
+    subtitleLock.writeLock().lock();
 
     try
     {
