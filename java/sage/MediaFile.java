@@ -199,11 +199,8 @@ public class MediaFile extends DBObject implements SegmentedFile
     int oldAiringID = 0;
     if (ver < 0x23)
       oldAiringID = readID(in, idMap); // airingID
-    if (!Wizard.COMPACT_DB || ver >= 0x4D)
-      createWatchCount = in.readInt();
-    else
-      createWatchCount = 0;
-    int numSegs = Wizard.COMPACT_DB ? in.readShort() : in.readInt();
+    createWatchCount = in.readInt();
+    int numSegs = in.readInt();
     times = new long[numSegs * 2];
     byte[] fakeBuf = null;
     boolean buildFakeFile = false;
@@ -222,7 +219,7 @@ public class MediaFile extends DBObject implements SegmentedFile
       times[i*2] = in.readLong();
       times[i*2 + 1] = in.readLong();
     }
-    if (!Wizard.COMPACT_DB && ver <= 0x4C)
+    if (ver <= 0x4C)
     {
       int numDeadAirs = in.readInt();
       for (int i = 0; i < numDeadAirs; i++)
@@ -231,8 +228,7 @@ public class MediaFile extends DBObject implements SegmentedFile
         in.readLong(); // Dead air end
       }
     }
-    if (!Wizard.COMPACT_DB || ver >= 0x47)
-      videoDirectory = in.readUTF().intern();
+    videoDirectory = in.readUTF().intern();
     // Repair the videoDirectory since it could be wrong if the files moved directory
     if (files.size() > 0)
     {
@@ -240,33 +236,22 @@ public class MediaFile extends DBObject implements SegmentedFile
       if (parentFile != null)
         videoDirectory = parentFile.toString().intern();
     }
-    if (!Wizard.COMPACT_DB)
-    {
-      name = in.readUTF();
-      archive = in.readBoolean();
-      if (ver >= 0x2F)
-        in.readBoolean(); // padding to help avoid reversing db encryption algorithms
-    }
-    else
-    {
-      name = "";
-      if (ver >= 0x47)
-        archive = in.readBoolean();
-      else
-        archive = true;
-    }
+    name = in.readUTF();
+    archive = in.readBoolean();
+    if (ver >= 0x2F)
+      in.readBoolean(); // padding to help avoid reversing db encryption algorithms
     infoAiringID = readID(in, idMap);
     if (infoAiringID == 0)
       infoAiringID = oldAiringID;
     if (infoAiringID == 0)
       infoAiringID = id;
-    if (ver > 0x1F && !Wizard.COMPACT_DB)
+    if (ver > 0x1F)
       host = in.readUTF();
     else
       host = SageTV.hostname;
     if (MAKE_ALL_MEDIAFILES_LOCAL)
       host = SageTV.hostname;
-    if (ver > 0x20 && !Wizard.COMPACT_DB)
+    if (ver > 0x20)
     {
       if (ver <= 0x4C)
         in.readLong(); // Provider ID
@@ -278,32 +263,26 @@ public class MediaFile extends DBObject implements SegmentedFile
       encodedBy = "";
     if (ver >= 0x30)
     {
-      if (!Wizard.COMPACT_DB)
+      byte oldType = in.readByte();
+      in.readByte(); // Media subtype
+      generalType = in.readByte();
+      if (Wizard.GENERATE_MEDIA_MASK)
       {
-        byte oldType = in.readByte();
-        in.readByte(); // Media subtype
-        generalType = in.readByte();
-        if (Wizard.GENERATE_MEDIA_MASK)
-        {
-          if (oldType == MEDIATYPE_AUDIO)
-            setMediaMask(MEDIA_MASK_MUSIC);
-          else if (oldType == MEDIATYPE_PICTURE)
-            setMediaMask(MEDIA_MASK_PICTURE);
-          else if (oldType == MEDIATYPE_VIDEO)
-            setMediaMask(MEDIA_MASK_VIDEO);
-          else if (oldType == MEDIATYPE_DVD)
-            setMediaMask(MEDIA_MASK_DVD);
-          else if (oldType == MEDIATYPE_BLURAY)
-            setMediaMask(MEDIA_MASK_BLURAY);
-          if (generalType == MEDIAFILE_TV)
-            addMediaMask(MEDIA_MASK_TV);
-        }
+        if (oldType == MEDIATYPE_AUDIO)
+          setMediaMask(MEDIA_MASK_MUSIC);
+        else if (oldType == MEDIATYPE_PICTURE)
+          setMediaMask(MEDIA_MASK_PICTURE);
+        else if (oldType == MEDIATYPE_VIDEO)
+          setMediaMask(MEDIA_MASK_VIDEO);
+        else if (oldType == MEDIATYPE_DVD)
+          setMediaMask(MEDIA_MASK_DVD);
+        else if (oldType == MEDIATYPE_BLURAY)
+          setMediaMask(MEDIA_MASK_BLURAY);
+        if (generalType == MEDIAFILE_TV)
+          addMediaMask(MEDIA_MASK_TV);
       }
-      else
-        generalType = in.readByte();
       acquisitionTech = in.readByte();
-      if (!Wizard.COMPACT_DB)
-        forcedComplete = in.readBoolean();
+      forcedComplete = in.readBoolean();
     }
     else if (ver > 0x23)
     {
@@ -359,7 +338,7 @@ public class MediaFile extends DBObject implements SegmentedFile
         if (!files.isEmpty() && thumbnailFile.equals(files.get(0)))
           thumbnailFile = files.get(0);
       }
-      thumbnailOffset = Wizard.COMPACT_DB ? in.readInt() : in.readLong();
+      thumbnailOffset = in.readLong();
 
       thumbnailSize = in.readInt();
 
@@ -371,7 +350,7 @@ public class MediaFile extends DBObject implements SegmentedFile
         thumbnailSize = 0;
       }
     }
-    if (ver >= 0x33 && !Wizard.COMPACT_DB && ver <= 0x4C)
+    if (ver >= 0x33 && ver <= 0x4C)
       in.readLong(); // Stream buffer size
     if (ver >= 0x36)
     {
@@ -379,37 +358,7 @@ public class MediaFile extends DBObject implements SegmentedFile
       if (ff.length() > 0)
         fileFormat = ContainerFormat.buildFormatFromString(ff);
     }
-    if (Wizard.COMPACT_DB)
-    {
-      if (ver >= 0x42)
-      {
-        int prefixOffset = in.readShort();
-        if (getFile(0) != null)
-        {
-          String str = getFile(0).toString();
-          if (prefixOffset >= 0 && prefixOffset < str.length())
-            name = str.substring(prefixOffset);
-          else
-            name = getFile(0).getName();
-        }
-        else
-          name = "";
-      }
-      else
-      {
-        if (getFile(0) != null)
-        {
-          String fname = getFile(0).getName();
-          int dot = fname.lastIndexOf('.');
-          String ext = "";
-          if (dot != -1)
-            ext = fname.substring(dot);
-          name = getContentAiring().getTitle() + ext;
-        }
-        else
-          name = "";
-      }
-    }
+
     if (!Sage.client && fileFormat == null && !hasMediaMask(MEDIA_MASK_DVD) && !isAnyLiveStream() &&
         generalType != MEDIAFILE_LOCAL_PLAYBACK && !files.isEmpty())
     {
@@ -457,10 +406,7 @@ public class MediaFile extends DBObject implements SegmentedFile
   {
     super.write(out, flags);
     out.writeInt(createWatchCount);
-    if (!Wizard.COMPACT_DB)
-      out.writeInt(files.size());
-    else
-      out.writeShort(files.size());
+    out.writeInt(files.size());
     for (int i = 0; i < files.size(); i++)
     {
       File currFile = files.elementAt(i);
@@ -487,43 +433,24 @@ public class MediaFile extends DBObject implements SegmentedFile
       out.writeLong(times[2*i + 1]);
     }
     out.writeUTF(videoDirectory);
-    if (!Wizard.COMPACT_DB)
-    {
-      out.writeUTF(name);
-      out.writeBoolean(archive);
-      out.writeBoolean(true); // padding to help avoid reversing db encryption algorithms
-    }
-    else
-      out.writeBoolean(archive);
+    out.writeUTF(name);
+    out.writeBoolean(archive);
+    out.writeBoolean(true); // padding to help avoid reversing db encryption algorithms
     out.writeInt(infoAiringID);
-    if (!Wizard.COMPACT_DB)
-    {
-      out.writeUTF(host);
-      out.writeUTF(encodedBy);
-      out.writeByte((byte)0); // Media type
-      out.writeByte((byte)0); // Media subtype
-    }
-    else
-      out.writeUTF(encodedBy);
+    out.writeUTF(host);
+    out.writeUTF(encodedBy);
+    out.writeByte((byte)0); // Media type
+    out.writeByte((byte)0); // Media subtype
     out.writeByte(generalType);
     out.writeByte(acquisitionTech);
-    if (!Wizard.COMPACT_DB)
-      out.writeBoolean(forcedComplete);
+    out.writeBoolean(forcedComplete);
     if (thumbnailFile == null)
       out.writeUTF("");
     else
       out.writeUTF(thumbnailFile.toString());
-    if (Wizard.COMPACT_DB)
-      out.writeInt((int)thumbnailOffset);
-    else
-      out.writeLong(thumbnailOffset);
+    out.writeLong(thumbnailOffset);
     out.writeInt(thumbnailSize);
     out.writeUTF((fileFormat == null) ? "" : fileFormat.getFullPropertyString());
-    if (Wizard.COMPACT_DB)
-    {
-      File f = files.isEmpty() ? null : (File)files.elementAt(0);
-      out.writeShort((f == null) ? 0 : (f.toString().length() - name.length()));
-    }
   }
 
   void initializeRecovery(File recoveredFile)
@@ -1356,8 +1283,6 @@ public class MediaFile extends DBObject implements SegmentedFile
           }
         }
       }
-      // NOTE: do NOT create the index file here as Wizard will have the lock on a fresh DB file...do it in a postInitialize method instead
-      consolidateDBObjectStrings();
     }
     else
     {
@@ -3304,42 +3229,7 @@ public class MediaFile extends DBObject implements SegmentedFile
       }
     }
 
-    consolidateDBObjectStrings();
     return true;
-  }
-
-  private void consolidateDBObjectStrings()
-  {
-    if (Wizard.COMPACT_DB && files.size() > 0)
-    {
-      // Use string pooling to consolidate the titles, episodes and filenames which all share common text
-      String filePath = files.get(0).getPath();
-      Show theShow = getShow();
-      if (theShow != null)
-      {
-        String showTit = theShow.getTitle();
-        int idx;
-        if (showTit != null && theShow.title != null)
-        {
-          idx = filePath.indexOf(IOUtils.convertPlatformPathChars(showTit));
-          if (idx != -1)
-          {
-            theShow.title.name = filePath.substring(idx, idx + theShow.title.name.length());
-            theShow.title.ignoreCaseHash = theShow.title.name.toLowerCase().hashCode();
-          }
-        }
-        String showEp = theShow.getEpisodeName();
-        if (showEp != null)
-        {
-          idx = filePath.indexOf(IOUtils.convertPlatformPathChars(showEp));
-          if (idx != -1)
-          {
-            theShow.episodeNameStr = filePath.substring(idx, idx + showEp.length());
-            theShow.episodeNameBytes = null;
-          }
-        }
-      }
-    }
   }
 
   public synchronized void setHostname(String newHost)

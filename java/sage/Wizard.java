@@ -120,9 +120,6 @@ public class Wizard implements EPGDBPublic2
 
   private static final int MAX_DB_ERRORS_TO_LOG = 1000;
 
-
-  public static boolean COMPACT_DB = false;
-
   private static boolean validateObjs = true;
   private boolean REPAIR_CATEGORIES = false;
 

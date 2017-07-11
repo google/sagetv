@@ -478,10 +478,9 @@ public class Airing extends DBObject implements Schedulable
   {
     super(in, ver, idMap);
     showID = readID(in, idMap);
-    if (!Wizard.COMPACT_DB || ver >= 0x47)
-      stationID = in.readInt();
+    stationID = in.readInt();
     time = in.readLong();
-    duration = (Wizard.COMPACT_DB && ver < 0x49) ? in.readInt() : in.readLong();
+    duration = in.readLong();
     if (duration < 0)
     {
       Wizard.INVALID_AIRING_DURATIONS = true;
@@ -494,7 +493,7 @@ public class Airing extends DBObject implements Schedulable
     else
       miscB = in.readByte() & 0xFF;
     prB = in.readByte();
-    if (ver >= 0x41 && !Wizard.COMPACT_DB)
+    if (ver >= 0x41)
       persist = in.readByte();
     if (ver >= 0x4C && ver < 0x54) {
       int size = in.readShort();
@@ -523,8 +522,7 @@ public class Airing extends DBObject implements Schedulable
     out.writeByte(partsB);
     out.writeInt(miscB);
     out.writeByte(prB);
-    if (!Wizard.COMPACT_DB)
-      out.writeByte(persist);
+    out.writeByte(persist);
   }
 
   @Override
