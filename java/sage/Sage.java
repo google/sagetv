@@ -135,7 +135,7 @@ public final class Sage
 
   public static final byte CLIENT_COMPATIBLE_MAJOR_VERSION = 9;
   public static final byte CLIENT_COMPATIBLE_MINOR_VERSION = 0;
-  public static final byte CLIENT_COMPATIBLE_MICRO_VERSION = 13;
+  public static final byte CLIENT_COMPATIBLE_MICRO_VERSION = 14;
 
   public static final byte ENCODER_COMPATIBLE_MAJOR_VERSION = 4;
   public static final byte ENCODER_COMPATIBLE_MINOR_VERSION = 1;

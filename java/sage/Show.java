@@ -457,10 +457,7 @@ public final class Show extends DBObject
   {
     super(in, ver, idMap);
     Wizard wiz = Wizard.getInstance();
-    if (!Wizard.COMPACT_DB)
-      duration = in.readLong();
-    else
-      duration = in.readInt();
+    duration = in.readLong();
     title = wiz.getTitleForID(readID(in, idMap));
 
     // We lazily create these String to speed up loading time and reduce memory overhead
@@ -481,7 +478,7 @@ public final class Show extends DBObject
 
     Stringer category = wiz.getCategoryForID(readID(in, idMap));
     Stringer subCategory = wiz.getSubCategoryForID(readID(in, idMap));
-    int numPeople = Wizard.COMPACT_DB ? in.readShort() : in.readInt();
+    int numPeople = in.readInt();
     if (numPeople > Wizard.STUPID_SIZE)
       throw new IOException("Stupid array size:" + numPeople);
     people = numPeople == 0 ? Pooler.EMPTY_PERSON_ARRAY : new Person[numPeople];
@@ -496,7 +493,7 @@ public final class Show extends DBObject
     }
 
     rated = wiz.getRatedForID(readID(in, idMap));
-    int numERs = Wizard.COMPACT_DB ? in.readShort() : in.readInt();
+    int numERs = in.readInt();
     if (numERs > Wizard.STUPID_SIZE)
       throw new IOException("Stupid array size.");
     ers = numERs == 0 ? Pooler.EMPTY_STRINGER_ARRAY : new Stringer[numERs];
@@ -505,17 +502,12 @@ public final class Show extends DBObject
 
     year = wiz.getYearForID(readID(in, idMap));
     pr = wiz.getPRForID(readID(in, idMap));
-    if (!Wizard.COMPACT_DB || ver >= 0x48)
-    {
-      int numBonus = Wizard.COMPACT_DB ? in.readShort() : in.readInt();
-      if (numBonus > Wizard.STUPID_SIZE)
-        throw new IOException("Stupid array size.");
-      bonuses = numBonus == 0 ? Pooler.EMPTY_STRINGER_ARRAY : new Stringer[numBonus];
-      for (int i = 0; i < numBonus; i++)
-        bonuses[i] = wiz.getBonusForID(readID(in, idMap));
-    }
-    else
-      bonuses = Pooler.EMPTY_STRINGER_ARRAY;
+    int numBonus = in.readInt();
+    if (numBonus > Wizard.STUPID_SIZE)
+      throw new IOException("Stupid array size.");
+    bonuses = numBonus == 0 ? Pooler.EMPTY_STRINGER_ARRAY : new Stringer[numBonus];
+    for (int i = 0; i < numBonus; i++)
+      bonuses[i] = wiz.getBonusForID(readID(in, idMap));
 
     // The Show Don't Like & last Watched are both encoded into this field
     long lastWatchedData = in.readLong();
@@ -540,14 +532,13 @@ public final class Show extends DBObject
         title = wiz.getTitleForName(primeTitle.name);
       }
     }
-    else if (!Wizard.COMPACT_DB)
+    else
       /*forcedFirstRun =*/ in.readBoolean();
     size = in.readShort();
     externalID = new byte[size];
     if (size > 0)
       in.readFully(externalID);
-    if (!Wizard.COMPACT_DB)
-      /*updateCount =*/ in.readInt();
+    /*updateCount =*/ in.readInt();
     language = wiz.getBonusForID(readID(in, idMap));
     originalAirDate = in.readLong();
     if (ver >= 0x4A)
@@ -656,10 +647,7 @@ public final class Show extends DBObject
   {
     super.write(out, flags);
     boolean useLookupIdx = (flags & Wizard.WRITE_OPT_USE_ARRAY_INDICES) != 0;
-    if (!Wizard.COMPACT_DB)
-      out.writeLong(duration);
-    else
-      out.writeInt((int)duration);
+    out.writeLong(duration);
     out.writeInt((title == null) ? 0 : (useLookupIdx ? title.lookupIdx : title.id));
     byte[] barr = episodeNameBytes;
     if (barr != null) {
@@ -678,10 +666,7 @@ public final class Show extends DBObject
     out.writeInt((categories.length == 0) ? 0 : (useLookupIdx ? categories[0].lookupIdx : categories[0].id));
     out.writeInt((categories.length < 2) ? 0 : (useLookupIdx ? categories[1].lookupIdx : categories[1].id));
 
-    if (!Wizard.COMPACT_DB)
-      out.writeInt(people.length);
-    else
-      out.writeShort(people.length);
+    out.writeInt(people.length);
     for (int i = 0; i < people.length; i++)
     {
       out.writeInt(useLookupIdx ? people[i].lookupIdx : people[i].id);
@@ -689,20 +674,14 @@ public final class Show extends DBObject
     }
 
     out.writeInt((rated == null) ? 0 : (useLookupIdx ? rated.lookupIdx : rated.id));
-    if (!Wizard.COMPACT_DB)
-      out.writeInt(ers.length);
-    else
-      out.writeShort(ers.length);
+    out.writeInt(ers.length);
     for (int i = 0; i < ers.length; i++)
       out.writeInt(useLookupIdx ? ers[i].lookupIdx : ers[i].id);
 
     out.writeInt((year == null) ? 0 : (useLookupIdx ? year.lookupIdx : year.id));
     out.writeInt((pr == null) ? 0 : (useLookupIdx ? pr.lookupIdx : pr.id));
 
-    if (!Wizard.COMPACT_DB)
-      out.writeInt(bonuses.length);
-    else
-      out.writeShort(bonuses.length);
+    out.writeInt(bonuses.length);
     for (int i = 0; i < bonuses.length; i++)
       out.writeInt(useLookupIdx ? bonuses[i].lookupIdx : bonuses[i].id);
 
@@ -714,13 +693,11 @@ public final class Show extends DBObject
         lastWatchedData *= -1;
     }
     out.writeLong(lastWatchedData);
-    if (!Wizard.COMPACT_DB)
-      out.writeBoolean(/*forcedFirstRun*/false); // old first run data
+    out.writeBoolean(/*forcedFirstRun*/false); // old first run data
     out.writeShort(externalID.length);
     if (externalID.length > 0)
       out.write(externalID);
-    if (!Wizard.COMPACT_DB)
-      out.writeInt(/*updateCount*/id);
+    out.writeInt(/*updateCount*/id);
     out.writeInt((language == null) ? 0 : (useLookupIdx ? language.lookupIdx : language.id));
     out.writeLong(originalAirDate);
     out.writeShort(seasonNum);

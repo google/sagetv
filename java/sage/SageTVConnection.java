@@ -769,7 +769,7 @@ public class SageTVConnection implements Runnable, Wizard.XctSyncClient, Carny.P
       throw new java.io.IOException("OK response not received, got:" + tempString);
     }
 
-    outStream.write(("WIZARD_SYNC2 " + Integer.toString(Wizard.VERSION & 0xFF) + " " + Boolean.toString(Wizard.COMPACT_DB) + "\r\n").getBytes(Sage.BYTE_CHARSET));
+    outStream.write(("WIZARD_SYNC2 " + Integer.toString(Wizard.VERSION & 0xFF) + "\r\n").getBytes(Sage.BYTE_CHARSET));
     Wizard.getInstance().sendDBThroughStream(mySock, outStream, this);
     outStream.flush();
     tempString = readLineBytes(inStream);
@@ -804,16 +804,15 @@ public class SageTVConnection implements Runnable, Wizard.XctSyncClient, Carny.P
 
   private void recvWizardSync2(String[] myTokes) throws java.io.IOException
   {
-    if (myTokes.length != 3)
+    if (myTokes.length != 2)
     {
-      outStream.write("ERROR need 3 tokens for WIZARD_SYNC2 command\r\n".getBytes(Sage.BYTE_CHARSET));
-      System.out.println("ERROR need 3 tokens for WIZARD_SYNC2 command." +
+      outStream.write("ERROR need 2 tokens for WIZARD_SYNC2 command\r\n".getBytes(Sage.BYTE_CHARSET));
+      System.out.println("ERROR need 2 tokens for WIZARD_SYNC2 command." +
           java.util.Arrays.asList(myTokes));
       return;
     }
 
     Wizard.VERSION = (byte)(Integer.parseInt(myTokes[1]) & 0xFF);
-    Wizard.COMPACT_DB = Boolean.valueOf(myTokes[2]).booleanValue();
     Wizard.getInstance().xctIn(inStream, Wizard.VERSION, TRANSLATE_DB_IDS ? dbIDMap : null);
     outStream.write(OK_BYTES);
   }
