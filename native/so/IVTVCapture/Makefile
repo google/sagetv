@@ -1,8 +1,5 @@
 JDK_HOME ?= /usr/local/j2sdk
 
-#CC=mipsel-unknown-linux-gnu-gcc
-#CC=gcc
-
 ifdef TARGET
         CROSS_PREFIX:=$(TARGET)-
 else

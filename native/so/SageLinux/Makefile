@@ -18,26 +18,30 @@
 UNAME_S := $(shell uname -s)
 
 JDK_HOME ?= /usr/local/j2sdk
-#JAVA_ARCH ?= i386
 JAVA_ARCH ?= amd64
 
-
-CC=gcc
-#CC=mipsel-unknown-linux-gnu-gcc
-CFLAGS = -c -fPIC -I$(JDK_HOME)/include -I$(JDK_HOME)/include/linux -D_FILE_OFFSET_BITS=64
-ifeq ($(UNAME_S),Darwin)
-CFLAGS = -c -fPIC -I$(JDK_HOME)/include -I$(JDK_HOME)/include/darwin -D_FILE_OFFSET_BITS=64
+ifdef TARGET
+        CROSS_PREFIX:=$(TARGET)-
+else
+        CROSS_PREFIX:=
 endif
+CC:=$(CROSS_PREFIX)gcc
+LD:=$(CROSS_PREFIX)ld
+AR:=$(CROSS_PREFIX)ar
+RANLIB:=$(CROSS_PREFIX)ranlib
+STRIP:=$(CROSS_PREFIX)strip
+
+ifeq ($(UNAME_S),Darwin)
+CFLAGS += -c -fPIC -I$(JDK_HOME)/include -I$(JDK_HOME)/include/darwin -D_FILE_OFFSET_BITS=64
+else
+CFLAGS += -c -fPIC -I$(JDK_HOME)/include -I$(JDK_HOME)/include/linux -D_FILE_OFFSET_BITS=64
+endif
+
 BINDIR=/usr/local/bin
 
 OBJFILES=sage_Sage.o sage_MMC.o sage_VideoFrame.o sage_BasicVideoFrame.o
 
-# Apple OS/X build only non X11 library for now
-ifeq ($(UNAME_S),Darwin)
 all: libSage.so
-else
-all: libSageX11.so libSage.so
-endif
 
 libSageX11.so: $(OBJFILES) sage_UIManagerX11.o
 	$(CC) -shared -o libSageX11.so  $(OBJFILES) sage_UIManagerX11.o -L$(JDK_HOME)/jre/lib/$(JAVA_ARCH) -ldl -lX11 -ljawt 
