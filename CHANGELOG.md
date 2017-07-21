@@ -6,6 +6,7 @@
 * New: Add Schedules Direct lineup by ID.
 * Change: Removed ZZZ from Schedules Direct Regions because it doesn't do anything.
 * Fix: VOB and MP4 subtitles locking methods were not being called.
+* Fix: Fixes to HDHomeRun (and probably others) ATSC Scanning returning blank and garbled channels.
 
 ## Version 9.1.5 (2017-06-19)
 * Fix: Carny throws a null pointer exception if a show has a null title.
