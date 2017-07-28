@@ -313,10 +313,12 @@ public class Person extends DBObject
   {
     if (extID >= 0 || orgPerson != null) return;
     orgPerson = Wizard.getInstance().getPersonForExtID(-1 * extID);
-    if (orgPerson == null)
+    // Our primary guide data source Schedules Direct doesn't always have the original person, so
+    // this just creates a lot of annoying log entries.
+    /*if (orgPerson == null)
     {
       if (Sage.DBG) System.out.println("ERROR Could not resolve aliased person back to original person id=" + (-1*extID) + " name=" + name);
-    }
+    }*/
   }
 
   /**
