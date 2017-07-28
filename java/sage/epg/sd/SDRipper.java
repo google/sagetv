@@ -76,6 +76,8 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -2216,10 +2218,29 @@ public class SDRipper extends EPGDataSource
           if (Sage.DBG) System.out.println("SDEPG Attempting to import images for " +
             peopleSize + " pe" + (peopleSize == 1 ? "rson" : "ople") + "...");
 
-          int remainingThreads = 0;
+          int remainingImports;
           final AtomicInteger totalPeople = new AtomicInteger(0);
-          BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(30);
-          ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 15, 5000, TimeUnit.MILLISECONDS, queue);
+          BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(9);
+          ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 3, 60000, TimeUnit.MILLISECONDS, queue) {
+            @Override
+            public ThreadFactory getThreadFactory()
+            {
+              return new ThreadFactory()
+              {
+                @Override
+                public Thread newThread(Runnable r)
+                {
+                  if (Sage.DBG) System.out.println("SDEPG Starting new import thread...");
+                  Thread returnThread = new Thread(r);
+                  returnThread.setName("SDEPG-Import");
+                  return returnThread;
+                }
+              };
+            }
+          };
+
+          // If the queue is currently full, do the lookup on this thread.
+          executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
 
           for (SDPerson nextPerson : addedAliases)
           {
@@ -2288,27 +2309,19 @@ public class SDRipper extends EPGDataSource
               }
             };
 
-            try
-            {
-              executor.execute(runnable);
-            }
-            catch (RejectedExecutionException e)
-            {
-              // If the queue is currently full, do the lookup on this thread.
-              runnable.run();
-            }
+            executor.execute(runnable);
           }
 
           executor.shutdown();
-          executor.awaitTermination(5000, TimeUnit.MILLISECONDS);
+          executor.awaitTermination(60000, TimeUnit.MILLISECONDS);
           // It's not a problem to not wait for the potentially remaining threads to complete. The
           // operation is thread-safe.
           addedAliases.clear();
-          remainingThreads = queue.size();
+          remainingImports = queue.size();
           peopleSize = totalPeople.get();
           if (Sage.DBG) System.out.println("SDEPG Imported images for " +
             peopleSize + " pe" + (peopleSize == 1 ? "rson" : "ople") +
-            " (+" + remainingThreads + ")");
+            " (+" + remainingImports + ")");
         }
 
         // If the value isn't -1, that means some data was not able to be received immediately.
@@ -2543,10 +2556,15 @@ public class SDRipper extends EPGDataSource
           for (Iterator<Integer> iterator = returnValue.keySet().iterator(); iterator.hasNext(); )
           {
             Integer stationID = iterator.next();
-            Airing airings[] = Wizard.getInstance().getAirings(stationID, currTime, currTime + 1, true);
-            if (airings == null || airings.length == 0 || wiz.isNoShow(airings[0]))
+            Airing airings[] = Wizard.getInstance().getAirings(stationID, currTime, currTime + 1, false);
+            if (airings == null || airings.length == 0)
             {
               if (Sage.DBG) System.out.println("SDEPG Removing hashes for station " + stationID);
+              iterator.remove();
+            }
+            else if (wiz.isNoShow(airings[0]))
+            {
+              if (Sage.DBG) System.out.println("SDEPG Removing hashes for station " + stationID + " because " + airings[0] + " is no show.");
               iterator.remove();
             }
           }
