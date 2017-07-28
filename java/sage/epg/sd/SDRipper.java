@@ -2233,6 +2233,10 @@ public class SDRipper extends EPGDataSource
                   if (Sage.DBG) System.out.println("SDEPG Starting new import thread...");
                   Thread returnThread = new Thread(r);
                   returnThread.setName("SDEPG-Import");
+                  // I don't believe this has created any issues, but let's not allow these threads
+                  // to run at the same priority as threads that directly impact the UI experience
+                  // just in case.
+                  returnThread.setPriority(Thread.MIN_PRIORITY + 1);
                   return returnThread;
                 }
               };
