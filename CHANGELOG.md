@@ -10,6 +10,7 @@
 * Change: Removed unhelpful alias to original person log entries.
 * Fix: Fixed issue with Schedules Direct forcing a full airing re-import on stations that do not have a No Data airing.
 * Change: Lowered the priority of the Schedules Direct person image import threads.
+* Fix: Removed use of G1GC in Windows due to possible memory leak issues. 
 
 ## Version 9.1.5 (2017-06-19)
 * Fix: Carny throws a null pointer exception if a show has a null title.

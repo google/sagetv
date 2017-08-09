@@ -1208,13 +1208,14 @@ int launchJVMSage(LPSTR lpszCmdLine, HWND hWnd, BOOL bClient, BOOL bService)
 		}
 		RegCloseKey(myKey);
 	}
-	else if (strstr(currVer, "1.8") || strstr(currVer, "1.9"))
+	// For some Windows users, G1GC appears to be causing a significant memory leak.
+	/*else if (strstr(currVer, "1.8") || strstr(currVer, "1.9"))
 	{
 		// If we are running Java 8 or 9, enable string deduplication. This has very measurable
 		// benefits in multi-miniclient situations.
 		options[vm_args.nOptions++].optionString = "-XX:+UseG1GC";
 		options[vm_args.nOptions++].optionString = "-XX:+UseStringDeduplication";
-	}
+	}*/
 	options[vm_args.nOptions++].optionString = "-verbose:gc";
 #ifdef _DEBUG
 
