@@ -227,7 +227,8 @@ static void UnpackVCT( ATSC_PSI* pATSCPSI, TS_SECTION* pSection )
 	{
 		VCT	vct={0};
 		int check_flag;
-		memcpy( vct.name, p, sizeof(vct.name) ); vct.name[sizeof(vct.name)-2] = 0x0;
+//		memcpy( vct.name, p, sizeof(vct.name) ); vct.name[sizeof(vct.name)-2] = 0x0;
+		memcpy( vct.name, p, 7*2 );
 		vct.major_num  = ((p[14]&0x0f)<<6) | ( p[15]>> 2 );
 		vct.minor_num  = ((p[15]&0x03)<<8) | p[16];
 		vct.modulation = p[17];

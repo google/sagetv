@@ -6,6 +6,7 @@
 * New: Add Schedules Direct lineup by ID.
 * Change: Removed ZZZ from Schedules Direct Regions because it doesn't do anything.
 * Fix: VOB and MP4 subtitles locking methods were not being called.
+* Fix: Fixes to HDHomeRun (and probably others) ATSC Scanning returning blank and garbled channels.
 * Fix: Reduced Schedules Direct person image import threads to 4 (including the execution thread) and added logging for when new threads are created for during the process.
 * Change: Removed unhelpful alias to original person log entries.
 * Fix: Fixed issue with Schedules Direct forcing a full airing re-import on stations that do not have a No Data airing.
