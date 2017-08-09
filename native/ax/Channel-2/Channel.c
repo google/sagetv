@@ -2873,8 +2873,8 @@ int scanDVBTChannel( CHANNEL_DATA *Channel, char* tuningString, char** scanResul
 	//SageTVReleaseScanChannel( Channel->Dev );
 	if ( found ) 
 	{
-		pos += SPRINTF( channels_buf+pos, channels_size-pos, "\r\n" );
-//		saveScanTuningTable( Channel, "frq" );
+//		pos += SPRINTF( channels_buf+pos, channels_size-pos, "\r\n" );
+		saveScanTuningTable( Channel, "frq" );
 	}
 	SageLog(( _LOG_TRACE, 3, "DVB-T Scan Info:%s %d.\r\n", *scanResult, found ));
 
