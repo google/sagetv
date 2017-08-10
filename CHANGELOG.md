@@ -1,6 +1,6 @@
 # Change Log
 
-## Version 9.1.6 (??)
+## Version 9.1.6 (2017-08-10)
 * Fix: Various fixes and cleanup on Linux Firewire and DVB.
 * Fix: Added support for all 4 tuners on the Hauppauge WinTV-quadHD tuner in Windows.
 * New: Add Schedules Direct lineup by ID.
