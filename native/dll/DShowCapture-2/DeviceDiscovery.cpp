@@ -341,6 +341,7 @@ static int getDeviceNameList( JNIEnv *env, REFCLSID devClass, DEVNAME *DevName, 
 }
 
 BOOL CheckFakeBDACrossBar( JNIEnv *env, char* capFiltName, int CapFiltNum, char* BDAFiltDevName, int BDAFiltDevNameSize );
+
 static int PurgeNameList( JNIEnv *env, DEVNAME* DevName, int numDev, REFCLSID devClass )
 {
 	int i, j, num=0;
@@ -399,7 +400,7 @@ static int MergeNameList( JNIEnv *env, DEVNAME* DevName, int numDev, DEVNAME* De
 	int i, j, k, num;
 	num = numDev; 
     slog((env, "MergeNameList() Entry: DevName[0] '%s', numDev=%d, new DevName1[0] '%s', numDev1=%d \r\n", 
-        DevName[0].FriendlyName, numDev, DevName1[0].FriendlyName, numDev1));  // KSF
+        DevName[0].FriendlyName, numDev, DevName1[0].FriendlyName, numDev1));
 	for ( i = 0; i<numDev1; i++ )
 	{
 		//ZQ hard code for anysee tuner
@@ -443,7 +444,7 @@ static int MergeNameList( JNIEnv *env, DEVNAME* DevName, int numDev, DEVNAME* De
             // Is this new device already in the array of previously-added devices?
 			for ( j = 0; j<numDev; j++ )
 			{ 
-                // slog((env, "FriendlyName '%s' at '%s', compare loc '%s', i=%d, j=%d \r\n", DevName1[i].FriendlyName, DevName1[i].hardware_loc, DevName[j].hardware_loc, i, j)); // KSF
+                // slog((env, "FriendlyName '%s' at '%s', compare loc '%s', i=%d, j=%d \r\n", DevName1[i].FriendlyName, DevName1[i].hardware_loc, DevName[j].hardware_loc, i, j));
 				if ( !strcmp( DevName[j].hardware_loc, DevName1[i].hardware_loc ) )
 					break; // break if hardware_loc matches
 			}
@@ -451,34 +452,70 @@ static int MergeNameList( JNIEnv *env, DEVNAME* DevName, int numDev, DEVNAME* De
 			// Special case: hard code for multiple Receivers which are found at the same hardware_loc
 			if ( j < numDev )
 			{
+                // slog((env, "New DevName1[%d] '%s'; found previous DevName[%d] '%s' at hardware_loc '%s'\r\n", i, DevName1[i].FriendlyName, j, DevName[j].FriendlyName, DevName[j].hardware_loc));
+
                 //ZQ hard code for anysee tuner
 				//Anysee hybrid tuners share the same loc (USB) 
 				if ( !strncmp( DevName[j].FriendlyName, "anysee BDA Digital Tuner", 22 ) )
 					j = numDev;
 
-                /* KSF: hard code for Hauppauge WinTV-quadHD, which has 2 BDA Reciever Components 
+
+                /* ----------------
+                 * KSF: hardcode for Hauppauge WinTV-quadHD, which has 2 BDA Reciever Components 
                  * (885 TS Capture, 885 TS Capture 2) for both of it's 2 Video Capture Sources
-                 "  (i.e., at both of it's 2 PCIe hardware locations).
-                 * "Hauppauge WinTV 885 TS Capture" has already been found at this hardware_loc; 
-                 * following lines added for 2nd dev.
-                 * NOTE: comparison here uses index i, not j (unlike anysee BDA, above)
+                 * (i.e., at both of it's 2 PCIe hardware locations).
+                 *
+                 * When 'Hauppauge WinTV 885 Video Capture' was detected (earlier), "Hauppauge WinTV 885 TS Capture' 
+                 * was also entered into DevName[] (due to registry contents).
+                 * If new device is the 2nd TS Capture device, then add it, here.
                  */
                 else if (!strncmp(DevName1[i].FriendlyName, "Hauppauge WinTV 885 TS Capture 2", 32))
                     j = numDev;
+
+
+                /* ----------------
+                 * KSF: hardcode for Hauppauge WinTV-dualHD usb stick, which has a single 'TS Capture' and 
+                 * 2 Source Filters (ATSC Tuner, ATSC Tuner 2) at it's hardware location.
+                 * We don't want user to see (or be able to select) the TS Capture device.
+                 *
+                 * The normal device-detection process finds the following (in this order):
+                 * 1: Hauppauge WinTV-dualHD TS Capture (which would normally tend to bind to 'ATSC Tuner 2')
+                 * 2: Hauppauge WinTV-dualHD ATSC Tuner 2
+                 * 3: Hauppauge WinTV-dualHD ATSC Tuner (not sure why this one is found last; it's first in the current .inf)
+                 *
+                 * Desired result is that DevName[] contains both Tuner names, but not TS Capture 
+                 */
+                else if (!strncmp(DevName[j].FriendlyName, "Hauppauge WinTV-dualHD TS Capture", sizeof("Hauppauge WinTV-dualHD TS Capture"))) 
+                {
+                    // "Hauppauge WinTV-dualHD TS Capture" is present, replace it with the 
+                    //  1st '...WinTV-dualHD ATSC Tuner *' found at same location (generally '...Tuner 2').
+                    slog((env, "patch: replace old DevName[%d] '%s' with new DevName1[%d] '%s' \r\n", 
+                        j, DevName[j].FriendlyName, i, DevName1[i].FriendlyName));
+
+                    strncpy(DevName[j].FriendlyName, DevName1[i].FriendlyName, sizeof(DevName1[i].FriendlyName) - 1);
+                }
+
+                // Add 2nd Tuner, either 'Hauppauge WinTV-dualHD ATSC Tuner' or 'Hauppauge WinTV-dualHD ATSC Tuner 2'
+                else if (strstr(DevName1[i].FriendlyName, "Hauppauge WinTV-dualHD ATSC Tuner")) 
+                {
+                    slog((env, "patch: also add '%s' \r\n", DevName1[i].FriendlyName));
+                    j = numDev;
+                }
+
 			}
 
 			//not found the same device
 			if ( j >= numDev )
 			{     
-                // slog((env, "Adding device '%s' i=%d, j=%d, num=%d \r\n", DevName1[i].FriendlyName, i, j, num)); // KSF
 				strncpy( DevName[num].FriendlyName, DevName1[i].FriendlyName, sizeof(DevName[num].FriendlyName)-1 );
 				strncpy( DevName[num].hardware_loc, DevName1[i].hardware_loc, sizeof(DevName[num].hardware_loc)-1 );
 				DevName[num].index = 0;
 				for ( k = 0; k<num; k++ )
 				{
-					if ( !strcmp( DevName[num].FriendlyName, DevName[k].FriendlyName ) )
+					if ( !strcmp( DevName[num].FriendlyName, DevName[k].FriendlyName ) )                 
 						DevName[num].index++;
 				}
+                // slog((env, "Added DevName[%d] '%s' (# %d) at loc:'%s' i=%d, j=%d \r\n", num, DevName[num].FriendlyName, DevName[num].index, DevName[num].hardware_loc, i, j));
 				num++;
 				if ( num >= MAX_DEV_NAMES ) 
 					return num;

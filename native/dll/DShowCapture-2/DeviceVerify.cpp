@@ -130,6 +130,15 @@ JNIEXPORT jint JNICALL Java_sage_DShowCaptureDevice_isCaptureDeviceValid0
 	}
 	//processing passed in configure name with tag<...>
 
+    // KSF: 
+    // Users that had plugged in this device prior to dual-tuner support will have a TS Capture entry in sage.properties.
+    // We don't want them to see that any more in the Setup Video Sources UI.  
+    // With this hack, they'll only see the 2 new 'Hauppauge WinTV-dualHD ATSC Tuner' entries.
+    if (!strncmp(capFiltName, "Hauppauge WinTV-dualHD TS Capture", sizeof("Hauppauge WinTV-dualHD TS Capture"))) 
+    {
+        slog((env, "hardcode: ignoring legacy device '%s' because WinTV-dualHD Tuner(s) are now supported \r\n", capFiltName));
+        return sage_DShowCaptureDevice_DEVICE_NO_EXIST;
+    }
 
 //	CoInitializeEx(NULL, COM_THREADING_MODE);
 	IBaseFilter* pFilter = NULL;
@@ -183,7 +192,7 @@ JNIEXPORT jint JNICALL Java_sage_DShowCaptureDevice_isCaptureDeviceValid0
 
 		SAFE_RELEASE(pFilter);
 	}
-
+ 
 	if (FAILED(hr))
 	{
 		if ( !strncmp( capFiltName, "PUSH TS SOURCE", 14 ) ) //hard code "PUSH TS SOURCE"  for debug dump data
@@ -1052,7 +1061,7 @@ BOOL CheckFakeBDACrossBar( JNIEnv *env, char* capFiltName, int CapFiltNum, char*
 	CLSID CapClassidCategory;
     DEVICE_DRV_INF  BDACaptureDrvInfo;
 	DEVICE_DRV_INF  VideoCaptureDrvInfo;
-    // slog((env, "CheckFakeBDACrossBar Entry: capFiltName %s, CapFiltNum %d, BDAFiltDevName %s \r\n", capFiltName, CapFiltNum, BDAFiltDevName)); 
+    // slog((env, "CheckFakeBDACrossBar Entry: capFiltName %s, CapFiltNum %d \r\n", capFiltName, CapFiltNum));
     try
 	{
 		IBaseFilter* pFilter = NULL;
