@@ -1,8 +1,6 @@
 # Change Log
 
-## Version 9.1.7 (2017-08-10)
-* Fix: add support for 2nd tuner of Hauppauge WinTV-dualHD usb tuner stick.
-* Fix: add support for 3rd & 4th tuners of Hauppauge WinTV-quadHD PCIe tuner card (2017-06-27).
+* Fix: add support for 2nd tuner of Hauppauge WinTV-dualHD usb tuner stick (Windows).
 
 ## Version 9.1.6 (2017-08-10)
 * Fix: Various fixes and cleanup on Linux Firewire and DVB.
