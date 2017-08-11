@@ -492,7 +492,7 @@ static int MergeNameList( JNIEnv *env, DEVNAME* DevName, int numDev, DEVNAME* De
                     slog((env, "patch: replace old DevName[%d] '%s' with new DevName1[%d] '%s' \r\n", 
                         j, DevName[j].FriendlyName, i, DevName1[i].FriendlyName));
 
-                    strncpy(DevName[j].FriendlyName, DevName1[i].FriendlyName, sizeof(DevName1[i].FriendlyName) - 1);
+                    strncpy(DevName[j].FriendlyName, DevName1[i].FriendlyName, sizeof(DevName[j].FriendlyName) - 1);
                 }
 
                 // Add 2nd Tuner, either 'Hauppauge WinTV-dualHD ATSC Tuner' or 'Hauppauge WinTV-dualHD ATSC Tuner 2'
