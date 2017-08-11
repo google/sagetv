@@ -541,6 +541,8 @@ JNIEXPORT void JNICALL Java_sage_DShowCaptureDevice_setupEncodingGraph0
 			ENCEXCEPT_RET(sage_EncodingException_SAGETV_INSTALL);
 		}
 
+        // slog((env, "_setupEncodingGraph0() Entry: captureConfig= 0x%x \r\n", pCapInfo->captureConfig));
+
 		AddBDAVideoCaptureFilters( env, pCapInfo, pCapInfo->pGraph, 0 );             
 		BDAGraphSetDebugFileSource( env, pCapInfo, pCapInfo->pGraph  );
 	    BDAGraphConnectFilter( env, pCapInfo,  pCapInfo->pGraph );
@@ -2248,15 +2250,24 @@ JNIEXPORT void JNICALL Java_sage_DShowCaptureDevice_setVideoProcessor0
 
 
 //ZQ
+// Given a BDA Receiver Component (usually a Video Capture filter name), searches for & connects to appropriate Tuner
 void BDAGraphConnectFilter( JNIEnv* env, DShowCaptureInfo *pCapInfo, IGraphBuilder* pGraph )
 {
 	graphTools.SetLogOutput( env );
     HRESULT hr = S_OK;
-    
+
+/*
+    slog((env, "BDAGraphConnectFilter() Entry: videoCaptureFilterName='%s' videoCaptureFilterNum=%d pVideoCaptureFilter=%p bdaCaptureFilterName='%s' bdaTunerFilterName='%s' pEncoder=%p filterState=%d pBDANetworkProvider=%p pBDATuner=%p pBDADemod=%p pBDACapture=%p TuningMode='%s' \r\n",
+        pCapInfo->videoCaptureFilterName, pCapInfo->videoCaptureFilterNum, pCapInfo->pVideoCaptureFilter,
+        pCapInfo->bdaCaptureFilterName, pCapInfo->bdaTunerFilterName, pCapInfo->pEncoder, pCapInfo->filterState,
+        pCapInfo->pBDANetworkProvider, pCapInfo->pBDATuner, pCapInfo->pBDADemod, pCapInfo->pBDACapture, pCapInfo->TuningMode));
+*/
     if ( pCapInfo->filterState >= 2 )  //is connected
     	return;
-	slog( (env, "Connecting capture Filters.(%s), '%s' %d\r\n", pCapInfo->bdaCaptureFilterName, pCapInfo->videoCaptureFilterName, pCapInfo->videoCaptureFilterNum ) );
 
+	slog( (env, "Connecting capture Filters. bdaCaptureFilterName='%s', videoCaptureFilterName='%s' videoCaptureFilterNum=%d\r\n", 
+        pCapInfo->bdaCaptureFilterName, pCapInfo->videoCaptureFilterName, pCapInfo->videoCaptureFilterNum ) );
+   
 	TV_TYPE BDATVTypes[7]={ ATSC, DVBT, DVBC, DVBS, UNKNOWN, UNKNOWN };
 	TV_TYPE BDATVType = UNKNOWN;
 	BOOL    bIsNetworkPorvider = 0;
@@ -2353,6 +2364,71 @@ void BDAGraphConnectFilter( JNIEnv* env, DShowCaptureInfo *pCapInfo, IGraphBuild
 		slog( (env,"Anysee graph was built. \r\n",  pCapInfo->videoCaptureFilterName ) );
 
 	} else
+
+    // The WinTV-dualHD usb stick has one Capture and 2 Tuner devices, all at the same hardware_loc.
+    // hardcode for both Hauppauge WinTV-dualHD tuner(s): usb device has '...ATSC Tuner' and '...ATSC Tuner 2'
+    if (strstr(pCapInfo->videoCaptureFilterName, "Hauppauge WinTV-dualHD ATSC Tuner"))
+    {
+        slog((env, "Hardcode graph building for '%s' \r\n", pCapInfo->videoCaptureFilterName));
+        BDATVType = ATSC;  // Tuning space is ATSC
+
+        ReleaseBDATuningSpace(env, pCapInfo);
+        SetTVType(pCapInfo, BDATVType, TRUE); // TRUE = use NetworkProvider
+
+        if (FAILED(hr = SetupBDATuningSpace(env, pCapInfo, pGraph)))
+            ENCEXCEPT_RET(sage_EncodingException_CAPTURE_DEVICE_INSTALL);
+
+        if (pCapInfo->pBDANetworkProvider == NULL)
+            slog((env, "Ooops: pCapInfo->pBDANetworkProvider is NULL, BDAVTVType=%d \r\n", BDATVType));
+
+        ASSERT(pCapInfo->pBDATuner == NULL);
+
+        // entered here with Tuner (not Capture) info; put it in correct structure member
+        pCapInfo->pBDATuner = pCapInfo->pBDACapture;
+        strncpy(pCapInfo->bdaTunerFilterName, pCapInfo->bdaCaptureFilterName, sizeof(pCapInfo->bdaTunerFilterName));
+        slog((env, "Fixed: pCapInfo->bdaTunerFilterName is now='%s' \r\n", pCapInfo->bdaTunerFilterName));
+
+        pCapInfo->pBDACapture = NULL;
+        pCapInfo->bdaCaptureFilterName[0] = 0x0;
+
+        hr = FindFilterByName2(&pCapInfo->pBDACapture, KSCATEGORY_BDA_RECEIVER_COMPONENT,
+            "Hauppauge WinTV-dualHD TS Capture", pCapInfo->videoCaptureFilterNum, // FilterNum is same value for Capture & both Tuners on a given usb stick
+            pCapInfo->bdaCaptureFilterName, sizeof(pCapInfo->bdaCaptureFilterName));
+        if (SUCCEEDED(hr))
+        {
+            //pCapInfo->pBDACapture->AddRef();
+            hr = pGraph->AddFilter(pCapInfo->pBDACapture, L"Hauppauge WinTV-dualHD TS Capture");
+        }
+
+        if (FAILED(hr))
+        {
+            slog((env, "Failed loading filter '%s' for WinTV-dualHD \r\n", "Hauppauge WinTV-dualHD TS Capture"));
+            ENCEXCEPT_RET(sage_EncodingException_CAPTURE_DEVICE_INSTALL);
+        }
+        else
+        if (FAILED(hr = graphTools.ConnectFilters(pGraph, pCapInfo->pBDANetworkProvider, pCapInfo->pBDATuner)))   // problematic
+        {
+            slog((env, "Can't connect Network Provider to Hauppauge WinTV-dualHD Tuner Filter '%s'->'%s' \r\n",
+                pCapInfo->bdaTunerFilterName, pCapInfo->tvType));
+            slog((env, "pCapInfo->pBDANetworkProvider=%p, pCapInfo->pBDATuner=%p \r\n",
+                pCapInfo->pBDANetworkProvider, pCapInfo->pBDATuner));
+            ENCEXCEPT_RET(sage_EncodingException_CAPTURE_DEVICE_INSTALL);
+        }
+        else
+        if (SUCCEEDED(hr = graphTools.ConnectFilters(pGraph, pCapInfo->pBDATuner, pCapInfo->pBDACapture)))
+        {
+            piLastFilter = pCapInfo->pBDACapture;
+        }
+        else
+        {
+            slog((env, "Failed connecting tuner filter to capture filter '%s' for Hauppauge WinTV-dualHD \r\n", pCapInfo->bdaCaptureFilterName));
+            ENCEXCEPT_RET(sage_EncodingException_CAPTURE_DEVICE_INSTALL);
+        }
+        slog((env, "Hauppauge WinTV-dualHD graph was built. \r\n"));
+
+    }
+    else
+
 	do {
 		BOOL bFoundCapture = FALSE;
 		piLastFilter = NULL;

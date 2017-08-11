@@ -119,15 +119,15 @@ HRESULT GetDeviceInfo( char*  pCaptureDevName, DEVICE_DRV_INF* pDrvInfo )
 
 	if ( strstr ( pCaptureDevName, "fd0a5af4-b41d-11d2-9c95-00c04f7971e0" ) != NULL )
 	{
-		pDrvInfo->device_class = 3;
+		pDrvInfo->device_class = 3; // BDA Receiver components (TS Capture)
 	} else
 	if ( strstr ( pCaptureDevName, "71985f48-1ca1-11d3-9cc8-00c04f7971e0" ) != NULL )
 	{
-		pDrvInfo->device_class = 2;
+		pDrvInfo->device_class = 2; // BDA Source Filters (Tuners)
 	} else
 	if ( strstr ( pCaptureDevName, "71985f4b-1ca1-11d3-9cc8-00c04f7971e0" ) != NULL )
 	{
-		pDrvInfo->device_class = 1;
+		pDrvInfo->device_class = 1; // BDA Network Providers
 	} 
 
 	if ( p = strstr( pCaptureDevName, "@device:sw:" ) ) //software device
