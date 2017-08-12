@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--  Created by InstallerBuild.ps1 script 24-May-2017 08:17 -->
+<!--  Created by InstallerBuild.ps1 script 12-Aug-2017 09:35 -->
 <Include>
   <?define MajorVersion="9" ?>
   <?define MinorVersion="1" ?>
-  <?define BuildVersion="1" ?>
-  <?define Revision="651" ?>
-  <?define VersionNumber="$(var.MajorVersion).$(var.MinorVersion).$(var.BuildVersion).$(var.Revision)" ?>
+  <?define BuildVersion="6" ?>
+  <?define VersionNumber="$(var.MajorVersion).$(var.MinorVersion).$(var.BuildVersion)" ?>
 </Include>
 
