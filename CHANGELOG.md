@@ -1,6 +1,18 @@
 # Change Log
 
+## Version 9.1.7 (?)
 * Fix: add support for 2nd tuner of Hauppauge WinTV-dualHD usb tuner stick (Windows).
+* Changes in the STV set 2017081201 for the next SageTV release v9.1.7.0:
+    * malore menus: Removed random misc adjectives after show titles; only display misc textafter the title if it is a star rating.
+	* Removed Zap2it logo from System Information.
+	* EPG Lineup configuration: Changed help text above option buttons, put Schedules Direct option at top of list, old built-in EPG option renamed as plugin option and moved down.
+	* Fixed Music by Artist filtering issue resulting in 0 songs per artist after entering 2nd and subsequent chars.
+	* Disabled access to YouTube, Google videos, and channels.com.
+	* Detailed Setup -> General: reworded the Sync System Clock option.
+	* Detailed Setup -> Advanced: removed Debug Logging enable/disable option because it is always enabled now.
+	* Configuration Wizard playback testing/configuration menu uses the "Default" decoder settings instead of SageTV MPEG decoders.
+	* Detailed Setup -> Customize: renamed extra option to mark channels in guide with non-Zap2it channel IDs to refer to non-Tribune IDs.
+	* Changed Zap2it text to Tribune elsewhere in the STV, since the EPG data fo the old built-in and new SD EPG data both ultimately come from Tribune.  
 
 ## Version 9.1.6 (2017-08-10)
 * Fix: Various fixes and cleanup on Linux Firewire and DVB.
@@ -111,15 +123,15 @@
 * If you are the first to commit changes after a release, ensure that the following have been incremented beyond the last release:
     * MICRO_VERSION in sage/Version.java
 * If you make any changes to stvs/SageTV7/SageTV7.xml, ensure that the following are updated in the STV:
-    * AddGlobalContext( "STVversionText", "October 13, 2015" )
+    * AddGlobalContext( "STVversionText", "August 12, 2017" )
         * This should match the date of the commit.
-    * AddGlobalContext( "ThisSTVSetVersionNum", "2015101301" )
+    * AddGlobalContext( "ThisSTVSetVersionNum", "2017081201" )
         * This should match the date of the commit and if there was more than one commit the same day, the last two digits should be incremented.
         * The format is YYYYMMDDVV.
         * YYYY is the year.
         * MM if the month number.
         * DD is the day of the month.
         * VV is the commit version for this date. This resets to 01 if the date changes.
-    * STVVersion [="9.0.1.1"]
+    * STVVersion [="9.1.7.0"]
         * This should start with MAJOR_VERSION.MINOR_VERSION.MICRO_VERSION in sage/Version.java
-        * The last number should only be incremented in tandem with the last two digits of ThisSTVSetVersionNum.
+        * The last number should be incremented for each update of the STV for the MAJOR_VERSION.MINOR_VERSION.MICRO_VERSION SageTV release, starting with 0 for the first STV version of a new release.
