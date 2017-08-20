@@ -81,7 +81,7 @@
 
 "OPTUS D1 (160.0 E)"
 	frq:12267000 rate:22500 mod:32 fec_rate_in:2 pol:1
-	frq:12295000 rate:22500 mod:32 fec_rate_in:3 pol:1
+	frq:12295000 rate:22500 mod:32 fec_rate_in:2 pol:1
 	frq:12331000 rate:22500 mod:32 fec_rate_in:2 pol:1
 	frq:12358000 rate:22500 mod:32 fec_rate_in:2 pol:1
 	frq:12394000 rate:22500 fec_rate_in:3 pol:1
@@ -99,7 +99,7 @@
 
 "OPTUS D1 (160.0 E) New Zealand"
 	frq:12267000 rate:22500 mod:32 fec_rate_in:2 pol:1
-	frq:12295000 rate:22500 mod:32 fec_rate_in:3 pol:1
+	frq:12295000 rate:22500 mod:32 fec_rate_in:2 pol:1
 	frq:12331000 rate:22500 mod:32 fec_rate_in:2 pol:1
 	frq:12358000 rate:22500 mod:32 fec_rate_in:2 pol:1
 	frq:12394000 rate:22500 fec_rate_in:3 pol:1
