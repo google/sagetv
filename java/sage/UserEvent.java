@@ -206,30 +206,6 @@ public class UserEvent
     "Right/Skip Fwd", "Left/Skip Bkwd", "Up/Volume Up", "Down/Volume Down", "Online", "Video Output",
     "Scroll Left", "Scroll Right", "Scroll Up", "Scroll Down", "Anything", };
 
-  private static final String[] LITE_UENAMES = { "?", "?", "left", "right",
-    "up", "down", "pause", "play", "ff", "rew", "time_scroll",
-    "ch_up", "ch_down", "vol_up", "vol_down", "tv",
-    "faster", "slower", "guide", "power", "select",
-    "info", "record", "mute", "full_screen", "home", "options", "0", "1", "2", "3", "4",
-    "5", "6", "7", "8", "9", "setup", "power_on", "power_off",
-    "mute_on", "mute_off", "ar_fill", "ar_4x3", "ar_16x9", "ar_source", "vol_up2", "vol_down2",
-    "ch_up2", "ch_down2", "page_up", "page_down", "page_right", "page_left", "play_pause",
-    "prev_channel", "ff_2", "rew_2", "live_tv", "back", "forward",
-    "delete", "schedule", "recordings",	"stop", "anything", };
-
-  public static String[] LITE_PRETTY_UENAMES = { "?", "?", "Left", "Right",
-    "Up", "Down", "Pause", "Play", "Skip Fwd/Page Right", "Skip Bkwd/Page Left", "Time Scroll",
-    "Channel Up/Page Up", "Channel Down/Page Down", "Volume Up", "Volume Down", "TV",
-    "Play Faster", "Play Slower", "Guide", "Power", "Select",
-    "Info", "Record", "Mute", "Full Screen", "Home", "Options", "Num 0", "Num 1", "Num 2",
-    "Num 3", "Num 4", "Num 5", "Num 6", "Num 7", "Num 8", "Num 9", "Setup",
-    "Power On", "Power Off", "Mute On", "Mute Off", "Aspect Ratio Fill", "Aspect Ratio 4x3",
-    "Aspect Ratio 16x9", "Aspect Ratio Source", "Right/Volume Up", "Left/Volume Down",
-    "Up/Channel Up", "Down/Channel Down", "Page Up", "Page Down", "Page Right", "Page Left", "Play/Pause",
-    "Previous Channel", "Skip Fwd #2", "Skip Bkwd #2", "Live TV",
-    "Back", "Forward", "Delete", "Recording Schedule",
-    "SageTV Recordings", "Stop", "Anything", };
-
   private static final java.util.Map nameCodeLookup;
   static
   {
@@ -247,8 +223,6 @@ public class UserEvent
       PRETTY_UENAMES[i] = Sage.rez(TRANSLATION_UENAMES[i]);
       nameCodeLookup.put(PRETTY_UENAMES[i].toLowerCase(), new Integer(i));
     }
-    for (int i = 2; i < LITE_UENAMES.length; i++)
-      LITE_PRETTY_UENAMES[i] = Sage.rez(TRANSLATION_UENAMES[getEvtCodeForName(LITE_UENAMES[i])]);
   }
 
   public static String getEvtName(int id)

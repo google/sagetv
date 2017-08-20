@@ -39,6 +39,7 @@ public class Pooler
   public static final Show[] EMPTY_SHOW_ARRAY = new Show[0];
   public static final tv.sage.mod.AbstractWidget[] EMPTY_ABSTRACTWIDGET_ARRAY = new tv.sage.mod.AbstractWidget[0];
   public static final Channel[] EMPTY_CHANNEL_ARRAY = new Channel[0];
+  public static final MediaFile[] EMPTY_MEDIA_FILE_ARRAY = new MediaFile[0];
   private static java.util.Stack vectorPool = new java.util.Stack();
   private static int numVecsCreated = 0;
   private static java.util.Stack arrayListPool = new java.util.Stack();
@@ -263,10 +264,7 @@ public class Pooler
           if (t instanceof OutOfMemoryError)
           {
             // On embedded just terminate the JVM and let it autorestart if we are out of memory
-            if (Sage.EMBEDDED)
-              System.exit(1);
-            else
-              sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createOOMMsg());
+            sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createOOMMsg());
           }
         }
       }

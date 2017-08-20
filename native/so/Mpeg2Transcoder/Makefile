@@ -1,5 +1,16 @@
 JDK_HOME ?= /usr/local/j2sdk
-CC=gcc
+
+ifdef TARGET
+        CROSS_PREFIX:=$(TARGET)-
+else
+        CROSS_PREFIX:=
+endif
+CC:=$(CROSS_PREFIX)gcc
+LD:=$(CROSS_PREFIX)ld
+AR:=$(CROSS_PREFIX)ar
+RANLIB:=$(CROSS_PREFIX)ranlib
+STRIP:=$(CROSS_PREFIX)strip
+
 FFMPEG_DIR = ../../../third_party/ffmpeg
 CFLAGS = -c -fPIC -I$(JDK_HOME)/include/ -I$(JDK_HOME)/include/linux -I$(FFMPEG_DIR)
 BINDIR=/usr/local/bin

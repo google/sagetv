@@ -40,25 +40,22 @@ public class MediaServer implements Runnable
     // Create the default transcoder configuration property. Don't let this one be changed we want to control its defaults
     // NOTE: Change the audio bitrate down to 128 instead of 384. 384 can't be used with mono at lower sampling rates
     // so that would cause failure in transcoding certain files
-    if (!Sage.EMBEDDED)
-    {
-      Sage.put(XCODE_QUALITIES_PROPERTY_ROOT + "DVD", "-f dvd -b 4000 -s " +
-          (MMC.getInstance().isNTSCVideoFormat() ? "720x480" : "720x576") + " -acodec mp2 -r " +
-          (MMC.getInstance().isNTSCVideoFormat() ? "29.97" : "25") + " -ab 128 -ar 48000 -ac 2");
-      Sage.put(XCODE_QUALITIES_PROPERTY_ROOT + "DVD6Ch", "-f dvd -b 4000 -s " +
-          (MMC.getInstance().isNTSCVideoFormat() ? "720x480" : "720x576") + " -acodec ac3 -r " +
-          (MMC.getInstance().isNTSCVideoFormat() ? "29.97" : "25") + " -ab 384 -ar 48000 -ac 6");
-      Sage.put(XCODE_QUALITIES_PROPERTY_ROOT + "DVDAudioOnly", "-f dvd -vcodec copy -acodec mp2 -ab 384 -ar 48000 -ac 2");
-      Sage.put(XCODE_QUALITIES_PROPERTY_ROOT + "music", "-f dvd -vn -acodec mp2 -ab 64 -ar 48000 -ac 2");
-      Sage.put(XCODE_QUALITIES_PROPERTY_ROOT + "music256", "-f dvd -vn -acodec mp2 -ab 256 -ar 48000 -ac 2");
-      Sage.put(XCODE_QUALITIES_PROPERTY_ROOT + "music128", "-f dvd -vn -acodec mp2 -ab 128 -ar 48000 -ac 2");
-      Sage.put(XCODE_QUALITIES_PROPERTY_ROOT + "mp3", "-f dvd -vn -acodec copy");
-      Sage.put(XCODE_QUALITIES_PROPERTY_ROOT + "mpeg2psremux", "-f dvd -vcodec copy -acodec copy -copyts");
-      Sage.put(XCODE_QUALITIES_PROPERTY_ROOT + "SVCD", "-f dvd -b 2000 -g 3 -bf 0 -acodec mp2 -ab 128 -ar 48000 -ac 2 -s " +
-          (MMC.getInstance().isNTSCVideoFormat() ? "352x240" : "352x288") + " -r " + (MMC.getInstance().isNTSCVideoFormat() ? "29.97" : "25"));
-      Sage.put(XCODE_QUALITIES_PROPERTY_ROOT + "SVCD6Ch", "-f dvd -b 2000 -g 3 -bf 0 -acodec ac3 -ab 384 -ar 48000 -ac 6 -s " +
-          (MMC.getInstance().isNTSCVideoFormat() ? "352x240" : "352x288") + " -r " + (MMC.getInstance().isNTSCVideoFormat() ? "29.97" : "25"));
-    }
+    Sage.put(XCODE_QUALITIES_PROPERTY_ROOT + "DVD", "-f dvd -b 4000 -s " +
+        (MMC.getInstance().isNTSCVideoFormat() ? "720x480" : "720x576") + " -acodec mp2 -r " +
+        (MMC.getInstance().isNTSCVideoFormat() ? "29.97" : "25") + " -ab 128 -ar 48000 -ac 2");
+    Sage.put(XCODE_QUALITIES_PROPERTY_ROOT + "DVD6Ch", "-f dvd -b 4000 -s " +
+        (MMC.getInstance().isNTSCVideoFormat() ? "720x480" : "720x576") + " -acodec ac3 -r " +
+        (MMC.getInstance().isNTSCVideoFormat() ? "29.97" : "25") + " -ab 384 -ar 48000 -ac 6");
+    Sage.put(XCODE_QUALITIES_PROPERTY_ROOT + "DVDAudioOnly", "-f dvd -vcodec copy -acodec mp2 -ab 384 -ar 48000 -ac 2");
+    Sage.put(XCODE_QUALITIES_PROPERTY_ROOT + "music", "-f dvd -vn -acodec mp2 -ab 64 -ar 48000 -ac 2");
+    Sage.put(XCODE_QUALITIES_PROPERTY_ROOT + "music256", "-f dvd -vn -acodec mp2 -ab 256 -ar 48000 -ac 2");
+    Sage.put(XCODE_QUALITIES_PROPERTY_ROOT + "music128", "-f dvd -vn -acodec mp2 -ab 128 -ar 48000 -ac 2");
+    Sage.put(XCODE_QUALITIES_PROPERTY_ROOT + "mp3", "-f dvd -vn -acodec copy");
+    Sage.put(XCODE_QUALITIES_PROPERTY_ROOT + "mpeg2psremux", "-f dvd -vcodec copy -acodec copy -copyts");
+    Sage.put(XCODE_QUALITIES_PROPERTY_ROOT + "SVCD", "-f dvd -b 2000 -g 3 -bf 0 -acodec mp2 -ab 128 -ar 48000 -ac 2 -s " +
+        (MMC.getInstance().isNTSCVideoFormat() ? "352x240" : "352x288") + " -r " + (MMC.getInstance().isNTSCVideoFormat() ? "29.97" : "25"));
+    Sage.put(XCODE_QUALITIES_PROPERTY_ROOT + "SVCD6Ch", "-f dvd -b 2000 -g 3 -bf 0 -acodec ac3 -ab 384 -ar 48000 -ac 6 -s " +
+        (MMC.getInstance().isNTSCVideoFormat() ? "352x240" : "352x288") + " -r " + (MMC.getInstance().isNTSCVideoFormat() ? "29.97" : "25"));
     extraFileSet = new java.util.HashSet();
     String extraFilesProp = Sage.get("media_server/extra_allowed_files", "miniclient");
     java.util.StringTokenizer toker = new java.util.StringTokenizer(extraFilesProp, ";");
@@ -79,7 +76,7 @@ public class MediaServer implements Runnable
         nextExt = nextExt.substring(1);
       readAheadFormats.add(nextExt.toLowerCase());
     }
-    useNioTransfers = Sage.getBoolean("use_nio_transfers", Sage.EMBEDDED);
+    useNioTransfers = Sage.getBoolean("use_nio_transfers", false);
   }
 
   public static void main(String[] args) { new MediaServer().run(); }
@@ -610,10 +607,7 @@ public class MediaServer implements Runnable
           {
             // On embedded we want to just check the file size straight up to avoid the network transfer overhead of communicating
             // with the network encoder
-            if (Sage.EMBEDDED && !circFileRec)
-              availSize = lastRecFileSize = fileChannel.size();
-            else
-              availSize = lastRecFileSize = MMC.getInstance().getRecordedBytes(currFile);
+            availSize = lastRecFileSize = MMC.getInstance().getRecordedBytes(currFile);
             totalSize = getLargeFileSize(currFile.toString());
           }
           else
@@ -678,7 +672,7 @@ public class MediaServer implements Runnable
       // NOTE: This used to not check the size through the MMC, but it's required to do that
       // because a circular file will have a bigger size than what's already recorded in it.
       long overage;
-      if (!recordingCurrFile || (Sage.EMBEDDED && !circFileRec))
+      if (!recordingCurrFile)
       {
         // On embedded we want to just check the file size straight up to avoid the network transfer overhead of communicating
         // with the network encoder
@@ -705,7 +699,7 @@ public class MediaServer implements Runnable
       {
         try { Thread.sleep(100); } catch (Exception e){}
         //Thread.yield();
-        long recByteLen = (downer == null ? ((Sage.EMBEDDED && !circFileRec) ? fileChannel.size() : MMC.getInstance().getRecordedBytes(currFile)) : downer.getNumDownloadedBytes());
+        long recByteLen = (downer == null ? MMC.getInstance().getRecordedBytes(currFile) : downer.getNumDownloadedBytes());
         recordingCurrFile = (downer == null && MMC.getInstance().isRecording(currFile)) || (downer != null && !downer.isComplete());
         if (recByteLen < 0 || !recordingCurrFile)
           recByteLen = fileChannel.size();
@@ -811,7 +805,7 @@ public class MediaServer implements Runnable
         long readThisTime = Math.min(currFileSize - offset, length);
         if (readThisTime > 0)
         {
-          if (!useNioTransfers || (!Sage.EMBEDDED && Sage.LINUX_OS && offset +length >= Integer.MAX_VALUE))
+          if (!useNioTransfers || (Sage.LINUX_OS && offset +length >= Integer.MAX_VALUE))
           {
             // NOTE: Due to Java using the sendfile kernel API call to do the transfer,
             // there's a 32-bit limitation here. This is very unfortunate. But since it's
@@ -942,7 +936,7 @@ public class MediaServer implements Runnable
           TimeoutHandler.registerTimeout(TIMEOUT, s);
         while (length > 0)
         {
-          if (!useNioTransfers || (!Sage.EMBEDDED && Sage.LINUX_OS && offset +length >= Integer.MAX_VALUE) || remuxer != null)
+          if (!useNioTransfers || (Sage.LINUX_OS && offset +length >= Integer.MAX_VALUE) || remuxer != null)
           {
             // NOTE: Due to Java using the sendfile kernel API call to do the transfer,
             // there's a 32-bit limitation here. This is very unfortunate. But since it's
@@ -1204,7 +1198,7 @@ public class MediaServer implements Runnable
             writeFile(Long.parseLong(tempString.substring(6, idx)),
                 Long.parseLong(tempString.substring(idx + 1)));
           }
-          else if (tempString.indexOf("XCODE_SETUP ") == 0 && !Sage.EMBEDDED)
+          else if (tempString.indexOf("XCODE_SETUP ") == 0)
           {
             String xcodeMode = tempString.substring(tempString.indexOf(" ") + 1);
             if (Sage.DBG) System.out.println("MediaServer is serving up in transcode mode: " + xcodeMode);

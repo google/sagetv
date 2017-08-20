@@ -32,7 +32,6 @@ public class DirectX9SageRenderer extends SageRenderer implements NativeImageAll
 
   public static boolean hasDirectX9()
   {
-    if (Sage.EMBEDDED) return false;
     //		if (!Sage.WINDOWS_OS) return false;
     // the hasDirectX90 method is defined in SageTVWin32.dll so we don't
     // need the DX9 libs to find out if its there

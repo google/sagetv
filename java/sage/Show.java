@@ -56,7 +56,24 @@ public final class Show extends DBObject
   public static final byte ANCHOR_ROLE = 26;
   public static final byte VOICE_ROLE = 27;
   public static final byte MUSICAL_GUEST_ROLE = 28;
-  public static final byte MAX_ROLE_NUM = 28;
+  public static final byte FILM_EDITOR_ROLE = 29;
+  public static final byte MUSIC_ROLE = 30;
+  public static final byte CASTING_ROLE = 31;
+  public static final byte CINEMATOGRAPHER_ROLE = 32;
+  public static final byte COSTUME_DESIGNER_ROLE = 33;
+  public static final byte PRODUCTION_DESIGN_ROLE = 34;
+  public static final byte CREATOR_ROLE = 35;
+  public static final byte CO_PRODUCER_ROLE = 36;
+  public static final byte ASSOCIATE_PRODUCER_ROLE = 37;
+  public static final byte FIRST_ASSISTANT_DIRECTOR_ROLE = 38;
+  public static final byte SUPERVISING_ART_DIRECTION_ROLE = 39;
+  public static final byte CO_EXECUTIVE_PRODUCER_ROLE = 40;
+  public static final byte DIRECTOR_OF_PHOTOGRAPHY_ROLE = 41;
+  public static final byte UNIT_PRODUCTION_MANAGER_ROLE = 42;
+  public static final byte MAKEUP_ARTIST_ROLE = 43;
+  public static final byte ASSISTANT_DIRECTOR_ROLE = 44;
+  public static final byte MUSIC_SUPERVISOR_ROLE = 45;
+  public static final byte MAX_ROLE_NUM = 45;
   public static final byte ALL_ROLES = 127;
 
   public static String[] getRoleNames()
@@ -69,8 +86,15 @@ public final class Show extends DBObject
         Sage.rez("Coach"), Sage.rez("Host"), Sage.rez("Executive_Producer"),
         Sage.rez("Artist"), Sage.rez("Album_Artist"), Sage.rez("Composer"),
         Sage.rez("Judge"), Sage.rez("Narrator"), Sage.rez("Contestant"),
-        Sage.rez("Correspondent"), Sage.rez("Team"), Sage.rez("Guest Voice"),
-        Sage.rez("Anchor"), Sage.rez("Voice"), Sage.rez("Musical Guest")
+        Sage.rez("Correspondent"), Sage.rez("Team"), Sage.rez("Guest_Voice"),
+        Sage.rez("Anchor"), Sage.rez("Voice"), Sage.rez("Musical_Guest"),
+        Sage.rez("Film_Editor"), Sage.rez("Music"), Sage.rez("Casting"),
+        Sage.rez("Cinematographer"), Sage.rez("Costume_Designer"), Sage.rez("Production_Design"),
+        Sage.rez("Creator"), Sage.rez("CoProducer"), Sage.rez("Associate_Producer"),
+        Sage.rez("First_Assistant_Director"), Sage.rez("Supervising_Art_Direction"),
+        Sage.rez("CoExecutive_Producer"), Sage.rez("Director_of_Photography"),
+        Sage.rez("Unit_Production_Manager"), Sage.rez("Makeup_Artist"),
+        Sage.rez("Assistant_Director"), Sage.rez("Music_Supervisor")
     };
   }
 
@@ -108,6 +132,9 @@ public final class Show extends DBObject
   public static final int IMAGE_SOURCE_MASK = 0x3;
   public static final int IMAGE_SOURCE_BONES_GSTATIC = 0;
   public static final int IMAGE_SOURCE_FIBER_GSTATIC = 1;
+
+  // Used for localized check on isMovie() method.
+  static String movieString = Sage.rez("Movie");
 
   public static String getRoleString(int x)
   {
@@ -178,6 +205,18 @@ public final class Show extends DBObject
 
   public String getCategory() { return (categories.length == 0) ? "" : categories[0].name; }
 
+  /**
+   * Checks case if the provided string matches the category.
+   *
+   * @param compare This is a Stringer optimized lookup that requires the incoming string to already
+   *               be all lowercase.
+   * @return <code>true</code> if the string matches the category.
+   */
+  public boolean isCategory(String compare)
+  {
+    return categories.length != 0 && categories[0].equalsIgnoreCase(compare);
+  }
+
   public String getSubCategory() { return (categories.length < 2) ? "" : categories[1].name; }
 
   public String[] getCategories()
@@ -237,7 +276,7 @@ public final class Show extends DBObject
     }
   }
 
-  public void appendExpandedRatingsString(StringBuffer rv)
+  public void appendExpandedRatingsString(StringBuilder rv)
   {
     for (int i = 0; i < ers.length; i++)
     {
@@ -249,7 +288,7 @@ public final class Show extends DBObject
 
   public String getExpandedRatingsString()
   {
-    StringBuffer rv = new StringBuffer();
+    StringBuilder rv = new StringBuilder();
     appendExpandedRatingsString(rv);
     return rv.toString();
   }
@@ -266,7 +305,7 @@ public final class Show extends DBObject
     return rv;
   }
 
-  public void appendBonusesString(StringBuffer rv)
+  public void appendBonusesString(StringBuilder rv)
   {
     for (int i = 0; i < bonuses.length; i++)
     {
@@ -278,7 +317,7 @@ public final class Show extends DBObject
 
   public String getBonusesString()
   {
-    StringBuffer rv = new StringBuffer();
+    StringBuilder rv = new StringBuilder();
     appendBonusesString(rv);
     return rv.toString();
   }
@@ -418,10 +457,7 @@ public final class Show extends DBObject
   {
     super(in, ver, idMap);
     Wizard wiz = Wizard.getInstance();
-    if (!Wizard.COMPACT_DB)
-      duration = in.readLong();
-    else
-      duration = in.readInt();
+    duration = in.readLong();
     title = wiz.getTitleForID(readID(in, idMap));
 
     // We lazily create these String to speed up loading time and reduce memory overhead
@@ -442,7 +478,7 @@ public final class Show extends DBObject
 
     Stringer category = wiz.getCategoryForID(readID(in, idMap));
     Stringer subCategory = wiz.getSubCategoryForID(readID(in, idMap));
-    int numPeople = Wizard.COMPACT_DB ? in.readShort() : in.readInt();
+    int numPeople = in.readInt();
     if (numPeople > Wizard.STUPID_SIZE)
       throw new IOException("Stupid array size:" + numPeople);
     people = numPeople == 0 ? Pooler.EMPTY_PERSON_ARRAY : new Person[numPeople];
@@ -457,7 +493,7 @@ public final class Show extends DBObject
     }
 
     rated = wiz.getRatedForID(readID(in, idMap));
-    int numERs = Wizard.COMPACT_DB ? in.readShort() : in.readInt();
+    int numERs = in.readInt();
     if (numERs > Wizard.STUPID_SIZE)
       throw new IOException("Stupid array size.");
     ers = numERs == 0 ? Pooler.EMPTY_STRINGER_ARRAY : new Stringer[numERs];
@@ -466,17 +502,12 @@ public final class Show extends DBObject
 
     year = wiz.getYearForID(readID(in, idMap));
     pr = wiz.getPRForID(readID(in, idMap));
-    if (!Wizard.COMPACT_DB || ver >= 0x48)
-    {
-      int numBonus = Wizard.COMPACT_DB ? in.readShort() : in.readInt();
-      if (numBonus > Wizard.STUPID_SIZE)
-        throw new IOException("Stupid array size.");
-      bonuses = numBonus == 0 ? Pooler.EMPTY_STRINGER_ARRAY : new Stringer[numBonus];
-      for (int i = 0; i < numBonus; i++)
-        bonuses[i] = wiz.getBonusForID(readID(in, idMap));
-    }
-    else
-      bonuses = Pooler.EMPTY_STRINGER_ARRAY;
+    int numBonus = in.readInt();
+    if (numBonus > Wizard.STUPID_SIZE)
+      throw new IOException("Stupid array size.");
+    bonuses = numBonus == 0 ? Pooler.EMPTY_STRINGER_ARRAY : new Stringer[numBonus];
+    for (int i = 0; i < numBonus; i++)
+      bonuses[i] = wiz.getBonusForID(readID(in, idMap));
 
     // The Show Don't Like & last Watched are both encoded into this field
     long lastWatchedData = in.readLong();
@@ -501,14 +532,13 @@ public final class Show extends DBObject
         title = wiz.getTitleForName(primeTitle.name);
       }
     }
-    else if (!Wizard.COMPACT_DB)
+    else
       /*forcedFirstRun =*/ in.readBoolean();
     size = in.readShort();
     externalID = new byte[size];
     if (size > 0)
       in.readFully(externalID);
-    if (!Wizard.COMPACT_DB)
-      /*updateCount =*/ in.readInt();
+    /*updateCount =*/ in.readInt();
     language = wiz.getBonusForID(readID(in, idMap));
     originalAirDate = in.readLong();
     if (ver >= 0x4A)
@@ -617,10 +647,7 @@ public final class Show extends DBObject
   {
     super.write(out, flags);
     boolean useLookupIdx = (flags & Wizard.WRITE_OPT_USE_ARRAY_INDICES) != 0;
-    if (!Wizard.COMPACT_DB)
-      out.writeLong(duration);
-    else
-      out.writeInt((int)duration);
+    out.writeLong(duration);
     out.writeInt((title == null) ? 0 : (useLookupIdx ? title.lookupIdx : title.id));
     byte[] barr = episodeNameBytes;
     if (barr != null) {
@@ -639,10 +666,7 @@ public final class Show extends DBObject
     out.writeInt((categories.length == 0) ? 0 : (useLookupIdx ? categories[0].lookupIdx : categories[0].id));
     out.writeInt((categories.length < 2) ? 0 : (useLookupIdx ? categories[1].lookupIdx : categories[1].id));
 
-    if (!Wizard.COMPACT_DB)
-      out.writeInt(people.length);
-    else
-      out.writeShort(people.length);
+    out.writeInt(people.length);
     for (int i = 0; i < people.length; i++)
     {
       out.writeInt(useLookupIdx ? people[i].lookupIdx : people[i].id);
@@ -650,25 +674,16 @@ public final class Show extends DBObject
     }
 
     out.writeInt((rated == null) ? 0 : (useLookupIdx ? rated.lookupIdx : rated.id));
-    if (!Wizard.COMPACT_DB)
-      out.writeInt(ers.length);
-    else
-      out.writeShort(ers.length);
+    out.writeInt(ers.length);
     for (int i = 0; i < ers.length; i++)
       out.writeInt(useLookupIdx ? ers[i].lookupIdx : ers[i].id);
 
     out.writeInt((year == null) ? 0 : (useLookupIdx ? year.lookupIdx : year.id));
     out.writeInt((pr == null) ? 0 : (useLookupIdx ? pr.lookupIdx : pr.id));
 
-    if (!Wizard.COMPACT_DB || SageConstants.PVR)
-    {
-      if (!Wizard.COMPACT_DB)
-        out.writeInt(bonuses.length);
-      else
-        out.writeShort(bonuses.length);
-      for (int i = 0; i < bonuses.length; i++)
-        out.writeInt(useLookupIdx ? bonuses[i].lookupIdx : bonuses[i].id);
-    }
+    out.writeInt(bonuses.length);
+    for (int i = 0; i < bonuses.length; i++)
+      out.writeInt(useLookupIdx ? bonuses[i].lookupIdx : bonuses[i].id);
 
     long lastWatchedData = lastWatched;
     if (dontLike) {
@@ -678,13 +693,11 @@ public final class Show extends DBObject
         lastWatchedData *= -1;
     }
     out.writeLong(lastWatchedData);
-    if (!Wizard.COMPACT_DB)
-      out.writeBoolean(/*forcedFirstRun*/false); // old first run data
+    out.writeBoolean(/*forcedFirstRun*/false); // old first run data
     out.writeShort(externalID.length);
     if (externalID.length > 0)
       out.write(externalID);
-    if (!Wizard.COMPACT_DB)
-      out.writeInt(/*updateCount*/id);
+    out.writeInt(/*updateCount*/id);
     out.writeInt((language == null) ? 0 : (useLookupIdx ? language.lookupIdx : language.id));
     out.writeLong(originalAirDate);
     out.writeShort(seasonNum);
@@ -1238,7 +1251,7 @@ public final class Show extends DBObject
         if (SDImages.getImageCount(i, imageURLs) > prefIndex)
         {
           int realIndex = imageURLs[0][i] + prefIndex;
-          return SDImages.decodeImageUrl(showcardID, imageURLs[realIndex]);
+          return SDImages.decodeShowImageUrl(showcardID, imageURLs[realIndex]);
         }
 
         i += 2;
@@ -1251,7 +1264,7 @@ public final class Show extends DBObject
         if (SDImages.getImageCount(i, imageURLs) > 0)
         {
           int realIndex = imageURLs[0][i];
-          return SDImages.decodeImageUrl(showcardID, imageURLs[realIndex]);
+          return SDImages.decodeShowImageUrl(showcardID, imageURLs[realIndex]);
         }
 
         i += 2;
@@ -1288,35 +1301,47 @@ public final class Show extends DBObject
       return getImageIdUrl(imageIDs[0], seriesID, showcardID, getExternalID(), false);
   }
 
+  /**
+   * Returns an image URL that's representative of this Movie
+   * <p/>
+   * If no images are available with the preferred index, any image will be returned.
+   *
+   * @param prefIndex The preferred image index.
+   * @param thumb Request thumbnail size image.
+   * @return A URL if an image was available or <code>null</code> if no images are available.
+   */
   public String getAnyImageUrl(int prefIndex, boolean thumb)
   {
     if (imageURLs.length > 1)
     {
-      // Thumbnails are even numbers and full images are odd.
+      // Thumbnails are even numbers and full images are odd. We are indexing in reverse because
+      // this will get us box art, then poster and last photo which is generally preferred for
+      // movies.
+
       // Try to get preferred image URL.
-      int i = thumb ? 0 : 1;
-      while (i < imageURLs[0].length)
+      int i = thumb ? imageURLs[0].length - 2 : imageURLs[0].length - 1;
+      while (i > 0)
       {
         if (SDImages.getImageCount(i, imageURLs) > prefIndex)
         {
           int realIndex = imageURLs[0][i] + prefIndex;
-          return SDImages.decodeImageUrl(showcardID, imageURLs[realIndex]);
+          return SDImages.decodeShowImageUrl(showcardID, imageURLs[realIndex]);
         }
 
-        i += 2;
+        i -= 2;
       }
 
       // Get any image URL.
-      i = thumb ? 0 : 1;
-      while (i < imageURLs[0].length)
+      i = thumb ? imageURLs[0].length - 2 : imageURLs[0].length - 1;
+      while (i > 0)
       {
         if (SDImages.getImageCount(i, imageURLs) > 0)
         {
           int realIndex = imageURLs[0][i];
-          return SDImages.decodeImageUrl(showcardID, imageURLs[realIndex]);
+          return SDImages.decodeShowImageUrl(showcardID, imageURLs[realIndex]);
         }
 
-        i += 2;
+        i -= 2;
       }
 
       return null;
@@ -1362,7 +1387,7 @@ public final class Show extends DBObject
         if (currentCount > idx)
         {
           int realIndex = imageURLs[0][i] + idx;
-          return SDImages.decodeImageUrl(showcardID, imageURLs[realIndex]);
+          return SDImages.decodeShowImageUrl(showcardID, imageURLs[realIndex]);
         }
 
         idx -= currentCount;
@@ -1428,7 +1453,7 @@ public final class Show extends DBObject
   {
     if (externalID.length > 1 && externalID[0] == 'M' && externalID[1] == 'V')
       return true;
-    if (categories != null && categories.length > 0 && Sage.rez("Movie").equals(categories[0].name))
+    if (categories != null && categories.length > 0 && movieString.equals(categories[0].name))
       return true;
     return false;
   }

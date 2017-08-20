@@ -25,6 +25,8 @@ import sage.EPGDataSource;
 import sage.ExternalTuningManager;
 import sage.FileDownloader;
 import sage.FileTransfer;
+import sage.SchedulerSelector;
+import sage.SeekerSelector;
 import sage.IOUtils;
 import sage.LinuxUtils;
 import sage.MMC;
@@ -195,7 +197,7 @@ public class Global {
        * @declaration public boolean AreThereUnresolvedConflicts();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return Boolean.valueOf(Scheduler.getInstance().areThereDontKnows());
+        return Boolean.valueOf(SchedulerSelector.getInstance().areThereDontKnows());
       }});
     rft.put(new PredefinedJEPFunction("Global", "IsAsleep")
     {
@@ -217,7 +219,7 @@ public class Global {
        * @declaration public long GetTotalDiskspaceAvailable();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return new Long(Seeker.getInstance().getAvailVideoDiskspace());
+        return new Long(SeekerSelector.getInstance().getAvailVideoDiskspace());
       }});
     rft.put(new PredefinedJEPFunction("Global", "GetTotalLibraryDuration", true)
     {
@@ -228,7 +230,7 @@ public class Global {
        * @declaration public long GetTotalLibraryDuration();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return new Long(Seeker.getInstance().getTotalImportedLibraryDuration());
+        return new Long(SeekerSelector.getInstance().getTotalImportedLibraryDuration());
       }});
     rft.put(new PredefinedJEPFunction("Global", "GetTotalVideoDuration", true)
     {
@@ -239,7 +241,7 @@ public class Global {
        * @declaration public long GetTotalVideoDuration();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return new Long(Seeker.getInstance().getTotalVideoDuration());
+        return new Long(SeekerSelector.getInstance().getTotalVideoDuration());
       }});
     rft.put(new PredefinedJEPFunction("Global", "GetUsedLibraryDiskspace", true)
     {
@@ -250,7 +252,7 @@ public class Global {
        * @declaration public long GetUsedLibraryDiskspace();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return new Long(Seeker.getInstance().getUsedImportedLibraryDiskspace());
+        return new Long(SeekerSelector.getInstance().getUsedImportedLibraryDiskspace());
       }});
     rft.put(new PredefinedJEPFunction("Global", "GetUsedVideoDiskspace", true)
     {
@@ -261,7 +263,7 @@ public class Global {
        * @declaration public long GetUsedVideoDiskspace();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return new Long(Seeker.getInstance().getUsedVideoDiskspace());
+        return new Long(SeekerSelector.getInstance().getUsedVideoDiskspace());
       }});
     rft.put(new PredefinedJEPFunction("Global", "AreAiringsSameShow", 2, new String[] {"Airing1", "Airing2"})
     {
@@ -429,7 +431,7 @@ public class Global {
        * @declaration public MediaFile[] GetCurrentlyRecordingMediaFiles();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return Seeker.getInstance().getCurrRecordFiles();
+        return SeekerSelector.getInstance().getCurrRecordFiles();
       }});
     rft.put(new PredefinedJEPFunction("Global", "GetSuggestedIntelligentRecordings", true)
     {
@@ -442,7 +444,7 @@ public class Global {
        * @declaration public Airing[] GetSuggestedIntelligentRecordings();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return Seeker.getInstance().getIRScheduledAirings();
+        return SeekerSelector.getInstance().getIRScheduledAirings();
       }});
     rft.put(new PredefinedJEPFunction("Global", "GetScheduledRecordings", true)
     {
@@ -453,7 +455,7 @@ public class Global {
        * @declaration public Airing[] GetScheduledRecordings();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return Seeker.getInstance().getInterleavedScheduledAirings();
+        return SeekerSelector.getInstance().getInterleavedScheduledAirings();
       }});
     rft.put(new PredefinedJEPFunction("Global", "GetScheduledRecordingsForDevice", 1, new String[] { "CaptureDevice"}, true)
     {
@@ -465,7 +467,7 @@ public class Global {
        * @declaration public Airing[] GetScheduledRecordingsForDevice(String CaptureDevice);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return Seeker.getInstance().getScheduledAiringsForSource(getString(stack));
+        return SeekerSelector.getInstance().getScheduledAiringsForSource(getString(stack));
       }});
     rft.put(new PredefinedJEPFunction("Global", "GetScheduledRecordingsForTime", 2, new String[] { "StartTime", "StopTime" }, true)
     {
@@ -479,7 +481,7 @@ public class Global {
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         long stop = getLong(stack);
-        return Seeker.getInstance().getInterleavedScheduledAirings(getLong(stack), stop);
+        return SeekerSelector.getInstance().getInterleavedScheduledAirings(getLong(stack), stop);
       }});
     rft.put(new PredefinedJEPFunction("Global", "GetScheduledRecordingsForDeviceForTime", 3, new String[] { "CaptureDevice", "StartTime", "StopTime"}, true)
     {
@@ -495,7 +497,7 @@ public class Global {
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         long stop = getLong(stack);
         long start = getLong(stack);
-        return Seeker.getInstance().getScheduledAiringsForSource(getString(stack), start, stop);
+        return SeekerSelector.getInstance().getScheduledAiringsForSource(getString(stack), start, stop);
       }});
     rft.put(new PredefinedJEPFunction("Global", "GetRecentlyWatched", 1, new String[] {"DurationToLookBack"}, true)
     {
@@ -507,7 +509,7 @@ public class Global {
        * @declaration public Airing[] GetRecentlyWatched(long DurationToLookBack);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return Seeker.getInstance().getRecentWatches(Sage.time() - getLong(stack));
+        return SeekerSelector.getInstance().getRecentWatches(Sage.time() - getLong(stack));
       }});
     rft.put(new PredefinedJEPFunction("Global", "RunLibraryImportScan", 1, new String[] {"WaitUntilDone"}, true)
     {
@@ -518,7 +520,7 @@ public class Global {
        * @declaration public void RunLibraryImportScan(boolean WaitUntilDone);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        Seeker.getInstance().scanLibrary(Catbert.evalBool(stack.pop())); return null;
+        SeekerSelector.getInstance().scanLibrary(Catbert.evalBool(stack.pop())); return null;
       }});
     rft.put(new PredefinedJEPFunction("Global", "Exit")
     {
@@ -587,7 +589,7 @@ public class Global {
           }
         }
         EPG.getInstance().kick();
-        Scheduler.getInstance().kick(false);
+        SchedulerSelector.getInstance().kick(false);
         if (Sage.client)
         {
           return makeNetworkedCall(stack);
@@ -603,7 +605,7 @@ public class Global {
        * @declaration public long GetApplicationLaunchTime();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return new Long(Sage.EMBEDDED ? (Sage.time() - (Sage.eventTime() - SageTV.getInstanceStartTime())) : SageTV.getInstanceStartTime());
+        return new Long(SageTV.getInstanceStartTime());
       }});
     rft.put(new PredefinedJEPFunction("Global", "GetFocusContext")
     {
@@ -728,9 +730,7 @@ public class Global {
        * @declaration public java.util.Vector GetSageCommandNames();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        java.util.Vector rv = new java.util.Vector(java.util.Arrays.asList(
-            (SageConstants.LITE && false)
-            ? UserEvent.LITE_PRETTY_UENAMES : UserEvent.PRETTY_UENAMES));
+        java.util.Vector rv = new java.util.Vector(java.util.Arrays.asList(UserEvent.PRETTY_UENAMES));
         rv.remove(0); // ?
         rv.remove(0); // ?
         rv.remove(rv.size() - 1); // Anything
@@ -1653,8 +1653,8 @@ public class Global {
        * @declaration public java.util.Vector GetAiringsThatWontBeRecorded(boolean OnlyUnresolved);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        java.util.Map conMap = Catbert.evalBool(stack.pop()) ? Scheduler.getInstance().getUnresolvedConflictsMap() :
-          Scheduler.getInstance().getConflictsMap();
+        java.util.Map conMap = Catbert.evalBool(stack.pop()) ? SchedulerSelector.getInstance().getUnresolvedConflictsMap() :
+          SchedulerSelector.getInstance().getConflictsMap();
         java.util.Vector rv = new java.util.Vector();
         java.util.Iterator walker = conMap.values().iterator();
         while (walker.hasNext())
@@ -1795,10 +1795,6 @@ public class Global {
             continue;
           rv.add(foo.getLocalUIClientName());
         }
-        if (Sage.EMBEDDED && !Sage.client)
-        {
-          return NetworkClient.getConnectedClientIDs();
-        }
         return rv.toArray(Pooler.EMPTY_STRING_ARRAY);
       }});
     rft.put(new PredefinedJEPFunction("Global", "GetUIContextName")
@@ -1907,7 +1903,7 @@ public class Global {
 							}
 						}
 					}*/
-            rv = Catbert.getRecordFailureObject(Seeker.getInstance().timedRecord(start, stop, c.getStationID(), recurCode, baseAir, uiClient));
+            rv = Catbert.getRecordFailureObject(SeekerSelector.getInstance().timedRecord(start, stop, c.getStationID(), recurCode, baseAir, uiClient));
             Catbert.asyncTaskComplete(taskID, rv);
           }
         }, "AsyncCreateTimedRecording");
@@ -2525,7 +2521,7 @@ public class Global {
        * @declaration public void CachePlaceshifterLogin();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        if (!Sage.EMBEDDED && stack.getUIMgr() != null && stack.getUIMgr().getUIClientType() == UIClient.REMOTE_UI &&
+        if (stack.getUIMgr() != null && stack.getUIMgr().getUIClientType() == UIClient.REMOTE_UI &&
             stack.getUIMgr().getRootPanel().getRenderEngine() instanceof MiniClientSageRenderer)
         {
           ((MiniClientSageRenderer)stack.getUIMgr().getRootPanel().getRenderEngine()).cacheAuthenticationNow();
@@ -2542,7 +2538,7 @@ public class Global {
        * @declaration public boolean CanCachePlaceshifterLogin();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        if (!Sage.EMBEDDED && stack.getUIMgr() != null && stack.getUIMgr().getUIClientType() == UIClient.REMOTE_UI &&
+        if (stack.getUIMgr() != null && stack.getUIMgr().getUIClientType() == UIClient.REMOTE_UI &&
             stack.getUIMgr().getRootPanel().getRenderEngine() instanceof MiniClientSageRenderer)
         {
           return Boolean.valueOf(((MiniClientSageRenderer)stack.getUIMgr().getRootPanel().getRenderEngine()).canCacheAuthentication());
@@ -2705,13 +2701,7 @@ public class Global {
        * @declaration public String GetDisplayResolutionDetails(String Resolution);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        if (!Sage.EMBEDDED)
-          getString(stack);
-        else if (stack.getUIMgr() != null && stack.getUIMgr().getUIClientType() == UIClient.REMOTE_UI &&
-            stack.getUIMgr().getRootPanel().getRenderEngine() instanceof MiniClientSageRenderer)
-        {
-          return ((MiniClientSageRenderer)stack.getUIMgr().getRootPanel().getRenderEngine()).getDetailedResolution(getString(stack));
-        }
+        getString(stack);
         return null;
       }});
     rft.put(new PredefinedJEPFunction("Global", "GetPreferredDisplayResolutions")
@@ -2787,8 +2777,6 @@ public class Global {
           data[1] = 'T';
           data[2] = 'V';
           data[3] = 1;
-          if (Sage.EMBEDDED)
-            data[4] = 99; // to indicate we also accept embedded servers where we run as a fat client
           pack.setLength(32);
           sock.setBroadcast(true);
           // Find the broadcast address for this subnet.
@@ -2804,33 +2792,15 @@ public class Global {
             if (pack.getLength() >= 4)
             {
               if (Sage.DBG) System.out.println("Discovery packet received:" + pack);
-              if (data[0] == 'S' && data[1] == 'T' && data[2] == 'V' && (data[3] == 2 || (data[3] == 3 && Sage.EMBEDDED)))
+              if (data[0] == 'S' && data[1] == 'T' && data[2] == 'V' && data[3] == 2)
               {
                 // Make sure it's not us
                 String had = pack.getAddress().getHostAddress();
-                if (!IOUtils.isLocalhostAddress(pack.getAddress()) && (!Sage.EMBEDDED || !pack.getAddress().getHostAddress().equals(LinuxUtils.getIPAddress())))
+                if (!IOUtils.isLocalhostAddress(pack.getAddress()))
                 {
                   StringBuffer si = new StringBuffer();
-                  String theName = Sage.EMBEDDED ? null : pack.getAddress().getHostName();
-                  if (Sage.EMBEDDED)
-                  {
-                    try
-                    {
-                      jcifs.netbios.NbtAddress[] netadds = jcifs.netbios.NbtAddress.getAllByAddress(had);
-                      for (int i = 0; i < netadds.length; i++)
-                      {
-                        if (!netadds[i].isGroupAddress())
-                        {
-                          theName = netadds[i].getHostName();
-                          break;
-                        }
-                      }
-                    }
-                    catch (java.net.UnknownHostException uhe)
-                    {
-                      System.out.println("Error in netbios naming discovery:" + uhe);
-                    }
-                  }
+                  String theName = pack.getAddress().getHostName();
+
                   si.append(theName == null ? had : theName);
                   si.append(";");
                   si.append(had);
@@ -2879,7 +2849,7 @@ public class Global {
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception
       {
-        return Sage.EMBEDDED ? Boolean.TRUE : Boolean.FALSE;
+        return Boolean.FALSE;
       }
     });
     rft.put(new PredefinedJEPFunction("Global", "IsEmbeddedServer", true)
@@ -2895,12 +2865,12 @@ public class Global {
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception
       {
-        return Sage.EMBEDDED ? Boolean.TRUE : Boolean.FALSE;
+        return Boolean.FALSE;
       }
     });
     rft.put(new PredefinedJEPFunction("Global", "IsPVR", true)
     {
-      boolean forcedPVRMode = SageConstants.PVR;
+      boolean forcedPVRMode = true;
       {
         String res = Sage.get("forced_pvr_mode", null);
         if (res != null)
@@ -2946,7 +2916,7 @@ public class Global {
        * @declaration public boolean IsDoingLibraryImportScan();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return Seeker.getInstance().isDoingImportScan() ? Boolean.TRUE : Boolean.FALSE;
+        return SeekerSelector.getInstance().isDoingImportScan() ? Boolean.TRUE : Boolean.FALSE;
       }});
     rft.put(new PredefinedJEPFunction("Global", "SwitchEmbeddedModeTo", new String[] { "NewMode" })
     {
@@ -3009,30 +2979,6 @@ public class Global {
        * @declaration public void PrepareForFirmwareLoad();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        if (!Sage.EMBEDDED) return null;
-        if (Sage.DBG) System.out.println("Preparing the system for a firmware load...free all the memory we can...");
-        if (Sage.DBG) System.out.println("MemStats-1: Used=" + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())/1000000 +
-            "MB Total=" + Runtime.getRuntime().totalMemory()/1000000 + "MB Max=" + Runtime.getRuntime().maxMemory()/1000000 + "MB");
-        Seeker.getInstance().disableLibraryScanning();
-        // Kill the process for recording as well
-        IOUtils.exec2(new String[] { "sh", "-c", "kill `pidof SGMRecording`"}, true);
-        if (stack.getUIMgrSafe() != null)
-          stack.getUIMgrSafe().clearMenuCache();
-        Wizard.getInstance().freeAllDBMemory();
-        if (Sage.DBG) System.out.println("MemStats-2: Used=" + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())/1000000 +
-            "MB Total=" + Runtime.getRuntime().totalMemory()/1000000 + "MB Max=" + Runtime.getRuntime().maxMemory()/1000000 + "MB");
-        System.gc();
-        try{Thread.sleep(750);}catch(Exception e){}
-        if (Sage.DBG) System.out.println("MemStats-3: Used=" + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())/1000000 +
-            "MB Total=" + Runtime.getRuntime().totalMemory()/1000000 + "MB Max=" + Runtime.getRuntime().maxMemory()/1000000 + "MB");
-        System.gc();
-        try{Thread.sleep(750);}catch(Exception e){}
-        if (Sage.DBG) System.out.println("MemStats-4: Used=" + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())/1000000 +
-            "MB Total=" + Runtime.getRuntime().totalMemory()/1000000 + "MB Max=" + Runtime.getRuntime().maxMemory()/1000000 + "MB");
-        System.gc();
-        try{Thread.sleep(750);}catch(Exception e){}
-        if (Sage.DBG) System.out.println("MemStats-5: Used=" + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory())/1000000 +
-            "MB Total=" + Runtime.getRuntime().totalMemory()/1000000 + "MB Max=" + Runtime.getRuntime().maxMemory()/1000000 + "MB");
         return null;
       }});
     rft.put(new PredefinedJEPFunction("Global", "AreScreenshotsSupported")
@@ -3046,7 +2992,7 @@ public class Global {
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         UIManager uiMgr = stack.getUIMgr();
-        if (!Sage.EMBEDDED && uiMgr != null && uiMgr.getUIClientType() == UIClient.REMOTE_UI)
+        if (uiMgr != null && uiMgr.getUIClientType() == UIClient.REMOTE_UI)
         {
           return ((MiniClientSageRenderer) uiMgr.getRootPanel().getRenderEngine()).supportsScreenshots() ? Boolean.TRUE : Boolean.FALSE;
         }
@@ -3066,7 +3012,7 @@ public class Global {
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         UIManager uiMgr = stack.getUIMgr();
         java.io.File f = getFile(stack);
-        if (!Sage.EMBEDDED && uiMgr != null && uiMgr.getUIClientType() == UIClient.REMOTE_UI)
+        if (uiMgr != null && uiMgr.getUIClientType() == UIClient.REMOTE_UI)
         {
           return ((MiniClientSageRenderer) uiMgr.getRootPanel().getRenderEngine()).saveScreenshotToFile(f) ? Boolean.TRUE : Boolean.FALSE;
         }
@@ -3082,7 +3028,7 @@ public class Global {
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception
       {
-        return Sage.EMBEDDED ? null : stack.getUIMgrSafe().getEmbeddedPanel();
+        return stack.getUIMgrSafe().getEmbeddedPanel();
       }
     });
     rft.put(new PredefinedJEPFunction("Global", "SetEmbeddedPanelBounds", new String[] { "x", "y", "width", "height"})
@@ -3103,8 +3049,7 @@ public class Global {
         float w = getFloat(stack);
         float y = getFloat(stack);
         float x = getFloat(stack);
-        if (!Sage.EMBEDDED)
-          stack.getUIMgrSafe().setEmbeddedBounds(x, y, w, h);
+        stack.getUIMgrSafe().setEmbeddedBounds(x, y, w, h);
         return null;
       }
     });
@@ -3138,25 +3083,7 @@ public class Global {
        */
 
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        if (!Sage.client || !Sage.EMBEDDED || SageTV.neddy == null)
-          return null;
-        int progress = SageTV.neddy.getConnectionState();
-        if (progress == NetworkClient.CS_STATE_SERVER_LOADING)
-          return Sage.rez("CS_STATE_SERVER_LOADING");
-        else if (progress == NetworkClient.CS_STATE_SERVER_NOT_FOUND)
-          return Sage.rez("CS_STATE_SERVER_NOT_FOUND");
-        else if (progress == NetworkClient.CS_STATE_CONNECTION_ESTABLISHING)
-          return Sage.rez("CS_STATE_CONNECTION_ESTABLISHING");
-        else if (progress == NetworkClient.CS_STATE_FULLY_CONNECTED)
-          return Sage.rez("CS_STATE_FULLY_CONNECTED");
-        else if (progress == NetworkClient.CS_STATE_NOT_INITIALIZED)
-          return Sage.rez("CS_STATE_NOT_INITIALIZED");
-        else if (progress == NetworkClient.CS_STATE_UNAUTHORIZED_CLIENT)
-          return Sage.rez("CS_STATE_UNAUTHORIZED_CLIENT");
-        else if (progress == NetworkClient.CS_STATE_VERSION_MISMATCH)
-          return Sage.rez("CS_STATE_VERSION_MISMATCH");
-        else
-          return null;
+        return null;
       }});
 
     /**
@@ -3170,6 +3097,21 @@ public class Global {
     rft.put(new PredefinedJEPFunction("Global", "GetEPGUpdateState", true) {
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         return EPG.getInstance().getEpgStateString();
+      }});
+    rft.put(new PredefinedJEPFunction("Global", "IsSDEPGServiceAvailable", true)
+    {
+      /**
+       * Returns true if the Schedules Direct EPG service is available.
+       * This is determined by trying to communicate with Schedules Direct if an unexpired token is
+       * present. If no token currently exists or it is expired, a new token will be acquired. If
+       * the token is unable to be obtained for any reason, the service is considered unavailable.
+       * @return true if the Schedules Direct EPG service is configured and able to authenticate, false otherwise
+       * @since 9.0
+       *
+       * @declaration public boolean IsSDEPGServiceAvailable();
+       */
+      public Object runSafely(Catbert.FastStack stack) throws Exception{
+        return sage.epg.sd.SDRipper.isAvailable();
       }});
     /*
 		rft.put(new PredefinedJEPFunction("Global", "", -1)

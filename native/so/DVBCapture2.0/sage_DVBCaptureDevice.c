@@ -149,7 +149,7 @@ static void sysOutPrint(JNIEnv *env, const char* cstr, ...)
     va_list args;
     va_start(args, cstr);
     char buf[1024*2];
-    vsprintf(buf, cstr, args);
+    vsnprintf(buf, sizeof(buf), cstr, args);
     va_end(args);
     fprintf(stderr, buf);
 }
@@ -166,7 +166,7 @@ static void sysOutPrint(JNIEnv *env, const char* cstr, ...)
     va_list args;
     va_start(args, cstr);
     char buf[1024*2];
-    vsprintf(buf, cstr, args);
+    vsnprintf(buf, sizeof(buf), cstr, args);
     va_end(args);
     jstring jstr = (*env)->NewStringUTF(env, buf);
     if(cls==NULL)
@@ -3204,6 +3204,18 @@ JNIEXPORT jstring JNICALL Java_sage_DVBCaptureDevice_getCardModelUIDForDevice
     return jcardname;
 }
 
+JNIEXPORT jint JNICALL Java_sage_DVBCaptureDevice_getSignalStrength0
+  (JNIEnv *env, jobject jo, jlong ptr)
+{
+    DVBCaptureDev *CDev = INT64_TO_PTR(DVBCaptureDev *, ptr);
+    int32_t snr;
+    if (CDev && ioctl(CDev->frontendFd, FE_READ_SNR, &snr) >= 0) {
+      // The SignalStrength is expected to be in the 0-100 range while the SNR
+      // is usually provided in cB, given the expected range we can divide by 5.
+      return snr / 5;
+    }
+    return 0;
+}
 
 #ifdef STANDALONE
 // Test applications for recording

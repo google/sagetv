@@ -22,10 +22,5 @@ public final class SageConstants
     // Non-instantiable
   }
 
-  public static final boolean LITE = false;
-  public static final boolean ENFORCE_EMBEDDED_RESTRICTIONS = false;
-  public static final boolean PVR = true;
-  public static final boolean SERVER_FUNCTION = true;
-  public static final boolean LIBRARY_FUNCTION = true;
   public static final int BUILD_VERSION = 441;
 }

@@ -17,16 +17,6 @@
 # set system name (will be Linux or Darwin)
 UNAME_S := $(shell uname -s)
 
-#TSNATIVE_LIB=../../lib/TSnative/libTSnative.so
-#TSNATIVED_LIB=../../lib/TSnative/libTSnatived.so
-#CHANNEL_LIB=../../lib/TSnative/channel.a
-#CHANNELD_LIB=../../lib/TSnative/channeld.a
-
-#TSNATIVE_SRC =    ../../ax/TSnative
-#TSNATIVE_INC = -I../../ax/TSnative
-#CHANNEL_SRC =    ../../ax/Channel
-#CHANNEL_INC =  -I../../ax/Channel
-
 NATIVECORE_LIB=../../lib/NativeCore/libNativeCore.so
 NATIVECORED_LIB=../../lib/NativeCore/libNativeCored.so
 CHANNEL_LIB=../../lib/NativeCore/channel.a
@@ -37,11 +27,6 @@ NATIVECORE_INC = -I../../ax/Native2.0/NativeCore
 CHANNEL_SRC = ../../ax/Channel-2
 CHANNEL_INC = -I../../ax/Channel-2
 
-
-# DTVChannel and SageTuning
-#DARWIN_SRC = ../../../darwin/Source
-#DTVCHANNEL_SRC = $(DARWIN_SRC)/capture2.0
-#TUNING_SRC = $(DARWIN_SRC)/capture2.0/hardware/protocols
 
 HDHR_DIR = ../../../third_party/SiliconDust/libhdhomerun
 
@@ -75,7 +60,6 @@ STRIP:=$(CROSS_PREFIX)strip
 # we really need to convert string args to const and re-enable this warning
 CFLAGS = -fPIC -Wall -Wno-unknown-pragmas -Wno-write-strings $(NATIVECORE_INC) $(CHANNEL_INC) $(DEBUG_OPTION) -I$(HDHR_DIR) -I../../include -Istage/include -Istage/include/hdhomerun -c -fPIC -I$(JDK_HOME)/include/ -I$(JDK_HOME)/include/linux -DSAGE_DTV_ONLY=1 -D_FILE_OFFSET_BITS=64 -DLinux
 LDFLAGS =-Lstage/lib -L.
-BINDIR=/usr/local/bin
 # Apple OS/X overwrite CFLAGS and LDFLAGS which are only working on Linux
 ifeq ($(UNAME_S),Darwin)
 CFLAGS = -fPIC -Wall -Wno-unknown-pragmas -Wno-write-strings $(NATIVECORE_INC) $(CHANNEL_INC) $(DEBUG_OPTION) -I$(HDHR_DIR) -I../../include -Istage/include -Istage/include/hdhomerun -c -fPIC -I$(JDK_HOME)/include/ -I$(JDK_HOME)/include/darwin -DSAGE_DTV_ONLY=1 -D_FILE_OFFSET_BITS=64 -DDarwin

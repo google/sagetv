@@ -94,6 +94,13 @@ public class FirewireCaptureDevice extends CaptureDevice implements Runnable
       if (channel.length() == 0)
         channel = activeSource.getChannel();
       tuneToChannel(channel);
+      long tuneWaitDelay = getPostTuningDelay();
+      if (tuneWaitDelay > 0)
+      {
+        try {
+          Thread.sleep(tuneWaitDelay);
+        } catch (Exception e) {}
+      }
     }
 
     if (encodeParams == null)

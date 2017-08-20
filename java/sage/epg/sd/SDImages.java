@@ -15,7 +15,6 @@
  */
 package sage.epg.sd;
 
-import sage.Channel;
 import sage.Pooler;
 import sage.Show;
 import sage.epg.sd.json.images.SDImage;
@@ -25,34 +24,35 @@ import java.nio.charset.StandardCharsets;
 public class SDImages
 {
   // Logos
-  public static final String LOGO_S3_AWS_STRING =
+  private static final String LOGO_S3_AWS_STRING =
       "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/"; // *.png
-  public static final short LOGO_S3_AWS = 0x80;
-  public static final short LOGO_HAS_ID = 0x40;
+  private static final short LOGO_S3_AWS = 0x80;
+  private static final short LOGO_HAS_ID = 0x40;
 
-  // Shows, Movies and Series
-  public static final String SOURCE_S3_AWS_STRING =
+  // Shows, Movies, Series and Persons
+  private static final String SOURCE_S3_AWS_STRING =
       "https://s3.amazonaws.com/schedulesdirect/assets/"; // *.jpg
-  public static final short SOURCE_S3_AWS = 0x80;
-  public static final String SOURCE_REDIRECT_STRING =
+  private static final short SOURCE_S3_AWS = 0x80;
+  private static final String SOURCE_REDIRECT_STRING =
       "https://json.schedulesdirect.org/20141201/image/assets/"; // *.jpg
-  public static final short SOURCE_REDIRECT = 0x40;
-  public static final short HAS_SHOWCARD_FLAG = 0x20;
-  public static final short IS_THUMB_FLAG = 0x10;
-  public static final short IS_TALL_FLAG = 0x08;
-  public static final short IMAGE_TYPE_MASK = 0x07;
-  public static final short IMAGE_TYPE_PHOTO_FLAG = 0x07;
-  public static final short IMAGE_TYPE_POSTER_FLAG = 0x06;
-  public static final short IMAGE_TYPE_BOXART_FLAG = 0x05;
+  private static final short SOURCE_REDIRECT = 0x40;
+  // Shows, Movies and Series
+  private static final short HAS_SHOWCARD_FLAG = 0x20;
+  private static final short IS_THUMB_FLAG = 0x10;
+  private static final short IS_TALL_FLAG = 0x08;
+  private static final short IMAGE_TYPE_MASK = 0x07;
+  private static final short IMAGE_TYPE_PHOTO_FLAG = 0x07;
+  private static final short IMAGE_TYPE_POSTER_FLAG = 0x06;
+  private static final short IMAGE_TYPE_BOXART_FLAG = 0x05;
 
-  public static final byte SERIES_THUMB_INDEX = 0;
-  public static final byte SERIES_FULL_INDEX = 1;
+  private static final byte SERIES_THUMB_INDEX = 0;
+  private static final byte SERIES_FULL_INDEX = 1;
 
-  public static final byte SHOW_PHOTO_TALL_INDEX = 1;
-  public static final byte SHOW_PHOTO_WIDE_INDEX = 3;
-  public static final byte SHOW_POSTER_TALL_INDEX = 5;
-  public static final byte SHOW_POSTER_WIDE_INDEX = 7;
-  public static final byte SHOW_BOXART_TALL_INDEX = 9;
+  private static final byte SHOW_PHOTO_TALL_INDEX = 1;
+  private static final byte SHOW_PHOTO_WIDE_INDEX = 3;
+  private static final byte SHOW_POSTER_TALL_INDEX = 5;
+  private static final byte SHOW_POSTER_WIDE_INDEX = 7;
+  private static final byte SHOW_BOXART_TALL_INDEX = 9;
 
   public static final byte ENCODE_ALL = 0;
   public static final byte ENCODE_SERIES_ONLY = 1;
@@ -103,10 +103,12 @@ public class SDImages
         }
 
         // We will not encode anything starting with a p0 because the 0 gets lost when the String is
-        // converted to a number and then we would need to add logic to the decoding methods to check
-        // for more possibilities due to the additional scenario. Also, I have not seen anything come
-        // in with a 0, but it could happen, so we need to account for it.
-        if (startingChar != -1 && urlBuilder.charAt(startingChar) == 'p' && urlBuilder.charAt(startingChar + 1) != '0')
+        // converted to a number and then we would need to add logic to the decoding methods to
+        // check for more possibilities due to the additional scenario. Also, I have not seen
+        // anything come in with a 0, but it could happen, so we need to account for it.
+        if (startingChar != -1 &&
+          urlBuilder.charAt(startingChar) == 'p' &&
+          urlBuilder.charAt(startingChar + 1) != '0')
         {
           int underscore = urlBuilder.indexOf("_", startingChar);
           if (underscore != -1)
@@ -185,7 +187,8 @@ public class SDImages
 
       int imageTypeIndex;
       if (mode == ENCODE_SERIES_ONLY)
-        imageTypeIndex = (getSDIndexForShowType(imageType) % 2) == 0 ? SERIES_THUMB_INDEX : SERIES_FULL_INDEX;
+        imageTypeIndex =
+          (getSDIndexForShowType(imageType) % 2) == 0 ? SERIES_THUMB_INDEX : SERIES_FULL_INDEX;
       else
         imageTypeIndex = getSDIndexForShowType(imageType);
 
@@ -508,7 +511,7 @@ public class SDImages
       return null;
 
     byte[] indexes = imageURLs[0];
-    return decodeImageUrl(showcardID, imageURLs[indexes[imageTypeIndex] + index]);
+    return decodeShowImageUrl(showcardID, imageURLs[indexes[imageTypeIndex] + index]);
   }
 
   public static String getSeriesImageUrl(int showcardID, byte[][] imageURLs, int index, boolean thumb)
@@ -530,7 +533,7 @@ public class SDImages
     return getImageUrl(showcardID, imageURLs, index, imageTypeIndex);
   }
 
-  public static String decodeImageUrl(int showcardID, byte[] imageURL)
+  public static String decodeShowImageUrl(int showcardID, byte[] imageURL)
   {
     // This is the minimum required to return a String,
     // but at this length it's probably not a valid URL.
@@ -541,7 +544,6 @@ public class SDImages
     // much larger, so to keep it from re-allocating a char array many times, we make a good guess.
     StringBuilder urlBuilder = new StringBuilder(imageURL.length + 64);
     byte attributes = imageURL[0];
-    //byte imageType = imageURL[1];
 
     if ((attributes & SOURCE_S3_AWS) != 0)
       urlBuilder.append(SOURCE_S3_AWS_STRING);
@@ -556,5 +558,114 @@ public class SDImages
     urlBuilder.append(new String(imageURL, 1, imageURL.length - 1, StandardCharsets.UTF_8)).append(".jpg");
 
     return urlBuilder.toString();
+  }
+
+  public static byte[] encodeGeneralImageUrl(SDImage image, StringBuilder urlBuilder)
+  {
+    byte attributes = 0;
+    byte encodedImage[] = null;
+    if (urlBuilder == null)
+      urlBuilder = new StringBuilder();
+    else
+      urlBuilder.setLength(0);
+
+    image.getUri(urlBuilder);
+    if (urlBuilder.length() == 0)
+      return Pooler.EMPTY_BYTE_ARRAY;
+
+    // Remove known URL prefixes.
+    if (urlBuilder.indexOf(SOURCE_REDIRECT_STRING) == 0)
+    {
+      urlBuilder.delete(0, SOURCE_REDIRECT_STRING.length());
+      attributes |= SOURCE_REDIRECT;
+    }
+    else if (urlBuilder.indexOf(SOURCE_S3_AWS_STRING) == 0)
+    {
+      urlBuilder.delete(0, SOURCE_S3_AWS_STRING.length());
+      attributes |= SOURCE_S3_AWS;
+    }
+    else
+    {
+      urlBuilder.delete(0, 8); // Remove https://
+    }
+
+    // Remove .jpg file extension.
+    urlBuilder.delete(urlBuilder.length() - 4, urlBuilder.length());
+    encodedImage = urlBuilder.toString().getBytes(StandardCharsets.UTF_8);
+
+    byte returnValue[] = new byte[encodedImage.length + 1];
+    returnValue[0] = attributes;
+    System.arraycopy(encodedImage, 0, returnValue, 1, encodedImage.length);
+    return returnValue;
+  }
+
+  public static String decodeGeneralImageUrl(byte[] imageURL)
+  {
+    // This is the minimum required to return a String,
+    // but at this length it's probably not a valid URL.
+    if (imageURL.length < 2)
+      return null;
+
+    // The StringBuilder will only allocate 16 characters by default and we know the result will be
+    // much larger, so to keep it from re-allocating a char array many times, we make a good guess.
+    StringBuilder urlBuilder = new StringBuilder(imageURL.length + 64);
+    byte attributes = imageURL[0];
+
+    if ((attributes & SOURCE_S3_AWS) != 0)
+      urlBuilder.append(SOURCE_S3_AWS_STRING);
+    else if ((attributes & SOURCE_REDIRECT) != 0)
+      urlBuilder.append(SOURCE_REDIRECT_STRING);
+    else
+      urlBuilder.append("https://");
+
+    urlBuilder.append(new String(imageURL, 1, imageURL.length - 1, StandardCharsets.UTF_8)).append(".jpg");
+
+    return urlBuilder.toString();
+  }
+
+  public static byte[][] encodeHeadShots(SDImage[] images)
+  {
+    // The 2D byte array is formatted as follows:
+    // [0][0] The attributes of the large image URL.
+    // [0][1-*] The large image URL encoded in UTF-8.
+    // [1][0] The attributes of the thumbnail image URL.
+    // [1][1-*] The thumbnail image URL encoded in UTF-8.
+
+    SDImage largest = null;
+    SDImage smallest = null;
+    for (SDImage image : images)
+    {
+      if (image.getCategoryByte() == SDImage.CAT_PHOTO_HEADSHOT)
+      {
+        if (largest == null)
+        {
+          if (image.isPortrait() && image.getUri().endsWith(".jpg"))
+          {
+            largest = image;
+            smallest = image;
+          }
+          continue;
+        }
+        // We are only concerned with one dimension since these are all vertical.
+        if (image.isPortrait() && image.getHeight() > largest.getHeight())
+        {
+          largest = image;
+        }
+        // Ensure we don't get a super tiny thumbnail.
+        if (image.isPortrait() && image.getHeight() >= 300 && image.getHeight() < smallest.getHeight())
+        {
+          smallest = image;
+        }
+      }
+    }
+
+    if (largest == null)
+      return Pooler.EMPTY_2D_BYTE_ARRAY;
+
+    StringBuilder stringBuilder = new StringBuilder();
+    byte[][] returnValue = new byte[2][];
+    returnValue[0] = encodeGeneralImageUrl(largest, stringBuilder);
+    returnValue[1] = encodeGeneralImageUrl(smallest, stringBuilder);
+    return returnValue;
   }
 }

@@ -21,13 +21,19 @@ import sage.epg.sd.gson.Gson;
 import sage.epg.sd.gson.JsonArray;
 import sage.epg.sd.gson.JsonElement;
 import sage.epg.sd.gson.JsonObject;
+import sage.epg.sd.gson.JsonSyntaxException;
 import sage.epg.sd.gson.stream.JsonWriter;
 import sage.epg.sd.json.headend.SDHeadend;
+import sage.epg.sd.json.headend.SDHeadendLineup;
+import sage.epg.sd.json.images.SDImage;
 import sage.epg.sd.json.images.SDProgramImages;
+import sage.epg.sd.json.lineup.SDAccountLineup;
 import sage.epg.sd.json.lineup.SDAccountLineups;
 import sage.epg.sd.json.locale.SDLanguage;
 import sage.epg.sd.json.locale.SDRegion;
 import sage.epg.sd.json.map.SDLineupMap;
+import sage.epg.sd.json.programs.SDInProgressSport;
+import sage.epg.sd.json.programs.SDPerson;
 import sage.epg.sd.json.programs.SDProgram;
 import sage.epg.sd.json.programs.SDSeriesDesc;
 import sage.epg.sd.json.programs.SDSeriesDescArray;
@@ -50,11 +56,10 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidParameterException;
 import java.util.Collection;
-import java.util.List;
-import java.util.Set;
 
 public abstract class SDSession
 {
+  private static final Object debugLock = new Object();
   private static PrintWriter debugWriter = null;
   private static int debugBytes = 0;
   protected static final Gson gson = SDUtils.GSON;
@@ -64,6 +69,14 @@ public abstract class SDSession
   public static final String USER_AGENT = "Open Source SageTV " + Version.VERSION;
   private static final String URL_BASE = "https://json.schedulesdirect.org";
   public static final String URL_VERSIONED = URL_BASE + "/20141201";
+  // Get images for celebrities. Cast/Crew must have a nameId to use this.
+  private static final String GET_CELEBRITY_IMAGES = URL_VERSIONED + "/metadata/celebrity/";
+  // Get supported sports that are in progress.
+  private static final String GET_IN_PROGRESS_SPORT = URL_VERSIONED + "/metadata/stillRunning/";
+  // Delete a lineup that is no longer being updated.
+  private static final String DELETE_ACCOUNT_LINEUP = URL_VERSIONED + "/lineups/";
+  // Add a lineup by appended ID.
+  private static final String ADD_ACCOUNT_LINEUP = DELETE_ACCOUNT_LINEUP;
 
   // The character set to be used for outgoing communications.
   protected static final Charset OUT_CHARSET = StandardCharsets.UTF_8;
@@ -72,7 +85,7 @@ public abstract class SDSession
 
   // These are set in the static constructor because they can throw format exceptions.
   // Returns a token if the credentials are valid.
-  private static final URL GET_TOKEN;
+  protected static final URL GET_TOKEN;
   // Get the current account status/saved lineups.
   private static final URL GET_STATUS;
   // Get a list of available services.
@@ -194,25 +207,28 @@ public abstract class SDSession
   /**
    * Enable debug logging for all JSON in and out.
    */
-  public synchronized static void enableDebug()
+  public static void enableDebug()
   {
     try
     {
-      File debugFile = new File("sd_epg.log");
-      long fileSize = debugFile.exists()? debugFile.length() : 0;
-      if (fileSize > 67108864)
+      synchronized (debugLock)
       {
-        File oldFile = new File("sd_epg.log.old");
-        if (oldFile.exists()) oldFile.delete();
-        debugFile.renameTo(new File("sd_epg.log.old"));
-        debugWriter = new PrintWriter(new BufferedWriter(new FileWriter("sd_epg.log")));
-      }
-      else
-      {
-        debugWriter = new PrintWriter(new BufferedWriter(new FileWriter("sd_epg.log", true)));
-      }
+        File debugFile = new File("sd_epg.log");
+        long fileSize = debugFile.exists() ? debugFile.length() : 0;
+        if (fileSize > 67108864)
+        {
+          File oldFile = new File("sd_epg.log.old");
+          if (oldFile.exists()) oldFile.delete();
+          debugFile.renameTo(new File("sd_epg.log.old"));
+          debugWriter = new PrintWriter(new BufferedWriter(new FileWriter("sd_epg.log")));
+        }
+        else
+        {
+          debugWriter = new PrintWriter(new BufferedWriter(new FileWriter("sd_epg.log", true)));
+        }
 
-      debugBytes = (int)fileSize;
+        debugBytes = (int) fileSize;
+      }
     }
     catch (IOException e)
     {
@@ -221,31 +237,34 @@ public abstract class SDSession
     }
   }
 
-  public synchronized static boolean debugEnabled()
+  public static boolean debugEnabled()
   {
     return debugWriter != null;
   }
 
-  public synchronized static void writeDebugException(Throwable line)
+  public static void writeDebugException(Throwable line)
   {
     if (debugWriter == null)
       return;
 
     try
     {
-      String message = line.getMessage();
-      if (message == null) message = "null";
-      debugWriter.write("#### Exception Start ####");
-      debugWriter.write(message);
-      debugWriter.write(System.lineSeparator());
-      line.printStackTrace(debugWriter);
-      debugWriter.write(System.lineSeparator());
-      debugWriter.write("#### Exception End ####");
-      debugWriter.write(System.lineSeparator());
-      debugWriter.flush();
-      // Close enough; we really don't need precise math here.
-      debugBytes += 512;
-      debugRollover();
+      synchronized (debugLock)
+      {
+        String message = line.getMessage();
+        if (message == null) message = "null";
+        debugWriter.write("#### Exception Start ####");
+        debugWriter.write(message);
+        debugWriter.write(System.lineSeparator());
+        line.printStackTrace(debugWriter);
+        debugWriter.write(System.lineSeparator());
+        debugWriter.write("#### Exception End ####");
+        debugWriter.write(System.lineSeparator());
+        debugWriter.flush();
+        // Close enough; we really don't need precise math here.
+        debugBytes += 512;
+        debugRollover();
+      }
     }
     catch (Exception e)
     {
@@ -254,19 +273,22 @@ public abstract class SDSession
     }
   }
 
-  public synchronized static void writeDebugLine(String line)
+  public static void writeDebugLine(String line)
   {
     if (debugWriter == null)
       return;
 
     try
     {
-      if (line == null) line = "null";
-      debugWriter.write(line);
-      debugWriter.write(System.lineSeparator());
-      debugWriter.flush();
-      debugBytes += line.length() + 2;
-      debugRollover();
+      synchronized (debugLock)
+      {
+        if (line == null) line = "null";
+        debugWriter.write(line);
+        debugWriter.write(System.lineSeparator());
+        debugWriter.flush();
+        debugBytes += line.length() + 2;
+        debugRollover();
+      }
     }
     catch (Exception e)
     {
@@ -275,16 +297,19 @@ public abstract class SDSession
     }
   }
 
-  public synchronized static void writeDebug(char[] line, int offset, int length)
+  public static void writeDebug(char[] line, int offset, int length)
   {
     if (debugWriter == null)
       return;
 
     try
     {
-      debugWriter.write(line, offset, length);
-      debugBytes += length;
-      // Don't perform a rollover in this method because we could cut a String of JSON in half.
+      synchronized (debugLock)
+      {
+        debugWriter.write(line, offset, length);
+        debugBytes += length;
+        // Don't perform a rollover in this method because we could cut a String of JSON in half.
+      }
     }
     catch (Exception e)
     {
@@ -302,7 +327,6 @@ public abstract class SDSession
       try
       {
         debugWriter.close();
-        debugWriter = null;
       } catch (Exception e) {}
       enableDebug();
     }
@@ -751,6 +775,32 @@ public abstract class SDSession
   }
 
   /**
+   * Add a new lineup to account.
+   *
+   * @param id The ID provided by a lineup from {@link SDHeadendLineup#getLineup()}.
+   * @return The number of account changes remaining.
+   * @throws IOException If there is an I/O related error.
+   * @throws SDException If there is a problem working with Schedules Direct.
+   */
+  public int addLineupByID(String id) throws IOException, SDException
+  {
+    URL url = new URL(ADD_ACCOUNT_LINEUP + id);
+    JsonObject reply = putAuthJson(url, JsonObject.class, null);
+
+    JsonElement codeElement = reply.get("code");
+    if (codeElement == null)
+      throw new SDException(SDErrors.SAGETV_UNKNOWN);
+
+    int code = codeElement.getAsInt();
+    if (code != 0)
+    {
+      SDErrors.throwErrorForCode(code);
+    }
+
+    return reply.get("changesRemaining").getAsInt();
+  }
+
+  /**
    * Get the lineups associated with this account.
    *
    * @return The lineups associated with this account.
@@ -772,14 +822,19 @@ public abstract class SDSession
   /**
    * Delete a lineup from account.
    *
-   * @param uri The URI provided by a lineup from <code>getLineups()</code>.
+   * @param lineup A lineup provided by {@link #getAccountLineups()}.
    * @return The number of account changes remaining.
    * @throws IOException If there is an I/O related error.
    * @throws SDException If there is a problem working with Schedules Direct.
    */
-  public int deleteLineup(String uri) throws IOException, SDException
+  public int deleteLineup(SDAccountLineup lineup) throws IOException, SDException
   {
-    URL url = new URL(URL_BASE + uri);
+    URL url;
+    if (lineup.getUri() != null)
+      url = new URL(URL_BASE + lineup.getUri());
+    else
+      url = new URL(DELETE_ACCOUNT_LINEUP + lineup.getLineup());
+
     JsonObject reply = deleteAuthJson(url, JsonObject.class);
 
     JsonElement codeElement = reply.get("code");
@@ -834,7 +889,7 @@ public abstract class SDSession
     JsonArray submit = new JsonArray();
     for (String program : programs)
     {
-      submit.add(program);
+      submit.add(SDUtils.fromSageTVtoProgram(program));
     }
 
     SDProgram[] returnValues = postAuthJson(GET_PROGRAMS, SDProgram[].class, submit);
@@ -988,6 +1043,41 @@ public abstract class SDSession
   }
 
   /**
+   * Get celebrity images for a specific celebrity.
+   *
+   * @param personId The person ID as provided by {@link SDPerson#getNameId()}. If this is null,
+   *                 blank or 0, an empty array will be returned.
+   * @return The available images of the provided celebrity as provided by Schedules Direct.
+   * @throws IOException If there is an I/O related error.
+   * @throws SDException If there is a problem working with Schedules Direct.
+   */
+  public SDImage[] getCelebrityImages(String personId) throws IOException, SDException
+  {
+    if (personId == null || personId.length() == 0 || personId.equals("0"))
+      return SDProgramImages.EMPTY_IMAGES;
+
+    try
+    {
+      // A token is not required to perform this lookup.
+      return getJson(new URL(GET_CELEBRITY_IMAGES + personId), SDImage[].class);
+    }
+    catch (JsonSyntaxException e)
+    {
+      // These lookups can return undocumented JSON that can throw exceptions when images do not
+      // exist. If this happens, we assume there aren't any images.
+      return SDProgramImages.EMPTY_IMAGES;
+    }
+    catch (SDException e)
+    {
+      // This error is expected from time to time.
+      if (e.ERROR == SDErrors.HCF)
+        return SDProgramImages.EMPTY_IMAGES;
+      // Anything else, throw the exception.
+      throw e;
+    }
+  }
+
+  /**
    * Get the schedules for the provided station IDs (limit 5000)
    * <p/>
    * The same provided dates will be used for all provided station IDs.
@@ -1068,5 +1158,25 @@ public abstract class SDSession
 
     SDScheduleMd5Array returnValues = postAuthJson(GET_SCHEDULES_MD5, SDScheduleMd5Array.class, submit);
     return returnValues.getMd5s();
+  }
+
+  /**
+   * Get the status of an in progress sport.
+   *
+   * @param programId The program ID of the sport
+   * @return <code>null</code> if the program ID is invalid or an SDInProgressSport object.
+   * @throws IOException If there is an I/O related error.
+   * @throws SDException If there is a problem working with Schedules Direct.
+   */
+  public SDInProgressSport getInProgressSport(String programId) throws IOException, SDException
+  {
+    if (programId == null || programId.length() == 0)
+      return null;
+
+    if (programId.length() == 12)
+      programId = SDUtils.fromSageTVtoProgram(programId);
+
+    // A token is not required to perform this lookup.
+    return getAuthJson(new URL(GET_IN_PROGRESS_SPORT + programId), SDInProgressSport.class);
   }
 }

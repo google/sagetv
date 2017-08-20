@@ -22,6 +22,11 @@ public class BigBrother
   static final long WATCH_IGNORE_TIME = 5*60000L;
   static final long WATCH_IGNORE_TIME_MOVIE = 10*60000L;
   static final long MIN_WATCH_TIME = 5000L;
+  // The duration of the Show cannot be more than this less than the Airing
+  // duration in order to use the Show duration. This is to account for channels
+  // that have commercials in movies as alignment on commercial free movie
+  // channels is generally never this much padding.
+  static final long MAX_DURATION_DIFF_TO_USE_SHOW = 20*Sage.MILLIS_PER_MIN;
   static final double COMPLETE_WATCH_FRACTION = 0.66;
 
   public static final int NO_ALIGN = 0;
@@ -163,7 +168,7 @@ public class BigBrother
   {
     sage.plugin.PluginEventManager.postEvent(sage.plugin.PluginEventManager.WATCHED_STATE_CHANGED,
         new Object[] { sage.plugin.PluginEventManager.VAR_AIRING, a });
-    Scheduler.getInstance().kick(true);
+    SchedulerSelector.getInstance().kick(true);
   }
   public static void clearWatched(Airing a)
   {
@@ -179,7 +184,7 @@ public class BigBrother
     }
     Watched prior = Wizard.getInstance().getWatch(a);
     if (prior != null) Wizard.getInstance().removeWatched(prior);
-    if (a.isTV() && (!Sage.EMBEDDED || Carny.getInstance().isLoveAir(a)))
+    if (a.isTV())
       Carny.getInstance().submitJob(new Object[] { Carny.WATCH_CLEAR_JOB, a });
     triggerWatchedChangeEvent(a);
   }
@@ -196,9 +201,7 @@ public class BigBrother
   static boolean setWatched(Airing a, long airWatchStart, long airWatchEnd,
       long realWatchStart, long realWatchEnd, int titleNum, boolean checkOnly)
   {
-    if (!SageConstants.LIBRARY_FUNCTION) return true;
-    if (!Sage.EMBEDDED && !SageConstants.LITE)
-      ((byte[])Sage.q)[32] = (byte) (((byte[])Sage.q)[11] * ((byte[])Sage.q)[25]); // piracy protection
+    ((byte[])Sage.q)[32] = (byte) (((byte[])Sage.q)[11] * ((byte[])Sage.q)[25]); // piracy protection
     if (a == null) return false;
     // Only track watches for TV & Video Airings & DVDs/BDs
     if (!a.isTV() && !a.isVideo() && !a.isDVD() && !a.isBluRay()) return false;
@@ -219,7 +222,7 @@ public class BigBrother
         Wizard.getInstance().addWatched(a, (a.isDVD() || a.isBluRay()) ? 0 : a.getStartTime(),
             (a.isDVD() || a.isBluRay()) ? a.getDuration() : a.getEndTime(),
                 0, 0);
-        if (a.isTV() && (!Sage.EMBEDDED || Carny.getInstance().isLoveAir(a)))
+        if (a.isTV())
           Carny.getInstance().submitJob(new Object[] { Carny.WATCH_MARK_JOB, a });
         triggerWatchedChangeEvent(a);
       }
@@ -230,13 +233,14 @@ public class BigBrother
     long watchedDur = airWatchEnd - airWatchStart;
     boolean rv = false;
     Watched priorWatch = Wizard.getInstance().getWatch(a);
-    if (watchedDur > MIN_WATCH_TIME || (Sage.EMBEDDED && priorWatch != null))
+    if (watchedDur > MIN_WATCH_TIME)
     {
       // It's not so short we ignore it.
       // See if we want to apply this to the show or not
       // as being completely seen.
       long validDuration = (a.isDVD() && !a.isBluRay()) ? Long.MAX_VALUE : a.duration;
-      if (s != null && s.duration > 10000 && s.duration < a.duration) // ignore running times that are in the wrong units
+      if (s != null && s.duration > 10000 && s.duration < a.duration && // ignore running times that are in the wrong units
+          a.duration - s.duration < MAX_DURATION_DIFF_TO_USE_SHOW)
         validDuration = s.duration;
       if (priorWatch != null) {
         // Include prior watched data in calculating whether or not this new one
@@ -265,7 +269,7 @@ public class BigBrother
           {
             if (s != null)
               s.setLastWatched(a.time);
-            if (a.isTV() && (!Sage.EMBEDDED || Carny.getInstance().isLoveAir(a)))
+            if (a.isTV())
               Carny.getInstance().submitJob(new Object[] { Carny.WATCH_REAL_JOB, a });
           }
           triggerWatchedChangeEvent(a);
@@ -299,17 +303,22 @@ public class BigBrother
 
   public static boolean areSameShow(Airing a1, Airing a2, boolean matchFavs)
   {
+    return areSameShow(a1, a2, matchFavs, null);
+  }
+
+  public static boolean areSameShow(Airing a1, Airing a2, boolean matchFavs, StringBuilder sbCache)
+  {
     if (a1 != null && a2 != null && a1.getShow() != null && a1.showID == a2.showID)
     {
       if ((isUnique(a1) || a1.time == a2.time) && (!matchFavs ||
-          Carny.getInstance().areSameFavorite(a1, a2)))
+          Carny.getInstance().areSameFavorite(a1, a2, sbCache)))
         return true;
       // Check for the Eastern/Pacific channel difference
       Channel c1 = a1.getChannel();
       Channel c2 = a2.getChannel();
       if ((c1 != null && c2 != null && ((c1.name.length() > 1 && c1.name.charAt(c1.name.length() - 1) == 'P') ||
           (c2.name.length() > 1 && c2.name.charAt(c2.name.length() - 1) == 'P')) && Math.abs(a1.time - a2.time) == 3*Sage.MILLIS_PER_HR) &&
-          (!matchFavs || Carny.getInstance().areSameFavorite(a1, a2)))
+          (!matchFavs || Carny.getInstance().areSameFavorite(a1, a2, sbCache)))
         return true;
     }
     return false;
@@ -385,9 +394,7 @@ public class BigBrother
         s.cachedUnique = Show.PRESUMED_UNIQUE; return true;
       }
 
-      if ("movie".equalsIgnoreCase(s.getCategory()) ||
-          "sports".equalsIgnoreCase(s.getCategory()) ||
-          s.hasEpisodeName())
+      if (s.isCategory("movie") || s.isCategory("sports") || s.hasEpisodeName())
       {
         s.cachedUnique = Show.PRESUMED_UNIQUE;
         return true;
@@ -436,9 +443,7 @@ public class BigBrother
         return true;
       }
 
-      if ("movie".equalsIgnoreCase(s.getCategory()) ||
-          "sports".equalsIgnoreCase(s.getCategory()) ||
-          s.hasEpisodeName())
+      if (s.isCategory("movie") || s.isCategory("sports") || s.hasEpisodeName())
       {
         return true;
       }

@@ -51,9 +51,10 @@ public class SDDescriptions
    * The long description if available will always be preferred over the short description.
    *
    * @param language The desired language abbreviation. (Ex. en for English)
+   * @param forceDesiredLanguage If the desired language is not available, a blank English
    * @return An available description or <code>null</code> if no descriptions exist.
    */
-  public Description getDescription(String language)
+  public Description getDescription(String language, boolean forceDesiredLanguage)
   {
     if (description1000 == null || description1000.length == 0)
     {
@@ -66,7 +67,7 @@ public class SDDescriptions
           return desc;
       }
 
-      return description100[0];
+      return forceDesiredLanguage ? BLANK_DESCRIPTION : description100[0];
     }
 
     for (Description desc : description1000)
@@ -84,7 +85,7 @@ public class SDDescriptions
       }
     }
 
-    return description1000[0];
+    return forceDesiredLanguage ? BLANK_DESCRIPTION : description1000[0];
   }
 
   public Description getFirstDescription()

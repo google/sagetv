@@ -24,7 +24,7 @@ import sage.*;
  */
 public class Database {
   private Database() {}
-  private static final boolean USE_COLLATOR_SORTING = Sage.getBoolean("use_collator_sorting", !Sage.EMBEDDED);
+  private static final boolean USE_COLLATOR_SORTING = Sage.getBoolean("use_collator_sorting", true);
   private static boolean TRIM_PRONOUNS_IN_SORTING = sage.Sage.getBoolean("ui/ignore_the_when_sorting", true);
   private static String[] pronounsToTrim = new String[] { "the ", "a ", "an " };
   private static void updateTrimPronouns()
@@ -689,7 +689,7 @@ public class Database {
         {
           bond = null;
           // Search through all of the Favorite objects to find the correct one
-          StringBuffer sbCache = new StringBuffer();
+          StringBuilder sbCache = new StringBuilder();
           for (int i = 0; i < cachedFavs.length; i++)
           {
             if (cachedFavs[i].followsTrend(air, false, sbCache))
@@ -1635,7 +1635,7 @@ public class Database {
             return (l1 < l2) ? -1 : ((l1 > l2) ? 1 : 0);
           }
         });
-        optSortMap.put("intelligent", Seeker.getInstance().getMediaFileComparator(true));
+        optSortMap.put("intelligent", SeekerSelector.getInstance().getMediaFileComparator(true));
         optSortMap.put("caseinsensitive", new java.util.Comparator()
         {
           public int compare(Object o1, Object o2)

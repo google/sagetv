@@ -146,41 +146,35 @@ public abstract class BasicVideoFrame extends java.awt.Panel
       videoBGColor = new java.awt.Color(30, 30, 30);
     }
     videoHShiftFreq = uiMgr.getLong(prefs + VIDEO_HORIZONTAL_SHIFT_FREQ, 0);
-    if (!Sage.EMBEDDED)
+    if (videoHShiftFreq != 0)
     {
-      if (videoHShiftFreq != 0)
-      {
-        createVideoHShiftTimer();
-      }
+      createVideoHShiftTimer();
+    }
 
-      setLayout(new java.awt.LayoutManager()
-      {
-        public void addLayoutComponent(String name, java.awt.Component comp){}
-        public java.awt.Dimension minimumLayoutSize(java.awt.Container parent)
-        {
-          return preferredLayoutSize(parent);
-        }
-        public java.awt.Dimension preferredLayoutSize(java.awt.Container parent)
-        {
-          return parent.getPreferredSize();
-        }
-        public void removeLayoutComponent(java.awt.Component comp){}
-        public void layoutContainer(java.awt.Container parent)
-        {
-          videoComp.setBounds(0, 0, parent.getWidth(), parent.getHeight());
-          refreshVideoSizing();
-        }
-      });
-      setFocusTraversalKeysEnabled(false);
-      setBackground(java.awt.Color.gray);
-    }
-    videoComp = new VideoCanvas();
-    if (!Sage.EMBEDDED)
+    setLayout(new java.awt.LayoutManager()
     {
-      videoComp.setFocusTraversalKeysEnabled(false);
-      add(videoComp);
-      videoComp.setVisible(false);
-    }
+      public void addLayoutComponent(String name, java.awt.Component comp){}
+      public java.awt.Dimension minimumLayoutSize(java.awt.Container parent)
+      {
+        return preferredLayoutSize(parent);
+      }
+      public java.awt.Dimension preferredLayoutSize(java.awt.Container parent)
+      {
+        return parent.getPreferredSize();
+      }
+      public void removeLayoutComponent(java.awt.Component comp){}
+      public void layoutContainer(java.awt.Container parent)
+      {
+        videoComp.setBounds(0, 0, parent.getWidth(), parent.getHeight());
+        refreshVideoSizing();
+      }
+    });
+    setFocusTraversalKeysEnabled(false);
+    setBackground(java.awt.Color.gray);
+    videoComp = new VideoCanvas();
+    videoComp.setFocusTraversalKeysEnabled(false);
+    add(videoComp);
+    videoComp.setVisible(false);
     mmc = MMC.getInstance();
     forcedPAR = uiMgr.getFloat("ui/forced_pixel_aspect_ratio", 0);
   }
@@ -367,19 +361,16 @@ public abstract class BasicVideoFrame extends java.awt.Panel
   public abstract float getCurrentAspectRatio();
   public void refreshVideoSizing()
   {
-    if (!Sage.EMBEDDED && getParent() == null) return;
+    if (getParent() == null) return;
     refreshVideoSizing(getVideoSize());
   }
   public void refreshVideoSizing(java.awt.Dimension vsize)
   {
-    if (!Sage.EMBEDDED && getParent() == null) return;
+    if (getParent() == null) return;
     sage.geom.Rectangle myBounds;
     if (videoBounds == null)
     {
-      if (Sage.EMBEDDED)
-        myBounds = new sage.geom.Rectangle(0, 0, uiMgr.getRootPanel().getWidth(), uiMgr.getRootPanel().getHeight());
-      else
-        myBounds = new sage.geom.Rectangle(0, 0, getParent().getWidth(), getParent().getHeight());
+      myBounds = new sage.geom.Rectangle(0, 0, getParent().getWidth(), getParent().getHeight());
     }
     else
       myBounds = new sage.geom.Rectangle(videoBounds);
@@ -484,7 +475,7 @@ public abstract class BasicVideoFrame extends java.awt.Panel
       videoHShiftTimer.cancel();
       videoHShiftTimer = null;
     }
-    if (x != 0 && !Sage.EMBEDDED)
+    if (x != 0)
     {
       createVideoHShiftTimer();
     }

@@ -32,7 +32,7 @@ public class FastRandomFile implements java.io.DataOutput, java.io.DataInput
       mode = mode.substring(0, mode.length() - 1);
     raf = new java.io.RandomAccessFile(name, mode);
     if (crypto)
-      cryptoKeys = (byte[]) (SageConstants.LITE ? UIManager.a : Sage.q);
+      cryptoKeys = (byte[]) (Sage.q);
   }
 
   public FastRandomFile(java.io.File file, String mode, String inCharset) throws java.io.IOException
@@ -43,7 +43,7 @@ public class FastRandomFile implements java.io.DataOutput, java.io.DataInput
       mode = mode.substring(0, mode.length() - 1);
     raf = new java.io.RandomAccessFile(file, mode);
     if (crypto)
-      cryptoKeys = (byte[]) (SageConstants.LITE ? UIManager.a : Sage.q);
+      cryptoKeys = (byte[]) (Sage.q);
   }
 
   public void setCrypto(byte[] crypt)
@@ -449,65 +449,46 @@ public class FastRandomFile implements java.io.DataOutput, java.io.DataInput
     if (s == null) s = "";
     if (isI18N)
     {
-      if (Sage.EMBEDDED)
+      int strlen = s.length();
+      int utflen = 0;
+      int c = 0;
+
+      for (int i = 0; i < strlen; i++) {
+        c = s.charAt(i);
+        if (c < 128) {
+          utflen++;
+        } else if (c > 0x07FF) {
+          utflen += 3;
+        } else {
+          utflen += 2;
+        }
+      }
+
+      if (utflen >= 0xFFFF)
       {
-        // With embedded VMs that store UTF-8 byte arrays, this is faster.
-        byte[] tempB = s.getBytes(Sage.I18N_CHARSET);
-        int len = tempB.length;
-        if (len > 0xFFFF)
-        {
-          writeShort(0xFFFF);
-          writeInt(len);
-        }
-        else
-        {
-          writeShort(len);
-        }
-        write(tempB);
+        write((byte)0xFF);
+        write((byte)0xFF);
+        write((byte) ((utflen >>> 24) & 0xFF));
+        write((byte) ((utflen >>> 16) & 0xFF));
+        write((byte) ((utflen >>> 8) & 0xFF));
+        write((byte) ((utflen >>> 0) & 0xFF));
       }
       else
       {
-        int strlen = s.length();
-        int utflen = 0;
-        int c = 0;
-
-        for (int i = 0; i < strlen; i++) {
-          c = s.charAt(i);
-          if (c < 128) {
-            utflen++;
-          } else if (c > 0x07FF) {
-            utflen += 3;
-          } else {
-            utflen += 2;
-          }
-        }
-
-        if (utflen >= 0xFFFF)
-        {
-          write((byte)0xFF);
-          write((byte)0xFF);
-          write((byte) ((utflen >>> 24) & 0xFF));
-          write((byte) ((utflen >>> 16) & 0xFF));
-          write((byte) ((utflen >>> 8) & 0xFF));
-          write((byte) ((utflen >>> 0) & 0xFF));
-        }
-        else
-        {
-          write((byte) ((utflen >>> 8) & 0xFF));
-          write((byte) ((utflen >>> 0) & 0xFF));
-        }
-        for (int i = 0; i < strlen; i++) {
-          c = s.charAt(i);
-          if (c < 128) {
-            write((byte) c);
-          } else if (c > 0x07FF) {
-            write((byte) (0xE0 | ((c >> 12) & 0x0F)));
-            write((byte) (0x80 | ((c >>  6) & 0x3F)));
-            write((byte) (0x80 | (c & 0x3F)));
-          } else {
-            write((byte) (0xC0 | ((c >>  6) & 0x1F)));
-            write((byte) (0x80 | (c & 0x3F)));
-          }
+        write((byte) ((utflen >>> 8) & 0xFF));
+        write((byte) ((utflen >>> 0) & 0xFF));
+      }
+      for (int i = 0; i < strlen; i++) {
+        c = s.charAt(i);
+        if (c < 128) {
+          write((byte) c);
+        } else if (c > 0x07FF) {
+          write((byte) (0xE0 | ((c >> 12) & 0x0F)));
+          write((byte) (0x80 | ((c >>  6) & 0x3F)));
+          write((byte) (0x80 | (c & 0x3F)));
+        } else {
+          write((byte) (0xC0 | ((c >>  6) & 0x1F)));
+          write((byte) (0x80 | (c & 0x3F)));
         }
       }
     }

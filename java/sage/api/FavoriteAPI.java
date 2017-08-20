@@ -459,7 +459,7 @@ public class FavoriteAPI {
         if (Permissions.hasPermission(Permissions.PERMISSION_RECORDINGSCHEDULE, stack.getUIMgr()))
         {
           Carny.getInstance().setRecordingQuality(a, q);
-          Scheduler.getInstance().kick(false); // because it can change the encoders for it
+          SchedulerSelector.getInstance().kick(false); // because it can change the encoders for it
         }
         return null;
       }});
@@ -535,7 +535,7 @@ public class FavoriteAPI {
           if (mr != null && q != null && Permissions.hasPermission(Permissions.PERMISSION_RECORDINGSCHEDULE, stack.getUIMgr()))
           {
             mr.bully(q);
-            Scheduler.getInstance().kick(false);
+            SchedulerSelector.getInstance().kick(false);
           }
         }
         return null;
@@ -1003,7 +1003,7 @@ public class FavoriteAPI {
         {
           // Search through all of the Favorite objects to find the correct one
           Agent[] favs = Wizard.getInstance().getFavorites();
-          StringBuffer sbCache = new StringBuffer();
+          StringBuilder sbCache = new StringBuilder();
           for (int i = 0; i < favs.length; i++)
           {
             if (favs[i].followsTrend(a, false, sbCache))
@@ -1027,7 +1027,7 @@ public class FavoriteAPI {
         java.util.ArrayList rv = new java.util.ArrayList();
         // Search through all of the Favorite objects to find the correct one
         Agent[] favs = Wizard.getInstance().getFavorites();
-        StringBuffer sbCache = new StringBuffer();
+        StringBuilder sbCache = new StringBuilder();
         for (int i = 0; i < favs.length; i++)
         {
           if (favs[i].followsTrend(a, false, sbCache))
@@ -1164,7 +1164,10 @@ public class FavoriteAPI {
     rft.put(new PredefinedJEPFunction("Favorite", "GetFavoriteAirings", new String[] { "Favorite" }, true)
     {
       /**
-       * Returns a list of all of the Airings in the database that match this Favorite.
+       * Returns a list of all of the Airings in the database that match this Favorite.  If this Favorite is disabled,
+       * no Airings will be returned.  To get a list of Airings that match a disabled Favorite, call
+       * GetPotentialFavoriteAirings instead.
+       *
        * @param Favorite the Favorite object
        * @return the list of Airings in the DB that match this Favorite
        *
@@ -1174,7 +1177,25 @@ public class FavoriteAPI {
         Agent fav = (Agent) stack.pop();
         if (fav == null) return null;
         return fav.getRelatedAirings(Wizard.getInstance().getRawAccess(Wizard.AIRING_CODE,
-            Wizard.AIRINGS_BY_CT_CODE), true, false, new StringBuffer());
+            Wizard.AIRINGS_BY_CT_CODE), false, false, new StringBuilder());
+      }});
+    rft.put(new PredefinedJEPFunction("Favorite", "GetPotentialFavoriteAirings", new String[] { "Favorite" }, true)
+    {
+      /**
+       * Returns a list of all of the Airings in the database that match this Favorite.  If the favorite is disabled
+       * this API call will ignore that fact and return the Airings that would match this favorite if it were not
+       * disabled.
+       * @param Favorite the Favorite object
+       * @return the list of Airings in the DB that match this Favorite
+       *
+       * @declaration public Airing[] GetPotentialFavoriteAirings(Favorite Favorite);
+       * @since 9.0.15
+       */
+      public Object runSafely(Catbert.FastStack stack) throws Exception{
+        Agent fav = (Agent) stack.pop();
+        if (fav == null) return null;
+        return fav.getRelatedAirings(Wizard.getInstance().getRawAccess(Wizard.AIRING_CODE,
+            Wizard.AIRINGS_BY_CT_CODE), false, true, new StringBuilder());
       }});
     rft.put(new PredefinedJEPFunction("Favorite", "GetFavoriteID", new String[] { "Favorite" })
     {

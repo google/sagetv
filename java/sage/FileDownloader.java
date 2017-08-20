@@ -137,7 +137,7 @@ public class FileDownloader extends SystemTask
     synchronous = inSynchronous;
     UIManager uiMgr = (uiMgrWeak != null) ? ((UIManager) uiMgrWeak.get()) : null;
     success = false;
-    if (circular && (!Sage.client || Sage.EMBEDDED))
+    if (circular && !Sage.client)
       circSize = Sage.getLong("downloader/circular_file_size", 8*1024*1024);
     else
       circSize = 0;

@@ -65,7 +65,7 @@ public class FileTransfer extends SystemTask
     orgDestFile = destFile;
     if (Sage.DBG) System.out.println("Transfer requested for files src=" + srcFileStr + " dest=" + destFile);
     UIManager uiMgr = (UIManager) uiMgrWeak.get();
-    remoteUIXfer = uiMgr.getUIClientType() == UIClient.REMOTE_UI && uiMgr.hasRemoteFSSupport() && !Sage.EMBEDDED;
+    remoteUIXfer = uiMgr.getUIClientType() == UIClient.REMOTE_UI && uiMgr.hasRemoteFSSupport();
     smbMountHolder = null;
     if (srcFileStr.startsWith("smb://"))
     {
@@ -180,22 +180,22 @@ public class FileTransfer extends SystemTask
 
       if (totalFileSize > freeSpace)
       {
-        if (!Sage.WINDOWS_OS || Seeker.getInstance().isPathInManagedStorage(destFile))
+        if (!Sage.WINDOWS_OS || SeekerSelector.getInstance().isPathInManagedStorage(destFile))
         {
           // Make a storage request with Seeker to get the space we need, and then see if we've got the space
           // now and then cancel the request.
           if (Sage.DBG) System.out.println("Requesting Seeker to clear up " + ((totalFileSize - freeSpace)/1000000) + "MB worth of space");
-          java.io.File tempFile = Seeker.getInstance().requestDirectoryStorage("scratch", totalFileSize - freeSpace);
-          synchronized (Seeker.getInstance())
+          java.io.File tempFile = SeekerSelector.getInstance().requestDirectoryStorage("scratch", totalFileSize - freeSpace);
+          synchronized (SeekerSelector.getInstance())
           {
-            Seeker.getInstance().kick();
+            SeekerSelector.getInstance().kick();
             try
             {
-              Seeker.getInstance().wait(5000);
+              SeekerSelector.getInstance().wait(5000);
             }catch (InterruptedException e){}
           }
           freeSpace = Sage.getDiskFreeSpace(destFile.getAbsolutePath());
-          Seeker.getInstance().clearDirectoryStorageRequest(tempFile);
+          SeekerSelector.getInstance().clearDirectoryStorageRequest(tempFile);
           if (totalFileSize > freeSpace)
           {
             if (Sage.DBG) System.out.println("Unable to clear up enough free space for library import");
@@ -399,7 +399,7 @@ public class FileTransfer extends SystemTask
       int fileStats = mcsr.fsGetPathAttributes(currPath);
       if ((fileStats & MiniClientSageRenderer.FS_PATH_FILE) != 0)
       {
-        if (allFileTypes || Seeker.getInstance().hasImportableFileExtension(currPath))
+        if (allFileTypes || SeekerSelector.getInstance().hasImportableFileExtension(currPath))
           rv.add(currPath);
       }
       else if ((fileStats & MiniClientSageRenderer.FS_PATH_DIRECTORY) != 0)

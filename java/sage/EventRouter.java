@@ -229,62 +229,56 @@ public class EventRouter implements	java.awt.event.MouseListener,
     repeatKeys.add(new Integer(UserEvent.UP_VOL_UP));
     repeatKeys.add(new Integer(UserEvent.DOWN_VOL_DOWN));
 
-    if (!Sage.EMBEDDED)
+    VideoFrame vf = uiMgr.getVideoFrame();
+    if (uiMgr.getGlobalFrame() != null)
     {
-      VideoFrame vf = uiMgr.getVideoFrame();
-      if (uiMgr.getGlobalFrame() != null)
-      {
-        uiMgr.getGlobalFrame().addMouseWheelListener(this);
-        uiMgr.getGlobalFrame().addKeyListener(this);
-      }
-      vf.addKeyListeners(this);
-      vf.addMouseListeners(this);
-      vf.addMouseMotionListeners(this);
+      uiMgr.getGlobalFrame().addMouseWheelListener(this);
+      uiMgr.getGlobalFrame().addKeyListener(this);
     }
+    vf.addKeyListeners(this);
+    vf.addMouseListeners(this);
+    vf.addMouseMotionListeners(this);
     loadInputPlugins();
   }
 
   public void loadInputPlugins()
   {
-    if (!Sage.EMBEDDED)
+    if (Sage.WINDOWS_OS)
     {
-      if (Sage.WINDOWS_OS)
+      if (uiMgr.getUIClientType() == UIClient.LOCAL)
+        inputPlugins.add(new SageTVInfraredReceive2());
+    }
+    else if (Sage.LINUX_OS && uiMgr.getBoolean("linux/load_default_input_plugins", true) && uiMgr.getUIClientType() == UIClient.LOCAL)
+    {
+      try
       {
-        if (uiMgr.getUIClientType() == UIClient.LOCAL)
-          inputPlugins.add(new SageTVInfraredReceive2());
+        inputPlugins.add(new PVR150Input());
       }
-      else if (Sage.LINUX_OS && uiMgr.getBoolean("linux/load_default_input_plugins", true) && uiMgr.getUIClientType() == UIClient.LOCAL)
+      catch (Throwable t)
       {
-        try
-        {
-          inputPlugins.add(new PVR150Input());
-        }
-        catch (Throwable t)
-        {
-          System.out.println("ERROR loading PVR150Input plugin of:" + t);
-          t.printStackTrace();
-        }
-        inputPlugins.add(new LinuxPowerInput());
+        System.out.println("ERROR loading PVR150Input plugin of:" + t);
+        t.printStackTrace();
       }
-      else if (Sage.MAC_OS_X && ((uiMgr.getUIClientType() == UIClient.REMOTE_UI && MiniClientSageRenderer.isClientLocalhost(uiMgr.getLocalUIClientName())) || Sage.client))
+      inputPlugins.add(new LinuxPowerInput());
+    }
+    else if (Sage.MAC_OS_X && ((uiMgr.getUIClientType() == UIClient.REMOTE_UI && MiniClientSageRenderer.isClientLocalhost(uiMgr.getLocalUIClientName())) || Sage.client))
+    {
+      // Check if it's a local PS UI which means we load the IR input plugins for it
+      if (Sage.DBG) System.out.println("Loading Mac input plugins for local PS UI");
+      try
       {
-        // Check if it's a local PS UI which means we load the IR input plugins for it
-        if (Sage.DBG) System.out.println("Loading Mac input plugins for local PS UI");
-        try
-        {
-          inputPlugins.add(new MacIRC());
-        }
-        catch (Throwable t)
-        {
-          System.out.println("ERROR loading MacIRC plugin of:" + t);
-          t.printStackTrace();
-        }
+        inputPlugins.add(new MacIRC());
+      }
+      catch (Throwable t)
+      {
+        System.out.println("ERROR loading MacIRC plugin of:" + t);
+        t.printStackTrace();
       }
     }
     //if (uiMgr.getUIClientType() == UIClient.REMOTE_UI)
     //	inputPlugins.add(new MiniInput());
     String extraPlugins = uiMgr.get("input_plugin_classes", "");
-    if (!SageConstants.LITE && extraPlugins.length() > 0)
+    if (extraPlugins.length() > 0)
     {
       java.util.StringTokenizer toker = new java.util.StringTokenizer(extraPlugins, ",");
       while (toker.hasMoreTokens())
@@ -472,7 +466,7 @@ public class EventRouter implements	java.awt.event.MouseListener,
   {
     lastEventTime = Sage.eventTime();
     if (uiMgr.isIgnoringAllEvents()) return;
-    if (!Sage.EMBEDDED && !uiMgr.getBoolean("disable_auto_mouse_events", false))
+    if (!uiMgr.getBoolean("disable_auto_mouse_events", false))
       processEvent(evt);
   }
 
@@ -790,7 +784,7 @@ public class EventRouter implements	java.awt.event.MouseListener,
   private void processUserEvent(UserEvent ue)
   {
     lastEventTime = Sage.eventTime();
-    if (Sage.DBG) System.out.println("processUserEvent-" + ue + " evtTime=" + Sage.df(ue.getWhen()));
+    if (Sage.DBG) System.out.println("processUserEvent-" + ue + " evtTime=" + Sage.df(ue != null ? ue.getWhen() : Sage.time()));
     if (Sage.WINDOWS_OS || Sage.MAC_OS_X)
       ServerPowerManagement.getInstance().kick();
 
@@ -965,7 +959,7 @@ public class EventRouter implements	java.awt.event.MouseListener,
     if (uiMgr.isIgnoringAllEvents()) return;
     if (!useAwtEventQueue)
       postUserEvent(evt);
-    else if (!Sage.EMBEDDED && !java.awt.EventQueue.isDispatchThread())
+    else if (!java.awt.EventQueue.isDispatchThread())
       java.awt.EventQueue.invokeLater(new Runnable()
       {
         public void run() { processUserEvent(evt); }
@@ -976,7 +970,7 @@ public class EventRouter implements	java.awt.event.MouseListener,
 
   public void invokeLater(Runnable runny)
   {
-    if (!Sage.EMBEDDED && useAwtEventQueue)
+    if (useAwtEventQueue)
       java.awt.EventQueue.invokeLater(runny);
     else
     {
@@ -991,7 +985,7 @@ public class EventRouter implements	java.awt.event.MouseListener,
 
   public void invokeAndWait(Runnable runny) throws InterruptedException, java.lang.reflect.InvocationTargetException
   {
-    if (!Sage.EMBEDDED && useAwtEventQueue)
+    if (useAwtEventQueue)
       java.awt.EventQueue.invokeAndWait(runny);
     else
     {
@@ -1205,7 +1199,7 @@ public class EventRouter implements	java.awt.event.MouseListener,
     if (Sage.DBG && uiMgr.getBoolean("debug_input_events", false))
       System.out.println("Recvd Event Key:" + keyChar + ' ' + keyCode + ' ' + keyModifiers);
     Keyie convEvt = new Keyie(keyCode, keyModifiers);
-    if (!Sage.EMBEDDED && Sage.DBG && !Sage.WINDOWS_OS && keyCode == java.awt.event.KeyEvent.VK_Q &&
+    if (Sage.DBG && !Sage.WINDOWS_OS && keyCode == java.awt.event.KeyEvent.VK_Q &&
         (keyModifiers == (java.awt.event.KeyEvent.ALT_MASK | java.awt.event.KeyEvent.SHIFT_MASK | java.awt.event.KeyEvent.CTRL_MASK)))
     {
       SageTV.exit();
@@ -1243,7 +1237,7 @@ public class EventRouter implements	java.awt.event.MouseListener,
       switch (eventID)
       {
         case java.awt.event.MouseEvent.MOUSE_CLICKED:
-          if (!Sage.EMBEDDED) mouseClicked(me);
+          mouseClicked(me);
           break;
         case java.awt.event.MouseEvent.MOUSE_PRESSED:
           mousePressed(me);
@@ -1252,16 +1246,14 @@ public class EventRouter implements	java.awt.event.MouseListener,
           mouseReleased(me);
           break;
         case java.awt.event.MouseEvent.MOUSE_DRAGGED:
-          if (!Sage.EMBEDDED) mouseDragged(me);
+          mouseDragged(me);
           break;
         case java.awt.event.MouseEvent.MOUSE_MOVED:
-          if (!Sage.EMBEDDED) mouseMoved(me);
+          mouseMoved(me);
           break;
       }
       // all the mouse listeners do the same thing in ZRoot
-      if (Sage.EMBEDDED)
-        evtSink.mouseEntered(me);
-      else if (useAwtEventQueue) {
+      if (useAwtEventQueue) {
         java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(me);
       } else {
         synchronized (evtQueue)

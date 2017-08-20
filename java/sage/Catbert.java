@@ -472,7 +472,7 @@ public class Catbert
   {
     Context con = (hookUI == null) ? new Context(uiMgr) : hookUI.getRelatedContext().createChild();
 
-    if (!Sage.EMBEDDED && uiMgr != null && uiMgr.getTracer() != null)
+    if (uiMgr != null && uiMgr.getTracer() != null)
       uiMgr.getTracer().traceHook(hooky, hookVars, hookUI);
 
     String[] hookVarNames = hookVarMap.get(hooky.getName());
@@ -529,7 +529,7 @@ public class Catbert
       context.focusedVar = inUIComp.doesAncestorOrMeHaveFocus() ? Boolean.TRUE : Boolean.FALSE;
 
 
-    if (!Sage.EMBEDDED && ENABLE_STUDIO_DEBUG_CHECKS && context.getUIMgr() != null && context.getUIMgr().getTracer() != null) context.getUIMgr().getTracer().traceEvaluate(Tracer.PRE_EVALUATION, expr, src, context);
+    if (ENABLE_STUDIO_DEBUG_CHECKS && context.getUIMgr() != null && context.getUIMgr().getTracer() != null) context.getUIMgr().getTracer().traceEvaluate(Tracer.PRE_EVALUATION, expr, src, context);
     JEP myParser = parserCache.get(expr);
     if (myParser == null)
     {
@@ -601,7 +601,7 @@ public class Catbert
           myParser.clearError();
           Long lastErrTime = errorTimeMap.get(errStr);
           System.out.println(errStr);
-          if (!Sage.EMBEDDED && Sage.getBoolean("popup_on_action_errors", false) && context.getUIMgr() != null && context.getUIMgr().getGlobalFrame() != null &&
+          if (Sage.getBoolean("popup_on_action_errors", false) && context.getUIMgr() != null && context.getUIMgr().getGlobalFrame() != null &&
               (lastErrTime == null || (Sage.time() - lastErrTime.longValue() > REPEAT_ERROR_SPACING)) &&
               (Sage.time() - overallLastErrorTime > 2000) &&
               !context.getUIMgr().isFSEXMode())
@@ -639,7 +639,7 @@ public class Catbert
     if (myParser != null)
     {
       rv = myParser.getValueAsObject(context, inUIComp);
-      if (!Sage.EMBEDDED && myParser.hasError())
+      if (myParser.hasError())
       {
         final String errStr = "Evaluation Error: " + myParser.getErrorInfo() + "\r\nExpression: " + expr;
         final Widget errWidg = src;
@@ -676,13 +676,13 @@ public class Catbert
           overallLastErrorTime = Sage.time();
         }
       }
-      if (!Sage.EMBEDDED && !SageConstants.LITE && Sage.q != null)
+      if (Sage.q != null)
         ((byte[])Sage.q)[6] = (byte) (((byte[])Sage.q)[112] + ((byte[])Sage.q)[45]); // piracy protection
     }
     if (!(rv instanceof AsyncTaskID))
       context.setLocal(null, rv);
 
-    if (!Sage.EMBEDDED && ENABLE_STUDIO_DEBUG_CHECKS && context.getUIMgr() != null && context.getUIMgr().getTracer() != null) context.getUIMgr().getTracer().traceEvaluate(Tracer.POST_EVALUATION, expr, src, context);
+    if (ENABLE_STUDIO_DEBUG_CHECKS && context.getUIMgr() != null && context.getUIMgr().getTracer() != null) context.getUIMgr().getTracer().traceEvaluate(Tracer.POST_EVALUATION, expr, src, context);
     return rv;
   }
 
@@ -2196,8 +2196,7 @@ public class Catbert
       sage.api.Database.init(this);
       sage.api.PlaylistAPI.init(this);
       sage.api.ShowAPI.init(this);
-      if (!Sage.EMBEDDED)
-        sage.api.TranscodeAPI.init(this);
+      sage.api.TranscodeAPI.init(this);
       sage.api.TVEditorialAPI.init(this);
       sage.api.SeriesInfoAPI.init(this);
       sage.api.SystemMessageAPI.init(this);

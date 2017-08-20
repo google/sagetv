@@ -23,10 +23,8 @@ public class ImageLoader
 {
   // Replicate this here since the miniclient uses this class as well and we don't
   // want to pull in the whole SageTV codebase
-  static boolean EMBEDDED = false;
   static
   {
-    EMBEDDED = System.getProperty("sage.embedded") != null;
     try
     {
       sage.Native.loadLibrary("ImageLoader");
@@ -44,26 +42,15 @@ public class ImageLoader
   // NOTE: The returned image must be freed with a call to freeImage
   public static RawImage loadImageFromFile(String filePath) throws java.io.IOException
   {
-    if (!EMBEDDED)
-      return loadScaledImageFromFile(filePath, 0, 0, 32, 0);
-    else
-      return loadScaledImageFromFile(filePath, 0, 0);
+    return loadScaledImageFromFile(filePath, 0, 0, 32, 0);
   }
   public static RawImage loadResizedImageFromFile(String filePath, int width, int height) throws java.io.IOException
   {
-    if (!EMBEDDED)
-      return loadScaledImageFromFile(filePath, width, height, 32, 0);
-    else
-      return loadScaledImageFromFile(filePath, width, height);
+    return loadScaledImageFromFile(filePath, width, height, 32, 0);
   }
   public static RawImage loadResizedRotatedImageFromFile(String filePath, int width, int height, int bpp, int rotation) throws java.io.IOException
   {
-    if (!EMBEDDED)
-      return loadScaledImageFromFile(filePath, width, height, bpp, rotation);
-    else if (bpp == 32 && rotation == 0)
-      return loadScaledImageFromFile(filePath, width, height);
-    else
-      throw new UnsupportedOperationException("image load rotation is NOT IMPLEMENTED on embedded");
+    return loadScaledImageFromFile(filePath, width, height, bpp, rotation);
   }
   public static RawImage loadImageFromMemory(byte[] imgdata) throws java.io.IOException
   {
@@ -85,10 +72,7 @@ public class ImageLoader
       fos.close();
       fos = null;
       RawImage rv;
-      if (EMBEDDED)
-        rv = loadScaledImageFromFile(tempFile.toString(), imageWidth, imageHeight);
-      else
-        rv = loadScaledImageFromFile(tempFile.toString(), imageWidth, imageHeight, bpp, rotation);
+      rv = loadScaledImageFromFile(tempFile.toString(), imageWidth, imageHeight, bpp, rotation);
       return rv;
     }
     finally
@@ -135,8 +119,6 @@ public class ImageLoader
   }
   public static RawImage createNullImage(int width, int height)
   {
-    if (EMBEDDED)
-      return new RawImage(width, height, new byte[width*height*4], true, width*4);
     java.nio.ByteBuffer bb = java.nio.ByteBuffer.allocateDirect(width*height*4);
     if (bb.hasArray())
       java.util.Arrays.fill(bb.array(), (byte)0);
@@ -147,25 +129,21 @@ public class ImageLoader
   // NOTE: The returned image must be freed with a call to freeImage
   public static RawImage scaleRawImage(RawImage srcImage, int imageWidth, int imageHeight)
   {
-    if (EMBEDDED) throw new UnsupportedOperationException("scaleRawImage is NOT IMPLEMENTED on embedded");
     return scaleRawImage(srcImage, imageWidth, imageHeight, null);
   }
   public static RawImage scaleRawImageWithInsets(RawImage srcImage, int imageWidth, int imageHeight, int[] insets)
   {
-    if (EMBEDDED) throw new UnsupportedOperationException("scaleRawImage is NOT IMPLEMENTED on embedded");
     return scaleRawImage(srcImage, imageWidth, imageHeight, insets);
   }
 
   public static void freeImage(RawImage img)
   {
-    if (!EMBEDDED && !img.isInternalAlloc())
+    if (!img.isInternalAlloc())
       freeImage0(img.getData());
   }
 
   public static byte[] compressImageToMemory(RawImage img, String format)
   {
-    if (EMBEDDED) throw new java.lang.UnsupportedOperationException("compressImageToMemory is NOT IMPLEMENTED on embedded");
-
     byte[] rv = null;
     java.io.DataInputStream fis = null;
     java.io.File tempFile = null;
@@ -201,7 +179,6 @@ public class ImageLoader
 
   public static boolean compressImageToFilePath(RawImage img, String filePath, String format)
   {
-    if (EMBEDDED) throw new java.lang.UnsupportedOperationException("compressImageToFilePath is NOT IMPLEMENTED on embedded");
     return compressImageToFile(img, filePath, format);
   }
 

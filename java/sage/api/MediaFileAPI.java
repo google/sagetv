@@ -565,7 +565,7 @@ public class MediaFileAPI {
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         MediaFile mf = getMediaFile(stack); if (mf == null || !Permissions.hasPermission(Permissions.PERMISSION_DELETE, stack.getUIMgr())) return Boolean.FALSE;
-        return Boolean.valueOf(Seeker.getInstance().destroyFile(mf, true, "User", stack.getUIMgr() != null ? stack.getUIMgr().getLocalUIClientName() : null));
+        return Boolean.valueOf(SeekerSelector.getInstance().destroyFile(mf, true, "User", stack.getUIMgr() != null ? stack.getUIMgr().getLocalUIClientName() : null));
       }});
     rft.put(new PredefinedJEPFunction("MediaFile", "DeleteFileWithoutPrejudice", 1, new String[] { "MediaFile" }, true)
     {
@@ -583,7 +583,7 @@ public class MediaFileAPI {
         MediaFile mf = getMediaFile(stack); if (mf == null || !Permissions.hasPermission(Permissions.PERMISSION_DELETE, stack.getUIMgr())) return Boolean.FALSE;
         if (Permissions.hasPermission(Permissions.PERMISSION_RECORDINGSCHEDULE, stack.getUIMgr()))
           BigBrother.clearWatched(mf.getContentAiring());
-        return Boolean.valueOf(Seeker.getInstance().destroyFile(mf, false, "User", stack.getUIMgr() != null ? stack.getUIMgr().getLocalUIClientName() : null));
+        return Boolean.valueOf(SeekerSelector.getInstance().destroyFile(mf, false, "User", stack.getUIMgr() != null ? stack.getUIMgr().getLocalUIClientName() : null));
       }});
     rft.put(new PredefinedJEPFunction("MediaFile", "GetFileDuration", 1, new String[] { "MediaFile" })
     {
@@ -1163,7 +1163,7 @@ public class MediaFileAPI {
                 if (Sage.DBG) System.out.println("Successfully regenerated thumbnail and inserted it into exif header!");
                 MetaImage.clearFromCache(new MetaImage.MediaFileThumbnail(mf));
                 // In case the offset/size changed for some unknown reason, this is very low overhead to reparse the JPEG file
-                mf.reinitializeMetadata(true, true, mf.getName().substring(0, mf.getName().length() - (Sage.EMBEDDED ? mf.getShow().getEpisodeName().length() : srcFile.getName().length())));
+                mf.reinitializeMetadata(true, true, mf.getName().substring(0, mf.getName().length() - (srcFile.getName().length())));
                 if (Sage.DBG) System.out.println("MF reinitialized to:" + mf);
               }
               else
@@ -1279,7 +1279,7 @@ public class MediaFileAPI {
       }
     }
 
-    mf.reinitializeMetadata(true, false, mf.getName().substring(0, mf.getName().length() - (Sage.EMBEDDED ? mf.getShow().getEpisodeName().length() : srcFile.getName().length())));
+    mf.reinitializeMetadata(true, false, mf.getName().substring(0, mf.getName().length() - (srcFile.getName().length())));
     if (Sage.DBG) System.out.println("MF reinitialized to:" + mf);
     MetaImage.clearFromCache(mf);
     return true;

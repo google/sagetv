@@ -843,8 +843,7 @@ public class MediaPlayerAPI {
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         boolean x = evalBool(stack.pop());
-        if (!Sage.EMBEDDED)
-          UIManager.setAlwaysOnTop(stack.getUIMgrSafe().getVideoFrame().getVideoHandle(), x);
+        UIManager.setAlwaysOnTop(stack.getUIMgrSafe().getVideoFrame().getVideoHandle(), x);
         return null;
       }});
     rft.put(new PredefinedJEPFunction("MediaPlayer", "DVDChapterNext")

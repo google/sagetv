@@ -30,6 +30,13 @@ if [ -e sagesettings ] ; then
 	. sagesettings
 fi
 
+# If we are running Java 8 or 9, enable string deduplication. This has very measurable benefits in
+# multi-miniclient situations.
+JAVA_VERSION=$(java -version 2>&1 | grep -i version | sed 's/.*version ".*\.\(.*\)\..*"/\1/; 1q')
+if [[ "$JAVA_VERSION" == "8" || "$JAVA_VERSION" == "9" ]] ; then
+    JAVAOPTS="$JAVAOPTS -XX:+UseG1GC -XX:+UseStringDeduplication"
+fi
+
 while [ $restartApp -eq 1 ]; do
 	restartApp=0
 	if [ -e stageddeletes.txt ] || [ -e stagedrenames.txt ] ; then
@@ -42,7 +49,7 @@ while [ $restartApp -eq 1 ]; do
 	fi
 	done
 	echo Starting server mode
-	java -Djava.awt.headless=$HEADLESS $JAVAMEM -XX:+UseAdaptiveSizePolicy -XX:MaxGCPauseMillis=25 -XX:GCTimeRatio=24 $(if [[ $EUID -eq 0 ]]; then echo '-XX:ThreadPriorityPolicy=1'; fi) $JAVAOPTS -cp Sage.jar:.:/:$(echo JARs/*.jar | sed 's/  */:/g') sage.Sage 0 0 x "sagetv Sage.properties" <&- &
+	java -Djava.awt.headless=$HEADLESS $JAVAMEM -XX:+UseAdaptiveSizePolicy -XX:MaxGCPauseMillis=25 -XX:GCTimeRatio=24 $(if [[ $EUID -eq 0 ]]; then echo '-XX:ThreadPriorityPolicy=1'; fi) $JAVAOPTS -cp Sage.jar:JARs/lucene-core-3.6.0.jar:/:$(echo JARs/*.jar | sed 's/  */:/g') sage.Sage 0 0 x "sagetv Sage.properties" <&- &
 	javapid=$!
 	echo -n $javapid > $PIDFILE
 	wait $javapid

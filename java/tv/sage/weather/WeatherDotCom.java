@@ -307,19 +307,13 @@ public class WeatherDotCom
     props.put("lastSponsorUpdateTime", Long.toString(lastSponsorUpdateTime));
     if (myLocId != null)
     {
-      if (sage.Sage.EMBEDDED)
-        sage.Sage.put("weather/locID", myLocId);
-      else
-        props.put("locID", myLocId);
+      props.put("locID", myLocId);
     }
     if (myUnits != null)
     {
-      if (sage.Sage.EMBEDDED)
-        sage.Sage.put("weather/units", myUnits);
-      else
-        props.put("units", myUnits);
+      props.put("units", myUnits);
     }
-    java.io.File cacheFile = new java.io.File((sage.Sage.EMBEDDED ? "/tmp/" : "") + "weather_cache.properties");
+    java.io.File cacheFile = new java.io.File(("") + "weather_cache.properties");
     java.io.OutputStream out = null;
     try
     {
@@ -343,7 +337,7 @@ public class WeatherDotCom
   private void loadWeatherDataFromCache()
   {
     props = new java.util.Properties();
-    java.io.File cacheFile = new java.io.File((sage.Sage.EMBEDDED ? "/tmp/" : "") + "weather_cache.properties");
+    java.io.File cacheFile = new java.io.File(("") + "weather_cache.properties");
     java.io.InputStream in = null;
     try
     {
@@ -369,16 +363,8 @@ public class WeatherDotCom
       lastCCUpdateTime = Long.parseLong(props.getProperty("lastCCUpdateTime", "0"));
       lastSponsorUpdateTime = Long.parseLong(props.getProperty("lastSponsorUpdateTime", "0"));
     }catch (NumberFormatException e){}
-    if (sage.Sage.EMBEDDED)
-    {
-      myLocId = sage.Sage.get("weather/locID", null);
-      myUnits = sage.Sage.get("weather/units", "s");
-    }
-    else
-    {
-      myLocId = props.getProperty("locID");
-      myUnits = props.getProperty("units", "s");
-    }
+    myLocId = props.getProperty("locID");
+    myUnits = props.getProperty("units", "s");
   }
 
   private String myLocId;

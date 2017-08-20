@@ -38,7 +38,7 @@ public class SDImagesTest extends DeserializeTest
     {
       assert packedImages[i] != null : "Index " + i + " was null!";
       boolean exists = false;
-      String decoded = SDImages.decodeImageUrl(showcardID, packedImages[i]);
+      String decoded = SDImages.decodeShowImageUrl(showcardID, packedImages[i]);
       for (SDImage image : images)
       {
         if (image.getUri().equals(decoded))

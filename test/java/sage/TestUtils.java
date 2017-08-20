@@ -37,7 +37,6 @@ public class TestUtils
 
     Sage.TESTING=true;
     Sage.client=false;
-    Sage.EMBEDDED=false;
     Sage.USE_HIRES_TIME=false;
 
     // create some important files/dirs for testing

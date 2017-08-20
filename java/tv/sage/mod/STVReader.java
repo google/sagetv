@@ -341,7 +341,7 @@ public class STVReader
 
       if (sage.Sage.DBG) System.out.println("Modules: STVReader load W I Z 0x" + Integer.toHexString(version));
 
-      if (version >= 0x2F || SageConstants.LITE)
+      if (version >= 0x2F)
       {
         // encrypted DB file
 
@@ -448,7 +448,7 @@ public class STVReader
       name = in.readUTF();
       propCount--;
     }
-    boolean allowSyms = sage.Sage.getBoolean("studio/preserve_widget_symbols_on_import", !sage.Sage.EMBEDDED);
+    boolean allowSyms = sage.Sage.getBoolean("studio/preserve_widget_symbols_on_import", true);
     for (int i = 0; i < propCount; i++)
     {
       if (optimize)

@@ -2,15 +2,7 @@
 <Include>
 
   <!-- Installer (not the application) Version needs updating here. -->
-  <?define SageInstallerVersion="1.005" ?>
-
-  <!-- Version needs updating here. -->
-  <?define MajorVersion="9" ?>
-  <?define MinorVersion="0" ?>
-  <?define BuildVersion="9" ?>
-  <?define Revision="441" ?>
-  <!-- Full version number to display -->
-  <?define VersionNumber="$(var.MajorVersion).$(var.MinorVersion).$(var.BuildVersion).$(var.Revision)" ?>
+  <?define SageInstallerVersion="1.013" ?>
 
   <!-- Set the product name -->
   <?if $(var.Configuration) = SetupServer ?>

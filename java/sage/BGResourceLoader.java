@@ -92,11 +92,6 @@ public class BGResourceLoader implements Runnable
             continue;
           }
         }
-        while (Sage.EMBEDDED && uiMgr.areUIActionsBeingProcessed(false))
-        {
-          // Hold off on this processing on limited resource systems if we're trying to respond to a user action
-          try{Thread.sleep(10);}catch(Exception e){}
-        }
 
         if (DEBUG_LOADER && Sage.DBG) System.out.println("BGLoader1 is processing the image resource for src=" + (processMe.metaSrc == null ? processMe.thumbSrc : processMe.metaSrc));
         if (!verifyLoadNeeded(processMe))
@@ -111,7 +106,7 @@ public class BGResourceLoader implements Runnable
           processMe.myMeta = MetaImage.getMetaImage((Album) processMe.metaSrc);
         else if (processMe.metaSrc instanceof java.io.File)
           processMe.myMeta = MetaImage.getMetaImage((java.io.File) processMe.metaSrc);
-        else if (processMe.metaSrc instanceof java.awt.Image && !Sage.EMBEDDED)
+        else if (processMe.metaSrc instanceof java.awt.Image)
           processMe.myMeta = MetaImage.getMetaImage((java.awt.Image) processMe.metaSrc);
         else if (processMe.metaSrc instanceof java.net.URL)
           processMe.myMeta = MetaImage.getMetaImage((java.net.URL) processMe.metaSrc);
@@ -164,12 +159,6 @@ public class BGResourceLoader implements Runnable
         }
       }
 
-      while (Sage.EMBEDDED && uiMgr.areUIActionsBeingProcessed(false))
-      {
-        // Hold off on this processing on limited resource systems if we're trying to respond to a user action
-        try{Thread.sleep(10);}catch(Exception e){}
-      }
-
       if (DEBUG_LOADER && Sage.DBG) System.out.println("BGLoader2 is processing the image resource for src=" + (processMe.metaSrc == null ? processMe.thumbSrc : processMe.metaSrc));
       // Now we do the actual image decode/preload into memory; checking if its needed first of course
       if (!verifyLoadNeeded(processMe))
@@ -181,11 +170,8 @@ public class BGResourceLoader implements Runnable
       if (DEBUG_LOADER && Sage.DBG) System.out.println("BGLoader is preloading the image into the cache now for meta=" + processMe.myMeta);
       if (nia != null)
         nia.preloadImage(processMe.myMeta);
-      else if (!Sage.EMBEDDED)
-      {
-        processMe.myMeta.getJavaImage(0);
-        processMe.myMeta.removeJavaRef(0);
-      }
+      processMe.myMeta.getJavaImage(0);
+      processMe.myMeta.removeJavaRef(0);
       if (processMe.myMeta.isNullOrFailed())
         failedImageTimes.put(getFastKey(processMe.metaSrc == null ? processMe.thumbSrc : processMe.metaSrc), new Long(Sage.eventTime()));
       if (DEBUG_LOADER && Sage.DBG) System.out.println("BGLoader is DONE preloading the image into the cache now; notify the listeners for meta=" + processMe.myMeta);

@@ -126,6 +126,16 @@ public class SDImage
     return height;
   }
 
+  public boolean isPortrait()
+  {
+    return height > width;
+  }
+
+  public boolean isWide()
+  {
+    return height < width;
+  }
+
   public String getUri()
   {
     // This also means we will end up with a 303 redirect.
@@ -202,6 +212,14 @@ public class SDImage
     }
 
     int wh = width > height ? width : height;
+    if (wh <= 160)
+    {
+      return SIZE_SM;
+    }
+    if (wh > 160 && wh <= 260)
+    {
+      return SIZE_XS;
+    }
     if (wh > 260 && wh < 600)
     {
       return SIZE_MD;
@@ -209,6 +227,10 @@ public class SDImage
     else if (wh >= 600 && wh <= 1920)
     {
       return SIZE_LG;
+    }
+    else if (wh > 1920)
+    {
+      return SIZE_MS;
     }
 
 
@@ -269,6 +291,7 @@ public class SDImage
       case "Photo":
         return CAT_PHOTO;
       case "Photo-headshot":
+      case "Photo - headshot":
         return CAT_PHOTO_HEADSHOT;
       default:
         return CAT_UNKNOWN;

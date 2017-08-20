@@ -155,7 +155,6 @@ public class Module implements tv.sage.Modular
 
   public String getUID()
   {
-    if (sage.Sage.EMBEDDED) return null;
     long uidCount = backupUIDCount;
     if (!batchLoad && sage.Sage.getRawProperties() != null)
       uidCount = sage.Sage.getLong("studio/widget_uid_counter", 1);
@@ -721,7 +720,6 @@ public class Module implements tv.sage.Modular
 
   public static Module loadXML(tv.sage.ModuleGroup group, java.util.Map symbolMap, java.io.File xmlFile) throws tv.sage.SageException
   {
-    if (SageConstants.LITE) return null; // Only BINARY STVs are allowed for LITE mode
     if (sage.Sage.DBG) System.out.println("Modules: loadXML from " + xmlFile);
 
     try
@@ -883,7 +881,6 @@ public class Module implements tv.sage.Modular
 
   public void importXML(java.util.Map symbolMap, java.io.File file, sage.UIManager uiMan) throws tv.sage.SageException
   {
-    if (SageConstants.LITE) return; // Only BINARY STVs are allowed for LITE mode
     if (sage.Sage.DBG) System.out.println("Modules: importXML from " + file);
 
     RawWidget[] rwz = null;

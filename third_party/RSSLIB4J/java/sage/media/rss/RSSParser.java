@@ -80,8 +80,7 @@ public class RSSParser {
       //      this.fixZeroLength();
       //   }
       // else
-      if (!sage.Sage.EMBEDDED)
-        this.fixUnicodeErrors();
+      this.fixUnicodeErrors();
 
     }catch(IOException e){
       throw new RSSException("RSSParser::setXmlResource(url) fails: "+e);
@@ -162,93 +161,36 @@ public class RSSParser {
     tempFile.deleteOnExit();
     FileOutputStream fw = new FileOutputStream(tempFile);
     BufferedInputStream bufIn = new BufferedInputStream(in);
-    if (sage.Sage.EMBEDDED)
+
+    Reader reader = new InputStreamReader(bufIn, "UTF-8");
+    BufferedWriter out = new BufferedWriter(new OutputStreamWriter(fw, "UTF-8"));
+    int c = reader.read();
+    while (c != -1)
     {
-      BufferedOutputStream out = new BufferedOutputStream(fw);
-      int c1,c2;
-      int c = bufIn.read();
-      while (c != -1)
+      if ((c >= 0x0020 && c <= 0xD7FF)
+          || c == 0x000A || c == 0x0009
+          || c == 0x000D
+          || (c >= 0xE000 && c <= 0xFFFD)
+          || (c >= 0x10000 && c <= 0x10ffff))
       {
-        if (c <= 127)
-        {
-          out.write(c);
-        }
-        else
-        {
-          switch (c >> 4)
-          {
-            case 12: case 13:
-              /* 110x xxxx   10xx xxxx*/
-              c1 = bufIn.read();
-              if (c1 >= 0 && (c1 & 0xC0) == 0x80)
-              {
-                out.write(c);
-                out.write(c1);
-              }
-              break;
-            case 14:
-              /* 1110 xxxx  10xx xxxx  10xx xxxx */
-              c1 = bufIn.read();
-              if (c1 >= 0 && (c1 & 0xC0) == 0x80)
-              {
-                c2 = bufIn.read();
-                if (c2 >= 0 && (c2 & 0xC0) == 0x80)
-                {
-                  out.write(c);
-                  out.write(c1);
-                  out.write(c2);
-                }
-              }
-              break;
-            case 15:
-              // Consume the next 3 bytes as well, this is a 32-bit unicode value which we can't handle w/ Java chars
-              bufIn.read();
-              bufIn.read();
-              bufIn.read();
-            default:
-              /* 10xx xxxx,  1111 xxxx */
-              // consume the next char since it's probably junk
-              //bufIn.read();
-              break;
-          }
-        }
-        c = bufIn.read();
+        out.write(c);
       }
-      out.flush();
-      out.close();
-      bufIn.close();
-    }
-    else
+      //		try
+      {
+        c = reader.read();
+      }
+      /*		catch (sun.io.MalformedInputException e2)
     {
-      Reader reader = new InputStreamReader(bufIn, "UTF-8");
-      BufferedWriter out = new BufferedWriter(new OutputStreamWriter(fw, "UTF-8"));
-      int c = reader.read();
-      while (c != -1)
-      {
-        if ((c >= 0x0020 && c <= 0xD7FF)
-            || c == 0x000A || c == 0x0009
-            || c == 0x000D
-            || (c >= 0xE000 && c <= 0xFFFD)
-            || (c >= 0x10000 && c <= 0x10ffff))
-        {
-          out.write(c);
-        }
-        //		try
-        {
-          c = reader.read();
-        }
-        /*		catch (sun.io.MalformedInputException e2)
-			{
-				System.out.println("Caught MIE, continuing...");
-				//reader.close();
-				reader = new InputStreamReader(bufIn, "UTF-8");
-				c = 0;
-			}*/
-      }
-      out.flush();
-      out.close();
-      reader.close();
+      System.out.println("Caught MIE, continuing...");
+      //reader.close();
+      reader = new InputStreamReader(bufIn, "UTF-8");
+      c = 0;
+    }*/
     }
+    out.flush();
+    out.close();
+    reader.close();
+
     fw.close();
     setXmlResource(tempFile.getAbsolutePath());
 

@@ -314,20 +314,6 @@ public class CaptureDeviceInput
       oldInput.providerID = 0;
       oldInput.writePrefs();
       NetworkClient.distributeRecursivePropertyChange(oldInput.prefs);
-      if (SageConstants.LITE)
-      {
-        // Find any other devices configured and unconfigure them
-        CaptureDeviceInput[] theInputs = MMC.getInstance().getConfiguredInputs();
-        for (int i = 0; i < theInputs.length; i++)
-        {
-          if (theInputs[i].capDev != capDev)
-          {
-            theInputs[i].providerID = 0;
-            theInputs[i].writePrefs();
-            NetworkClient.distributeRecursivePropertyChange(theInputs[i].prefs);
-          }
-        }
-      }
     }
     providerID = inProvID;
     writePrefs();
@@ -542,7 +528,7 @@ public class CaptureDeviceInput
       sage.media.format.ContainerFormat cf;
       // We don't know what it is in this case aside from container, so it'll get set through a message callback
       cf = new sage.media.format.ContainerFormat();
-      if (Sage.getBoolean(prefs + "encode_digital_tv_as_program_stream", !Sage.EMBEDDED))
+      if (Sage.getBoolean(prefs + "encode_digital_tv_as_program_stream", true))
         cf.setFormatName(sage.media.format.MediaFormat.MPEG2_PS);
       else
         cf.setFormatName(sage.media.format.MediaFormat.MPEG2_TS);

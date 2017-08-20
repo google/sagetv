@@ -16,6 +16,8 @@
 package sage;
 
 import java.lang.reflect.Constructor;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import sage.Wizard.MaintenanceType;
 import sage.epg.sd.SDRipper;
@@ -124,25 +126,15 @@ public final class EPG implements Runnable
         serviceLevels.put(new Long(slKeys[i]), currMap);
       }
     }
-    if (SageTV.upgradeFromLite)
+    String logoDirStr = Sage.get(prefs + LOGO_DIR, null);
+    if (logoDirStr == null)
     {
       logoDir = new java.io.File(Sage.getPath("data", "ChannelLogos"));
-      if (!Sage.EMBEDDED)
-        Sage.put(prefs + LOGO_DIR, logoDir.toString());
+      Sage.put(prefs + LOGO_DIR, logoDir.toString());
     }
     else
     {
-      String logoDirStr = Sage.get(prefs + LOGO_DIR, null);
-      if (logoDirStr == null)
-      {
-        logoDir = new java.io.File(Sage.getPath("data", "ChannelLogos"));
-        if (!Sage.EMBEDDED)
-          Sage.put(prefs + LOGO_DIR, logoDir.toString());
-      }
-      else
-      {
-        logoDir = new java.io.File(logoDirStr);
-      }
+      logoDir = new java.io.File(logoDirStr);
     }
     logoDir.mkdirs();
     logoMap = new java.util.HashMap<String, java.io.File>();
@@ -248,7 +240,7 @@ public final class EPG implements Runnable
       EPGDataSource newEPGDS;
       try
       {
-        if (!Sage.EMBEDDED && currClassStr != null && currClassStr.equals("Basic"))
+        if (currClassStr != null && currClassStr.equals("Basic"))
         {
           sources.addElement(newEPGDS = new EPGDataSource(Integer.parseInt(dsNames[i])));
         }
@@ -409,17 +401,22 @@ public final class EPG implements Runnable
 
   void resetViewableStationsCache()
   {
-    synchronized (stationIDCacheLock)
+    stationIDCacheLock.writeLock().lock();
+    try
     {
       viewableStationIDCache = null;
       VideoFrame.clearSortedChannelLists();
+    }
+    finally
+    {
+      stationIDCacheLock.writeLock().unlock();
     }
     // NOTE: We didn't need this in our old UI because we would call RemoveUnusedLineups whenever someone was exiting the
     // channel setup UIs which would then kick the scheduler. Now that it's happening via backend processes we need to kick it
     // every time we change the enabled channels so it redoes the schedule and then also kicks the Seeker for what channels are viewable.
     if (!Sage.client)
     {
-      Scheduler.getInstance().kick(true);
+      SchedulerSelector.getInstance().kick(true);
     }
   }
 
@@ -637,7 +634,7 @@ public final class EPG implements Runnable
         if (reqMaintenanceType != MaintenanceType.NONE)
         {
           Carny.getInstance().kickHard();
-          Scheduler.getInstance().kick(false);
+          SchedulerSelector.getInstance().kick(false);
         }
 
         if (reqMaintenanceType != MaintenanceType.NONE
@@ -1473,7 +1470,8 @@ public final class EPG implements Runnable
 
   private void createViewableStationIDCache()
   {
-    synchronized (stationIDCacheLock)
+    stationIDCacheLock.writeLock().lock();
+    try
     {
       java.util.HashSet<Integer> viewableStations = new java.util.HashSet<Integer>();
       for (int i = 0; i < sources.size(); i++)
@@ -1490,11 +1488,12 @@ public final class EPG implements Runnable
             while (walker.hasNext())
             {
               java.util.Map.Entry<Integer, String[]> ent = walker.next();
-              if (!ds.unavailStations.contains(ent.getKey()))
+              Integer key = ent.getKey();
+              if (!ds.unavailStations.contains(key))
               {
                 String[] val = ent.getValue();
                 if (val.length > 0 && val[0].length() > 0)
-                  viewableStations.add(ent.getKey());
+                  viewableStations.add(key);
               }
             }
           }
@@ -1511,15 +1510,39 @@ public final class EPG implements Runnable
       }
       java.util.Arrays.sort(viewableStationIDCache);
     }
+    finally
+    {
+      stationIDCacheLock.writeLock().unlock();
+    }
   }
 
   public boolean canViewStation(int stationID)
   {
-    synchronized (stationIDCacheLock)
+    // There is significant contention on this lock when Carny is multi-threaded, so we now use a
+    // read/write lock.
+    stationIDCacheLock.readLock().lock();
+    try
+    {
+      if (viewableStationIDCache != null)
+        return java.util.Arrays.binarySearch(viewableStationIDCache, stationID) >= 0;
+    }
+    finally
+    {
+      stationIDCacheLock.readLock().unlock();
+    }
+
+    // This only happens when we change what's viewable which isn't that often for a normal user, so
+    // this is an acceptable performance loss.
+    stationIDCacheLock.writeLock().lock();
+    try
     {
       if (viewableStationIDCache == null)
         createViewableStationIDCache();
       return java.util.Arrays.binarySearch(viewableStationIDCache, stationID) >= 0;
+    }
+    finally
+    {
+      stationIDCacheLock.writeLock().unlock();
     }
   }
   /*for (int i = 0; i < sources.size(); i++)
@@ -1665,7 +1688,8 @@ public final class EPG implements Runnable
   private java.util.Map<String, java.io.File> logoMap;
   //	private java.util.Map colorMap;
 
-  private Object stationIDCacheLock = new Object();
+  // Now that Carny is multi-threaded, there is significant reader contention for this cache.
+  private final ReadWriteLock stationIDCacheLock = new ReentrantReadWriteLock();
   private int[] viewableStationIDCache;
 
   private final java.util.Map<Long, java.util.Map<Integer, String[]>> lineups;

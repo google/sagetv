@@ -76,12 +76,6 @@ public class MMC
 
     capDevMgrs = new java.util.ArrayList();
     globalEncoderMap = new java.util.HashMap();
-    if (Sage.EMBEDDED)
-    {
-      // Be sure the video format properties are sync'd properly
-      if ("PAL".equals(Sage.get("TV_STANDARD", null)) && isNTSCVideoFormat())
-        Sage.putInt(prefs + VIDEO_FORMAT_CODE, 8);
-    }
   }
 
   private void init()
@@ -119,25 +113,25 @@ public class MMC
       if (Sage.DBG) System.out.println("EncoderMap=" + globalEncoderMap);
     }
     NetworkClient.distributeRecursivePropertyChange("mmc/encoders");
-    Seeker.getInstance().kick();
-    Scheduler.getInstance().kick(true);
+    SeekerSelector.getInstance().kick();
+    SchedulerSelector.getInstance().kick(true);
   }
   
  // This is an overload of redetectCaptureDevices.  It is meant to only redetect devices for
  // one CaptureDeviceManager.  For instance discover NetworkEncoder devices
  public void redetectCaptureDevices(CaptureDeviceManager mgr)
  {
-     if (Sage.DBG) System.out.println("MMC is re-doing the capture device detection on " + mgr);
-     mgr.detectCaptureDevices((CaptureDevice[]) globalEncoderMap.values().toArray(new CaptureDevice[0]));
-     CaptureDevice[] newDevs = mgr.getCaptureDevices();
-     
-     if (Sage.DBG) System.out.println("devices detected=" + java.util.Arrays.asList(newDevs));
-     updateCaptureDeviceObjects(newDevs);
+   if (Sage.DBG) System.out.println("MMC is re-doing the capture device detection on " + mgr);
+   mgr.detectCaptureDevices((CaptureDevice[]) globalEncoderMap.values().toArray(new CaptureDevice[0]));
+   CaptureDevice[] newDevs = mgr.getCaptureDevices();
 
-     if (Sage.DBG) System.out.println("EncoderMap=" + globalEncoderMap);
-     NetworkClient.distributeRecursivePropertyChange("mmc/encoders");
-     Seeker.getInstance().kick();
-     Scheduler.getInstance().kick(true);
+   if (Sage.DBG) System.out.println("devices detected=" + java.util.Arrays.asList(newDevs));
+   updateCaptureDeviceObjects(newDevs);
+
+   if (Sage.DBG) System.out.println("EncoderMap=" + globalEncoderMap);
+   NetworkClient.distributeRecursivePropertyChange("mmc/encoders");
+   SeekerSelector.getInstance().kick();
+   SchedulerSelector.getInstance().kick(true);
  }
 
   // If we're changing the actual CapDev object than we need to rebuild this map. This occurs
@@ -406,6 +400,14 @@ public class MMC
 
   public long getRecordedBytes(java.io.File recordingFile)
   {
+    // TODO: Will be enabled in a future commit.
+    /*if (SeekerSelector.USE_BETA_SEEKER)
+    {
+      long returnValue = Splitter.getInstance().getBytesStreamed(recordingFile);
+      if (returnValue != -1)
+        return returnValue;
+    }*/
+
     java.util.Iterator walker = globalEncoderMap.values().iterator();
     while (walker.hasNext())
     {

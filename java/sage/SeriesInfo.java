@@ -202,23 +202,22 @@ public class SeriesInfo extends DBObject
       out.writeUTF(characters[i]);
     }
     out.writeUTF(imageUrl);
-    if (SageConstants.PVR)
+
+    if (props == null)
+      out.writeUTF("");
+    else
     {
-      if (props == null)
-        out.writeUTF("");
-      else
+      StringBuilder sb = new StringBuilder();
+      for (Map.Entry<Object, Object> ent : props.entrySet())
       {
-        StringBuilder sb = new StringBuilder();
-        for (Map.Entry<Object, Object> ent : props.entrySet())
-        {
-          sb.append(MediaFormat.escapeString(ent.getKey().toString()));
-          sb.append('=');
-          sb.append(MediaFormat.escapeString(ent.getValue().toString()));
-          sb.append(';');
-        }
-        out.writeUTF(sb.toString());
+        sb.append(MediaFormat.escapeString(ent.getKey().toString()));
+        sb.append('=');
+        sb.append(MediaFormat.escapeString(ent.getValue().toString()));
+        sb.append(';');
       }
+      out.writeUTF(sb.toString());
     }
+
     out.writeInt(showcardID);
     out.writeShort(seriesImages.length);
     for (int i = 0; i < seriesImages.length; i++)

@@ -36,6 +36,7 @@ public final class Stringer extends DBObject implements Comparable<Stringer>
   {
     super(in, ver, idMap);
     name = in.readUTF();
+    ignoreCaseHash = name.toLowerCase().hashCode();
   }
 
   void write(DataOutput out, int flags) throws IOException
@@ -53,6 +54,7 @@ public final class Stringer extends DBObject implements Comparable<Stringer>
   {
     Stringer fromMe = (Stringer) x;
     name = fromMe.name;
+    ignoreCaseHash = name.toLowerCase().hashCode();
     super.update(fromMe);
   }
 
@@ -61,7 +63,37 @@ public final class Stringer extends DBObject implements Comparable<Stringer>
     return toString().compareTo(o.toString());
   }
 
+  // NOTE: Any string passed into this method must already be all lowercase.
+  public boolean equalsIgnoreCase(String compare)
+  {
+    String thisName = name;
+    int thisIgnoreHash = ignoreCaseHash;
+    // The hash could be 0, but it's not going to be any more often than any other hash and in case
+    // we miss a case where the title is set, this covers that problem.
+    if (thisIgnoreHash == 0)
+      return thisName.equalsIgnoreCase(compare);
+    return compare == thisName ||
+      (compare.hashCode() == thisIgnoreHash && compare.length() == thisName.length() &&
+        thisName.regionMatches(true, 0, compare, 0, thisName.length()));
+  }
+
+  public boolean equalsIgnoreCase(Stringer compare)
+  {
+    String thisName = name;
+    String compareName = compare.name;
+    int thisIgnoreHash = ignoreCaseHash;
+    // The hash could be 0, but it's not going to be any more often than any other hash and in case
+    // we miss a case where the title is set, this covers that problem.
+    if (thisIgnoreHash == 0)
+      return thisName.equalsIgnoreCase(compareName);
+    return compareName == thisName ||
+      (compare.ignoreCaseHash == thisIgnoreHash && compareName.length() == thisName.length() &&
+        thisName.regionMatches(true, 0, compareName, 0, thisName.length()));
+  }
+
   String name;
+  // Used for case insensitive comparisons.
+  transient int ignoreCaseHash;
 
   public static final Comparator<Stringer> NAME_COMPARATOR =
       new Comparator<Stringer>()

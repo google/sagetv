@@ -44,7 +44,6 @@ public class WidgetAPI {
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         java.io.File f = getFile(stack);
-        if (SageConstants.LITE) return null;
         if (stack.getUIMgr() == null) return Boolean.FALSE;
         try
         {
@@ -67,7 +66,6 @@ public class WidgetAPI {
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         java.io.File f = getFile(stack);
-        if (SageConstants.LITE) return null;
         if (stack.getUIMgr() == null) return Boolean.FALSE;
         try
         {
@@ -198,7 +196,6 @@ public class WidgetAPI {
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         String s = getString(stack);
-        if (SageConstants.LITE) return null;
         return stack.getUIMgr() == null ? null : stack.getUIMgr().getModuleGroup().addWidget(WidgetMeta.getTypeForName(s));
       }});
     rft.put(new PredefinedJEPFunction("Widget", "AddWidgetWithSymbol", new String[] { "WidgetType", "Symbol" })
@@ -216,7 +213,6 @@ public class WidgetAPI {
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         String symb = getString(stack);
         String s = getString(stack);
-        if (SageConstants.LITE) return null;
         return stack.getUIMgr() == null ? null : stack.getUIMgr().getModuleGroup().addWidget(WidgetMeta.getTypeForName(s), symb);
       }});
     rft.put(new PredefinedJEPFunction("Widget", "RemoveWidget", new String[] { "Widget" })
@@ -243,7 +239,6 @@ public class WidgetAPI {
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         Widget cw = getWidget(stack);
         Widget pw = getWidget(stack);
-        if (SageConstants.LITE) return null;
         if (cw != null && pw != null && pw.willContain(cw))
           WidgetFidget.contain(pw, cw);
         return null;
@@ -263,7 +258,6 @@ public class WidgetAPI {
         int idx = getInt(stack);
         Widget cw = getWidget(stack);
         Widget pw = getWidget(stack);
-        if (SageConstants.LITE) return null;
         if (cw != null && pw != null && pw.willContain(cw))
           WidgetFidget.contain(pw, cw, idx);
         return null;
@@ -281,7 +275,6 @@ public class WidgetAPI {
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         Widget cw = getWidget(stack);
         Widget pw = getWidget(stack);
-        if (SageConstants.LITE) return null;
         if (cw != null && pw != null)
           WidgetFidget.discontent(pw, cw);
         return null;
@@ -345,7 +338,6 @@ public class WidgetAPI {
         String pv = getString(stack);
         String pn = getString(stack);
         Widget w = getWidget(stack);
-        if (SageConstants.LITE) return null;
         if (w != null)
           WidgetFidget.setProperty(w, WidgetMeta.getPropForName(pn), pv);
         return null;
@@ -392,7 +384,6 @@ public class WidgetAPI {
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         String s = getString(stack);
         Widget w = getWidget(stack);
-        if (SageConstants.LITE) return null;
         if (w != null)
           WidgetFidget.setName(w, s);
         return null;
@@ -682,13 +673,8 @@ public class WidgetAPI {
        * @declaration public java.io.File GetDefaultSTVFile();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        if (Sage.EMBEDDED)
-        {
-          return new java.io.File("/app/sage/STVs/Cheetah/Cheetah.opt.stv");
-        }
-        else
-          return new java.io.File(System.getProperty("user.dir"), "STVs" + java.io.File.separatorChar +
-              ("SageTV7" + java.io.File.separatorChar + "SageTV7.xml"));
+        return new java.io.File(System.getProperty("user.dir"), "STVs" + java.io.File.separatorChar +
+            ("SageTV7" + java.io.File.separatorChar + "SageTV7.xml"));
 
       }});
     rft.put(new PredefinedJEPFunction("Widget", "GetUIWidgetContext")

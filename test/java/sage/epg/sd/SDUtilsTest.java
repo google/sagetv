@@ -49,8 +49,8 @@ public class SDUtilsTest
   @Test(groups = {"gson", "schedulesDirect", "dateTime", "conversion" })
   public void testDateConversion()
   {
-    long date = SDUtils.SDDateUTCToMillis("2014-06-28");
-    assert date == 1403913600000L : "Expected 1403913600000, got " + date;
+    long date = SDUtils.SDDateUTCToMillis("2014-06-28") + TimeZone.getDefault().getRawOffset();
+    assert date == 1403956800000L : "Expected 1403956800000, got " + date;
   }
 
   @Test(groups = {"gson", "schedulesDirect", "removeLeadingZeros", "conversion" })
@@ -66,6 +66,9 @@ public class SDUtilsTest
     assert "100".equals(cleaned) : "Expected 100, got " + cleaned;
     cleaned = SDUtils.removeLeadingZeros("1000");
     assert "1000".equals(cleaned) : "Expected 1000, got " + cleaned;
+    // Radio channels should not be trimmed.
+    cleaned = SDUtils.removeLeadingZeros("0000");
+    assert "0000".equals(cleaned) : "Expected 0000, got " + cleaned;
   }
 
   @Test(groups = {"gson", "schedulesDirect", "program", "conversion" })

@@ -489,7 +489,7 @@ public class ZDataTable extends ZPseudoComp
 
   public boolean setFocusByValue(String varName, Object focusValue, boolean visCheck)  // returns true if it took the focus
   {
-    if (!passesConditional() && (Sage.EMBEDDED || !Catbert.evalBool(relatedContext.getLocal("AllowHiddenFocus")))) return false;
+    if (!passesConditional() && (!Catbert.evalBool(relatedContext.getLocal("AllowHiddenFocus")))) return false;
 
     for (int i = 0; i < numKids; i++)
     {
@@ -654,7 +654,7 @@ public class ZDataTable extends ZPseudoComp
         }
       }
     }
-    if (!Sage.EMBEDDED && !madeChanges && !passesConditional() && uiMgr.allowHiddenFocus() && Catbert.evalBool(relatedContext.getLocal("AllowHiddenFocus")))
+    if (!madeChanges && !passesConditional() && uiMgr.allowHiddenFocus() && Catbert.evalBool(relatedContext.getLocal("AllowHiddenFocus")))
     {
       Object myValue = relatedContext.safeLookup(varName);
       if (myValue == focusValue || (myValue != null && myValue.equals(focusValue)))
@@ -1682,7 +1682,7 @@ public class ZDataTable extends ZPseudoComp
     }
     originalKids.remove(null);
     Widget cellWidg = gridPanel.widg;
-    if (finalCellWidgs == null || (!Sage.EMBEDDED && finalCellModTime < uiMgr.getModuleGroup().lastModified()))
+    if (finalCellWidgs == null || (finalCellModTime < uiMgr.getModuleGroup().lastModified()))
     {
       finalCellWidgs = deriveFinalUIChildrenWithActionParents(cellWidg);
       finalCellModTime = uiMgr.getModuleGroup().lastModified();
@@ -1873,7 +1873,7 @@ public class ZDataTable extends ZPseudoComp
     {
       if (rowDataContext != null)
       {
-        if (finalRowWidgs == null || (!Sage.EMBEDDED && finalRowModTime < uiMgr.getModuleGroup().lastModified()))
+        if (finalRowWidgs == null || (finalRowModTime < uiMgr.getModuleGroup().lastModified()))
         {
           finalRowWidgs = deriveFinalUIChildrenWithActionParents(rowHeaderPanel.widg);
           finalRowModTime = uiMgr.getModuleGroup().lastModified();
@@ -2036,7 +2036,7 @@ public class ZDataTable extends ZPseudoComp
       }
       if (columnDataContext != null)
       {
-        if (finalColWidgs == null || (!Sage.EMBEDDED && finalColModTime < uiMgr.getModuleGroup().lastModified()))
+        if (finalColWidgs == null || (finalColModTime < uiMgr.getModuleGroup().lastModified()))
         {
           finalColWidgs = deriveFinalUIChildrenWithActionParents(colHeaderPanel.widg);
           finalColModTime = uiMgr.getModuleGroup().lastModified();

@@ -12,3 +12,12 @@ script:
   - export JAVA_ARCH=amd64
   - cd build
   - ./buildall.sh
+  - cd ..
+
+deploy:
+  skip_cleanup: true
+  provider: script
+  script: build/deploy.sh
+  on:
+    branch: master
+

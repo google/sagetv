@@ -166,7 +166,12 @@ public final class ManualRecord extends DBObject
     }
   }
 
-  Airing getSchedulingAiring()
+  public int getStationID()
+  {
+    return stationID;
+  }
+
+  public Airing getSchedulingAiring()
   {
     if (myAiring == null)
     {
@@ -304,6 +309,7 @@ public final class ManualRecord extends DBObject
 
   public long getStartTime() { return startTime; }
   public long getEndTime() { return startTime + duration; }
+  public long getDuration() { return duration; }
 
   public String toString()
   {

@@ -64,4 +64,26 @@ public class SDStationScheduleTest extends DeserializeTest
       assert program.getMd5() != null;
     }
   }
+
+  @Test(groups = {"gson", "schedulesDirect", "schedule" })
+  public void deserializeBadVideoProperties() throws IOException
+  {
+    String schedule = "epg/sd/json/schedules/scheduleBadVideoProperties.json";
+    SDStationSchedule stationSchedules[] = deserialize(schedule, SDStationSchedule[].class);
+
+    for (SDStationSchedule stationSchedule : stationSchedules)
+    {
+      assert stationSchedule.getCode() == 0;
+      assert stationSchedule.getMetadata().getMd5() != null;
+      assert stationSchedule.getMetadata().getModified() != null;
+      assert stationSchedule.getMetadata().getStartDate() != null;
+
+      for (SDProgramSchedule program : stationSchedule.getPrograms())
+      {
+        assert program.getProgramID() != null;
+        assert program.getAirDateTime() != null;
+        assert program.getMd5() != null;
+      }
+    }
+  }
 }

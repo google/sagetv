@@ -147,7 +147,6 @@ public class UIManager implements Runnable, UIClient
 
   public static long getHWND(Canvas canvas)
   {
-    if (Sage.EMBEDDED) return 0;
     return UIUtils.getHWND(canvas);
   }
 
@@ -192,8 +191,7 @@ public class UIManager implements Runnable, UIClient
   private static native int getCursorPosY0();
 
   public static final boolean ANTIALIAS = true;
-  public static final String SAGE = (SageConstants.LITE && false)
-      ? ("SageTVLite V" + Version.VERSION) : ("SageTV V" + Version.VERSION);
+  public static final String SAGE = ("SageTV V" + Version.VERSION);
   public static final DecimalFormat floatFormat = new DecimalFormat("0.###");
 
   public static final int NO_STARTUP = 0;
@@ -275,7 +273,7 @@ public class UIManager implements Runnable, UIClient
   private UIManager(String inUIClientName)
   {
     uiClientName = inUIClientName;
-    if (!Seeker.LOCAL_PROCESS_CLIENT.equals(uiClientName) && !Sage.EMBEDDED)
+    if (!Seeker.LOCAL_PROCESS_CLIENT.equals(uiClientName))
     {
       uiProps = new SageProperties(Sage.client);
       new File("clients").mkdirs();
@@ -370,7 +368,7 @@ public class UIManager implements Runnable, UIClient
     }
 
     if (Sage.isHeadless() && uiClientName.equals(Seeker.LOCAL_PROCESS_CLIENT)) return;
-    if (!Sage.EMBEDDED && !windowless)
+    if (!windowless)
     {
       if (Sage.masterWindow == null)
         Sage.masterWindow = win = new SpecialWindow(Sage.rez("SageTV") + (Sage.isTrueClient() ? " Client" : ""),
@@ -438,13 +436,10 @@ public class UIManager implements Runnable, UIClient
     router = new EventRouter(this);
 
     rootPanel = new ZRoot(this);
-    if (!Sage.EMBEDDED)
-    {
-      rootPanel.addKeyListener(router);
-      rootPanel.addMouseListener(router);
-      rootPanel.addMouseMotionListener(router);
-      rootPanel.setFocusTraversalKeysEnabled(false);
-    }
+    rootPanel.addKeyListener(router);
+    rootPanel.addMouseListener(router);
+    rootPanel.addMouseMotionListener(router);
+    rootPanel.setFocusTraversalKeysEnabled(false);
     basePanel = new ZComp(rootPanel)
     {
       public void doLayoutNow()
@@ -455,74 +450,73 @@ public class UIManager implements Runnable, UIClient
       }
     };
     rootPanel.setRoot(basePanel);
-    if (!Sage.EMBEDDED)
+
+    LayoutManager layer = new LayoutManager()
     {
-      LayoutManager layer = new LayoutManager()
+      public void addLayoutComponent(String name, Component comp)
+      {}
+      public Dimension minimumLayoutSize(Container parent)
       {
-        public void addLayoutComponent(String name, Component comp)
-        {}
-        public Dimension minimumLayoutSize(Container parent)
+        return preferredLayoutSize(parent);
+      }
+      public Dimension preferredLayoutSize(Container parent)
+      {
+        return parent.getPreferredSize();
+      }
+      public void removeLayoutComponent(Component comp)
+      {}
+      public void layoutContainer(Container parent)
+      {
+        if (embeddedPanel != null)
         {
-          return preferredLayoutSize(parent);
-        }
-        public Dimension preferredLayoutSize(Container parent)
-        {
-          return parent.getPreferredSize();
-        }
-        public void removeLayoutComponent(Component comp)
-        {}
-        public void layoutContainer(Container parent)
-        {
-          if (embeddedPanel != null)
+          if (Sage.MAC_OS_X)
           {
-            if (Sage.MAC_OS_X)
-            {
-              // This is actually used on Mac for part of the UI architecture, so don't rely on the embedded bounds
-              embeddedPanel.setBounds(0, 0, parent.getWidth(), parent.getHeight());
-            }
+            // This is actually used on Mac for part of the UI architecture, so don't rely on the embedded bounds
+            embeddedPanel.setBounds(0, 0, parent.getWidth(), parent.getHeight());
+          }
+          else
+          {
+            // NOTE: For now, just make the embedded panel full size if it has any children
+            if (embeddedBounds == null || embeddedPanel.getComponentCount() == 0 || embeddedBounds.width == 0 || embeddedBounds.height == 0)
+              embeddedPanel.setBounds(0, 0, 0, 0);
             else
             {
-              // NOTE: For now, just make the embedded panel full size if it has any children
-              if (embeddedBounds == null || embeddedPanel.getComponentCount() == 0 || embeddedBounds.width == 0 || embeddedBounds.height == 0)
-                embeddedPanel.setBounds(0, 0, 0, 0);
-              else
-              {
-                Rectangle embedBounds = new Rectangle(
-                    (int)(embeddedBounds.x * (parent.getWidth() - embeddedBounds.getWidth() * parent.getWidth())),
-                    (int)(embeddedBounds.y * (parent.getHeight() - embeddedBounds.getHeight() * parent.getHeight())),
-                    (int)(embeddedBounds.getWidth() * parent.getWidth()),
-                    (int)(embeddedBounds.getHeight() * parent.getHeight()));
-                embeddedPanel.setBounds(embedBounds);//0, 0, parent.getWidth(), parent.getHeight());
-              }
+              Rectangle embedBounds = new Rectangle(
+                  (int)(embeddedBounds.x * (parent.getWidth() - embeddedBounds.getWidth() * parent.getWidth())),
+                  (int)(embeddedBounds.y * (parent.getHeight() - embeddedBounds.getHeight() * parent.getHeight())),
+                  (int)(embeddedBounds.getWidth() * parent.getWidth()),
+                  (int)(embeddedBounds.getHeight() * parent.getHeight()));
+              embeddedPanel.setBounds(embedBounds);//0, 0, parent.getWidth(), parent.getHeight());
             }
           }
-          rootPanel.setBounds(0, 0, parent.getWidth(), parent.getHeight());
-          Rectangle theVBounds = videoBounds;
-          if (theVBounds == null)
-            vf.setBounds(0, 0, parent.getWidth(), parent.getHeight());//vf.setBounds(x, y, w, h);
-          else
-            vf.setBounds(theVBounds);
         }
-      };
-      if (!windowless)
-      {
-        win.getContentPane().setLayout(layer);
-        embeddedPanel = new Panel();
-        embeddedPanel.setLayout(new BorderLayout());
-        win.getContentPane().add(embeddedPanel);
-        embeddedPanel.setVisible(false);
-        win.getContentPane().add(rootPanel, "Center");
+        rootPanel.setBounds(0, 0, parent.getWidth(), parent.getHeight());
+        Rectangle theVBounds = videoBounds;
+        if (theVBounds == null)
+          vf.setBounds(0, 0, parent.getWidth(), parent.getHeight());//vf.setBounds(x, y, w, h);
+        else
+          vf.setBounds(theVBounds);
       }
-      else
-      {
-        fakePanel.setLayout(layer);
-        fakePanel.add(rootPanel, "Center");
-      }
-      if (!windowless)
-        win.getContentPane().add(vf);
-      else
-        fakePanel.add(vf);
+    };
+    if (!windowless)
+    {
+      win.getContentPane().setLayout(layer);
+      embeddedPanel = new Panel();
+      embeddedPanel.setLayout(new BorderLayout());
+      win.getContentPane().add(embeddedPanel);
+      embeddedPanel.setVisible(false);
+      win.getContentPane().add(rootPanel, "Center");
     }
+    else
+    {
+      fakePanel.setLayout(layer);
+      fakePanel.add(rootPanel, "Center");
+    }
+    if (!windowless)
+      win.getContentPane().add(vf);
+    else
+      fakePanel.add(vf);
+
     Sage.setSplashText(Sage.rez("Module_Init", new Object[]
         { Sage.rez("Rendering_Engine") }));
     rootPanel.initializeRenderer();
@@ -530,7 +524,7 @@ public class UIManager implements Runnable, UIClient
 
   public Dimension getScreenSize()
   {
-    if (windowless || Sage.EMBEDDED)
+    if (windowless)
     {
       Dimension scrSize = new Dimension();
       scrSize.width = getInt("osd_rendering_width", 720);
@@ -681,7 +675,6 @@ public class UIManager implements Runnable, UIClient
 
   public void setHidden(boolean x, boolean fromMouseAction)
   {
-    if (Sage.EMBEDDED) return;
     if (!windowless && Sage.MAC_OS_X && !Sage.isHeadless()) {
       // this will hide until the mouse is moved, otherwise we have to balance hide/unhide calls
       cursorHidden = setHidden0(x, fromMouseAction);
@@ -764,7 +757,7 @@ public class UIManager implements Runnable, UIClient
     if (Sage.DBG) System.out.println("UIManager.gotoSleep(" + sleepy + ") isTaskbar=" + isTaskbar);
     if (sleepy == isTaskbar) // redundant call
     {
-      if (!Sage.EMBEDDED && !sleepy && !windowless)
+      if (!sleepy && !windowless)
       {
         router.invokeLater(new Runnable()
         {
@@ -783,34 +776,31 @@ public class UIManager implements Runnable, UIClient
     if (!sleepy)
     {
       isTaskbar = false;
-      if (!Sage.EMBEDDED)
+      if (!windowless)
       {
-        if (!windowless)
+        // Be sure it's not minimized when it's restored!
+        if (fsExMode && fsWin != null)
+          fsWin.setExtendedState(oldWinState & ~Frame.ICONIFIED);
+        win.setExtendedState(oldWinState & ~Frame.ICONIFIED);
+        if (Sage.WINDOWS_OS || !getBoolean("hide_java_ui_window", Sage.LINUX_OS))
         {
-          // Be sure it's not minimized when it's restored!
           if (fsExMode && fsWin != null)
-            fsWin.setExtendedState(oldWinState & ~Frame.ICONIFIED);
-          win.setExtendedState(oldWinState & ~Frame.ICONIFIED);
-          if (Sage.WINDOWS_OS || !getBoolean("hide_java_ui_window", Sage.LINUX_OS))
-          {
-            if (fsExMode && fsWin != null)
-              fsWin.setVisible(true);
-            else
-              win.setVisible(true);
-          }
-          if (Sage.WINDOWS_OS && uiClientName.equals(Seeker.LOCAL_PROCESS_CLIENT))
-          {
-            Sage.removeTaskbarIcon0(Sage.mainHwnd);
-            Sage.setupHooksSync();
-          }
+            fsWin.setVisible(true);
+          else
+            win.setVisible(true);
         }
-        Sage.gc(true);
+        if (Sage.WINDOWS_OS && uiClientName.equals(Seeker.LOCAL_PROCESS_CLIENT))
+        {
+          Sage.removeTaskbarIcon0(Sage.mainHwnd);
+          Sage.setupHooksSync();
+        }
       }
+      Sage.gc(true);
       if (clearMenus)
         advanceUI(MAIN_MENU);
       else
         backupUI();
-      if (!Sage.EMBEDDED && !windowless)
+      if (!windowless)
       {
         if (killedAcceleratedRenderingForSleep)
         {
@@ -851,7 +841,7 @@ public class UIManager implements Runnable, UIClient
       if (rootPanel != null && rootPanel.getRenderEngine() instanceof Java2DSageRenderer &&
           ((Java2DSageRenderer) rootPanel.getRenderEngine()).hasOSDRenderer())
         usingOSDRender = true;
-      if (!Sage.EMBEDDED && Sage.WINDOWS_OS && (!screenSaverOnSleep || (!windowless && !isFullScreen() && !usingOSDRender)))
+      if (Sage.WINDOWS_OS && (!screenSaverOnSleep || (!windowless && !isFullScreen() && !usingOSDRender)))
       {
         advanceUI(MAIN_MENU);
         // Kill the 3D system if it's active, then reload it after we wakeup
@@ -886,7 +876,7 @@ public class UIManager implements Runnable, UIClient
             oldWinState = win.getExtendedState();
             win.setExtendedState(Frame.ICONIFIED);
           }
-          if (uiClientName.equals(Seeker.LOCAL_PROCESS_CLIENT) && !Sage.EMBEDDED)
+          if (uiClientName.equals(Seeker.LOCAL_PROCESS_CLIENT))
           {
             Sage.addTaskbarIcon0(Sage.mainHwnd);
             Sage.releaseSystemHooks0(Sage.mainHwnd);
@@ -913,7 +903,7 @@ public class UIManager implements Runnable, UIClient
 
   public void reloadSystemHooks()
   {
-    if (!Sage.EMBEDDED && Sage.WINDOWS_OS && uiClientName.equals(Seeker.LOCAL_PROCESS_CLIENT))
+    if (Sage.WINDOWS_OS && uiClientName.equals(Seeker.LOCAL_PROCESS_CLIENT))
     {
       Sage.releaseSystemHooks0(Sage.mainHwnd);
       try{Thread.sleep(500);}catch(Exception e){}
@@ -953,7 +943,7 @@ public class UIManager implements Runnable, UIClient
       if (Sage.DBG) System.out.println("UIManager System power is suspending");
       if (!Sage.isHeadless() || !uiClientName.equals(Seeker.LOCAL_PROCESS_CLIENT))
       {
-        if (!Sage.EMBEDDED && !EventQueue.isDispatchThread() && vf != null && Sage.getBoolean("ui/close_media_player_on_standby", true))
+        if (!EventQueue.isDispatchThread() && vf != null && Sage.getBoolean("ui/close_media_player_on_standby", true))
           vf.closeAndWait();
       }
 
@@ -991,7 +981,7 @@ public class UIManager implements Runnable, UIClient
     }
 
     int startupType = getInt(prefs + STARTUP_TYPE, 0);
-    if (!Sage.EMBEDDED && !windowless)
+    if (!windowless)
     {
       GraphicsDevice[] screens = GraphicsEnvironment.getLocalGraphicsEnvironment().
           getScreenDevices();
@@ -1055,142 +1045,50 @@ public class UIManager implements Runnable, UIClient
     SageProperties theProps = uiProps == null ? Sage.getRawProperties() : uiProps;
     try
     {
-      if (Sage.client && Sage.EMBEDDED)
+      String originalSTV = null;
+      String fileStr = theProps.get("STV", null);
+      if (Sage.initialSTV != null)
       {
-        // In embedded client mode we need to query the server for the current STV and then download all of it's contents to our cache in /rw.
-        // We do use a timestamp to check for the case that this has already been done.
-        String serverSTVFile = CorePluginManager.getServerProperty("STV", null);
-        // This shouldn't happen unless the server is offline
-        if (serverSTVFile == null || serverSTVFile.length() == 0)
-          throw new SageException("ERROR: Server STV property is blank!", 0);
-        // Now get it's file modification time
-        long fileModTime = 0;
-        try
-        {
-          fileModTime = (Long) SageTV.api("GetPathLastModifiedTime", new Object[] { serverSTVFile });
-        }
-        catch (Exception e)
-        {
-          if (Sage.DBG) System.out.println("ERROR Cannot retrieve file modification time from server!!! " + e);
-        }
-        File fullSTVPath = new File(serverSTVFile);
-        // The STV cache is stored in /rw/sage/STVCache/CLEANED_SERVER_STV_PATH/MODTIME/
-        // If we detect a new one with a different mod time, then we delete the old ones to prevent using extra flash memory for it
-        String cleanedPathName = MediaFile.createValidFilename(fullSTVPath.toString());
-        File stvCacheRoot = new File("/rw/sage/STVCache/" + cleanedPathName);
-        String modStr = Long.toString(fileModTime);
-        if (Sage.DBG) System.out.println("Server STV file path=" + serverSTVFile + " modTime=" + fileModTime + " cacheRoot=" + stvCacheRoot);
-        File actualSTVFile = null;
-        if (!stvCacheRoot.isDirectory())
-          stvCacheRoot.mkdirs();
-        else
-        {
-          File[] existingSTVMods = stvCacheRoot.listFiles();
-          // See if any of these should be removed
-          for (int i = 0; existingSTVMods != null && i < existingSTVMods.length; i++)
-          {
-            if (!existingSTVMods[i].getName().equals(modStr))
-            {
-              // File is different then the server's just destroy this cache path
-              if (Sage.DBG) System.out.println("Deleting old STV cache dir of: " + existingSTVMods[i]);
-              IOUtils.deleteDirectory(existingSTVMods[i]);
-            }
-            else
-            {
-              // this should be where the STV is at; if so then set the var so we use it
-              actualSTVFile = new File(existingSTVMods[i], fullSTVPath.getName());
-              if (!actualSTVFile.isFile())
-                actualSTVFile = null;
-              else
-              {
-                if (Sage.DBG) System.out.println("Found existing cached STV file at: " + actualSTVFile);
-              }
-            }
-          }
-        }
-        if (actualSTVFile == null)
-        {
-          stvCacheRoot = new File(stvCacheRoot, modStr);
-          if (Sage.DBG) System.out.println("Cached STV was not found; download all the files needed for the STV from the server to: " + stvCacheRoot);
-          // Do directory listings recursively to do this; the LAST item we download is the actual STV file itself to prevent us from thinking
-          // that we have all the contents when we don't; it's basically the flag for completeness
-          File stvFilePrefix = fullSTVPath.getParentFile();
-          String prefixStr = stvFilePrefix.toString();
-          if (!prefixStr.endsWith(File.separator))
-            prefixStr += File.separator;
-          File[] allSTVContents = IOUtils.listServerFilesRecursive(stvFilePrefix, true);
-          File[] targetFiles = new File[allSTVContents.length];
-          // Now download each item individually to our filesystem...using a tmp filename for the STV file so we can rename it afterwards to mark this as done
-          for (int i = 0; i < allSTVContents.length; i++)
-          {
-            targetFiles[i] = new File(stvCacheRoot, allSTVContents[i].toString().substring(prefixStr.length()));
-            if (allSTVContents[i].equals(fullSTVPath))
-            {
-              targetFiles[i] = new File(targetFiles[i].toString() + ".tmp");
-            }
-            targetFiles[i].getParentFile().mkdirs();
-          }
-          IOUtils.downloadFilesFromSageTVServer(allSTVContents, targetFiles);
-          // Now rename the STV File
-          String currPath = fullSTVPath.toString();
-          File targetFile = new File(stvCacheRoot, currPath.substring(prefixStr.length()));
-          File tmpTargetFile = new File(targetFile.toString() + ".tmp");
-          tmpTargetFile.renameTo(targetFile);
-          if (Sage.DBG) System.out.println("Done downloading the full STV set from the server; cached STV is now at " + targetFile);
-          actualSTVFile = targetFile;
-        }
-        Properties modProps = new Properties();
-        modProps.put("STV", actualSTVFile.toString());
-        if (Sage.DBG) System.out.println("UIMgr loading UI from: " + modProps.get("STV"));
-        moduleGroup = ModuleManager.loadModuleGroup(modProps);
-        if (Sage.DBG) System.out.println("UIMgr done loading UI from: " + modProps.get("STV"));
+        originalSTV = theProps.get("STV", null);
+        theProps.put("STV", fileStr = Sage.initialSTV);
       }
-      else
+      else if (theProps.get("STV", null) == null && theProps.get("modules", null) == null &&
+          theProps.get(Wizard.WIZARD_KEY + "/" + Wizard.WIDGET_DB_FILE, null) != null)
       {
-        String originalSTV = null;
-        String fileStr = theProps.get("STV", null);
-        if (Sage.initialSTV != null)
-        {
-          originalSTV = theProps.get("STV", null);
-          theProps.put("STV", fileStr = Sage.initialSTV);
-        }
-        else if (theProps.get("STV", null) == null && theProps.get("modules", null) == null &&
-            theProps.get(Wizard.WIZARD_KEY + "/" + Wizard.WIDGET_DB_FILE, null) != null)
-        {
-          theProps.put("STV", fileStr = theProps.get(Wizard.WIZARD_KEY + "/" + Wizard.WIDGET_DB_FILE, null));
-        }
-        // Don't reset MVP/PS UIs on upgrade of a server or they'll keep getting reset every time they connect
-        // until the server is restarted!
-        if (!Sage.EMBEDDED && (fileStr == null || (Sage.getBoolean("wizard/revert_stv_on_upgrade", false) && ((SageTV.upgrade &&
-            getUIClientType() != UIClient.REMOTE_UI) || (getUIClientType() == UIClient.REMOTE_UI && !SAGE.equals(get("ui/last_version", "")))))))
-        {
-          fileStr = new File(System.getProperty("user.dir"),
-              "STVs" + File.separatorChar + ("SageTV7" + File.separatorChar + "SageTV7.xml")).toString();
-          theProps.put("STV", fileStr);
-        }
-        if (getUIClientType() == UIClient.REMOTE_UI)
-        {
-          put("ui/last_version", SAGE);
-        }
-
-        // Check for remote MiniClient login that requires the Login STV
-        if (getUIClientType() == UIClient.REMOTE_UI && rootPanel.getRenderEngine() instanceof MiniClientSageRenderer &&
-            ((MiniClientSageRenderer) rootPanel.getRenderEngine()).connectionRequiresAuthentication())
-        {
-          originalSTV = theProps.get("STV", originalSTV);
-          fileStr = new File(System.getProperty("user.dir"),
-              "STVs" + File.separatorChar + ("SageTV7" + File.separatorChar + "SecureLogin.xml")).toString();
-          theProps.put("STV", theProps.get("secure_remote_login_stv7", fileStr.toString()));
-        }
-        if (Sage.DBG) System.out.println("UIMgr loading UI from: " + theProps.get("STV", null));
-        moduleGroup = ModuleManager.loadModuleGroup(theProps.getAllPrefs());
-
-        if (Sage.DBG) System.out.println("UIMgr done loading UI from: " + theProps.get("STV", null));
-
-        // We don't want double-clicking of files to change the STV we load by default
-        if (originalSTV != null)
-          theProps.put("STV", originalSTV);
+        theProps.put("STV", fileStr = theProps.get(Wizard.WIZARD_KEY + "/" + Wizard.WIDGET_DB_FILE, null));
       }
+      // Don't reset MVP/PS UIs on upgrade of a server or they'll keep getting reset every time they connect
+      // until the server is restarted!
+      if ((fileStr == null || (Sage.getBoolean("wizard/revert_stv_on_upgrade", false) && ((SageTV.upgrade &&
+          getUIClientType() != UIClient.REMOTE_UI) || (getUIClientType() == UIClient.REMOTE_UI && !SAGE.equals(get("ui/last_version", "")))))))
+      {
+        fileStr = new File(System.getProperty("user.dir"),
+            "STVs" + File.separatorChar + ("SageTV7" + File.separatorChar + "SageTV7.xml")).toString();
+        theProps.put("STV", fileStr);
+      }
+      if (getUIClientType() == UIClient.REMOTE_UI)
+      {
+        put("ui/last_version", SAGE);
+      }
+
+      // Check for remote MiniClient login that requires the Login STV
+      if (getUIClientType() == UIClient.REMOTE_UI && rootPanel.getRenderEngine() instanceof MiniClientSageRenderer &&
+          ((MiniClientSageRenderer) rootPanel.getRenderEngine()).connectionRequiresAuthentication())
+      {
+        originalSTV = theProps.get("STV", originalSTV);
+        fileStr = new File(System.getProperty("user.dir"),
+            "STVs" + File.separatorChar + ("SageTV7" + File.separatorChar + "SecureLogin.xml")).toString();
+        theProps.put("STV", theProps.get("secure_remote_login_stv7", fileStr.toString()));
+      }
+      if (Sage.DBG) System.out.println("UIMgr loading UI from: " + theProps.get("STV", null));
+      moduleGroup = ModuleManager.loadModuleGroup(theProps.getAllPrefs());
+
+      if (Sage.DBG) System.out.println("UIMgr done loading UI from: " + theProps.get("STV", null));
+
+      // We don't want double-clicking of files to change the STV we load by default
+      if (originalSTV != null)
+        theProps.put("STV", originalSTV);
+
     }
     catch (Exception sx)
     {
@@ -1200,17 +1098,8 @@ public class UIManager implements Runnable, UIClient
 
       // The STV load failed, so revert to the default STV property and try to load it again
       String fileStr;
-      if (Sage.EMBEDDED)
-      {
-        if (SageConstants.PVR)
-          fileStr = "/app/sage/STVs/SageTV7/SageTV7.opt.stv";
-
-        else
-          fileStr = "/app/sage/STVs/Cheetah/Cheetah.opt.stv";
-      }
-      else
-        fileStr = new File(System.getProperty("user.dir"),
-            "STVs" + File.separatorChar + ("SageTV7" + File.separatorChar + "SageTV7.xml")).toString();
+      fileStr = new File(System.getProperty("user.dir"),
+          "STVs" + File.separatorChar + ("SageTV7" + File.separatorChar + "SageTV7.xml")).toString();
       theProps.put("STV", fileStr);
       try
       {
@@ -1232,7 +1121,7 @@ public class UIManager implements Runnable, UIClient
     }
     Catbert.processUISpecificHook("ApplicationStarted", null, this, false);
     updateXBMCCompatible();
-    if (Sage.client && !SageTV.neddy.isClientConnected() && !Sage.EMBEDDED)
+    if (Sage.client && !SageTV.neddy.isClientConnected())
     {
       // This'll bring up its own connection failure UI so don't do anything here.
     }
@@ -1270,12 +1159,7 @@ public class UIManager implements Runnable, UIClient
 
     router.startRouter();
 
-    if (Sage.EMBEDDED)
-    {
-      Dimension scrSize = getScreenSize();
-      rootPanel.setBounds(0, 0, scrSize.width, scrSize.height);
-    }
-    else if (!windowless)
+    if (!windowless)
     {
       if (Sage.WINDOWS_OS || !getBoolean("hide_java_ui_window", false))
       {
@@ -1283,8 +1167,7 @@ public class UIManager implements Runnable, UIClient
         {
           isTaskbar = true;
           vf.sleep();
-          if (!Sage.EMBEDDED)
-            Sage.addTaskbarIcon0(Sage.mainHwnd);
+          Sage.addTaskbarIcon0(Sage.mainHwnd);
         }
         else
         {
@@ -1321,7 +1204,7 @@ public class UIManager implements Runnable, UIClient
   {
     // Check the DB for a Menu with this name
     Widget[] menus;
-    if (menuWidgetCache == null || (!Sage.EMBEDDED && moduleGroup.lastModified() > menuWidgetLastCached))
+    if (menuWidgetCache == null || (moduleGroup.lastModified() > menuWidgetLastCached))
     {
       menuWidgetLastCached = moduleGroup.lastModified();
       menus = menuWidgetCache = moduleGroup.getWidgets(Widget.MENU);
@@ -1345,7 +1228,7 @@ public class UIManager implements Runnable, UIClient
 
   PseudoMenu getUI(Widget uiWidg)
   {
-    if (!Sage.EMBEDDED && moduleGroup.lastModified() > uiWidgMapLastCached)
+    if (moduleGroup.lastModified() > uiWidgMapLastCached)
     {
       uiWidgMap.clear();
       uiWidgMapLastCached = moduleGroup.lastModified();
@@ -1643,7 +1526,7 @@ public class UIManager implements Runnable, UIClient
         // to view that aren't being currently recorded.
         int numEncoders = MMC.getInstance().getConfiguredInputs().length;
         int lastStationID = vf.getBestLastStationID();
-        MediaFile[] currFile = Seeker.getInstance().getCurrRecordFiles();
+        MediaFile[] currFile = SeekerSelector.getInstance().getCurrRecordFiles();
         if (Sage.DBG) System.out.println("#CurrRecs=" + currFile.length + " #Encoders=" + numEncoders);
         for (int z = VideoFrame.getEnablePC() ? 0 : 1; z < 3; z++)
         {
@@ -1973,16 +1856,13 @@ public class UIManager implements Runnable, UIClient
 
   private void requestDelayedFocus()
   {
-    if (!Sage.EMBEDDED)
-    {
-      router.invokeLater(new Runnable()
+    router.invokeLater(new Runnable()
       {
         public void run()
         {
           rootPanel.requestFocus();
         }
       });
-    }
   }
 
   public boolean isTV()
@@ -2030,11 +1910,11 @@ public class UIManager implements Runnable, UIClient
       rootPanel.kill();
       if (Sage.DBG) System.out.println("Killed RootPanel");
     }
-    if (isTaskbar && uiClientName.equals(Seeker.LOCAL_PROCESS_CLIENT) && !Sage.EMBEDDED)
+    if (isTaskbar && uiClientName.equals(Seeker.LOCAL_PROCESS_CLIENT))
       Sage.removeTaskbarIcon0(Sage.mainHwnd);
     if (currUI != null)
       currUI.terminate(false);
-    if (!Sage.EMBEDDED && !windowless && win != null)
+    if (!windowless && win != null)
     {
       if (!win.isFullScreen() && win.getExtendedState() != Frame.MAXIMIZED_BOTH)
       {
@@ -2056,28 +1936,15 @@ public class UIManager implements Runnable, UIClient
     MetaImage.notifyOfDeadUIManager(this);
 
     if (Sage.DBG) System.out.println("Disposed Window");
-
-    if (Sage.EMBEDDED && Sage.client && false)
-    {
-      // We do this here as well when running in client mode since the user may never actually exit the client mode
-      // jvm in normal usage. And otherwise they would always lost their client settings if the box was powered off in client mode.
-      // They'll still lose them now if the power is unplugged before the UI is terminated; but that should be a rare case
-      SageProperties.syncClientServerEmbeddedProperties();
-    }
   }
 
   void trueValidate()
   {
     if (rootPanel != null && basePanel != null)
     {
-      if (Sage.EMBEDDED)
-        basePanel.appendToDirty(true);
-      else
+      synchronized (rootPanel.getTreeLock())
       {
-        synchronized (rootPanel.getTreeLock())
-        {
-          basePanel.appendToDirty(true);
-        }
+        basePanel.appendToDirty(true);
       }
     }
   }
@@ -2291,7 +2158,7 @@ public class UIManager implements Runnable, UIClient
 
   public void setEmbeddedBounds(float x, float y, float w, float h)
   {
-    if (!Sage.EMBEDDED && (embeddedBounds == null || embeddedBounds.x != x || embeddedBounds.y != y || embeddedBounds.width != w || embeddedBounds.height != h))
+    if ((embeddedBounds == null || embeddedBounds.x != x || embeddedBounds.y != y || embeddedBounds.width != w || embeddedBounds.height != h))
     {
       if (embeddedBounds == null)
         embeddedBounds = new Rectangle2D.Float();
@@ -2338,7 +2205,7 @@ public class UIManager implements Runnable, UIClient
   {
     if (isTaskbar)
     {
-      MediaFile[] currRecs = Seeker.getInstance().getCurrRecordFiles();
+      MediaFile[] currRecs = SeekerSelector.getInstance().getCurrRecordFiles();
       String tipString = (currRecs.length > 0 ?
           (Sage.rez("SageTV") + "-" + Sage.rez("Recording") + " " + currRecs[0].getContentAiring().getShortString()) :
             Sage.rez("SageTV"));
@@ -2346,8 +2213,7 @@ public class UIManager implements Runnable, UIClient
         tipString += " & " + currRecs[i].getContentAiring().getShortString();
       if (tipString.length() > 63)
         tipString = tipString.substring(0, 63);
-      if (!Sage.EMBEDDED)
-        Sage.updateTaskbarIcon0(Sage.mainHwnd, tipString);
+      Sage.updateTaskbarIcon0(Sage.mainHwnd, tipString);
     }
   }
 
@@ -2709,7 +2575,7 @@ public class UIManager implements Runnable, UIClient
 
   public boolean isFullScreen()
   {
-    if (Sage.EMBEDDED || windowless)
+    if (windowless)
     {
       if (rootPanel.getRenderEngine() instanceof MiniClientSageRenderer)
       {
@@ -2786,7 +2652,7 @@ public class UIManager implements Runnable, UIClient
 
   public void setFullScreen(boolean x)
   {
-    if (!Sage.EMBEDDED && win != null)
+    if (win != null)
     {
       fsMode = x;
       // IMPORTANT: We have to use a separate window for full screen when we're using exclusive mode on windows or it
@@ -2933,13 +2799,6 @@ public class UIManager implements Runnable, UIClient
     }
   }
 
-  // SageTV Lite entry point
-  public static void c(String[] args) throws Throwable
-  {
-    if (SageConstants.LITE)
-      Sage.startup(args);
-  }
-
   public void setIgnoreAllEvents(boolean x)
   {
     ignoreAllEvents = x;
@@ -2959,9 +2818,9 @@ public class UIManager implements Runnable, UIClient
 
   public STVEditor getStudio(boolean createIfNotThere)
   {
-    if (!SageConstants.LITE && ENABLE_STUDIO
+    if (ENABLE_STUDIO
         && (!Sage.isHeadless() || Sage.getBoolean("allow_studio_in_headless",false))
-        && !Sage.EMBEDDED && Permissions.hasPermission(Permissions.PERMISSION_STUDIO, this))
+        && Permissions.hasPermission(Permissions.PERMISSION_STUDIO, this))
     {
       if (myStudio != null || !createIfNotThere)
         return myStudio;
@@ -3170,7 +3029,7 @@ public class UIManager implements Runnable, UIClient
 
   public Widget[] getGlobalHooks()
   {
-    if (hookCache == null || (!Sage.EMBEDDED && hookLastCached < moduleGroup.lastModified()))
+    if (hookCache == null || (hookLastCached < moduleGroup.lastModified()))
     {
       hookLastCached = moduleGroup.lastModified();
       hookCache = moduleGroup.getWidgets(Widget.HOOK);
@@ -3207,16 +3066,8 @@ public class UIManager implements Runnable, UIClient
 
   public void setUIResolution(int width, int height)
   {
-    if (!Sage.EMBEDDED)
-    {
-      fakePanel.setSize(width, height);
-      fakePanel.getLayout().layoutContainer(fakePanel);
-    }
-    else
-    {
-      if (rootPanel != null)
-        rootPanel.setBounds(0, 0, width, height);
-    }
+    fakePanel.setSize(width, height);
+    fakePanel.getLayout().layoutContainer(fakePanel);
   }
 
   public boolean areEffectsEnabled()
@@ -3566,7 +3417,7 @@ public class UIManager implements Runnable, UIClient
       MiniClientSageRenderer miniRender = (MiniClientSageRenderer)rootPanel.getRenderEngine();
       return miniRender.getDisplayResolution();
     }
-    else if (!Sage.EMBEDDED && !windowless && win != null)
+    else if (!windowless && win != null)
     {
       Rectangle r = win.getCurrScreenBounds();
       VideoFormat vidForm = new VideoFormat();
@@ -3594,7 +3445,7 @@ public class UIManager implements Runnable, UIClient
       else
         return miniRender.getMaxClientResolution();
     }
-    else if (!Sage.EMBEDDED && !windowless && win != null)
+    else if (!windowless && win != null)
     {
       Rectangle r = win.getCurrScreenBounds();
       return new Dimension(r.width, r.height);

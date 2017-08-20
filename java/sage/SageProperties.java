@@ -20,7 +20,7 @@ public class SageProperties
   // This is used when loading/saving properties files so that we don't get a conflict when accessing the same file in
   // the filesystem (which can happen because of the asynchronicity of how clients are born and die)
   private static final Object GLOBAL_PROPERTY_LOCK = new Object();
-  private static final boolean STORE_DEFAULTS = !Sage.EMBEDDED;
+  private static final boolean STORE_DEFAULTS = true;
   private static final String FINAL_PROPERTY = "zzz";
   public static final String[] CLIENT_XFER_PROPERTY_PREFIXES = { "epg/channel_lineups", "epg/service_levels",
     "epg/lineup_overrides", "epg/lineup_physical_overrides", "epg/physical_channel_lineups", "epg_data_sources",
@@ -407,11 +407,6 @@ public class SageProperties
   }
   public void savePrefs()
   {
-    if (Sage.EMBEDDED && !dirty)
-    {
-      if (Sage.DBG) System.out.println("Don't save the properties file....it's not dirty...");
-      return;
-    }
     if (pendingSave) {
       if (Sage.DBG) System.out.println("Leaving early from savePrefs()...another thread is already waiting to do it");
       return;
@@ -596,20 +591,7 @@ public class SageProperties
 
   public static void syncClientServerEmbeddedProperties()
   {
-    if (!Sage.EMBEDDED) return;
-    if (Sage.DBG) System.out.println("Performing synchronization between embedded properties files");
-    SageProperties otherProps = new SageProperties(!Sage.client);
-    otherProps.setupPrefs(Sage.client ? "/rw/sage/Sage.properties" : "/rw/sage/SageClient.properties", "/app/sage/Sage.properties.defaults");
-    for (int i = 0; i < EMBEDDED_SYNCED_PROPERTIES.length; i++)
-    {
-      String oldValue = Sage.get(EMBEDDED_SYNCED_PROPERTIES[i], null);
-      if (oldValue != null)
-      {
-        otherProps.put(EMBEDDED_SYNCED_PROPERTIES[i], oldValue);
-      }
-    }
-    if (otherProps.isDirty())
-      otherProps.savePrefs();
+    return;
   }
 
   private static class FastProperties extends java.util.Properties

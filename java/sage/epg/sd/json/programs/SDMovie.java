@@ -15,6 +15,8 @@
  */
 package sage.epg.sd.json.programs;
 
+import sage.Sage;
+
 import java.util.Arrays;
 
 public class SDMovie
@@ -22,7 +24,7 @@ public class SDMovie
   private static final QualityRating[] EMPTY_QUALITY_RATING = new QualityRating[0];
 
   private String year;
-  //private int duration;
+  private int duration;
   private QualityRating qualityRating[];
 
   /**
@@ -38,12 +40,13 @@ public class SDMovie
 
   /**
    * Duration (in integer seconds). Optional. NOTE: in a future API this will be removed from the
-   * movie array and will be an element of the program itself.
+   * movie array and will be an element of the program itself. (provided as in integer seconds and
+   * converted to long milliseconds before returning)
    */
-  /*public int getDuration()
+  public long getDuration()
   {
-    return duration;
-  }*/
+    return ((long)duration & 0xFFFFFFFFL) * 1000L;
+  }
 
   /**
    * an array of ratings for the quality of the movie. Optional.
@@ -82,6 +85,44 @@ public class SDMovie
     }
 
     return "";
+  }
+
+  public String getFormattedQualityRating()
+  {
+    String quality = getQualityRating("Gracenote");
+    if (quality.length() == 0)
+      return quality;
+    StringBuilder returnValue = new StringBuilder(5);
+    char chars[] = quality.toCharArray();
+    boolean decimal = false;
+    for (char number : chars)
+    {
+      if (number >= '0' && number <= '9')
+      {
+        if (decimal)
+        {
+          if (number > '0')
+            returnValue.append("+");
+          break;
+        }
+
+        int stars = number - '0';
+        for (int i = 0; i < stars; i++)
+        {
+          returnValue.append("*");
+        }
+      }
+      else if (returnValue.length() > 0)
+      {
+        decimal = number == '.';
+        if (!decimal)
+        {
+          if (Sage.DBG) System.out.println("SDEPG Unexpected movie quality format: " + quality);
+          returnValue.setLength(0);
+        }
+      }
+    }
+    return returnValue.toString();
   }
 
   @Override

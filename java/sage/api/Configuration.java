@@ -27,6 +27,8 @@ import sage.DirectX9SageRenderer;
 import sage.EPG;
 import sage.EventRouter;
 import sage.ExternalTuningManager;
+import sage.SchedulerSelector;
+import sage.SeekerSelector;
 import sage.Java2DSageRenderer;
 import sage.MMC;
 import sage.MiniClientSageRenderer;
@@ -75,7 +77,7 @@ public class Configuration{
        * @declaration public java.io.File[] GetLibraryImportPaths();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return Seeker.getInstance().getArchiveDirectories(Seeker.ALL_DIR_MASK);
+        return SeekerSelector.getInstance().getArchiveDirectories(Seeker.ALL_DIR_MASK);
       }});
     rft.put(new PredefinedJEPFunction("Configuration", "GetPictureLibraryImportPaths", true)
     {
@@ -86,7 +88,7 @@ public class Configuration{
        * @declaration public java.io.File[] GetPictureLibraryImportPaths();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return Seeker.getInstance().getArchiveDirectories(Seeker.PICTURE_DIR_MASK);
+        return SeekerSelector.getInstance().getArchiveDirectories(Seeker.PICTURE_DIR_MASK);
       }});
     rft.put(new PredefinedJEPFunction("Configuration", "GetMusicLibraryImportPaths", true)
     {
@@ -97,7 +99,7 @@ public class Configuration{
        * @declaration public java.io.File[] GetMusicLibraryImportPaths();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return Seeker.getInstance().getArchiveDirectories(Seeker.MUSIC_DIR_MASK);
+        return SeekerSelector.getInstance().getArchiveDirectories(Seeker.MUSIC_DIR_MASK);
       }});
     rft.put(new PredefinedJEPFunction("Configuration", "GetVideoLibraryImportPaths", true)
     {
@@ -108,7 +110,7 @@ public class Configuration{
        * @declaration public java.io.File[] GetVideoLibraryImportPaths();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return Seeker.getInstance().getArchiveDirectories(Seeker.VIDEO_DIR_MASK);
+        return SeekerSelector.getInstance().getArchiveDirectories(Seeker.VIDEO_DIR_MASK);
       }});
     rft.put(new PredefinedJEPFunction("Configuration", "IsMajorMinorDTVChannelTuningEnabled", true)
     {
@@ -120,7 +122,7 @@ public class Configuration{
        * @declaration public boolean IsMajorMinorDTVChannelTuningEnabled();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return Boolean.valueOf(Seeker.getInstance().getUseDTVMajorMinorChans());
+        return Boolean.valueOf(SeekerSelector.getInstance().getUseDTVMajorMinorChans());
       }});
     rft.put(new PredefinedJEPFunction("Configuration", "GetAutodialForInternet", true)
     {
@@ -914,7 +916,7 @@ public class Configuration{
        * @declaration public String GetDefaultRecordingQuality();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return Seeker.getInstance().getDefaultQuality();
+        return SeekerSelector.getInstance().getDefaultQuality();
       }});
     rft.put(new PredefinedJEPFunction("Configuration", "IsIntelligentRecordingDisabled", true)
     {
@@ -925,7 +927,7 @@ public class Configuration{
        * @declaration public boolean IsIntelligentRecordingDisabled();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return Boolean.valueOf(Seeker.getInstance().getDisableProfilerRecording());
+        return Boolean.valueOf(SeekerSelector.getInstance().getDisableProfilerRecording());
       }});
     rft.put(new PredefinedJEPFunction("Configuration", "AddLibraryImportPath", 1, new String[]{"NewPath"}, true)
     {
@@ -939,7 +941,7 @@ public class Configuration{
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         String f = getString(stack);
         if (f != null)
-          Seeker.getInstance().addArchiveDirectory(f, Seeker.ALL_DIR_MASK);
+          SeekerSelector.getInstance().addArchiveDirectory(f, Seeker.ALL_DIR_MASK);
         return null;
       }});
     rft.put(new PredefinedJEPFunction("Configuration", "AddPictureLibraryImportPath", 1, new String[]{"NewPath"}, true)
@@ -954,7 +956,7 @@ public class Configuration{
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         String f = getString(stack);
         if (f != null)
-          Seeker.getInstance().addArchiveDirectory(f, Seeker.PICTURE_DIR_MASK);
+          SeekerSelector.getInstance().addArchiveDirectory(f, Seeker.PICTURE_DIR_MASK);
         return null;
       }});
     rft.put(new PredefinedJEPFunction("Configuration", "AddMusicLibraryImportPath", 1, new String[]{"NewPath"}, true)
@@ -969,7 +971,7 @@ public class Configuration{
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         String f = getString(stack);
         if (f != null)
-          Seeker.getInstance().addArchiveDirectory(f, Seeker.MUSIC_DIR_MASK);
+          SeekerSelector.getInstance().addArchiveDirectory(f, Seeker.MUSIC_DIR_MASK);
         return null;
       }});
     rft.put(new PredefinedJEPFunction("Configuration", "AddVideoLibraryImportPath", 1, new String[]{"NewPath"}, true)
@@ -984,7 +986,7 @@ public class Configuration{
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         String f = getString(stack);
         if (f != null)
-          Seeker.getInstance().addArchiveDirectory(f, Seeker.VIDEO_DIR_MASK);
+          SeekerSelector.getInstance().addArchiveDirectory(f, Seeker.VIDEO_DIR_MASK);
         return null;
       }});
     rft.put(new PredefinedJEPFunction("Configuration", "RemoveLibraryImportPath", 1, new String[]{"RemovePath"}, true)
@@ -998,7 +1000,7 @@ public class Configuration{
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         java.io.File f = getFile(stack);
         if (f != null)
-          Seeker.getInstance().removeArchiveDirectory(f, Seeker.ALL_DIR_MASK);
+          SeekerSelector.getInstance().removeArchiveDirectory(f, Seeker.ALL_DIR_MASK);
         return null;
       }});
     rft.put(new PredefinedJEPFunction("Configuration", "RemovePictureLibraryImportPath", 1, new String[]{"RemovePath"}, true)
@@ -1012,7 +1014,7 @@ public class Configuration{
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         java.io.File f = getFile(stack);
         if (f != null)
-          Seeker.getInstance().removeArchiveDirectory(f, Seeker.PICTURE_DIR_MASK);
+          SeekerSelector.getInstance().removeArchiveDirectory(f, Seeker.PICTURE_DIR_MASK);
         return null;
       }});
     rft.put(new PredefinedJEPFunction("Configuration", "RemoveMusicLibraryImportPath", 1, new String[]{"RemovePath"}, true)
@@ -1026,7 +1028,7 @@ public class Configuration{
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         java.io.File f = getFile(stack);
         if (f != null)
-          Seeker.getInstance().removeArchiveDirectory(f, Seeker.MUSIC_DIR_MASK);
+          SeekerSelector.getInstance().removeArchiveDirectory(f, Seeker.MUSIC_DIR_MASK);
         return null;
       }});
     rft.put(new PredefinedJEPFunction("Configuration", "RemoveVideoLibraryImportPath", 1, new String[]{"RemovePath"}, true)
@@ -1040,7 +1042,7 @@ public class Configuration{
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         java.io.File f = getFile(stack);
         if (f != null)
-          Seeker.getInstance().removeArchiveDirectory(f, Seeker.VIDEO_DIR_MASK);
+          SeekerSelector.getInstance().removeArchiveDirectory(f, Seeker.VIDEO_DIR_MASK);
         return null;
       }});
     rft.put(new PredefinedJEPFunction("Configuration", "SetDefaultRecordingQuality", 1, new String[]{"Quality"}, true)
@@ -1052,7 +1054,7 @@ public class Configuration{
        * @declaration public void SetDefaultRecordingQuality(String Quality);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        Seeker.getInstance().setDefaultQuality(getString(stack)); return null;
+        SeekerSelector.getInstance().setDefaultQuality(getString(stack)); return null;
       }});
     rft.put(new PredefinedJEPFunction("Configuration", "SetIntelligentRecordingDisabled", 1, new String[]{"Disabled"}, true)
     {
@@ -1063,7 +1065,7 @@ public class Configuration{
        * @declaration public void SetIntelligentRecordingDisabled(boolean Disabled);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        Seeker.getInstance().setDisableProfilerRecording(evalBool(stack.pop())); return null;
+        SeekerSelector.getInstance().setDisableProfilerRecording(evalBool(stack.pop())); return null;
       }});
     rft.put(new PredefinedJEPFunction("Configuration", "SetMajorMinorDTVChannelTuningEnabled", 1, new String[]{"Enabled"}, true)
     {
@@ -1075,7 +1077,7 @@ public class Configuration{
        * @declaration public void SetMajorMinorDTVChannelTuningEnabled(boolean Enabled);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        Seeker.getInstance().setUseDTVMajorMinorChans(evalBool(stack.pop())); return null;
+        SeekerSelector.getInstance().setUseDTVMajorMinorChans(evalBool(stack.pop())); return null;
       }});
     rft.put(new PredefinedJEPFunction("Configuration", "IsScreenSaverOnSleepEnabled")
     {
@@ -1475,7 +1477,7 @@ public class Configuration{
        * @declaration public String[] GetRecordingQualities();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        CaptureDevice[] capdevs = Scheduler.getInstance().getMyEncoders();
+        CaptureDevice[] capdevs = SchedulerSelector.getInstance().getMyEncoders();
         if (capdevs.length == 0)
           return MMC.getInstance().getAllEncodingQualities();
         else
@@ -1523,7 +1525,7 @@ public class Configuration{
        * @declaration public java.io.File[] GetVideoDirectories();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return Seeker.getInstance().getVideoStoreDirectories();
+        return SeekerSelector.getInstance().getVideoStoreDirectories();
       }});
     rft.put(new PredefinedJEPFunction("Configuration", "GetDiskspaceRuleForVideoDirectory", 1, new String[] {"Directory"}, true)
     {
@@ -1536,7 +1538,7 @@ public class Configuration{
        * @declaration public String GetDiskspaceRuleForVideoDirectory(java.io.File Directory);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return Seeker.getInstance().getRuleForDirectory(getFile(stack));
+        return SeekerSelector.getInstance().getRuleForDirectory(getFile(stack));
       }});
     rft.put(new PredefinedJEPFunction("Configuration", "GetDiskspaceSizeForVideoDirectory", 1, new String[] {"Directory"}, true)
     {
@@ -1548,7 +1550,7 @@ public class Configuration{
        * @declaration public long GetDiskspaceSizeForVideoDirectory(java.io.File Directory);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return new Long(Seeker.getInstance().getRuleSizeForDirectory(getFile(stack)));
+        return new Long(SeekerSelector.getInstance().getRuleSizeForDirectory(getFile(stack)));
       }});
     rft.put(new PredefinedJEPFunction("Configuration", "RemoveVideoDirectory", 1, new String[] {"Directory"}, true)
     {
@@ -1561,7 +1563,7 @@ public class Configuration{
        * @declaration public void RemoveVideoDirectory(java.io.File Directory);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        Seeker.getInstance().removeVideoDirectory(getFile(stack)); return null;
+        SeekerSelector.getInstance().removeVideoDirectory(getFile(stack)); return null;
       }});
     rft.put(new PredefinedJEPFunction("Configuration", "AddVideoDirectory", 3, new String[] {"Directory", "Rule", "Size"}, true)
     {
@@ -1577,7 +1579,7 @@ public class Configuration{
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         long l = getLong(stack);
         String s = getString(stack);
-        Seeker.getInstance().addVideoDirectory(getString(stack), s, l); return null;
+        SeekerSelector.getInstance().addVideoDirectory(getString(stack), s, l); return null;
       }});
     rft.put(new PredefinedJEPFunction("Configuration", "ChangeVideoDirectory", 4, new String[] { "OldDirectory", "NewDirectory", "NewRule", "NewSize"}, true)
     {
@@ -1594,7 +1596,7 @@ public class Configuration{
         long l = getLong(stack);
         String s = getString(stack);
         java.io.File newDir = getFile(stack);
-        Seeker.getInstance().changeVideoDirectory(getFile(stack), newDir, s, l); return null;
+        SeekerSelector.getInstance().changeVideoDirectory(getFile(stack), newDir, s, l); return null;
       }});
     rft.put(new PredefinedJEPFunction("Configuration", "GetVideoDiskspaceRules")
     {
@@ -1605,7 +1607,7 @@ public class Configuration{
        * @declaration public String[] GetVideoDiskspaceRules();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return Seeker.getVideoDiskspaceRules();
+        return SeekerSelector.getVideoDiskspaceRules();
       }});
     rft.put(new PredefinedJEPFunction("Configuration", "GetIRCodesLinkedToSageCommand", 1, new String[] {"SageCommand"})
     {
@@ -1866,7 +1868,7 @@ public class Configuration{
        * @declaration public boolean IsSageTVServerEnabled();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return Boolean.valueOf(Sage.getBoolean("enable_server", SageConstants.PVR));
+        return Boolean.valueOf(Sage.getBoolean("enable_server", true));
       }});
     rft.put(new PredefinedJEPFunction("Configuration", "SetSageTVServerEnabled", 1, new String[]{"Enabled"}, true)
     {
@@ -2141,8 +2143,6 @@ public class Configuration{
       public Object runSafely(Catbert.FastStack stack) throws Exception{
         boolean isPAL;
         Sage.putInt("mmc/video_format_code", (isPAL = "PAL".equalsIgnoreCase(getString(stack))) ? 8 : 1);
-        if (Sage.EMBEDDED)
-          Sage.put("TV_STANDARD", isPAL ? "PAL" : "NTSC");
         return null;
       }});
     rft.put(new PredefinedJEPFunction("Configuration", "GetAnalogVideoFormat", true)
@@ -3489,7 +3489,7 @@ public class Configuration{
        * @declaration public boolean GetCurrentlyAiringProgramsStartLive();
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
-        return Boolean.valueOf(Sage.getBoolean("videoframe/force_live_playback_on_currently_airing_programs", Sage.EMBEDDED));
+        return Boolean.valueOf(Sage.getBoolean("videoframe/force_live_playback_on_currently_airing_programs", false));
       }});
     /*
 		rft.put(new PredefinedJEPFunction("Configuration", "", 0)

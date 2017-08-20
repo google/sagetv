@@ -55,26 +55,9 @@ public class LinuxDVBCaptureManager implements CaptureDeviceManager
         {
           if (dvbFiles[i].startsWith("adapter"))
           {
-            if (Sage.EMBEDDED)
-            {
-              String[] adapterFiles = new java.io.File("/dev/dvb/"+dvbFiles[i]+"/").list();
-              for (int j = 0; j < adapterFiles.length; j++)
-              {
-                if (Sage.DBG) System.out.println("adapter file "+j+" "+adapterFiles[j]);
-                if(adapterFiles[j].startsWith("frontend"))
-                {
-                  dvbDevVec.add(dvbFiles[i]);
-                  devToModelMap.put(dvbFiles[i], DVBCaptureDevice.getCardModelUIDForDevice(dvbFiles[i]));
-                  modelToDevMap.put(devToModelMap.get(dvbFiles[i]), dvbFiles[i]);
-                }
-              }
-            }
-            else
-            {
-              dvbDevVec.add(dvbFiles[i]);
-              devToModelMap.put(dvbFiles[i], DVBCaptureDevice.getCardModelUIDForDevice(dvbFiles[i]));
-              modelToDevMap.put(devToModelMap.get(dvbFiles[i]), dvbFiles[i]);
-            }
+            dvbDevVec.add(dvbFiles[i]);
+            devToModelMap.put(dvbFiles[i], DVBCaptureDevice.getCardModelUIDForDevice(dvbFiles[i]));
+            modelToDevMap.put(devToModelMap.get(dvbFiles[i]), dvbFiles[i]);
           }
         }
         catch (Exception e)

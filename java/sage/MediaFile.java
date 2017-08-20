@@ -69,7 +69,7 @@ public class MediaFile extends DBObject implements SegmentedFile
 {
   private static final boolean OPTIMIZE_METADATA_MEM_USAGE = Sage.getBoolean("optimize_metadata_mem_usage", true);
   private static final long LOSS_FOR_COMPLETE = 600000L; // 10 minutes
-  private static final long MINIMUM_TV_FILE_SIZE = Sage.getLong("minimum_tv_file_size", Sage.EMBEDDED ? 131072 : 500000);
+  private static final long MINIMUM_TV_FILE_SIZE = Sage.getLong("minimum_tv_file_size", 500000);
   private static final long MINIMUM_TV_AUDIO_FILE_SIZE = Sage.getLong("minimum_tv_audio_file_size", 50000);
   private static final boolean VIDEO_THUMBNAIL_FILE_GEN = Sage.getBoolean("video_thumbnail_generation", true);
   private static final String THUMB_FOLDER_NAME = Sage.get("ui/thumbnail_folder", "GeneratedThumbnails");
@@ -161,9 +161,19 @@ public class MediaFile extends DBObject implements SegmentedFile
     return liveFileMap.get(cdi);
   }
 
+  static MediaFile putLiveMediaFileForInput(CaptureDeviceInput cdi, MediaFile file)
+  {
+    return liveFileMap.put(cdi, file);
+  }
+
   public static MediaFile getLiveBufferedMediaFileForInput(CaptureDeviceInput cdi)
   {
     return liveBuffFileMap.get(cdi);
+  }
+
+  static MediaFile putLiveBufferedMediaFileForInput(CaptureDeviceInput cdi, MediaFile file)
+  {
+    return liveBuffFileMap.put(cdi, file);
   }
 
   protected MediaFile(int inFileID)
@@ -189,18 +199,15 @@ public class MediaFile extends DBObject implements SegmentedFile
     int oldAiringID = 0;
     if (ver < 0x23)
       oldAiringID = readID(in, idMap); // airingID
-    if (!Wizard.COMPACT_DB || ver >= 0x4D)
-      createWatchCount = in.readInt();
-    else
-      createWatchCount = 0;
-    int numSegs = Wizard.COMPACT_DB ? in.readShort() : in.readInt();
+    createWatchCount = in.readInt();
+    int numSegs = in.readInt();
     times = new long[numSegs * 2];
     byte[] fakeBuf = null;
     boolean buildFakeFile = false;
     for (int i = 0; i < numSegs; i++)
     {
       String str = in.readUTF();
-      files.addElement(new File((Sage.client && !Sage.WINDOWS_OS && !Sage.EMBEDDED) ? IOUtils.convertPlatformPathChars(str) : str));
+      files.addElement(new File((Sage.client && !Sage.WINDOWS_OS) ? IOUtils.convertPlatformPathChars(str) : str));
       if (BUILD_FAKE_MEDIA_FILE_SYSTEM)
       {
         File lastFile = files.lastElement();
@@ -212,7 +219,7 @@ public class MediaFile extends DBObject implements SegmentedFile
       times[i*2] = in.readLong();
       times[i*2 + 1] = in.readLong();
     }
-    if (!Wizard.COMPACT_DB && ver <= 0x4C)
+    if (ver <= 0x4C)
     {
       int numDeadAirs = in.readInt();
       for (int i = 0; i < numDeadAirs; i++)
@@ -221,8 +228,7 @@ public class MediaFile extends DBObject implements SegmentedFile
         in.readLong(); // Dead air end
       }
     }
-    if (!Wizard.COMPACT_DB || ver >= 0x47)
-      videoDirectory = in.readUTF().intern();
+    videoDirectory = in.readUTF().intern();
     // Repair the videoDirectory since it could be wrong if the files moved directory
     if (files.size() > 0)
     {
@@ -230,33 +236,22 @@ public class MediaFile extends DBObject implements SegmentedFile
       if (parentFile != null)
         videoDirectory = parentFile.toString().intern();
     }
-    if (!Wizard.COMPACT_DB)
-    {
-      name = in.readUTF();
-      archive = in.readBoolean();
-      if (ver >= 0x2F)
-        in.readBoolean(); // padding to help avoid reversing db encryption algorithms
-    }
-    else
-    {
-      name = "";
-      if (ver >= 0x47)
-        archive = in.readBoolean();
-      else
-        archive = true;
-    }
+    name = in.readUTF();
+    archive = in.readBoolean();
+    if (ver >= 0x2F)
+      in.readBoolean(); // padding to help avoid reversing db encryption algorithms
     infoAiringID = readID(in, idMap);
     if (infoAiringID == 0)
       infoAiringID = oldAiringID;
     if (infoAiringID == 0)
       infoAiringID = id;
-    if (ver > 0x1F && !Wizard.COMPACT_DB)
+    if (ver > 0x1F)
       host = in.readUTF();
     else
       host = SageTV.hostname;
     if (MAKE_ALL_MEDIAFILES_LOCAL)
       host = SageTV.hostname;
-    if (ver > 0x20 && !Wizard.COMPACT_DB)
+    if (ver > 0x20)
     {
       if (ver <= 0x4C)
         in.readLong(); // Provider ID
@@ -268,32 +263,26 @@ public class MediaFile extends DBObject implements SegmentedFile
       encodedBy = "";
     if (ver >= 0x30)
     {
-      if (!Wizard.COMPACT_DB)
+      byte oldType = in.readByte();
+      in.readByte(); // Media subtype
+      generalType = in.readByte();
+      if (Wizard.GENERATE_MEDIA_MASK)
       {
-        byte oldType = in.readByte();
-        in.readByte(); // Media subtype
-        generalType = in.readByte();
-        if (Wizard.GENERATE_MEDIA_MASK)
-        {
-          if (oldType == MEDIATYPE_AUDIO)
-            setMediaMask(MEDIA_MASK_MUSIC);
-          else if (oldType == MEDIATYPE_PICTURE)
-            setMediaMask(MEDIA_MASK_PICTURE);
-          else if (oldType == MEDIATYPE_VIDEO)
-            setMediaMask(MEDIA_MASK_VIDEO);
-          else if (oldType == MEDIATYPE_DVD)
-            setMediaMask(MEDIA_MASK_DVD);
-          else if (oldType == MEDIATYPE_BLURAY)
-            setMediaMask(MEDIA_MASK_BLURAY);
-          if (generalType == MEDIAFILE_TV)
-            addMediaMask(MEDIA_MASK_TV);
-        }
+        if (oldType == MEDIATYPE_AUDIO)
+          setMediaMask(MEDIA_MASK_MUSIC);
+        else if (oldType == MEDIATYPE_PICTURE)
+          setMediaMask(MEDIA_MASK_PICTURE);
+        else if (oldType == MEDIATYPE_VIDEO)
+          setMediaMask(MEDIA_MASK_VIDEO);
+        else if (oldType == MEDIATYPE_DVD)
+          setMediaMask(MEDIA_MASK_DVD);
+        else if (oldType == MEDIATYPE_BLURAY)
+          setMediaMask(MEDIA_MASK_BLURAY);
+        if (generalType == MEDIAFILE_TV)
+          addMediaMask(MEDIA_MASK_TV);
       }
-      else
-        generalType = in.readByte();
       acquisitionTech = in.readByte();
-      if (!Wizard.COMPACT_DB)
-        forcedComplete = in.readBoolean();
+      forcedComplete = in.readBoolean();
     }
     else if (ver > 0x23)
     {
@@ -349,7 +338,7 @@ public class MediaFile extends DBObject implements SegmentedFile
         if (!files.isEmpty() && thumbnailFile.equals(files.get(0)))
           thumbnailFile = files.get(0);
       }
-      thumbnailOffset = Wizard.COMPACT_DB ? in.readInt() : in.readLong();
+      thumbnailOffset = in.readLong();
 
       thumbnailSize = in.readInt();
 
@@ -361,7 +350,7 @@ public class MediaFile extends DBObject implements SegmentedFile
         thumbnailSize = 0;
       }
     }
-    if (ver >= 0x33 && !Wizard.COMPACT_DB && ver <= 0x4C)
+    if (ver >= 0x33 && ver <= 0x4C)
       in.readLong(); // Stream buffer size
     if (ver >= 0x36)
     {
@@ -369,37 +358,7 @@ public class MediaFile extends DBObject implements SegmentedFile
       if (ff.length() > 0)
         fileFormat = ContainerFormat.buildFormatFromString(ff);
     }
-    if (Wizard.COMPACT_DB)
-    {
-      if (ver >= 0x42)
-      {
-        int prefixOffset = in.readShort();
-        if (getFile(0) != null)
-        {
-          String str = getFile(0).toString();
-          if (prefixOffset >= 0 && prefixOffset < str.length())
-            name = str.substring(prefixOffset);
-          else
-            name = getFile(0).getName();
-        }
-        else
-          name = "";
-      }
-      else
-      {
-        if (getFile(0) != null)
-        {
-          String fname = getFile(0).getName();
-          int dot = fname.lastIndexOf('.');
-          String ext = "";
-          if (dot != -1)
-            ext = fname.substring(dot);
-          name = getContentAiring().getTitle() + ext;
-        }
-        else
-          name = "";
-      }
-    }
+
     if (!Sage.client && fileFormat == null && !hasMediaMask(MEDIA_MASK_DVD) && !isAnyLiveStream() &&
         generalType != MEDIAFILE_LOCAL_PLAYBACK && !files.isEmpty())
     {
@@ -447,10 +406,7 @@ public class MediaFile extends DBObject implements SegmentedFile
   {
     super.write(out, flags);
     out.writeInt(createWatchCount);
-    if (!Wizard.COMPACT_DB)
-      out.writeInt(files.size());
-    else
-      out.writeShort(files.size());
+    out.writeInt(files.size());
     for (int i = 0; i < files.size(); i++)
     {
       File currFile = files.elementAt(i);
@@ -476,45 +432,25 @@ public class MediaFile extends DBObject implements SegmentedFile
       out.writeLong(times[2*i]);
       out.writeLong(times[2*i + 1]);
     }
-    if (!Wizard.COMPACT_DB || SageConstants.PVR)
-      out.writeUTF(videoDirectory);
-    if (!Wizard.COMPACT_DB)
-    {
-      out.writeUTF(name);
-      out.writeBoolean(archive);
-      out.writeBoolean(true); // padding to help avoid reversing db encryption algorithms
-    }
-    else if (SageConstants.PVR)
-      out.writeBoolean(archive);
+    out.writeUTF(videoDirectory);
+    out.writeUTF(name);
+    out.writeBoolean(archive);
+    out.writeBoolean(true); // padding to help avoid reversing db encryption algorithms
     out.writeInt(infoAiringID);
-    if (!Wizard.COMPACT_DB)
-    {
-      out.writeUTF(host);
-      out.writeUTF(encodedBy);
-      out.writeByte((byte)0); // Media type
-      out.writeByte((byte)0); // Media subtype
-    }
-    else if (SageConstants.PVR)
-      out.writeUTF(encodedBy);
+    out.writeUTF(host);
+    out.writeUTF(encodedBy);
+    out.writeByte((byte)0); // Media type
+    out.writeByte((byte)0); // Media subtype
     out.writeByte(generalType);
     out.writeByte(acquisitionTech);
-    if (!Wizard.COMPACT_DB)
-      out.writeBoolean(forcedComplete);
+    out.writeBoolean(forcedComplete);
     if (thumbnailFile == null)
       out.writeUTF("");
     else
       out.writeUTF(thumbnailFile.toString());
-    if (Wizard.COMPACT_DB)
-      out.writeInt((int)thumbnailOffset);
-    else
-      out.writeLong(thumbnailOffset);
+    out.writeLong(thumbnailOffset);
     out.writeInt(thumbnailSize);
     out.writeUTF((fileFormat == null) ? "" : fileFormat.getFullPropertyString());
-    if (Wizard.COMPACT_DB)
-    {
-      File f = files.isEmpty() ? null : (File)files.elementAt(0);
-      out.writeShort((f == null) ? 0 : (f.toString().length() - name.length()));
-    }
   }
 
   void initializeRecovery(File recoveredFile)
@@ -552,15 +488,6 @@ public class MediaFile extends DBObject implements SegmentedFile
   private boolean deleteFileAndIndex(File f)
   {
     boolean rv = f.delete();
-    if (Sage.EMBEDDED && rv)
-    {
-      String fname = f.getAbsolutePath();
-      int dotIdx = fname.lastIndexOf('.');
-      if (dotIdx != -1)
-      {
-        new File(fname.substring(0, dotIdx) + ".ind").delete();
-      }
-    }
     return rv;
   }
 
@@ -603,7 +530,7 @@ public class MediaFile extends DBObject implements SegmentedFile
     Airing metaAir = null;
     // Temporarily guess the media type based off the filename extension that's mapped for import (really only used for detecting DVDs)
     String nameLC = rawFile.getName().toLowerCase();
-    setMediaMask(Seeker.getInstance().guessImportedMediaMask(rawFile.getAbsolutePath()));
+    setMediaMask(SeekerSelector.getInstance().guessImportedMediaMask(rawFile.getAbsolutePath()));
 
     long rawFileLastMod = rawFile.lastModified();
     if (rawFileLastMod == 0)
@@ -1240,10 +1167,7 @@ public class MediaFile extends DBObject implements SegmentedFile
         }
         long airTime = getRecordTime();
         long airDur = getRecordDuration();
-        // We added IE & IM for imported episodes & movies, per request of BMT developer stuckless
-        if (fileFormat != null && (isTV() || (Sage.EMBEDDED && (extID.startsWith("EP") || extID.startsWith("SH") ||
-            extID.startsWith("SP") || extID.startsWith("MV") || extID.startsWith("DT") || extID.startsWith("IE") ||
-            extID.startsWith("IM")))) && fileFormat.hasMetadata(MediaFormat.META_AIRING_TIME) &&
+        if (fileFormat != null && isTV() && fileFormat.hasMetadata(MediaFormat.META_AIRING_TIME) &&
             fileFormat.hasMetadata(MediaFormat.META_AIRING_DURATION))
         {
           try
@@ -1318,9 +1242,7 @@ public class MediaFile extends DBObject implements SegmentedFile
         infoAiringID = myAiring.id;
         // We don't mark TV recordings as 'TV' when they're imported on the embedded system because we have no
         // TV specific display menus...but we still want to handle multi-segment imports properly
-        if (isTV() || (Sage.EMBEDDED && (extID.startsWith("EP") || extID.startsWith("SH") ||
-            extID.startsWith("SP") || extID.startsWith("MV") || extID.startsWith("DT") ||
-            extID.startsWith("IE") || extID.startsWith("IM")))) // We added IE & IM for imported episodes & movies, per request of BMT developer stuckless
+        if (isTV())
         {
           // Attempt to recover other segments if this is a multisegment recording
           // The special case we have to deal with is when we're using episodes in filenames
@@ -1341,7 +1263,7 @@ public class MediaFile extends DBObject implements SegmentedFile
                 long fileTime = recoveredFile.lastModified();
                 long fileDur = FormatParser.getFileDuration(recoveredFile);
                 // Don't modify the timestamps on embedded systems since we won't be 'owning' the TV file
-                if (!Sage.EMBEDDED && ((fileTime - fileDur) < getRecordEnd() || fileTime > myAiring.getEndTime()))
+                if ((fileTime - fileDur) < getRecordEnd() || fileTime > myAiring.getEndTime())
                 {
                   if (!recoveredFile.setLastModified(getRecordEnd() + 2000 + fileDur))
                   {
@@ -1361,8 +1283,6 @@ public class MediaFile extends DBObject implements SegmentedFile
           }
         }
       }
-      // NOTE: do NOT create the index file here as Wizard will have the lock on a fresh DB file...do it in a postInitialize method instead
-      consolidateDBObjectStrings();
     }
     else
     {
@@ -2710,56 +2630,25 @@ public class MediaFile extends DBObject implements SegmentedFile
       rv.put(MediaFormat.META_SEASON_NUMBER, Integer.toString(s.getSeasonNumber()));
       rv.put(MediaFormat.META_EPISODE_NUMBER, Integer.toString(s.getEpisodeNumber()));
       rv.put(MediaFormat.META_ALT_EPISODE_NUMBER, Integer.toString(s.getAltEpisodeNumber()));
-      if (isTV() && Sage.EMBEDDED)
-      {
-        if (s.isForcedUnique())
-          rv.put(MediaFormat.META_FORCED_UNIQUE, "true");
-        rv.put(MediaFormat.META_SERIES_ID, Integer.toString(s.getSeriesID()));
-        rv.put(MediaFormat.META_SHOWCARD_ID, Integer.toString(s.getShowcardID()));
-        String imageStr = s.getImageMetaStorageString();
-        if (imageStr != null)
-          rv.put(MediaFormat.META_CORE_IMAGERY2, imageStr);
-        for (int i = 1; i <= Show.MAX_ROLE_NUM; i++)
-        {
-          String[] peeps = s.getPeopleList(i);
-          if (peeps != null && peeps.length > 0)
-          {
-            StringBuffer sb = new StringBuffer();
-            for (int j = 0; j < peeps.length; j++)
-            {
-              sb.append(peeps[j]);
-              if (j < peeps.length - 1)
-              {
-                sb.append(';');
-              }
-            }
-            rv.put(Show.ROLE_NAMES[i], sb.toString());
-          }
-        }
-
-      }
-      else
-      {
-        rv.put(Show.getRoleString(Show.ACTOR_ROLE), s.getPeopleString(Show.ACTOR_ROLE, ";"));
-        rv.put(Show.getRoleString(Show.GUEST_ROLE), s.getPeopleString(Show.GUEST_ROLE, ";"));
-        rv.put(Show.getRoleString(Show.GUEST_STAR_ROLE), s.getPeopleString(Show.GUEST_STAR_ROLE, ";"));
-        rv.put(Show.getRoleString(Show.DIRECTOR_ROLE), s.getPeopleString(Show.DIRECTOR_ROLE, ";"));
-        rv.put(Show.getRoleString(Show.PRODUCER_ROLE), s.getPeopleString(Show.PRODUCER_ROLE, ";"));
-        rv.put(Show.getRoleString(Show.WRITER_ROLE), s.getPeopleString(Show.WRITER_ROLE, ";"));
-        rv.put(Show.getRoleString(Show.CHOREOGRAPHER_ROLE), s.getPeopleString(Show.CHOREOGRAPHER_ROLE, ";"));
-        rv.put(Show.getRoleString(Show.HOST_ROLE), s.getPeopleString(Show.HOST_ROLE, ";"));
-        rv.put(Show.getRoleString(Show.EXECUTIVE_PRODUCER_ROLE), s.getPeopleString(Show.EXECUTIVE_PRODUCER_ROLE, ";"));
-        rv.put(Show.getRoleString(Show.COMPOSER_ROLE), s.getPeopleString(Show.COMPOSER_ROLE, ";"));
-        rv.put(Show.getRoleString(Show.JUDGE_ROLE), s.getPeopleString(Show.JUDGE_ROLE, ";"));
-        rv.put(Show.getRoleString(Show.NARRATOR_ROLE), s.getPeopleString(Show.NARRATOR_ROLE, ";"));
-        rv.put(Show.getRoleString(Show.CONTESTANT_ROLE), s.getPeopleString(Show.CONTESTANT_ROLE, ";"));
-        rv.put(Show.getRoleString(Show.CORRESPONDENT_ROLE), s.getPeopleString(Show.CORRESPONDENT_ROLE, ";"));
-        rv.put(Show.getRoleString(Show.TEAM_ROLE), s.getPeopleString(Show.TEAM_ROLE, ";"));
-        rv.put(Show.getRoleString(Show.GUEST_VOICE_ROLE), s.getPeopleString(Show.GUEST_VOICE_ROLE, ";"));
-        rv.put(Show.getRoleString(Show.ANCHOR_ROLE), s.getPeopleString(Show.ANCHOR_ROLE, ";"));
-        rv.put(Show.getRoleString(Show.VOICE_ROLE), s.getPeopleString(Show.VOICE_ROLE, ";"));
-        rv.put(Show.getRoleString(Show.MUSICAL_GUEST_ROLE), s.getPeopleString(Show.MUSICAL_GUEST_ROLE, ";"));
-      }
+      rv.put(Show.getRoleString(Show.ACTOR_ROLE), s.getPeopleString(Show.ACTOR_ROLE, ";"));
+      rv.put(Show.getRoleString(Show.GUEST_ROLE), s.getPeopleString(Show.GUEST_ROLE, ";"));
+      rv.put(Show.getRoleString(Show.GUEST_STAR_ROLE), s.getPeopleString(Show.GUEST_STAR_ROLE, ";"));
+      rv.put(Show.getRoleString(Show.DIRECTOR_ROLE), s.getPeopleString(Show.DIRECTOR_ROLE, ";"));
+      rv.put(Show.getRoleString(Show.PRODUCER_ROLE), s.getPeopleString(Show.PRODUCER_ROLE, ";"));
+      rv.put(Show.getRoleString(Show.WRITER_ROLE), s.getPeopleString(Show.WRITER_ROLE, ";"));
+      rv.put(Show.getRoleString(Show.CHOREOGRAPHER_ROLE), s.getPeopleString(Show.CHOREOGRAPHER_ROLE, ";"));
+      rv.put(Show.getRoleString(Show.HOST_ROLE), s.getPeopleString(Show.HOST_ROLE, ";"));
+      rv.put(Show.getRoleString(Show.EXECUTIVE_PRODUCER_ROLE), s.getPeopleString(Show.EXECUTIVE_PRODUCER_ROLE, ";"));
+      rv.put(Show.getRoleString(Show.COMPOSER_ROLE), s.getPeopleString(Show.COMPOSER_ROLE, ";"));
+      rv.put(Show.getRoleString(Show.JUDGE_ROLE), s.getPeopleString(Show.JUDGE_ROLE, ";"));
+      rv.put(Show.getRoleString(Show.NARRATOR_ROLE), s.getPeopleString(Show.NARRATOR_ROLE, ";"));
+      rv.put(Show.getRoleString(Show.CONTESTANT_ROLE), s.getPeopleString(Show.CONTESTANT_ROLE, ";"));
+      rv.put(Show.getRoleString(Show.CORRESPONDENT_ROLE), s.getPeopleString(Show.CORRESPONDENT_ROLE, ";"));
+      rv.put(Show.getRoleString(Show.TEAM_ROLE), s.getPeopleString(Show.TEAM_ROLE, ";"));
+      rv.put(Show.getRoleString(Show.GUEST_VOICE_ROLE), s.getPeopleString(Show.GUEST_VOICE_ROLE, ";"));
+      rv.put(Show.getRoleString(Show.ANCHOR_ROLE), s.getPeopleString(Show.ANCHOR_ROLE, ";"));
+      rv.put(Show.getRoleString(Show.VOICE_ROLE), s.getPeopleString(Show.VOICE_ROLE, ";"));
+      rv.put(Show.getRoleString(Show.MUSICAL_GUEST_ROLE), s.getPeopleString(Show.MUSICAL_GUEST_ROLE, ";"));
     }
     else
     {
@@ -3249,6 +3138,11 @@ public class MediaFile extends DBObject implements SegmentedFile
     return generalType;
   }
 
+  int getInfoAiringID()
+  {
+    return infoAiringID;
+  }
+
   boolean validate()
   {
     if (getContentAiring() == null)
@@ -3335,41 +3229,7 @@ public class MediaFile extends DBObject implements SegmentedFile
       }
     }
 
-    consolidateDBObjectStrings();
     return true;
-  }
-
-  private void consolidateDBObjectStrings()
-  {
-    if (Wizard.COMPACT_DB && files.size() > 0)
-    {
-      // Use string pooling to consolidate the titles, episodes and filenames which all share common text
-      String filePath = files.get(0).getPath();
-      Show theShow = getShow();
-      if (theShow != null)
-      {
-        String showTit = theShow.getTitle();
-        int idx;
-        if (showTit != null && theShow.title != null)
-        {
-          idx = filePath.indexOf(Sage.EMBEDDED ? showTit : IOUtils.convertPlatformPathChars(showTit));
-          if (idx != -1)
-          {
-            theShow.title.name = filePath.substring(idx, idx + theShow.title.name.length());
-          }
-        }
-        String showEp = theShow.getEpisodeName();
-        if (showEp != null)
-        {
-          idx = filePath.indexOf(Sage.EMBEDDED ? showEp : IOUtils.convertPlatformPathChars(showEp));
-          if (idx != -1)
-          {
-            theShow.episodeNameStr = filePath.substring(idx, idx + showEp.length());
-            theShow.episodeNameBytes = null;
-          }
-        }
-      }
-    }
   }
 
   public synchronized void setHostname(String newHost)
@@ -3441,8 +3301,7 @@ public class MediaFile extends DBObject implements SegmentedFile
     if (infoAiringID != mf.infoAiringID)
       myAiring = null;
     infoAiringID = mf.infoAiringID;
-    if (!Sage.EMBEDDED || SageConstants.PVR)
-      videoDirectory = new String(mf.videoDirectory);
+    videoDirectory = new String(mf.videoDirectory);
     host = mf.host;
     encodedBy = mf.encodedBy;
     //mediaType = mf.mediaType;
@@ -3455,40 +3314,7 @@ public class MediaFile extends DBObject implements SegmentedFile
     thumbnailSize = mf.thumbnailSize;
     name = mf.name;
     createWatchCount = mf.createWatchCount;
-    List<VideoFrame> vfs = null;
-    boolean reloadMediaPlayer = false;
-    if (Sage.EMBEDDED && Sage.client && fileFormat != null && mf.fileFormat != null &&
-        (vfs = VideoFrame.getVFsUsingMediaFile(this)).size() > 0)
-    {
-      // Determine if we need to reload the media player due to the format changing for this file
-      // This will only happen if the primary video or audio stream no longer has the same codec or PID
-      VideoFormat oldVideo = fileFormat.getVideoFormat();
-      VideoFormat newVideo = mf.fileFormat.getVideoFormat();
-      String oldVideoForm = (oldVideo == null) ? null : oldVideo.getFormatName();
-      String newVideoForm = (newVideo == null) ? null : newVideo.getFormatName();
-      String oldVideoPid = (oldVideo == null) ? null : oldVideo.getId();
-      String newVideoPid = (newVideo == null) ? null : newVideo.getId();
-      AudioFormat oldAudio = fileFormat.getAudioFormat();
-      AudioFormat newAudio = mf.fileFormat.getAudioFormat();
-      String oldAudioForm = (oldAudio == null) ? null : oldAudio.getFormatName();
-      String newAudioForm = (newAudio == null) ? null : newAudio.getFormatName();
-      String oldAudioPid = (oldAudio == null) ? null : oldAudio.getId();
-      String newAudioPid = (newAudio == null) ? null : newAudio.getId();
-      if (oldVideoForm == null || !oldVideoForm.equals(newVideoForm) ||
-          oldVideoPid == null || !oldVideoPid.equals(newVideoPid) ||
-          oldAudioForm == null || !oldAudioForm.equals(newAudioForm) ||
-          oldAudioPid == null || !oldAudioPid.equals(newAudioPid))
-      {
-        reloadMediaPlayer = true;
-      }
-    }
     fileFormat = mf.fileFormat;
-    if (reloadMediaPlayer)
-    {
-      if (Sage.DBG) System.out.println("RELOADING media player because it's using a file that's just underwent a significant format change");
-      for (int i = 0; i < vfs.size(); i++)
-        vfs.get(i).reloadFile();
-    }
     super.update(fromMe);
   }
 
@@ -3500,8 +3326,7 @@ public class MediaFile extends DBObject implements SegmentedFile
   private void checkForTVFileConversion(String externalID)
   {
     // Check for conversion to a TV file. This is true if it uses TMS data for the Show IDs
-    if ((!Sage.EMBEDDED || SageConstants.PVR)
-        && Sage.getBoolean("enable_converting_imported_videos_to_tv_recordings", true)
+    if (Sage.getBoolean("enable_converting_imported_videos_to_tv_recordings", true)
         && (externalID.startsWith("EP") || externalID.startsWith("SH") ||
             externalID.startsWith("SP") || externalID.startsWith("MV") || externalID.startsWith("DT") ||
             externalID.startsWith("IE") || externalID.startsWith("IM"))) // We added IE & IM for imported episodes & movies, per request of BMT developer stuckless
@@ -3711,7 +3536,82 @@ public class MediaFile extends DBObject implements SegmentedFile
     }
   }
 
+  /**
+   * Returns a new file name that can be guaranteed to be able to be used on this media file shortly.
+   * <p/>
+   * You can only get one of these at a time. You must pass the {@link NextSegmentGuarantee}
+   * returned from here to {@link #rollGuaranteedSegment(NextSegmentGuarantee)} to start a
+   * new segment before you can call this and get a new segment.
+   * <p/>
+   * This is only to be used when recording and transitioning between file segments during live
+   * playback.
+   *
+   * @return <code>null</code> if your request was denied.
+   */
+  synchronized NextSegmentGuarantee startGuaranteedSegment(long currTime)
+  {
+    // We can only assure one of these at a time.
+    if (nextSegmentGuarantee != null)
+      return null;
+    File nextFileName = getNextSegment(false);
+    return nextFileName != null ? nextSegmentGuarantee = new NextSegmentGuarantee(nextFileName, currTime) : null;
+  }
+
+  /**
+   * Start a new segment with the file from a {@link NextSegmentGuarantee} object.
+   * <p/>
+   * This is only to be used when recording and transitioning between file segments during live
+   * playback.
+   *
+   * @param nextSegment The {@link NextSegmentGuarantee} object provided by
+   *                    {@link #startGuaranteedSegment(long)} for this {@link MediaFile}.
+   * @return <code>true</code> if the segment change was successful.
+   */
+  synchronized boolean rollGuaranteedSegment(NextSegmentGuarantee nextSegment)
+  {
+    if (nextSegmentGuarantee == null || nextSegment != nextSegmentGuarantee)
+      return false;
+
+    Wizard wiz = Wizard.getInstance();
+    try
+    {
+      wiz.acquireWriteLock(Wizard.MEDIAFILE_CODE);
+      endSegment(nextSegmentGuarantee.getStartTime());
+      startSegment(nextSegmentGuarantee.getStartTime() + 1, null, nextSegment.getNewSegment());
+    } finally {
+      wiz.releaseWriteLock(Wizard.MEDIAFILE_CODE);
+    }
+
+    if (Sage.DBG) System.out.println("MediaFile transitioned to subfile:" + nextSegmentGuarantee.getNextSegment() + " " + this);
+    nextSegmentGuarantee = null;
+    return true;
+  }
+
+  /**
+   * Release a guaranteed new file segment.
+   * <p/>
+   * You cannot release the guarantee without the correct {@link NextSegmentGuarantee} for this
+   * {@link MediaFile} unless the <code>force</code> parameter is get to <code>true</code>.
+   * <p/>
+   * This is only to be used when recording and transitioning between file segments during live
+   * playback.
+   *
+   * @param nextSegment The {@link NextSegmentGuarantee} object provided by
+   *                    {@link #startGuaranteedSegment(long)} for this {@link MediaFile}.
+   * @param force Set <code>true</code> to clear the segment regardless of if nextSegment is correct.
+   */
+  synchronized void releaseGuaranteedSegment(NextSegmentGuarantee nextSegment, boolean force)
+  {
+    if (nextSegment == nextSegmentGuarantee || force)
+      nextSegmentGuarantee = null;
+  }
+
   synchronized void startSegment(long startTime, String newEncodedBy)
+  {
+    startSegment(startTime, newEncodedBy, null);
+  }
+
+  private synchronized void startSegment(long startTime, String newEncodedBy, File guaranteedFile)
   {
     Wizard wiz = Wizard.getInstance();
     try {
@@ -3726,7 +3626,10 @@ public class MediaFile extends DBObject implements SegmentedFile
       else if (newEncodedBy != null)
         encodedBy = newEncodedBy;
       addTimes(startTime, 0);
-      files.addElement(getNextSegment(false));
+      if (guaranteedFile != null)
+        files.addElement(guaranteedFile);
+      else
+        files.addElement(getNextSegment(false));
       if (isLiveBufferedStream())
       {
         files.firstElement().deleteOnExit();
@@ -3738,7 +3641,7 @@ public class MediaFile extends DBObject implements SegmentedFile
             if (Sage.DBG) System.out.println("Deleting old media file buffer file because its name changed:"  + oldFiles.get(i));
             // If the deletion fails, be sure we don't import it
             if (!oldFiles.get(i).delete())
-              Seeker.getInstance().addIgnoreFile(oldFiles.get(i));
+              SeekerSelector.getInstance().addIgnoreFile(oldFiles.get(i));
           }
         }
         // This'll affect the sorting of the secondary index so we need to re-sort this in the DB
@@ -4112,7 +4015,7 @@ public class MediaFile extends DBObject implements SegmentedFile
       // JAK: 8/2/05 - Use a different file extension for the circularly buffered
       // files so Windows doesn't try to parse them because sometimes it crashes Explorer.
       return new File(videoDirectory, (forcedStringName != null ? forcedStringName :
-        createValidFilename(Sage.EMBEDDED ? encodedBy : name)) + '-' + fileNum + ".mpgbuf"/*getFileExtension()*/);
+        createValidFilename(name)) + '-' + fileNum + ".mpgbuf"/*getFileExtension()*/);
     }
     else if (getShow() == null)
     {
@@ -4213,7 +4116,8 @@ public class MediaFile extends DBObject implements SegmentedFile
       }
 
       fileNum++;
-    } while (!ignoreFiles && (rv.isFile() || files.contains(rv)));
+    } while (!ignoreFiles && (rv.isFile() || files.contains(rv) ||
+      (nextSegmentGuarantee != null && rv.equals(nextSegmentGuarantee.getNewSegment()))));
     if (!ignoreFiles && !rv.isFile())
     {
       try
@@ -4298,6 +4202,9 @@ public class MediaFile extends DBObject implements SegmentedFile
             getContentAiring().getDuration())- LOSS_FOR_COMPLETE)));
   }
 
+  /**
+   * Use with care.
+   */
   void thisIsComplete()
   {
     if (!forcedComplete)
@@ -5126,7 +5033,7 @@ public class MediaFile extends DBObject implements SegmentedFile
       thumbWidth -= thumbWidth % 2;
       final File imageThumbFile = getGeneratedThumbnailFileLocation();
 
-      if (!Sage.EMBEDDED && Math.abs(getRecordTime() - imageThumbFile.lastModified()) > 2500 && isPicture())
+      if (Math.abs(getRecordTime() - imageThumbFile.lastModified()) > 2500 && isPicture())
       {
         if (Sage.DBG) System.out.println("Re-generating thumbnail because source image has changed recTime=" + Sage.df(getRecordTime()) +
             " thumbTime=" + Sage.df(imageThumbFile.lastModified()));
@@ -5255,7 +5162,7 @@ public class MediaFile extends DBObject implements SegmentedFile
               // we can track regeneration correctly
               imageThumbFile.setLastModified(getRecordTime());
             }
-            else if (!Sage.EMBEDDED)
+            else
             {
               MetaImage myMeta = MetaImage.getMetaImage(MediaFile.this);
               Image fullImage = myMeta.getJavaImage();
@@ -5377,10 +5284,8 @@ public class MediaFile extends DBObject implements SegmentedFile
               // We're disabling this again on EMBEDDED since this *should* work fine now; leaving it at zero caused lots of black
               // thumbnails since that would correspond with show transitions from the broadcast quite often.
               // However, not having it at zero causes CPU issues on embedded quite often...so just leave it there.
-              if (Sage.EMBEDDED && MediaFormat.MPEG2_TS.equals(getContainerFormat()))
-                targetTime = 0;
-              res = execVideoThumbGen(pathString, deinterlaceGen, targetTime, finalThumbWidth, finalThumbHeight, !Sage.EMBEDDED, imageThumbFile, -1);
-              if ((!imageThumbFile.isFile() || imageThumbFile.length() == 0) && (targetTime > 0 || !Sage.EMBEDDED))
+              res = execVideoThumbGen(pathString, deinterlaceGen, targetTime, finalThumbWidth, finalThumbHeight, true, imageThumbFile, -1);
+              if ((!imageThumbFile.isFile() || imageThumbFile.length() == 0))
               {
                 // Creation failed, but we used an offset time so try again without an offset
                 res = execVideoThumbGen(pathString, deinterlaceGen, 0, finalThumbWidth, finalThumbHeight, false, imageThumbFile, -1);
@@ -5498,7 +5403,7 @@ public class MediaFile extends DBObject implements SegmentedFile
     List<String> args = new ArrayList<String>(25);
     if (Sage.LINUX_OS || Sage.MAC_OS_X)
       args.add("nice");
-    args.add(Sage.EMBEDDED ? "./ffmpegjpeg" : FFMPEGTranscoder.getTranscoderPath());
+    args.add(FFMPEGTranscoder.getTranscoderPath());
     if (offsetTime > 0)
     {
       args.add("-ss");
@@ -5512,7 +5417,7 @@ public class MediaFile extends DBObject implements SegmentedFile
     }
     if (isRecording())
       args.add("-activefile");
-    if (!Sage.EMBEDDED && skipNonKeys)
+    if (skipNonKeys)
     {
       args.add("-skip_frame");
       args.add("nokey");
@@ -5528,39 +5433,28 @@ public class MediaFile extends DBObject implements SegmentedFile
     if (deinterlace)
       args.add("-deinterlace");
     // New version of FFMPEG requires using libavfilter for cropping
-    if (!Sage.EMBEDDED)
-    {
-      args.add("-vf");
-      args.add("crop=0:8:0:0,scale=" + width + ":" + height);
-    }
+    args.add("-vf");
+    args.add("crop=0:8:0:0,scale=" + width + ":" + height);
     args.add("-vframes");
     args.add("1");
-    if (Sage.EMBEDDED)
-    {
-      args.add("-s");
-      args.add(width + "x" + height);
-    }
     args.add("-an");
     // Our optimized mode sets skipNonKeys to true...but if that fails just grab the first frame so we don't do a huge search again
-    if (!Sage.EMBEDDED)
+    if (skipNonKeys)
     {
-      if (skipNonKeys)
-      {
-        // I'm not sure if we even need to worry about energy so much as variance...that's where the detail in the thumbnail comes from is the contrast...
-        //        args.add("-minpixenergy");
-        // We're trying this at higher values since we're getting some bad thumbnails through in testing
-        //        args.add("45");//args.add("35");//args.add("25");//args.add("20");
-        args.add("-minpixvar");
-        args.add("300");
-        args.add("-minpixnumframes");
-        args.add("150"); // used to be 600, but quite often this spends way too much time looking for a good frame
-      }
-      else
-      {
-        // This'll still do minimal keyframe obeyance which fixes some bad files such as: Y:\testcontent\_KRCA-DT_20080129_124117.mpg
-        args.add("-minpixenergy");
-        args.add("1");
-      }
+      // I'm not sure if we even need to worry about energy so much as variance...that's where the detail in the thumbnail comes from is the contrast...
+      //        args.add("-minpixenergy");
+      // We're trying this at higher values since we're getting some bad thumbnails through in testing
+      //        args.add("45");//args.add("35");//args.add("25");//args.add("20");
+      args.add("-minpixvar");
+      args.add("300");
+      args.add("-minpixnumframes");
+      args.add("150"); // used to be 600, but quite often this spends way too much time looking for a good frame
+    }
+    else
+    {
+      // This'll still do minimal keyframe obeyance which fixes some bad files such as: Y:\testcontent\_KRCA-DT_20080129_124117.mpg
+      args.add("-minpixenergy");
+      args.add("1");
     }
     if (targetStream >= 0)
     {
@@ -5721,11 +5615,6 @@ public class MediaFile extends DBObject implements SegmentedFile
   }
   public void setStreamBufferSize(long x)
   {
-    if (Sage.EMBEDDED)
-    {
-      // Be sure this is aligned at 188 bytes
-      x = x - (x % 188);
-    }
     streamBufferSizeMap.put(this, new Long(x));
   }
 
@@ -5752,7 +5641,7 @@ public class MediaFile extends DBObject implements SegmentedFile
   {
     // Check to see if we've changed the stream format or IDs for any of the streams; and if so we should have anybody playing this file reload it.
     boolean majorChange = false;
-    if (fileFormat != null && !Sage.EMBEDDED)
+    if (fileFormat != null)
     {
       if (newFormat.getNumberOfStreams() != fileFormat.getNumberOfStreams() ||
           newFormat.getNumAudioStreams() != fileFormat.getNumAudioStreams() ||
@@ -6143,6 +6032,12 @@ public class MediaFile extends DBObject implements SegmentedFile
     times = newTimes;
   }
 
+  public String getVideoDirectory()
+  {
+    return videoDirectory;
+  }
+
+
   Airing myAiring;
   String videoDirectory;
   String name;
@@ -6176,6 +6071,11 @@ public class MediaFile extends DBObject implements SegmentedFile
 
   // This is null if we haven't parsed it yet or can't figure it out
   ContainerFormat fileFormat;
+
+  // This is null if we have not guaranteed anyone what the next segment file name will be. This is
+  // the object returned when we need the next segment name before we actually want to add a new
+  // segment to the MediaFile.
+  private NextSegmentGuarantee nextSegmentGuarantee;
 
   public static final Comparator<MediaFile> AIRING_ID_COMPARATOR =
       new Comparator<MediaFile>()
@@ -6381,6 +6281,33 @@ public class MediaFile extends DBObject implements SegmentedFile
         }
       }
       return null;
+    }
+  }
+
+  public class NextSegmentGuarantee
+  {
+    private final File nextSegment;
+    private final long currTime;
+
+    private NextSegmentGuarantee(File nextSegment, long currTime)
+    {
+      this.nextSegment = nextSegment;
+      this.currTime = currTime;
+    }
+
+    public File getNewSegment()
+    {
+      return nextSegment;
+    }
+
+    public String getNextSegment()
+    {
+      return nextSegment.toString();
+    }
+
+    public long getStartTime()
+    {
+      return currTime;
     }
   }
 }

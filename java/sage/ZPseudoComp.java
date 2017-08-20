@@ -681,7 +681,7 @@ public class ZPseudoComp extends ZComp implements java.awt.event.MouseListener,
       }
     }
 
-    if (!Sage.EMBEDDED && (widgType == Widget.VIDEO || (widgType == Widget.MENU &&
+    if ((widgType == Widget.VIDEO || (widgType == Widget.MENU &&
         propWidg.getBooleanProperty(Widget.VIDEO_BACKGROUND, null, this))))
     {
       addMouseListener(uiMgr.getVideoFrame().getDvdMouseListener());
@@ -704,7 +704,7 @@ public class ZPseudoComp extends ZComp implements java.awt.event.MouseListener,
       else
         addMouseMotionListener(this);
     }
-    if (!Sage.EMBEDDED && Boolean.TRUE.equals(relatedContext.safeLookup("MouseMovementControlsWindow")) && uiMgr.getGlobalFrame() != null)
+    if (Boolean.TRUE.equals(relatedContext.safeLookup("MouseMovementControlsWindow")) && uiMgr.getGlobalFrame() != null)
     {
       addMouseMotionListener(uiMgr.getGlobalFrame());
       addMouseListener(uiMgr.getGlobalFrame());
@@ -1507,7 +1507,7 @@ public class ZPseudoComp extends ZComp implements java.awt.event.MouseListener,
     boolean changeProps = false;
     float oldf;
     int oldi;
-    if (lastLayoutLastCached == 0 || (!Sage.EMBEDDED && lastLayoutLastCached < uiMgr.getModuleGroup().lastModified()))
+    if (lastLayoutLastCached == 0 || (lastLayoutLastCached < uiMgr.getModuleGroup().lastModified()))
     {
       lastLayoutLastCached = uiMgr.getModuleGroup().lastModified();
       changeProps = true;
@@ -2097,7 +2097,7 @@ public class ZPseudoComp extends ZComp implements java.awt.event.MouseListener,
   private boolean doNotRecurseLayoutNow;
   public void doLayoutNow()
   {
-    if (!Sage.EMBEDDED && uiMgr.getTracer() != null) uiMgr.getTracer().traceUI(Tracer.LAYOUT_UI, this, widg, null);
+    if (uiMgr.getTracer() != null) uiMgr.getTracer().traceUI(Tracer.LAYOUT_UI, this, widg, null);
 
     if (hasAnimation && animStart == 0)
       lastAnimTime = animStart = Sage.eventTime();
@@ -2789,9 +2789,9 @@ public class ZPseudoComp extends ZComp implements java.awt.event.MouseListener,
           if (pseudoKid != null)
             checkForLayoutLoad(pseudoKid);
           kidSize.setFrame(kid.getPreferredSize(layoutWidth, layoutHeight, orgLayoutWidth, orgLayoutHeight, 0));
-          if (Sage.EMBEDDED || pseudoKid == null || !uiMgr.disableParentClip() || (pseudoKid.validLayoutBits & FIXEDW_LAYOUT) == 0)
+          if (pseudoKid == null || !uiMgr.disableParentClip() || (pseudoKid.validLayoutBits & FIXEDW_LAYOUT) == 0)
             kidSize.width = Math.min(layoutWidth, kidSize.width);
-          if (Sage.EMBEDDED || pseudoKid == null || !uiMgr.disableParentClip() || (pseudoKid.validLayoutBits & FIXEDH_LAYOUT) == 0)
+          if (pseudoKid == null || !uiMgr.disableParentClip() || (pseudoKid.validLayoutBits & FIXEDH_LAYOUT) == 0)
             kidSize.height = Math.min(layoutHeight, kidSize.height);
           float kidX = x;
           float kidY = y;
@@ -3260,7 +3260,7 @@ public class ZPseudoComp extends ZComp implements java.awt.event.MouseListener,
 
   protected void selectNode(ZComp picky)
   {
-    if (!shouldTakeEvents() && (Sage.EMBEDDED || !Catbert.evalBool(relatedContext.safeLookup("AllowHiddenFocus")))) return;
+    if (!shouldTakeEvents() && (!Catbert.evalBool(relatedContext.safeLookup("AllowHiddenFocus")))) return;
 
     boolean[] gotLock = new boolean[1];
     if (!uiMgr.getLock(true, gotLock, true))
@@ -3841,7 +3841,7 @@ public class ZPseudoComp extends ZComp implements java.awt.event.MouseListener,
               return true;
             }
           }
-          else if (!Sage.EMBEDDED && evt.getKeyCode() == java.awt.event.KeyEvent.VK_INSERT && evt.getKeyModifiers() == java.awt.event.KeyEvent.SHIFT_MASK)
+          else if (evt.getKeyCode() == java.awt.event.KeyEvent.VK_INSERT && evt.getKeyModifiers() == java.awt.event.KeyEvent.SHIFT_MASK)
           {
             // Paste test into the text widget
             try
@@ -4909,7 +4909,7 @@ public class ZPseudoComp extends ZComp implements java.awt.event.MouseListener,
   protected boolean evaluate(boolean doComps, boolean doData)
   {
     // Because the dynamic input might be conditional we have to run this for both comps & data
-    boolean allowHiddenFocus = !Sage.EMBEDDED && Catbert.evalBool(relatedContext.getLocal("AllowHiddenFocus"));
+    boolean allowHiddenFocus = Catbert.evalBool(relatedContext.getLocal("AllowHiddenFocus"));
     try
     {
       if (!doData)
@@ -5009,7 +5009,7 @@ public class ZPseudoComp extends ZComp implements java.awt.event.MouseListener,
                   else
                     kidImage.setImage((MetaImage) resVal);
                 }
-                else if (!Sage.EMBEDDED && resVal instanceof java.awt.Image)
+                else if (resVal instanceof java.awt.Image)
                 {
                   java.awt.Image ima = (java.awt.Image) resVal;
                   //if (Sage.DBG) System.out.println("DynImage=" + ima + " w=" + ima.getWidth(null) + " h=" + ima.getHeight(null));
@@ -5152,7 +5152,7 @@ public class ZPseudoComp extends ZComp implements java.awt.event.MouseListener,
 
   public boolean setDefaultFocus() // returns true if it took the focus
   {
-    if (!passesConditional() && (Sage.EMBEDDED || !Catbert.evalBool(relatedContext.getLocal("AllowHiddenFocus"))))
+    if (!passesConditional() && (!Catbert.evalBool(relatedContext.getLocal("AllowHiddenFocus"))))
       return false;
     if (focusTargetRect != null)
     {
@@ -5679,7 +5679,7 @@ public class ZPseudoComp extends ZComp implements java.awt.event.MouseListener,
     // Transform our coordinates by our rendering transform so we can test clipping against what we render
     boolean inRegion;
     boolean ensureAllEffectsExist = false;
-    if (effectKidsLastCached == 0 || (!Sage.EMBEDDED && uiMgr.getModuleGroup().lastModified() > effectKidsLastCached))
+    if (effectKidsLastCached == 0 || (uiMgr.getModuleGroup().lastModified() > effectKidsLastCached))
     {
       effectKidsLastCached = uiMgr.getModuleGroup().lastModified();
       // This flag is to override the caching we do for effects so that studio changes can be visualized in real-time
@@ -5927,7 +5927,7 @@ public class ZPseudoComp extends ZComp implements java.awt.event.MouseListener,
       hitRectAdjust = null;
     }
     recalcAllEffectStates = false;
-    if (!Sage.EMBEDDED && uiMgr.disableParentClip() && !Catbert.evalBool(relatedContext.getLocal("EnforceBounds")))
+    if (uiMgr.disableParentClip() && !Catbert.evalBool(relatedContext.getLocal("EnforceBounds")))
       inRegion = true;
     boolean renderMe = inRegion && boundsf.width != 0 && boundsf.height != 0;
     boolean disableShapeRender = false;
@@ -5989,7 +5989,7 @@ public class ZPseudoComp extends ZComp implements java.awt.event.MouseListener,
     }
     float orgclipx=clipRect.x, orgclipy=clipRect.y, orgclipw=clipRect.width, orgcliph=clipRect.height;
 
-    if (!Sage.EMBEDDED && uiMgr.getTracer() != null) uiMgr.getTracer().traceUI(Tracer.RENDER_UI, this, widg, null);
+    if (uiMgr.getTracer() != null) uiMgr.getTracer().traceUI(Tracer.RENDER_UI, this, widg, null);
     if (renderStartHook != null)
     {
       Catbert.processHookDirectly(renderStartHook, null, uiMgr, this);
@@ -6040,9 +6040,9 @@ public class ZPseudoComp extends ZComp implements java.awt.event.MouseListener,
     }
 
     java.awt.geom.Rectangle2D.Float bgCompClipRect = clipRect;
-    if (Sage.EMBEDDED || !uiMgr.disableParentClip() || Catbert.evalBool(relatedContext.getLocal("EnforceBounds")))
+    if (!uiMgr.disableParentClip() || Catbert.evalBool(relatedContext.getLocal("EnforceBounds")))
     {
-      if (!Sage.EMBEDDED && uiMgr.disableParentClip())
+      if (uiMgr.disableParentClip())
       {
         bgCompClipRect = new java.awt.geom.Rectangle2D.Float(clipRect.x, clipRect.y, clipRect.width, clipRect.height);
       }
@@ -6196,7 +6196,7 @@ public class ZPseudoComp extends ZComp implements java.awt.event.MouseListener,
     }
 
     // Update any dynamic properties for non-pseudo children
-    if (!Sage.EMBEDDED && propWidg.isType(Widget.IMAGE))
+    if (propWidg.isType(Widget.IMAGE))
     {
       if (reality.getEnableCornerArc())
       {
@@ -6206,7 +6206,7 @@ public class ZPseudoComp extends ZComp implements java.awt.event.MouseListener,
         ((ZImage) kids[0]).setCornerArc(0);
     }
 
-    if (shapeKidsLastCached == 0 || (!Sage.EMBEDDED && uiMgr.getModuleGroup().lastModified() > shapeKidsLastCached))
+    if (shapeKidsLastCached == 0 || (uiMgr.getModuleGroup().lastModified() > shapeKidsLastCached))
     {
       shapeKidsLastCached = uiMgr.getModuleGroup().lastModified();
       java.util.ArrayList shapeKids = Pooler.getPooledArrayList();//new java.util.ArrayList();
@@ -6402,7 +6402,7 @@ public class ZPseudoComp extends ZComp implements java.awt.event.MouseListener,
     }
 
     // This needs to be done here in case it wasn't done when building the rendering ops
-    if (shapeKidsLastCached == 0 || (!Sage.EMBEDDED && uiMgr.getModuleGroup().lastModified() > shapeKidsLastCached))
+    if (shapeKidsLastCached == 0 || (uiMgr.getModuleGroup().lastModified() > shapeKidsLastCached))
     {
       shapeKidsLastCached = uiMgr.getModuleGroup().lastModified();
       java.util.ArrayList shapeKids = new java.util.ArrayList();
@@ -6808,7 +6808,7 @@ public class ZPseudoComp extends ZComp implements java.awt.event.MouseListener,
 
   public boolean setFocusByValue(String varName, Object focusValue, boolean visCheck)  // returns true if it took the focus
   {
-    if (!passesConditional() && (Sage.EMBEDDED || !uiMgr.allowHiddenFocus() || !Catbert.evalBool(relatedContext.getLocal("AllowHiddenFocus")))) return false;
+    if (!passesConditional() && (!uiMgr.allowHiddenFocus() || !Catbert.evalBool(relatedContext.getLocal("AllowHiddenFocus")))) return false;
 
     boolean focusTest = isFocusable();
     if (focusTest && (!visCheck || isWithinScreenBounds()))
