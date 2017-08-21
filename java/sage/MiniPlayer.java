@@ -867,7 +867,7 @@ public class MiniPlayer implements DVDMediaPlayer
             }
             Thread.currentThread().setPriority(oldPriority);
             if (!mcsr.isLocalConnection() && uiBandwidthEstimate < 10000000 &&
-                uiBandwidthEstimate >= Sage.getInt("miniplayer/min_bandwidth_for_no_transcode", 2000000))
+                uiBandwidthEstimate >= Sage.getInt("miniplayer/min_bandwidth_for_no_transcode", 2000000) && Sage.getBoolean("miniplayer/wan_prevent_push", true))
             {
               if (Sage.DBG) System.out.println("Detected non-LAN connection under 10Mbps but above set limit (" + uiBandwidthEstimate +
                   "), force it to transcode mode");
