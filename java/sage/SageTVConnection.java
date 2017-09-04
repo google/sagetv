@@ -1435,7 +1435,8 @@ public class SageTVConnection implements Runnable, Wizard.XctSyncClient, Carny.P
       }
       else
       {
-        String s = dataIn.readUTF();
+        //special handling of readUTF for strings larger than 64k
+        String s = readUTF(dataIn);
         Object rv = s;
         if (minorType == MINOR_FILE)
           rv = new java.io.File(IOUtils.convertPlatformPathChars(s));
@@ -1519,7 +1520,8 @@ public class SageTVConnection implements Runnable, Wizard.XctSyncClient, Carny.P
         }
         else
         {
-          String s = dataIn.readUTF();
+          //special handling of readUTF for strings larger than 64k
+          String s = readUTF(dataIn);
           Object rv = s;
           if (minorType == MINOR_FILE)
             rv = new java.io.File(IOUtils.convertPlatformPathChars(s));
@@ -1691,7 +1693,87 @@ public class SageTVConnection implements Runnable, Wizard.XctSyncClient, Carny.P
       throw new IllegalArgumentException("INVALID MAJOR TYPE IN OBJECT: " + majorType);
   }
 
-  private void writeObjectToStream(Object obj, java.io.DataOutput dataOut) throws java.io.IOException
+  // For optimizing UTF reads
+  private byte[] bytearr = null;
+  private char[] chararr = null;
+  // NOTE: We have another special case here where we want to handle strings that are larger than 64k.
+  // We do that by writing out 0xFFFF for the length which indicates that the next 4 bytes will
+  // have the actual string length; then we go from there.
+  private String readUTF(java.io.DataInput dataIn) throws java.io.IOException
+  {
+    int utflen = dataIn.readUnsignedShort();
+    if (utflen == 0)
+      return "";
+    else if (utflen == 0xFFFF)
+      utflen = dataIn.readInt();
+    if (bytearr == null || bytearr.length < utflen)
+    {
+      bytearr = new byte[utflen*2];
+      chararr = new char[utflen*2];
+    }
+
+    int c, c2, c3;
+    int incount = 0;
+    int outcount = 0;
+
+    dataIn.readFully(bytearr, 0, utflen);
+
+    while (incount < utflen) {
+      // Fast path for all 7 bit ASCII chars
+      c = bytearr[incount] & 0xFF;
+      if (c > 127) break;
+      incount++;
+      chararr[outcount++]=(char)c;
+    }
+
+    int x;
+    while (incount < utflen) {
+      c = bytearr[incount] & 0xFF;
+      if (c < 128) {
+        incount++;
+        chararr[outcount++]=(char)c;
+        continue;
+      }
+      // Look at the top four bits only, since only they can affect this
+      x = c >> 4;
+      if (x == 12 || x == 13) {
+        // 110xxxxx 10xxxxxx - 2 bytes for this char
+        incount += 2;
+        if (incount > utflen)
+          throw new java.io.UTFDataFormatException("bad UTF data: missing second byte of 2 byte char at " + incount);
+        c2 = bytearr[incount - 1];
+        // Verify next byte starts with 10xxxxxx
+        if ((c2 & 0xC0) != 0x80)
+          throw new java.io.UTFDataFormatException("bad UTF data: second byte format after 110xxxx is wrong char: 0x" +
+            Integer.toString((int)c2, 16) + " count: " + incount);
+        chararr[outcount++]=(char)(((c & 0x1F) << 6) | (c2 & 0x3F));
+      }
+      else if (x == 14)
+      {
+        // 1110xxxx 10xxxxxx 10xxxx - 3 bytes for this char
+        incount += 3;
+        if (incount > utflen)
+          throw new java.io.UTFDataFormatException("bad UTF data: missing extra bytes of 3 byte char at " + incount);
+        c2 = bytearr[incount - 2];
+        c3 = bytearr[incount - 1];
+        // Verify next bytes start with 10xxxxxx
+        if (((c2 & 0xC0) != 0x80) || ((c3 & 0xC0) != 0x80))
+          throw new java.io.UTFDataFormatException("bad UTF data: extra byte format after 1110xxx is wrong char2: 0x" +
+            Integer.toString((int)c2, 16) + " char3: " + Integer.toString((int)c3, 16) + " count: " + incount);
+        chararr[outcount++]=(char)(((c & 0x0F) << 12) | ((c2 & 0x3F) << 6) | (c3 & 0x3F));
+      }
+      else
+      {
+        // No need to support beyond this, as we only have 16 bit chars in Java
+        throw new java.io.UTFDataFormatException("bad UTF data: we don't support more than 16 bit chars char: " +
+          Integer.toString((int)c, 16) + " count:" + incount);
+      }
+    }
+    return new String(chararr, 0, outcount);
+  }
+
+
+    private void writeObjectToStream(Object obj, java.io.DataOutput dataOut) throws java.io.IOException
   {
     if (obj == null)
     {
@@ -1968,7 +2050,8 @@ public class SageTVConnection implements Runnable, Wizard.XctSyncClient, Carny.P
     {
       dataOut.writeByte(MAJOR_JAVAOBJECT);
       dataOut.writeByte(MINOR_FILE);
-      dataOut.writeUTF(obj.toString());
+      //special handling of writeUTF for strings larger than 64k
+      writeUTF(obj.toString(),dataOut);
     }
     else if (obj instanceof sage.msg.SystemMessage)
     {
@@ -2054,9 +2137,62 @@ public class SageTVConnection implements Runnable, Wizard.XctSyncClient, Carny.P
     {
       dataOut.writeByte(MAJOR_JAVAOBJECT);
       dataOut.writeByte(MINOR_STRING);
-      dataOut.writeUTF(obj.toString());
+      //special handling of writeUTF for strings larger than 64k
+      writeUTF(obj.toString(),dataOut);
     }
   }
+
+  // NOTE: We have another special case here where we want to handle strings that are larger than 64k.
+  // We do that by writing out 0xFFFF for the length which indicates that the next 4 bytes will
+  // have the actual string length; then we go from there.
+  private void writeUTF(String s, java.io.DataOutput dataOut) throws java.io.IOException
+  {
+    if (s == null) s = "";
+    int strlen = s.length();
+    int utflen = 0;
+    int c = 0;
+
+    for (int i = 0; i < strlen; i++) {
+      c = s.charAt(i);
+      if (c < 128) {
+        utflen++;
+      } else if (c > 0x07FF) {
+        utflen += 3;
+      } else {
+        utflen += 2;
+      }
+    }
+
+    if (utflen >= 0xFFFF)
+    {
+      dataOut.write((byte)0xFF);
+      dataOut.write((byte)0xFF);
+      dataOut.write((byte) ((utflen >>> 24) & 0xFF));
+      dataOut.write((byte) ((utflen >>> 16) & 0xFF));
+      dataOut.write((byte) ((utflen >>> 8) & 0xFF));
+      dataOut.write((byte) ((utflen >>> 0) & 0xFF));
+    }
+    else
+    {
+      dataOut.write((byte) ((utflen >>> 8) & 0xFF));
+      dataOut.write((byte) ((utflen >>> 0) & 0xFF));
+    }
+    for (int i = 0; i < strlen; i++) {
+      c = s.charAt(i);
+      if (c < 128) {
+        dataOut.write((byte) c);
+      } else if (c > 0x07FF) {
+        dataOut.write((byte) (0xE0 | ((c >> 12) & 0x0F)));
+        dataOut.write((byte) (0x80 | ((c >>  6) & 0x3F)));
+        dataOut.write((byte) (0x80 | (c & 0x3F)));
+      } else {
+        dataOut.write((byte) (0xC0 | ((c >>  6) & 0x1F)));
+        dataOut.write((byte) (0x80 | (c & 0x3F)));
+      }
+    }
+  }
+
+
 
   /*
    *
