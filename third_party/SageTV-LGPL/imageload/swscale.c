@@ -25,7 +25,7 @@
   supported Input formats: YV12, I420/IYUV, YUY2, UYVY, BGR32, BGR24, BGR16, BGR15, RGB32, RGB24, Y8/Y800, YVU9/IF09
   supported output formats: YV12, I420/IYUV, YUY2, UYVY, {BGR,RGB}{1,4,8,15,16,24,32}, Y8/Y800, YVU9/IF09
   {BGR,RGB}{1,4,8,15,16} support dithering
-  
+
   unscaled special converters (YV12=I420=IYUV, Y800=Y8)
   YV12 -> {BGR,RGB}{1,4,8,15,16,24,32}
   x -> x
@@ -37,7 +37,7 @@
   BGR15 -> BGR16
 */
 
-/* 
+/*
 tested special converters (most are tested actually but i didnt write it down ...)
  YV12 -> BGR16
  YV12 -> YV12
@@ -188,7 +188,7 @@ static const uint64_t w1111       attribute_used __attribute__((aligned(8))) = 0
 // clipping helper table for C implementations:
 static unsigned char clip_table[768];
 
-		  
+
 const uint8_t  __attribute__((aligned(8))) dither_2x2_4[2][8]={
 {  1,   3,   1,   3,   1,   3,   1,   3, },
 {  2,   0,   2,   0,   2,   0,   2,   0, },
@@ -232,7 +232,7 @@ const uint8_t  __attribute__((aligned(8))) dither_8x8_220[8][8]={
 {  7, 172,  48, 213,   3, 168,  45, 210, },
 };
 
-inline void rgb24to32(const uint8_t *src,uint8_t *dst,long src_size)
+static inline void rgb24to32(const uint8_t *src,uint8_t *dst,long src_size)
 {
   uint8_t *dest = dst;
   const uint8_t *s = src;
@@ -256,7 +256,7 @@ inline void rgb24to32(const uint8_t *src,uint8_t *dst,long src_size)
   }
 }
 
-inline void rgb32to24(const uint8_t *src,uint8_t *dst,long src_size)
+static inline void rgb32to24(const uint8_t *src,uint8_t *dst,long src_size)
 {
   uint8_t *dest = dst;
   const uint8_t *s = src;
@@ -280,7 +280,7 @@ inline void rgb32to24(const uint8_t *src,uint8_t *dst,long src_size)
   }
 }
 
-inline void rgb24tobgr24(const uint8_t *src, uint8_t *dst, long src_size)
+static inline void rgb24tobgr24(const uint8_t *src, uint8_t *dst, long src_size)
 {
 	unsigned i;
 	for(i=0; i<src_size; i+=3)
@@ -293,13 +293,13 @@ inline void rgb24tobgr24(const uint8_t *src, uint8_t *dst, long src_size)
 	}
 }
 
-inline void rgb32tobgr32(const uint8_t *src, uint8_t *dst, long src_size)
+static inline void rgb32tobgr32(const uint8_t *src, uint8_t *dst, long src_size)
 {
 	unsigned i;
 	unsigned num_pixels = src_size >> 2;
 	for(i=0; i<num_pixels; i++)
 	{
-#ifdef WORDS_BIGENDIAN  
+#ifdef WORDS_BIGENDIAN
 	  dst[4*i + 1] = src[4*i + 3];
 	  dst[4*i + 2] = src[4*i + 2];
 	  dst[4*i + 3] = src[4*i + 1];
@@ -463,7 +463,7 @@ char *sws_format_name(enum PixelFormat format)
 				if(V>255)    V=255;\
 				else if(V<0) V=0;\
 			}
-                        
+
 #define YSCALE_YUV_2_RGBX_C(type) \
 			YSCALE_YUV_2_PACKEDX_C(type)\
 			r = c->table_rV[V];\
@@ -594,7 +594,7 @@ static double getSplineCoeff(double a, double b, double c, double d, double dist
 {
 //	printf("%f %f %f %f %f\n", a,b,c,d,dist);
 	if(dist<=1.0) 	return ((d*dist + c)*dist + b)*dist +a;
-	else		return getSplineCoeff(	0.0, 
+	else		return getSplineCoeff(	0.0,
 						 b+ 2.0*c + 3.0*d,
 						        c + 3.0*d,
 						-b- 3.0*c - 6.0*d,
@@ -635,7 +635,7 @@ static inline int initFilter(int16_t **outFilter, int16_t **filterPos, int *outF
 		int xDstInSrc;
 		filterSize= 1;
 		filter= av_malloc(dstW*sizeof(double)*filterSize);
-		
+
 		xDstInSrc= xInc/2 - 0x8000;
 		for(i=0; i<dstW; i++)
 		{
@@ -652,7 +652,7 @@ static inline int initFilter(int16_t **outFilter, int16_t **filterPos, int *outF
 		int xDstInSrc;
 		if     (flags&SWS_BICUBIC) filterSize= 4;
 		else if(flags&SWS_X      ) filterSize= 4;
-		else			   filterSize= 2; // SWS_BILINEAR / SWS_AREA 
+		else			   filterSize= 2; // SWS_BILINEAR / SWS_AREA
 		filter= av_malloc(dstW*sizeof(double)*filterSize);
 
 		xDstInSrc= xInc/2 - 0x8000;
@@ -692,12 +692,12 @@ static inline int initFilter(int16_t **outFilter, int16_t **filterPos, int *outF
 			sizeFactor= 0.0; //GCC warning killer
 			ASSERT(0)
 		}
-		
+
 		if(xInc1 <= 1.0)	filterSizeInSrc= sizeFactor; // upscale
 		else			filterSizeInSrc= sizeFactor*srcW / (double)dstW;
 
 		filterSize= (int)ceil(1 + filterSizeInSrc); // will be reduced later if possible
-		if(filterSize > srcW-2) 
+		if(filterSize > srcW-2)
 		{
 			filterSize=srcW-2;
 			if (filterSize == 0)
@@ -721,7 +721,7 @@ static inline int initFilter(int16_t **outFilter, int16_t **filterPos, int *outF
 					double B= param[0] != SWS_PARAM_DEFAULT ? param[0] : 0.0;
 					double C= param[1] != SWS_PARAM_DEFAULT ? param[1] : 0.6;
 
-					if(d<1.0) 
+					if(d<1.0)
 						coeff = (12-9*B-6*C)*d*d*d + (-18+12*B+6*C)*d*d + 6-2*B;
 					else if(d<2.0)
 						coeff = (-B-6*C)*d*d*d + (6*B+30*C)*d*d + (-12*B-48*C)*d +8*B+24*C;
@@ -737,7 +737,7 @@ static inline int initFilter(int16_t **outFilter, int16_t **filterPos, int *outF
 				else if(flags & SWS_X)
 				{
 					double A= param[0] != SWS_PARAM_DEFAULT ? param[0] : 1.0;
-					
+
 					if(d<1.0)
 						coeff = cos(d*PI);
 					else
@@ -764,7 +764,7 @@ static inline int initFilter(int16_t **outFilter, int16_t **filterPos, int *outF
 				}
 				else if(flags & SWS_LANCZOS)
 				{
-					double p= param[0] != SWS_PARAM_DEFAULT ? param[0] : 3.0; 
+					double p= param[0] != SWS_PARAM_DEFAULT ? param[0] : 3.0;
 					coeff = d ? sin(d*PI)*sin(d*PI/p)/(d*d*PI*PI/p) : 1.0;
 					if(d>p) coeff=0;
 				}
@@ -905,7 +905,7 @@ static inline int initFilter(int16_t **outFilter, int16_t **filterPos, int *outF
 		}
 	}
 	av_free(filter2); filter2=NULL;
-	
+
 
 	//FIXME try to align filterpos if possible
 
@@ -965,7 +965,7 @@ static inline int initFilter(int16_t **outFilter, int16_t **filterPos, int *outF
 			error = v - intV;
 		}
 	}
-	
+
 	(*filterPos)[dstW]= (*filterPos)[dstW-1]; // the MMX scaler will read over the end
 	for(i=0; i<*outFilterSize; i++)
 	{
@@ -987,7 +987,7 @@ static void globalInit(void){
 }
 
 static SwsFunc getSwsFunc(int flags){
-    
+
 	return swScale_C;
 }
 
@@ -1008,7 +1008,7 @@ static int rgb2rgbWrapper(SwsContext *c, uint8_t* src, int srcStride, int srcSli
 		switch(srcId | (dstId<<4)){
 		case 0x68: conv= rgb32to24; break;
 		case 0x86: conv= rgb24to32; break;
-		default: MSG_ERR("swScaler: internal error %s -> %s converter\n", 
+		default: MSG_ERR("swScaler: internal error %s -> %s converter\n",
 				 sws_format_name(srcFormat), sws_format_name(dstFormat)); break;
 		}
 	}else if(   (isBGR(srcFormat) && isRGB(dstFormat))
@@ -1018,11 +1018,11 @@ static int rgb2rgbWrapper(SwsContext *c, uint8_t* src, int srcStride, int srcSli
 		case 0x68: conv= rgb32tobgr24; break;
 		case 0x86: conv= rgb24tobgr32; break;
 		case 0x88: conv= rgb32tobgr32; break;
-		default: MSG_ERR("swScaler: internal error %s -> %s converter\n", 
+		default: MSG_ERR("swScaler: internal error %s -> %s converter\n",
 				 sws_format_name(srcFormat), sws_format_name(dstFormat)); break;
 		}
 	}else{
-		MSG_ERR("swScaler: internal error %s -> %s converter\n", 
+		MSG_ERR("swScaler: internal error %s -> %s converter\n",
 			 sws_format_name(srcFormat), sws_format_name(dstFormat));
 	}
 
@@ -1040,7 +1040,7 @@ static int rgb2rgbWrapper(SwsContext *c, uint8_t* src, int srcStride, int srcSli
 			srcPtr+= srcStride;
 			dstPtr+= dstStride;
 		}
-	}     
+	}
 	return srcSliceH;
 }
 
@@ -1062,8 +1062,8 @@ static int simpleCopy(SwsContext *c, uint8_t* src, int srcStride, int srcSliceY,
 		dstPtr+= dstStride;
 	}
 	return srcSliceH;
-		
-		
+
+
 /*	if(dstStride==srcStride && srcStride > 0)
 		memcpy(dst + dstStride*srcSliceY, src, srcSliceH*dstStride);
 	else
@@ -1074,7 +1074,7 @@ static int simpleCopy(SwsContext *c, uint8_t* src, int srcStride, int srcSliceY,
 		int length=0;
 
 		/* universal length finder */
-/*		while(length+c->srcW <= FFABS(dstStride) 
+/*		while(length+c->srcW <= FFABS(dstStride)
 		   && length+c->srcW <= FFABS(srcStride)) length+= c->srcW;
 		ASSERT(length!=0);
 
@@ -1113,12 +1113,12 @@ SwsContext *sws_getContext(int srcW, int srcH, int srcFormat, int dstW, int dstH
 	int srcRange, dstRange;
 
 	flags &= ~(SWS_CPU_CAPS_MMX|SWS_CPU_CAPS_MMX2|SWS_CPU_CAPS_3DNOW|SWS_CPU_CAPS_ALTIVEC);
-	
+
 	if(clip_table[512] != 255) globalInit();
 
 	unscaled = (srcW == dstW && srcH == dstH);
 
-	if(!isSupportedIn(srcFormat)) 
+	if(!isSupportedIn(srcFormat))
 	{
 		MSG_ERR("swScaler: %s is not supported as input format\n", sws_format_name(srcFormat));
 		return NULL;
@@ -1132,7 +1132,7 @@ SwsContext *sws_getContext(int srcW, int srcH, int srcFormat, int dstW, int dstH
 	/* sanity check */
 	if(srcW<4 || srcH<1 || dstW<8 || dstH<1) //FIXME check if these are enough and try to lowwer them after fixing the relevant parts of the code
 	{
-		 MSG_ERR("swScaler: %dx%d -> %dx%d is invalid scaling dimension\n", 
+		 MSG_ERR("swScaler: %dx%d -> %dx%d is invalid scaling dimension\n",
 			srcW, srcH, dstW, dstH);
 		return NULL;
 	}
@@ -1191,7 +1191,7 @@ SwsContext *sws_getContext(int srcW, int srcH, int srcFormat, int dstW, int dstH
 
 		if(c->swScale){
 			if(flags&SWS_PRINT_INFO)
-				MSG_INFO("SwScaler: using unscaled %s -> %s special converter\n", 
+				MSG_INFO("SwScaler: using unscaled %s -> %s special converter\n",
 					sws_format_name(srcFormat), sws_format_name(dstFormat));
 			return c;
 		}
@@ -1283,10 +1283,10 @@ SwsContext *sws_getContext(int srcW, int srcH, int srcFormat, int dstW, int dstH
 			MSG_INFO("\nSwScaler: ehh flags invalid?! ");
 
 		if(dstFormat==PIX_FMT_BGR555 || dstFormat==PIX_FMT_BGR565)
-			MSG_INFO("from %s to%s %s ", 
+			MSG_INFO("from %s to%s %s ",
 				sws_format_name(srcFormat), dither, sws_format_name(dstFormat));
 		else
-			MSG_INFO("from %s to %s ", 
+			MSG_INFO("from %s to %s ",
 				sws_format_name(srcFormat), sws_format_name(dstFormat));
 
 		MSG_INFO("using C\n");
