@@ -87,6 +87,10 @@ if errorlevel 1 goto CopyFailure
 xcopy "%_supportDir%\SupportBinaries" "%_targetDir%" /i /q /e
 if errorlevel 1 goto CopyFailure
 
+@REM Copy the imageloader and swscale Binaries - from buildwin\dll
+xcopy "%_projectDir%..\..\..\buildwin\dll\*.dll" "%_targetDir%\SageTV" /i /q /e
+if errorlevel 1 goto CopyFailure
+
 @REM Copy the elf build files - these for now are stored in this location from a ZIP
 xcopy "%_supportDir%\elf" "%_targetDir%\SageTV" /i /q /e
 if errorlevel 1 goto CopyFailure
@@ -104,9 +108,11 @@ goto PreBuildSuccess
 echo Starting pre-build processing for %_configName%
 
 @REM Copy the Support Binaries - these are ones where I could not find source
-xcopy "%_supportDir%\SupportBinaries\SageTV\ImageLoader.dll" "%_targetDir%\Placeshifter\" /q
 xcopy "%_supportDir%\SupportBinaries\SageTV\pthreadGC2.dll" "%_targetDir%\Placeshifter\" /q
-xcopy "%_supportDir%\SupportBinaries\SageTV\swscale.dll" "%_targetDir%\Placeshifter\" /q
+if errorlevel 1 goto CopyFailure
+
+@REM Copy the imageloader and swscale Binaries - from buildwin\dll
+xcopy "%_projectDir%..\..\..\buildwin\dll\*.dll" "%_targetDir%\Placeshifter" /i /q /e
 if errorlevel 1 goto CopyFailure
 
 @REM Copy the thirdparty license

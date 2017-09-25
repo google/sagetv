@@ -1,19 +1,18 @@
 CC=gcc
-#CFLAGS = -c -D_JNI_IMPLEMENTATION -IC:\\jdk1.4\\include -IC:\\jdk1.4\\include\\win32
-CFLAGS = -c -O2 -s -D_JNI_IMPLEMENTATION -I/mingw/include -IC:\\jdk1.4\\include -IC:\\jdk1.4\\include\\win32 -I/usr/local/include -DJava_sage_media_image_ImageLoader_createThumbnail=_Java_sage_media_image_ImageLoader_createThumbnail -DJava_sage_media_image_ImageLoader_loadScaledImageFromFile=_Java_sage_media_image_ImageLoader_loadScaledImageFromFile -DJava_sage_media_image_ImageLoader_freeImage0=_Java_sage_media_image_ImageLoader_freeImage0 -DJava_sage_media_image_ImageLoader_compressImageToFile=_Java_sage_media_image_ImageLoader_compressImageToFile -DJava_sage_media_image_ImageLoader_loadImageDimensionsFromFile=_Java_sage_media_image_ImageLoader_loadImageDimensionsFromFile -DJava_sage_media_image_ImageLoader_scaleRawImage=_Java_sage_media_image_ImageLoader_scaleRawImage
+CFLAGS = -c -O2 -s -D_JNI_IMPLEMENTATION -I/mingw/include -IC:\\jdk1.4\\include -IC:\\jdk1.4\\include\\win32 -I/usr/local/include -I../../../native/include -I../../codecs/giflib/lib -DJava_sage_media_image_ImageLoader_createThumbnail=_Java_sage_media_image_ImageLoader_createThumbnail -DJava_sage_media_image_ImageLoader_loadScaledImageFromFile=_Java_sage_media_image_ImageLoader_loadScaledImageFromFile -DJava_sage_media_image_ImageLoader_freeImage0=_Java_sage_media_image_ImageLoader_freeImage0 -DJava_sage_media_image_ImageLoader_compressImageToFile=_Java_sage_media_image_ImageLoader_compressImageToFile -DJava_sage_media_image_ImageLoader_loadImageDimensionsFromFile=_Java_sage_media_image_ImageLoader_loadImageDimensionsFromFile -DJava_sage_media_image_ImageLoader_scaleRawImage=_Java_sage_media_image_ImageLoader_scaleRawImage
 
 OBJFILES=imageload.o sage_media_image_ImageLoader.o
 
 all: swscale.dll ImageLoader.dll
 
 swscale.dll: swscale.o 
-	$(CC) -shared -W1 -o swscale.dll swscale.o -L/mingw/lib -L/usr/local/lib
+	$(CC) -shared -W -o swscale.dll swscale.o -L/mingw/lib -L/usr/local/lib
 
 ImageLoader.dll: $(OBJFILES)
-	$(CC) -shared -W1 -o ImageLoader.dll $(OBJFILES) -L/mingw/lib -ljpeg -lregif -lpng -lz -L/usr/local/lib -ltiff -L. -lswscale
+	$(CC) -s -static-libgcc -shared -W -o ImageLoader.dll $(OBJFILES) ../../codecs/giflib/lib/.libs/libgif.a ../../codecs/libpng/.libs/libpng12.a ../../codecs/jpeg-6b/libjpeg.a -lz ../../codecs/tiff/libtiff/.libs/libtiff.a -L. -lswscale
 
 imagetest: test.o $(OBJFILES) 
-	$(CC) -o imagetest $(OBJFILES) -L/mingw/lib -ljpeg -lregif -lpng -lz -L/usr/local/lib -ltiff -L. -lswscale
+	$(CC) -s -static-libgcc test.c -o imagetest.exe $(OBJFILES) ../../codecs/giflib/lib/.libs/libgif.a ../../codecs/libpng/.libs/libpng12.a ../../codecs/jpeg-6b/libjpeg.a -lz ../../codecs/tiff/libtiff/.libs/libtiff.a -L. -lswscale
 
 swscale.o: swscale_template.c
 

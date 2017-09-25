@@ -1,6 +1,6 @@
 # Change Log
 
-## Version 9.1.7 (?)
+## Version 9.1.7 (2017-09-24)
 * Fix: add support for 2nd tuner of Hauppauge WinTV-dualHD usb tuner stick (Windows).
 * Changes in the STV set 2017081201 for the next SageTV release v9.1.7.0:
     * malore menus: Removed random misc adjectives after show titles; only display misc textafter the title if it is a star rating.
@@ -13,6 +13,7 @@
 	* Configuration Wizard playback testing/configuration menu uses the "Default" decoder settings instead of SageTV MPEG decoders.
 	* Detailed Setup -> Customize: renamed extra option to mark channels in guide with non-Zap2it channel IDs to refer to non-Tribune IDs.
 	* Changed Zap2it text to Tribune elsewhere in the STV, since the EPG data fo the old built-in and new SD EPG data both ultimately come from Tribune.  
+* Fix: resolved 'Grey-scale channel logos are green and half-width' for Windows releases (was fixed for linux in 9.0.8.423 and newer)
 
 ## Version 9.1.6 (2017-08-10)
 * Fix: Various fixes and cleanup on Linux Firewire and DVB.
