@@ -316,7 +316,7 @@ JNIEXPORT jintArray JNICALL Java_sage_DShowCaptureDevice_getCrossbarConnections0
 		{
 			if ( strstr( capFiltName, "QUAD DVB-T" ) ) //ZQ DigitalNow Quad DVB-T creates outpin after input pin connected. 
 				hasBDAInput = CheckFakeBDACrossBar( env, capFiltName, videoCapFiltNum, NULL, 0 );//I hope it's the last ugly hard code path before the new DShowCapture code is done.
-			
+
 			pVideoPin = FindPin(pFilter, PINDIR_OUTPUT, &MEDIATYPE_Stream, NULL);
 			if ( pVideoPin )
 			{
@@ -381,11 +381,8 @@ JNIEXPORT jintArray JNICALL Java_sage_DShowCaptureDevice_getCrossbarConnections0
 	BOOL hasRadioInput = FALSE;
 	// If it doesn't have the tuner filter ignore the tuner inputs on the crossbar
 	BOOL hasTunerFilter = FALSE;
-	// If there's an S/PDIF input then we tie that to the Component input if it exists; and
-	// if there's more than one audio input that's related to the component input then the component
-	// input will appear more than once
-	BOOL hasMultiAudioCompInput = FALSE;
-	long numIn=0,  numOut=0;
+
+   	long numIn=0,  numOut=0;
 	long numIn2=0, numOut2=0;
 	IAMCrossbar* pRealCross = NULL;
 	IAMCrossbar* pRealCross2 = NULL;
@@ -517,7 +514,11 @@ JNIEXPORT jintArray JNICALL Java_sage_DShowCaptureDevice_getCrossbarConnections0
 		}
 	} //ZQ. 
 	
-	// Check for the multiple audio inputs linked to the component input case.
+    // Check for the multiple audio inputs linked to the component input case.
+    // If there's an S/PDIF input then we tie that to the Component input if it exists; and
+    // if there's more than one audio input that's related to the component input then the component
+    // input will appear more than once
+    BOOL hasMultiAudioCompInput = FALSE;
 	BOOL foundSPDIFCompInput = FALSE;
 	BOOL foundOtherCompInput = FALSE;
 	long relatedPinType, junk;
@@ -529,7 +530,7 @@ JNIEXPORT jintArray JNICALL Java_sage_DShowCaptureDevice_getCrossbarConnections0
 			pRealCross->get_CrossbarPinInfo(TRUE, relatedPin, &junk, &relatedPinType);
 
 		// I see no reason to show the other inputs here, they're just confusing
-		if (pinType == PhysConn_Video_YRYBY)
+		if (pinType == PhysConn_Video_YRYBY) // component
 		{
 			if (relatedPinType == PhysConn_Audio_SPDIFDigital)
 				foundSPDIFCompInput = TRUE;
@@ -540,17 +541,118 @@ JNIEXPORT jintArray JNICALL Java_sage_DShowCaptureDevice_getCrossbarConnections0
 			foundSPDIFCompInput = TRUE;
 		else if (relatedPinType == PhysConn_Video_YRYBY && pinType >= PhysConn_Audio_Line && pinType <= PhysConn_Audio_AUX)
 			foundOtherCompInput = TRUE;
+
+        slog((env, "pin index i=%d pinType=%d relatedPin=%d foundSPDIFCompInput=%d foundOtherCompInput=%d \r\n", i, pinType, relatedPin, foundSPDIFCompInput, foundOtherCompInput));
 	}
 	hasMultiAudioCompInput = foundOtherCompInput && foundSPDIFCompInput;
+    slog((env, "hasMultiAudioCompInput=%d \r\n", hasMultiAudioCompInput));
 
-	pinData = new jint[ numIn + numIn2 + (hasRadioInput ? 1:0) + (hasMultiAudioCompInput ? 1:0)];
+
+    // Check for multiple audio inputs for use with HDMI video input.
+    // PhysConn_Video_SerialDigital (HDMI video in) is most commonly
+    // paired with PhysConn_Audio_AESDigital (HDMI audio in).
+    // If there are **other** possible audio inputs, 
+    // then the various HDMI A-V combinations will all appear.
+
+#define MAX_AUDIO_PINS ((PhysConn_Audio_AudioDecoder - PhysConn_Audio_Tuner) + 2)
+    long hdmiRelatedPin, partnerRelatedPin;
+    BOOL foundVideoHdmiInput = FALSE;
+    int numAudioPins = 0;
+    int audioPin[MAX_AUDIO_PINS];
+    int audioVideoHdmiPinType[MAX_AUDIO_PINS];
+    int numReportedHdmiPinTypes = 0;
+    int reportedHdmiPinType[MAX_AUDIO_PINS];
+
+    // Build a list of HDMI & all audio pins of interest available on this device
+    for (i = 0; i < numIn; i++)
+    {
+        relatedPinType = relatedPin = pinType = 0;
+        pRealCross->get_CrossbarPinInfo(TRUE, i, &relatedPin, &pinType);
+         
+        switch (pinType)
+        {
+        case PhysConn_Video_SerialDigital: // HDMI video input
+            foundVideoHdmiInput = TRUE;
+            hdmiRelatedPin = relatedPin;
+            if (relatedPin >= 0)
+            {
+                pRealCross->get_CrossbarPinInfo(TRUE, relatedPin, &partnerRelatedPin, &relatedPinType);
+                // sanity check: related pins probably should point to each other; but not required
+                if (i != partnerRelatedPin)
+                    slog((env, "INFO pin index i=%d, pinType=%d -> relatedPin=%d, relatedPinType=%d, but its partnerRelatedPin=%d \r\n",
+                        i, pinType, relatedPin, relatedPinType, partnerRelatedPin));
+            }
+            break;
+        case PhysConn_Audio_Line:
+            audioPin[numAudioPins] = i;
+            audioVideoHdmiPinType[numAudioPins] = 80;    // HDMI+LineIn; HDMI_LINEIN_CROSSBAR_INDEX
+            numAudioPins++;
+            break;
+        case PhysConn_Audio_AESDigital:
+            audioPin[numAudioPins] = i;
+            audioVideoHdmiPinType[numAudioPins] = 81;    // HDMI_AV; HDMI_AES_CROSSBAR_INDEX
+            numAudioPins++;
+            break;
+        case PhysConn_Audio_SPDIFDigital:
+            audioPin[numAudioPins] = i;
+            audioVideoHdmiPinType[numAudioPins] = 82;    // HDMI+SPDIF; HDMI_SPDIF_CROSSBAR_INDEX
+            numAudioPins++;
+            break;
+        default:
+            break;
+        }
+    }
+
+    // Build list of reportable HDMI inputs
+    // Something mildly complicated; need to handle the following possible situations:
+    // 1. HDMI vid input, but no audio pins: report the HDMI pinType itself
+    // 2. HDMI vid input, no Related pin && some audio pins: report all possible <HDMI+audio> pinType combos
+    // 3. HDMI vid input, w/Related pin && some audio pins: report original HDMI pinType & other unique <HDMI+audio> pinType combos
+    if (foundVideoHdmiInput)
+    {
+        if (numAudioPins == 0)
+        {
+            reportedHdmiPinType[numReportedHdmiPinTypes] = PhysConn_Video_SerialDigital;   // the HDMI video pinType itself
+            slog((env, "no audio pins! returning original HDMI pinType=%d \r\n", reportedHdmiPinType[numReportedHdmiPinTypes]));
+            numReportedHdmiPinTypes++;
+        }
+        else
+        {
+            // build a list of all possible HDMI AV sources;  restrict to ROUTEABLE pintypes??
+            for (i = 0; i < numAudioPins; i++)
+            {
+                if (audioPin[i] == hdmiRelatedPin)
+                {
+                    // report driver's original pinType instead of our combo type
+                    reportedHdmiPinType[numReportedHdmiPinTypes] = PhysConn_Video_SerialDigital;
+                    slog((env, "HDMI AV has Related audio pin: reportedHdmiPinType[%d]=%d \r\n", numReportedHdmiPinTypes, reportedHdmiPinType[numReportedHdmiPinTypes]));
+                    numReportedHdmiPinTypes++;
+                }
+                else
+                {
+                    // report our combo pinType
+                    reportedHdmiPinType[numReportedHdmiPinTypes] = audioVideoHdmiPinType[i];
+                    slog((env, "HDMI AV has other audio pin: reportedHdmiPinType[%d]=%d \r\n", numReportedHdmiPinTypes, reportedHdmiPinType[numReportedHdmiPinTypes]));
+                    numReportedHdmiPinTypes++;
+                }
+            }
+        }
+    }
+
+    long numInTotal = numIn + numIn2;
+    if (hasRadioInput) numInTotal++;
+    if (hasMultiAudioCompInput) numInTotal++;
+    numInTotal += numReportedHdmiPinTypes;
+   	pinData = new jint[numInTotal];
+    BOOL allowDigitalTvTuner = TRUE;
+
 	for (i = 0; i < numIn; i++)
 	{
 		relatedPin = pinType = 0;
 		pRealCross->get_CrossbarPinInfo(TRUE, i, &relatedPin, &pinType);
 
 		// I see no reason to show the other inputs here, they're just confusing
-		if (pinType && pinType <= PhysConn_Video_SerialDigital/*PhysConn_Video_Black*/)
+		if (pinType && pinType <= PhysConn_Video_ParallelDigital /*PhysConn_Video_Black*/)
 		{
 			// Enforce rule for component/spdif input if this is it
 			if (pinType == PhysConn_Video_YRYBY)
@@ -558,20 +660,35 @@ JNIEXPORT jintArray JNICALL Java_sage_DShowCaptureDevice_getCrossbarConnections0
 				if (hasMultiAudioCompInput)
 				{
 					pinData[numValidPins++] = pinType;
-					pinData[numValidPins++] = 90; // 90 is the code for Component+SPDIF
+					pinData[numValidPins++] = 90; // 90 is the code for Component+SPDIF, YPBPR_SPDIF_CROSSBAR_INDEX
 				}
 				else if (relatedPin >= 0)
 				{
 					pRealCross->get_CrossbarPinInfo(TRUE, relatedPin, &junk, &relatedPinType);
 
 					if (relatedPinType == PhysConn_Audio_SPDIFDigital)
-						pinData[numValidPins++] = 90; // 90 is the code for Component+SPDIF
+						pinData[numValidPins++] = 90; // 90 is the code for Component+SPDIF, YPBPR_SPDIF_CROSSBAR_INDEX
 					else
 						pinData[numValidPins++] = pinType;
 				}
 				else
 					pinData[numValidPins++] = pinType;
 			}
+
+            // show all HDMI audio-video input combos
+            else if ( (pinType == PhysConn_Video_SerialDigital) && (numReportedHdmiPinTypes > 0) )
+            {
+                for (int j = 0; j < numReportedHdmiPinTypes; j++)
+                    pinData[numValidPins++] = reportedHdmiPinType[j];
+            }
+
+            else if (pinType == PhysConn_Video_ParallelDigital)
+            {
+                pinData[numValidPins++] = pinType;
+                if (!hasTunerFilter)
+                    allowDigitalTvTuner = FALSE;
+            }
+
 			// Enforce tuner crossbar pins only if tuner filter exists rule
 			else if (pinType != PhysConn_Video_Tuner || hasTunerFilter)
 				pinData[numValidPins++] = pinType;
@@ -583,19 +700,24 @@ JNIEXPORT jintArray JNICALL Java_sage_DShowCaptureDevice_getCrossbarConnections0
 		pRealCross2->get_CrossbarPinInfo(TRUE, i, &relatedPin, &pinType);
 
 		// I see no reason to show the other inputs here, they're just confusing
-		if (pinType && pinType <= PhysConn_Video_SerialDigital/*PhysConn_Video_Black*/)
+		if (pinType && pinType <= PhysConn_Video_ParallelDigital /*PhysConn_Video_Black*/)
 		{
 			// Enforce tuner crossbar pins only if tuner filter exists rule
 			if (pinType != PhysConn_Video_Tuner || hasTunerFilter)
 				pinData[numValidPins++] = pinType;
-		}
+		}      
 	}
 
 	if (hasRadioInput)
 		pinData[numValidPins++] = 99; // 99 is the code for an FM Radio input for SageTV
 
-	if ( hasBDAInput )
+    // don't blindly add 'Digital TV Tuner'
+    // ex: HD PVR 60: hasBDAInput=TRUE & a video input pin (PhysConn_Video_ParallelDigital), but no actual tuner
+	if (hasBDAInput && allowDigitalTvTuner)
+    {
 		pinData[numValidPins++] = 100; //100 is the code of BDA fake crossbar  ZQ.
+        slog((env, "added DIGITAL_TUNER_CROSSBAR_INDEX; numValidPins=%d hasBDAInput=%d on capFiltName '%s' \r\n", numValidPins, hasBDAInput, capFiltName));
+    }
 
 	SAFE_RELEASE(pRealCross);
 	SAFE_RELEASE(pRealCross2);
@@ -604,6 +726,10 @@ JNIEXPORT jintArray JNICALL Java_sage_DShowCaptureDevice_getCrossbarConnections0
 loc_end:
 	if (!numValidPins)
 		return NULL;
+
+    for (i = 0; i < numValidPins; i++)
+        slog((env, "pin list: pin %d pinType=%d \r\n", i, pinData[i]));
+
 	jintArray rv = env->NewIntArray(numValidPins);
 	env->SetIntArrayRegion(rv, 0, numValidPins, pinData);
 	return rv;
@@ -639,68 +765,69 @@ JNIEXPORT jint JNICALL Java_sage_DShowCaptureDevice_getDeviceCaps0
 		slog((env, "DeviceCap: Virtual Tuner %s type 0x%x\r\n", capFiltName, newCaptureType   ) );
 		return newCaptureType;
 	}
-	try 
-	{
-		// Check the registry for a custom setting for this capture filter name.
-		HKEY captureDetailsKey;
-		BOOL hasCaptureDetails = FALSE;
-		BOOL isHybridCapture = FALSE;
-		DWORD detailsChipsetMask = 0;
-		DWORD detailsCaptureMask = 0;
-		char* captureKeyName = new char[1024];
-		SPRINTF(captureKeyName, 1024, "%s%s", "SOFTWARE\\Frey Technologies\\Common\\AdditionalCaptureSetups\\", capFiltName);
-		if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, captureKeyName, 0, KEY_ALL_ACCESS, &captureDetailsKey) == ERROR_SUCCESS)
-		{
-			char HybridTuner[64]={0};
-			hasCaptureDetails = TRUE;
-			DWORD hType;
-			DWORD hSize = sizeof(detailsChipsetMask);
-			RegQueryValueEx(captureDetailsKey, "ChipsetMask", 0, &hType, (LPBYTE)&detailsChipsetMask, &hSize);
-			hSize = sizeof(detailsChipsetMask);
-			RegQueryValueEx(captureDetailsKey, "CaptureMask", 0, &hType, (LPBYTE)&detailsCaptureMask, &hSize);
-			hSize = sizeof(HybridTuner);
+    try
+    {
+        // Check the registry for a custom setting for this capture filter name.
+        HKEY captureDetailsKey;
+        BOOL hasCaptureDetails = FALSE;
+        BOOL isHybridCapture = FALSE;
+        BOOL skipCrossbarCheck = FALSE;
+        DWORD detailsChipsetMask = 0;
+        DWORD detailsCaptureMask = 0;
+        char* captureKeyName = new char[1024];
+        SPRINTF(captureKeyName, 1024, "%s%s", "SOFTWARE\\Frey Technologies\\Common\\AdditionalCaptureSetups\\", capFiltName);
+        if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, captureKeyName, 0, KEY_ALL_ACCESS, &captureDetailsKey) == ERROR_SUCCESS)
+        {
+            char HybridTuner[64]={0};
+            hasCaptureDetails = TRUE;
+            DWORD hType;
+            DWORD hSize = sizeof(detailsChipsetMask);
+            RegQueryValueEx(captureDetailsKey, "ChipsetMask", 0, &hType, (LPBYTE)&detailsChipsetMask, &hSize);
+            hSize = sizeof(detailsChipsetMask);
+            RegQueryValueEx(captureDetailsKey, "CaptureMask", 0, &hType, (LPBYTE)&detailsCaptureMask, &hSize);
+            hSize = sizeof(HybridTuner);
 
-			//check if it's a hybrid card
-			//hybrid(sagetv)=comb(hauppauge), bandle(sagetv)=hybrid(hauppauge)
-			if ( RegQueryValueEx(captureDetailsKey, "hybrid", 0, &hType, (LPBYTE)&HybridTuner, &hSize) == S_OK )
-			{
-				isHybridCapture = HybridTuner[0] != 0x0;
-				if ( isHybridCapture )
-				{
-					if ( CheckFakeBDACrossBar( env, HybridTuner, videoCapFiltNum, NULL, 0 ) )
-						isHybridCapture = TRUE;
-					else
-						isHybridCapture = FALSE;
-				}
-				slog((env, "Hybrid Capture tuner '%s' '%s' %s \r\n", capFiltName, HybridTuner, isHybridCapture?"yes": "No") );
-			}
-			
-			RegCloseKey(captureDetailsKey);
-			slog((env, "Get CaptureMask from registry %s, 0x%x (hybrid:'%s')\r\n", captureKeyName, detailsCaptureMask, HybridTuner  ) );
-		}
+            //check if it's a hybrid card
+            //hybrid(sagetv)=comb(hauppauge), bandle(sagetv)=hybrid(hauppauge)
+            if ( RegQueryValueEx(captureDetailsKey, "hybrid", 0, &hType, (LPBYTE)&HybridTuner, &hSize) == S_OK )
+            {
+                isHybridCapture = HybridTuner[0] != 0x0;
+                if ( isHybridCapture )
+                {
+                    if ( CheckFakeBDACrossBar( env, HybridTuner, videoCapFiltNum, NULL, 0 ) )
+                        isHybridCapture = TRUE;
+                    else
+                        isHybridCapture = FALSE;
+                }
+                slog((env, "Hybrid Capture tuner '%s' '%s' %s \r\n", capFiltName, HybridTuner, isHybridCapture ? "yes" : "No"));
+            }
 
-		delete [] captureKeyName;
+            RegCloseKey(captureDetailsKey);
+            slog((env, "Get CaptureMask from registry %s, 0x%x (hybrid:'%s')\r\n", captureKeyName, detailsCaptureMask, HybridTuner  ) );
+        }
 
-		DEVICE_DRV_INF  CaptureDrvInfo={0};
-		char FilterName[256]={0};
-		BOOL bFoundDevice = GetFilterDevName( env, capFiltName, videoCapFiltNum, FilterName, sizeof(FilterName) );
-		if ( bFoundDevice )
-		{
-			GetDeviceInfo( FilterName, &CaptureDrvInfo );
-			slog((env, "Device desc:'%s'.\r\n", CaptureDrvInfo.device_desc ) );
-		}
+        delete [] captureKeyName;
 
-		BOOL pv256 = !strcmp("StreamMachine 2210 PCI Capture", capFiltName);
-		BOOL pvr250 = strstr(capFiltName, "PVR") != NULL; // and if its MPEG2
-		BOOL python2 = strstr(capFiltName, "Python") != NULL; // and if its MPEG2
-		BOOL vbdvcr = strstr(capFiltName, "VBDVCR") != NULL; // and if its mpeg2video
-		BOOL adaptec = strstr(capFiltName, "Adaptec") != NULL;
-		BOOL hcw = ( strstr(capFiltName, "Hauppauge") != NULL || strstr(capFiltName, "WinTV HVR") != NULL );
-		BOOL bgt = ( !strcmp( CaptureDrvInfo.vendor_id, "1131" ) ); //black gold
-		BOOL hasBDAInput = FALSE;
-		DWORD  BDAInputType = 0;
+        DEVICE_DRV_INF  CaptureDrvInfo={0};
+        char FilterName[256]={0};
+        BOOL bFoundDevice = GetFilterDevName( env, capFiltName, videoCapFiltNum, FilterName, sizeof(FilterName) );
+        if ( bFoundDevice )
+        {
+            GetDeviceInfo( FilterName, &CaptureDrvInfo );
+            slog((env, "Device desc:'%s'.\r\n", CaptureDrvInfo.device_desc ) );
+        }
 
-//ZQ REMOVE ME
+        BOOL pv256 = !strcmp("StreamMachine 2210 PCI Capture", capFiltName);
+        BOOL pvr250 = strstr(capFiltName, "PVR") != NULL; // and if its MPEG2
+        BOOL python2 = strstr(capFiltName, "Python") != NULL; // and if its MPEG2
+        BOOL vbdvcr = strstr(capFiltName, "VBDVCR") != NULL; // and if its mpeg2video
+        BOOL adaptec = strstr(capFiltName, "Adaptec") != NULL;
+        BOOL hcw = ( strstr(capFiltName, "Hauppauge") != NULL || strstr(capFiltName, "WinTV HVR") != NULL );
+        BOOL bgt = ( !strcmp( CaptureDrvInfo.vendor_id, "1131" ) ); //black gold
+        BOOL hasBDAInput = FALSE;
+        DWORD  BDAInputType = 0;
+
+        //ZQ REMOVE ME - beware: these bits are defined in Java code
 #undef sage_DShowCaptureDevice_BDA_ATSC
 #define sage_DShowCaptureDevice_BDA_ATSC    0x2000000L
 #undef sage_DShowCaptureDevice_BDA_QAM
@@ -712,57 +839,71 @@ JNIEXPORT jint JNICALL Java_sage_DShowCaptureDevice_getDeviceCaps0
 #undef sage_DShowCaptureDevice_BDA_DVB_C
 #define sage_DShowCaptureDevice_BDA_DVB_C   0x1000000L
 
-		//Processing Hauppauge tuners
-		if ( hcw && bFoundDevice )
-		{
-			slog((env, "It's Hauppauge device.\r\n") );
-			if ( strstr( CaptureDrvInfo.device_desc, "HVR-1250") || strstr( CaptureDrvInfo.device_desc, "HVR-1255") || 
-				 strstr( CaptureDrvInfo.device_desc, "HVR-1550") )
-			{  
-				//hasCaptureDetails = false;
-				hasCaptureDetails = true;
-				isHybridCapture = false;
-				detailsCaptureMask = 0x00500; // sage_DShowCaptureDevice_MPEG_VIDEO_RAW_AUDIO_CAPTURE_MASK | sage_DShowCaptureDevice_RAW_AV_CAPTURE_MASK
-				detailsChipsetMask = 0;
-				slog((env, "A HVR-1250/1255/1550 analog tuner is found.\r\n" ));				
+        //Processing Hauppauge tuners
+        if ( hcw && bFoundDevice )
+        {
+            slog((env, "It's Hauppauge device.\r\n") );
+            if ( strstr( CaptureDrvInfo.device_desc, "HVR-1250") || strstr( CaptureDrvInfo.device_desc, "HVR-1255") ||
+                 strstr( CaptureDrvInfo.device_desc, "HVR-1550") )
+            {
+                //hasCaptureDetails = false;
+                hasCaptureDetails = true;
+                isHybridCapture = false;
+                detailsCaptureMask = 0x00500; // sage_DShowCaptureDevice_MPEG_VIDEO_RAW_AUDIO_CAPTURE_MASK | sage_DShowCaptureDevice_RAW_AV_CAPTURE_MASK
+                detailsChipsetMask = 0;
+                slog((env, "A HVR-1250/1255/1550 analog tuner is found.\r\n" ));
 
-			} else
-			if ( strstr( CaptureDrvInfo.device_desc, "PVR-160") )
-			{
-				isHybridCapture = false;
-				detailsCaptureMask = 0x000800;  // sage_DShowCaptureDevice_MPEG_AV_CAPTURE_MASK
-				detailsChipsetMask = 0;
-				slog((env, "A PVR-160 is found.\r\n" ));
-			} else
-			//hard code for HVR-4000 desc:"Hauppauge WinTV 88x Video (Hybrid, DVB-T/S2+IR)"
-			if ( strstr( CaptureDrvInfo.device_desc, "Hybrid, DVB-T/S") )
-			{
-				isHybridCapture = false;
-				hasCaptureDetails = false;
-				detailsCaptureMask = 0x000800;  // sage_DShowCaptureDevice_MPEG_AV_CAPTURE_MASK
-				detailsChipsetMask = 0;
-				BDAInputType = sage_DShowCaptureDevice_BDA_DVB_S|sage_DShowCaptureDevice_BDA_DVB_T;
-				slog((env, "A boundle card is found (Analog+DVB-T+DVB-S), DVB-T|DVB-S added into source.\r\n" ) );
-			} else
-			if ( strstr( CaptureDrvInfo.device_desc, "WinTV HVR-930C") )
-			{
-				isHybridCapture = false;
-				hasCaptureDetails = false;
-				detailsCaptureMask = 0x000800;  // sage_DShowCaptureDevice_MPEG_AV_CAPTURE_MASK
-				detailsChipsetMask = 0;
-				BDAInputType = sage_DShowCaptureDevice_BDA_DVB_C|sage_DShowCaptureDevice_BDA_DVB_T;
-				slog((env, "A boundle card is found, DVB-T|DVB-C added into source.\r\n" ) );
-			}
-		} 
+            } else
+            if ( strstr( CaptureDrvInfo.device_desc, "PVR-160") )
+            {
+                isHybridCapture = false;
+                detailsCaptureMask = 0x000800;  // sage_DShowCaptureDevice_MPEG_AV_CAPTURE_MASK
+                detailsChipsetMask = 0;
+                slog((env, "A PVR-160 is found.\r\n" ));
+            } else
+            //hard code for HVR-4000 desc:"Hauppauge WinTV 88x Video (Hybrid, DVB-T/S2+IR)"
+            if ( strstr( CaptureDrvInfo.device_desc, "Hybrid, DVB-T/S") )
+            {
+                isHybridCapture = false;
+                hasCaptureDetails = false;
+                detailsCaptureMask = 0x000800;  // sage_DShowCaptureDevice_MPEG_AV_CAPTURE_MASK
+                detailsChipsetMask = 0;
+                BDAInputType = sage_DShowCaptureDevice_BDA_DVB_S|sage_DShowCaptureDevice_BDA_DVB_T;
+                slog((env, "A boundle card is found (Analog+DVB-T+DVB-S), DVB-T|DVB-S added into source.\r\n" ) );
+            } else
+            if ( strstr( CaptureDrvInfo.device_desc, "WinTV HVR-930C") )
+            {
+                isHybridCapture = false;
+                hasCaptureDetails = false;
+                detailsCaptureMask = 0x000800;  // sage_DShowCaptureDevice_MPEG_AV_CAPTURE_MASK
+                detailsChipsetMask = 0;
+                BDAInputType = sage_DShowCaptureDevice_BDA_DVB_C|sage_DShowCaptureDevice_BDA_DVB_T;
+                slog((env, "A boundle card is found, DVB-T|DVB-C added into source.\r\n" ) );
+            }       
+        } 
 
-		if ( !isHybridCapture ) {
+        // HD PVR 60 has a video input pin, but no tuner. Due to the driver, CheckFakeBDACrossBar()
+        // returns 1, but we don't want to show 'Digital Tv Tuner' input, so...
+        // (for all previou Hauppauge devices with HDPVR_ENCODER_MASK, hasBDAInput=0 anyway)
+        // Might need to add other conditions here for future capture devices
+        if (detailsChipsetMask & sage_DShowCaptureDevice_HDPVR_ENCODER_MASK) 
+        {
+           skipCrossbarCheck = TRUE;
+        }
+
+        if (skipCrossbarCheck)
+        {
+            hasBDAInput = FALSE;
+            slog((env, "skip BDACrossbar check for tuner; detailsCaptureMask=0x%x detailsChipsetMask=0x%x \r\n", detailsCaptureMask, detailsChipsetMask));
+        } else
+        if ( !isHybridCapture ) {
 			hasBDAInput = CheckFakeBDACrossBar( env, capFiltName, videoCapFiltNum, NULL, 0 );  // can return > 1
-			slog((env, "BDA CaptureDetail:0x%x; hasBDAInput:0x%x; BDA type:0x%x\r\n", detailsCaptureMask, hasBDAInput, BDAInputType ) );
+            slog((env, "BDA CaptureDetail:0x%x; hasBDAInput:0x%x; BDA type:0x%x\r\n", detailsCaptureMask, hasBDAInput, BDAInputType ) );
 		}
 		else
 		{
 			detailsCaptureMask &= ~sage_DShowCaptureDevice_BDA_VIDEO_CAPTURE_MASK; //don't show Digital Tuner alone with analog tuner
-			slog((env, "skip BDACrossbar check for hybrid tuner  0x%x. \r\n", detailsCaptureMask ) );
+            slog((env, "skip BDACrossbar check for hybrid tuner  0x%x. \r\n", detailsCaptureMask ) );
 		}
 
 		if ( bgt && bFoundDevice && !hcw ) //hauppauge uses 1131 vendor id on HVR-2250 card on some case conflication with black gold card
@@ -784,11 +925,11 @@ JNIEXPORT jint JNICALL Java_sage_DShowCaptureDevice_getDeviceCaps0
 			if ( hasBDAInput )
 			{
 				slog((env, "fake BDA crossbar cap0 is added for %s..\r\n",   capFiltName ) );
-				slog((env, "DeviceCap: 0x%x\r\n", (detailsChipsetMask | detailsCaptureMask | sage_DShowCaptureDevice_BDA_VIDEO_CAPTURE_MASK ) ) );
-				return (detailsChipsetMask | detailsCaptureMask | sage_DShowCaptureDevice_BDA_VIDEO_CAPTURE_MASK|BDAInputType ); //ZQ
+				slog((env, "DeviceCap: 0x%x hasBDAInput=%d \r\n", (detailsChipsetMask | detailsCaptureMask | sage_DShowCaptureDevice_BDA_VIDEO_CAPTURE_MASK), hasBDAInput));
+				return (detailsChipsetMask | detailsCaptureMask | sage_DShowCaptureDevice_BDA_VIDEO_CAPTURE_MASK | BDAInputType); //ZQ
 			}
 
-			slog((env, "DeviceCap: 0x%x\r\n", (detailsChipsetMask | detailsCaptureMask)   ) );
+			slog((env, "DeviceCap: 0x%x hasBDAInput=%d \r\n", (detailsChipsetMask | detailsCaptureMask), hasBDAInput));
 			return (detailsChipsetMask | detailsCaptureMask);
 		}
 		else
@@ -834,7 +975,7 @@ JNIEXPORT jint JNICALL Java_sage_DShowCaptureDevice_getDeviceCaps0
 		} else
 		{
 			newCaptureType |= sage_DShowCaptureDevice_BDA_CAPTURE_TUNER_MASK;
-			slog(( "CaptureFilter in AM_KSCATEGORY_CAPTURE\r\n" ));
+			slog(( "CaptureFilter in AM_KSCATEGORY_CAPTURE, newCaptureType=0x%x \r\n", newCaptureType));
 		}
 
 		if ( pFilter == NULL ) //ZQ.

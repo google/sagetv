@@ -266,6 +266,7 @@ JNIEXPORT void JNICALL Java_sage_DShowCaptureDevice_switchToConnector0
 	HRESULT hr = pCapInfo->pCrossbar->QueryInterface(IID_IAMCrossbar, (void**)&pXBar1);
 	HTESTPRINT(hr);
 
+    // This handles A-V "related" pins, as reported by the driver
 	// Look through the pins on the crossbar and find the correct one for the type of
 	// connector we're routing. Also find the aligned audio pin and set that too.
 	int tempCrossIndex = crossIndex;
@@ -289,8 +290,9 @@ JNIEXPORT void JNICALL Java_sage_DShowCaptureDevice_switchToConnector0
 	{
 		hr = pXBar1->get_CrossbarPinInfo(TRUE, i, &relatedPin, &pinType);
 		HTESTPRINT(hr);
-		if (pinType == crossType || (pinType == PhysConn_Video_YRYBY && crossType == 90)) // 90 is Component+SPDIF
-		{
+
+		if (pinType == crossType || (pinType == PhysConn_Video_YRYBY && crossType == 90)) // 90 is Component+SPDIF; YPBPR_SPDIF_CROSSBAR_INDEX
+        {
 			if ((crossType != 1 && tempCrossIndex > 0) ||
 				tempCrossIndex == 1)
 			{
@@ -313,26 +315,26 @@ JNIEXPORT void JNICALL Java_sage_DShowCaptureDevice_switchToConnector0
 					long relatedPinType = 0;
 					long junk = 0;
 					pXBar1->get_CrossbarPinInfo(TRUE, relatedPin, &junk, &relatedPinType);
-					if ((relatedPinType != PhysConn_Audio_SPDIFDigital && crossType == 90) ||
-						(relatedPinType == PhysConn_Audio_SPDIFDigital && crossType == PhysConn_Video_YRYBY))
-					{
-						// Find the other audio input pin that's related to the component input and use that
-						int j;
-						long otherRelatedPin = 0;
-						for (j = 0; j < numIn; j++)
-						{
-							if (j == relatedPin) continue;
-							otherRelatedPin = 0;
-							pXBar1->get_CrossbarPinInfo(TRUE, j, &otherRelatedPin, &junk);
-							if (otherRelatedPin == i)
-							{
-								slog(( env, "Crossbar swapping related audio pins on component video input old:%d new:%d\r\n", relatedPin, j));
-								relatedPin = j;
-								break;
-							}
-						}
-					}
-
+                    if ((relatedPinType != PhysConn_Audio_SPDIFDigital && crossType == 90) ||
+                        (relatedPinType == PhysConn_Audio_SPDIFDigital && crossType == PhysConn_Video_YRYBY))
+                    {
+                        // Find the other audio input pin that's related to the component input and use that
+                        int j;
+                        long otherRelatedPin = 0;
+                        for (j = 0; j < numIn; j++)
+                        {
+                            if (j == relatedPin) continue;
+                            otherRelatedPin = 0;
+                            pXBar1->get_CrossbarPinInfo(TRUE, j, &otherRelatedPin, &junk);
+                            if (otherRelatedPin == i)
+                            {
+                                slog(( env, "Crossbar swapping related audio pins on component video input old:%d new:%d\r\n", relatedPin, j));
+                                relatedPin = j;
+                                break;
+                            }
+                        }
+                    }
+					
 				}
 				// Route any related audio
 //				hr = pXBar1->get_IsRoutedTo(audioOutNum, &currRoute);
@@ -342,10 +344,78 @@ JNIEXPORT void JNICALL Java_sage_DShowCaptureDevice_switchToConnector0
 					HTESTPRINT(hr);
 				}
 			}
-			slog(( env, "Crossbar route: video:%d, auido:%d\r\n", i, relatedPin ));
+			slog(( env, "Crossbar route: videoIn pin:%d, auido:%d videoOutNum=%d audioOutNum=%d \r\n", i, relatedPin, videoOutNum, audioOutNum));
 			break;
 		}
-	}
+
+        // Normal HDMI (V=HDMI and A='related' pin, as defined in .inf) was handled above.
+        // Also handle other A-V pin-pairs, even though the driver might not report them as related.
+        // Example: Hauppauge HD-PVR2 supports HDMI+SPDIF, but driver doesn't report that combo.
+        // so we don't look for 'relatedPin' here, instead relying on getCrossbarConnections0() to have 
+        // previously confirmed presense of HDMI & some other audio pin(s).  
+        // Codes 80-89 are only possible if we already know the device supports it.
+        else if ((pinType == PhysConn_Video_SerialDigital) && (crossType >= 80) && (crossType <= 89) ) // 80-89 is HDMI+<something>
+        {
+            if ((crossType != 1 && tempCrossIndex > 0) ||
+                tempCrossIndex == 1)
+            {
+                tempCrossIndex--;
+                continue;
+            }
+
+            // Route the video
+            long currRoute = -1;
+            //			hr = pXBar1->get_IsRoutedTo(videoOutNum, &currRoute);
+            //			if (FAILED(hr) || currRoute != i)
+            {
+                hr = pXBar1->Route(videoOutNum, i);
+                HTESTPRINT(hr);
+            }
+
+            if (audioOutNum >= 0)
+            {
+                long audioHdmiPinType;
+                long junk = 0;
+                switch (crossType)
+                {
+                case 80:    // HDMI+LineIn; HDMI_LINEIN_CROSSBAR_INDEX
+                    audioHdmiPinType = PhysConn_Audio_Line;
+                    break;
+                case 81:    // HDMI+HDMI; HDMI_AES_CROSSBAR_INDEX
+                    audioHdmiPinType = PhysConn_Audio_AESDigital;
+                    break;
+                case 82:    // HDMI+SPDIF; HDMI_SPDIF_CROSSBAR_INDEX
+                    audioHdmiPinType = PhysConn_Audio_SPDIFDigital;
+                    break;
+                default:    // use 'related' audio pin; should never happen
+                    pXBar1->get_CrossbarPinInfo(TRUE, relatedPin, &junk, &audioHdmiPinType);
+                    slog((env, "using default related audio pin; relatedPin=%d pinType=%d \r\n", relatedPin, audioHdmiPinType));
+                    break;
+                }
+
+                // Find the desired audio input pin
+                int j;
+                for (j = 0; j < numIn; j++)
+                {
+                    pXBar1->get_CrossbarPinInfo(TRUE, j, &junk, &pinType);
+                    if (pinType == audioHdmiPinType)
+                    {
+                        slog((env, "Located audio input pin %d; HDMI video input pin %d \r\n", j, i));
+                        // Route any related audio
+                        //				hr = pXBar1->get_IsRoutedTo(audioOutNum, &currRoute);
+                        //				if (FAILED(hr) || currRoute != j)
+                        {
+                            hr = pXBar1->Route(audioOutNum, j);
+                            HTESTPRINT(hr);
+                        }
+                        slog((env, "Crossbar route: video:%d, auido:%d \r\n", i, j));
+                        break;
+                    }
+                }
+            }
+            break;
+        }
+    }
 
 	SAFE_RELEASE(pXBar1);
 
