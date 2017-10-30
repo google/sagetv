@@ -292,6 +292,13 @@
                     <RegistryValue Name="CaptureMask" Value="2048" Type="integer" />
                     <RegistryValue Name="ChipsetMask" Value="1048576" Type="integer" />
                 </RegistryKey>
+	</Component>
+            <Component Id="cmpRegFreyCommonAddCaptureHDPVR60CaptureFilterHD" Guid="{B8FE962B-AA0A-495C-91D5-3043CE986AEC}" KeyPath="yes">
+                <RegistryKey ForceCreateOnInstall="yes" Key="SOFTWARE\Frey Technologies\Common\AdditionalCaptureSetups\HD PVR 60 Capture Filter (HD)" Root="HKLM">
+	            <Permission GenericAll="yes" User="Everyone"/>
+                    <RegistryValue Name="CaptureMask" Value="2048" Type="integer" />
+                    <RegistryValue Name="ChipsetMask" Value="1048576" Type="integer" />
+                </RegistryKey>
             </Component>
             <Component Id="cmpRegFreyCommonDSFilters" Guid="{6E0BEF6D-3033-46DF-A5E1-9C92C72793B0}" KeyPath="yes">
               <RegistryKey ForceCreateOnInstall="yes" Key="SOFTWARE\Frey Technologies\Common\DSFilters" Root="HKLM">
@@ -364,6 +371,7 @@
             <ComponentRef Id="cmpRegFreyCommonAddCaptureViXSPureTVCapture" />
             <ComponentRef Id="cmpRegFreyCommonAddCaptureXtremeTVPCITVTuner" />
             <ComponentRef Id="cmpRegFreyCommonAddCaptureHauppaugeSienaVideoCapture" />
+            <ComponentRef Id="cmpRegFreyCommonAddCaptureHDPVR60CaptureFilterHD" />
             <ComponentRef Id="cmpRegFreyCommonDSFilters" />
             <ComponentRef Id="cmpRegFreyCommonDSFiltersMpegDeMux" />
             <ComponentRef Id="cmpRegFreyCommonDSFiltersMpegMux" />

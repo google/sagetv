@@ -1,5 +1,8 @@
 # Change Log
 
+* HD-PVR2 video capture device: add ability to select multiple audio inputs (Windows)
+* HD PVR 60 video capture device: new device support (Windows)
+
 ## Version 9.1.7 (2017-09-24)
 * Fix: add support for 2nd tuner of Hauppauge WinTV-dualHD usb tuner stick (Windows).
 * Changes in the STV set 2017081201 for the next SageTV release v9.1.7.0:

@@ -71,6 +71,7 @@ extern "C" {
 #define sage_DShowCaptureDevice_BDA_RECEIVER_COMPONENT_MASK 262144L // 0x40000
 #undef sage_DShowCaptureDevice_BDA_VIRTUAL_TUNER_MASK
 #define sage_DShowCaptureDevice_BDA_VIRTUAL_TUNER_MASK 524288L  // 0x80000
+    // NOTE: 0x0200000L - 0x1000000L defined & used in Java code
 #undef sage_DShowCaptureDevice_FM_RADIO_FREQ_MAX
 #define sage_DShowCaptureDevice_FM_RADIO_FREQ_MAX 108100000L
 #undef sage_DShowCaptureDevice_FM_RADIO_FREQ_MIN
