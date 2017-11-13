@@ -429,8 +429,37 @@ CreateVersionHeader
 # must be run after GetVersionStr
 CreateWIXVersionInclude
 
+# determine which targets to work on
+[boolean]$buildneeded = $false
+$targets = @()
+[boolean]$javaJar = $false
+[boolean]$javaMiniJar = $false
+If ($A) { #do All Targets
+    $targets = @("Server","Client","Placeshifter")
+    $javaJar = $true
+    $javaMiniJar = $true
+    $buildneeded = $true
+}Else{
+    If ($S) { 
+        $targets += "Server"
+        $javaJar = $true
+        $buildneeded = $true
+    }
+    If ($C) { 
+        $targets += "Client"
+        $javaJar = $true
+        $buildneeded = $true
+    }
+    If ($P) { 
+        $targets += "Placeshifter"
+        $javaMiniJar = $true
+        $buildneeded = $true
+    }
+}
+Write-Host "Processing" $targets
+
 # perform source build
-If ((!$i) -and (!$j) -and (!$nb)){
+If ((!$i) -and (!$j) -and (!$nb) -and ($buildneeded)){
     if ( -not ( Compile-Source "Release" ) ) {
 	    $result = 1
     }
@@ -441,30 +470,6 @@ If ((!$i) -and (!$j) -and (!$nb)){
 	    $result = 1
     }
 }
-
-# determine which targets to work on
-$targets = @()
-[boolean]$javaJar = $false
-[boolean]$javaMiniJar = $false
-If ($A) { #do All Targets
-    $targets = @("Server","Client","Placeshifter")
-    $javaJar = $true
-    $javaMiniJar = $true
-}Else{
-    If ($S) { 
-        $targets += "Server"
-        $javaJar = $true
-    }
-    If ($C) { 
-        $targets += "Client"
-        $javaJar = $true
-    }
-    If ($P) { 
-        $targets += "Placeshifter"
-        $javaMiniJar = $true
-    }
-}
-Write-Host "Processing" $targets
 
 # build java source if required
 If ((!$b) -and (!$i) -and (!$nj)){
