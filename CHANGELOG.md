@@ -1,5 +1,6 @@
 # Change Log
 
+## Version 9.1.8 (2017-11-13) - windows only
 * HD-PVR2 video capture device: add ability to select multiple audio inputs (Windows)
 * HD PVR 60 video capture device: new device support (Windows)
 
