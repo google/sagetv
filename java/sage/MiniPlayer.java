@@ -156,6 +156,7 @@ public class MiniPlayer implements DVDMediaPlayer
         else
         {
           mpegSrc.init(true, !timeshifted, usingRemuxer);
+          checkForByteBasedSeeking(file);
         }
       }
       catch (java.io.IOException e)
@@ -397,7 +398,7 @@ public class MiniPlayer implements DVDMediaPlayer
     }
     else
     {
-      duration = (mySrc == null || timeshifted) ? 0 : mySrc.getDurationMillis();
+      duration = (mySrc == null || timeshifted || byteBasedSeeking) ? 0 : mySrc.getDurationMillis();
     }
     if (Sage.DBG) System.out.println("getDuration : "+ duration);
     return duration;
@@ -458,7 +459,7 @@ public class MiniPlayer implements DVDMediaPlayer
     }
     else
     {
-      long otherTime;
+      long otherTime = 0;
       if(transcoded)
       {
         otherTime = (tcSrc != null ? tcSrc.getFirstTimestampMillis() : 0);
@@ -475,7 +476,7 @@ public class MiniPlayer implements DVDMediaPlayer
           otherTime = otherTime - FastMpeg2Reader.MAX_PTS/90;
         }
       }
-      else
+      else if (!byteBasedSeeking)
       {
         otherTime = (mpegSrc != null ? mpegSrc.getFirstTimestampMillis() : 0);
         if (otherTime - nativeTime > 100000 && mpegSrc != null && mpegSrc.didPTSRollover())
@@ -506,7 +507,7 @@ public class MiniPlayer implements DVDMediaPlayer
       return rv;
     }
   }
-
+  
   public boolean getMute()
   {
     return currMute;
@@ -587,6 +588,33 @@ public class MiniPlayer implements DVDMediaPlayer
       }
     }
     timeshifted = serverSideTranscoding;
+  }
+  
+  void checkForByteBasedSeeking(java.io.File file) {
+    if (Sage.getBoolean("disable_byte_based_seek_check", true)) return;
+    if (mpegSrc != null) {
+      if (uiMgr.getBoolean("force_byte_based_seeking", false)) {
+        System.out.println("Forcing byte based seeking due to property setting");
+        byteBasedSeeking = true;
+      } else if (!timeshifted) {
+        // We can't check duration for files that are currently recording because
+        // the parser doesn't check the duration in that case and it's problematic
+        // if we change that.
+        long parserDuration = mpegSrc.getDurationMillis();
+        if (parserDuration < 0) {
+          System.out.println("Using byte based seeking due to invalid duration from parser");
+          byteBasedSeeking = true;
+        } else {
+          long fileDur = VideoFrame.getMediaFileForPlayer(this).getDuration(file);
+          long diff = Math.abs(parserDuration - fileDur);
+          if (fileDur > Sage.MILLIS_PER_MIN && diff > fileDur/4) {
+            byteBasedSeeking = true;
+            System.out.println("Using byte based seeking due to duration mismatch between " +
+                "parser (" + parserDuration + ") and recording (" + fileDur + ")");
+          }
+        }
+      }
+    }
   }
 
   public void load(byte majorTypeHint, byte minorTypeHint, String encodingHint, java.io.File file, String hostname, boolean timeshifted, long bufferSize) throws PlaybackException
@@ -1135,6 +1163,7 @@ public class MiniPlayer implements DVDMediaPlayer
             else
             {
               mpegSrc.init(true, !timeshifted, usingRemuxer);
+              checkForByteBasedSeeking(file);
             }
           }
           catch (java.io.IOException e)
@@ -2210,10 +2239,15 @@ public class MiniPlayer implements DVDMediaPlayer
               }
               else
               {
-                if(transcoded)
+                if (byteBasedSeeking) {
+                  long target = Math.round((((double) seekTimeMillis) / 
+                      VideoFrame.getMediaFileForPlayer(this).getDuration(currFile)) * mpegSrc.length());
+                  mpegSrc.seekToPosition(target);
+                } else if(transcoded) {
                   tcSrc.seek(seekTimeMillis);
-                else
+                } else {
                   mpegSrc.seek(seekTimeMillis);
+                }
 
                 if (currState == PAUSE_STATE && (mcsr != null && mcsr.supportsFrameStep()))
                 {
@@ -3030,6 +3064,14 @@ public class MiniPlayer implements DVDMediaPlayer
           }
           lastMediaTimeCacheTime = Sage.eventTime();
           return lastMediaTime;
+        }
+        if (byteBasedSeeking && mpegSrc != null) {
+          // Generate an estimated media time based off the byte position and
+          // the current known duration of the file.
+          long currPos = Math.max(0, mpegSrc.getReadPos() - maxAvailBufferSize);
+          double relativePos = ((double) currPos) / mpegSrc.length();
+          MediaFile mf = VideoFrame.getMediaFileForPlayer(this);
+          currMediaTime = Math.round(mf.getDuration(currFile) * relativePos);
         }
         // I don't see any good reason to do this interpolation on embedded since if we sent a request to the miniclient above
         // then we should have a pretty accurate time counter right now
@@ -4078,6 +4120,7 @@ public class MiniPlayer implements DVDMediaPlayer
   protected long timeGuessMillis;
   protected long guessTimestamp;
   protected long timestampOffset;
+  protected boolean byteBasedSeeking;
   protected boolean serverSideTranscoding;
 
   protected boolean pushMode;

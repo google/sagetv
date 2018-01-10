@@ -1656,6 +1656,15 @@ public final class FastMpeg2Reader
     msecStartForSkip = lastRawIFramePTS = lastRawVideoPTS = 0;
     lastFullParseBytePos = -(DIST_BETWEEN_FULL_PARSES + 1);
   }
+  
+  public void seekToPosition(long pos) throws IOException {
+    if (pos <= 0) {
+      seekToBeginning();
+    } else {
+      ins.position(pos);
+      bitsDone = pos*8;
+    }
+  }
 
   public void seek(long seekTime) throws IOException
   {

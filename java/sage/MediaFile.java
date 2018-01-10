@@ -3882,6 +3882,16 @@ public class MediaFile extends DBObject implements SegmentedFile
   {
     return getEnd(segment) - getStart(segment);
   }
+  
+  public synchronized long getDuration(java.io.File file) {
+    if (file == null) return -1;
+    for (int i = 0; i < files.size(); i++) {
+      if (files.get(i).equals(file)) {
+        return getDuration(i);
+      }
+    }
+    return -1;
+  }
 
   public synchronized int segmentLocation(long segTime, boolean roundForward)
   {
