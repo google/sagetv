@@ -28,6 +28,11 @@ config*.log
 /.gradle/
 /.settings/
 
+#netbeans project stuff
+/nbproject
+/build.xml
+
+
 # IDEA / jetbrains stuff
 /.idea
 *.iws
@@ -995,3 +1000,6 @@ third_party/ffmpeg/vhook/
 third_party/mplayer/liba52/liba52.a
 third_party/ffmpeg/libavformat/thp.d
 
+/nbproject/private/
+/nbbuild/
+/dist/
