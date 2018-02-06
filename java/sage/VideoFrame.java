@@ -5049,12 +5049,16 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
 
   public MediaPlayer createMediaPlayer(MediaFile theFile)
   {
+      
+      
     if (Sage.DBG) System.out.println("VideoFrame creating new media player for file:" + theFile);
     String mpPlugin = getPluginClassForFile(theFile);
     if (mpPlugin.length() > 0)
     {
+        
       try
       {
+          if (Sage.DBG) System.out.println("JVL - Creating mpPlugin");
         return (MediaPlayer) Class.forName(mpPlugin, true, Sage.extClassLoader).newInstance();
       }
       catch (Throwable e)
@@ -5069,16 +5073,19 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
 		}*/
     if (mediaPlayerSetup == STBX25XX_MEDIA_PLAYER_SETUP)
     {
+        
       if(theFile.isDVD())
       {
         if (uiMgr.getRootPanel().getRenderEngine() instanceof MiniClientSageRenderer)
         {
+          if (Sage.DBG) System.out.println("JVL - Creating MiniPlayer");
           String ipdp = ((MiniClientSageRenderer) uiMgr.getRootPanel().getRenderEngine()).getInputDevsProp();
           if (ipdp != null && ipdp.indexOf("MOUSE") != -1)
             return new MiniPlayer();
         }
         try
         {
+            if (Sage.DBG) System.out.println("JVL - Creating MiniDVDPlayer");
           return (MediaPlayer) Class.forName("sage.MiniDVDPlayer").newInstance();
         }
         catch (Throwable t)
@@ -5089,45 +5096,65 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
       }
       else if (theFile.isLiveStream())
       {
+          if (Sage.DBG) System.out.println("JVL - Creating MiniMulticastPlayer");
         return new MiniMulticastPlayer();
       }
       else
       {
+        if (Sage.DBG) System.out.println("JVL - ELSE BLOCK Creating MiniPlayer");
         return new MiniPlayer();
       }
     }
     else if (Sage.WINDOWS_OS/* && !(uiMgr.getRootPanel().getRenderEngine() instanceof JOGLSageRenderer)*/)
     {
+        System.out.println("JVL - IS WINDOWS OS");
+        
       if (theFile.isLiveStream())
-        return new DShowLivePlayer();
+      {
+          if (Sage.DBG) System.out.println("JVL - Creating DShowLivePlayer (Live Stream)");
+            return new DShowLivePlayer();
+      }
       else if (theFile.isDVD())
+      {
+          if (Sage.DBG) System.out.println("JVL - Creating DShowDVDPlayer (DVD)");
         return new DShowDVDPlayer();
+      }
       else if (theFile.isLiveBufferedStream() && theFile.isMusic())
+      {
+          if (Sage.DBG) System.out.println("JVL - Creating DShowRadioPlayer (BufferedMusicStream)");
         return new DShowRadioPlayer();
+      }
       else if (theFile.isMusic() && ((!sage.media.format.MediaFormat.AAC.equals(theFile.getPrimaryAudioFormat()) &&
           !sage.media.format.MediaFormat.VORBIS.equals(theFile.getPrimaryAudioFormat()) &&
           !sage.media.format.MediaFormat.FLAC.equals(theFile.getPrimaryAudioFormat()) &&
           !sage.media.format.MediaFormat.ALAC.equals(theFile.getPrimaryAudioFormat()) &&
           (theFile.getFileFormat() == null || !theFile.getFileFormat().isDRMProtected())) ||
           Sage.getBoolean("always_use_dshow_player", true)))
+      {
+        if (Sage.DBG) System.out.println("JVL - Creating DShowMusicPlayer (Music)");
         return new DShowMusicPlayer();
+      }
       else if (theFile.isBluRay() || (theFile.isVideo() && MediaFile.isMPEG2LegacySubtype(theFile.getLegacyMediaSubtype())))
       {
+        if (Sage.DBG) System.out.println("JVL - Creating DShowTVPlayer (Video)");
         return new DShowTVPlayer();
       }
       else
       {
+          if (Sage.DBG) System.out.println("JVL - GOING INTO ELSE BLOCK");
         // Check if it's a recording with a live preview we can access
         if (theFile.isLocalFile() && theFile.isRecording() && !Sage.client)
         {
           CaptureDeviceInput cdi = SeekerSelector.getInstance().getInputForCurrRecordingFile(theFile);
           if (cdi != null && cdi.getCaptureDevice().getNativeVideoPreviewConfigHandle() != 0)
           {
+              if (Sage.DBG) System.out.println("JVL - Creating DShowSharedLiveMediaPlayer (Local or Recording)");
             return new DShowSharedLiveMediaPlayer(cdi.toString());
           }
         }
         if (Sage.getBoolean("mplayer/use_for_online_content", true) && downer != null)
         {
+            if (Sage.DBG) System.out.println("JVL - Creating LinuxMPlayerPlugin (Online Content)");
           return new LinuxMPlayerPlugin();
         }
         // Check if we use MPlayer or the DShowPlayer
@@ -5146,16 +5173,19 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
                         sage.media.format.MediaFormat.H264.equals(theFile.getPrimaryVideoFormat()) ||
                         sage.media.format.MediaFormat.OGG.equals(theFile.getContainerFormat())))
         {
+            if (Sage.DBG) System.out.println("JVL - Creating LinuxMPlayerPlugin (Always use DirectShow)");
           return new LinuxMPlayerPlugin();
         }
         else
         {
+          if (Sage.DBG) System.out.println("JVL - ELSE ELSE BLOCK  DShowMediaPlayer (LAST CASE)");
           return new DShowMediaPlayer();
         }
       }
     }
     else
     {
+        if (Sage.DBG) System.out.println("JVL - ELSE ELSE ELSE BLOCK - Mac or some unsupported OS");
       if (Sage.MAC_OS_X) {
         if(theFile.isDVD())
           return new MacDVDPlayer();
