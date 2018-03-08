@@ -1,7 +1,7 @@
 /*
  * hdhomerun_debug.h
  *
- * Copyright © 2006 Silicondust USA Inc. <www.silicondust.com>.
+ * Copyright © 2007-2015 Silicondust USA Inc. <www.silicondust.com>.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -32,20 +32,20 @@ extern "C" {
 
 struct hdhomerun_debug_t;
 
-extern LIBTYPE struct hdhomerun_debug_t *hdhomerun_debug_create(void);
-extern LIBTYPE void hdhomerun_debug_destroy(struct hdhomerun_debug_t *dbg);
+extern LIBHDHOMERUN_API struct hdhomerun_debug_t *hdhomerun_debug_create(void);
+extern LIBHDHOMERUN_API void hdhomerun_debug_destroy(struct hdhomerun_debug_t *dbg);
 
-extern LIBTYPE void hdhomerun_debug_set_prefix(struct hdhomerun_debug_t *dbg, const char *prefix);
-extern LIBTYPE void hdhomerun_debug_set_filename(struct hdhomerun_debug_t *dbg, const char *filename);
-extern LIBTYPE void hdhomerun_debug_enable(struct hdhomerun_debug_t *dbg);
-extern LIBTYPE void hdhomerun_debug_disable(struct hdhomerun_debug_t *dbg);
-extern LIBTYPE bool_t hdhomerun_debug_enabled(struct hdhomerun_debug_t *dbg);
+extern LIBHDHOMERUN_API void hdhomerun_debug_set_prefix(struct hdhomerun_debug_t *dbg, const char *prefix);
+extern LIBHDHOMERUN_API void hdhomerun_debug_set_filename(struct hdhomerun_debug_t *dbg, const char *filename);
+extern LIBHDHOMERUN_API void hdhomerun_debug_enable(struct hdhomerun_debug_t *dbg);
+extern LIBHDHOMERUN_API void hdhomerun_debug_disable(struct hdhomerun_debug_t *dbg);
+extern LIBHDHOMERUN_API bool hdhomerun_debug_enabled(struct hdhomerun_debug_t *dbg);
 
-extern LIBTYPE void hdhomerun_debug_flush(struct hdhomerun_debug_t *dbg, uint64_t timeout);
-extern LIBTYPE void hdhomerun_debug_close(struct hdhomerun_debug_t *dbg, uint64_t timeout);
+extern LIBHDHOMERUN_API void hdhomerun_debug_flush(struct hdhomerun_debug_t *dbg, uint64_t timeout);
+extern LIBHDHOMERUN_API void hdhomerun_debug_close(struct hdhomerun_debug_t *dbg, uint64_t timeout);
 
-extern LIBTYPE void hdhomerun_debug_printf(struct hdhomerun_debug_t *dbg, const char *fmt, ...);
-extern LIBTYPE void hdhomerun_debug_vprintf(struct hdhomerun_debug_t *dbg, const char *fmt, va_list args);
+extern LIBHDHOMERUN_API void hdhomerun_debug_printf(struct hdhomerun_debug_t *dbg, const char *fmt, ...);
+extern LIBHDHOMERUN_API void hdhomerun_debug_vprintf(struct hdhomerun_debug_t *dbg, const char *fmt, va_list args);
 
 #ifdef __cplusplus
 }

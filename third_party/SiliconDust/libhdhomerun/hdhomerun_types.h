@@ -1,7 +1,7 @@
 /*
  * hdhomerun_types.h
  *
- * Copyright © 2008-2009 Silicondust USA Inc. <www.silicondust.com>.
+ * Copyright © 2008-2015 Silicondust USA Inc. <www.silicondust.com>.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -29,9 +29,9 @@ struct hdhomerun_device_allocation_t;
 struct hdhomerun_tuner_status_t {
 	char channel[32];
 	char lock_str[32];
-	bool_t signal_present;
-	bool_t lock_supported;
-	bool_t lock_unsupported;
+	bool signal_present;
+	bool lock_supported;
+	bool lock_unsupported;
 	unsigned int signal_strength;
 	unsigned int signal_to_noise_quality;
 	unsigned int symbol_error_quality;
@@ -45,9 +45,9 @@ struct hdhomerun_tuner_vstatus_t {
 	char auth[32];
 	char cci[32];
 	char cgms[32];
-	bool_t not_subscribed;
-	bool_t not_available;
-	bool_t copy_protected;
+	bool not_subscribed;
+	bool not_available;
+	bool copy_protected;
 };
 
 struct hdhomerun_channelscan_program_t {
@@ -68,8 +68,8 @@ struct hdhomerun_channelscan_result_t {
 	struct hdhomerun_tuner_status_t status;
 	int program_count;
 	struct hdhomerun_channelscan_program_t programs[HDHOMERUN_CHANNELSCAN_MAX_PROGRAM_COUNT];
-	bool_t transport_stream_id_detected;
-	bool_t original_network_id_detected;
+	bool transport_stream_id_detected;
+	bool original_network_id_detected;
 	uint16_t transport_stream_id;
 	uint16_t original_network_id;
 };

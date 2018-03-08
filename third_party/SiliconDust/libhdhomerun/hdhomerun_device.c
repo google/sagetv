@@ -1,7 +1,7 @@
 /*
  * hdhomerun_device.c
  *
- * Copyright © 2006-2010 Silicondust USA Inc. <www.silicondust.com>.
+ * Copyright © 2006-2015 Silicondust USA Inc. <www.silicondust.com>.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -215,7 +215,7 @@ struct hdhomerun_device_t *hdhomerun_device_create_from_str(const char *device_s
 		 */
 		unsigned int port;
 		if (sscanf(device_str, "%u.%u.%u.%u:%u", &a[0], &a[1], &a[2], &a[3], &port) == 5) {
-			return hdhomerun_device_create_multicast(ip_addr, port, dbg);
+			return hdhomerun_device_create_multicast(ip_addr, (uint16_t)port, dbg);
 		}
 
 		/*
@@ -339,7 +339,7 @@ struct hdhomerun_video_sock_t *hdhomerun_device_get_video_sock(struct hdhomerun_
 		return hd->vs;
 	}
 
-	bool_t allow_port_reuse = (hd->multicast_port != 0);
+	bool allow_port_reuse = (hd->multicast_port != 0);
 
 	hd->vs = hdhomerun_video_create(hd->multicast_port, allow_port_reuse, VIDEO_DATA_BUFFER_SIZE_1S * 2, hd->dbg);
 	if (!hd->vs) {
@@ -372,22 +372,22 @@ static uint32_t hdhomerun_device_get_status_parse(const char *status_str, const 
 	return (uint32_t)value;
 }
 
-static bool_t hdhomerun_device_get_tuner_status_lock_is_bcast(struct hdhomerun_tuner_status_t *status)
+static bool hdhomerun_device_get_tuner_status_lock_is_bcast(struct hdhomerun_tuner_status_t *status)
 {
 	if (strcmp(status->lock_str, "8vsb") == 0) {
-		return TRUE;
+		return true;
 	}
 	if (strncmp(status->lock_str, "t8", 2) == 0) {
-		return TRUE;
+		return true;
 	}
 	if (strncmp(status->lock_str, "t7", 2) == 0) {
-		return TRUE;
+		return true;
 	}
 	if (strncmp(status->lock_str, "t6", 2) == 0) {
-		return TRUE;
+		return true;
 	}
 
-	return FALSE;
+	return false;
 }
 
 uint32_t hdhomerun_device_get_tuner_status_ss_color(struct hdhomerun_tuner_status_t *status)
@@ -481,9 +481,9 @@ int hdhomerun_device_get_tuner_status(struct hdhomerun_device_t *hd, char **psta
 
 		if (strcmp(status->lock_str, "none") != 0) {
 			if (status->lock_str[0] == '(') {
-				status->lock_unsupported = TRUE;
+				status->lock_unsupported = true;
 			} else {
-				status->lock_supported = TRUE;
+				status->lock_supported = true;
 			}
 		}
 	}
@@ -579,21 +579,21 @@ int hdhomerun_device_get_tuner_vstatus(struct hdhomerun_device_t *hd, char **pvs
 		}
 
 		if (strncmp(vstatus->auth, "not-subscribed", 14) == 0) {
-			vstatus->not_subscribed = TRUE;
+			vstatus->not_subscribed = true;
 		}
 
 		if (strncmp(vstatus->auth, "error", 5) == 0) {
-			vstatus->not_available = TRUE;
+			vstatus->not_available = true;
 		}
 		if (strncmp(vstatus->auth, "dialog", 6) == 0) {
-			vstatus->not_available = TRUE;
+			vstatus->not_available = true;
 		}
 
 		if (strncmp(vstatus->cci, "protected", 9) == 0) {
-			vstatus->copy_protected = TRUE;
+			vstatus->copy_protected = true;
 		}
 		if (strncmp(vstatus->cgms, "protected", 9) == 0) {
-			vstatus->copy_protected = TRUE;
+			vstatus->copy_protected = true;
 		}
 	}
 
@@ -885,7 +885,7 @@ int hdhomerun_device_set_tuner_filter(struct hdhomerun_device_t *hd, const char 
 	return hdhomerun_control_set_with_lockkey(hd->cs, name, filter, hd->lockkey, NULL, NULL);
 }
 
-static bool_t hdhomerun_device_set_tuner_filter_by_array_append(char *ptr, char *end, uint16_t range_begin, uint16_t range_end)
+static bool hdhomerun_device_set_tuner_filter_by_array_append(char *ptr, char *end, uint16_t range_begin, uint16_t range_end)
 {
 	if (range_begin == range_end) {
 		return hdhomerun_sprintf(ptr, end, "0x%04x ", (unsigned int)range_begin);
@@ -1145,6 +1145,8 @@ int hdhomerun_device_stream_start(struct hdhomerun_device_t *hd)
 		return -1;
 	}
 
+	hdhomerun_video_set_keepalive(hd->vs, 0, 0, 0);
+
 	/* Set target. */
 	if (hd->multicast_ip != 0) {
 		int ret = hdhomerun_video_join_multicast_group(hd->vs, hd->multicast_ip, 0);
@@ -1159,6 +1161,9 @@ int hdhomerun_device_stream_start(struct hdhomerun_device_t *hd)
 		if (ret <= 0) {
 			return ret;
 		}
+
+		uint32_t remote_ip = hdhomerun_control_get_device_ip(hd->cs);
+		hdhomerun_video_set_keepalive(hd->vs, remote_ip, 5004, hd->lockkey);
 	}
 
 	/* Flush video buffer. */
