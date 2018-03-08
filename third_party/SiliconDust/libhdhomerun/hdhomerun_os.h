@@ -1,7 +1,7 @@
 /*
  * hdhomerun_os.h
  *
- * Copyright © 2006-2008 Silicondust USA Inc. <www.silicondust.com>.
+ * Copyright © 2006-2015 Silicondust USA Inc. <www.silicondust.com>.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,20 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#if defined(_WIN32) || defined(_WIN64)
-#define __WINDOWS__
-#endif
-
-#if defined(__WINDOWS__)
+#if defined(_WIN32)
 #include "hdhomerun_os_windows.h"
 #else
 #include "hdhomerun_os_posix.h"
-#endif
-
-#if !defined(TRUE)
-#define TRUE 1
-#endif
-
-#if !defined(FALSE)
-#define FALSE 0
 #endif

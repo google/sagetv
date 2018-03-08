@@ -1,7 +1,7 @@
 /*
  * hdhomerun_channels.c
  *
- * Copyright © 2007-2008 Silicondust USA Inc. <www.silicondust.com>.
+ * Copyright © 2007-2014 Silicondust USA Inc. <www.silicondust.com>.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -83,6 +83,13 @@ static const struct hdhomerun_channelmap_range_t hdhomerun_channelmap_range_jp_b
 	{  0,  0,         0,       0}
 };
 
+/* TW antenna channels. */
+static const struct hdhomerun_channelmap_range_t hdhomerun_channelmap_range_tw_bcast[] = {
+	{  7,  13, 177000000, 6000000},
+	{ 14,  69, 473000000, 6000000},
+	{  0,   0,         0,       0}
+};
+
 /* US antenna channels. */
 static const struct hdhomerun_channelmap_range_t hdhomerun_channelmap_range_us_bcast[] = {
 	{  2,   4,  57000000, 6000000},
@@ -136,7 +143,7 @@ static const struct hdhomerun_channelmap_record_t hdhomerun_channelmap_table[] =
 	{"au-cable", hdhomerun_channelmap_range_eu_cable, "au-cable",               "AU"},
 	{"eu-bcast", hdhomerun_channelmap_range_eu_bcast, "eu-bcast",               NULL},
 	{"eu-cable", hdhomerun_channelmap_range_eu_cable, "eu-cable",               NULL},
-	{"tw-bcast", hdhomerun_channelmap_range_us_bcast, "tw-bcast",               "TW"},
+	{"tw-bcast", hdhomerun_channelmap_range_tw_bcast, "tw-bcast",               "TW"},
 	{"tw-cable", hdhomerun_channelmap_range_us_cable, "tw-cable",               "TW"},
 
 	{"kr-bcast", hdhomerun_channelmap_range_us_bcast, "kr-bcast",               "KR"},

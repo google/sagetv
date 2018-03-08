@@ -1,7 +1,7 @@
 /*
  * hdhomerun_sock_windows.c
  *
- * Copyright © 2010 Silicondust USA Inc. <www.silicondust.com>.
+ * Copyright © 2010-2016 Silicondust USA Inc. <www.silicondust.com>.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,25 +18,67 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-/*
- * Implementation notes:
- *
- * API specifies timeout for each operation (or zero for non-blocking).
- *
- * It is not possible to rely on the OS socket timeout as this will fail to
- * detect the command-response situation where data is sent successfully and
- * the other end chooses not to send a response (other than the TCP ack).
- *
- * Windows supports select() however native WSA events are used to:
- * - avoid problems with socket numbers above 1024.
- * - wait without allowing other events handlers to run (important for use
- *   with win7 WMC).
- */
-
 #include "hdhomerun.h"
-#include <windows.h>
 #include <iphlpapi.h>
 
+struct hdhomerun_sock_t {
+	SOCKET sock;
+	HANDLE event;
+	long events_selected;
+};
+
+#if defined(_WINRT)
+static char *hdhomerun_local_ip_info_str = NULL;
+
+/*
+ * String format: ip address '/' subnet mask bits <space> ...
+ * Example: "192.168.0.100/24 169.254.0.100/16"
+ */
+void hdhomerun_local_ip_info_set_str(const char *ip_info_str)
+{
+	if (hdhomerun_local_ip_info_str) {
+		free(hdhomerun_local_ip_info_str);
+	}
+
+	hdhomerun_local_ip_info_str = strdup(ip_info_str);
+}
+
+int hdhomerun_local_ip_info(struct hdhomerun_local_ip_info_t ip_info_list[], int max_count)
+{
+	const char *ptr = hdhomerun_local_ip_info_str;
+	if (!ptr) {
+		return 0;
+	}
+
+	struct hdhomerun_local_ip_info_t *ip_info = ip_info_list;
+	int count = 0;
+
+	while (count < max_count) {
+		unsigned int a[4];
+		unsigned int mask_bitcount;
+		if (sscanf(ptr, "%u.%u.%u.%u/%u", &a[0], &a[1], &a[2], &a[3], &mask_bitcount) != 5) {
+			break;
+		}
+
+		ip_info->ip_addr = (uint32_t)((a[0] << 24) | (a[1] << 16) | (a[2] << 8) | (a[3] << 0));
+		ip_info->subnet_mask = 0xFFFFFFFF << (32 - mask_bitcount);
+		ip_info++;
+
+		count++;
+
+		ptr = strchr(ptr, ' ');
+		if (!ptr) {
+			break;
+		}
+
+		ptr++;
+	}
+
+	return count;
+}
+#endif
+
+#if !defined(_WINRT)
 int hdhomerun_local_ip_info(struct hdhomerun_local_ip_info_t ip_info_list[], int max_count)
 {
 	PIP_ADAPTER_INFO AdapterInfo;
@@ -99,52 +141,91 @@ int hdhomerun_local_ip_info(struct hdhomerun_local_ip_info_t ip_info_list[], int
 	free(AdapterInfo);
 	return count;
 }
+#endif
 
-hdhomerun_sock_t hdhomerun_sock_create_udp(void)
+static struct hdhomerun_sock_t *hdhomerun_sock_create_internal(int protocol)
 {
+	struct hdhomerun_sock_t *sock = (struct hdhomerun_sock_t *)calloc(1, sizeof(struct hdhomerun_sock_t));
+	if (!sock) {
+		return NULL;
+	}
+
 	/* Create socket. */
-	hdhomerun_sock_t sock = (hdhomerun_sock_t)socket(AF_INET, SOCK_DGRAM, 0);
-	if (sock == -1) {
-		return HDHOMERUN_SOCK_INVALID;
+	sock->sock = socket(AF_INET, protocol, 0);
+	if (sock->sock == INVALID_SOCKET) {
+		free(sock);
+		return NULL;
 	}
 
 	/* Set non-blocking */
 	unsigned long mode = 1;
-	if (ioctlsocket(sock, FIONBIO, &mode) != 0) {
-		closesocket(sock);
-		return HDHOMERUN_SOCK_INVALID;
+	if (ioctlsocket(sock->sock, FIONBIO, &mode) != 0) {
+		hdhomerun_sock_destroy(sock);
+		return NULL;
+	}
+
+	/* Event */
+	sock->event = CreateEvent(NULL, false, false, NULL);
+	if (!sock->event) {
+		hdhomerun_sock_destroy(sock);
+		return NULL;
+	}
+
+	/* Success. */
+	return sock;
+}
+
+struct hdhomerun_sock_t *hdhomerun_sock_create_udp(void)
+{
+	struct hdhomerun_sock_t *sock = hdhomerun_sock_create_internal(SOCK_DGRAM);
+	if (!sock) {
+		return NULL;
 	}
 
 	/* Allow broadcast. */
 	int sock_opt = 1;
-	setsockopt(sock, SOL_SOCKET, SO_BROADCAST, (char *)&sock_opt, sizeof(sock_opt));
+	setsockopt(sock->sock, SOL_SOCKET, SO_BROADCAST, (char *)&sock_opt, sizeof(sock_opt));
 
 	/* Success. */
 	return sock;
 }
 
-hdhomerun_sock_t hdhomerun_sock_create_tcp(void)
+struct hdhomerun_sock_t *hdhomerun_sock_create_tcp(void)
 {
-	/* Create socket. */
-	hdhomerun_sock_t sock = (hdhomerun_sock_t)socket(AF_INET, SOCK_STREAM, 0);
-	if (sock == -1) {
-		return HDHOMERUN_SOCK_INVALID;
-	}
-
-	/* Set non-blocking */
-	unsigned long mode = 1;
-	if (ioctlsocket(sock, FIONBIO, &mode) != 0) {
-		closesocket(sock);
-		return HDHOMERUN_SOCK_INVALID;
-	}
-
-	/* Success. */
-	return sock;
+	return hdhomerun_sock_create_internal(SOCK_STREAM);
 }
 
-void hdhomerun_sock_destroy(hdhomerun_sock_t sock)
+void hdhomerun_sock_destroy(struct hdhomerun_sock_t *sock)
 {
-	closesocket(sock);
+	if (sock->event) {
+		CloseHandle(sock->event);
+	}
+
+	closesocket(sock->sock);
+	free(sock);
+}
+
+void hdhomerun_sock_stop(struct hdhomerun_sock_t *sock)
+{
+	shutdown(sock->sock, SD_BOTH);
+}
+
+void hdhomerun_sock_set_send_buffer_size(struct hdhomerun_sock_t *sock, size_t size)
+{
+	int size_opt = (int)size;
+	setsockopt(sock->sock, SOL_SOCKET, SO_SNDBUF, (char *)&size_opt, sizeof(size_opt));
+}
+
+void hdhomerun_sock_set_recv_buffer_size(struct hdhomerun_sock_t *sock, size_t size)
+{
+	int size_opt = (int)size;
+	setsockopt(sock->sock, SOL_SOCKET, SO_RCVBUF, (char *)&size_opt, sizeof(size_opt));
+}
+
+void hdhomerun_sock_set_allow_reuse(struct hdhomerun_sock_t *sock)
+{
+	int sock_opt = 1;
+	setsockopt(sock->sock, SOL_SOCKET, SO_REUSEADDR, (char *)&sock_opt, sizeof(sock_opt));
 }
 
 int hdhomerun_sock_getlasterror(void)
@@ -152,43 +233,43 @@ int hdhomerun_sock_getlasterror(void)
 	return WSAGetLastError();
 }
 
-uint32_t hdhomerun_sock_getsockname_addr(hdhomerun_sock_t sock)
+uint32_t hdhomerun_sock_getsockname_addr(struct hdhomerun_sock_t *sock)
 {
 	struct sockaddr_in sock_addr;
 	int sockaddr_size = sizeof(sock_addr);
 
-	if (getsockname(sock, (struct sockaddr *)&sock_addr, &sockaddr_size) != 0) {
+	if (getsockname(sock->sock, (struct sockaddr *)&sock_addr, &sockaddr_size) != 0) {
 		return 0;
 	}
 
 	return ntohl(sock_addr.sin_addr.s_addr);
 }
 
-uint16_t hdhomerun_sock_getsockname_port(hdhomerun_sock_t sock)
+uint16_t hdhomerun_sock_getsockname_port(struct hdhomerun_sock_t *sock)
 {
 	struct sockaddr_in sock_addr;
 	int sockaddr_size = sizeof(sock_addr);
 
-	if (getsockname(sock, (struct sockaddr *)&sock_addr, &sockaddr_size) != 0) {
+	if (getsockname(sock->sock, (struct sockaddr *)&sock_addr, &sockaddr_size) != 0) {
 		return 0;
 	}
 
 	return ntohs(sock_addr.sin_port);
 }
 
-uint32_t hdhomerun_sock_getpeername_addr(hdhomerun_sock_t sock)
+uint32_t hdhomerun_sock_getpeername_addr(struct hdhomerun_sock_t *sock)
 {
 	struct sockaddr_in sock_addr;
 	int sockaddr_size = sizeof(sock_addr);
 
-	if (getpeername(sock, (struct sockaddr *)&sock_addr, &sockaddr_size) != 0) {
+	if (getpeername(sock->sock, (struct sockaddr *)&sock_addr, &sockaddr_size) != 0) {
 		return 0;
 	}
 
 	return ntohl(sock_addr.sin_addr.s_addr);
 }
 
-uint32_t hdhomerun_sock_getaddrinfo_addr(hdhomerun_sock_t sock, const char *name)
+uint32_t hdhomerun_sock_getaddrinfo_addr(struct hdhomerun_sock_t *sock, const char *name)
 {
 	struct addrinfo hints;
 	memset(&hints, 0, sizeof(hints));
@@ -208,38 +289,38 @@ uint32_t hdhomerun_sock_getaddrinfo_addr(hdhomerun_sock_t sock, const char *name
 	return addr;
 }
 
-bool_t hdhomerun_sock_join_multicast_group(hdhomerun_sock_t sock, uint32_t multicast_ip, uint32_t local_ip)
+bool hdhomerun_sock_join_multicast_group(struct hdhomerun_sock_t *sock, uint32_t multicast_ip, uint32_t local_ip)
 {
 	struct ip_mreq imr;
 	memset(&imr, 0, sizeof(imr));
 	imr.imr_multiaddr.s_addr  = htonl(multicast_ip);
 	imr.imr_interface.s_addr  = htonl(local_ip);
 
-	if (setsockopt(sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, (const char *)&imr, sizeof(imr)) != 0) {
-		return FALSE;
+	if (setsockopt(sock->sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, (const char *)&imr, sizeof(imr)) != 0) {
+		return false;
 	}
 
-	return TRUE;
+	return true;
 }
 
-bool_t hdhomerun_sock_leave_multicast_group(hdhomerun_sock_t sock, uint32_t multicast_ip, uint32_t local_ip)
+bool hdhomerun_sock_leave_multicast_group(struct hdhomerun_sock_t *sock, uint32_t multicast_ip, uint32_t local_ip)
 {
 	struct ip_mreq imr;
 	memset(&imr, 0, sizeof(imr));
 	imr.imr_multiaddr.s_addr  = htonl(multicast_ip);
 	imr.imr_interface.s_addr  = htonl(local_ip);
 
-	if (setsockopt(sock, IPPROTO_IP, IP_DROP_MEMBERSHIP, (const char *)&imr, sizeof(imr)) != 0) {
-		return FALSE;
+	if (setsockopt(sock->sock, IPPROTO_IP, IP_DROP_MEMBERSHIP, (const char *)&imr, sizeof(imr)) != 0) {
+		return false;
 	}
 
-	return TRUE;
+	return true;
 }
 
-bool_t hdhomerun_sock_bind(hdhomerun_sock_t sock, uint32_t local_addr, uint16_t local_port, bool_t allow_reuse)
+bool hdhomerun_sock_bind(struct hdhomerun_sock_t *sock, uint32_t local_addr, uint16_t local_port, bool allow_reuse)
 {
 	int sock_opt = allow_reuse;
-	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&sock_opt, sizeof(sock_opt));
+	setsockopt(sock->sock, SOL_SOCKET, SO_REUSEADDR, (char *)&sock_opt, sizeof(sock_opt));
 
 	struct sockaddr_in sock_addr;
 	memset(&sock_addr, 0, sizeof(sock_addr));
@@ -247,204 +328,202 @@ bool_t hdhomerun_sock_bind(hdhomerun_sock_t sock, uint32_t local_addr, uint16_t 
 	sock_addr.sin_addr.s_addr = htonl(local_addr);
 	sock_addr.sin_port = htons(local_port);
 
-	if (bind(sock, (struct sockaddr *)&sock_addr, sizeof(sock_addr)) != 0) {
-		return FALSE;
+	if (bind(sock->sock, (struct sockaddr *)&sock_addr, sizeof(sock_addr)) != 0) {
+		return false;
 	}
 
-	return TRUE;
+	return true;
 }
 
-bool_t hdhomerun_sock_connect(hdhomerun_sock_t sock, uint32_t remote_addr, uint16_t remote_port, uint64_t timeout)
+static bool hdhomerun_sock_event_select(struct hdhomerun_sock_t *sock, long events)
 {
-	/* Connect (non-blocking). */
+	if (sock->events_selected != events) {
+		if (WSAEventSelect(sock->sock, sock->event, events) == SOCKET_ERROR) {
+			return false;
+		}
+		sock->events_selected = events;
+	}
+
+	ResetEvent(sock->event);
+	return true;
+}
+
+bool hdhomerun_sock_connect(struct hdhomerun_sock_t *sock, uint32_t remote_addr, uint16_t remote_port, uint64_t timeout)
+{
+	if (!hdhomerun_sock_event_select(sock, FD_WRITE | FD_CLOSE)) {
+		return false;
+	}
+
 	struct sockaddr_in sock_addr;
 	memset(&sock_addr, 0, sizeof(sock_addr));
 	sock_addr.sin_family = AF_INET;
 	sock_addr.sin_addr.s_addr = htonl(remote_addr);
 	sock_addr.sin_port = htons(remote_port);
 
-	if (connect(sock, (struct sockaddr *)&sock_addr, sizeof(sock_addr)) != 0) {
+	if (connect(sock->sock, (struct sockaddr *)&sock_addr, sizeof(sock_addr)) != 0) {
 		if (WSAGetLastError() != WSAEWOULDBLOCK) {
-			return FALSE;
+			return false;
 		}
 	}
 
-	/* Wait for connect to complete (both success and failure will signal). */
-	WSAEVENT wsa_event = WSACreateEvent();
-	if (wsa_event == WSA_INVALID_EVENT) {
-		return FALSE;
+	DWORD wait_ret = WaitForSingleObjectEx(sock->event, (DWORD)timeout, false);
+	if (wait_ret != WAIT_OBJECT_0) {
+		return false;
 	}
 
-	if (WSAEventSelect(sock, wsa_event, FD_WRITE | FD_CLOSE) == SOCKET_ERROR) {
-		WSACloseEvent(wsa_event);
-		return FALSE;
+	WSANETWORKEVENTS network_events;
+	if (WSAEnumNetworkEvents(sock->sock, sock->event, &network_events) == SOCKET_ERROR) {
+		return false;
+	}
+	if ((network_events.lNetworkEvents & FD_WRITE) == 0) {
+		return false;
+	}
+	if (network_events.lNetworkEvents & FD_CLOSE) {
+		return false;
 	}
 
-	DWORD ret = WaitForSingleObjectEx(wsa_event, (DWORD)timeout, FALSE);
-	WSACloseEvent(wsa_event);
-	if (ret != WAIT_OBJECT_0) {
-		return FALSE;
-	}
-
-	/* Detect success/failure. */
-	wsa_event = WSACreateEvent();
-	if (wsa_event == WSA_INVALID_EVENT) {
-		return FALSE;
-	}
-
-	if (WSAEventSelect(sock, wsa_event, FD_CLOSE) == SOCKET_ERROR) {
-		WSACloseEvent(wsa_event);
-		return FALSE;
-	}
-
-	ret = WaitForSingleObjectEx(wsa_event, 0, FALSE);
-	WSACloseEvent(wsa_event);
-	if (ret == WAIT_OBJECT_0) {
-		return FALSE;
-	}
-
-	return TRUE;
+	return true;
 }
 
-static bool_t hdhomerun_sock_wait_for_event(hdhomerun_sock_t sock, long event_type, uint64_t stop_time)
+bool hdhomerun_sock_send(struct hdhomerun_sock_t *sock, const void *data, size_t length, uint64_t timeout)
 {
-	uint64_t current_time = getcurrenttime();
-	if (current_time >= stop_time) {
-		return FALSE;
+	if (!hdhomerun_sock_event_select(sock, FD_WRITE | FD_CLOSE)) {
+		return false;
 	}
 
-	WSAEVENT wsa_event = WSACreateEvent();
-	if (wsa_event == WSA_INVALID_EVENT) {
-		return FALSE;
-	}
-
-	if (WSAEventSelect(sock, wsa_event, event_type) == SOCKET_ERROR) {
-		WSACloseEvent(wsa_event);
-		return FALSE;
-	}
-
-	DWORD ret = WaitForSingleObjectEx(wsa_event, (DWORD)(stop_time - current_time), FALSE);
-	WSACloseEvent(wsa_event);
-
-	if (ret != WAIT_OBJECT_0) {
-		return FALSE;
-	}
-
-	return TRUE;
-}
-
-bool_t hdhomerun_sock_send(hdhomerun_sock_t sock, const void *data, size_t length, uint64_t timeout)
-{
 	uint64_t stop_time = getcurrenttime() + timeout;
 	const uint8_t *ptr = (uint8_t *)data;
 
 	while (1) {
-		int ret = send(sock, (char *)ptr, (int)length, 0);
-		if (ret <= 0) {
-			if (WSAGetLastError() != WSAEWOULDBLOCK) {
-				return FALSE;
-			}
-			if (!hdhomerun_sock_wait_for_event(sock, FD_WRITE | FD_CLOSE, stop_time)) {
-				return FALSE;
-			}
-			continue;
+		int ret = send(sock->sock, (char *)ptr, (int)length, 0);
+		if (ret >= (int)length) {
+			return true;
 		}
 
-		if (ret < (int)length) {
+		if ((ret == SOCKET_ERROR) && (WSAGetLastError() != WSAEWOULDBLOCK)) {
+			return false;
+		}
+
+		if (ret > 0) {
 			ptr += ret;
 			length -= ret;
-			continue;
 		}
 
-		return TRUE;
+		uint64_t current_time = getcurrenttime();
+		if (current_time >= stop_time) {
+			return false;
+		}
+
+		if (WaitForSingleObjectEx(sock->event, (DWORD)(stop_time - current_time), false) != WAIT_OBJECT_0) {
+			return false;
+		}
 	}
 }
 
-bool_t hdhomerun_sock_sendto(hdhomerun_sock_t sock, uint32_t remote_addr, uint16_t remote_port, const void *data, size_t length, uint64_t timeout)
+bool hdhomerun_sock_sendto(struct hdhomerun_sock_t *sock, uint32_t remote_addr, uint16_t remote_port, const void *data, size_t length, uint64_t timeout)
 {
-	uint64_t stop_time = getcurrenttime() + timeout;
-	const uint8_t *ptr = (uint8_t *)data;
-
-	while (1) {
-		struct sockaddr_in sock_addr;
-		memset(&sock_addr, 0, sizeof(sock_addr));
-		sock_addr.sin_family = AF_INET;
-		sock_addr.sin_addr.s_addr = htonl(remote_addr);
-		sock_addr.sin_port = htons(remote_port);
-
-		int ret = sendto(sock, (char *)ptr, (int)length, 0, (struct sockaddr *)&sock_addr, sizeof(sock_addr));
-		if (ret <= 0) {
-			if (WSAGetLastError() != WSAEWOULDBLOCK) {
-				return FALSE;
-			}
-			if (!hdhomerun_sock_wait_for_event(sock, FD_WRITE | FD_CLOSE, stop_time)) {
-				return FALSE;
-			}
-			continue;
-		}
-
-		if (ret < (int)length) {
-			ptr += ret;
-			length -= ret;
-			continue;
-		}
-
-		return TRUE;
+	if (!hdhomerun_sock_event_select(sock, FD_WRITE | FD_CLOSE)) {
+		return false;
 	}
+
+	struct sockaddr_in sock_addr;
+	memset(&sock_addr, 0, sizeof(sock_addr));
+	sock_addr.sin_family = AF_INET;
+	sock_addr.sin_addr.s_addr = htonl(remote_addr);
+	sock_addr.sin_port = htons(remote_port);
+
+	int ret = sendto(sock->sock, (char *)data, (int)length, 0, (struct sockaddr *)&sock_addr, sizeof(sock_addr));
+	if (ret >= (int)length) {
+		return true;
+	}
+
+	if (ret >= 0) {
+		return false;
+	}
+	if (WSAGetLastError() != WSAEWOULDBLOCK) {
+		return false;
+	}
+
+	if (WaitForSingleObjectEx(sock->event, (DWORD)timeout, false) != WAIT_OBJECT_0) {
+		return false;
+	}
+
+	ret = sendto(sock->sock, (char *)data, (int)length, 0, (struct sockaddr *)&sock_addr, sizeof(sock_addr));
+	if (ret >= (int)length) {
+		return true;
+	}
+
+	return false;
 }
 
-bool_t hdhomerun_sock_recv(hdhomerun_sock_t sock, void *data, size_t *length, uint64_t timeout)
+bool hdhomerun_sock_recv(struct hdhomerun_sock_t *sock, void *data, size_t *length, uint64_t timeout)
 {
-	uint64_t stop_time = getcurrenttime() + timeout;
+	if (!hdhomerun_sock_event_select(sock, FD_READ | FD_CLOSE)) {
+		return false;
+	}
 
-	while (1) {
-		int ret = recv(sock, (char *)data, (int)(*length), 0);
-		if (ret < 0) {
-			if (WSAGetLastError() != WSAEWOULDBLOCK) {
-				return FALSE;
-			}
-			if (!hdhomerun_sock_wait_for_event(sock, FD_READ | FD_CLOSE, stop_time)) {
-				return FALSE;
-			}
-			continue;
-		}
-
-		if (ret == 0) {
-			return FALSE;
-		}
-
+	int ret = recv(sock->sock, (char *)data, (int)(*length), 0);
+	if (ret > 0) {
 		*length = ret;
-		return TRUE;
+		return true;
 	}
+
+	if (ret == 0) {
+		return false;
+	}
+	if (WSAGetLastError() != WSAEWOULDBLOCK) {
+		return false;
+	}
+
+	if (WaitForSingleObjectEx(sock->event, (DWORD)timeout, false) != WAIT_OBJECT_0) {
+		return false;
+	}
+
+	ret = recv(sock->sock, (char *)data, (int)(*length), 0);
+	if (ret > 0) {
+		*length = ret;
+		return true;
+	}
+
+	return false;
 }
 
-bool_t hdhomerun_sock_recvfrom(hdhomerun_sock_t sock, uint32_t *remote_addr, uint16_t *remote_port, void *data, size_t *length, uint64_t timeout)
+bool hdhomerun_sock_recvfrom(struct hdhomerun_sock_t *sock, uint32_t *remote_addr, uint16_t *remote_port, void *data, size_t *length, uint64_t timeout)
 {
-	uint64_t stop_time = getcurrenttime() + timeout;
+	if (!hdhomerun_sock_event_select(sock, FD_READ | FD_CLOSE)) {
+		return false;
+	}
 
-	while (1) {
-		struct sockaddr_in sock_addr;
-		memset(&sock_addr, 0, sizeof(sock_addr));
-		int sockaddr_size = sizeof(sock_addr);
+	struct sockaddr_in sock_addr;
+	memset(&sock_addr, 0, sizeof(sock_addr));
+	int sockaddr_size = sizeof(sock_addr);
 
-		int ret = recvfrom(sock, (char *)data, (int)(*length), 0, (struct sockaddr *)&sock_addr, &sockaddr_size);
-		if (ret < 0) {
-			if (WSAGetLastError() != WSAEWOULDBLOCK) {
-				return FALSE;
-			}
-			if (!hdhomerun_sock_wait_for_event(sock, FD_READ | FD_CLOSE, stop_time)) {
-				return FALSE;
-			}
-			continue;
-		}
-
-		if (ret == 0) {
-			return FALSE;
-		}
-
+	int ret = recvfrom(sock->sock, (char *)data, (int)(*length), 0, (struct sockaddr *)&sock_addr, &sockaddr_size);
+	if (ret > 0) {
 		*remote_addr = ntohl(sock_addr.sin_addr.s_addr);
 		*remote_port = ntohs(sock_addr.sin_port);
 		*length = ret;
-		return TRUE;
+		return true;
 	}
+
+	if (ret == 0) {
+		return false;
+	}
+	if (WSAGetLastError() != WSAEWOULDBLOCK) {
+		return false;
+	}
+
+	if (WaitForSingleObjectEx(sock->event, (DWORD)timeout, false) != WAIT_OBJECT_0) {
+		return false;
+	}
+
+	ret = recvfrom(sock->sock, (char *)data, (int)(*length), 0, (struct sockaddr *)&sock_addr, &sockaddr_size);
+	if (ret > 0) {
+		*remote_addr = ntohl(sock_addr.sin_addr.s_addr);
+		*remote_port = ntohs(sock_addr.sin_port);
+		*length = ret;
+		return true;
+	}
+
+	return false;
 }
