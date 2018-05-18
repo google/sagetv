@@ -1,5 +1,10 @@
 # Change Log
 
+## Version 9.1.9 (2018-05-18)
+* Byte based seeking support for MPEG files
+* update libhdhomerun to 20170930
+* Fixed bug where file modification time can get set incorrectly
+
 ## Version 9.1.8 (2017-11-13) - windows only
 * HD-PVR2 video capture device: add ability to select multiple audio inputs (Windows)
 * HD PVR 60 video capture device: new device support (Windows)
