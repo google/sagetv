@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.lang.Short;
 
 public final class Show extends DBObject
 {
@@ -656,7 +657,20 @@ public final class Show extends DBObject
     }
     else
       out.writeUTF(episodeNameStr);
+
     barr = descBytes;
+
+    /*
+     * if the description is bigger than the max
+     * short value then nullify barr forcing into
+     * the else block below using the string rather
+     * than the byte array
+    */
+
+    if (barr != null && barr.length > Short.MAX_VALUE) {
+        barr = null;
+    }
+
     if (barr != null) {
       out.writeShort(barr.length);
       out.write(barr);
@@ -1578,3 +1592,5 @@ public final class Show extends DBObject
     }
   };
 }
+  }
+  };
