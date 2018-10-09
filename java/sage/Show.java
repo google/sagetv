@@ -654,9 +654,9 @@ public final class Show extends DBObject
     if (barr != null) {
       out.writeShort(barr.length);
       out.write(barr);
-    }
-    else
+    } else {
       out.writeUTF(episodeNameStr);
+    }
 
     barr = descBytes;
 
@@ -674,9 +674,10 @@ public final class Show extends DBObject
     if (barr != null) {
       out.writeShort(barr.length);
       out.write(barr);
+    } else {
+        out.writeUTF(descStr);
     }
-    else
-      out.writeUTF(descStr);
+
     out.writeInt((categories.length == 0) ? 0 : (useLookupIdx ? categories[0].lookupIdx : categories[0].id));
     out.writeInt((categories.length < 2) ? 0 : (useLookupIdx ? categories[1].lookupIdx : categories[1].id));
 
