@@ -1606,5 +1606,3 @@ public final class Show extends DBObject
     }
   };
 }
-  }
-  };
