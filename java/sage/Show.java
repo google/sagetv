@@ -675,7 +675,7 @@ public final class Show extends DBObject
       out.writeShort(barr.length);
       out.write(barr);
     } else {
-        out.writeUTF(descStr);
+      out.writeUTF(descStr);
     }
 
     out.writeInt((categories.length == 0) ? 0 : (useLookupIdx ? categories[0].lookupIdx : categories[0].id));
@@ -690,44 +690,57 @@ public final class Show extends DBObject
 
     out.writeInt((rated == null) ? 0 : (useLookupIdx ? rated.lookupIdx : rated.id));
     out.writeInt(ers.length);
-    for (int i = 0; i < ers.length; i++)
+    for (int i = 0; i < ers.length; i++) {
       out.writeInt(useLookupIdx ? ers[i].lookupIdx : ers[i].id);
+    }
 
     out.writeInt((year == null) ? 0 : (useLookupIdx ? year.lookupIdx : year.id));
     out.writeInt((pr == null) ? 0 : (useLookupIdx ? pr.lookupIdx : pr.id));
 
     out.writeInt(bonuses.length);
-    for (int i = 0; i < bonuses.length; i++)
+    for (int i = 0; i < bonuses.length; i++) {
       out.writeInt(useLookupIdx ? bonuses[i].lookupIdx : bonuses[i].id);
+    }
 
     long lastWatchedData = lastWatched;
     if (dontLike) {
-      if (lastWatchedData == 0)
+      if (lastWatchedData == 0) {
         lastWatchedData = -1;
-      else
+      } else {
         lastWatchedData *= -1;
+      }
     }
     out.writeLong(lastWatchedData);
     out.writeBoolean(/*forcedFirstRun*/false); // old first run data
     out.writeShort(externalID.length);
-    if (externalID.length > 0)
+
+    if (externalID.length > 0) {
       out.write(externalID);
+    }
+
     out.writeInt(/*updateCount*/id);
     out.writeInt((language == null) ? 0 : (useLookupIdx ? language.lookupIdx : language.id));
     out.writeLong(originalAirDate);
     out.writeShort(seasonNum);
     out.writeShort(episodeNum);
     out.writeShort(Math.max(0, categories.length - 2));
-    for (int i = 2; i < categories.length; i++)
+
+    for (int i = 2; i < categories.length; i++) {
       out.writeInt(useLookupIdx ? categories[i].lookupIdx : categories[i].id);
+    }
+
     out.writeBoolean(cachedUnique == FORCED_UNIQUE);
     out.writeShort(altEpisodeNum);
     out.writeInt(showcardID);
     out.writeInt(seriesID);
     out.writeShort(imageIDs.length);
-    for (int i = 0; i < imageIDs.length; i++)
+
+    for (int i = 0; i < imageIDs.length; i++) {
       out.writeShort(imageIDs[i]);
+    }
+
     out.writeShort(imageURLs.length);
+
     for (int i = 0; i < imageURLs.length; i++)
     {
       out.writeShort(imageURLs[i].length);
