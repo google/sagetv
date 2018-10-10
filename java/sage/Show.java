@@ -320,32 +320,35 @@ public final class Show extends DBObject
   void update(DBObject x)
   {
     Show fromMe = (Show) x;
-    duration = fromMe.duration;
-    lastWatched = fromMe.lastWatched;
-    dontLike = fromMe.dontLike;
-    title = fromMe.title;
-    episodeNameStr = fromMe.episodeNameStr;
-    externalID = fromMe.externalID;
-    descStr = fromMe.descStr;
-    categories = fromMe.categories;
-    people = fromMe.people;
-    roles = fromMe.roles;
-    rated = fromMe.rated;
-    ers = fromMe.ers;
-    year = fromMe.year;
-    pr = fromMe.pr;
-    bonuses = fromMe.bonuses;
-    language = fromMe.language;
-    originalAirDate = fromMe.originalAirDate;
-    seasonNum = fromMe.seasonNum;
-    episodeNum = fromMe.episodeNum;
+
+    duration            = fromMe.duration;
+    lastWatched         = fromMe.lastWatched;
+    dontLike            = fromMe.dontLike;
+    title               = fromMe.title;
+    episodeNameStr      = fromMe.episodeNameStr;
+    externalID          = fromMe.externalID;
+    descStr             = fromMe.descStr;
+    categories          = fromMe.categories;
+    people              = fromMe.people;
+    roles               = fromMe.roles;
+    rated               = fromMe.rated;
+    ers                 = fromMe.ers;
+    year                = fromMe.year;
+    pr                  = fromMe.pr;
+    bonuses             = fromMe.bonuses;
+    language            = fromMe.language;
+    originalAirDate     = fromMe.originalAirDate;
+    seasonNum           = fromMe.seasonNum;
+    episodeNum          = fromMe.episodeNum;
+
     if (fromMe.cachedUnique == FORCED_UNIQUE)
       cachedUnique = FORCED_UNIQUE;
-    altEpisodeNum = fromMe.altEpisodeNum;
-    seriesID = fromMe.seriesID;
-    showcardID = fromMe.showcardID;
-    imageIDs = fromMe.imageIDs;
-    imageURLs = fromMe.imageURLs;
+
+    altEpisodeNum   = fromMe.altEpisodeNum;
+    seriesID        = fromMe.seriesID;
+    showcardID      = fromMe.showcardID;
+    imageIDs        = fromMe.imageIDs;
+    imageURLs       = fromMe.imageURLs;
     super.update(fromMe);
   }
   @Override
@@ -423,6 +426,9 @@ public final class Show extends DBObject
   Show(DataInput in, byte ver, Map<Integer, Integer> idMap) throws IOException
   {
     super(in, ver, idMap);
+
+    int size        = 0;
+
     Wizard wiz      = Wizard.getInstance();
     duration        = in.readLong();
     title           = wiz.getTitleForID(readID(in, idMap));
@@ -1496,7 +1502,9 @@ public final class Show extends DBObject
   long duration;
   Stringer title;
   volatile String episodeNameStr;
+  byte[] episodeNameBytes; /* deprecated no longer used */
   volatile String descStr;
+  byte[] descBytes; /* deprecated no longer used */
   Stringer[] categories;
   Person[] people;
   byte[] roles;
