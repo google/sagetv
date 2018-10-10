@@ -4541,9 +4541,7 @@ public class Wizard implements EPGDBPublic2
       s.duration = duration;
       s.title = getTitleForName(title, mediaMask);
       s.episodeNameStr = (episodeName == null) ? "" : new String(episodeName);
-      s.episodeNameBytes = null;
       s.descStr = (desc == null) ? "" : new String(desc);
-      s.descBytes = null;
       if (!fromAPlugin && extID.startsWith("MV") && (categories == null || categories.length == 0 || !Sage.rez("Movie").equals(categories[0])))
       {
         if (categories == null)
