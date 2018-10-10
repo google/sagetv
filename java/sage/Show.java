@@ -163,43 +163,11 @@ public final class Show extends DBObject
 
   public String getEpisodeName()
   {
-    if (episodeNameBytes != null)
-    {
-      // Doing it this way should be thread safe, we may create the String twice but we'd always
-      // do it from a valid byte array
-      byte[] testBytes = episodeNameBytes;
-      if (testBytes != null)
-      {
-        try {
-          episodeNameStr = new String(testBytes, Sage.I18N_CHARSET);
-          episodeNameBytes = null;
-        }
-        catch (UnsupportedEncodingException uee) {
-          if (Sage.DBG) System.out.println("Unicode ERROR creating String of:" + uee);
-        }
-      }
-    }
-    return episodeNameStr;
+   return episodeNameStr;
   }
 
   public String getDesc()
   {
-    if (descBytes != null)
-    {
-      // Doing it this way should be thread safe, we may create the String twice but we'd always
-      // do it from a valid byte array
-      byte[] testBytes = descBytes;
-      if (testBytes != null)
-      {
-        try {
-          descStr = new String(testBytes, Sage.I18N_CHARSET);
-          descBytes = null;
-        }
-        catch (UnsupportedEncodingException uee) {
-          if (Sage.DBG) System.out.println("Unicode ERROR creating String of:" + uee);
-        }
-      }
-    }
     return descStr;
   }
 
@@ -355,10 +323,8 @@ public final class Show extends DBObject
     lastWatched = fromMe.lastWatched;
     dontLike = fromMe.dontLike;
     title = fromMe.title;
-    episodeNameBytes = fromMe.episodeNameBytes;
     episodeNameStr = fromMe.episodeNameStr;
     externalID = fromMe.externalID;
-    descBytes = fromMe.descBytes;
     descStr = fromMe.descStr;
     categories = fromMe.categories;
     people = fromMe.people;
@@ -461,20 +427,10 @@ public final class Show extends DBObject
     title = wiz.getTitleForID(readID(in, idMap));
 
     // We lazily create these String to speed up loading time and reduce memory overhead
-    int size = in.readShort();
-    if (size == 0)
-      episodeNameStr = "";
-    else {
-      episodeNameBytes = new byte[size];
-      in.readFully(episodeNameBytes);
-    }
-    size = in.readShort();
-    if (size == 0)
-      descStr = "";
-    else {
-      descBytes = new byte[size];
-      in.readFully(descBytes);
-    }
+    int size = 0;
+
+    episodeNameStr = in.readUTF();
+    descStr = in.readUTF();
 
     Stringer category = wiz.getCategoryForID(readID(in, idMap));
     Stringer subCategory = wiz.getSubCategoryForID(readID(in, idMap));
@@ -649,20 +605,10 @@ public final class Show extends DBObject
     boolean useLookupIdx = (flags & Wizard.WRITE_OPT_USE_ARRAY_INDICES) != 0;
     out.writeLong(duration);
     out.writeInt((title == null) ? 0 : (useLookupIdx ? title.lookupIdx : title.id));
-    byte[] barr = episodeNameBytes;
-    if (barr != null) {
-      out.writeShort(barr.length);
-      out.write(barr);
-    }
-    else
-      out.writeUTF(episodeNameStr);
-    barr = descBytes;
-    if (barr != null) {
-      out.writeShort(barr.length);
-      out.write(barr);
-    }
-    else
-      out.writeUTF(descStr);
+
+    out.writeUTF(episodeNameStr);
+    out.writeUTF(descStr);
+
     out.writeInt((categories.length == 0) ? 0 : (useLookupIdx ? categories[0].lookupIdx : categories[0].id));
     out.writeInt((categories.length < 2) ? 0 : (useLookupIdx ? categories[1].lookupIdx : categories[1].id));
 
@@ -1536,9 +1482,7 @@ public final class Show extends DBObject
   long duration;
   Stringer title;
   volatile String episodeNameStr;
-  byte[] episodeNameBytes;
   volatile String descStr;
-  byte[] descBytes;
   Stringer[] categories;
   Person[] people;
   byte[] roles;
