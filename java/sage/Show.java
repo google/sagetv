@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.lang.Short;
 
 public final class Show extends DBObject
 {
@@ -163,43 +164,11 @@ public final class Show extends DBObject
 
   public String getEpisodeName()
   {
-    if (episodeNameBytes != null)
-    {
-      // Doing it this way should be thread safe, we may create the String twice but we'd always
-      // do it from a valid byte array
-      byte[] testBytes = episodeNameBytes;
-      if (testBytes != null)
-      {
-        try {
-          episodeNameStr = new String(testBytes, Sage.I18N_CHARSET);
-          episodeNameBytes = null;
-        }
-        catch (UnsupportedEncodingException uee) {
-          if (Sage.DBG) System.out.println("Unicode ERROR creating String of:" + uee);
-        }
-      }
-    }
     return episodeNameStr;
   }
 
   public String getDesc()
   {
-    if (descBytes != null)
-    {
-      // Doing it this way should be thread safe, we may create the String twice but we'd always
-      // do it from a valid byte array
-      byte[] testBytes = descBytes;
-      if (testBytes != null)
-      {
-        try {
-          descStr = new String(testBytes, Sage.I18N_CHARSET);
-          descBytes = null;
-        }
-        catch (UnsupportedEncodingException uee) {
-          if (Sage.DBG) System.out.println("Unicode ERROR creating String of:" + uee);
-        }
-      }
-    }
     return descStr;
   }
 
@@ -351,34 +320,35 @@ public final class Show extends DBObject
   void update(DBObject x)
   {
     Show fromMe = (Show) x;
-    duration = fromMe.duration;
-    lastWatched = fromMe.lastWatched;
-    dontLike = fromMe.dontLike;
-    title = fromMe.title;
-    episodeNameBytes = fromMe.episodeNameBytes;
-    episodeNameStr = fromMe.episodeNameStr;
-    externalID = fromMe.externalID;
-    descBytes = fromMe.descBytes;
-    descStr = fromMe.descStr;
-    categories = fromMe.categories;
-    people = fromMe.people;
-    roles = fromMe.roles;
-    rated = fromMe.rated;
-    ers = fromMe.ers;
-    year = fromMe.year;
-    pr = fromMe.pr;
-    bonuses = fromMe.bonuses;
-    language = fromMe.language;
-    originalAirDate = fromMe.originalAirDate;
-    seasonNum = fromMe.seasonNum;
-    episodeNum = fromMe.episodeNum;
+
+    duration            = fromMe.duration;
+    lastWatched         = fromMe.lastWatched;
+    dontLike            = fromMe.dontLike;
+    title               = fromMe.title;
+    episodeNameStr      = fromMe.episodeNameStr;
+    externalID          = fromMe.externalID;
+    descStr             = fromMe.descStr;
+    categories          = fromMe.categories;
+    people              = fromMe.people;
+    roles               = fromMe.roles;
+    rated               = fromMe.rated;
+    ers                 = fromMe.ers;
+    year                = fromMe.year;
+    pr                  = fromMe.pr;
+    bonuses             = fromMe.bonuses;
+    language            = fromMe.language;
+    originalAirDate     = fromMe.originalAirDate;
+    seasonNum           = fromMe.seasonNum;
+    episodeNum          = fromMe.episodeNum;
+
     if (fromMe.cachedUnique == FORCED_UNIQUE)
       cachedUnique = FORCED_UNIQUE;
-    altEpisodeNum = fromMe.altEpisodeNum;
-    seriesID = fromMe.seriesID;
-    showcardID = fromMe.showcardID;
-    imageIDs = fromMe.imageIDs;
-    imageURLs = fromMe.imageURLs;
+
+    altEpisodeNum   = fromMe.altEpisodeNum;
+    seriesID        = fromMe.seriesID;
+    showcardID      = fromMe.showcardID;
+    imageIDs        = fromMe.imageIDs;
+    imageURLs       = fromMe.imageURLs;
     super.update(fromMe);
   }
   @Override
@@ -456,38 +426,30 @@ public final class Show extends DBObject
   Show(DataInput in, byte ver, Map<Integer, Integer> idMap) throws IOException
   {
     super(in, ver, idMap);
-    Wizard wiz = Wizard.getInstance();
-    duration = in.readLong();
-    title = wiz.getTitleForID(readID(in, idMap));
 
-    // We lazily create these String to speed up loading time and reduce memory overhead
-    int size = in.readShort();
-    if (size == 0)
-      episodeNameStr = "";
-    else {
-      episodeNameBytes = new byte[size];
-      in.readFully(episodeNameBytes);
-    }
-    size = in.readShort();
-    if (size == 0)
-      descStr = "";
-    else {
-      descBytes = new byte[size];
-      in.readFully(descBytes);
-    }
+    int size        = 0;
 
-    Stringer category = wiz.getCategoryForID(readID(in, idMap));
+    Wizard wiz      = Wizard.getInstance();
+    duration        = in.readLong();
+    title           = wiz.getTitleForID(readID(in, idMap));
+    episodeNameStr  = in.readUTF();
+    descStr         = in.readUTF();
+
+
+    Stringer category   = wiz.getCategoryForID(readID(in, idMap));
     Stringer subCategory = wiz.getSubCategoryForID(readID(in, idMap));
+
     int numPeople = in.readInt();
+
     if (numPeople > Wizard.STUPID_SIZE)
       throw new IOException("Stupid array size:" + numPeople);
-    people = numPeople == 0 ? Pooler.EMPTY_PERSON_ARRAY : new Person[numPeople];
-    roles = numPeople == 0 ? Pooler.EMPTY_BYTE_ARRAY : new byte[numPeople];
-    for (int i = 0; i < numPeople; i++)
-    {
+
+    people  = numPeople == 0 ? Pooler.EMPTY_PERSON_ARRAY : new Person[numPeople];
+    roles   = numPeople == 0 ? Pooler.EMPTY_BYTE_ARRAY : new byte[numPeople];
+    for (int i = 0; i < numPeople; i++) {
       people[i] = wiz.getPersonForID(readID(in, idMap));
-      if (ver >= 0x1C)
-      {
+
+      if (ver >= 0x1C) {
         roles[i] = in.readByte();
       }
     }
@@ -649,20 +611,11 @@ public final class Show extends DBObject
     boolean useLookupIdx = (flags & Wizard.WRITE_OPT_USE_ARRAY_INDICES) != 0;
     out.writeLong(duration);
     out.writeInt((title == null) ? 0 : (useLookupIdx ? title.lookupIdx : title.id));
-    byte[] barr = episodeNameBytes;
-    if (barr != null) {
-      out.writeShort(barr.length);
-      out.write(barr);
-    }
-    else
-      out.writeUTF(episodeNameStr);
-    barr = descBytes;
-    if (barr != null) {
-      out.writeShort(barr.length);
-      out.write(barr);
-    }
-    else
-      out.writeUTF(descStr);
+
+
+    out.writeUTF(episodeNameStr);
+    out.writeUTF(descStr);
+
     out.writeInt((categories.length == 0) ? 0 : (useLookupIdx ? categories[0].lookupIdx : categories[0].id));
     out.writeInt((categories.length < 2) ? 0 : (useLookupIdx ? categories[1].lookupIdx : categories[1].id));
 
@@ -675,44 +628,57 @@ public final class Show extends DBObject
 
     out.writeInt((rated == null) ? 0 : (useLookupIdx ? rated.lookupIdx : rated.id));
     out.writeInt(ers.length);
-    for (int i = 0; i < ers.length; i++)
+    for (int i = 0; i < ers.length; i++) {
       out.writeInt(useLookupIdx ? ers[i].lookupIdx : ers[i].id);
+    }
 
     out.writeInt((year == null) ? 0 : (useLookupIdx ? year.lookupIdx : year.id));
     out.writeInt((pr == null) ? 0 : (useLookupIdx ? pr.lookupIdx : pr.id));
 
     out.writeInt(bonuses.length);
-    for (int i = 0; i < bonuses.length; i++)
+    for (int i = 0; i < bonuses.length; i++) {
       out.writeInt(useLookupIdx ? bonuses[i].lookupIdx : bonuses[i].id);
+    }
 
     long lastWatchedData = lastWatched;
     if (dontLike) {
-      if (lastWatchedData == 0)
+      if (lastWatchedData == 0) {
         lastWatchedData = -1;
-      else
+      } else {
         lastWatchedData *= -1;
+      }
     }
     out.writeLong(lastWatchedData);
     out.writeBoolean(/*forcedFirstRun*/false); // old first run data
     out.writeShort(externalID.length);
-    if (externalID.length > 0)
+
+    if (externalID.length > 0) {
       out.write(externalID);
+    }
+
     out.writeInt(/*updateCount*/id);
     out.writeInt((language == null) ? 0 : (useLookupIdx ? language.lookupIdx : language.id));
     out.writeLong(originalAirDate);
     out.writeShort(seasonNum);
     out.writeShort(episodeNum);
     out.writeShort(Math.max(0, categories.length - 2));
-    for (int i = 2; i < categories.length; i++)
+
+    for (int i = 2; i < categories.length; i++) {
       out.writeInt(useLookupIdx ? categories[i].lookupIdx : categories[i].id);
+    }
+
     out.writeBoolean(cachedUnique == FORCED_UNIQUE);
     out.writeShort(altEpisodeNum);
     out.writeInt(showcardID);
     out.writeInt(seriesID);
     out.writeShort(imageIDs.length);
-    for (int i = 0; i < imageIDs.length; i++)
+
+    for (int i = 0; i < imageIDs.length; i++) {
       out.writeShort(imageIDs[i]);
+    }
+
     out.writeShort(imageURLs.length);
+
     for (int i = 0; i < imageURLs.length; i++)
     {
       out.writeShort(imageURLs[i].length);
@@ -1536,9 +1502,9 @@ public final class Show extends DBObject
   long duration;
   Stringer title;
   volatile String episodeNameStr;
-  byte[] episodeNameBytes;
+  byte[] episodeNameBytes; /* deprecated no longer used */
   volatile String descStr;
-  byte[] descBytes;
+  byte[] descBytes; /* deprecated no longer used */
   Stringer[] categories;
   Person[] people;
   byte[] roles;
