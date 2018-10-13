@@ -1,5 +1,8 @@
 # Change Log
 
+## Version 9.1.10 (2018-10-13)
+* removed old bytes properties for episodeName and desc to resolve potential crashes
+
 ## Version 9.1.9 (2018-05-18)
 * Byte based seeking support for MPEG files
 * update libhdhomerun to 20170930
