@@ -347,6 +347,23 @@ function Upload-Binaries {
     }
     $filename = "$deployment_dir/$ProductVersion/$file" + "_" + "$ProductVersion" + $ext
     $url = "$bt_api_url/content/opensagetv/$bt_repository/$filename"
+    
+    add-type @"
+        using System.Net;
+        using System.Security.Cryptography.X509Certificates;
+        public class TrustAllCertsPolicy : ICertificatePolicy {
+            public bool CheckValidationResult(
+                ServicePoint srvPoint, X509Certificate certificate,
+                WebRequest request, int certificateProblem) {
+                return true;
+            }
+        }
+"@
+    $AllProtocols = [System.Net.SecurityProtocolType]'Ssl3,Tls,Tls11,Tls12'
+    [System.Net.ServicePointManager]::SecurityProtocol = $AllProtocols
+        
+    [System.Net.ServicePointManager]::CertificatePolicy = New-Object TrustAllCertsPolicy
+    
     $result = Invoke-WebRequest -Uri $url -Credential $bt_credentials -Method PUT -Headers $bt_headers -InFile "$sourcefile" -TimeoutSec 6000
     log "Binary Upload of" $sourcefile "to" $filename "returned" $result
  
