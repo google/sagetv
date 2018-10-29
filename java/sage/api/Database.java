@@ -1619,14 +1619,16 @@ public class Database {
             {
               int n1 = s1.getSeasonNumber();
               int n2 = s2.getSeasonNumber();
-              int x = n1 - n2;
-              if (x != 0 && n1 != 0 && n2 != 0)
-                return x;
+              if (n1 > n2)  // larger season is older/earlier show
+                return -1;
+              else if (n1 < n2)
+                return 1;
               n1 = s1.getEpisodeNumber();
               n2 = s2.getEpisodeNumber();
-              x = n1 - n2;
-              if (x != 0 && n1 != 0 && n2 != 0)
-                return x;
+              if (n1 < n2)
+                return -1;
+              else if (n1 > n2)
+                return 1;
             }
             Airing a1 = getAirObj(o1);
             Airing a2 = getAirObj(o2);
