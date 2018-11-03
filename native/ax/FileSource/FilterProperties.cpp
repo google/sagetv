@@ -62,7 +62,7 @@ CFilterProperties::~CFilterProperties()
 {
 }
 
-BOOL CFilterProperties::OnReceiveMessage( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
+INT_PTR CFilterProperties::OnReceiveMessage( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
     switch(uMsg)
     {
@@ -70,13 +70,13 @@ BOOL CFilterProperties::OnReceiveMessage( HWND hwnd, UINT uMsg, WPARAM wParam, L
         {
             m_hwndDialog = hwnd;
 			DisplayInfo();
-            return TRUE;
+            return (INT_PTR)TRUE;
         }
 
         case WM_DESTROY:
         {
             DestroyWindow(m_hwndDialog);
-            return TRUE;
+            return (INT_PTR)TRUE;
         }
 
         case WM_COMMAND:
@@ -101,7 +101,7 @@ BOOL CFilterProperties::OnReceiveMessage( HWND hwnd, UINT uMsg, WPARAM wParam, L
 				break;
 			default:;
             };
-            return TRUE;
+            return (INT_PTR)TRUE;
         }
 
         case WM_NOTIFY:
@@ -114,7 +114,7 @@ BOOL CFilterProperties::OnReceiveMessage( HWND hwnd, UINT uMsg, WPARAM wParam, L
         }
 
         default:
-            return FALSE;
+            return (INT_PTR)FALSE;
     }
     
 	return CBasePropertyPage::OnReceiveMessage(hwnd,uMsg,wParam,lParam);

@@ -27,13 +27,13 @@ extern "C" {
 #endif /* __cplusplus */
 
 #ifdef WIN32
-# ifndef FAACAPI
-#  define FAACAPI __stdcall
-# endif
+  #ifndef FAACAPI
+    #define FAACAPI __cdecl
+  #endif
 #else
-# ifndef FAACAPI
-#  define FAACAPI
-# endif
+  #ifndef FAACAPI
+    #define FAACAPI
+  #endif
 #endif
 
 #pragma pack(push, 1)

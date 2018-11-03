@@ -141,7 +141,11 @@ public class SageTV implements Runnable
     alive = true;
     startTime = Sage.time();
     Sage.put("version", UIManager.SAGE);
-    if (Sage.DBG) System.out.println(UIManager.SAGE);
+    if (Sage.DBG)
+    {
+      System.out.println(UIManager.SAGE);
+      System.out.println("Data Model=" + (Sage.is64BitJVM() ? "64-bit" : "32-bit"));
+    }
 
     String localIP = "";
     try

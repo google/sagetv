@@ -29,8 +29,7 @@ void CJeffMixer::ZeroAll()
 CJeffMixer::CJeffMixer(DWORD DstType, DWORD SrcType, DWORD ControlType, bool useIndex)
 {
 	ZeroAll();
-	int numDevs = mixerGetNumDevs();
-	if(numDevs < 1) return;
+	if(mixerGetNumDevs() < 1) return;
 	mmr = mixerOpen(&m_HMixer, 0, 0, 0L, CALLBACK_NULL);
 	if (mmr != MMSYSERR_NOERROR) return;
 // get dwLineID
@@ -78,7 +77,7 @@ CJeffMixer::CJeffMixer(HWND hwnd, DWORD DstType, DWORD SrcType, DWORD ControlTyp
 {
 	ZeroAll();
 	if(mixerGetNumDevs() < 1) return;
-	mmr = mixerOpen(&m_HMixer, 0, (DWORD)hwnd, 0L, CALLBACK_WINDOW);
+	mmr = mixerOpen(&m_HMixer, 0, (DWORD_PTR)hwnd, 0L, CALLBACK_WINDOW);
 	if (mmr != MMSYSERR_NOERROR) return;
 // get dwLineID
 	MIXERLINE mxl;

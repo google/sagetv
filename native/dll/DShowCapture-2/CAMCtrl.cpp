@@ -1144,7 +1144,7 @@ static int OpenAnyseeCam( JNIEnv *env, DShowCaptureInfo* pCapInfo )
 		if ( pAnysee->CILib->OpenCILib(NULL, ADList.dwADIndex[i]) == S_OK )
 		{
 			pAnysee->portNum = i;
-			int ret = pAnysee->CILib->CI_Control(CI_CONTROL_IS_PLUG_OPEN, (long *)&fCIStateFunc, (long *)fCIMessageFunc);
+			int ret = pAnysee->CILib->CI_Control(CI_CONTROL_IS_PLUG_OPEN, (LPARAM *)&fCIStateFunc, (LPARAM *)fCIMessageFunc);
 			if ( !SUCCEEDED( ret ) )
 			{
 				slog(( "CAM: Anysee failed seeting CI fCIStateFunc,  fCIMessageFunc on port %d\r\n", pAnysee->portNum ));

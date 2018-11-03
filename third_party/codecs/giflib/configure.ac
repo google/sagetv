@@ -59,17 +59,17 @@ AC_CHECK_HEADERS(unistd.h)
 
 dnl Find a way to define a 32 bit integer
 foundint=no
-AC_CHECK_HEADERS([sys/types.h], [
-	AC_DEFINE([UINT32], u_int32_t,
-		  [Set to an unsigned 32 bit integer available on this system])
-	foundint=yes]
-)
-
-if test x$foundint != x'yes'; then
 AC_CHECK_HEADERS([stdint.h], [
 	 AC_DEFINE([UINT32], uint32_t,
 		  [Set to an unsigned 32 bit integer available on this system])
 	 foundint=yes]
+)
+
+if test x$foundint != x'yes'; then
+AC_CHECK_HEADERS([sys/types.h], [
+	AC_DEFINE([UINT32], u_int32_t,
+		  [Set to an unsigned 32 bit integer available on this system])
+	foundint=yes]
 )
 fi
 

@@ -232,7 +232,7 @@ typedef struct Channel
 	uint32_t  delayParse;        //postponde to start parser im million seconds
 	uint32_t freqShift;
 	int32_t	 frqTableUpdateCheck;
-	uint32_t frqTableTimeStamp;
+	time_t   frqTableTimeStamp;
 	char     frqTableFileName[256];
 	char     frqTableFilePath[128];
 	int32_t  tuneCtrl;             //1: naked qam tune.

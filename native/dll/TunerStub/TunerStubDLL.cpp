@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <malloc.h>
 #include "TunerStubDLL.h"
+#include <inttypes.h>
 
 // Enable this define to build the dll which controls the Hauppauge IR blaster (HCWIRBlaster.dll)
 //#define HCW_BLASTER
@@ -408,7 +409,7 @@ pattern*  create_pat_list(unsigned char Temp_String[],
    	length = 0;
    	while(Ptr)                 //get command pattern bytes
 	{                                            
-		sscanf((char*)Ptr,"%x", &Temp_Command[length]);
+		sscanf((char*)Ptr,"%hhx", &Temp_Command[length]);
 		Ptr = (unsigned char*)strtok(NULL, " \t");
 		length++;
 	}
@@ -437,7 +438,7 @@ pattern*  create_pat_list(unsigned char Temp_String[],
 		length = 0;
 		while(Ptr)                 //get command pattern bytes
 		{                                            
-			sscanf((char*)Ptr,"%x", &Temp_Command[length]);
+			sscanf((char*)Ptr,"%hhx", &Temp_Command[length]);
 			Ptr = (unsigned char*)strtok(NULL, " \t");    
 			length++;
 		}

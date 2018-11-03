@@ -113,7 +113,7 @@ BOOL loadUIRTDLL(void)
 /*****************************************************************************/
 void WINAPI IRReceiveCallback (char *IREventStr, void *userData)
 {
-	printf("<IR Receive: Code = %s, UserData = %08x!!!\n", IREventStr, (UINT32)userData);
+	printf("<IR Receive: Code = %s, UserData = %08p!!!\n", IREventStr, userData);
 
 	// Get the Java VM, attach to it and send the event, then detach
 	JavaVM* vmBuf;
@@ -152,7 +152,7 @@ void setupUIRTReceiveCallback(jobject router)
 /*****************************************************************************/
 void WINAPI IRLearnCallback (unsigned int progress, unsigned int sigQuality, unsigned long carrierFreq, void *userData)
 {
-	printf("<Learn Progress: %d%%, Signal = %d%%, Freq = %ld, UserData = %08x!!!\n", progress, sigQuality & 0xff, carrierFreq, (UINT32)userData);
+	printf("<Learn Progress: %d%%, Signal = %d%%, Freq = %ld, UserData = %08p!!!\n", progress, sigQuality & 0xff, carrierFreq, userData);
 }
 
 

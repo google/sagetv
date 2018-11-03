@@ -336,8 +336,8 @@ JNIEXPORT jobject JNICALL Java_sage_media_image_ImageLoader_loadScaledImageFromF
 		return NULL;
 	}
 
-	jobject rv = (*env)->NewObject(env, rawImageClass, rawImageConstruct, myImage->uWidth, myImage->uHeight, 
-		dbuf, myImage->hasAlpha ? JNI_TRUE : JNI_FALSE, myImage->uBytePerLine);
+	jobject rv = (*env)->NewObject(env, rawImageClass, rawImageConstruct, (jint) myImage->uWidth, (jint) myImage->uHeight, 
+		dbuf, myImage->hasAlpha ? JNI_TRUE : JNI_FALSE, (jint) (myImage->uBytePerLine));
 	free(myImage); // this doesn't free the data, only the structure
 	return rv;
 }
@@ -558,8 +558,8 @@ JNIEXPORT jobject JNICALL Java_sage_media_image_ImageLoader_loadImageDimensionsF
 		return NULL;
 	}
 
-	jobject rv = (*env)->NewObject(env, rawImageClass, rawImageConstruct, imageWidth, imageHeight, 
-		0, hasAlpha ? JNI_TRUE : JNI_FALSE, 0);
+	jobject rv = (*env)->NewObject(env, rawImageClass, rawImageConstruct, (jint) imageWidth, (jint) imageHeight, 
+		NULL, hasAlpha ? JNI_TRUE : JNI_FALSE, (jint) 0);
 	return rv;
 }
 
@@ -847,7 +847,7 @@ sysOutPrint(env, "raw scaling insets line=%d tempScale=%d\r\n", __LINE__, tempSc
 		return NULL;
 	}
 
-	jobject rv = (*env)->NewObject(env, rawImageClass, rawImageConstruct, imageWidth, imageHeight, 
-		destImageBuf, JNI_TRUE, imageWidth*4);
+	jobject rv = (*env)->NewObject(env, rawImageClass, rawImageConstruct, (jint) imageWidth, (jint) imageHeight, 
+		destImageBuf, JNI_TRUE, (jint) (imageWidth*4));
 	return rv;
 }

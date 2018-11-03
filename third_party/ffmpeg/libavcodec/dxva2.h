@@ -25,6 +25,9 @@
 
 #include <stdint.h>
 
+#define COBJMACROS
+#include <d3d9.h>
+#include <dxva.h>
 #include <dxva2api.h>
 
 /**

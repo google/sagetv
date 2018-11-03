@@ -205,7 +205,7 @@ public:
     HRESULT WaitForNext(
 	    	DWORD dwTimeout,
 		LPVOID *ppContext,
-		DWORD * pdwUser,
+		DWORD_PTR * pdwUser,
                 LONG * pcbActual
                 );
 

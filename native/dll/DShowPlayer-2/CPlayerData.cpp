@@ -56,9 +56,11 @@ long CC_DUMP( void* context, short cc_num, void* cc_data, short bar_num, void* b
 	lptr = (unsigned long*)cc_data;
 	for ( i = 0; i<cc_num && *lptr; i++ )
 	{
+// wnjj - NOT 64-bit safe (*lptr is unsigned long but used as an unsigned char * cc_ptr)
+// Function doesn't seem to do anything useful right now anyway.
 		cc_ptr = (unsigned char*)*lptr++;
 		cc_bytes = *lptr++;
-		//printf( "got CC Data %d bytes start from 0x%x\n", cc_bytes, cc_ptr );
+		//printf( "got CC Data %d bytes start from 0x%p\n", cc_bytes, cc_ptr );
 	}
 
 	sptr = (unsigned short*)bar_data;

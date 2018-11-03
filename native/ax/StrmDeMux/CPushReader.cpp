@@ -16,7 +16,9 @@
 
 #pragma warning(disable : 4996)
 
-#define _USE_32BIT_TIME_T
+#ifndef _WIN64
+  #define _USE_32BIT_TIME_T
+#endif
 
 #include <streams.h>
 
@@ -260,7 +262,7 @@ static int feeder_open(URLContext *h, const char *filename, int flags)
     fd = _sopen( p,  _O_RDONLY|_O_BINARY, _SH_DENYNO , _S_IREAD|_S_IWRITE );
     if (fd < 0)
         return -2;//AVERROR(ENOENT);
-    h->priv_data = (void *) (intptr_t) fd;
+    h->priv_data = (void *) fd;
     return 0;
 }
 
@@ -365,7 +367,7 @@ static int feeder_close(URLContext *h)
 
 static int feeder_get_handle(URLContext *h)
 {
-    return (intptr_t) h->priv_data;
+    return (int) h->priv_data;
 }
 
 URLProtocol sagetv_protocol = {
@@ -480,12 +482,12 @@ HRESULT CPushReader::Init( )
 			m_pTrackInf[TrackNum].av.d.v.mpeg_video.width  = Width;
 			m_pTrackInf[TrackNum].av.d.v.mpeg_video.height = Height;
 			m_pTrackInf[TrackNum].av.d.v.mpeg_video.progressive = !m_pTrackInf[TrackNum].av.d.v.mpeg_video.progressive;
-			DbgLog( (LOG_TRACE, 2, TEXT("Found video: MPEG1 %dx%d frame_rate(%d/%d) progress:%d bitrate:%d, lan:'%s'"),  Width, Height,
-				                   (int*)m_pTrackInf[TrackNum].av.d.v.mpeg_video.frame_num, 
-								   (int*)m_pTrackInf[TrackNum].av.d.v.mpeg_video.frame_den,
+			DbgLog( (LOG_TRACE, 2, TEXT("Found video: MPEG1 %dx%d frame_rate(%d/%d) progress:%d bitrate:%d, lan:'%lu'"),  Width, Height,
+				                   m_pTrackInf[TrackNum].av.d.v.mpeg_video.frame_num, 
+								   m_pTrackInf[TrackNum].av.d.v.mpeg_video.frame_den,
 								   m_pTrackInf[TrackNum].av.d.v.mpeg_video.progressive,
 								   m_pTrackInf[TrackNum].av.d.v.mpeg_video.bit_rate,
-								   &m_pTrackInf[TrackNum].language) );  
+								   m_pTrackInf[TrackNum].language) );  
 			break;
 		case 2:  //MPEG2
 			m_pTrackInf[TrackNum].av.format_fourcc = SAGE_FOURCC( "MPGV" );

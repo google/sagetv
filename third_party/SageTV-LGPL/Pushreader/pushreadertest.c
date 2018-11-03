@@ -42,7 +42,7 @@ int main(int argc, char **argv)
     fprintf(stderr, "Opening %s with PushReader\n",argv[1]);
     pr=OpenPushReader(argv[1], NULL, 0 );
     disableDecodeAudio( pr );
-    fprintf(stderr, "Opened pull reader retval 0x%x\n",(unsigned int)((void*)pr));
+    fprintf(stderr, "Opened pull reader retval 0x%p\n",((void*)pr));
     if(pr!=NULL)
     {
         int width, height, miscv;

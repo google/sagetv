@@ -278,7 +278,7 @@ HRESULT CSequentialAllocator::Alloc()
         /* Find the smallest */
         CMediaSample *pSample = m_lFree.Head();
 
-        m_pBuffer = (PBYTE)(DWORD)-1;
+        m_pBuffer = (PBYTE)-1;
         for (; pSample != NULL; pSample = m_lFree.Next(pSample)) {
             PBYTE pbTemp;
             pSample->GetPointer(&pbTemp);

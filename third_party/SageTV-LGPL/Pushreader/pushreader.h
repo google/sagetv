@@ -24,7 +24,6 @@
 extern "C" {
 #endif
 
-
 struct PushReader *OpenPushReader(const char *filename, URLProtocol *private_protocol, unsigned long option );
 
 // 0 none

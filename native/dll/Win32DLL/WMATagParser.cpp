@@ -169,7 +169,7 @@ public:
 
 			if (attValueName[0] != '\0')
 			{
-				env->CallObjectMethod(rvMap, mapPut, env->NewString(reinterpret_cast<const jchar*>(pwszName), wcslen(pwszName)), env->NewString(reinterpret_cast<const jchar*>(attValueName), wcslen(attValueName)));
+				env->CallObjectMethod(rvMap, mapPut, env->NewString(reinterpret_cast<const jchar*>(pwszName), (int) wcslen(pwszName)), env->NewString(reinterpret_cast<const jchar*>(attValueName), (int) wcslen(attValueName)));
 			}
 
 			// Release allocated memory for the next pass.

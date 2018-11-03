@@ -1,18 +1,27 @@
 CC=gcc
-CFLAGS = -c -O2 -s -D_JNI_IMPLEMENTATION -I/mingw/include -IC:\\jdk1.4\\include -IC:\\jdk1.4\\include\\win32 -I/usr/local/include -I../../../native/include -I../../codecs/giflib/lib -DJava_sage_media_image_ImageLoader_createThumbnail=_Java_sage_media_image_ImageLoader_createThumbnail -DJava_sage_media_image_ImageLoader_loadScaledImageFromFile=_Java_sage_media_image_ImageLoader_loadScaledImageFromFile -DJava_sage_media_image_ImageLoader_freeImage0=_Java_sage_media_image_ImageLoader_freeImage0 -DJava_sage_media_image_ImageLoader_compressImageToFile=_Java_sage_media_image_ImageLoader_compressImageToFile -DJava_sage_media_image_ImageLoader_loadImageDimensionsFromFile=_Java_sage_media_image_ImageLoader_loadImageDimensionsFromFile -DJava_sage_media_image_ImageLoader_scaleRawImage=_Java_sage_media_image_ImageLoader_scaleRawImage
+
+CFLAGS = -c -O2 -s -D_JNI_IMPLEMENTATION -I/mingw/include -I"$(SAGEDEVJDK)/include" -I"$(SAGEDEVJDK)/include/win32" -I/usr/local/include -I../../../native/include -I../../codecs/giflib/lib
 
 OBJFILES=imageload.o sage_media_image_ImageLoader.o
 
 all: swscale.dll ImageLoader.dll
 
 swscale.dll: swscale.o 
-	$(CC) -shared -W -o swscale.dll swscale.o -L/mingw/lib -L/usr/local/lib
+	$(CC) -shared -W -o swscale.dll swscale.o -L"$(MINGW_PREFIX)/lib" -L/usr/local/lib
+	case `uname` in \
+	  MINGW32*) mkdir -p Win32 ; cp swscale.dll Win32 ;; \
+	  MINGW64*) mkdir -p x64   ; cp swscale.dll x64   ;; \
+	esac
 
 ImageLoader.dll: $(OBJFILES)
-	$(CC) -s -static-libgcc -shared -W -o ImageLoader.dll $(OBJFILES) ../../codecs/giflib/lib/.libs/libgif.a ../../codecs/libpng/.libs/libpng12.a ../../codecs/jpeg-6b/libjpeg.a -lz ../../codecs/tiff/libtiff/.libs/libtiff.a -L. -lswscale
+	$(CC) -s -static-libgcc -Wl,--kill-at -shared -W -o ImageLoader.dll $(OBJFILES) ../../codecs/giflib/lib/.libs/libgif.a ../../codecs/libpng/.libs/libpng12.a ../../codecs/jpeg-6b/libjpeg.a ../../codecs/tiff/libtiff/.libs/libtiff.a -L. -lswscale -Wl,-Bstatic -L"$(MINGW_PREFIX)/lib" -lz
+	case `uname` in \
+	  MINGW32*) mkdir -p Win32 ; cp ImageLoader.dll Win32 ;; \
+	  MINGW64*) mkdir -p x64   ; cp ImageLoader.dll x64   ;; \
+	esac
 
 imagetest: test.o $(OBJFILES) 
-	$(CC) -s -static-libgcc test.c -o imagetest.exe $(OBJFILES) ../../codecs/giflib/lib/.libs/libgif.a ../../codecs/libpng/.libs/libpng12.a ../../codecs/jpeg-6b/libjpeg.a -lz ../../codecs/tiff/libtiff/.libs/libtiff.a -L. -lswscale
+	$(CC) -s -static-libgcc test.c -o imagetest.exe $(OBJFILES) ../../codecs/giflib/lib/.libs/libgif.a ../../codecs/libpng/.libs/libpng12.a ../../codecs/jpeg-6b/libjpeg.a ../../codecs/tiff/libtiff/.libs/libtiff.a -L. -lswscale -Wl,-Bstatic -L"$(MINGW_PREFIX)/lib" -lz
 
 swscale.o: swscale_template.c
 

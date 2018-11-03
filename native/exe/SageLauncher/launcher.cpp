@@ -1566,7 +1566,7 @@ MYOUT(buf);
 
 	FreeLibrary(hLib);
 
-	return( lpMsg.wParam);
+	return((int) lpMsg.wParam);
 }
 
 #define WM_APPCOMMAND                   0x0319

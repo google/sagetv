@@ -1241,7 +1241,8 @@ public final class Sage
     }
     else
     {
-      theImage = ImageUtils.fullyLoadImage(isTrueClient() ? "images/splashclient.gif" : "images/splash.gif");
+      theImage = ImageUtils.fullyLoadImage(isTrueClient() ? (is64BitJVM() ? "images/splashclient64.gif" : "images/splashclient.gif") : 
+                                                            (is64BitJVM() ? "images/splash64.gif"       : "images/splash.gif"      ));
     }
     ActiveImage splashImage = new ActiveImage(theImage);
     splashWindow.add(splashImage, "Center");
@@ -2231,5 +2232,12 @@ public final class Sage
       srcRect.height -= ((destRect.y + destRect.height) - (clipRect.y + clipRect.height)) * srcRect.height / destRect.height;
       destRect.height -= ((destRect.y + destRect.height) - (clipRect.y + clipRect.height));
     }
+  }
+
+  public static boolean is64BitJVM()
+  {
+    return ((System.getProperty("sun.arch.data.model").equals("64")) |
+            (System.getProperty("os.arch").equals("x86_64")) |
+            (System.getProperty("os.arch").equals("amd64")));
   }
 }
