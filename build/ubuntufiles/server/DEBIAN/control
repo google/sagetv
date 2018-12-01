@@ -8,6 +8,6 @@ Changed-By: Sean Stuckless <sean.stuckless@gmail.com>
 Vcs-Browser: https://github.com/google/sagetv
 Architecture: DEB_ARCH
 Version: MAJOR_VERSION.MINOR_VERSION.MICRO_VERSION
-Depends: java5-runtime | java5-sdk | debconf (>= 0.2.17)
+Depends: java7-runtime | java7-sdk | debconf (>= 0.2.17), net-tools
 Suggests: ivtv
 Description: SageTV Server MAJOR_VERSION.MINOR_VERSION.MICRO_VERSION
