@@ -25,6 +25,14 @@
 
 #ifdef HCW_BLASTER
 #include "../../../third_party/Hauppauge/hcwIRBlast.h"
+
+//#include <initguid.h>
+//
+//DEFINE_GUID(CLSID_HCWBlasterCOM,
+//0x4587A032, 0x7397, 0x4153, 0x89, 0xF9, 0x1D, 0x75, 0xF1, 0x2F, 0xED, 0x1E);
+//
+//DEFINE_GUID(IID_HCWIRBlast,
+//0x494D38ED, 0x7C44, 0x4666, 0xB8, 0x96, 0x97, 0x74, 0xA8, 0x45, 0x23, 0xBC);
 #endif
 
 #define Line_Length 200
@@ -41,9 +49,10 @@ BOOL APIENTRY DllMain( HANDLE hModule,
 		case DLL_THREAD_DETACH:
 		case DLL_PROCESS_DETACH:
 			break;
-    }
+  }
     return TRUE;
 }
+
 void  Add_Remote(remote **head, FILE *fp, unsigned char *Temp_String);
 command*  Create_Command_List(FILE *fp);
 pattern*  create_pat_list(unsigned char Temp_String[],
@@ -81,7 +90,7 @@ unsigned char*  String_Space(unsigned char *String)
    unsigned int Length;   //Length of string "String"
    unsigned char *Space;  //pointer to allocated space
 
-   Length = strlen((char*)String) + 1;
+   Length = (unsigned int) strlen((char*)String) + 1;
    Space = (unsigned char *)malloc(Length*sizeof(unsigned char));
    if (Space == NULL)
    {  
@@ -111,42 +120,88 @@ TUNERSTUBDLL_API bool NeedBitrate(void) { return false; }
 TUNERSTUBDLL_API bool NeedCarrierFrequency(void) { return false; }
 
 #ifdef HCW_BLASTER
-WORD			m_IRBlasterPort;  // IRblaster port,
-UIR_CFG		m_IRBlasterCFG; // IRblaster config data
+ #ifdef _WIN64
+  #import "..\..\exe\HCWIRBlasterCOM\Win32\Release\HCWIRBlasterCOM.tlb"
+ #else
+  typedef WORD (WINAPI *pfn_UIR_Open)(BOOL, WORD);
+  typedef UIRError (WINAPI *pfn_UIR_GetConfig)(int, int, UIR_CFG *);
+  typedef UIRError (WINAPI *pfn_UIR_GotoChannel)(int, int, int);
+
+  HMODULE hHCWBlastDll = NULL;
+  pfn_UIR_Open        pUIR_Open       = NULL;
+  pfn_UIR_GetConfig   pUIR_GetConfig  = NULL;
+  pfn_UIR_GotoChannel pUIR_GotoChannel= NULL;
+
+  WORD			m_IRBlasterPort;  // IRblaster port,
+  UIR_CFG		m_IRBlasterCFG; // IRblaster config data
+ #endif
 #endif
 
 TUNERSTUBDLL_API const char* DeviceName() { 
 #ifdef HCW_BLASTER
 	return "Hauppauge IR Blaster";
 #else
-	return "Stub Transmitter";
+  #ifdef EXE_MULTITUNER
+	  return "EXE Multi Tuner";
+  #else
+	  return "Stub Transmitter";
+	#endif
 #endif
 }
 TUNERSTUBDLL_API bool OpenDevice(int ComPort) 
 {
 #ifdef HCW_BLASTER
+ #ifdef _WIN64 // 64-bit calls into 32-bit COM server
+
+  HRESULT hr;
+
+  hr = CoInitialize(NULL);
+  if (FAILED(hr)) return(false);
+
+  HCWIRBlasterCOMLib::IIRBlastPtr pIRBlast;
+
+  hr = pIRBlast.CreateInstance("HCWIRBlasterCOM.IRBlast");
+  if (FAILED(hr)) return(false);
+
+  VARIANT_BOOL ret;
+  hr = pIRBlast->OpenDevice(&ret);
+  if (FAILED(hr)) return(false);
+
+  if (ret == VARIANT_FALSE) return(false);
+
+ #else // 32-bit calls directly into DLL
+
 	m_IRBlasterPort = 0;
-	//Use try/catch block in case delayload of hcwblast.dll fails
-	try {
-		m_IRBlasterPort = UIR_Open(FALSE, 0); 
+  if (!hHCWBlastDll)
+  {
+    hHCWBlastDll = LoadLibrary("hcwIRblast");
+    if (hHCWBlastDll)
+    {
+      pUIR_Open        = (pfn_UIR_Open)        GetProcAddress(hHCWBlastDll, "UIR_Open");
+      pUIR_GetConfig   = (pfn_UIR_GetConfig)   GetProcAddress(hHCWBlastDll, "UIR_GetConfig");
+      pUIR_GotoChannel = (pfn_UIR_GotoChannel) GetProcAddress(hHCWBlastDll, "UIR_GotoChannel");
+    }
+  }
+  if (hHCWBlastDll && pUIR_Open && pUIR_GetConfig)
+  {
+		m_IRBlasterPort = pUIR_Open(FALSE, 0); 
 		//Try to open default IRBlaster device
 		m_IRBlasterCFG.cfgDataSize = sizeof(UIR_CFG);
 		// Load the previously saved configuration params
-		UIRError uerr = UIR_GetConfig(-1, -1, &m_IRBlasterCFG);
+		UIRError uerr = pUIR_GetConfig(-1, -1, &m_IRBlasterCFG);
 		if(uerr != UIRError_Success)
 		{
 			m_IRBlasterPort = 0;
 		}
 	}
-	catch(...)
-	{
-		// hcwblast.dll not found, or some other critical problem
-	}
 	if(m_IRBlasterPort == 0)
 	{
 		return false;
 	}
+
+ #endif
 #endif
+
 	return true; 
 }
 TUNERSTUBDLL_API void CloseDevice() 
@@ -490,22 +545,37 @@ TUNERSTUBDLL_API void FreeRemotes(remote **head)
 TUNERSTUBDLL_API bool CanMacroTune(void) { return true; }
 TUNERSTUBDLL_API void MacroTune(int channel)
 {
-	if(m_IRBlasterPort)
+  #ifdef _WIN64 // 64-bit calls into 32-bit COM server
+
+    HRESULT hr;
+
+    hr = CoInitialize(NULL);
+    if (FAILED(hr)) return;
+
+    HCWIRBlasterCOMLib::IIRBlastPtr pIRBlast;
+
+    hr = pIRBlast.CreateInstance("HCWIRBlasterCOM.IRBlast");
+    if (FAILED(hr)) return;
+
+    pIRBlast->MacroTune((long) channel);
+
+  #else // 32-bit calls directly into DLL
+
+	if(m_IRBlasterPort && pUIR_GotoChannel)
 	{
-		UIRError uerr = UIR_GotoChannel(m_IRBlasterCFG.cfgDevice, m_IRBlasterCFG.cfgCodeset,
-			channel);
+		UIRError uerr = pUIR_GotoChannel(m_IRBlasterCFG.cfgDevice, m_IRBlasterCFG.cfgCodeset, channel);
 		if(uerr != UIRError_Success)
 		{
 			//DPF(0, "UIR_GotoChannel()=%d, failed\n", uerr);
 		}
 	}
+
+  #endif
 }
 #else
-TUNERSTUBDLL_API bool CanMacroTune(void) { return false; }
-TUNERSTUBDLL_API void MacroTune(int channel){}
-#endif
 
-/*
+  #ifdef EXE_MULTITUNER
+TUNERSTUBDLL_API bool CanMacroTune(void) { return true; }
 TUNERSTUBDLL_API void MacroTune(int newNum)
 {
 	STARTUPINFO si; // Startup Info Structure 
@@ -559,5 +629,9 @@ TUNERSTUBDLL_API void MacroTune(int newNum)
 		&si, &pi);
 	CloseHandle(&pi);
 }
+  #else
+    TUNERSTUBDLL_API bool CanMacroTune(void) { return false; }
+    TUNERSTUBDLL_API void MacroTune(int channel){}
+  #endif
 
-*/
+#endif

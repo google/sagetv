@@ -58,6 +58,7 @@ struct URLContext {
     int max_packet_size;  /**< if non zero, the stream is packetized with this max packet size */
     void *priv_data;
     char *filename; /**< specified filename */
+    int is_connected;
 };
 
 typedef struct URLContext URLContext;
@@ -74,6 +75,9 @@ typedef struct URLProtocol {
     int64_t (*url_read_seek)(URLContext *h, int stream_index,
                              int64_t timestamp, int flags);
     int (*url_get_file_handle)(URLContext *h);
+    int priv_data_size;
+//    const AVClass *priv_data_class; not used here but in avio.h
+    void *priv_data_class;
 } URLProtocol;
 
 typedef struct URLPath
@@ -422,7 +426,7 @@ HRESULT CPushReader::Init( )
 	ret = verfyVersion( LIBAVFORMAT_VERSION_MAJOR,  sizeof( URLProtocol ), sizeof(URLContext) );
 	if ( ret )
 	{
-		DbgLog( (LOG_ERROR, 1, TEXT("Error PushReader FFMpeg version isn't matched.")  ) );  
+		DbgLog( (LOG_ERROR, 1, TEXT("Error PushReader FFMpeg version isn't matched. (error code %d)"), ret ) );  
 		return E_FAIL;
 	}
 

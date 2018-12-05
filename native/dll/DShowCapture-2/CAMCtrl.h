@@ -326,8 +326,8 @@ typedef struct
 } SLOTINF;
 
 
-typedef void (__stdcall* PFN_CI_OnSlotStatus)(DWORD Context, char nSlot, char nStatus, SLOTINF* csInfo);
-typedef void (__stdcall* PFN_CI_OnCAStatus)(DWORD Context, char nSlot, char nReplyTag, unsigned short wStatus);
+typedef void (__stdcall* PFN_CI_OnSlotStatus)(void *Context, char nSlot, char nStatus, SLOTINF* csInfo);
+typedef void (__stdcall* PFN_CI_OnCAStatus)(void * Context, char nSlot, char nReplyTag, unsigned short wStatus);
 typedef struct 
 {
       PFN_CI_OnSlotStatus onSlotStatus;

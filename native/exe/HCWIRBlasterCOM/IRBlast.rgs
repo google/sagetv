@@ -1,0 +1,26 @@
+HKCR
+{
+	HCWIRBlasterCOM.IRBlast.1 = s 'IRBlast Class'
+	{
+		CLSID = s '{4587A032-7397-4153-89F9-1D75F12FED1E}'
+	}
+	HCWIRBlasterCOM.IRBlast = s 'IRBlast Class'
+	{		
+		CurVer = s 'HCWIRBlasterCOM.IRBlast.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {4587A032-7397-4153-89F9-1D75F12FED1E} = s 'IRBlast Class'
+		{
+			ProgID = s 'HCWIRBlasterCOM.IRBlast.1'
+			VersionIndependentProgID = s 'HCWIRBlasterCOM.IRBlast'
+			ForceRemove Programmable
+			LocalServer32 = s '%MODULE%'
+			{
+				val ServerExecutable = s '%MODULE_RAW%'
+			}
+			TypeLib = s '{BAEDC50F-F595-4B38-BFD1-430D0B74CF96}'
+			Version = s '1.0'
+		}
+	}
+}

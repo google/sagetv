@@ -550,7 +550,8 @@ JNIEXPORT jboolean JNICALL Java_sage_DShowCaptureDevice_autoTuneChannel0
 	if (capMask(pCapInfo->captureConfig, sage_DShowCaptureDevice_BDA_VIDEO_CAPTURE_MASK ))
 	{
 		HRESULT hr;
-		const char* cnum = env->GetStringUTFChars(jnum, NULL);
+		const char *cnum = env->GetStringUTFChars(jnum, NULL);
+		const char *cnum_save = cnum; // preserve for Release
 		if ( cnum == NULL || *cnum == 0x0 ) cnum = "0";
 		slog((env, "autotune0 digital tuner '%s-%d' num=%s (ver 3.1)\r\n", pCapInfo->videoCaptureFilterName, 
 			        pCapInfo->videoCaptureFilterNum, cnum ));
@@ -559,7 +560,7 @@ JNIEXPORT jboolean JNICALL Java_sage_DShowCaptureDevice_autoTuneChannel0
 		hr = SetupBDAStreamOutFormat( env, pCapInfo, streamType );
 
 		hr = TurnBDAChannel( env, pCapInfo, cnum );
-		env->ReleaseStringUTFChars(jnum, cnum);
+		env->ReleaseStringUTFChars(jnum, cnum_save);
 
 
 		int locked = SageCheckLocked( pCapInfo );

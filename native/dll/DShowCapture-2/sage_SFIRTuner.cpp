@@ -61,7 +61,7 @@ typedef int (*LPFNTakedown)(void);
 typedef bool (*LPFNNeedCarrier)(void);
 typedef bool (*LPFNNeedBitrate)(void);
 typedef bool (*LPFNCanMacroTune)(void);
-typedef int (*LPFNMacroTune)(int);
+typedef void (*LPFNMacroTune)(int);
 typedef int (*LPFNDESTROYLIST)(remote**);
 typedef int (*LPFNPLAY)(remote*, unsigned char*, int);
 
