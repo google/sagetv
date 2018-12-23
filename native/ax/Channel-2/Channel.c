@@ -43,12 +43,7 @@
 #ifdef WIN32
 //*********************** WINDOWS section *********************
 #define rename( x, y )	MoveFile( x, y )
-#if( _MSC_VER <= 800 )
-#pragma pack(1)  
-#else
 #include <pshpack1.h>
-#endif
-
 //*********************** WINDOWS section *********************
 #else
 #ifdef __APPLE__
@@ -3519,3 +3514,7 @@ static int _CopyFile( char* src, char *tar )
 	fclose( ft );
 	return sum;
 }
+
+#ifdef WIN32
+#include <poppack.h>
+#endif

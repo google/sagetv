@@ -142,7 +142,7 @@ TUNERSTUBDLL_API const char* DeviceName() {
 	return "Hauppauge IR Blaster";
 #else
   #ifdef EXE_MULTITUNER
-	  return "EXE Multi Tuner";
+	  return "EXEMultiTunerPlugin";
   #else
 	  return "Stub Transmitter";
 	#endif

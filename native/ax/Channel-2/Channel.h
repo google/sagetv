@@ -65,11 +65,7 @@
 
 //data structure byte packing throughout
 #ifdef WIN32
-#if( _MSC_VER <= 800 )
-#pragma pack(1)  
-#else
 #include <pshpack1.h>
-#endif
 #endif
 
 #if defined(__APPLE__)
@@ -232,7 +228,7 @@ typedef struct Channel
 	uint32_t  delayParse;        //postponde to start parser im million seconds
 	uint32_t freqShift;
 	int32_t	 frqTableUpdateCheck;
-	time_t   frqTableTimeStamp;
+	uint32_t frqTableTimeStamp;
 	char     frqTableFileName[256];
 	char     frqTableFilePath[128];
 	int32_t  tuneCtrl;             //1: naked qam tune.
@@ -333,6 +329,10 @@ void setFrqFilePath( CHANNEL_DATA *Channel, char *FileLocation );
 
 #ifdef __cplusplus
 }
+#endif
+
+#ifdef WIN32
+#include <poppack.h>
 #endif
 
 #if defined(__APPLE__)

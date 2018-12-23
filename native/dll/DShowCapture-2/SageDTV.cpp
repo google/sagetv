@@ -41,11 +41,7 @@
 #include <time.h>
 #include "uniapi.h"
 
-#if( _MSC_VER <= 800 )
-#pragma pack(1)  
-#else
 #include <pshpack1.h>
-#endif
 
 int GetCfgVal( char* Str, char* Name, int MaxNameLen, int* Val, char* Ext, int MaxExtLen );
 extern FilterGraphTools graphTools;
@@ -1759,3 +1755,4 @@ int GetCfgVal( char* Str, char* Name, int MaxNameLen, int* Val, char* Ext, int M
 	}
 	return ret;
 }
+#include <poppack.h>

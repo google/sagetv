@@ -35,13 +35,7 @@
 
 #ifdef WIN32
 //*********************** WINDOWS section *********************
-
-#if( _MSC_VER <= 800 )
-#pragma pack(1)  
-#else
 #include <pshpack1.h>
-#endif
-
 //*********************** WINDOWS section *********************
 #else
 #ifdef __APPLE__
@@ -2784,3 +2778,7 @@ time_t fileTimeStamp( char* szFileName )
 	stat( szFileName, &st );
 	return st.st_mtime;
 }
+
+#ifdef WIN32
+#include <poppack.h>
+#endif

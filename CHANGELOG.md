@@ -1,5 +1,13 @@
 # Change Log
 
+## Version 9.2.0 (2019-01-03)
+* Reworked for Windows 64-bit version
+* Added ExeMultiTunerPlugin project
+* Added USB-UIRT transmit project
+* Added HCWIRBlaster project
+* Changed defaults: video/audio decoder to 'Default', video/dvd_video renderer to 'EVR'
+* Updates to whitelist LAV Filters
+* Updated STV to remove prompt on new install for the weather underground plugin
 * Fix: Sage-x64 hang due to CableCARD tuners (Windows)
 * Fix: Add support for HVR-4400 and other 885 variants (Windows) 
 

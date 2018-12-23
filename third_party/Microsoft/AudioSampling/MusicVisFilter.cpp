@@ -13,7 +13,6 @@
 #include <wxdebug.h>
 #include "../../../native/include/IMusicVis.h"
 #include "MusicVisFilter.h"
-//#include "../../../native/include/guids.h"
 
 
 // Setup data

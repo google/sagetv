@@ -25,11 +25,7 @@ extern "C" {
 #endif
 
 #ifdef WIN32
-#if( _MSC_VER <= 800 )
-#pragma pack(1)  
-#else
 #include <pshpack1.h>
-#endif
 #endif
 
 
@@ -377,6 +373,10 @@ long OnCamPMT( void* context, short bytes, void* mesg );
 int  SwitchCamChannel( JNIEnv *env, DShowCaptureInfo* pCapInfo, int serviceId, int encryptionFlag );
 void EnableCAMPMT( JNIEnv *env, DShowCaptureInfo* pCapInfo );
 void DisableCAMPMT( JNIEnv *env, DShowCaptureInfo* pCapInfo );
+
+#ifdef WIN32
+#include <poppack.h>
+#endif
 
 #ifdef __cplusplus
  }
