@@ -714,7 +714,7 @@ int tuneDVBTFrequency( DShowCaptureInfo* pCapInfo, DVB_T_FREQ* dvbt, int bDryRun
 		}
 		else
 		{
-			flog( ("native.log", "Sucessful Changing DVB-T freq %d band :%d \n", freq, band ) );
+			flog( ("native.log", "Successful Changing DVB-T freq %d band :%d \n", freq, band ) );
 			pCapInfo->dwTuneState = 1;
 		}
 	}
@@ -801,7 +801,7 @@ int tuneDVBCFrequency( DShowCaptureInfo* pCapInfo, DVB_C_FREQ* dvbc, int bDryRun
 		}
 		else
 		{
-			flog( ("native.log", "Sucessful changing DVB-C freq:%d symrate:%d mod:%d fec_in:%d fec_in_rate:%d fec_out:%d fec_out_rate:%d hr=0x%x\n", 
+			flog( ("native.log", "Successful changing DVB-C freq:%d symrate:%d mod:%d fec_in:%d fec_in_rate:%d fec_out:%d fec_out_rate:%d hr=0x%x\n", 
 			             freq, symrate, modulation, innerFEC, innerFECRate, outerFEC, outerFECRate, hr ) );
 			pCapInfo->dwTuneState = 1;
 		}
@@ -954,7 +954,7 @@ int tuneDVBSFrequency( DShowCaptureInfo* pCapInfo, DVB_S_FREQ* dvbs, int bDryRun
 		}
 		else
 		{
-			flog( ("native.log", "Sucessful Changing DVB-S tune request for freq %d symrate:%d mod:%d fec_in:%s fec_in_rate:%s(0x%x) fec_out:%s fec_out_rate:%s pol:%d roll:0x%02x pilot:0x%02x hr=0x%x.\n", 
+			flog( ("native.log", "Successful Changing DVB-S tune request for freq %d symrate:%d mod:%d fec_in:%s fec_in_rate:%s(0x%x) fec_out:%s fec_out_rate:%s pol:%d roll:0x%02x pilot:0x%02x hr=0x%x.\n", 
 				     freq, symrate, modulation, in_fec, in_fec_rate, innerFECRate, out_fec, out_fec_rate, pol, roll_off, pilot, hr ) );
 			pCapInfo->dwTuneState = 1;
 		}

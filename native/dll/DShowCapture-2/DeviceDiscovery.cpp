@@ -472,8 +472,15 @@ static int MergeNameList( JNIEnv *env, DEVNAME* DevName, int numDev, DEVNAME* De
                 else if (!strncmp(DevName1[i].FriendlyName, "Hauppauge WinTV 885 TS Capture 2", 32))
                     j = numDev;
 
+				/* ----------------
+				* JRE: hardcode for Hauppauge HVR-4400, which has 2 BDA Receiver Components
+				* (885 TS Capture, 885 Alt TS Capture) for it's 2 BDA Video Capture Sources
+				*
+				*/
+				else if (!strncmp(DevName1[i].FriendlyName, "Hauppauge WinTV 885 Alt TS Capture", 34))
+					j = numDev;
 
-                /* ----------------
+				/* ----------------
                  * KSF: hardcode for Hauppauge WinTV-dualHD usb stick, which has a single 'TS Capture' and 
                  * 2 Source Filters (ATSC Tuner, ATSC Tuner 2) at it's hardware location.
                  * We don't want user to see (or be able to select) the TS Capture device.

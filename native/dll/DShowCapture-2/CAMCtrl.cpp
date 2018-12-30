@@ -238,7 +238,7 @@ int OpenCAM( JNIEnv *env, DShowCaptureInfo* pCapInfo )
 		ret = OpenTechnoTrendCI( env, pCapInfo );
 	} else
 	{
-		slog(( "CAM:unkown CAM/CI device %s %s-%d\r\n", pTag,
+		slog(( "CAM:unknown CAM/CI device %s %s-%d\r\n", pTag,
 			            pCapInfo->videoCaptureFilterName, pCapInfo->videoCaptureFilterNum ));
 		ret = -1;
 	}
@@ -273,7 +273,7 @@ int CloseCAM( JNIEnv *env, DShowCaptureInfo* pCapInfo )
 		ret = CloseTechnoTrendCI( env, pCapInfo );
 	} else
 	{
-		slog(( "CAM:unkown device %s %s-%d\r\n", pTag,
+		slog(( "CAM:unknown device %s %s-%d\r\n", pTag,
 			            pCapInfo->videoCaptureFilterName, pCapInfo->videoCaptureFilterNum ));
 		ret = -1;
 	}
@@ -306,7 +306,7 @@ void EnableCAMPMT( JNIEnv *env, DShowCaptureInfo* pCapInfo )
 		((CAM_CTRL_HEADER*)pCapInfo->pCamCtrlData)->OnPMTEnable = true;
 	} else
 	{
-		slog(( "CAM:unkown device %s %s-%d\r\n", pTag,
+		slog(( "CAM:unknown device %s %s-%d\r\n", pTag,
 			            pCapInfo->videoCaptureFilterName, pCapInfo->videoCaptureFilterNum ));
 	}
 }
@@ -334,7 +334,7 @@ void DisableCAMPMT( JNIEnv *env, DShowCaptureInfo* pCapInfo )
 		((CAM_CTRL_HEADER*)pCapInfo->pCamCtrlData)->OnPMTEnable = false;
 	} else
 	{
-		slog(( "CAM:unkown device %s %s-%d\r\n", pTag,
+		slog(( "CAM:unknown device %s %s-%d\r\n", pTag,
 			            pCapInfo->videoCaptureFilterName, pCapInfo->videoCaptureFilterNum ));
 	}
 }
@@ -368,7 +368,7 @@ int  SwitchCamChannel( JNIEnv *env, DShowCaptureInfo* pCapInfo, int serviceId, i
 		ret = TechnoTrendCamSwitchChannel( env, pCapInfo, serviceId );
 	} else
 	{
-		slog(( "CAM:unkown device %s %s-%d\r\n", pTag,
+		slog(( "CAM:unknown device %s %s-%d\r\n", pTag,
 			            pCapInfo->videoCaptureFilterName, pCapInfo->videoCaptureFilterNum ));
 		ret = -1;
 	}
@@ -429,7 +429,7 @@ long OnCamPMT( void* context, short bytes, void* mesg )
 	} else
 	{
 		return 0;
-		 slog(( "CAM: Unknown card type for OnCamPTM: unkown name %s-%d\r\n", 
+		 slog(( "CAM: Unknown card type for OnCamPTM: unknown name %s-%d\r\n", 
 														   pCapInfo->videoCaptureFilterName, 
 			                                               pCapInfo->videoCaptureFilterNum ));
 	}
@@ -1534,7 +1534,7 @@ static int GetTechnoTrendDeviceType( JNIEnv *env, DShowCaptureInfo* pCapInfo )
       {
         // _log.Info("Technotrend Unknown card type");
          deviceType = TypeUnknown;
-		 slog(( "CAM:TechnoTrend card type: unkown name %s-%d\r\n", pCapInfo->videoCaptureFilterName, 
+		 slog(( "CAM:TechnoTrend card type: unknown name %s-%d\r\n", pCapInfo->videoCaptureFilterName, 
 			                                               pCapInfo->videoCaptureFilterNum ));
       }
 
@@ -1567,7 +1567,7 @@ static int OpenTechnoTrendCI( JNIEnv *env, DShowCaptureInfo* pCapInfo )
 
 	if ( pTechnoTrend->deviceType == TypeUnknown )
 	{
-		slog(( "CAM:Failed open TechnoTrend device, due to unkown device type %s-%d\r\n", 
+		slog(( "CAM:Failed open TechnoTrend device, due to unknown device type %s-%d\r\n", 
 			 pCapInfo->videoCaptureFilterName, pCapInfo->videoCaptureFilterNum ));
 		return -1;
 	}

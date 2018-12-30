@@ -38,7 +38,7 @@ void BDAGraphConnectDumpSink( JNIEnv* env, DShowCaptureInfo *pCapInfo, IGraphBui
 void BDAGraphDisconnectDumpSink( JNIEnv* env, DShowCaptureInfo *pCapInfo, IGraphBuilder* pGraph );
 void ClearUpDebugFileSource( JNIEnv* env, DShowCaptureInfo *pCapInfo, IGraphBuilder* pGraph );
 HRESULT TurnBDAChannel( JNIEnv *env, DShowCaptureInfo* pCapInfo, const char* cnum  );
-HRESULT ChannelSinalStrength( JNIEnv *env, DShowCaptureInfo* pCapInfo, long *strength, long* quality, bool* locked );
+HRESULT ChannelSignalStrength( JNIEnv *env, DShowCaptureInfo* pCapInfo, long *strength, long* quality, bool* locked );
 void BDAGraphConnectDebugRawDumpSink( JNIEnv* env, DShowCaptureInfo *pCapInfo, IGraphBuilder* pGraph  );
 void BDAGraphSetDebugRawDumpFileName( JNIEnv* env, DShowCaptureInfo *pCapInfo, IGraphBuilder* pGraph, char* Channel  );
 void BDAGraphSetDebugFileSource( JNIEnv* env, DShowCaptureInfo *pCapInfo, IGraphBuilder* pGraph  );
@@ -697,7 +697,7 @@ JNIEXPORT jint JNICALL Java_sage_DShowCaptureDevice_getSignalStrength0
 			return 100;
 
 		long strength =0, quality = 0;
-		HRESULT hr = ChannelSinalStrength(env, pCapInfo, &strength, &quality, NULL);
+		HRESULT hr = ChannelSignalStrength(env, pCapInfo, &strength, &quality, NULL);
 		slog((env, "DTV Signal Strength=%d %d\r\n", strength, quality));
 		return hr == S_OK ?  quality: 0;
 	}
@@ -821,7 +821,7 @@ HRESULT  RetreveBDAChannel( JNIEnv *env, DShowCaptureInfo* pCapInfo, long *plId1
 }
 
 
-HRESULT  ChannelSinalStrength( JNIEnv *env, DShowCaptureInfo* pCapInfo, long *strength, long* quality, bool* locked )
+HRESULT  ChannelSignalStrength( JNIEnv *env, DShowCaptureInfo* pCapInfo, long *strength, long* quality, bool* locked )
 {
 	HRESULT hr;
 	CComPtr <IBDA_Topology> bdaNetTop;

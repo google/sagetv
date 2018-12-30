@@ -1,5 +1,7 @@
 # Change Log
 
+* Fix: Add support for HVR-4400 and other 885 variants (Windows) 
+
 ## Version 9.1.10 (2018-10-13)
 * removed old bytes properties for episodeName and desc to resolve potential crashes
 
