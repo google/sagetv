@@ -1245,7 +1245,7 @@ JNIEXPORT jboolean JNICALL Java_sage_Sage_setupSystemHooks0
 		if ( !ret )
 		{
 			Win32ShellHookEnable = dwEnable;
-			elog((env, "specifiy Win32ShellHookEnable Enable %d in registery\r\n", Win32ShellHookEnable ));
+			elog((env, "specify Win32ShellHookEnable Enable %d in registry\r\n", Win32ShellHookEnable ));
 		} 
 		RegCloseKey( hregkey );
 	}
@@ -1275,7 +1275,7 @@ JNIEXPORT jboolean JNICALL Java_sage_Sage_setupSystemHooks0
 				// Check that it worked
 				if (hookRes)
 				{
-					slog((env, "Succesfully setup system shell hook\r\n"));
+					slog((env, "Successfully setup system shell hook\r\n"));
 				}
 				else
 				{
@@ -1308,7 +1308,7 @@ JNIEXPORT jboolean JNICALL Java_sage_Sage_setupSystemHooks0
 				if ( !ret )
 				{
 					WinRawInputEnable = dwEnable;
-					elog((env, "specifiy RawInputHook Enable %d in registery\r\n", WinRawInputEnable ));
+					elog((env, "specify RawInputHook Enable %d in registry\r\n", WinRawInputEnable ));
 				} 
 				RegCloseKey( hregkey );
 			}
@@ -1335,7 +1335,7 @@ JNIEXPORT jboolean JNICALL Java_sage_Sage_setupSystemHooks0
 				hookRes = lpfnProc((HWND) jhwnd);
 				if (hookRes)
 				{
-					slog((env, "Succesfully setup win raw input\r\n" ));
+					slog((env, "Successfully setup win raw input\r\n" ));
 				}
 				else
 				{
@@ -1347,29 +1347,29 @@ JNIEXPORT jboolean JNICALL Java_sage_Sage_setupSystemHooks0
 		}
 	}
 
-	char KeybooardHookName[100]={0};
+	char KeyboardHookName[100]={0};
 	if ( RegOpenKeyEx(HKEY_LOCAL_MACHINE, regkey, 0, KEY_READ, &hregkey) == ERROR_SUCCESS )
 	{
 		DWORD hType;
-		DWORD hSize = sizeof(KeybooardHookName);
-		ret = RegQueryValueEx( hregkey, "WinKeyboardHook", 0, &hType, (LPBYTE)KeybooardHookName, &hSize);
+		DWORD hSize = sizeof(KeyboardHookName);
+		ret = RegQueryValueEx( hregkey, "WinKeyboardHook", 0, &hType, (LPBYTE)KeyboardHookName, &hSize);
 		if ( ret )
 		{
-			//strcpy( KeybooardHookName, "WinKeyboardHook" );
-			elog((env, "not specifiy WinkeyboardHook in registery, load default one\r\n"));
+			//strcpy( KeyboardHookName, "WinKeyboardHook" );
+			elog((env, "no specific WinkeyboardHook in registry, load default one\r\n"));
 		} else
 		{
-			elog((env, "load specifiy WinkeyboardHook in registry '%s'\r\n", KeybooardHookName ));
+			elog((env, "load specific WinkeyboardHook in registry '%s'\r\n", KeyboardHookName ));
 		}
 		RegCloseKey( hregkey );
 	}
 
-	if ( KeybooardHookName[0] )
+	if ( KeyboardHookName[0] )
 	{
-		hKeybaordLib= LoadLibrary(KeybooardHookName);
+		hKeybaordLib= LoadLibrary(KeyboardHookName);
 		if (!hKeybaordLib)
 		{
-			elog((env, "ERROR Unable to load WinKeyboardHook library:%s\r\n", KeybooardHookName ));
+			elog((env, "ERROR Unable to load WinKeyboardHook library:%s\r\n", KeyboardHookName ));
 			ret = JNI_FALSE;
 		} else
 		{
@@ -1383,12 +1383,12 @@ JNIEXPORT jboolean JNICALL Java_sage_Sage_setupSystemHooks0
 				hookRes = lpfnProc((HWND) jhwnd);
 				if (hookRes)
 				{
-					slog((env, "Succesfully setup WinKeyborad hook\r\n"));
+					slog((env, "Successfully setup WinKeyboard hook\r\n"));
 				}
 				else
 				{
 					// The hook failed
-					elog((env, "Failed setting up WinKeyborad hook\r\n"));
+					elog((env, "Failed setting up WinKeyboard hook\r\n"));
 					ret = JNI_FALSE;
 				}
 			}

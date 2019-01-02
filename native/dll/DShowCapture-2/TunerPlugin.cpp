@@ -104,7 +104,7 @@ int  SetupTunerPlugin( JNIEnv *env, DShowCaptureInfo* pCapInfo, int nTunerType )
 		ret = RegQueryValueEx( hregkey, PluginKey, 0, &hType, (LPBYTE)&PluginName, &hSize);
 		if ( ret )
 		{
-			slog((env, "Tuner Plugin is not specified in registery '%s\\%s' \r\n", regkey, PluginKey ));
+			slog((env, "Tuner Plugin is not specified in registry '%s\\%s' \r\n", regkey, PluginKey ));
 			PluginName[0] = 0;
 			ret = -2;
 		} 
@@ -112,7 +112,7 @@ int  SetupTunerPlugin( JNIEnv *env, DShowCaptureInfo* pCapInfo, int nTunerType )
 	} 
 	else
 	{
-		slog((env, "Tuner Plugin not setup in registery '%s' \r\n", regkey ));
+		slog((env, "Tuner Plugin not setup in registry '%s' \r\n", regkey ));
 		ret = -3;
 	}
 

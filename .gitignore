@@ -995,3 +995,9 @@ third_party/ffmpeg/vhook/
 third_party/mplayer/liba52/liba52.a
 third_party/ffmpeg/libavformat/thp.d
 
+native/.vs/SageWorkspace/v14/.suo
+
+
+*.log
+native/SageWorkspace.VC.db
+native/SageWorkspace.VC.VC.opendb

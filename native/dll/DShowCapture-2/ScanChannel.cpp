@@ -28,7 +28,7 @@
 extern FilterGraphTools graphTools;
 TV_TYPE GetTVType( DShowCaptureInfo *pCapInfo );
 char * TVTypeString( TV_TYPE BDATVType );
-HRESULT  ChannelSinalStrength( JNIEnv *env, DShowCaptureInfo* pCapInfo, long *strength, long* quality, bool* locked );
+HRESULT  ChannelSignalStrength( JNIEnv *env, DShowCaptureInfo* pCapInfo, long *strength, long* quality, bool* locked );
 HRESULT  ChangeATSCChannel( JNIEnv *env, DShowCaptureInfo* pCapInfo, long lPhysicalChannel,long lMajorChannel, long lMinorChannel );
 HRESULT  SetupBDAStreamOutFormat( JNIEnv *env, DShowCaptureInfo* pCapInfo, int streamType );
 

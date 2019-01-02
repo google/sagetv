@@ -275,7 +275,7 @@ JNIEXPORT jintArray JNICALL Java_sage_DShowCaptureDevice_getCrossbarConnections0
 		*devNameEnd = '\0';
 
 
-	//ZQ if board has BDA source tunner, if it's avaliable, make it as a fake crossbar
+	//ZQ if board has BDA source tuner, if it's avaliable, make it as a fake crossbar
 	// if only device has video output or stream pin and BDA, we think it valid BDA video capture   ZQ.
 	BOOL hasBDAInput = FALSE;
 	CComPtr<IBaseFilter> pFilter = NULL; //we could optimize following code.
@@ -839,57 +839,88 @@ JNIEXPORT jint JNICALL Java_sage_DShowCaptureDevice_getDeviceCaps0
 #undef sage_DShowCaptureDevice_BDA_DVB_C
 #define sage_DShowCaptureDevice_BDA_DVB_C   0x1000000L
 
-        //Processing Hauppauge tuners
-        if ( hcw && bFoundDevice )
-        {
-            slog((env, "It's Hauppauge device.\r\n") );
-            if ( strstr( CaptureDrvInfo.device_desc, "HVR-1250") || strstr( CaptureDrvInfo.device_desc, "HVR-1255") ||
-                 strstr( CaptureDrvInfo.device_desc, "HVR-1550") )
-            {
-                //hasCaptureDetails = false;
-                hasCaptureDetails = true;
-                isHybridCapture = false;
-                detailsCaptureMask = 0x00500; // sage_DShowCaptureDevice_MPEG_VIDEO_RAW_AUDIO_CAPTURE_MASK | sage_DShowCaptureDevice_RAW_AV_CAPTURE_MASK
-                detailsChipsetMask = 0;
-                slog((env, "A HVR-1250/1255/1550 analog tuner is found.\r\n" ));
+	//Processing Hauppauge tuners
+	if ( hcw && bFoundDevice )
+	{
+		slog((env, "It's Hauppauge device.\r\n") );
+		if ( strstr( CaptureDrvInfo.device_desc, "HVR-1250") || strstr( CaptureDrvInfo.device_desc, "HVR-1255") || 
+			 strstr( CaptureDrvInfo.device_desc, "HVR-1550") )
+		{  
+			//hasCaptureDetails = false;
+			hasCaptureDetails = true;
+			isHybridCapture = false;
+			detailsCaptureMask = 0x00500; // sage_DShowCaptureDevice_MPEG_VIDEO_RAW_AUDIO_CAPTURE_MASK | sage_DShowCaptureDevice_RAW_AV_CAPTURE_MASK
+			detailsChipsetMask = 0;
+			slog((env, "A HVR-1250/1255/1550 analog tuner is found.\r\n" ));				
 
-            } else
-            if ( strstr( CaptureDrvInfo.device_desc, "PVR-160") )
-            {
-                isHybridCapture = false;
-                detailsCaptureMask = 0x000800;  // sage_DShowCaptureDevice_MPEG_AV_CAPTURE_MASK
-                detailsChipsetMask = 0;
-                slog((env, "A PVR-160 is found.\r\n" ));
-            } else
-            //hard code for HVR-4000 desc:"Hauppauge WinTV 88x Video (Hybrid, DVB-T/S2+IR)"
-            if ( strstr( CaptureDrvInfo.device_desc, "Hybrid, DVB-T/S") )
-            {
-                isHybridCapture = false;
-                hasCaptureDetails = false;
-                detailsCaptureMask = 0x000800;  // sage_DShowCaptureDevice_MPEG_AV_CAPTURE_MASK
-                detailsChipsetMask = 0;
-                BDAInputType = sage_DShowCaptureDevice_BDA_DVB_S|sage_DShowCaptureDevice_BDA_DVB_T;
-                slog((env, "A boundle card is found (Analog+DVB-T+DVB-S), DVB-T|DVB-S added into source.\r\n" ) );
-            } else
-            if ( strstr( CaptureDrvInfo.device_desc, "WinTV HVR-930C") )
-            {
-                isHybridCapture = false;
-                hasCaptureDetails = false;
-                detailsCaptureMask = 0x000800;  // sage_DShowCaptureDevice_MPEG_AV_CAPTURE_MASK
-                detailsChipsetMask = 0;
-                BDAInputType = sage_DShowCaptureDevice_BDA_DVB_C|sage_DShowCaptureDevice_BDA_DVB_T;
-                slog((env, "A boundle card is found, DVB-T|DVB-C added into source.\r\n" ) );
-            }       
-        } 
+		}
+		else
+		if ( strstr( CaptureDrvInfo.device_desc, "PVR-160") )
+		{
+			isHybridCapture = false;
+			detailsCaptureMask = 0x000800;  // sage_DShowCaptureDevice_MPEG_AV_CAPTURE_MASK
+			detailsChipsetMask = 0;
+			slog((env, "A PVR-160 is found.\r\n" ));
+		}
+		else
 
-        // HD PVR 60 has a video input pin, but no tuner. Due to the driver, CheckFakeBDACrossBar()
-        // returns 1, but we don't want to show 'Digital Tv Tuner' input, so...
-        // (for all previou Hauppauge devices with HDPVR_ENCODER_MASK, hasBDAInput=0 anyway)
-        // Might need to add other conditions here for future capture devices
-        if (detailsChipsetMask & sage_DShowCaptureDevice_HDPVR_ENCODER_MASK) 
-        {
-           skipCrossbarCheck = TRUE;
-        }
+		// hard code for HVR-4000 and HVR-3000 desc:"Hauppauge WinTV 88x Video (Hybrid, DVB-T/S"
+		if ( strstr( CaptureDrvInfo.device_desc, "Hybrid, DVB-T/S") )
+		{
+			isHybridCapture = false;
+			hasCaptureDetails = false;
+			detailsCaptureMask = 0x000800;  // sage_DShowCaptureDevice_MPEG_AV_CAPTURE_MASK
+			detailsChipsetMask = 0;
+			BDAInputType = sage_DShowCaptureDevice_BDA_DVB_S|sage_DShowCaptureDevice_BDA_DVB_T;
+			slog((env, "A bundle card is found (Analog+DVB-T+DVB-S), DVB-T|DVB-S added into source.\r\n" ) );
+		}
+		else
+
+		// hard code for HVR-4400 and (3300, 5500, 4405,5505)? desc:"Hauppauge WinTV HVR-4400 (Model 121xxx, Hybrid DVB-T/S2, IR)"
+		// it's a hybrid, but has DVB-T and DVB-S connected to two different TS Capture filters
+		if ( strstr(CaptureDrvInfo.device_desc, "Hybrid DVB-T/S"))
+		{
+			isHybridCapture = false;
+			hasCaptureDetails = false;
+			detailsCaptureMask = 0x000800;  // sage_DShowCaptureDevice_MPEG_AV_CAPTURE_MASK
+			detailsChipsetMask = 0;
+			BDAInputType = sage_DShowCaptureDevice_BDA_DVB_S | sage_DShowCaptureDevice_BDA_DVB_T;
+			slog((env, "A bundle card is found (Analog+DVB-T+DVB-S), DVB-T|DVB-S added into source.\r\n"));
+		}
+		else
+
+		// hard code for HVR-5525 desc:"Hybrid DVB-T/C/S2, IR)"
+		// it's a hybrid, but has DVB-T,DVB-C and DVB-S connected to two different TS Capture filters
+		if (strstr(CaptureDrvInfo.device_desc, "Hybrid DVB-T/C"))
+		{
+			isHybridCapture = false;
+			hasCaptureDetails = false;
+			detailsCaptureMask = 0x000800;  // sage_DShowCaptureDevice_MPEG_AV_CAPTURE_MASK
+			detailsChipsetMask = 0;
+			BDAInputType = sage_DShowCaptureDevice_BDA_DVB_S | sage_DShowCaptureDevice_BDA_DVB_T | sage_DShowCaptureDevice_BDA_DVB_C;
+			slog((env, "A bundle card is found (Analog+DVB-T+DVB-S+DVB-C), DVB-T|DVB-S|DVB-C added into source.\r\n"));
+		}
+		else
+
+		if ( strstr( CaptureDrvInfo.device_desc, "WinTV HVR-930C") )
+		{
+			isHybridCapture = false;
+			hasCaptureDetails = false;
+			detailsCaptureMask = 0x000800;  // sage_DShowCaptureDevice_MPEG_AV_CAPTURE_MASK
+			detailsChipsetMask = 0;
+			BDAInputType = sage_DShowCaptureDevice_BDA_DVB_C|sage_DShowCaptureDevice_BDA_DVB_T;
+			slog((env, "A bundle card is found, DVB-T|DVB-C added into source.\r\n" ) );
+		}
+	}
+
+		// HD PVR 60 has a video input pin, but no tuner. Due to the driver, CheckFakeBDACrossBar()
+		// returns 1, but we don't want to show 'Digital Tv Tuner' input, so...
+		// (for all previou Hauppauge devices with HDPVR_ENCODER_MASK, hasBDAInput=0 anyway)
+		// Might need to add other conditions here for future capture devices
+		if (detailsChipsetMask & sage_DShowCaptureDevice_HDPVR_ENCODER_MASK) 
+		{
+			skipCrossbarCheck = TRUE;
+		}
 
         if (skipCrossbarCheck)
         {
@@ -916,7 +947,7 @@ JNIEXPORT jint JNICALL Java_sage_DShowCaptureDevice_getDeviceCaps0
 				detailsCaptureMask = 0x000800;  // sage_DShowCaptureDevice_MPEG_AV_CAPTURE_MASK
 				detailsChipsetMask = 0;
 				BDAInputType = sage_DShowCaptureDevice_BDA_DVB_S|sage_DShowCaptureDevice_BDA_DVB_T;
-				slog((env, "A boundle card is found (Analog+DVB-T+DVB-S), DVB-T|DVB-S added into source.\r\n" ) );
+				slog((env, "A bundle card is found (Analog+DVB-T+DVB-S), DVB-T|DVB-S added into source.\r\n" ) );
 			}
 		}
 
@@ -1319,7 +1350,7 @@ BOOL CheckFakeBDACrossBar( JNIEnv *env, char* capFiltName, int CapFiltNum, char*
 			{
 				if ( BDAFiltDevName != NULL )
 					strncpy( BDAFiltDevName, captureArray[nTunerIndex], BDAFiltDevNameSize );
-				slog((env, "Mutil-tuner(%d) BDA capture is found on location:'%s' id:'%s' for %s-%d. (%s,%d,desc:%s).\r\n", hasBDAInput,
+				slog((env, "Multi-tuner(%d) BDA capture is found on location:'%s' id:'%s' for %s-%d. (%s,%d,desc:%s).\r\n", hasBDAInput,
 					    VideoCaptureDrvInfo.hardware_loc, VideoCaptureDrvInfo.hardware_id, 
 						capFiltName, CapFiltNum, captureArray[nTunerIndex], nTunerIndex, VideoCaptureDrvInfo.device_desc ) );
 			} else
@@ -1327,7 +1358,7 @@ BOOL CheckFakeBDACrossBar( JNIEnv *env, char* capFiltName, int CapFiltNum, char*
 				char *p = "";
 				if (  nTunerIndex >= 0 && nTunerIndex <MAX_BDA_TUNER_NUM &&  captureArray[nTunerIndex] != NULL ) 
 					p =  captureArray[nTunerIndex];
-				slog((env, "ERROR: Mutil-tuner(%d) BDA capture is found on location:'%s' id '%s' for %s-%d.(%s,%d, desc:%s) , matching failed.\r\n", 
+				slog((env, "ERROR: Multi-tuner(%d) BDA capture is found on location:'%s' id '%s' for %s-%d.(%s,%d, desc:%s) , matching failed.\r\n", 
 					        hasBDAInput, 
 					        VideoCaptureDrvInfo.hardware_loc, VideoCaptureDrvInfo.hardware_id, 
 							capFiltName, CapFiltNum, p, nTunerIndex, VideoCaptureDrvInfo.device_desc ) );
