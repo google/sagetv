@@ -1,5 +1,6 @@
 # Change Log
 
+* Fix: Sage-x64 hang due to CableCARD tuners (Windows)
 * Fix: Add support for HVR-4400 and other 885 variants (Windows) 
 
 ## Version 9.1.10 (2018-10-13)
