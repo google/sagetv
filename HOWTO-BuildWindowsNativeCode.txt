@@ -16,9 +16,8 @@ The process involves the following steps:
 1. Install JDK
 2. Install GitHub Desktop (optional)
 3. Install DirectX SDK
-4. Install SDK 6.1
-5. Install Visual Studio 2015
-6. Build SageTv Windows native code
+4. Install Visual Studio 2015
+5. Build SageTv Windows native code
 
 
 =====================================================================
@@ -99,39 +98,7 @@ C) Verify DXSDK_DIR env. variable is set (in System env. vars.)
 
 
 =====================================================================
-4. Install SDK6.1
-=====================================================================
-
-Steps:
------
-A) Download the installer from:
-  http://www.microsoft.com/en-us/download/details.aspx?id=11310
-
-B) Launch the installer
-  (the bulk of the actual installation is downloaded)
-
-  Accept the installer's default destinations, e.g.:
-    Destination folder:
-      C:\Program Files\Microsoft SDKs\Windows\v6.1
-
-    Destination folder for Samples:
-      C:\Program Files\Microsoft SDKs\Windows\v6.1\Samples
-
-  Wait for "Installation finished OK."
-
-C) Create an environment variable:
-    WINDOWS61SDK     
-  It's value should be the path to where the SDK was installed, i.e., 
-    C:\Program Files\Microsoft SDKs\Windows\v6.1
-  Do NOT quote the path, even though it may contain embedded spaces.
-
-D) Run Windows update, get updates for the SDK
-
-E) Reboot, if requested
-
-
-=====================================================================
-5. Install VS2015 (aka vs14)
+4. Install VS2015 (aka vs14)
 =====================================================================
 Visual Studio 2015 provides an IDE for working native code.  It also
 included necessary libraries and compile tools.
@@ -180,7 +147,7 @@ Note: You can re-run the installer again later to add or change
 
 
 =====================================================================
-6. Build SageTv Windows native code
+5. Build SageTv Windows native code
 =====================================================================
 
 We're finally ready to build Windows "native" (non-Java) code.
@@ -192,7 +159,6 @@ Prerequisites:
   - Environment variables set:
     DXSDK_DIR
     SAGEDEVJDK
-    WINDOWS61SDK
 
 Steps:
 -----
@@ -230,9 +196,6 @@ Common build failures:
 * "RC1015: cannot open include file 'afxres.h' "
   Re-run the VS2015 installer and verify that MS Foundation Classes 
   were installed.
-
-* "fatal error C1083: Cannot open include file: 'qedit.h' "
-  This occurs if WINDOWS61SDK is missing or incorrect
 
 * "can't find jvm.lib"
   This occurs if SAGEDEVJDK is missing or incorrect

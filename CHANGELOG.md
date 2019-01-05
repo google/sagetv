@@ -1,5 +1,6 @@
 # Change Log
 
+* Removed dependency on SDK6.1 (Windows)
 * Fix: Sage-x64 hang due to CableCARD tuners (Windows)
 * Fix: Add support for HVR-4400 and other 885 variants (Windows) 
 
