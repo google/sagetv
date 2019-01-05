@@ -80,7 +80,7 @@
         "mov                        (%%"REG_d"), %%"REG_S"  \n\t"\
         "jb                                  1b             \n\t"\
         :: "r" (&c->redDither),\
-        "r" (dest), "g" (width)\
+        "r" (dest), "g" ((x86_reg) width)\
         : "%"REG_a, "%"REG_d, "%"REG_S\
     );
 
@@ -142,7 +142,7 @@
         "mov                        (%%"REG_d"), %%"REG_S"  \n\t"\
         "jb                                  1b             \n\t"\
         :: "r" (&c->redDither),\
-        "r" (dest), "g" (width)\
+        "r" (dest), "g" ((x86_reg) width)\
         : "%"REG_a, "%"REG_d, "%"REG_S\
     );
 
@@ -2494,7 +2494,7 @@ static inline void RENAME(hcscale_fast)(SwsContext *c, int16_t *dst,
 /* GCC 3.3 makes MPlayer crash on IA-32 machines when using "g" operand here,
 which is needed to support GCC 4.0. */
 #if ARCH_X86_64 && AV_GCC_VERSION_AT_LEAST(3,4)
-            :: "m" (src1), "m" (dst), "g" (dstWidth), "m" (xInc_shr16), "m" (xInc_mask),
+            :: "m" (src1), "m" (dst), "g" ((x86_reg) dstWidth), "m" (xInc_shr16), "m" (xInc_mask),
 #else
             :: "m" (src1), "m" (dst), "m" (dstWidth), "m" (xInc_shr16), "m" (xInc_mask),
 #endif

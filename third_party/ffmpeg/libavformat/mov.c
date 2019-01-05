@@ -22,6 +22,8 @@
 // for nanosleep on non-Win platforms
 #ifndef __MINGW32__
 #include <time.h>
+#else
+#include <unistd.h> // usleep
 #endif
 #include <limits.h>
 
