@@ -606,16 +606,18 @@ public class SFIRTuner implements Runnable
          int cmdNum = Integer.parseInt(cmdString);
       } catch (Exception e) {
          String cmdStringNumeric = cmdString.replaceAll("\\D", ""); // remove all non-digits
-	 cmdString = cmdStringNumeric;
+         cmdString = cmdStringNumeric;
          if (Sage.DBG) System.out.println("IR tune command must be all digits; converted it to: " + cmdString);
       }
 
       if (canMacroTune())
       {
-	try {
-          macroTune(Integer.parseInt(cmdString));
-	}
-        catch (Exception e){}
+         try {
+            macroTune(Integer.parseInt(cmdString));
+         } 
+         catch (Exception e){
+            if (Sage.DBG) System.out.println("Exception in playTuneString");
+         }
       }
       else
       {
