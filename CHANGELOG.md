@@ -1,5 +1,7 @@
 # Change Log
+
 * Fix: IR interface hangs trying to send non-numeric (eg: 42-1-1) command.
+* Removed dependency on SDK6.1 (Windows)
 * Fix: Sage-x64 hang due to CableCARD tuners (Windows)
 * Fix: Add support for HVR-4400 and other 885 variants (Windows) 
 
