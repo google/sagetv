@@ -52,7 +52,7 @@ extern "C" {
 
 #ifdef WIN32
   #ifndef FAACAPI
-    #define FAACAPI __stdcall
+    #define FAACAPI __cdecl
   #endif
 #else
   #ifndef FAACAPI

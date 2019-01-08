@@ -15,6 +15,7 @@
  *   License along with this library; if not, write to the Free Software
  *   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
+
 inline unsigned int GetImcbpc(BitStream *s)
 {
     int code=GetBits(s, 9, 0);
@@ -1815,3 +1816,10 @@ inline unsigned int Getmvd(BitStream *s)
     }
 }
 
+//need these for 'inline' to work
+unsigned int GetImcbpc(BitStream *s);
+unsigned int GetPmcbpc(BitStream *s);
+unsigned int GetCBPY(BitStream *s);
+unsigned int GetINTRATCOEF(BitStream *s);
+unsigned int GetTCOEF(BitStream *s);
+unsigned int Getmvd(BitStream *s);

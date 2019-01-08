@@ -3277,9 +3277,15 @@ int64_t av_gettime(void)
 #if defined(CONFIG_WINCE)
     return timeGetTime() * INT64_C(1000);
 #elif defined(__MINGW32__)
+  // time is #defined in libavutil/internal.h - breaks tb.time below
+  #define saved_time time
+  #undef time
+
     struct timeb tb;
     _ftime(&tb);
     return ((int64_t)tb.time * INT64_C(1000) + (int64_t)tb.millitm) * INT64_C(1000);
+
+  #define time saved_time
 #else
     struct timeval tv;
     gettimeofday(&tv,NULL);

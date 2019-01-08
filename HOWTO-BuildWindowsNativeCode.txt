@@ -3,8 +3,8 @@
 ---- Overview ----
 ------------------
 
-This document details how to setup the build environment for
-Sagetv Open Source, using Visual Studio 2015, for the purpose
+This document details how to setup the build environment for SageTV Open
+Source, using Visual Studio 2015 and MSYS2/MINGW, for the purpose
 of building Windows "native" (non-Java) code.  It assumes a Windows
 computer with no previous installation of the tools listed below.
 
@@ -13,11 +13,13 @@ and do not skip the reboots.
 
 The process involves the following steps:
 
-1. Install JDK
+1. Install JDK (32 & 64 bit)
 2. Install GitHub Desktop (optional)
 3. Install DirectX SDK
 4. Install Visual Studio 2015
-5. Build SageTv Windows native code
+5. Install MSYS2 & required packages
+6. Build SageTV Windows native code in MinGW
+7. Build SageTV Windows native code in Visual Studio
 
 
 =====================================================================
@@ -28,26 +30,35 @@ Info:
   In deciding between installing the 32-bit vs. 64-bit
   version of JDK, consider that prior to SageOpenSource, SageTv
   was originally built using the 32-bit version of Java.
-  To avoid unforseen issues it may be wise to start with a 32-bit 
+  To avoid unforseen issues it may be wise to start with a 32-bit
   JDK installation for initial development.
 
 
 Steps:
 ------
-A) Download the Java Development Kit.
+A) Download the Java Development Kits (Windows x86 and Windows x64).
 
   Available here:
 http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
 
-B) Install the Java Development Kit.
-  Note the folder that it's installed to.
+B) Install the Java Development Kits.
+  Note the folders that they're installed to.
 
-C) Create the following Environment Variable:
+C) Create the following Environment Variables:
+
     SAGEDEVJDK
 
-  It's value should be the path to where JDK was installed, i.e., 
+  It's value should be the path to where JDK was installed, i.e.,
   something like:
     C:\Program Files (x86)\Java\jdk1.8.0_60
+
+  Do NOT quote the path, even though it may contain embedded spaces.
+
+    SAGEDEVJDK64
+
+  It's value should be the path to where JDK was installed, i.e.,
+  something like:
+    C:\Program Files\Java\jdk1.8.0_60
 
   Do NOT quote the path, even though it may contain embedded spaces.
 
@@ -60,7 +71,7 @@ Info:
 -----
   GitHub Desktop is used to access the Sage source-code repository.
 
-  Use of GitHub Desktop is optional.  It's also possible to download 
+  Use of GitHub Desktop is optional.  It's also possible to download
   source code via the web interface, at:
     https://github.com/google/sagetv
 
@@ -90,7 +101,7 @@ B) Run the installer
    check this option)
 
 
-  The installer automatically adds DXSDK_DIR to the **System** 
+  The installer automatically adds DXSDK_DIR to the **System**
   environment variables.  On a 64-bit OS, DXSDK_DIR points to:
     C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)
 
@@ -114,13 +125,13 @@ C) Launch the downloaded file (runs the installer)
 Visual Studio Community 2015 window opens:
   Accept the default installation location
     e.g. C:\Program Files (x86)\Microsoft Visual Studio 14.0
-  
+
   "Choose the type of installation"
     select "Custom"
 
   Click "Next" button
 
-  At the Select Features window, 
+  At the Select Features window,
     Select the following features **in addition** to the defaults:
     Programming Languages
       Select "Visual C++"
@@ -147,25 +158,107 @@ Note: You can re-run the installer again later to add or change
 
 
 =====================================================================
-5. Build SageTv Windows native code
+5. Install MSYS2 & required packages
+=====================================================================
+MSYS2 is a software building platform that provides a Unix-like command
+line and tools.  Details here:   https://github.com/msys2/msys2/wiki
+
+Download it here:
+
+https://www.msys2.org
+
+Select the x64_64 version if your OS is 64-bit and you want to build
+64-bit code.
+
+Follow the installation instructions on the msys2.org page.
+
+Once it's installed, there will be 3 shortcuts in your start menu under
+"MSYS2 64bit":  MSYS2 MSYS, MSYS2 MinGW 32-bit and MSYS2 MinGW 64-bit.
+
+Run the MSYS one to install support the following packages using 'pacman':
+
+pacman -S msys/make
+pacman -S msys/autoconf
+pacman -S msys/automake1.15
+pacman -S msys/automake-wrapper
+pacman -S msys/libtool
+pacman -S mingw32/mingw-w64-i686-gcc
+pacman -S mingw64/mingw-w64-x86_64-gcc
+pacman -S mingw32/mingw-w64-i686-yasm
+pacman -S mingw64/mingw-w64-x86_64-yasm
+pacman -S mingw32/mingw-w64-i686-freetype
+pacman -S mingw64/mingw-w64-x86_64-freetype
+pacman -S mingw32/mingw-w64-i686-harfbuzz
+pacman -S mingw64/mingw-w64-x86_64-harfbuzz
+pacman -S mingw32/mingw-w64-i686-libpng 
+pacman -S mingw64/mingw-w64-x86_64-libpng
+pacman -S mingw32/mingw-w64-i686-graphite2
+pacman -S mingw64/mingw-w64-x86_64-graphite2
+pacman -S mingw32/mingw-w64-i686-zlib
+pacman -S mingw64/mingw-w64-x86_64-zlib
+
+
+Using 'pacman -Ss <pattern>' will list available packages matching the
+pattern.  Use 'pacman -Q' to list all installed packges.
+
+MSYS2 MSYS is only used to configure the 32/64 bit MinGW enviroments.
+Close it after the packages are installed.
+
+
+=====================================================================
+6. Build SageTV Windows native code in MinGW
 =====================================================================
 
-We're finally ready to build Windows "native" (non-Java) code.
+Run either MSYS2 MinGW 32-bit or MSYS2 MinGW 64-bit.
+Use the 32-bit or 64-bit MinGW version to build 32-bit or 64-bit SageTV.
+
+Prerequisites:
+-----
+  - Packages listed above are installed.
+  - You're in the proper shell (MINGW32 or MINGW64 after the prompt).
+  - SAGEDEVJDK & SAGEDEVJDK64 environment variables are set.  Confirm by
+    typing 'env'.
+
+Steps:
+-----
+A.  Navigate to the sagetv/buildwin directory.  The C drive is mounted as
+    '/c' so you can do something like 'cd /c/projects/sagetv/buildwin'.
+
+B.  run ./buildwin.sh
+
+This builds the following support DLL's an places them in buildwin/Win32 or
+buildwin/x64:
+  - swscale.dll
+  - ImageLoader.dll
+  - Pushreader.dll
+  - FreetypeFontJNI.dll
+  - Mpeg2Transcoder.dll
+
+It also builds third_party/SageTV-LGPL/Pushreader/(Win32|x64)/Pushreader.lib
+which is referenced in the Visual Studio StrmDeMux project.
+
+
+=====================================================================
+7. Build SageTV Windows native code in Visual Studio
+=====================================================================
+
+We're finally ready to build VS2015 Windows "native" (non-Java) code.
 
 Prerequisites:
 -----
   - JDK installed.
-  - DirectX SDK, SDK6.1 & Visual Studio installed and configured
+  - DirectX SDK & Visual Studio installed and configured
   - Environment variables set:
     DXSDK_DIR
     SAGEDEVJDK
+    SAGEDEVJDK64
 
 Steps:
 -----
 A) Verify that the above environment variables have been set.
    Visual Studio needs them all to build the Solution.
-   - Open a Command Prompt window.  
-   - Type "set".  
+   - Open a Command Prompt window.
+   - Type "set".
    - Verify the variables listed above.
 
 B) Use Git to get a local copy of the repository onto your computer.
@@ -188,13 +281,13 @@ E) Build the Solution:
   - In the Solution Explorer sub-window, highlight SageWorkspace.
   - Right-click SageLauncher, select "Build"
 
-  The resultant files will be in native\Build\Release & Debug
+  The resultant files will be in native\Build\Release\Win32
 
 
 Common build failures:
 -----------------------
 * "RC1015: cannot open include file 'afxres.h' "
-  Re-run the VS2015 installer and verify that MS Foundation Classes 
+  Re-run the VS2015 installer and verify that MS Foundation Classes
   were installed.
 
 * "can't find jvm.lib"
@@ -202,6 +295,3 @@ Common build failures:
 
 *  "fatal error C1083: Cannot open include file: 'D3dX9.h' "
   This occurs if DXSDK_DIR is missing or incorrect
-
-
-

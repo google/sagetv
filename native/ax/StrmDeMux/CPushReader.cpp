@@ -46,6 +46,15 @@
 ////////////////////////////////////////////////////////////////////
 #define LIBAVFORMAT_VERSION_MAJOR  52
 
+typedef struct {
+    const char* class_name;
+    const char* (*item_name)(void* ctx);
+    const struct AVOption *option;
+    int version;
+    int log_level_offset_offset;
+    int parent_log_context_offset;
+} AVClass;
+
 struct URLContext {
 #if LIBAVFORMAT_VERSION_MAJOR >= 53
     const AVClass *av_class; ///< information for av_log(). Set by url_open().
@@ -56,6 +65,7 @@ struct URLContext {
     int max_packet_size;  /**< if non zero, the stream is packetized with this max packet size */
     void *priv_data;
     char *filename; /**< specified filename */
+    int is_connected;
 };
 
 typedef struct URLContext URLContext;
@@ -72,6 +82,8 @@ typedef struct URLProtocol {
     int64_t (*url_read_seek)(URLContext *h, int stream_index,
                              int64_t timestamp, int flags);
     int (*url_get_file_handle)(URLContext *h);
+    int priv_data_size;
+    const AVClass *priv_data_class;
 } URLProtocol;
 
 typedef struct URLPath

@@ -1,5 +1,6 @@
 # Change Log
 
+* Enabled MSYS2/MinGW compile for FFMPEG-based projects (Windows)
 * Fix: IR interface hangs trying to send non-numeric (eg: 42-1-1) command.
 * Removed dependency on SDK6.1 (Windows)
 * Fix: Sage-x64 hang due to CableCARD tuners (Windows)

@@ -1,0 +1,18 @@
+FFMPEG_DIR=../../../third_party/ffmpeg
+
+CC:=gcc
+
+CFLAGS = -c -fPIC -I"$(SAGEDEVJDK)/include" -I"$(SAGEDEVJDK)/include/win32" -I$(FFMPEG_DIR)
+
+
+OBJFILES=Mpeg2Transcoder.o
+
+Mpeg2Transcoder.dll: $(OBJFILES)
+	$(CC) -s -static-libgcc -Wl,--kill-at -shared -W -o Mpeg2Transcoder.dll $(OBJFILES) -L../../../third_party/SageTV-LGPL/imageload -lswscale -Wl,-Bstatic -L$(FFMPEG_DIR)/libavutil -L$(FFMPEG_DIR)/libavformat -L$(FFMPEG_DIR)/libavcodec -lavformat-minimal -lavcodec-minimal -lavutil-minimal -L"$(MINGW_PREFIX)/lib" -lm -lz -lws2_32 -lwsock32
+	case `uname` in \
+	  MINGW32*) mkdir -p Win32 ; cp Mpeg2Transcoder.dll Win32 ;; \
+	  MINGW64*) mkdir -p x64   ; cp Mpeg2Transcoder.dll x64   ;; \
+	esac
+
+clean:
+	rm -f *.o Mpeg2Transcoder.dll *.c~ *.h~

@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include "flashmpeg4.h"
 
+
 //#define DEBUGHEADER
 //#define DEBUGMB
 //#define DEBUG
@@ -29,22 +30,6 @@
 //#define DEBUGPUTBITS
 //#define DEBUGDC
 //#define NOPBLOCKS
-
-// We need to decode each frame from flv to coefficients then 
-// back from coefficients to I263 and Pmpeg4 blocks.
-
-typedef struct
-{
-    int format;
-    int tr;
-    int width;
-    int height;
-    int ptype;
-    int unk;
-    int pquant;
-    int mbwidth;
-    int mbheight;
-} flv_state;
 
 // Read bits
 // Read vlc
@@ -208,14 +193,6 @@ unsigned int mvdvlc[2][33] = {
       10, 11, 11, 11, 11, 11, 11, 12,
       12}
 };
-
-typedef struct
-{
-    unsigned char *dataptr;
-    int position; // in bits
-    int size; // in bits
-    int error;
-} BitStream;
 
 // We can optimize this later with some caching...
 // Rules: we don't peek at more than 24 bits so we can keep 32bits in buffer down to 24 bits...
@@ -469,7 +446,7 @@ int PutMVD(BitStream *os, int code, int sign)
     return 0;
 }
 
-readBlock(BitStream *is, BitStream *os, int mbx, int mby, int startpos, flv_state *state, int intra, int curquant)
+void readBlock(BitStream *is, BitStream *os, int mbx, int mby, int startpos, flv_state *state, int intra, int curquant)
 {
     int pos=startpos;
     int run;
@@ -599,7 +576,7 @@ readBlock(BitStream *is, BitStream *os, int mbx, int mby, int startpos, flv_stat
     }
 }
 
-putVolHeader(BitStream *s, flv_state *state)
+void putVolHeader(BitStream *s, flv_state *state)
 {
     PutBits(s, 32, 0x100);
     PutBits(s, 32, 0x120);
@@ -642,7 +619,7 @@ putVolHeader(BitStream *s, flv_state *state)
     PadByte(s);
 }
 
-putVopHeader(BitStream *s, flv_state *state, int virtualframe)
+void putVopHeader(BitStream *s, flv_state *state, int virtualframe)
 {
     PutBits(s, 32, 0x1B6);
     if(!virtualframe)
@@ -728,7 +705,7 @@ short preddc(int bx, int by, int width, short dc, short *predbuffer)
     return dc-(pred+4)/8;
 }
 
-convertFrame(unsigned char *input, int inlen, unsigned char *output, int outlen, int *used,
+int convertFrame(unsigned char *input, int inlen, unsigned char *output, int outlen, int *used,
     short *predbuffer)
 {
     BitStream is;

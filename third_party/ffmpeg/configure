@@ -1729,7 +1729,7 @@ set_default host_cc
 
 exesuf() {
     case $1 in
-        mingw32*|cygwin*|*-dos|freedos|opendos|os/2*) echo .exe ;;
+        mingw*|cygwin*|*-dos|freedos|opendos|os/2*) echo .exe ;;
     esac
 }
 
@@ -2246,7 +2246,7 @@ case $target_os in
         enabled_any pic shared ||
             { check_cflags -mdynamic-no-pic && add_asflags -mdynamic-no-pic; }
         ;;
-    mingw32*)
+    mingw*)
         if test $target_os = "mingw32ce"; then
             disable network
         else
