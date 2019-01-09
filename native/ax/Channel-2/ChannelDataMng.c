@@ -17,7 +17,9 @@
 #ifdef WIN32
 #pragma warning(disable : 4996)
 #pragma warning(disable: 4702)
-#define _USE_32BIT_TIME_T
+#ifndef _WIN64
+  #define _USE_32BIT_TIME_T
+#endif
 #endif
 #include <stdlib.h>
 #include <stdio.h>
@@ -30,18 +32,10 @@
 #include "ChannelScan.h"
 #include "Channel.h"
 
-#include "Channel.h"
-
 
 #ifdef WIN32
 //*********************** WINDOWS section *********************
-
-#if( _MSC_VER <= 800 )
-#pragma pack(1)  
-#else
 #include <pshpack1.h>
-#endif
-
 //*********************** WINDOWS section *********************
 #else
 #ifdef __APPLE__
@@ -220,7 +214,7 @@ char* makeDVBCFreqString( char*Buf, int Size,  DVB_C_FREQ * Freq  );
 static bool  parseDVBSFreqEntry( char* p_in, DVB_S_FREQ * Freq, char** error  );
 char* makeDVBSFreqString( char*Buf, int Size,  DVB_S_FREQ * Freq  );
 bool GetString( char*p, const char* Name, char* Str, int MaxLen );
-uint32_t fileTimeStamp( char* szFileName );
+time_t fileTimeStamp( char* szFileName );
 static char version_string[] ="VERSION 3.0, country:%s\r\n";
 static char type_string[] ="TYPE %s\r\n";
  
@@ -1336,7 +1330,7 @@ static int getNextTextField( char* p_in, char **p_out, char* text, int max_len )
 		
 	if ( p != NULL )
 	{
-		bytes = min( p - token, max_len-1 );
+		bytes = min( (int) (p - token), max_len-1 );
 		strncpy( text, token, bytes );
 		text[bytes] = 0x0;
 	}
@@ -2776,7 +2770,7 @@ int ConvertIllegalChar2( char* filename )
 }
 
 #include <sys/stat.h>
-uint32_t fileTimeStamp( char* szFileName )
+time_t fileTimeStamp( char* szFileName )
 {
 	struct stat st;
 	if ( szFileName == NULL || szFileName[0] == 0 )
@@ -2784,3 +2778,7 @@ uint32_t fileTimeStamp( char* szFileName )
 	stat( szFileName, &st );
 	return st.st_mtime;
 }
+
+#ifdef WIN32
+#include <poppack.h>
+#endif

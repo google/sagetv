@@ -68,8 +68,13 @@ BEGIN
     BEGIN
         BLOCK "080004b0"
         BEGIN
-			VALUE "FileDescription", "SageTV"
-			VALUE "InternalName", "SageTV"
+#ifdef _WIN64
+			VALUE "FileDescription", "SageTV 64-bit"
+			VALUE "InternalName", "SageTV 64-bit"
+#else
+			VALUE "FileDescription", "SageTV 32-bit"
+			VALUE "InternalName", "SageTV 32-bit"
+#endif
 			VALUE "OriginalFilename", "SageTV.exe"
 			VALUE "ProductName", "SageTV"
 			VALUE "CompanyName", "SageTV Open Source"

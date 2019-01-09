@@ -16,7 +16,9 @@
 
 #pragma warning(disable : 4996)
 
-#define _USE_32BIT_TIME_T
+#ifndef _WIN64
+  #define _USE_32BIT_TIME_T
+#endif
 
 #include <streams.h>
 
@@ -46,15 +48,6 @@
 ////////////////////////////////////////////////////////////////////
 #define LIBAVFORMAT_VERSION_MAJOR  52
 
-typedef struct {
-    const char* class_name;
-    const char* (*item_name)(void* ctx);
-    const struct AVOption *option;
-    int version;
-    int log_level_offset_offset;
-    int parent_log_context_offset;
-} AVClass;
-
 struct URLContext {
 #if LIBAVFORMAT_VERSION_MAJOR >= 53
     const AVClass *av_class; ///< information for av_log(). Set by url_open().
@@ -83,7 +76,8 @@ typedef struct URLProtocol {
                              int64_t timestamp, int flags);
     int (*url_get_file_handle)(URLContext *h);
     int priv_data_size;
-    const AVClass *priv_data_class;
+//    const AVClass *priv_data_class; not used here but in avio.h
+    void *priv_data_class;
 } URLProtocol;
 
 typedef struct URLPath
@@ -272,7 +266,7 @@ static int feeder_open(URLContext *h, const char *filename, int flags)
     fd = _sopen( p,  _O_RDONLY|_O_BINARY, _SH_DENYNO , _S_IREAD|_S_IWRITE );
     if (fd < 0)
         return -2;//AVERROR(ENOENT);
-    h->priv_data = (void *) (intptr_t) fd;
+    h->priv_data = (void *) fd;
     return 0;
 }
 
@@ -377,7 +371,7 @@ static int feeder_close(URLContext *h)
 
 static int feeder_get_handle(URLContext *h)
 {
-    return (intptr_t) h->priv_data;
+    return (int) h->priv_data;
 }
 
 URLProtocol sagetv_protocol = {
@@ -432,7 +426,7 @@ HRESULT CPushReader::Init( )
 	ret = verfyVersion( LIBAVFORMAT_VERSION_MAJOR,  sizeof( URLProtocol ), sizeof(URLContext) );
 	if ( ret )
 	{
-		DbgLog( (LOG_ERROR, 1, TEXT("Error PushReader FFMpeg version isn't matched.")  ) );  
+		DbgLog( (LOG_ERROR, 1, TEXT("Error PushReader FFMpeg version isn't matched. (error code %d)"), ret ) );  
 		return E_FAIL;
 	}
 
@@ -492,12 +486,12 @@ HRESULT CPushReader::Init( )
 			m_pTrackInf[TrackNum].av.d.v.mpeg_video.width  = Width;
 			m_pTrackInf[TrackNum].av.d.v.mpeg_video.height = Height;
 			m_pTrackInf[TrackNum].av.d.v.mpeg_video.progressive = !m_pTrackInf[TrackNum].av.d.v.mpeg_video.progressive;
-			DbgLog( (LOG_TRACE, 2, TEXT("Found video: MPEG1 %dx%d frame_rate(%d/%d) progress:%d bitrate:%d, lan:'%s'"),  Width, Height,
-				                   (int*)m_pTrackInf[TrackNum].av.d.v.mpeg_video.frame_num, 
-								   (int*)m_pTrackInf[TrackNum].av.d.v.mpeg_video.frame_den,
+			DbgLog( (LOG_TRACE, 2, TEXT("Found video: MPEG1 %dx%d frame_rate(%d/%d) progress:%d bitrate:%d, lan:'%lu'"),  Width, Height,
+				                   m_pTrackInf[TrackNum].av.d.v.mpeg_video.frame_num, 
+								   m_pTrackInf[TrackNum].av.d.v.mpeg_video.frame_den,
 								   m_pTrackInf[TrackNum].av.d.v.mpeg_video.progressive,
 								   m_pTrackInf[TrackNum].av.d.v.mpeg_video.bit_rate,
-								   &m_pTrackInf[TrackNum].language) );  
+								   m_pTrackInf[TrackNum].language) );  
 			break;
 		case 2:  //MPEG2
 			m_pTrackInf[TrackNum].av.format_fourcc = SAGE_FOURCC( "MPGV" );

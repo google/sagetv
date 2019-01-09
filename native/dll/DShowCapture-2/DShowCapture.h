@@ -35,11 +35,7 @@
 #include <tune.h>     //ZQ       
 
 #ifdef WIN32
-#if( _MSC_VER <= 800 )
-#pragma pack(1)  
-#else
 #include <pshpack1.h>
-#endif
 #endif
 
 #define CAPTURE_NUM 2
@@ -141,6 +137,9 @@ typedef struct DShowCaptureInfo
 #define E_FREQUENCY_NOT_UNDEFINED  0x81000201
 #define E_CHANNEL_DISABLED		   0x81000202
 
+#ifdef WIN32
+#include <poppack.h>
+#endif
 
 extern HANDLE mutex350Encoder;
 #endif

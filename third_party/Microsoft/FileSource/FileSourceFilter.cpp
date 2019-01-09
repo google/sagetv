@@ -326,7 +326,7 @@ STDMETHODIMP CFileSourceOutpin::RequestAllocator( IMemAllocator* pPreferred,
     return hr;
 }
 
-STDMETHODIMP CFileSourceOutpin::Request( IMediaSample* pSample, DWORD dwUser )
+STDMETHODIMP CFileSourceOutpin::Request( IMediaSample* pSample, DWORD_PTR dwUser )
 {
     REFERENCE_TIME tStart, tStop;
     HRESULT hr = pSample->GetTime(&tStart, &tStop);
@@ -371,7 +371,7 @@ STDMETHODIMP CFileSourceOutpin::Request( IMediaSample* pSample, DWORD dwUser )
 	return m_pAsyncIO->Request(llPos, lLength, TRUE,	pBuffer, (LPVOID)pSample, dwUser);
 }
 
-STDMETHODIMP CFileSourceOutpin::WaitForNext( DWORD dwTimeout, IMediaSample** ppSample, DWORD * pdwUser)		
+STDMETHODIMP CFileSourceOutpin::WaitForNext( DWORD dwTimeout, IMediaSample** ppSample, DWORD_PTR * pdwUser)		
 {
     LONG cbActual;
     IMediaSample* pSample;

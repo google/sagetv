@@ -349,8 +349,8 @@ EVNT_CODE CodeTbl3[] ={
 
 LRESULT CALLBACK WinKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
-	static DWORD dwLastVKCode = 0;
-	static DWORD dwEvtKillVKCode = 0;
+	static LPARAM dwLastVKCode = 0;
+	static LPARAM dwEvtKillVKCode = 0;
 	LPARAM SageEvent=0;
 	// Call the next handler in the chain
 	if (nCode == HC_ACTION && hWinKeybaordNotifyWnd != NULL ) 

@@ -1144,7 +1144,7 @@ static int OpenAnyseeCam( JNIEnv *env, DShowCaptureInfo* pCapInfo )
 		if ( pAnysee->CILib->OpenCILib(NULL, ADList.dwADIndex[i]) == S_OK )
 		{
 			pAnysee->portNum = i;
-			int ret = pAnysee->CILib->CI_Control(CI_CONTROL_IS_PLUG_OPEN, (long *)&fCIStateFunc, (long *)fCIMessageFunc);
+			int ret = pAnysee->CILib->CI_Control(CI_CONTROL_IS_PLUG_OPEN, (LPARAM *)&fCIStateFunc, (LPARAM *)fCIMessageFunc);
 			if ( !SUCCEEDED( ret ) )
 			{
 				slog(( "CAM: Anysee failed seeting CI fCIStateFunc,  fCIMessageFunc on port %d\r\n", pAnysee->portNum ));
@@ -1292,8 +1292,8 @@ static long OnAnyseePMT(  JNIEnv *env, DShowCaptureInfo* pCapInfo, short bytes, 
 //////////////////////////////////////////////////////////////////////////////
 //TechnoTrend CI 
 //////////////////////////////////////////////////////////////////////////////
-static void __stdcall OnCAStatus(DWORD Context, char nSlot, char nReplyTag, unsigned short wStatus );
-static void __stdcall OnSlotStatus( DWORD Context, char nSlot, char nStatus, SLOTINF* csInfo );
+static void __stdcall OnCAStatus(void * Context, char nSlot, char nReplyTag, unsigned short wStatus );
+static void __stdcall OnSlotStatus( void * Context, char nSlot, char nStatus, SLOTINF* csInfo );
 
 
 
@@ -1726,7 +1726,7 @@ static long OnTechnoTrendPMT( JNIEnv *env, DShowCaptureInfo* pCapInfo, short byt
 	return 0;
 }
 
-static void __stdcall OnSlotStatus( DWORD context, char nSlot, char Status, SLOTINF* csInfo )
+static void __stdcall OnSlotStatus( void *context, char nSlot, char Status, SLOTINF* csInfo )
 {
 	DShowCaptureInfo* pCapInfo;
 	if ( context == NULL )
@@ -1760,7 +1760,7 @@ static void __stdcall OnSlotStatus( DWORD context, char nSlot, char Status, SLOT
 	slog(( "CAM:*slot TechnoTrend CAM/CI slot status changed %d\r\n", Status )); 
 }
 
-static void __stdcall OnCAStatus(DWORD Context, char nSlot, char nReplyTag, unsigned short wStatus )
+static void __stdcall OnCAStatus(void *Context, char nSlot, char nReplyTag, unsigned short wStatus )
 {
 	//printf( "TechnoTrend CA status change\n" );
 	slog(( "CAM:#slot TechnoTrend CAM/CI slot status changed:%d slot:%d tag:%d\r\n", wStatus, nSlot, nReplyTag ));

@@ -17,7 +17,9 @@
 // Eliminate silly MS compiler security warnings about using POSIX functions
 #pragma warning(disable : 4996)
 #pragma warning(disable: 4702)
-#define _USE_32BIT_TIME_T
+#ifndef _WIN64
+  #define _USE_32BIT_TIME_T
+#endif
 
 #include "stdafx.h"
 #include <bdatypes.h>
@@ -39,11 +41,7 @@
 #include <time.h>
 #include "uniapi.h"
 
-#if( _MSC_VER <= 800 )
-#pragma pack(1)  
-#else
 #include <pshpack1.h>
-#endif
 
 int GetCfgVal( char* Str, char* Name, int MaxNameLen, int* Val, char* Ext, int MaxExtLen );
 extern FilterGraphTools graphTools;
@@ -1757,3 +1755,4 @@ int GetCfgVal( char* Str, char* Name, int MaxNameLen, int* Val, char* Ext, int M
 	}
 	return ret;
 }
+#include <poppack.h>

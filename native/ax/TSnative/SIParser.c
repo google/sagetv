@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 // Eliminate silly MS compiler security warnings about using POSIX functions
-#define _USE_32BIT_TIME_T 1
+#ifndef _WIN64
+  #define _USE_32BIT_TIME_T
+#endif
 #pragma warning(disable : 4996)
 
 #include <stdio.h>
@@ -297,7 +299,7 @@ int _mem_release( char* p, void* ctx, int line )
 		if ( i >= MAX_HEAP_SIZE )
 		{
 			char buf[64];
-			sprintf( buf, "Caught a illegal memory free 0x%lx at line:%d\n", (unsigned long)p, line );
+			sprintf( buf, "Caught a illegal memory free %p at line:%d\n", p, line );
 			_log_error( buf );
 			return 1;
 		}
@@ -1032,9 +1034,9 @@ int EPGNotifyATSC( SI_PARSER* pParser, EIT* pEit )
 	memset( buf, 0x0, bytes );
 	used_bytes = 0; 
 
-	sprintf( buf, "EPG-0|%d-%d %s|GPS:%ld|%ld|%s|", 
+	sprintf( buf, "EPG-0|%d-%d %s|GPS:%lld|%ld|%s|", 
 		pVct->major_num, pVct->minor_num, pVct->minor_num == 0 ? "AN" :"DT", 
-		pEit->start_time, pEit->during_length, language	);
+		(long long) pEit->start_time, pEit->during_length, language	);
 
 	used_bytes += strlen( buf );
 	if ( used_bytes >= bytes )
@@ -2294,10 +2296,10 @@ static unsigned short GetServiceType( SI_PARSER* pParser, int ONID, int TSID, in
 }
 */
 DEIT* LookUpDEIT( SI_PARSER* pParser, unsigned short service_id, unsigned short TSID, 
-				  unsigned short ONID, unsigned short event_id, unsigned long start_time )
+				  unsigned short ONID, unsigned short event_id, time_t start_time )
 {
 	int i, latest_event;
-	unsigned latest_start_time;
+	time_t latest_start_time;
 	for ( i = 0; i<pParser->DEITNum; i++ )
 	{
 		if ( pParser->deit[i].service_id == service_id &&
@@ -2692,7 +2694,8 @@ static int UnpackDVBEIT( SI_PARSER* pParser, SECTION_HEADER* pSectionHeader, uns
 {
 	unsigned char* p;
 	unsigned short service_id, TSID, ONID, event_id;
-	unsigned long start_time, duration_length;
+	time_t        start_time;
+	unsigned long duration_length;
 	int total_bytes, bytes;
 	int n;
 

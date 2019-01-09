@@ -22,7 +22,7 @@
 #include <stdio.h>
 #include <direct.h>
 
-#define JVM_MISSING MessageBox(NULL, "Could not get information on current JVM.\nPlease install Java Runtime Environment 1.4","Java Missing", MB_OK);\
+#define JVM_MISSING MessageBox(NULL, "Could not get information on current JVM.\nPlease reinstall Java Runtime Environment 1.7 or greater.","Java Missing", MB_OK);\
 
 LRESULT CALLBACK WndProc( HWND hWnd, UINT messg,
 								WPARAM wParam, LPARAM lParam );
@@ -313,7 +313,11 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	HMODULE sageLib = LoadLibrary("SageTVWin32.dll");
 	if (sageLib)
 	{
+#ifdef _WIN64
+		LPFNSetupHooks hookProc = (LPFNSetupHooks)GetProcAddress(sageLib, "Java_sage_Sage_setupSystemHooks0");
+#else
 		LPFNSetupHooks hookProc = (LPFNSetupHooks)GetProcAddress(sageLib, "_Java_sage_Sage_setupSystemHooks0@16");
+#endif
 		if (hookProc)
 		{
 			hookProc(env, 0, (jlong)hWnd);

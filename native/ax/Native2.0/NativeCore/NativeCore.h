@@ -24,7 +24,9 @@ extern "C" {
 #define NULL    ((void *)0)
 #endif
 
-#define _USE_32BIT_TIME_T
+#ifndef _WIN64
+  #define _USE_32BIT_TIME_T
+#endif
 
 #define _LARGEFILE64_SOURCE
 
