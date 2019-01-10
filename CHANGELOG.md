@@ -1,5 +1,6 @@
 # Change Log
 
+* New: Add EXEMultiTunerPlugin, HCWIRBlaster & USB-UUIRT VS projects (Windows)
 * 64-bit code and VS project updates (Windows)
 * Enabled MSYS2/MinGW compile for FFMPEG-based projects (Windows)
 * Fix: IR interface hangs trying to send non-numeric (eg: 42-1-1) command.
