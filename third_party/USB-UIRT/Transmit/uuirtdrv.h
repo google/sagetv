@@ -29,24 +29,24 @@
 // This class is exported from the uuirtdrv.dll
 //class UUIRTDRV_API CUuirtdrv {
 //public:
-//	CUuirtdrv(void);
-//	// TODO: add your methods here.
+//  CUuirtdrv(void);
+//  // TODO: add your methods here.
 //};
 
 typedef struct
 {
-	unsigned int fwVersion;
-	unsigned int protVersion;
-	unsigned char fwDateDay;
-	unsigned char fwDateMonth;
-	unsigned char fwDateYear;
+  unsigned int fwVersion;
+  unsigned int protVersion;
+  unsigned char fwDateDay;
+  unsigned char fwDateMonth;
+  unsigned char fwDateYear;
 } UUINFO, *PUUINFO;
 
 typedef struct UUGPIO
 {
-	BYTE	irCode[6];
-	BYTE	action;
-	BYTE	duration;
+  BYTE  irCode[6];
+  BYTE  action;
+  BYTE  duration;
 } *PUUGPIO;
 
 typedef void *HUUHANDLE;
@@ -63,7 +63,7 @@ UUIRTDRV_API HUUHANDLE PASCAL UUIRTOpen(void);
 
 UUIRTDRV_API HUUHANDLE PASCAL UUIRTOpenEx(char *devName, DWORD dwFlagsAndAttributes, void *reserved0, void *reserved1);
 
-#define UUIRTDRV_OPENEX_ATTRIBUTE_EXCLUSIVE	0x0001
+#define UUIRTDRV_OPENEX_ATTRIBUTE_EXCLUSIVE 0x0001
 
 UUIRTDRV_API BOOL PASCAL UUIRTClose(HUUHANDLE hHandle);
 
@@ -102,36 +102,36 @@ UUIRTDRV_API BOOL PASCAL UUIRTEEProgram(HUUHANDLE hHandle, FT_PROGRAM_DATA *ftDa
 
 
 
-typedef HUUHANDLE	(WINAPI *pfn_UUIRTOpen)		(void);
-typedef HUUHANDLE	(WINAPI *pfn_UUIRTOpenEx)		(char *devName, DWORD dwFlagsAndAttributes, void *reserved0, void *reserved1);
-typedef BOOL		(WINAPI *pfn_UUIRTClose)	(HUUHANDLE hHandle);
-typedef BOOL		(WINAPI *pfn_UUIRTGetDrvInfo)(unsigned int *puDrvVersion);
-typedef	BOOL		(WINAPI *pfn_UUIRTGetDrvVersion)(unsigned int *puDLLVersion);
-typedef BOOL		(WINAPI *pfn_UUIRTGetUUIRTInfo)(HUUHANDLE hHandle, PUUINFO puuInfo);
-typedef BOOL		(WINAPI *pfn_UUIRTGetUUIRTConfig)(HUUHANDLE hHandle, PUINT32 puConfig);
-typedef BOOL		(WINAPI *pfn_UUIRTSetUUIRTConfig)(HUUHANDLE hHandle, UINT32 uConfig);
-typedef BOOL		(WINAPI *pfn_UUIRTSetReceiveCallback)(HUUHANDLE hHandle, PUUCALLBACKPROC receiveProc, void *userData);
-typedef	BOOL		(WINAPI *pfn_UUIRTTransmitIR)(HUUHANDLE hHandle, char *IRCode, int codeFormat, int repeatCount, int inactivityWaitTime, HANDLE hEvent, void *reserved0, void *reserved1);
-typedef	BOOL		(WINAPI *pfn_UUIRTLearnIR)(HUUHANDLE hHandle, int codeFormat, char *IRCode, PLEARNCALLBACKPROC progressProc, void *userData, BOOL *pAbort, unsigned int param1, void *reserved0, void *reserved1);
-typedef	BOOL		(WINAPI *pfn_UUIRTGetUUIRTGPIOCfg)(HUUHANDLE hHandle, int *pNumSlots, UINT32 *pdwPortPins, PUUGPIO pGPIOStruct);
-typedef	BOOL		(WINAPI *pfn_UUIRTSetUUIRTGPIOCfg)(HUUHANDLE hHandle, int index, PUUGPIO pGpioSt);
+typedef HUUHANDLE (WINAPI *pfn_UUIRTOpen)(void);
+typedef HUUHANDLE (WINAPI *pfn_UUIRTOpenEx)(char *devName, DWORD dwFlagsAndAttributes, void *reserved0, void *reserved1);
+typedef BOOL    (WINAPI *pfn_UUIRTClose)(HUUHANDLE hHandle);
+typedef BOOL    (WINAPI *pfn_UUIRTGetDrvInfo)(unsigned int *puDrvVersion);
+typedef BOOL    (WINAPI *pfn_UUIRTGetDrvVersion)(unsigned int *puDLLVersion);
+typedef BOOL    (WINAPI *pfn_UUIRTGetUUIRTInfo)(HUUHANDLE hHandle, PUUINFO puuInfo);
+typedef BOOL    (WINAPI *pfn_UUIRTGetUUIRTConfig)(HUUHANDLE hHandle, PUINT32 puConfig);
+typedef BOOL    (WINAPI *pfn_UUIRTSetUUIRTConfig)(HUUHANDLE hHandle, UINT32 uConfig);
+typedef BOOL    (WINAPI *pfn_UUIRTSetReceiveCallback)(HUUHANDLE hHandle, PUUCALLBACKPROC receiveProc, void *userData);
+typedef BOOL    (WINAPI *pfn_UUIRTTransmitIR)(HUUHANDLE hHandle, char *IRCode, int codeFormat, int repeatCount, int inactivityWaitTime, HANDLE hEvent, void *reserved0, void *reserved1);
+typedef BOOL    (WINAPI *pfn_UUIRTLearnIR)(HUUHANDLE hHandle, int codeFormat, char *IRCode, PLEARNCALLBACKPROC progressProc, void *userData, BOOL *pAbort, unsigned int param1, void *reserved0, void *reserved1);
+typedef BOOL    (WINAPI *pfn_UUIRTGetUUIRTGPIOCfg)(HUUHANDLE hHandle, int *pNumSlots, UINT32 *pdwPortPins, PUUGPIO pGPIOStruct);
+typedef BOOL    (WINAPI *pfn_UUIRTSetUUIRTGPIOCfg)(HUUHANDLE hHandle, int index, PUUGPIO pGpioSt);
 #if 0
-typedef	BOOL		(WINAPI *pfn_UUIRTEERead)(HUUHANDLE hHandle, FT_PROGRAM_DATA *ftData);
-typedef	BOOL		(WINAPI *pfn_UUIRTEEProgram)(HUUHANDLE hHandle, FT_PROGRAM_DATA *ftData);
+typedef BOOL    (WINAPI *pfn_UUIRTEERead)(HUUHANDLE hHandle, FT_PROGRAM_DATA *ftData);
+typedef BOOL    (WINAPI *pfn_UUIRTEEProgram)(HUUHANDLE hHandle, FT_PROGRAM_DATA *ftData);
 #endif
 
-#define UUIRTDRV_CFG_LEDRX		0x0001
-#define UUIRTDRV_CFG_LEDTX		0x0002
-#define UUIRTDRV_CFG_LEGACYRX	0x0004
+#define UUIRTDRV_CFG_LEDRX    0x0001
+#define UUIRTDRV_CFG_LEDTX    0x0002
+#define UUIRTDRV_CFG_LEGACYRX 0x0004
 
-#define UUIRTDRV_IRFMT_UUIRT	0x0000
-#define UUIRTDRV_IRFMT_PRONTO	0x0010
+#define UUIRTDRV_IRFMT_UUIRT  0x0000
+#define UUIRTDRV_IRFMT_PRONTO 0x0010
 
-#define UUIRTDRV_IRFMT_LEARN_FORCERAW	0x0100
-#define UUIRTDRV_IRFMT_LEARN_FORCESTRUC	0x0200
-#define UUIRTDRV_IRFMT_LEARN_FORCEFREQ	0x0400
-#define UUIRTDRV_IRFMT_LEARN_FREQDETECT	0x0800
-#define UUIRTDRV_IRFMT_LEARN_UIR		0x4000
-#define UUIRTDRV_IRFMT_LEARN_DEBUG		0x8000
+#define UUIRTDRV_IRFMT_LEARN_FORCERAW   0x0100
+#define UUIRTDRV_IRFMT_LEARN_FORCESTRUC 0x0200
+#define UUIRTDRV_IRFMT_LEARN_FORCEFREQ  0x0400
+#define UUIRTDRV_IRFMT_LEARN_FREQDETECT 0x0800
+#define UUIRTDRV_IRFMT_LEARN_UIR        0x4000
+#define UUIRTDRV_IRFMT_LEARN_DEBUG      0x8000
 
-#define UUIRTDRV_IRFMT_TRANSMIT_DC		0x0080
+#define UUIRTDRV_IRFMT_TRANSMIT_DC      0x0080

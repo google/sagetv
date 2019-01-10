@@ -36,33 +36,3 @@ DLLDATA_ROUTINES( aProxyFileList, GET_DLL_CLSID )
 #endif
 
 /* end of generated dlldata file */
-files in this DLL, specifying this file for the
-   /dlldata command line option
-
-*********************************************************/
-
-#define PROXY_DELEGATION
-
-#include <rpcproxy.h>
-
-#ifdef __cplusplus
-extern "C"   {
-#endif
-
-EXTERN_PROXY_FILE( HCWIRBlasterCOM )
-
-
-PROXYFILE_LIST_START
-/* Start of list */
-  REFERENCE_PROXY_FILE( HCWIRBlasterCOM ),
-/* End of list */
-PROXYFILE_LIST_END
-
-
-DLLDATA_ROUTINES( aProxyFileList, GET_DLL_CLSID )
-
-#ifdef __cplusplus
-}  /*extern "C" */
-#endif
-
-/* end of generated dlldata file */

@@ -122,14 +122,14 @@ BOOL loadDLL(void)
   }
   loadCount = 0;
 
-    hinstLib = LoadLibrary("uuirtdrv");
+  hinstLib = LoadLibrary("uuirtdrv");
 
-    // If the handle is valid, try to get the function address.
+  // If the handle is valid, try to get the function address.
 
-    if (hinstLib != NULL)
-    {
-        fnUUIRTOpen = (pfn_UUIRTOpen) GetProcAddress(hinstLib, "UUIRTOpen");
-        fnUUIRTClose = (pfn_UUIRTClose) GetProcAddress(hinstLib, "UUIRTClose");
+  if (hinstLib != NULL)
+  {
+    fnUUIRTOpen = (pfn_UUIRTOpen) GetProcAddress(hinstLib, "UUIRTOpen");
+    fnUUIRTClose = (pfn_UUIRTClose) GetProcAddress(hinstLib, "UUIRTClose");
     fn_UUIRTGetDrvInfo  = (pfn_UUIRTGetDrvInfo) GetProcAddress(hinstLib, "UUIRTGetDrvInfo");
     fn_UUIRTGetUUIRTInfo = (pfn_UUIRTGetUUIRTInfo) GetProcAddress(hinstLib, "UUIRTGetUUIRTInfo");
     fn_UUIRTGetUUIRTConfig = (pfn_UUIRTGetUUIRTConfig) GetProcAddress(hinstLib, "UUIRTGetUUIRTConfig");
@@ -139,19 +139,18 @@ BOOL loadDLL(void)
     fn_UUIRTLearnIR = (pfn_UUIRTLearnIR) GetProcAddress(hinstLib, "UUIRTLearnIR");
     fn_UUIRTGetDrvVersion = (pfn_UUIRTGetDrvVersion) GetProcAddress(hinstLib, "UUIRTGetDrvVersion");
     fnUUIRTOpenEx = NULL;
-        fnUUIRTOpenEx = (pfn_UUIRTOpenEx) GetProcAddress(hinstLib, "UUIRTOpenEx");
+    fnUUIRTOpenEx = (pfn_UUIRTOpenEx) GetProcAddress(hinstLib, "UUIRTOpenEx");
 
     if (!fnUUIRTOpen ||
-      !fnUUIRTClose ||
-      !fn_UUIRTGetDrvInfo ||
-      !fn_UUIRTGetUUIRTInfo ||
-      !fn_UUIRTGetUUIRTConfig ||
-      !fn_UUIRTSetUUIRTConfig ||
-      !fn_UUIRTSetReceiveCallback ||
-      !fn_UUIRTTransmitIR ||
-      !fn_UUIRTLearnIR ||
-      !fn_UUIRTGetDrvVersion
-)
+        !fnUUIRTClose ||
+        !fn_UUIRTGetDrvInfo ||
+        !fn_UUIRTGetUUIRTInfo ||
+        !fn_UUIRTGetUUIRTConfig ||
+        !fn_UUIRTSetUUIRTConfig ||
+        !fn_UUIRTSetReceiveCallback ||
+        !fn_UUIRTTransmitIR ||
+        !fn_UUIRTLearnIR ||
+        !fn_UUIRTGetDrvVersion)
     {
       unLoadDLL();
       return FALSE;
@@ -159,6 +158,7 @@ BOOL loadDLL(void)
 
     return TRUE;
   }
+
   return FALSE;
 }
 
@@ -364,7 +364,6 @@ bool openHelper(int deviceNum)
         static char myStr[256];
 
         sprintf_s(myStr,256, "Error: Unable to initialize USB-UIRT (unknown error) [%08lx]!\n",err);
-        DbgLog(myStr);
         errStr = myStr;
       }
 
@@ -378,6 +377,7 @@ bool openHelper(int deviceNum)
 
   if (errStr)
   {
+    DbgLog(errStr);
     return false;
   }
 
@@ -405,11 +405,10 @@ void closeHelper(int deviceNum)
 
   if ((hDrvHandle[deviceNum]) && (hDrvHandle[deviceNum] != INVALID_HANDLE_VALUE))
     fnUUIRTClose(hDrvHandle[deviceNum]);
-  {
-    hDrvHandle[deviceNum] = NULL;
 
-    unLoadDLL();
-  }
+  hDrvHandle[deviceNum] = NULL;
+
+  unLoadDLL();
 }
 
 TUNERSTUBDLL_API void CloseDevice()

@@ -29,15 +29,14 @@ class CHCWIRBlasterCOMModule : public ATL::CAtlExeModuleT< CHCWIRBlasterCOMModul
 public :
 	DECLARE_LIBID(LIBID_HCWIRBlasterCOMLib)
 	DECLARE_REGISTRY_APPID_RESOURCEID(IDR_HCWIRBLASTERCOM, "{9CA9D5C7-DBBE-4D4E-A135-DF12D4FC5550}")
-	};
+};
 
 CHCWIRBlasterCOMModule _AtlModule;
 
 
 
 //
-extern "C" int WINAPI _tWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, 
-								LPTSTR /*lpCmdLine*/, int nShowCmd)
+extern "C" int WINAPI _tWinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPTSTR /*lpCmdLine*/, int nShowCmd)
 {
 	return _AtlModule.WinMain(nShowCmd);
 }
