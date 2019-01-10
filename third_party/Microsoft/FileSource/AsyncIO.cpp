@@ -164,7 +164,7 @@ CAsyncIo::Request(
     if (bAligned) {
         if (!IsAligned(llPos) ||
     	!IsAligned(lLength) ||
-    	!IsAligned( (LONG)pBuffer )) {
+    	!IsAligned((LONGLONG)pBuffer )) {
             return VFW_E_BADALIGN;
         }
     }
@@ -197,7 +197,7 @@ HRESULT
 CAsyncIo::WaitForNext(
     DWORD dwTimeout,
     LPVOID *ppContext,
-    DWORD * pdwUser,
+    DWORD_PTR * pdwUser,
     LONG* pcbActual)
 {
     // some errors find a sample, others don't. Ensure that
@@ -274,7 +274,7 @@ CAsyncIo::SyncReadAligned(
 {
     if (!IsAligned(llPos) ||
 	!IsAligned(lLength) ||
-	!IsAligned((LONG) pBuffer)) {
+	!IsAligned((LONGLONG) pBuffer)) {
         return VFW_E_BADALIGN;
     }
 
@@ -617,7 +617,7 @@ CAsyncIo::SyncRead(
 {
     if (IsAligned(llPos) &&
 	IsAligned(lLength) &&
-	IsAligned((LONG)pBuffer)) {
+	IsAligned((LONGLONG)pBuffer)) {
         LONG cbUnused;
 	    return SyncReadAligned(llPos, lLength, pBuffer, &cbUnused, NULL);
     }

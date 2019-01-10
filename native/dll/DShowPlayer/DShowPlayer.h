@@ -31,20 +31,11 @@
 // This is for all graph events
 #define WM_DVD_EVENT (WM_USER + 396)
 
-#if( _MSC_VER <= 800 )
-#pragma pack(4)  
-#else
 #include <pshpack4.h>
-#endif
-
 
 class CVMRAllocator;
 
-#if( _MSC_VER <= 800 )
-#pragma pack(1)  
-#else
 #include <pshpack1.h>
-#endif
 
 class CPlayerData
 {
@@ -138,3 +129,6 @@ protected:
 	CKeyProvider* prov;
 #endif
 };
+
+#include <poppack.h>
+#include <poppack.h>

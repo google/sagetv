@@ -21,11 +21,7 @@
 
 //data structure byte packing throughout
 #ifdef WIN32
-#if( _MSC_VER <= 800 )
-#pragma pack(1)  
-#else
 #include <pshpack1.h>
-#endif
 #else
 //typedef _int64 long long
 #ifndef _inline
@@ -512,6 +508,9 @@ unsigned int read_ue( const unsigned char* buffer, int* bits_offset, int* total_
 int read_se( const unsigned char* buffer, int* bits_offset, int* total_bits  );
 int read_u( const unsigned char* buffer, int* bits_offset, int* total_bits, int bits  );
 
+#ifdef WIN32
+#include <poppack.h>
+#endif
 
 #ifdef __cplusplus
 }

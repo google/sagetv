@@ -232,8 +232,8 @@ char* _access_alignment_check_( char* buf, int buf_len )
 	char* b_c_p  = (char*)&b.c;
 	//char* b_d_p  = (char*)&b.d;
 	snprintf( buf, buf_len, "a: %ld %ld %ld %ld; b:%ld %ld", 
-		      a_b_p-base_a, a_c_p-base_a, a_d_p-base_a, a_e_p-base_a, 
-			    b_b_p-base_b, b_c_p-base_b );
+		      (long) (a_b_p-base_a), (long) (a_c_p-base_a), (long) (a_d_p-base_a), (long) (a_e_p-base_a), 
+			    (long) (b_b_p-base_b), (long) (b_c_p-base_b) );
 
 	return buf;
 

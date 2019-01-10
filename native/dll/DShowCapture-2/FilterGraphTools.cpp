@@ -1297,7 +1297,7 @@ HRESULT FilterGraphTools::AddToRot(IUnknown *pUnkGraph, DWORD *pdwRegister)
         return E_FAIL;
     }
 	WCHAR *wsz = (WCHAR *)malloc(256);
-	swprintf(wsz, L"FilterGraph %08x pid %08x", (DWORD)pUnkGraph, GetCurrentProcessId());
+	swprintf(wsz, L"FilterGraph %p pid %08x", pUnkGraph, GetCurrentProcessId());
 
     HRESULT hr = CreateItemMoniker(L"!", wsz, &pMoniker);
     if SUCCEEDED(hr)

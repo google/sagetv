@@ -80,7 +80,7 @@ unsigned char*  String_Space(unsigned char *String)
    unsigned int Length;   //Length of string "String"
    unsigned char *Space;  //pointer to allocated space
 
-   Length = strlen((char*)String) + 1;
+   Length = (unsigned int) strlen((char*)String) + 1;
    Space = (unsigned char *)malloc(Length*sizeof(unsigned char));
    if (Space == NULL)
    {  
@@ -408,7 +408,7 @@ pattern*  create_pat_list(unsigned char Temp_String[],
    	length = 0;
    	while(Ptr)                 //get command pattern bytes
 	{                                            
-		sscanf((char*)Ptr,"%x", &Temp_Command[length]);
+		sscanf((char*)Ptr,"%hhx", &Temp_Command[length]);
 		Ptr = (unsigned char*)strtok(NULL, " \t");
 		length++;
 	}
@@ -437,7 +437,7 @@ pattern*  create_pat_list(unsigned char Temp_String[],
 		length = 0;
 		while(Ptr)                 //get command pattern bytes
 		{                                            
-			sscanf((char*)Ptr,"%x", &Temp_Command[length]);
+			sscanf((char*)Ptr,"%hhx", &Temp_Command[length]);
 			Ptr = (unsigned char*)strtok(NULL, " \t");    
 			length++;
 		}

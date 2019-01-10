@@ -1225,7 +1225,8 @@ JNIEXPORT jint JNICALL Java_sage_DShowMediaPlayer_processEvents0
 	// when that's all we need to do
 	CComPtr<IMediaEvent> pIME = NULL;
 	hr = playerData->GetGraph()->QueryInterface(IID_IMediaEvent, (void**)&pIME);
-    long lEvent, lParam1, lParam2;
+    long lEvent;
+    LONG_PTR lParam1, lParam2;
     long lTimeOut = 0;
 	long evErr = 0;
 

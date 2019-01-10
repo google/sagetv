@@ -277,11 +277,11 @@ D) Locate the SageWorkspace.sln file.  It will be in:
   Answer them.
 
 E) Build the Solution:
-  - On the Studio menu bar, ensure "Release" and "Win32" is chosen.
+  - On the Studio menu bar, ensure "Release" and "Win32" or "x64" is chosen.
   - In the Solution Explorer sub-window, highlight SageWorkspace.
   - Right-click SageLauncher, select "Build"
 
-  The resultant files will be in native\Build\Release\Win32
+  The resultant files will be in native\Build\Release\Win32 or x64
 
 
 Common build failures:

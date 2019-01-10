@@ -19,6 +19,7 @@
 
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
+#include <time.h>
 
 #if defined(__APPLE__) || defined(__linux__)
 #include <stdbool.h> // clear up bool type confusion in the extern "C" block
@@ -65,11 +66,7 @@
 
 //data structure byte packing throughout
 #ifdef WIN32
-#if( _MSC_VER <= 800 )
-#pragma pack(1)  
-#else
 #include <pshpack1.h>
-#endif
 #endif
 
 #if defined(__APPLE__)
@@ -232,7 +229,7 @@ typedef struct Channel
 	uint32_t  delayParse;        //postponde to start parser im million seconds
 	uint32_t freqShift;
 	int32_t	 frqTableUpdateCheck;
-	uint32_t frqTableTimeStamp;
+	time_t   frqTableTimeStamp;
 	char     frqTableFileName[256];
 	char     frqTableFilePath[128];
 	int32_t  tuneCtrl;             //1: naked qam tune.
@@ -333,6 +330,10 @@ void setFrqFilePath( CHANNEL_DATA *Channel, char *FileLocation );
 
 #ifdef __cplusplus
 }
+#endif
+
+#ifdef WIN32
+#include <poppack.h>
 #endif
 
 #if defined(__APPLE__)

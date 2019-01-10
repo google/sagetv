@@ -1,5 +1,6 @@
 # Change Log
 
+* 64-bit code and VS project updates (Windows)
 * Enabled MSYS2/MinGW compile for FFMPEG-based projects (Windows)
 * Fix: IR interface hangs trying to send non-numeric (eg: 42-1-1) command.
 * Removed dependency on SDK6.1 (Windows)

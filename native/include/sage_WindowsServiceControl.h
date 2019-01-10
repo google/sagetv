@@ -45,10 +45,10 @@ JNIEXPORT jlong JNICALL Java_sage_WindowsServiceControl_installService0
 /*
  * Class:     sage_WindowsServiceControl
  * Method:    setServiceAutostart0
- * Signature: (JZ)Z
+ * Signature: (Ljava/lang/String;JZ)Z
  */
 JNIEXPORT jboolean JNICALL Java_sage_WindowsServiceControl_setServiceAutostart0
-  (JNIEnv *, jobject, jlong, jboolean);
+  (JNIEnv *, jobject, jstring, jlong, jboolean);
 
 /*
  * Class:     sage_WindowsServiceControl
@@ -101,10 +101,10 @@ JNIEXPORT jstring JNICALL Java_sage_WindowsServiceControl_getServiceUser0
 /*
  * Class:     sage_WindowsServiceControl
  * Method:    setServiceUser0
- * Signature: (JLjava/lang/String;Ljava/lang/String;)Z
+ * Signature: (Ljava/lang/String;JLjava/lang/String;Ljava/lang/String;)Z
  */
 JNIEXPORT jboolean JNICALL Java_sage_WindowsServiceControl_setServiceUser0
-  (JNIEnv *, jobject, jlong, jstring, jstring);
+  (JNIEnv *, jobject, jstring, jlong, jstring, jstring);
 
 /*
  * Class:     sage_WindowsServiceControl

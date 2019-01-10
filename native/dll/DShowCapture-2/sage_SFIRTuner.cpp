@@ -61,7 +61,7 @@ typedef int (*LPFNTakedown)(void);
 typedef bool (*LPFNNeedCarrier)(void);
 typedef bool (*LPFNNeedBitrate)(void);
 typedef bool (*LPFNCanMacroTune)(void);
-typedef int (*LPFNMacroTune)(int);
+typedef void (*LPFNMacroTune)(int);
 typedef int (*LPFNDESTROYLIST)(remote**);
 typedef int (*LPFNPLAY)(remote*, unsigned char*, int);
 
@@ -577,7 +577,7 @@ JNIEXPORT void JNICALL Java_sage_SFIRTuner_init0(JNIEnv *env, jobject jo)
 	{
 		const char* cname = env->GetStringUTFChars(jfname, NULL);
 		deviceDLL = LoadLibrary(cname);
-		SetLongField(env, jo, "nativeDllHandle", (jint) deviceDLL);
+		SetLongField(env, jo, "nativeDllHandle", (jlong) deviceDLL);
 		env->ReleaseStringUTFChars(jfname, cname);
 	}
 }
