@@ -97,7 +97,6 @@ public class WindowsServiceControl implements ActionListener
     {
       if (ptr == 0)
       {
-        serviceName = Sage.is64BitJVM() ? "SageTV64" : "SageTV";
         ptr = installService0(serviceName, new java.io.File(System.getProperty("user.dir"),
             "SageTVService.exe").getAbsolutePath());
         if (ptr == 0)

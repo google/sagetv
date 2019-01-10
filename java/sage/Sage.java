@@ -2236,8 +2236,8 @@ public final class Sage
 
   public static boolean is64BitJVM()
   {
-    return ((System.getProperty("sun.arch.data.model").equals("64")) |
-            (System.getProperty("os.arch").equals("x86_64")) |
-            (System.getProperty("os.arch").equals("amd64")));
+    return (("64".equals(System.getProperty("sun.arch.data.model"))) ||
+            ("x86_64".equals(System.getProperty("os.arch"))) ||
+            ("amd64".equals(System.getProperty("os.arch"))));
   }
 }
