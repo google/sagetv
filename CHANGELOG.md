@@ -1,5 +1,8 @@
 # Change Log
 
+* Fix: Include Win10 in 'VISTA_OS' detection (Windows)
+* Change: New installation properties default video/dvd_video renderer is 'EVR'
+* Change: New installation properties default video/audio decoder are auto-detected
 * New: Add EXEMultiTunerPlugin, HCWIRBlaster & USB-UUIRT VS projects (Windows)
 * 64-bit code and VS project updates (Windows)
 * Enabled MSYS2/MinGW compile for FFMPEG-based projects (Windows)

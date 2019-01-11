@@ -115,7 +115,9 @@ public final class Sage
     WINDOWS_OS = System.getProperty("os.name").toLowerCase().indexOf("windows") != -1;
     MAC_OS_X = System.getProperty("os.name").toLowerCase().indexOf("mac os x") != -1;
     LINUX_OS = !WINDOWS_OS && !MAC_OS_X;
-    VISTA_OS = WINDOWS_OS && (System.getProperty("os.version").startsWith("6.") || System.getProperty("os.version").startsWith("7."));
+    VISTA_OS = WINDOWS_OS && (System.getProperty("os.version").startsWith("6.") ||
+                              System.getProperty("os.version").startsWith("7.") ||
+                              System.getProperty("os.version").startsWith("10."));
     LINUX_IS_ROOT = "root".equals(System.getProperty("user.name"));
     if (WINDOWS_OS)
       sage.Native.loadLibrary("SageTVWin32");
