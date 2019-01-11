@@ -238,7 +238,7 @@ public class DShowTVPlayer extends DShowMediaPlayer
           java.util.Arrays.binarySearch(dshowFilters, "LAV Audio Decoder",
               filterNameCompare) >= 0)
       {
-        if (Sage.DBG) System.out.println("Default SageTV configuration will be used");
+        if (Sage.DBG) System.out.println("Default LAV configuration will be used");
         setVideoDecoderFilter("LAV Video Decoder");
         setAudioDecoderFilter("LAV Audio Decoder");
         //				setUseOverlay(true);
