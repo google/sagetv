@@ -232,6 +232,19 @@ public class DShowTVPlayer extends DShowMediaPlayer
         setAudioRenderFilter(Sage.rez("Default"));
         return;
       }
+      if (Sage.DBG) System.out.println("Searching for existence of LAV decoders...");
+      if (java.util.Arrays.binarySearch(dshowFilters, "LAV Video Decoder",
+          filterNameCompare) >= 0 &&
+          java.util.Arrays.binarySearch(dshowFilters, "LAV Audio Decoder",
+              filterNameCompare) >= 0)
+      {
+        if (Sage.DBG) System.out.println("Default SageTV configuration will be used");
+        setVideoDecoderFilter("LAV Video Decoder");
+        setAudioDecoderFilter("LAV Audio Decoder");
+        //				setUseOverlay(true);
+        setAudioRenderFilter(Sage.rez("Default"));
+        return;
+      }
       if (Sage.DBG) System.out.println("Searching for existence of Hauppauge card & Intervideo decoders...");
       if (java.util.Arrays.binarySearch(dshowFilters, "InterVideo NonCSS Video Decoder for Hauppauge",
           filterNameCompare) >= 0 &&
