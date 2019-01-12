@@ -148,8 +148,12 @@ test {
 	systemProperty 'nio_test_file', "delete-nio-testng."
 	systemProperty 'sage.testing', "true"
 
-    workingDir = file("$sageBuildDir/sagetv_test/");
-    workingDir.mkdirs();
+    workingDir = file("$sageBuildDir/sagetv_test/")
+    workingDir.mkdirs()
+
+	// this just allows sage to think that ffmpeg exists for some tests when it checks for transcoder
+	def fake_ffmpeg = new File(workingDir, 'ffmpeg')
+	fake_ffmpeg << 'test file'
 }
 
 /**
