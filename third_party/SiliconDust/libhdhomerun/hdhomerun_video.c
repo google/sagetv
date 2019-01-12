@@ -1,7 +1,7 @@
 /*
  * hdhomerun_video.c
  *
- * Copyright © 2006-2010 Silicondust USA Inc. <www.silicondust.com>.
+ * Copyright © 2006-2016 Silicondust USA Inc. <www.silicondust.com>.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,9 +21,14 @@
 #include "hdhomerun.h"
 
 struct hdhomerun_video_sock_t {
-	pthread_mutex_t lock;
+	thread_mutex_t lock;
 	struct hdhomerun_debug_t *dbg;
-	hdhomerun_sock_t sock;
+	struct hdhomerun_sock_t *sock;
+
+	uint32_t keepalive_lockkey;
+	uint32_t keepalive_addr;
+	uint16_t keepalive_port;
+	volatile bool keepalive_start;
 
 	volatile size_t head;
 	volatile size_t tail;
@@ -31,8 +36,8 @@ struct hdhomerun_video_sock_t {
 	size_t buffer_size;
 	size_t advance;
 
-	pthread_t thread;
-	volatile bool_t terminate;
+	thread_task_t thread;
+	volatile bool terminate;
 
 	volatile uint32_t packet_count;
 	volatile uint32_t transport_error_count;
@@ -44,9 +49,9 @@ struct hdhomerun_video_sock_t {
 	volatile uint8_t sequence[0x2000];
 };
 
-static THREAD_FUNC_PREFIX hdhomerun_video_thread_execute(void *arg);
+static void hdhomerun_video_thread_execute(void *arg);
 
-struct hdhomerun_video_sock_t *hdhomerun_video_create(uint16_t listen_port, bool_t allow_port_reuse, size_t buffer_size, struct hdhomerun_debug_t *dbg)
+struct hdhomerun_video_sock_t *hdhomerun_video_create(uint16_t listen_port, bool allow_port_reuse, size_t buffer_size, struct hdhomerun_debug_t *dbg)
 {
 	/* Create object. */
 	struct hdhomerun_video_sock_t *vs = (struct hdhomerun_video_sock_t *)calloc(1, sizeof(struct hdhomerun_video_sock_t));
@@ -56,8 +61,7 @@ struct hdhomerun_video_sock_t *hdhomerun_video_create(uint16_t listen_port, bool
 	}
 
 	vs->dbg = dbg;
-	vs->sock = HDHOMERUN_SOCK_INVALID;
-	pthread_mutex_init(&vs->lock, NULL);
+	thread_mutex_init(&vs->lock);
 
 	/* Reset sequence tracking. */
 	hdhomerun_video_flush(vs);
@@ -79,14 +83,13 @@ struct hdhomerun_video_sock_t *hdhomerun_video_create(uint16_t listen_port, bool
 	
 	/* Create socket. */
 	vs->sock = hdhomerun_sock_create_udp();
-	if (vs->sock == HDHOMERUN_SOCK_INVALID) {
+	if (!vs->sock) {
 		hdhomerun_debug_printf(dbg, "hdhomerun_video_create: failed to allocate socket\n");
 		goto error;
 	}
 
 	/* Expand socket buffer size. */
-	int rx_size = 1024 * 1024;
-	setsockopt(vs->sock, SOL_SOCKET, SO_RCVBUF, (char *)&rx_size, sizeof(rx_size));
+	hdhomerun_sock_set_recv_buffer_size(vs->sock, 1024 * 1024);
 
 	/* Bind socket. */
 	if (!hdhomerun_sock_bind(vs->sock, INADDR_ANY, listen_port, allow_port_reuse)) {
@@ -95,7 +98,7 @@ struct hdhomerun_video_sock_t *hdhomerun_video_create(uint16_t listen_port, bool
 	}
 
 	/* Start thread. */
-	if (pthread_create(&vs->thread, NULL, &hdhomerun_video_thread_execute, vs) != 0) {
+	if (!thread_task_create(&vs->thread, &hdhomerun_video_thread_execute, vs)) {
 		hdhomerun_debug_printf(dbg, "hdhomerun_video_create: failed to start thread\n");
 		goto error;
 	}
@@ -104,28 +107,48 @@ struct hdhomerun_video_sock_t *hdhomerun_video_create(uint16_t listen_port, bool
 	return vs;
 
 error:
-	if (vs->sock != HDHOMERUN_SOCK_INVALID) {
+	if (vs->sock) {
 		hdhomerun_sock_destroy(vs->sock);
 	}
+
 	if (vs->buffer) {
 		free(vs->buffer);
 	}
+
+	thread_mutex_dispose(&vs->lock);
+
 	free(vs);
 	return NULL;
 }
 
 void hdhomerun_video_destroy(struct hdhomerun_video_sock_t *vs)
 {
-	vs->terminate = TRUE;
-	pthread_join(vs->thread, NULL);
+	vs->terminate = true;
+	thread_task_join(vs->thread);
 
 	hdhomerun_sock_destroy(vs->sock);
+	thread_mutex_dispose(&vs->lock);
 	free(vs->buffer);
 
 	free(vs);
 }
 
-hdhomerun_sock_t hdhomerun_video_get_sock(struct hdhomerun_video_sock_t *vs)
+void hdhomerun_video_set_keepalive(struct hdhomerun_video_sock_t *vs, uint32_t remote_addr, uint16_t remote_port, uint32_t lockkey)
+{
+	thread_mutex_lock(&vs->lock);
+
+	vs->keepalive_addr = remote_addr;
+	vs->keepalive_port = remote_port;
+	vs->keepalive_lockkey = lockkey;
+
+	if ((remote_addr != 0) && (remote_port != 0)) {
+		vs->keepalive_start = true;
+	}
+
+	thread_mutex_unlock(&vs->lock);
+}
+
+struct hdhomerun_sock_t *hdhomerun_video_get_sock(struct hdhomerun_video_sock_t *vs)
 {
 	return vs->sock;
 }
@@ -165,7 +188,7 @@ static void hdhomerun_video_stats_ts_pkt(struct hdhomerun_video_sock_t *vs, uint
 		return;
 	}
 
-	bool_t transport_error = ptr[1] >> 7;
+	bool transport_error = ptr[1] >> 7;
 	if (transport_error) {
 		vs->transport_error_count++;
 		vs->sequence[packet_identifier] = 0xFF;
@@ -219,26 +242,51 @@ static void hdhomerun_video_parse_rtp(struct hdhomerun_video_sock_t *vs, struct 
 	}
 }
 
-static THREAD_FUNC_PREFIX hdhomerun_video_thread_execute(void *arg)
+static void hdhomerun_video_thread_send_keepalive(struct hdhomerun_video_sock_t *vs)
+{
+	thread_mutex_lock(&vs->lock);
+	uint32_t keepalive_lockkey = vs->keepalive_lockkey;
+	uint32_t keepalive_addr = vs->keepalive_addr;
+	uint16_t keepalive_port = vs->keepalive_port;
+	vs->keepalive_start = false;
+	thread_mutex_unlock(&vs->lock);
+
+	if ((keepalive_addr == 0) || (keepalive_port == 0)) {
+		return;
+	}
+
+	struct hdhomerun_pkt_t pkt;
+	hdhomerun_pkt_reset(&pkt);
+	hdhomerun_pkt_write_u32(&pkt, keepalive_lockkey);
+	hdhomerun_sock_sendto(vs->sock, keepalive_addr, keepalive_port, pkt.start, pkt.end - pkt.start, 25);
+}
+
+static void hdhomerun_video_thread_execute(void *arg)
 {
 	struct hdhomerun_video_sock_t *vs = (struct hdhomerun_video_sock_t *)arg;
-	struct hdhomerun_pkt_t pkt_inst;
+	uint64_t send_time = getcurrenttime();
 
 	while (!vs->terminate) {
-		struct hdhomerun_pkt_t *pkt = &pkt_inst;
-		hdhomerun_pkt_reset(pkt);
+		uint64_t current_time = getcurrenttime();
+		if (vs->keepalive_start || (current_time >= send_time)) {
+			hdhomerun_video_thread_send_keepalive(vs);
+			send_time = current_time + 1000;
+		}
 
 		/* Receive. */
+		struct hdhomerun_pkt_t pkt;
+		hdhomerun_pkt_reset(&pkt);
+
 		size_t length = VIDEO_RTP_DATA_PACKET_SIZE;
-		if (!hdhomerun_sock_recv(vs->sock, pkt->end, &length, 25)) {
+		if (!hdhomerun_sock_recv(vs->sock, pkt.end, &length, 25)) {
 			continue;
 		}
 
-		pkt->end += length;
+		pkt.end += length;
 
 		if (length == VIDEO_RTP_DATA_PACKET_SIZE) {
-			hdhomerun_video_parse_rtp(vs, pkt);
-			length = (int)(pkt->end - pkt->pos);
+			hdhomerun_video_parse_rtp(vs, &pkt);
+			length = pkt.end - pkt.pos;
 		}
 
 		if (length != VIDEO_DATA_PACKET_SIZE) {
@@ -246,12 +294,12 @@ static THREAD_FUNC_PREFIX hdhomerun_video_thread_execute(void *arg)
 			continue;
 		}
 
-		pthread_mutex_lock(&vs->lock);
+		thread_mutex_lock(&vs->lock);
 
 		/* Store in ring buffer. */
 		size_t head = vs->head;
 		uint8_t *ptr = vs->buffer + head;
-		memcpy(ptr, pkt->pos, length);
+		memcpy(ptr, pkt.pos, length);
 
 		/* Stats. */
 		vs->packet_count++;
@@ -272,21 +320,19 @@ static THREAD_FUNC_PREFIX hdhomerun_video_thread_execute(void *arg)
 		/* Check for buffer overflow. */
 		if (head == vs->tail) {
 			vs->overflow_error_count++;
-			pthread_mutex_unlock(&vs->lock);
+			thread_mutex_unlock(&vs->lock);
 			continue;
 		}
 
 		vs->head = head;
 
-		pthread_mutex_unlock(&vs->lock);
+		thread_mutex_unlock(&vs->lock);
 	}
-
-	return NULL;
 }
 
 uint8_t *hdhomerun_video_recv(struct hdhomerun_video_sock_t *vs, size_t max_size, size_t *pactual_size)
 {
-	pthread_mutex_lock(&vs->lock);
+	thread_mutex_lock(&vs->lock);
 
 	size_t head = vs->head;
 	size_t tail = vs->tail;
@@ -303,7 +349,7 @@ uint8_t *hdhomerun_video_recv(struct hdhomerun_video_sock_t *vs, size_t max_size
 	if (head == tail) {
 		vs->advance = 0;
 		*pactual_size = 0;
-		pthread_mutex_unlock(&vs->lock);
+		thread_mutex_unlock(&vs->lock);
 		return NULL;
 	}
 
@@ -311,7 +357,7 @@ uint8_t *hdhomerun_video_recv(struct hdhomerun_video_sock_t *vs, size_t max_size
 	if (size == 0) {
 		vs->advance = 0;
 		*pactual_size = 0;
-		pthread_mutex_unlock(&vs->lock);
+		thread_mutex_unlock(&vs->lock);
 		return NULL;
 	}
 
@@ -328,13 +374,13 @@ uint8_t *hdhomerun_video_recv(struct hdhomerun_video_sock_t *vs, size_t max_size
 	*pactual_size = size;
 	uint8_t *result = vs->buffer + tail;
 
-	pthread_mutex_unlock(&vs->lock);
+	thread_mutex_unlock(&vs->lock);
 	return result;
 }
 
 void hdhomerun_video_flush(struct hdhomerun_video_sock_t *vs)
 {
-	pthread_mutex_lock(&vs->lock);
+	thread_mutex_lock(&vs->lock);
 
 	vs->tail = vs->head;
 	vs->advance = 0;
@@ -352,7 +398,7 @@ void hdhomerun_video_flush(struct hdhomerun_video_sock_t *vs)
 	vs->sequence_error_count = 0;
 	vs->overflow_error_count = 0;
 
-	pthread_mutex_unlock(&vs->lock);
+	thread_mutex_unlock(&vs->lock);
 }
 
 void hdhomerun_video_debug_print_stats(struct hdhomerun_video_sock_t *vs)
@@ -371,7 +417,7 @@ void hdhomerun_video_get_stats(struct hdhomerun_video_sock_t *vs, struct hdhomer
 {
 	memset(stats, 0, sizeof(struct hdhomerun_video_stats_t));
 
-	pthread_mutex_lock(&vs->lock);
+	thread_mutex_lock(&vs->lock);
 
 	stats->packet_count = vs->packet_count;
 	stats->network_error_count = vs->network_error_count;
@@ -379,5 +425,5 @@ void hdhomerun_video_get_stats(struct hdhomerun_video_sock_t *vs, struct hdhomer
 	stats->sequence_error_count = vs->sequence_error_count;
 	stats->overflow_error_count = vs->overflow_error_count;
 
-	pthread_mutex_unlock(&vs->lock);
+	thread_mutex_unlock(&vs->lock);
 }

@@ -161,7 +161,7 @@ typedef struct
 {
 	unsigned short event_id;
 	unsigned short source_id;
-	unsigned long  start_time;
+	time_t         start_time;
 	unsigned long  during_length;
 	unsigned char  etm_loc;
 	unsigned char  title_length;
@@ -194,7 +194,7 @@ typedef struct {
 typedef struct 
 {
 	char   channel[16];
-	unsigned long  start_time;
+	time_t         start_time;
 	unsigned long  during_length;
 	char*  title_text;
 	char*  program_text;
@@ -344,7 +344,7 @@ typedef struct
 	unsigned short ONID;
 	unsigned short TSID;
 	unsigned short service_id;
-	unsigned long  start_time;
+	time_t         start_time;
 	unsigned long  during_length;
 	EGUID		   event_guid;
 	S_EVENT		  *event; 

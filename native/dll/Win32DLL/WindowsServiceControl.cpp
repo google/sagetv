@@ -184,16 +184,19 @@ JNIEXPORT jlong JNICALL Java_sage_WindowsServiceControl_installService0
 /*
  * Class:     sage_WindowsServiceControl
  * Method:    setServiceAutostart0
- * Signature: (JZ)Z
+ * Signature: (Ljava/lang/String;JZ)Z
  */
 JNIEXPORT jboolean JNICALL Java_sage_WindowsServiceControl_setServiceAutostart0
-  (JNIEnv *env, jobject jo, jlong svcPtr, jboolean autostart)
+  (JNIEnv *env, jobject jo, jstring jsvcName, jlong svcPtr, jboolean autostart)
 {
 	WinServiceInfo* svcInfo = (WinServiceInfo*) svcPtr;
 	if (!svcInfo) return 0;
-	return ChangeServiceConfig(svcInfo->schService, SERVICE_NO_CHANGE, 
+	const char* svcName = env->GetStringUTFChars(jsvcName, NULL);
+	jboolean rv = (jboolean) ChangeServiceConfig(svcInfo->schService, SERVICE_NO_CHANGE, 
 		autostart ? SERVICE_AUTO_START : SERVICE_DISABLED, SERVICE_NO_CHANGE,
-		NULL, NULL, NULL, NULL, NULL,/*acct*/ NULL/*passwd*/, "SageTV");
+		NULL, NULL, NULL, NULL, NULL,/*acct*/ NULL/*passwd*/, svcName);
+	env->ReleaseStringUTFChars(jsvcName, svcName);
+	return rv;
 }
 
 /*
@@ -309,18 +312,19 @@ JNIEXPORT jstring JNICALL Java_sage_WindowsServiceControl_getServiceUser0
 /*
  * Class:     sage_WindowsServiceControl
  * Method:    setServiceUser0
- * Signature: (JLjava/lang/String;Ljava/lang/String;)Z
+ * Signature: (Ljava/lang/String;JLjava/lang/String;Ljava/lang/String;)Z
  */
 JNIEXPORT jboolean JNICALL Java_sage_WindowsServiceControl_setServiceUser0
-  (JNIEnv *env, jobject jo, jlong ptr, jstring juser, jstring jpass)
+  (JNIEnv *env, jobject jo, jstring jsvcName, jlong ptr, jstring juser, jstring jpass)
 {
 	WinServiceInfo* svcInfo = (WinServiceInfo*) ptr;
 	if (!svcInfo) return 0;
+	const char* svcName = env->GetStringUTFChars(jsvcName, NULL);
 	const char* cuser = env->GetStringUTFChars(juser, NULL);
 	const char* cpass = env->GetStringUTFChars(jpass, NULL);
 	jboolean rv = ChangeServiceConfig(svcInfo->schService, SERVICE_NO_CHANGE, 
 		SERVICE_NO_CHANGE, SERVICE_NO_CHANGE,
-		NULL, NULL, NULL, NULL, cuser,/*acct*/ cpass/*passwd*/, "SageTV");
+		NULL, NULL, NULL, NULL, cuser,/*acct*/ cpass/*passwd*/, svcName);
 	if (rv)
 	{
 		// Check to make sure this account has logon as service rights and if not, then grant them.
@@ -338,6 +342,7 @@ JNIEXPORT jboolean JNICALL Java_sage_WindowsServiceControl_setServiceUser0
 			}
 		}
 	}
+	env->ReleaseStringUTFChars(jsvcName, svcName);
 	env->ReleaseStringUTFChars(juser, cuser);
 	env->ReleaseStringUTFChars(jpass, cpass);
 	return rv;
@@ -572,7 +577,7 @@ InitLsaString(
         return;
     }
 
-    StringLength = wcslen(String);
+    StringLength = (DWORD) wcslen(String);
     LsaString->Buffer = String;
     LsaString->Length = (USHORT) StringLength * sizeof(WCHAR);
     LsaString->MaximumLength=(USHORT)(StringLength+1) * sizeof(WCHAR);

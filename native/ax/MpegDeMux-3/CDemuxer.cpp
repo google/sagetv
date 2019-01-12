@@ -16,7 +16,9 @@
 
 #pragma warning(disable : 4996)
 
-#define _USE_32BIT_TIME_T
+#ifndef _WIN64
+  #define _USE_32BIT_TIME_T
+#endif
 
 #include <streams.h>
 

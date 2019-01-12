@@ -223,7 +223,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	int res = (*createJavaVM)(&vm, (void**) &env, &vm_args); 
 	if (res != 0)
 	{
-		errorMsg("Could not create JVM.\nPlease reinstall Java Runtime Environment 1.4", "Java Missing");
+		errorMsg("Could not create JVM.\nPlease reinstall Java Runtime Environment 1.7 or greater", "Java Missing");
 		return FALSE;
 	}
 	globalenv = env;

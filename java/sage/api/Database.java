@@ -1572,7 +1572,25 @@ public class Database {
             }
           }
           if (sortie != null)
-            java.util.Arrays.sort(currData, sortie);
+          {
+            try
+            {
+              java.util.Arrays.sort(currData, sortie);
+            }
+            catch (Exception e)
+            {
+              if (sortTech.toString().equalsIgnoreCase("getoriginalairingdate"))
+              {
+                // We know we violate the sorting contract in this method, so if it fails do it the safe way
+                sortie = optSortMap.get("safegetoriginalairingdate");
+                java.util.Arrays.sort(currData, sortie);
+              }
+              else
+              {
+                throw e;
+              }
+            }
+          }
           else
             java.util.Arrays.sort(currData);
           //if (Sage.DBG) System.out.println("Sort res=" + java.util.Arrays.asList(currData));
@@ -1626,6 +1644,38 @@ public class Database {
               n2 = s2.getEpisodeNumber();
               x = n1 - n2;
               if (x != 0 && n1 != 0 && n2 != 0)
+                return x;
+            }
+            Airing a1 = getAirObj(o1);
+            Airing a2 = getAirObj(o2);
+            l1 = (a1 == null) ? 0 : a1.getStartTime();
+            l2 = (a2 == null) ? 0 : a2.getStartTime();
+            return (l1 < l2) ? -1 : ((l1 > l2) ? 1 : 0);
+          }
+        });
+        optSortMap.put("safegetoriginalairingdate", new java.util.Comparator()
+        {
+          public int compare(Object o1, Object o2)
+          {
+            Show s1 = getShowObj(o1);
+            Show s2 = getShowObj(o2);
+            long l1 = (s1 == null) ? 0 : s1.getOriginalAirDate();
+            long l2 = (s2 == null) ? 0 : s2.getOriginalAirDate();
+            if (l1 < l2)
+              return -1;
+            else if (l1 > l2)
+              return 1;
+            if (s1 != null && s2 != null)
+            {
+              int n1 = s1.getSeasonNumber();
+              int n2 = s2.getSeasonNumber();
+              int x = n1 - n2;
+              if (x != 0)
+                return x;
+              n1 = s1.getEpisodeNumber();
+              n2 = s2.getEpisodeNumber();
+              x = n1 - n2;
+              if (x != 0)
                 return x;
             }
             Airing a1 = getAirObj(o1);

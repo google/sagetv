@@ -598,7 +598,7 @@ slog((env, "DTVSerialX num=%d cmd[0]=0x%x.\r\n", num, cmd[0]));
  * Signature: (I)V
  */
 JNIEXPORT void JNICALL Java_sage_DirecTVSerialControl_closeHandle0
-  (JNIEnv *env, jobject jo, jint jhand)
+  (JNIEnv *env, jobject jo, jlong jhand)
 {
 	int i = 0;
 	for (i = 0; i < NUM_CMD_STYLE_SLOTS; i++)
@@ -625,7 +625,7 @@ JNIEXPORT void JNICALL Java_sage_DirecTVSerialControl_closeHandle0
  * Signature: (II)Z
  */
 JNIEXPORT jboolean JNICALL Java_sage_DirecTVSerialControl_dtvSerialChannel0
-  (JNIEnv *env, jobject jo, jint comHandle, jint channel)
+  (JNIEnv *env, jobject jo, jlong comHandle, jint channel)
 {
 	int cmdStyleIndex = 0;
 	int i = 0;

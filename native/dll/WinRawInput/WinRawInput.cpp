@@ -104,12 +104,12 @@ DllExport BOOL RemoveWinRawInput()
  * Method:    setupRawInput0
  * Signature: (J)Z
  */
-JNIEXPORT DWORD JNICALL Java_sage_Sage_setupRawInput0
+JNIEXPORT jlong JNICALL Java_sage_Sage_setupRawInput0
   (JNIEnv *env, jclass jc, jlong jhwnd)
 {
 	if (!jhwnd ) return JNI_FALSE;
 	hRawInputHandle = OpenRawInputProxyWnd((HWND)jhwnd);
-	return (DWORD)hRawInputHandle;
+	return (jlong)hRawInputHandle;
 }
 
 /*

@@ -1,5 +1,24 @@
 # Change Log
 
+* Fix: Include Win10 in 'VISTA_OS' detection (Windows)
+* Change: New installation properties default video/dvd_video renderer is 'EVR'
+* Change: New installation properties default video/audio decoder are auto-detected
+* New: Add EXEMultiTunerPlugin, HCWIRBlaster & USB-UUIRT VS projects (Windows)
+* 64-bit code and VS project updates (Windows)
+* Enabled MSYS2/MinGW compile for FFMPEG-based projects (Windows)
+* Fix: IR interface hangs trying to send non-numeric (eg: 42-1-1) command.
+* Removed dependency on SDK6.1 (Windows)
+* Fix: Sage-x64 hang due to CableCARD tuners (Windows)
+* Fix: Add support for HVR-4400 and other 885 variants (Windows) 
+
+## Version 9.1.10 (2018-10-13)
+* removed old bytes properties for episodeName and desc to resolve potential crashes
+
+## Version 9.1.9 (2018-05-18)
+* Byte based seeking support for MPEG files
+* update libhdhomerun to 20170930
+* Fixed bug where file modification time can get set incorrectly
+
 ## Version 9.1.8 (2017-11-13) - windows only
 * HD-PVR2 video capture device: add ability to select multiple audio inputs (Windows)
 * HD PVR 60 video capture device: new device support (Windows)

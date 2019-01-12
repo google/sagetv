@@ -79,14 +79,14 @@ public class WindowsServiceControl implements ActionListener
 
   public native boolean isServiceAutostart0(long ptr);
   public native long installService0(String serviceName, String serviceExe);
-  public native boolean setServiceAutostart0(long ptr, boolean autostart);
+  public native boolean setServiceAutostart0(String serviceName, long ptr, boolean autostart);
   public native boolean startService0(long ptr);
   public native boolean stopService0(long ptr);
   public native boolean isServiceRunning0(long ptr);
   public native boolean isServiceLoading0(long ptr);
   public native boolean isServiceStopping0(long ptr);
   public native String getServiceUser0(long ptr);
-  public native boolean setServiceUser0(long ptr, String username, String password);
+  public native boolean setServiceUser0(String serviceName, long ptr, String username, String password);
   public native boolean isServiceRecovery0(long ptr);
   public native void setServiceRecovery0(long ptr, boolean x);
 
@@ -97,18 +97,18 @@ public class WindowsServiceControl implements ActionListener
     {
       if (ptr == 0)
       {
-        ptr = installService0("SageTV", new java.io.File(System.getProperty("user.dir"),
+        ptr = installService0(serviceName, new java.io.File(System.getProperty("user.dir"),
             "SageTVService.exe").getAbsolutePath());
         if (ptr == 0)
           javax.swing.JOptionPane.showMessageDialog(f, rez("Service_Install_Error"));
       }
       else
-        setServiceAutostart0(ptr, true);
+        setServiceAutostart0(serviceName, ptr, true);
       refreshUIState();
     }
     else if (src == disableButton)
     {
-      setServiceAutostart0(ptr, false);
+      setServiceAutostart0(serviceName, ptr, false);
       refreshUIState();
     }
     else if (src == startButton)
@@ -123,7 +123,7 @@ public class WindowsServiceControl implements ActionListener
     }
     else if (src == runAsDefaultButton)
     {
-      setServiceUser0(ptr, "LocalSystem", "");
+      setServiceUser0(serviceName, ptr, "LocalSystem", "");
       refreshUIState();
     }
     else if (src == runAsUserButton)
@@ -171,7 +171,7 @@ public class WindowsServiceControl implements ActionListener
           javax.swing.JOptionPane.showMessageDialog(f, rez("Password_Mismatch"));
           return;
         }
-        if (!setServiceUser0(ptr, user, pass))
+        if (!setServiceUser0(serviceName, ptr, user, pass))
         {
           javax.swing.JOptionPane.showMessageDialog(f, rez("Invalid_username_or_password_entered"));
         }
@@ -228,6 +228,7 @@ public class WindowsServiceControl implements ActionListener
   JCheckBox autoRestartServiceCheck;
 
   long ptr;
+  String serviceName;
 
   private boolean isRunning() { return ptr != 0 && isServiceRunning0(ptr); }
   private boolean isLoading() { return ptr != 0 && isServiceLoading0(ptr); }
@@ -256,8 +257,9 @@ public class WindowsServiceControl implements ActionListener
   private WindowsServiceControl()
   {
     sage.Native.loadLibrary("SageTVWin32");
-    ptr = openServiceHandle0("SageTV");
-    f = new JFrame(rez("SageTV_Service_Control"));
+    serviceName = Sage.is64BitJVM() ? "SageTV64" : "SageTV";
+    ptr = openServiceHandle0(serviceName);
+    f = new JFrame(rez("SageTV_Service_Control") + (Sage.is64BitJVM() ? " 64" : ""));
     f.addWindowListener(new WindowAdapter()
     {
       public void windowClosing(WindowEvent evt)
@@ -301,7 +303,7 @@ public class WindowsServiceControl implements ActionListener
     gbc.gridheight = 1;
     gbc.anchor = gbc.CENTER;
     gbc.insets = new Insets(4, 4, 4, 4);
-    pane.add(new JLabel(new ImageIcon("STVs\\SageTV3\\SageLogo256.png")), gbc);
+    pane.add(new JLabel(new ImageIcon("STVs\\SageTV7\\SageLogo256.png")), gbc);
     gbc.gridy++;
     gbc.ipadx = gbc.ipady = 4;
     pane.add(enabledLabel, gbc);

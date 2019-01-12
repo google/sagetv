@@ -126,7 +126,7 @@ bool HDHRDevice::validate()
 {
 	if(mDeviceInfo.device_id != 0) {
 		struct hdhomerun_discover_device_t deviceInfo;
-		bool_t valid = hdhomerun_discover_validate_device_id(mDeviceInfo.device_id);
+		bool valid = hdhomerun_discover_validate_device_id(mDeviceInfo.device_id);
 		bool done = false;
 		
 		// if validation fails, give it a few seconds to come back
@@ -137,7 +137,7 @@ bool HDHRDevice::validate()
 			
 			do {
 				// -1 = error, 0 = none found, else number of devices found (max 1 here)
-				result = hdhomerun_discover_find_devices_custom(0, HDHOMERUN_DEVICE_TYPE_TUNER, mDeviceInfo.device_id, &deviceInfo, 1);
+				result = hdhomerun_discover_find_devices_custom_v2(0, HDHOMERUN_DEVICE_TYPE_TUNER, mDeviceInfo.device_id, &deviceInfo, 1);
 //				flog( "Native.log",  "hdhomerun_discover_find_device(%08lx) returned %d\r\n", mDeviceInfo.device_id, result);
 				
 				if(result == -1) return false;
@@ -280,7 +280,7 @@ int HDHRDevice::setTuning(SageTuningParams *params)
 		sprintf(channelSetting, "auto%d%c:%ld", bandwidth, cable ? 'c' : 't', channel);
 	} else
 	{
-		sprintf(channelSetting, "auto:%ld", mTuningParams.tuningFrequency );
+		sprintf(channelSetting, "%" PRIu32, mTuningParams.tuningFrequency );
 	}
 	flog( "Native.log",  "HDHRDevice::setTuning: channel %s\r\n", channelSetting);
 	

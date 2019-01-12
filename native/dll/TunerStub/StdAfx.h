@@ -38,4 +38,9 @@
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
 
+#define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS      // some CString constructors will be explicit
+
+#include <atlbase.h>
+#include <atlstr.h>
+
 #endif // !defined(AFX_STDAFX_H__CD910ECE_595A_4244_9807_756711BC700C__INCLUDED_)

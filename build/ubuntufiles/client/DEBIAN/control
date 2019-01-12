@@ -8,5 +8,5 @@ Changed-By: Sean Stuckless <sean.stuckless@gmail.com>
 Vcs-Browser: https://github.com/google/sagetv
 Architecture: DEB_ARCH
 Version: MAJOR_VERSION.MINOR_VERSION.MICRO_VERSION
-Depends: libasound2, java5-runtime | java5-sdk, libfaac0
+Depends: libasound2, java7-runtime | java7-sdk, libfaac0, net-tools
 Description: SageTV Client MAJOR_VERSION.MINOR_VERSION.MICRO_VERSION

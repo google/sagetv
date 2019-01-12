@@ -293,7 +293,7 @@ public class MpegMetadata
     }
     try
     {
-      addFileMetadata(mf.getFile(0), type, rv.toString());
+      addFileMetadata(mf.getFile(0), type, rv.toString(), mf.getRecordEnd());
     }
     catch (java.io.IOException e)
     {
@@ -392,12 +392,18 @@ public class MpegMetadata
   // 1: Mpeg2-TS
   // 2: Mpeg2-TS with 4 bytes extra header (.m2ts)
 
-  public static void addFileMetadata(java.io.File f, int type, String metadataStr) throws java.io.IOException
+  public static void addFileMetadata(java.io.File f, int type, String metadataStr, long targetFileTime) throws java.io.IOException
   {
     int i, j, packetcount=0;
     int pos=0;
     // PRESERVE TIMESTAMP ON THE FILE!!!
     long fileTime = f.lastModified();
+    if (targetFileTime != 0 && Math.abs(targetFileTime - fileTime) > 30000) {
+      // There's an issue on Windows where the file closing is done asynchronously sometimes and may not have occurred by the time
+      // we get here so the file modification time may not have been updated yet. So ensure we don't go setting the modification time
+      // to the creation time if we received a suggestion that is more than 30 seconds off from the modification time.
+      fileTime = targetFileTime;
+    }
     sage.io.SageDataFile ra = new sage.io.SageDataFile(new sage.io.BufferedSageFile(new sage.io.LocalSageFile(f, false)), sage.Sage.BYTE_CHARSET);
     try
     {
@@ -704,7 +710,7 @@ public class MpegMetadata
       }
       try
       {
-        addFileMetadata(f, new Integer(args[2]).intValue(), args[3]);
+        addFileMetadata(f, new Integer(args[2]).intValue(), args[3], 0);
       }
       catch(Exception e)
       {

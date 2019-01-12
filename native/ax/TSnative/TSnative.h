@@ -30,13 +30,7 @@
 
 #ifdef WIN32
 //*********************** WINDOWS section *************************
-
-#if( _MSC_VER <= 800 )
-#pragma pack(1)  
-#else
 #include <pshpack1.h>
-#endif
-
 //*********************** WINDOWS section *************************
 #else
 #ifdef MAC
@@ -304,6 +298,9 @@ bool SectionCrcCheck( TS_SECTION* pSection );
 bool BuildSectionData( TS_SECTION* pSection, int nSectionLength, char* pData );
 int  PopSectionData( TS_SECTION* pSection, char* pData, int Bytes );
 
+#ifdef WIN32
+#include <poppack.h>
+#endif
 
 #ifdef __cplusplus
 }

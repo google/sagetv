@@ -77,7 +77,7 @@ char* strcpy_sage( const char* file, int line, char* tar, int size, const char* 
 		fprintf( fp,  "%02d/%02d/%d %02d:%02d:%02d (tid %06x) ", ltm.tm_mon+1, ltm.tm_mday, ltm.tm_year+1900, 
 				      ltm.tm_hour, ltm.tm_min, ltm.tm_sec, GetCurrentThreadId() );  
 		fprintf( fp,  "Buffer overrun detected in STRCPY(). File: %s Line: %d ", file, line );
-		fprintf( fp,  "tar_size:%d, src_size:%d src:'%s' \n", size, strlen(src), src );
+		fprintf( fp,  "tar_size:%d, src_size:%d src:'%p' \n", size, (int) strlen(src), src );
 		fclose( fp );
 		return "";
 	}

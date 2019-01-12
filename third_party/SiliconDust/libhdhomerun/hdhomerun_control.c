@@ -1,7 +1,7 @@
 /*
  * hdhomerun_control.c
  *
- * Copyright © 2006-2010 Silicondust USA Inc. <www.silicondust.com>.
+ * Copyright © 2006-2016 Silicondust USA Inc. <www.silicondust.com>.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -30,7 +30,7 @@ struct hdhomerun_control_sock_t {
 	uint32_t desired_device_ip;
 	uint32_t actual_device_id;
 	uint32_t actual_device_ip;
-	hdhomerun_sock_t sock;
+	struct hdhomerun_sock_t *sock;
 	struct hdhomerun_debug_t *dbg;
 	struct hdhomerun_pkt_t tx_pkt;
 	struct hdhomerun_pkt_t rx_pkt;
@@ -38,12 +38,12 @@ struct hdhomerun_control_sock_t {
 
 static void hdhomerun_control_close_sock(struct hdhomerun_control_sock_t *cs)
 {
-	if (cs->sock == HDHOMERUN_SOCK_INVALID) {
+	if (!cs->sock) {
 		return;
 	}
 
 	hdhomerun_sock_destroy(cs->sock);
-	cs->sock = HDHOMERUN_SOCK_INVALID;
+	cs->sock = NULL;
 }
 
 void hdhomerun_control_set_device(struct hdhomerun_control_sock_t *cs, uint32_t device_id, uint32_t device_ip)
@@ -65,7 +65,6 @@ struct hdhomerun_control_sock_t *hdhomerun_control_create(uint32_t device_id, ui
 	}
 
 	cs->dbg = dbg;
-	cs->sock = HDHOMERUN_SOCK_INVALID;
 	hdhomerun_control_set_device(cs, device_id, device_ip);
 
 	return cs;
@@ -77,46 +76,46 @@ void hdhomerun_control_destroy(struct hdhomerun_control_sock_t *cs)
 	free(cs);
 }
 
-static bool_t hdhomerun_control_connect_sock(struct hdhomerun_control_sock_t *cs)
+static bool hdhomerun_control_connect_sock(struct hdhomerun_control_sock_t *cs)
 {
-	if (cs->sock != HDHOMERUN_SOCK_INVALID) {
-		return TRUE;
+	if (cs->sock) {
+		return true;
 	}
 
 	if ((cs->desired_device_id == 0) && (cs->desired_device_ip == 0)) {
 		hdhomerun_debug_printf(cs->dbg, "hdhomerun_control_connect_sock: no device specified\n");
-		return FALSE;
+		return false;
 	}
 	if (hdhomerun_discover_is_ip_multicast(cs->desired_device_ip)) {
 		hdhomerun_debug_printf(cs->dbg, "hdhomerun_control_connect_sock: cannot use multicast ip address for device operations\n");
-		return FALSE;
+		return false;
 	}
 
 	/* Find device. */
 	struct hdhomerun_discover_device_t result;
-	if (hdhomerun_discover_find_devices_custom(cs->desired_device_ip, HDHOMERUN_DEVICE_TYPE_WILDCARD, cs->desired_device_id, &result, 1) <= 0) {
+	if (hdhomerun_discover_find_devices_custom_v2(cs->desired_device_ip, HDHOMERUN_DEVICE_TYPE_WILDCARD, cs->desired_device_id, &result, 1) <= 0) {
 		hdhomerun_debug_printf(cs->dbg, "hdhomerun_control_connect_sock: device not found\n");
-		return FALSE;
+		return false;
 	}
 	cs->actual_device_ip = result.ip_addr;
 	cs->actual_device_id = result.device_id;
 
 	/* Create socket. */
 	cs->sock = hdhomerun_sock_create_tcp();
-	if (cs->sock == HDHOMERUN_SOCK_INVALID) {
+	if (!cs->sock) {
 		hdhomerun_debug_printf(cs->dbg, "hdhomerun_control_connect_sock: failed to create socket (%d)\n", hdhomerun_sock_getlasterror());
-		return FALSE;
+		return false;
 	}
 
 	/* Initiate connection. */
 	if (!hdhomerun_sock_connect(cs->sock, cs->actual_device_ip, HDHOMERUN_CONTROL_TCP_PORT, HDHOMERUN_CONTROL_CONNECT_TIMEOUT)) {
 		hdhomerun_debug_printf(cs->dbg, "hdhomerun_control_connect_sock: failed to connect (%d)\n", hdhomerun_sock_getlasterror());
 		hdhomerun_control_close_sock(cs);
-		return FALSE;
+		return false;
 	}
 
 	/* Success. */
-	return TRUE;
+	return true;
 }
 
 uint32_t hdhomerun_control_get_device_id(struct hdhomerun_control_sock_t *cs)
@@ -165,18 +164,18 @@ uint32_t hdhomerun_control_get_local_addr(struct hdhomerun_control_sock_t *cs)
 	return addr;
 }
 
-static bool_t hdhomerun_control_send_sock(struct hdhomerun_control_sock_t *cs, struct hdhomerun_pkt_t *tx_pkt)
+static bool hdhomerun_control_send_sock(struct hdhomerun_control_sock_t *cs, struct hdhomerun_pkt_t *tx_pkt)
 {
 	if (!hdhomerun_sock_send(cs->sock, tx_pkt->start, tx_pkt->end - tx_pkt->start, HDHOMERUN_CONTROL_SEND_TIMEOUT)) {
 		hdhomerun_debug_printf(cs->dbg, "hdhomerun_control_send_sock: send failed (%d)\n", hdhomerun_sock_getlasterror());
 		hdhomerun_control_close_sock(cs);
-		return FALSE;
+		return false;
 	}
 
-	return TRUE;
+	return true;
 }
 
-static bool_t hdhomerun_control_recv_sock(struct hdhomerun_control_sock_t *cs, struct hdhomerun_pkt_t *rx_pkt, uint16_t *ptype, uint64_t recv_timeout)
+static bool hdhomerun_control_recv_sock(struct hdhomerun_control_sock_t *cs, struct hdhomerun_pkt_t *rx_pkt, uint16_t *ptype, uint64_t recv_timeout)
 {
 	uint64_t stop_time = getcurrenttime() + recv_timeout;
 	hdhomerun_pkt_reset(rx_pkt);
@@ -186,14 +185,14 @@ static bool_t hdhomerun_control_recv_sock(struct hdhomerun_control_sock_t *cs, s
 		if (current_time >= stop_time) {
 			hdhomerun_debug_printf(cs->dbg, "hdhomerun_control_recv_sock: timeout\n");
 			hdhomerun_control_close_sock(cs);
-			return FALSE;
+			return false;
 		}
 
 		size_t length = rx_pkt->limit - rx_pkt->end;
 		if (!hdhomerun_sock_recv(cs->sock, rx_pkt->end, &length, stop_time - current_time)) {
 			hdhomerun_debug_printf(cs->dbg, "hdhomerun_control_recv_sock: recv failed (%d)\n", hdhomerun_sock_getlasterror());
 			hdhomerun_control_close_sock(cs);
-			return FALSE;
+			return false;
 		}
 
 		rx_pkt->end += length;
@@ -202,10 +201,10 @@ static bool_t hdhomerun_control_recv_sock(struct hdhomerun_control_sock_t *cs, s
 		if (ret < 0) {
 			hdhomerun_debug_printf(cs->dbg, "hdhomerun_control_recv_sock: frame error\n");
 			hdhomerun_control_close_sock(cs);
-			return FALSE;
+			return false;
 		}
 		if (ret > 0) {
-			return TRUE;
+			return true;
 		}
 	}
 }
@@ -216,7 +215,7 @@ static int hdhomerun_control_send_recv_internal(struct hdhomerun_control_sock_t 
 
 	int i;
 	for (i = 0; i < 2; i++) {
-		if (cs->sock == HDHOMERUN_SOCK_INVALID) {
+		if (!cs->sock) {
 			if (!hdhomerun_control_connect_sock(cs)) {
 				hdhomerun_debug_printf(cs->dbg, "hdhomerun_control_send_recv: connect failed\n");
 				return -1;
@@ -260,7 +259,7 @@ static int hdhomerun_control_get_set(struct hdhomerun_control_sock_t *cs, const 
 	/* Request. */
 	hdhomerun_pkt_reset(tx_pkt);
 
-	int name_len = (int)strlen(name) + 1;
+	size_t name_len = strlen(name) + 1;
 	if (tx_pkt->end + 3 + name_len > tx_pkt->limit) {
 		hdhomerun_debug_printf(cs->dbg, "hdhomerun_control_get_set: request too long\n");
 		return -1;
@@ -270,7 +269,7 @@ static int hdhomerun_control_get_set(struct hdhomerun_control_sock_t *cs, const 
 	hdhomerun_pkt_write_mem(tx_pkt, (const void *)name, name_len);
 
 	if (value) {
-		int value_len = (int)strlen(value) + 1;
+		size_t value_len = strlen(value) + 1;
 		if (tx_pkt->end + 3 + value_len > tx_pkt->limit) {
 			hdhomerun_debug_printf(cs->dbg, "hdhomerun_control_get_set: request too long\n");
 			return -1;
@@ -328,6 +327,9 @@ static int hdhomerun_control_get_set(struct hdhomerun_control_sock_t *cs, const 
 			}
 
 			return 0;
+
+		default:
+			break;
 		}
 
 		rx_pkt->pos = next;
@@ -356,7 +358,7 @@ int hdhomerun_control_upgrade(struct hdhomerun_control_sock_t *cs, FILE *upgrade
 {
 	struct hdhomerun_pkt_t *tx_pkt = &cs->tx_pkt;
 	struct hdhomerun_pkt_t *rx_pkt = &cs->rx_pkt;
-	bool_t upload_delay = FALSE;
+	bool upload_delay = false;
 	uint32_t sequence = 0;
 
 	/* Special case detection. */

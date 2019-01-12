@@ -54,13 +54,13 @@ JNIEXPORT jint JNICALL Java_sage_miniclient_OpenGLVideoRenderer_initVideoServer
 	strcpy(buf, shmemPrefix);
 	strcat(buf, "FrameDone");
 	HANDLE evtDone = CreateEvent(NULL, FALSE, FALSE, buf);
-	fprintf(stderr, "Created FileMap=0x%x evtReady=0x%x evtDone=0x%x\r\n", (int) fileMap, (int) evtReady, (int) evtDone);
+	fprintf(stderr, "Created FileMap=0x%p evtReady=0x%p evtDone=0x%p\r\n", fileMap, evtReady, evtDone);
 	unsigned char* myPtr = (unsigned char*)MapViewOfFile(fileMap, FILE_MAP_READ|FILE_MAP_WRITE, 0, 0, 0);
 	unsigned int* myData = (unsigned int*) myPtr;
 	jobject byteBuffer = env->NewDirectByteBuffer(myPtr + 1024, 1920*540*3);
 	if (env->ExceptionOccurred())
 		return JNI_FALSE; // let the exception propogate
-	fprintf(stderr, "Starting to read...0x%x\r\n", (int) myPtr);
+	fprintf(stderr, "Starting to read...0x%p\r\n", myPtr);
 	while (glVideoServerActive)
 	{
 		if (WAIT_OBJECT_0 != WaitForSingleObject(evtReady, 200))
