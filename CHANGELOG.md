@@ -1,5 +1,7 @@
 # Change Log
 
+* Change: Whitelist LAV Audio and Video Decoders (Windows)
+* Change: SageTV7 STV system information will indicate 32/64 bit
 * Fix: Include Win10 in 'VISTA_OS' detection (Windows)
 * Change: New installation properties default video/dvd_video renderer is 'EVR'
 * Change: New installation properties default video/audio decoder are auto-detected

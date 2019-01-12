@@ -83,6 +83,8 @@ public class DShowMediaPlayer implements DVDMediaPlayer
       sage.Native.loadLibrary("DShowPlayer");
       java.util.ArrayList videoFilters = new java.util.ArrayList();
       java.util.ArrayList audioFilters = new java.util.ArrayList();
+      audioFilters.add("LAV Audio Decoder");
+      videoFilters.add("LAV Video Decoder");
       audioFilters.add("Cyberlink Audio Decoder");
       videoFilters.add("Cyberlink Video/SP Decoder");
       audioFilters.add("CyberLink Audio Decoder (PDVD7)");
