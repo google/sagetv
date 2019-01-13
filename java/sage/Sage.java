@@ -115,7 +115,9 @@ public final class Sage
     WINDOWS_OS = System.getProperty("os.name").toLowerCase().indexOf("windows") != -1;
     MAC_OS_X = System.getProperty("os.name").toLowerCase().indexOf("mac os x") != -1;
     LINUX_OS = !WINDOWS_OS && !MAC_OS_X;
-    VISTA_OS = WINDOWS_OS && (System.getProperty("os.version").startsWith("6.") || System.getProperty("os.version").startsWith("7."));
+    VISTA_OS = WINDOWS_OS && (System.getProperty("os.version").startsWith("6.") ||
+                              System.getProperty("os.version").startsWith("7.") ||
+                              System.getProperty("os.version").startsWith("10."));
     LINUX_IS_ROOT = "root".equals(System.getProperty("user.name"));
     if (WINDOWS_OS)
       sage.Native.loadLibrary("SageTVWin32");
@@ -1241,7 +1243,8 @@ public final class Sage
     }
     else
     {
-      theImage = ImageUtils.fullyLoadImage(isTrueClient() ? "images/splashclient.gif" : "images/splash.gif");
+      theImage = ImageUtils.fullyLoadImage(isTrueClient() ? (is64BitJVM() ? "images/splashclient64.gif" : "images/splashclient.gif") : 
+                                                            (is64BitJVM() ? "images/splash64.gif"       : "images/splash.gif"      ));
     }
     ActiveImage splashImage = new ActiveImage(theImage);
     splashWindow.add(splashImage, "Center");
@@ -2231,5 +2234,12 @@ public final class Sage
       srcRect.height -= ((destRect.y + destRect.height) - (clipRect.y + clipRect.height)) * srcRect.height / destRect.height;
       destRect.height -= ((destRect.y + destRect.height) - (clipRect.y + clipRect.height));
     }
+  }
+
+  public static boolean is64BitJVM()
+  {
+    return (("64".equals(System.getProperty("sun.arch.data.model"))) ||
+            ("x86_64".equals(System.getProperty("os.arch"))) ||
+            ("amd64".equals(System.getProperty("os.arch"))));
   }
 }

@@ -1,4 +1,4 @@
-SUBDIRS = lib util doc pic
+SUBDIRS = lib
 WINDOWS = $(top_srcdir)/windows/GifWin.cpp \
 	  $(top_srcdir)/windows/GifWin.h \
 	  $(top_srcdir)/windows/StdAfx.h \

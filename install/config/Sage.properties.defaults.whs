@@ -136,4 +136,6 @@ ui/numeric_text_input_de_6=MNO\u00D66
 ui/numeric_text_input_de_7=PQRS\u00DF7
 ui/numeric_text_input_de_8=TU\u00DCV8
 ui/numeric_text_input_de_9=WXYZ9
+videoframe/audio_decoder_filter=
+videoframe/video_decoder_filter=
 zzz=true

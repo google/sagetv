@@ -27,7 +27,11 @@
 #include "flashmpeg4.h"
 #include "feeder.h"
 
-void *av_memcpy(void *dest, const void *src, unsigned int size);
+void *av_memcpy(void *dest, const void *src, unsigned int size)
+{
+  if ((dest != NULL) && (src != NULL) && (size != 0)) (memcpy(dest, src, size));
+}
+
 
 //#define DEBUGAAC
 //#define DEBUGH264
@@ -106,7 +110,7 @@ void _flog( int level, const char* cstr, ... )
 }
 
 
-int bug_broken_dts=0;
+//int bug_broken_dts=0;
 static int countMpeg4Frames(unsigned char *data, int len, int *nFrames, int *nBFrames);
 static int readH264Length(struct PushReader *t1, unsigned char *data,
                     int pos, int len);
@@ -2416,5 +2420,3 @@ void setDebugTrace( char* pDebugLogName, int logCtrl )
 
 	logControl = logCtrl;
 }
-
-

@@ -34,8 +34,8 @@ public:
     STDMETHODIMP RequestAllocator( IMemAllocator* pPreferred,
 				                   ALLOCATOR_PROPERTIES* pProps,
 								   IMemAllocator ** ppActual);
-    STDMETHODIMP Request( IMediaSample* pSample, DWORD dwUser);	
-    STDMETHODIMP WaitForNext( DWORD dwTimeout, IMediaSample** ppSample, DWORD * pdwUser);		
+    STDMETHODIMP Request( IMediaSample* pSample, DWORD_PTR dwUser);	
+    STDMETHODIMP WaitForNext( DWORD dwTimeout, IMediaSample** ppSample, DWORD_PTR* pdwUser);		
     STDMETHODIMP SyncReadAligned( IMediaSample* pSample );
     STDMETHODIMP SyncRead( LONGLONG llPosition,	LONG lLength, BYTE* pBuffer);	
     STDMETHODIMP Length( LONGLONG* pTotal, LONGLONG* pAvailable);

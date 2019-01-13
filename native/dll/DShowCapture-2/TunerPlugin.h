@@ -25,11 +25,7 @@ extern "C" {
 #endif
 
 #ifdef WIN32
-#if( _MSC_VER <= 800 )
-#pragma pack(1)  
-#else
 #include <pshpack1.h>
-#endif
 #endif
 
 #include "channel.h"
@@ -61,6 +57,10 @@ int TunerPluginDVBCCall( DShowCaptureInfo* pCapInfo, DVB_C_FREQ* dvbs );
 int TunerPluginDVBTCall( DShowCaptureInfo* pCapInfo, DVB_T_FREQ* dvbs );
 int TunerPluginQAMCall( DShowCaptureInfo* pCapInfo, QAM_FREQ* dvbs );
 int TunerPluginATSCCall( DShowCaptureInfo* pCapInfo, ATSC_FREQ* dvbs );
+
+#ifdef WIN32
+#include <poppack.h>
+#endif
 
 #ifdef __cplusplus
  }

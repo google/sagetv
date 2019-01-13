@@ -24,11 +24,7 @@
 #include <assert.h>
 
 #ifdef WIN32
-#if( _MSC_VER <= 800 )
-#pragma pack(1)  
-#else
 #include <pshpack1.h>
-#endif
 #endif
 
 #include "TSnative.h"
@@ -4181,3 +4177,7 @@ int  sage_stricmp ( const char * dst,  const char * src )
 
     return(f - l);
 }
+
+#ifdef WIN32
+#include <poppack.h>
+#endif

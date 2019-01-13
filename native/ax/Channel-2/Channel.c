@@ -21,7 +21,9 @@
 
 #pragma warning(disable : 4996)
 #pragma warning(disable: 4702)
-#define _USE_32BIT_TIME_T
+#ifndef _WIN64
+  #define _USE_32BIT_TIME_T
+#endif
 
 #include <windows.h>
 #endif
@@ -41,12 +43,7 @@
 #ifdef WIN32
 //*********************** WINDOWS section *********************
 #define rename( x, y )	MoveFile( x, y )
-#if( _MSC_VER <= 800 )
-#pragma pack(1)  
-#else
 #include <pshpack1.h>
-#endif
-
 //*********************** WINDOWS section *********************
 #else
 #ifdef __APPLE__
@@ -1241,7 +1238,7 @@ void* getTuningEntry(  CHANNEL_DATA *Channel, int tune_type, int major, int mino
 	return NULL;
 	
 }
-uint32_t fileTimeStamp( char* szFileName );
+time_t fileTimeStamp( char* szFileName );
 bool tuneChannel( CHANNEL_DATA *channel, const char* tune_string )
 {
 	//int status;
@@ -3517,3 +3514,7 @@ static int _CopyFile( char* src, char *tar )
 	fclose( ft );
 	return sum;
 }
+
+#ifdef WIN32
+#include <poppack.h>
+#endif

@@ -313,10 +313,10 @@ JNIEXPORT void JNICALL Java_sage_DirectX9SageRenderer_asyncVideoRender0
 	strcat(buf, "FrameDone");
 	HANDLE evtDone = CreateEvent(NULL, FALSE, FALSE, buf);
 	env->ReleaseStringUTFChars(sharedMemPrefix, cName);
-	slog((env, "Created FileMap=0x%x evtReady=0x%x evtDone=0x%x\r\n", (int) fileMap, (int) evtReady, (int) evtDone));
+	slog((env, "Created FileMap=0x%p evtReady=0x%p evtDone=0x%p\r\n", fileMap, evtReady, evtDone));
 	unsigned char* myPtr = (unsigned char*)MapViewOfFile(fileMap, FILE_MAP_READ|FILE_MAP_WRITE, 0, 0, 0);
 	unsigned int* myData = (unsigned int*) myPtr;
-	slog((env, "Starting to read...0x%x\r\n", (int) myPtr));
+	slog((env, "Starting to read...0x%p\r\n", myPtr));
 	int configured = 0;
 	int j = 0;
 	int myAsyncRenderCount = asyncRenderCount;
@@ -778,8 +778,8 @@ JNIEXPORT jboolean JNICALL Java_sage_DirectX9SageRenderer_initDX9SageRenderer0(J
 	// Create our pixel shader for doing MPlayer video rendering
 	LPD3DXBUFFER ppShader;
 	hr = D3DXAssembleShader(
-		YUV_RGB_PIXEL_SHADER_CODE,
-		strlen(YUV_RGB_PIXEL_SHADER_CODE),
+		(LPCSTR) YUV_RGB_PIXEL_SHADER_CODE,
+		(UINT) strlen(YUV_RGB_PIXEL_SHADER_CODE),
 		NULL,
 		NULL,
 		0,//D3DXSHADER_DEBUG, // TEMP FOR DEBUGGING
@@ -940,16 +940,6 @@ JNIEXPORT void JNICALL Java_sage_DirectX9SageRenderer_cleanupDX9SageRenderer0(JN
 	JNI_RT_CATCH_NODEV;
 }
 
-// Used for fast byte-swapping to fix endian order issues with byte buffer data
-unsigned long swap(unsigned long ToSwap) {
-   __asm
-   {
-   mov eax,ToSwap
-   bswap eax
-   mov ToSwap,eax
-   }
-return(ToSwap);
-}
 
 // Callback function used to clear a texture to black
 VOID WINAPI ClearToBlack (D3DXVECTOR4* pOut, const D3DXVECTOR2* pTexCoord, 
@@ -1055,7 +1045,8 @@ JNIEXPORT jlong JNICALL Java_sage_DirectX9SageRenderer_createD3DTextureFromMemor
 		int idxNew = y * storedWidth;
 		int idxOld = y * jwidth;
 		for (x = 0; x < jwidth; x++)
-			swapper[idxNew + x] = swap(swapOrg[idxOld + x]);
+			swapper[idxNew + x] = _byteswap_ulong(swapOrg[idxOld + x]);
+
 		if (x < storedWidth)
 			ZeroMemory(&(swapper[idxNew + x]), sizeof(unsigned long) * (storedWidth - x));
 	}

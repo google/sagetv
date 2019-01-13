@@ -887,7 +887,7 @@ JNIEXPORT void JNICALL Java_sage_UIManager_setCursorClip(
 JNIEXPORT jboolean JNICALL Java_sage_UIManager_sendMessage(
 	JNIEnv *env, jclass jc, jlong winID, jint msgID, jint msgData)
 {
-	DWORD msgRes;
+	DWORD_PTR msgRes;
 	if (SendMessageTimeout((HWND) winID, msgID + WM_USER, msgData, msgData,
 		SMTO_ABORTIFHUNG | SMTO_BLOCK, 15000, &msgRes) == 0)
 		return JNI_FALSE;
@@ -907,7 +907,7 @@ JNIEXPORT jlong JNICALL Java_sage_UIManager_findWindow(
 	const char* name = env->GetStringUTFChars(jname, (unsigned char*) NULL);
 	if (jwinclass == NULL)
 	{
-		retVal = (jint) FindWindow((const char*) NULL, name);
+		retVal = (jlong) FindWindow((const char*) NULL, name);
 	}
 	else
 	{
@@ -955,7 +955,7 @@ void loadAWTLib()
 		HMODULE exeMod = GetModuleHandle(NULL);
 		LPTSTR appPath = new TCHAR[512];
 		GetModuleFileName(exeMod, appPath, 512);
-		int appLen = strlen(appPath);
+		int appLen = (int) strlen(appPath);
 		for (int i = appLen - 1; i > 0; i--)
 		{
 			if (appPath[i] == '\\')
@@ -1042,7 +1042,11 @@ JNIEXPORT jlong JNICALL Java_sage_UIUtils_getHWND
 	typedef jboolean (JNICALL *AWTPROC)(JNIEnv* env, JAWT* awt);
 	
 	awt.version = JAWT_VERSION_1_4;
+#ifdef _WIN64
+	AWTPROC lpfnProc = (AWTPROC)GetProcAddress(sageLoadedAwtLib, "JAWT_GetAWT");
+#else
 	AWTPROC lpfnProc = (AWTPROC)GetProcAddress(sageLoadedAwtLib, "_JAWT_GetAWT@8");
+#endif
 	result = lpfnProc(env, &awt);
 	if (result == JNI_FALSE)
 	{

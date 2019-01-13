@@ -41,7 +41,7 @@ public class DShowDVDPlayer extends DShowMediaPlayer implements DVDMediaPlayer
   {
     // Default to using the OverlayMixer for video rendering because it supports the mouse in DVD menus,
     // that currently doesn't work in VMR9
-    String rv = Sage.get(PREFS_ROOT + DVD_VIDEO_RENDER_FILTER, "Overlay");
+    String rv = Sage.get(PREFS_ROOT + DVD_VIDEO_RENDER_FILTER, Sage.VISTA_OS ? "EVR" : "Overlay");
     if (rv.length() == 0)
       return Sage.rez("Default");
     else

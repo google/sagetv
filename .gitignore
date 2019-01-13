@@ -14,11 +14,17 @@ config*.log
 /native/**/*.map
 /native/**/*.a
 /native/**/*.so
+/native/**/*.vcxproj.user
+/native/**/Win32/
+/native/**/x64/
 
 /third_party/**/*.o
 /third_party/**/*.lo
 /third_party/**/*.la
 /third_party/**/*.pc
+/third_party/**/*.vcxproj.user
+/third_party/Microsoft/**/Win32/
+/third_party/Microsoft/**/x64/
 
 # gradle/eclipse stuff
 /bin/
@@ -37,6 +43,8 @@ config*.log
 .DS_Store
 
 /buildoutput/
+/buildwin/Win32/
+/buildwin/x64/
 
 # remove specific files that are created after a build
 build/miniTempBuildImages/
@@ -63,6 +71,7 @@ third_party/codecs/faac/frontend/.deps/
 third_party/codecs/faac/frontend/Makefile
 third_party/codecs/faac/frontend/Makefile.in
 third_party/codecs/faac/frontend/faac
+third_party/codecs/faac/frontend/faac.exe
 third_party/codecs/faac/include/Makefile
 third_party/codecs/faac/include/Makefile.in
 third_party/codecs/faac/install-sh
@@ -160,6 +169,7 @@ third_party/codecs/giflib/util/icon2gif
 third_party/codecs/giflib/util/raw2gif
 third_party/codecs/giflib/util/rgb2gif
 third_party/codecs/giflib/util/text2gif
+third_party/codecs/giflib/util/*.exe
 third_party/codecs/jpeg-6b/Makefile
 third_party/codecs/jpeg-6b/cjpeg
 third_party/codecs/jpeg-6b/config.status
@@ -169,6 +179,7 @@ third_party/codecs/jpeg-6b/jpegtran
 third_party/codecs/jpeg-6b/libjpeg.a
 third_party/codecs/jpeg-6b/rdjpgcom
 third_party/codecs/jpeg-6b/wrjpgcom
+third_party/codecs/jpeg-6b/*.exe
 third_party/codecs/libpng/.deps/
 third_party/codecs/libpng/.libs/
 third_party/codecs/libpng/Makefile
@@ -258,6 +269,7 @@ third_party/codecs/x264/config.mak
 third_party/codecs/x264/gtk/config.mak
 third_party/codecs/x264/libx264.a
 third_party/codecs/x264/x264
+third_party/codecs/x264/x264.exe
 third_party/codecs/xvidcore/build/generic/=build/
 third_party/codecs/xvidcore/build/generic/config.guess
 third_party/codecs/xvidcore/build/generic/config.status
@@ -272,7 +284,9 @@ third_party/ffmpeg/config.err
 third_party/ffmpeg/config.h
 third_party/ffmpeg/config.mak
 third_party/ffmpeg/ffmpeg
+third_party/ffmpeg/ffmpeg.exe
 third_party/ffmpeg/ffmpeg_g
+third_party/ffmpeg/ffmpeg_g.exe
 third_party/ffmpeg/libavcodec/libavcodec.a
 third_party/ffmpeg/libavdevice/libavdevice.a
 third_party/ffmpeg/libavformat/libavformat.a
@@ -337,8 +351,10 @@ third_party/ffmpeg/.version
 third_party/ffmpeg/cmdutils.d
 third_party/ffmpeg/ffmpeg.d
 third_party/ffmpeg/ffprobe
+third_party/ffmpeg/ffprobe.exe
 third_party/ffmpeg/ffprobe.d
 third_party/ffmpeg/ffprobe_g
+third_party/ffmpeg/ffprobe_g.exe
 third_party/ffmpeg/libavcodec/4xm.d
 third_party/ffmpeg/libavcodec/8bps.d
 third_party/ffmpeg/libavcodec/8svx.d

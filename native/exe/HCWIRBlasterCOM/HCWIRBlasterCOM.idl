@@ -1,0 +1,37 @@
+// HCWIRBlasterCOM.idl : IDL source for HCWIRBlasterCOM
+//
+
+// This file will be processed by the MIDL tool to
+// produce the type library (HCWIRBlasterCOM.tlb) and marshalling code.
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+[
+	object,
+	uuid(494D38ED-7C44-4666-B896-9774A84523BC),
+	dual,
+	nonextensible,
+	pointer_default(unique)
+]
+interface IIRBlast : IDispatch{
+	[id(1)] HRESULT OpenDevice([out] VARIANT_BOOL* ret);
+	[id(2)] HRESULT MacroTune([in] LONG nChannel);
+};
+[
+	uuid(BAEDC50F-F595-4B38-BFD1-430D0B74CF96),
+	version(1.0),
+]
+library HCWIRBlasterCOMLib
+{
+	importlib("stdole2.tlb");
+	[
+		uuid(4587A032-7397-4153-89F9-1D75F12FED1E)		
+	]
+	coclass IRBlast
+	{
+		[default] interface IIRBlast;
+	};
+};
+
+import "shobjidl.idl";

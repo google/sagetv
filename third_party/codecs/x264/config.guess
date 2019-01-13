@@ -797,6 +797,12 @@ EOF
     i*:CYGWIN*:*)
 	echo ${UNAME_MACHINE}-pc-cygwin
 	exit ;;
+    *:MINGW32*:*)
+	echo i386-pc-mingw32
+	exit ;;
+    *:MINGW64*:*)
+	echo x86_64-pc-mingw32
+	exit ;;
     *:MINGW*:*)
 	echo ${UNAME_MACHINE}-pc-mingw32
 	exit ;;
