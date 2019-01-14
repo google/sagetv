@@ -797,7 +797,7 @@ public class FFMPEGTranscoder implements TranscodeEngine
       xcodeParamsVec.add("-b");
       xcodeParamsVec.add(currVideoBitrateKbps*1000 + "");
       xcodeParamsVec.add("-s");
-      xcodeParamsVec.add(size[0] + "x" + size[1]);
+      xcodeParamsVec.add(targetWidth + "x" + targetHeight);
       xcodeParamsVec.add("-r");
       // Trying to lower the frame rate here caused problems...
       xcodeParamsVec.add("29.97");
