@@ -18,6 +18,7 @@ package sage;
 public class FFMPEGTranscoder implements TranscodeEngine
 {
   private static final boolean XCODE_DEBUG = Sage.DBG && Sage.getBoolean("media_server/transcode_debug", false);
+  static final String BITRATE_OPTIONS_SIZE_KEY = "httpls_bandwidth/%s/video_size";
 
   public FFMPEGTranscoder()
   {
@@ -781,14 +782,22 @@ public class FFMPEGTranscoder implements TranscodeEngine
       xcodeParamsVec.add("mpegts");
       xcodeParamsVec.add("-vcodec");
       xcodeParamsVec.add(videoCodec = "libx264");
-      targetWidth = 480;
-      targetHeight = 272;
+      String sizeKey = String.format(BITRATE_OPTIONS_SIZE_KEY, estimatedBandwidth/1000);
+      String xcodeSize = Sage.get(sizeKey, Sage.get(String.format(BITRATE_OPTIONS_SIZE_KEY, "default"), "480x272"));
+      if (Sage.DBG)
+        System.out.println("FFMpegTranscoder: httpls: Using framesize "+xcodeSize+" for bandwidth: "+(estimatedBandwidth/1000)+" base on key: " + sizeKey);
+      // this will always return a valid 2 element array of w and h
+      int size[] = parseFrameSize(xcodeSize, 480, 272);
+      if (Sage.DBG)
+        System.out.println("FFMpegTranscoder: httpls: Calculated framesize " + size[0] + "x" + size[1]);
+      targetWidth = size[0];
+      targetHeight = size[1];
       currAudioBitrateKbps = 32;
       currVideoBitrateKbps = (int)Math.max(64000, (estimatedBandwidth - 32000))/1000;
       xcodeParamsVec.add("-b");
       xcodeParamsVec.add(currVideoBitrateKbps*1000 + "");
       xcodeParamsVec.add("-s");
-      xcodeParamsVec.add("480x272");
+      xcodeParamsVec.add(targetWidth + "x" + targetHeight);
       xcodeParamsVec.add("-r");
       // Trying to lower the frame rate here caused problems...
       xcodeParamsVec.add("29.97");
@@ -1523,6 +1532,87 @@ public class FFMPEGTranscoder implements TranscodeEngine
 
     xcodeStdin = xcodeProcess.getOutputStream();
     //try{Thread.sleep(Sage.getInt("media_server/xcode_start_delay", 1000));}catch (Exception e){}
+  }
+
+  /**
+   * Given a string like, '1280x720' it will return a 2 element array where element 0 is width and element 1 is height.
+   * If the string is unparseable, then it will return the defaults.
+   * If the string is 'original' it will attempt to get the size from the original video stream.
+   *
+   * @param xcodeWxH
+   * @param defWidth
+   * @param defHeight
+   * @return
+   */
+  int[] parseFrameSize(String xcodeWxH, int defWidth, int defHeight)
+  {
+    int size[] = new int[] {defWidth, defHeight};
+    if (xcodeWxH == null)
+    {
+      return size;
+    }
+
+    xcodeWxH = xcodeWxH.toLowerCase();
+
+    // if we pass 'original' then try to use the original size of the video
+    if ("original".equals(xcodeWxH))
+    {
+      if (sourceFormat!=null && sourceFormat.getVideoFormat()!=null)
+      {
+        size[0] = sourceFormat.getVideoFormat().getWidth();
+        size[1] = sourceFormat.getVideoFormat().getHeight();
+        size[0] = (size[0]<=0) ? defWidth : size[0];
+        size[1] = (size[1]<=0) ? defHeight : size[1];
+        return size;
+      }
+      else
+      {
+        if (Sage.DBG)
+          System.out.println("FFMpegTranscoder: parseFrameSize(): 'original' was passed but there isn't any video information.  Using defaults.");
+        return size;
+      }
+    }
+
+    // need to parse widthxheight, ie, 1280x720
+    String parts[] = xcodeWxH.split("x");
+    if (parts.length != 2)
+    {
+      if (Sage.DBG)
+        System.out.println("FFMpegTranscoder: parseFrameSize(): Invalid xcode size option "+xcodeWxH+" (should be widthxheight, eg, 1280x720)");
+      return size;
+    }
+
+    int w,h;
+    try
+    {
+      w = Integer.parseInt(parts[0].trim());
+    }
+    catch (Throwable t)
+    {
+      if (Sage.DBG)
+        System.out.println("FFMpegTranscoder: parseFrameSize(): Invalid xcode size option "+xcodeWxH+" (should be widthxheight, eg, 1280x720)");
+      return size;
+    }
+
+    try
+    {
+      h = Integer.parseInt(parts[1].trim());
+    }
+    catch (Throwable t)
+    {
+      if (Sage.DBG)
+        System.out.println("FFMpegTranscoder: parseFrameSize(): Invalid xcode size option "+xcodeWxH+" (should be widthxheight, eg, 1280x720)");
+      return size;
+    }
+
+    // great, we have a valid height and width
+    if (h>0 && w>0)
+    {
+      size[0]=w;
+      size[1]=h;
+    }
+
+    return size;
   }
 
   public void stopTranscode()
