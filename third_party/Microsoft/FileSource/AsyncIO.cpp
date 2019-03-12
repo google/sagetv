@@ -30,7 +30,7 @@ CAsyncRequest::Request(
     BOOL bAligned,
     BYTE* pBuffer,
     LPVOID pContext,	// filter's context
-    DWORD dwUser)	// downstream filter's context
+    DWORD_PTR dwUser)	// downstream filter's context
 {
     m_pAsyncIO = pIo;
     m_pStream = pStream;
@@ -159,7 +159,7 @@ CAsyncIo::Request(
             BOOL bAligned,
             BYTE* pBuffer,
             LPVOID pContext,
-            DWORD dwUser)
+            DWORD_PTR dwUser)
 {
     if (bAligned) {
         if (!IsAligned(llPos) ||
