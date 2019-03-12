@@ -22,7 +22,8 @@
 #include "sage_DShowMediaPlayer.h"
 #include "imusicvis.h"
 #include "guids.h"
-#include <jawt_md.h>
+#pragma pack(push, 16)  // align JAWT data struct to DLL call
+#include "jawt_md.h"
 #include "sage_PlaybackException.h"
 
 #define MUSIC_DATA_HIST_LEN 200
@@ -346,7 +347,14 @@ JNIEXPORT void JNICALL Java_sage_DShowMusicPlayer_renderVisualization0
 		typedef jboolean (JNICALL *AWTPROC)(JNIEnv* env, JAWT* awt);
 		
 		awt.version = JAWT_VERSION_1_3;
-		AWTPROC lpfnProc = (AWTPROC)GetProcAddress(sageLoadedAwtLib, "_JAWT_GetAWT@8");
+#ifdef _WIN64
+    AWTPROC lpfnProc = (AWTPROC)GetProcAddress(sageLoadedAwtLib, "JAWT_GetAWT");
+#else
+    AWTPROC lpfnProc = (AWTPROC)GetProcAddress(sageLoadedAwtLib, "_JAWT_GetAWT@8");
+#endif
+    if (lpfnProc == NULL)
+      return;
+
 		result = lpfnProc(env, &awt);
 		if (result == JNI_FALSE)
 			return;
@@ -409,3 +417,4 @@ JNIEXPORT void JNICALL Java_sage_DShowMusicPlayer_renderVisualization0
 		elog((env, "EXCEPTION ERROR in renderVisualization.\r\n"));
 	}
 }
+#pragma pack(pop)

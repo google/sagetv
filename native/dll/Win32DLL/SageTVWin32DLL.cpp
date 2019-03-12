@@ -23,6 +23,7 @@
 #include "../../include/sage_UserEvent.h"
 #include <wininet.h>
 #include <shellapi.h>
+#pragma pack(push, 16)  // align JAWT data struct to DLL call
 #include "jawt.h"
 #include "jawt_md.h"
 
@@ -1639,3 +1640,4 @@ BOOL APIENTRY DllMain( HANDLE hModule,
     return TRUE;
 }
 
+#pragma pack(pop)
