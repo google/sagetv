@@ -1,41 +1,73 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+  <?include SageTVInclude.wxi ?>	
   <Fragment>
     <util:RegistrySearch
       Id="Java7FamilyVersion"
         Root="HKLM" Key="SOFTWARE\JavaSoft\Java Runtime Environment"
         Value="CurrentVersion"
-        Win64="no"
+        Win64="$(var.Win64)"
         Variable="JavaCurrentVersion" />
     <PackageGroup Id="Java7Runtime">
-      <?if $(var.InstallerType) = Full ?>
-	      <ExePackage Id="Java7Runtime"
-		DisplayName="Java Runtime Version 7(x86 offline)"
-		Cache="no"
-		Compressed="yes"
-		PerMachine="yes"
-		Permanent="yes"
-		Vital="yes"
-		Name="Redist\jre-7u79-windows-i586.exe"
-		SourceFile="redist\jre-7u79-windows-i586.exe"
-		InstallCommand="/s ADDLOCAL=jrecore IEXPLORER=1 MOZILLA=1 JAVAUPDATE=0 JU=0 SYSTRAY=0 AUTOUPDATECHECK=0 REBOOT=Suppress /L*v &quot;[WixBundleLog_Java7Runtime]&quot;"
-		DetectCondition="JavaCurrentVersion AND (JavaCurrentVersion &gt;= v1.7)">
-	      </ExePackage>
+      <?if $(var.Platform) = x64 ?>
+	      <?if $(var.InstallerType) = Full ?>
+		      <ExePackage Id="Java7Runtime"
+			DisplayName="Java Runtime Version 7(x64 offline)"
+			Cache="no"
+			Compressed="yes"
+			PerMachine="yes"
+			Permanent="yes"
+			Vital="yes"
+			Name="Redist\jre-7u79-windows-x64.exe"
+			SourceFile="redist\jre-7u79-windows-x64.exe"
+			InstallCommand="/s ADDLOCAL=jrecore IEXPLORER=1 MOZILLA=1 JAVAUPDATE=0 JU=0 SYSTRAY=0 AUTOUPDATECHECK=0 REBOOT=Suppress /L*v &quot;[WixBundleLog_Java7Runtime]&quot;"
+			DetectCondition="JavaCurrentVersion AND (JavaCurrentVersion &gt;= v1.7)">
+		      </ExePackage>
+	      <?else?>
+		      <ExePackage Id="Java7Runtime"
+			DisplayName="Java Runtime Version 7(x64 online)"
+			Cache="no"
+			Compressed="no"
+			PerMachine="yes"
+			Permanent="yes"
+			Vital="yes"
+			Name="Redist\jre-7u79-windows-x64.exe"
+			SourceFile="redist\jre-7u79-windows-x64.exe"
+			DownloadUrl="https://dl.bintray.com/opensagetv/sagetv/installersupportfiles/1.101/jre-7u79-windows-x64.exe"
+			InstallCommand="/s ADDLOCAL=jrecore IEXPLORER=1 MOZILLA=1 JAVAUPDATE=0 JU=0 SYSTRAY=0 AUTOUPDATECHECK=0 REBOOT=Suppress /L*v &quot;[WixBundleLog_Java7Runtime]&quot;"
+			DetectCondition="JavaCurrentVersion AND (JavaCurrentVersion &gt;= v1.7)">
+		      </ExePackage>
+	      <?endif?>
       <?else?>
-	      <ExePackage Id="Java7Runtime"
-		DisplayName="Java Runtime Version 7(x86 online)"
-		Cache="no"
-		Compressed="no"
-		PerMachine="yes"
-		Permanent="yes"
-		Vital="yes"
-		Name="Redist\jre-7u79-windows-i586.exe"
-		SourceFile="redist\jre-7u79-windows-i586.exe"
-		DownloadUrl="https://dl.bintray.com/opensagetv/sagetv/installersupportfiles/1.002/jre-7u79-windows-i586.exe"
-		InstallCommand="/s ADDLOCAL=jrecore IEXPLORER=1 MOZILLA=1 JAVAUPDATE=0 JU=0 SYSTRAY=0 AUTOUPDATECHECK=0 REBOOT=Suppress /L*v &quot;[WixBundleLog_Java7Runtime]&quot;"
-		DetectCondition="JavaCurrentVersion AND (JavaCurrentVersion &gt;= v1.7)">
-	      </ExePackage>
+	      <?if $(var.InstallerType) = Full ?>
+		      <ExePackage Id="Java7Runtime"
+			DisplayName="Java Runtime Version 7(x86 offline)"
+			Cache="no"
+			Compressed="yes"
+			PerMachine="yes"
+			Permanent="yes"
+			Vital="yes"
+			Name="Redist\jre-7u79-windows-i586.exe"
+			SourceFile="redist\jre-7u79-windows-i586.exe"
+			InstallCommand="/s ADDLOCAL=jrecore IEXPLORER=1 MOZILLA=1 JAVAUPDATE=0 JU=0 SYSTRAY=0 AUTOUPDATECHECK=0 REBOOT=Suppress /L*v &quot;[WixBundleLog_Java7Runtime]&quot;"
+			DetectCondition="JavaCurrentVersion AND (JavaCurrentVersion &gt;= v1.7)">
+		      </ExePackage>
+	      <?else?>
+		      <ExePackage Id="Java7Runtime"
+			DisplayName="Java Runtime Version 7(x86 online)"
+			Cache="no"
+			Compressed="no"
+			PerMachine="yes"
+			Permanent="yes"
+			Vital="yes"
+			Name="Redist\jre-7u79-windows-i586.exe"
+			SourceFile="redist\jre-7u79-windows-i586.exe"
+			DownloadUrl="https://dl.bintray.com/opensagetv/sagetv/installersupportfiles/1.002/jre-7u79-windows-i586.exe"
+			InstallCommand="/s ADDLOCAL=jrecore IEXPLORER=1 MOZILLA=1 JAVAUPDATE=0 JU=0 SYSTRAY=0 AUTOUPDATECHECK=0 REBOOT=Suppress /L*v &quot;[WixBundleLog_Java7Runtime]&quot;"
+			DetectCondition="JavaCurrentVersion AND (JavaCurrentVersion &gt;= v1.7)">
+		      </ExePackage>
+	      <?endif?>
       <?endif?>
     </PackageGroup>
   </Fragment>

@@ -12,28 +12,58 @@
     <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
     <Name>SageTVSetupMSI</Name>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'SetupServer' ">
-    <OutputName>SageTVSetupMSI</OutputName>
-    <OutputPath>release\bin\$(Configuration)\</OutputPath>
-    <IntermediateOutputPath>obj\msi\$(Configuration)\</IntermediateOutputPath>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'SetupServer|x86' ">
+    <OutputName>SageTVSetupMSI$(Platform)</OutputName>
+    <OutputPath>release\bin\$(Configuration)$(Platform)\</OutputPath>
+    <IntermediateOutputPath>obj\msi\$(Configuration)$(Platform)\</IntermediateOutputPath>
     <DefineConstants>SourceSTV=..\..\..\stvs\SageTV7;SourceSageTVSource=source\SageTV\SageTV;SourceCommonSource=source\SageTV\Common;SourcePlaceshifterSource=source\SageTV\Placeshifter;ProdVersion=0.0.0.0</DefineConstants>
     <DefineSolutionProperties>false</DefineSolutionProperties>
+    <InstallerPlatform>x86</InstallerPlatform>
     <SuppressIces>ICE60;ICE61</SuppressIces>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'SetupClient' ">
-    <OutputName>SageTVClientSetupMSI</OutputName>
-    <OutputPath>release\bin\$(Configuration)\</OutputPath>
-    <IntermediateOutputPath>obj\msi\$(Configuration)\</IntermediateOutputPath>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'SetupServer|x64' ">
+    <OutputName>SageTVSetupMSI$(Platform)</OutputName>
+    <OutputPath>release\bin\$(Configuration)$(Platform)\</OutputPath>
+    <IntermediateOutputPath>obj\msi\$(Configuration)$(Platform)\</IntermediateOutputPath>
     <DefineConstants>SourceSTV=..\..\..\stvs\SageTV7;SourceSageTVSource=source\SageTV\SageTV;SourceCommonSource=source\SageTV\Common;SourcePlaceshifterSource=source\SageTV\Placeshifter;ProdVersion=0.0.0.0</DefineConstants>
     <DefineSolutionProperties>false</DefineSolutionProperties>
+    <InstallerPlatform>x64</InstallerPlatform>
+    <SuppressIces>ICE60;ICE61;ICE80</SuppressIces>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'SetupClient|x86' ">
+    <OutputName>SageTVClientSetupMSI$(Platform)</OutputName>
+    <OutputPath>release\bin\$(Configuration)$(Platform)\</OutputPath>
+    <IntermediateOutputPath>obj\msi\$(Configuration)$(Platform)\</IntermediateOutputPath>
+    <DefineConstants>SourceSTV=..\..\..\stvs\SageTV7;SourceSageTVSource=source\SageTV\SageTV;SourceCommonSource=source\SageTV\Common;SourcePlaceshifterSource=source\SageTV\Placeshifter;ProdVersion=0.0.0.0</DefineConstants>
+    <DefineSolutionProperties>false</DefineSolutionProperties>
+    <InstallerPlatform>x86</InstallerPlatform>
     <SuppressIces>ICE60;ICE61</SuppressIces>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'SetupPlaceshifter' ">
-    <OutputName>SageTVPlaceshifterSetupMSI</OutputName>
-    <OutputPath>release\bin\$(Configuration)\</OutputPath>
-    <IntermediateOutputPath>obj\msi\$(Configuration)\</IntermediateOutputPath>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'SetupClient|x64' ">
+    <OutputName>SageTVClientSetupMSI$(Platform)</OutputName>
+    <OutputPath>release\bin\$(Configuration)$(Platform)\</OutputPath>
+    <IntermediateOutputPath>obj\msi\$(Configuration)$(Platform)\</IntermediateOutputPath>
     <DefineConstants>SourceSTV=..\..\..\stvs\SageTV7;SourceSageTVSource=source\SageTV\SageTV;SourceCommonSource=source\SageTV\Common;SourcePlaceshifterSource=source\SageTV\Placeshifter;ProdVersion=0.0.0.0</DefineConstants>
     <DefineSolutionProperties>false</DefineSolutionProperties>
+    <InstallerPlatform>x64</InstallerPlatform>
+    <SuppressIces>ICE60;ICE61;ICE80</SuppressIces>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'SetupPlaceshifter|x86' ">
+    <OutputName>SageTVPlaceshifterSetupMSI$(Platform)</OutputName>
+    <OutputPath>release\bin\$(Configuration)$(Platform)\</OutputPath>
+    <IntermediateOutputPath>obj\msi\$(Configuration)$(Platform)\</IntermediateOutputPath>
+    <DefineConstants>SourceSTV=..\..\..\stvs\SageTV7;SourceSageTVSource=source\SageTV\SageTV;SourceCommonSource=source\SageTV\Common;SourcePlaceshifterSource=source\SageTV\Placeshifter;ProdVersion=0.0.0.0</DefineConstants>
+    <DefineSolutionProperties>false</DefineSolutionProperties>
+    <InstallerPlatform>x86</InstallerPlatform>
+    <SuppressIces>ICE60;ICE61</SuppressIces>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'SetupPlaceshifter|x64' ">
+    <OutputName>SageTVPlaceshifterSetupMSI$(Platform)</OutputName>
+    <OutputPath>release\bin\$(Configuration)$(Platform)\</OutputPath>
+    <IntermediateOutputPath>obj\msi\$(Configuration)$(Platform)\</IntermediateOutputPath>
+    <DefineConstants>SourceSTV=..\..\..\stvs\SageTV7;SourceSageTVSource=source\SageTV\SageTV;SourceCommonSource=source\SageTV\Common;SourcePlaceshifterSource=source\SageTV\Placeshifter;ProdVersion=0.0.0.0</DefineConstants>
+    <DefineSolutionProperties>false</DefineSolutionProperties>
+    <InstallerPlatform>x64</InstallerPlatform>
     <SuppressIces>ICE60;ICE61</SuppressIces>
   </PropertyGroup>
   <ItemGroup Condition=" '$(Configuration)' == 'SetupServer' ">
@@ -59,6 +89,10 @@
     <Compile Include="source-dir-placeshifter.wxs" />
   </ItemGroup>
   <ItemGroup>
+    <WixExtension Include="WixDifxAppExtension">
+      <HintPath>$(WixExtDir)\WixDifxAppExtension.dll</HintPath>
+      <Name>WixDifxAppExtension</Name>
+    </WixExtension>
     <WixExtension Include="WixFirewallExtension">
       <HintPath>$(WixExtDir)\WixFirewallExtension.dll</HintPath>
       <Name>WixFirewallExtension</Name>
@@ -73,12 +107,18 @@
     </WixExtension>
   </ItemGroup>
   <ItemGroup>
+    <WixLibrary Include="difxapp_$(Platform)">
+      <HintPath>$(WixExtDir)\difxapp_$(Platform).wixlib</HintPath>
+      <Name>difxapp_$(Platform)</Name>
+    </WixLibrary>
+  </ItemGroup>
+  <ItemGroup>
     <Content Include="PreBuild.bat" />
     <Content Include="SageTVInclude.wxi" />
   </ItemGroup>
   <Import Project="$(WixTargetsPath)" />
   <PropertyGroup>
-    <PreBuildEvent>$(ProjectDir)PreBuild.bat $(ConfigurationName) $(ProjectName) "$(ProjectDir)"</PreBuildEvent>
+    <PreBuildEvent>$(ProjectDir)PreBuild.bat $(ConfigurationName) $(Platform) $(ProjectName) "$(ProjectDir)"</PreBuildEvent>
   </PropertyGroup>
   <!--
 	To modify your build process, add your task inside one of the targets below and uncomment it.

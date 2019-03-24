@@ -20,46 +20,101 @@
     <WixVariable Id="WixStdbaThemeWxl" Value="Resource\SageTVTheme.wxl" />
 
     <!-- Set the value of variable to be used on the UI forms -->
-    <Variable Name="InstallFolder" Type="string" Value="[ProgramFilesFolder]$(var.DefaultInstallFolder)" />
+    <!-- Need to use a different ProgramFilesFolder for 64 bit installs -->
+    <?if $(var.Platform) = x64 ?>
+      <Variable Name="InstallFolder" Type="string" bal:Overridable="yes" Value="[ProgramFiles64Folder]$(var.DefaultInstallFolder)" />
+    <?else ?>
+      <Variable Name="InstallFolder" Type="string" bal:Overridable="yes" Value="[ProgramFilesFolder]$(var.DefaultInstallFolder)" />
+    <?endif?>
+    <Variable Name="LAVFILTERSCHECKBOX" Type="numeric" bal:Overridable="yes" Value="1" Persisted="yes" />
+    <Variable Name="ENABLESAGETVSTREAMDEMUX" Type="numeric" bal:Overridable="yes" Value="0" Persisted="yes" />
+    <Variable Name="ALWAYSSWAPFORAC3FILTER" Type="numeric" bal:Overridable="yes" Value="0" Persisted="yes" />
+    <Variable Name="USBUIRTCHECKBOX" Type="numeric" bal:Overridable="yes" Value="0" Persisted="yes" />
+
     <Variable Name="SageInstallerVersion" Type="string" Value="$(var.SageInstallerVersion)" />
 
+    <?if $(var.Platform) = x64 ?>
+      <bal:Condition Message="This installer is for x64 Windows versions.  Please use the x86 installer on this version of windows.">VersionNT64</bal:Condition>
+    <?endif?>
+
+    <!-- Get the installfolder from the registry if it exists -->
+    <util:RegistrySearch Id="InstallFolderExists" Variable="InstallFolderExists" Root="HKLM" Key="SOFTWARE\Frey Technologies" Value="LastInstallDir" Win64="$(var.Win64)" Format="raw" Result="exists"/>
+    <util:RegistrySearch Id="InstallFolder" Variable="InstallFolder" After="InstallFolderExists" Root="HKLM" Key="SOFTWARE\Frey Technologies" Value="LastInstallDir" Win64="$(var.Win64)" Format="raw" Result="value" Condition="InstallFolderExists"/>
+
+    <!-- LAV Filters and related settings for all but placeshifter  -->
+    <?if ($(var.Configuration) = SetupServer) Or ($(var.Configuration) = SetupClient) ?>
+      <util:RegistrySearch Id="LAVFILTERSCHECKBOXExists" Variable="LAVFILTERSCHECKBOXExists" Root="HKLM" Key="SOFTWARE\Frey Technologies" Value="LastInstallLAVFILTERS" Win64="$(var.Win64)" Format="raw" Result="exists"/>
+      <util:RegistrySearch Id="LAVFILTERSCHECKBOX" Variable="LAVFILTERSCHECKBOX" After="LAVFILTERSCHECKBOXExists" Root="HKLM" Key="SOFTWARE\Frey Technologies" Value="LastInstallLAVFILTERS" Win64="$(var.Win64)" Format="raw" Result="value" Condition="LAVFILTERSCHECKBOXExists"/>
+      <util:RegistrySearch Id="ENABLESAGETVSTREAMDEMUXExists" Variable="ENABLESAGETVSTREAMDEMUXExists" Root="HKLM" Key="SOFTWARE\Frey Technologies\Common\DirectShow" Value="EnableSageTVStreamDemux" Win64="$(var.Win64)" Format="raw" Result="exists"/>
+      <util:RegistrySearch Id="ENABLESAGETVSTREAMDEMUX" Variable="ENABLESAGETVSTREAMDEMUX" After="ENABLESAGETVSTREAMDEMUXExists" Root="HKLM" Key="SOFTWARE\Frey Technologies\Common\DirectShow" Value="EnableSageTVStreamDemux" Win64="$(var.Win64)" Format="raw" Result="value" Condition="ENABLESAGETVSTREAMDEMUXExists"/>
+      <util:RegistrySearch Id="ALWAYSSWAPFORAC3FILTERExists" Variable="ALWAYSSWAPFORAC3FILTERExists" Root="HKLM" Key="SOFTWARE\Frey Technologies\Common\DSFilters\AudioDec" Value="AlwaysSwapForAC3Filter" Win64="$(var.Win64)" Format="raw" Result="exists"/>
+      <util:RegistrySearch Id="ALWAYSSWAPFORAC3FILTER" Variable="ALWAYSSWAPFORAC3FILTER" After="ALWAYSSWAPFORAC3FILTERExists" Root="HKLM" Key="SOFTWARE\Frey Technologies\Common\DSFilters\AudioDec" Value="AlwaysSwapForAC3Filter" Win64="$(var.Win64)" Format="raw" Result="value" Condition="ALWAYSSWAPFORAC3FILTERExists"/>
+    <?else ?>
+      <!-- PlaceShifter does not need this  -->
+      <Variable Name="LAVFILTERSCHECKBOXState" Type="string" Value="disable" />
+      <Variable Name="ENABLESAGETVSTREAMDEMUXState" Type="string" Value="disable" />
+      <Variable Name="ALWAYSSWAPFORAC3FILTERState" Type="string" Value="disable" />
+    <?endif?>
+
+    <!-- On x64 ONLY Get the USBUIRTCHECKBOX value from the registry if it exists. Leave USBUIRTCHECKBOX = 0 on x86 - do not offer to install  -->
+    <?if $(var.Platform) = x64 ?>
+      <?if ($(var.Configuration) = SetupServer) Or ($(var.Configuration) = SetupClient) ?>
+        <util:RegistrySearch Id="USBUIRTCHECKBOXExists" Variable="USBUIRTCHECKBOXExists" Root="HKLM" Key="SOFTWARE\Frey Technologies" Value="LastInstallUSBUIRT" Win64="$(var.Win64)" Format="raw" Result="exists"/>
+        <util:RegistrySearch Id="USBUIRTCHECKBOX" Variable="USBUIRTCHECKBOX" After="USBUIRTCHECKBOXExists" Root="HKLM" Key="SOFTWARE\Frey Technologies" Value="LastInstallUSBUIRT" Win64="$(var.Win64)" Format="raw" Result="value" Condition="USBUIRTCHECKBOXExists"/>
+      <?else ?>
+        <!-- PlaceShifter does not need this  -->
+        <Variable Name="USBUIRTCHECKBOXState" Type="string" Value="disable" />
+      <?endif?>
+    <?else ?>
+      <Variable Name="USBUIRTCHECKBOXState" Type="string" Value="disable" />
+    <?endif?>
+
     <Chain>
-			<!-- TODO: Define the list of chained packages. -->
-			<!-- <MsiPackage SourceFile="path\to\your.msi" /> -->
-      <PackageGroupRef Id="Java7Runtime"/>
+      <PackageGroupRef Id="Java8Runtime"/>
       <PackageGroupRef Id="redist_vc100"/>
       <PackageGroupRef Id="redist_vc140"/>
-
+      
       <?if $(var.Configuration) = SetupServer ?>
         <MsiPackage Id="SageTVSetupMSI"
-                SourceFile="release\bin\SetupServer\SageTVSetupMSI.msi"
+                SourceFile="release\bin\$(var.Configuration)$(var.Platform)\SageTVSetupMSI$(var.Platform).msi"
                 DisplayInternalUI="no"
                 EnableFeatureSelection="no"
-                
                 Compressed="yes">
+          <MsiProperty Name="LAVFILTERSCHECKBOX" Value="[LAVFILTERSCHECKBOX]" />
+          <MsiProperty Name="ENABLESAGETVSTREAMDEMUX" Value="[ENABLESAGETVSTREAMDEMUX]" />
+          <MsiProperty Name="ALWAYSSWAPFORAC3FILTER" Value="[ALWAYSSWAPFORAC3FILTER]" />
+          <MsiProperty Name="USBUIRTCHECKBOX" Value="[USBUIRTCHECKBOX]" />
           <MsiProperty Name="INSTALLFOLDER" Value="[InstallFolder]" />
         </MsiPackage>
       <?elseif $(var.Configuration) = SetupClient?>
         <MsiPackage Id="SageTVSetupMSI"
-                  SourceFile="release\bin\SetupClient\SageTVClientSetupMSI.msi"
-                  DisplayInternalUI="no"
-                  EnableFeatureSelection="no"
-                  Compressed="yes">
+                SourceFile="release\bin\$(var.Configuration)$(var.Platform)\SageTVClientSetupMSI$(var.Platform).msi"
+                DisplayInternalUI="no"
+                EnableFeatureSelection="no"
+                Compressed="yes">
           <MsiProperty Name="INSTALLFOLDER" Value="[InstallFolder]" />
         </MsiPackage>
       <?elseif $(var.Configuration) = SetupPlaceshifter?>
         <MsiPackage Id="SageTVPlaceshifterSetupMSI"
-                  SourceFile="release\bin\SetupPlaceshifter\SageTVPlaceshifterSetupMSI.msi"
-                  DisplayInternalUI="no"
-                  EnableFeatureSelection="no"
-                  Compressed="yes">
+                SourceFile="release\bin\$(var.Configuration)$(var.Platform)\SageTVPlaceshifterSetupMSI$(var.Platform).msi"
+                DisplayInternalUI="no"
+                EnableFeatureSelection="no"
+                Compressed="yes">
           <MsiProperty Name="INSTALLFOLDER" Value="[InstallFolder]" />
         </MsiPackage>
       <?endif?>
       
+      <!-- Install LAV Filters -->
+      <?if ($(var.Configuration) = SetupServer) Or ($(var.Configuration) = SetupClient) ?>
+        <PackageGroupRef Id="redist_lavfilters" After="SageTVSetupMSI"/>
+      <?endif?>
+      
+
+      <!-- Remove AC3Filter in 1.102 as the full exe installer contains CANDY malware that we do not want to include
       <?if ($(var.Configuration) = SetupServer) Or ($(var.Configuration) = SetupClient) ?>
         <PackageGroupRef Id="redist_ac3filter" After="SageTVSetupMSI"/>
       <?endif?>
+      -->
 
     </Chain>
 
