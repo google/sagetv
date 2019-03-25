@@ -1,5 +1,7 @@
 # Change Log
 
+## Version 9.2.1 (2019-03-23)
+* 64-bit AVI playback and music fixes (Windows)
 * Change: Whitelist LAV Audio and Video Decoders (Windows)
 * Change: SageTV7 STV system information will indicate 32/64 bit
 * Fix: Include Win10 in 'VISTA_OS' detection (Windows)

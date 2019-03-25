@@ -154,6 +154,8 @@ test {
   // this just allows sage to think that ffmpeg exists for some tests when it checks for transcoder
   def fake_ffmpeg = new File(workingDir, 'ffmpeg')
   fake_ffmpeg << 'test file'
+  def fake_ffmpeg_windows = new File(workingDir, 'ffmpeg.exe')
+  fake_ffmpeg_windows << 'test file'
 }
 
 /**
