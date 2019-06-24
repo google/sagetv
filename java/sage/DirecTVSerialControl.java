@@ -89,15 +89,15 @@ public class DirecTVSerialControl
           }
           try
           {
-            if (Sage.DBG) System.out.println("dtvSerialChannel(handle=" + openHandle.intValue() +
+            if (Sage.DBG) System.out.println("dtvSerialChannel(handle=" + openHandle +
                 ", chan=" + Integer.parseInt(chanString) + ")");
-            if (!dtvSerialChannel0(openHandle.intValue(), Integer.parseInt(chanString)))
+            if (!dtvSerialChannel0(openHandle, Integer.parseInt(chanString)))
             {
               if (Sage.DBG) System.out.println("DirecTV serial channel change failed!");
               if (Sage.getBoolean("reopen_directv_serial_on_failure", true))
               {
                 if (Sage.DBG) System.out.println("Closing and re-opening the connection to the DirecTV receiver...");
-                closeHandle0(openHandle.intValue());
+                closeHandle0(openHandle);
                 serialHandleMap.remove(portString);
                 long newHand = openDTVSerial0(portString);
                 if (newHand == -1)
@@ -107,7 +107,7 @@ public class DirecTVSerialControl
                 }
                 serialHandleMap.put(portString, openHandle = new Long(newHand));
                 if (Sage.DBG) System.out.println("Retrying DirecTV channel change now");
-                dtvSerialChannel0(openHandle.intValue(), Integer.parseInt(chanString));
+                dtvSerialChannel0(openHandle, Integer.parseInt(chanString));
               }
             }
           }catch (Exception e){}
@@ -118,8 +118,8 @@ public class DirecTVSerialControl
   }
 
   private native long openDTVSerial0(String comPortString);
-  private native void closeHandle0(int handle);
-  private native boolean dtvSerialChannel0(int handle, int channel);
+  private native void closeHandle0(long handle);
+  private native boolean dtvSerialChannel0(long handle, int channel);
 
   private java.util.Map serialHandleMap;
   private boolean loadLibFailed = false;

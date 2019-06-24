@@ -356,7 +356,7 @@ case $host_cpu in
         LDFLAGS="$LDFLAGS -arch x86_64"
       fi
     elif [ "$SYS" = MINGW ]; then
-      ASFLAGS="$ASFLAGS -f win32 -m amd64 -DPREFIX"
+      ASFLAGS="$ASFLAGS -f win32 -m amd64"
     else
       ASFLAGS="$ASFLAGS -f elf -m amd64"
     fi

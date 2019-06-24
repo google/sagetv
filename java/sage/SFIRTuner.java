@@ -601,9 +601,23 @@ public class SFIRTuner implements Runnable
     {
       if (Sage.DBG) System.out.println("Playing IR tune command of " + cmdString);
       if (!ensureRemoteLoaded(remoteName)) return;
+
+      try {
+         int cmdNum = Integer.parseInt(cmdString);
+      } catch (Exception e) {
+         String cmdStringNumeric = cmdString.replaceAll("\\D", ""); // remove all non-digits
+         cmdString = cmdStringNumeric;
+         if (Sage.DBG) System.out.println("IR tune command must be all digits; converted it to: " + cmdString);
+      }
+
       if (canMacroTune())
       {
-        macroTune(Integer.parseInt(cmdString));
+         try {
+            macroTune(Integer.parseInt(cmdString));
+         } 
+         catch (Exception e){
+            if (Sage.DBG) System.out.println("Exception in playTuneString");
+         }
       }
       else
       {

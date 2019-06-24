@@ -17,7 +17,38 @@
  */
 #ifndef __FLASHMPEG4_H__
 
+// We need to decode each frame from flv to coefficients then 
+// back from coefficients to I263 and Pmpeg4 blocks.
+
+typedef struct
+{
+    int format;
+    int tr;
+    int width;
+    int height;
+    int ptype;
+    int unk;
+    int pquant;
+    int mbwidth;
+    int mbheight;
+} flv_state;
+
+typedef struct
+{
+    unsigned char *dataptr;
+    int position; // in bits
+    int size; // in bits
+    int error;
+} BitStream;
+
+
 int convertFrame(unsigned char *input, int inlen, unsigned char *output, int outlen, int *used,
     short *predbuffer);
 
+//need these for 'inline' to work
+unsigned int GetBits(BitStream *s, int n, int use);
+unsigned int PutBits(BitStream *s, int n, int value);
+unsigned int DiscardBits(BitStream *s, int n);
+
+#define __FLASHMPEG4_H__
 #endif

@@ -3,3 +3,7 @@ root = true
 [*.java]
 indent_style = space
 indent_size = 2
+
+[*.gradle]
+indent_style = space
+indent_size = 2

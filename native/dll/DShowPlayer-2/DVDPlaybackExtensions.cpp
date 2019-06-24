@@ -884,7 +884,8 @@ JNIEXPORT jint JNICALL Java_sage_DShowDVDPlayer_processEvents0
 	// when that's all we need to do
 	CComPtr<IMediaEvent> pIME = NULL;
 	hr = playerData->GetGraph()->QueryInterface(IID_IMediaEvent, (void**)&pIME);
-    long lEvent, lParam1, lParam2;
+	long lEvent;
+	LONG_PTR lParam1, lParam2;
     long lTimeOut = 0;
 	long evErr = 0;
 	static jclass stringClass = (jclass) env->NewGlobalRef(env->FindClass("java/lang/String"));
@@ -897,8 +898,7 @@ JNIEXPORT jint JNICALL Java_sage_DShowDVDPlayer_processEvents0
 	jboolean rv = 0;
 	ULONG numVols, currVol, numTitles=0;
 
-	while (SUCCEEDED(pIME->GetEvent(&lEvent, (LONG_PTR *) &lParam1, 
-                    (LONG_PTR *) &lParam2, lTimeOut)))
+	while (SUCCEEDED(pIME->GetEvent(&lEvent, &lParam1, &lParam2, lTimeOut)))
 	{
         slog((env, "Event: %#x l1=0x%x l2=0x%x\r\n", lEvent, lParam1, lParam2));
 
@@ -916,11 +916,11 @@ JNIEXPORT jint JNICALL Java_sage_DShowDVDPlayer_processEvents0
 				pCtrl->PlayTitle(1, DVD_CMD_FLAG_None, NULL);
 				break;
 			case EC_DVD_ANGLE_CHANGE:
-				playerData->m_currAngle = lParam2;
-				playerData->m_totalAngles = lParam1;
+				playerData->m_currAngle = (int) lParam2;
+				playerData->m_totalAngles = (int) lParam1;
 				break;
 			case EC_DVD_CHAPTER_START:
-				playerData->m_currChapter = lParam1;
+				playerData->m_currChapter = (int) lParam1;
 				break;
 			case EC_DVD_DOMAIN_CHANGE:
 				playerData->m_currDomain = (DVD_DOMAIN)lParam1;
@@ -932,8 +932,8 @@ JNIEXPORT jint JNICALL Java_sage_DShowDVDPlayer_processEvents0
 			case EC_DVD_TITLE_CHANGE:
 				if (lEvent == EC_DVD_TITLE_CHANGE)
 				{
-					playerData->m_currTitle = lParam1;
-					hr = pInfo->GetNumberOfChapters(lParam1, (ULONG*)&(playerData->m_totalChapters));
+					playerData->m_currTitle = (int) lParam1;
+					hr = pInfo->GetNumberOfChapters((ULONG) lParam1, (ULONG*)&(playerData->m_totalChapters));
 				}
 				// Subtitles/audio selections change on title boundaries so reconfigure those values
 				hr = pInfo->GetCurrentSubpicture(&ulTotal, &ulCurr, &subPicDisabled);
@@ -1041,20 +1041,20 @@ JNIEXPORT jint JNICALL Java_sage_DShowDVDPlayer_processEvents0
 				}
 				break;
 			case EC_DVD_BUTTON_CHANGE:
-				playerData->m_numButtons = lParam1;
+				playerData->m_numButtons = (int) lParam1;
 				break;
 			case EC_DVD_AUDIO_STREAM_CHANGE:
-				playerData->m_currLang = (lParam1 == 0xFFFFFFFF) ? -1 : lParam1;
+				playerData->m_currLang = (lParam1 == 0xFFFFFFFF) ? -1 : (int) lParam1;
 				break;
 			case EC_DVD_SUBPICTURE_STREAM_CHANGE:
-				playerData->m_currSub = (lParam1 == 0xFFFFFFFF) ? -1 : lParam1;
+				playerData->m_currSub = (lParam1 == 0xFFFFFFFF) ? -1 : (int) lParam1;
 				if (lParam2 == 0)
 					playerData->m_currSub = -1; // disabled subpicture
 				break;
 
 	        case EC_DVD_ERROR:
-		        slog((env, "DVD Event: Error event received (code %ld)\r\n", lParam1));
-				hr = lParam1;
+		        slog((env, "DVD Event: Error event received (code %ld)\r\n", (DWORD) lParam1));
+				hr = (DWORD) lParam1;
 				pIME->FreeEventParams(lEvent, lParam1, lParam2);
 				switch (hr)
 				{

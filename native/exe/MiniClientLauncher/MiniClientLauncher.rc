@@ -68,8 +68,13 @@ BEGIN
     BEGIN
         BLOCK "040904b0"
         BEGIN
-			VALUE "FileDescription", "SageTV Placeshifter"
-			VALUE "InternalName", "SageTV Placeshifter"
+#ifdef _WIN64
+			VALUE "FileDescription", "SageTV Placeshifter 64-bit"
+			VALUE "InternalName", "SageTV Placeshifter 64-bit"
+#else
+			VALUE "FileDescription", "SageTV Placeshifter 32-bit"
+			VALUE "InternalName", "SageTV Placeshifter 32-bit"
+#endif
 			VALUE "OriginalFilename", "Placeshifter.exe"
 			VALUE "ProductName", "SageTV Placeshifter"
 			VALUE "CompanyName", "SageTV Open Source"

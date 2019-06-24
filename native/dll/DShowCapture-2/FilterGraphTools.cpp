@@ -202,6 +202,27 @@ HRESULT FilterGraphTools::AddFilterByDevicePath2(IGraphBuilder* piGraphBuilder, 
 	//{
 	//	return AddFilterByDevicePath( piGraphBuilder, ppiFilter, pDevicePath, pName );
 	//}
+
+    /* These tuners are a mess.  
+    On Win-x64, their installers didn't make 32-bit entries for them in
+    HKEY_CLASSES_ROOT\Wow6432Node\CLSID\{FD0A5AF4-B41D-11D2-9C95-00C04F7971E0}\Instance
+    (BDA Receiver Components), nor are there entries in
+    HKEY_CLASSES_ROOT\Wow6432Node\CLSID\{71985F48-1CA1-11d3-9CC8-00C04F7971E0}\Instance
+    (BDA Source Filters), so Sage-x86 on 64-bit Windows doesn't encounter them.
+    But they DO have 64-bit registry entries for BDA Receiver Components & BDA Source Filters
+    in  HKEY_CLASSES_ROOT\CLSID\{FD0A5AF4-B41D-11D2-9C95-00C04F7971E0}\Instance
+    and HKEY_CLASSES_ROOT\CLSID\{71985F48-1CA1-11d3-9CC8-00C04F7971E0}\Instance
+    so Sage-x64 does see these.  When we find these filter keys, it takes nearly 30 seconds
+    on every attempt to add the filter.  Since we don't natively handle CableCARD
+    tuners anyway (requires a *DCT shim), the best solution is to ignore them here.
+    */
+    if ((wcsncmp(pName, L"HDHomeRun Prime Tuner", 21) == 0) ||
+        (wcsncmp(pName, L"Ceton InfiniTV PCIe", 19) == 0))
+    {
+        Log(L"Hardcode: ignore CableCARD tuner '%s' \r\n", pName);
+        return (E_FAIL);
+    }
+
 	//software device
 	hr = AddFilterByDevicePath( piGraphBuilder, ppiFilter, pDevicePath, pName );
 	if ( hr != S_OK )
@@ -1276,7 +1297,7 @@ HRESULT FilterGraphTools::AddToRot(IUnknown *pUnkGraph, DWORD *pdwRegister)
         return E_FAIL;
     }
 	WCHAR *wsz = (WCHAR *)malloc(256);
-	swprintf(wsz, L"FilterGraph %08x pid %08x", (DWORD)pUnkGraph, GetCurrentProcessId());
+	swprintf(wsz, L"FilterGraph %p pid %08x", pUnkGraph, GetCurrentProcessId());
 
     HRESULT hr = CreateItemMoniker(L"!", wsz, &pMoniker);
     if SUCCEEDED(hr)

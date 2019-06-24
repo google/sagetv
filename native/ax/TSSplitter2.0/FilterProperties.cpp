@@ -16,7 +16,9 @@
 
 #pragma warning(disable : 4996)
 
-#define _USE_32BIT_TIME_T
+#ifndef _WIN64
+  #define _USE_32BIT_TIME_T
+#endif
 
 #include <windows.h>
 #include <commctrl.h>
@@ -96,7 +98,7 @@ CFilterProperties *g_pCFilterProperties = NULL;
 	g_pCFilterProperties->OnTimer( ct );
 }     
 
-BOOL CFilterProperties::OnReceiveMessage( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
+ INT_PTR CFilterProperties::OnReceiveMessage( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
 	int checked;
     switch(uMsg)
@@ -109,14 +111,14 @@ BOOL CFilterProperties::OnReceiveMessage( HWND hwnd, UINT uMsg, WPARAM wParam, L
 			DisplayInfo();
 		    SetTimer( hwnd, IDT_TIMER, 1000, (TIMERPROC)LocalTimerProc );  
   
-            return TRUE;
+            return (INT_PTR)TRUE;
         }
 
         case WM_DESTROY:
         {
 			KillTimer(hwnd,   IDT_TIMER );     
             DestroyWindow(m_hwndDialog);
-            return TRUE;
+            return (INT_PTR)TRUE;
         }
 
         case WM_COMMAND:
@@ -154,7 +156,7 @@ BOOL CFilterProperties::OnReceiveMessage( HWND hwnd, UINT uMsg, WPARAM wParam, L
 				OnBtnScanDone( );
 			default:;
             };
-            return TRUE;
+            return (INT_PTR)TRUE;
         }
 
         case WM_NOTIFY:
@@ -167,7 +169,7 @@ BOOL CFilterProperties::OnReceiveMessage( HWND hwnd, UINT uMsg, WPARAM wParam, L
         }
 
         default:
-            return FALSE;
+            return (INT_PTR)FALSE;
     }
     
 	return CBasePropertyPage::OnReceiveMessage(hwnd,uMsg,wParam,lParam);

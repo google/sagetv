@@ -174,3 +174,5 @@ ui/numeric_text_input_fr_8=TUV8
 ui/numeric_text_input_fr_8_lower=tuv8
 ui/numeric_text_input_fr_9=WXYZ9
 ui/numeric_text_input_fr_9_lower=wxyz9
+videoframe/audio_decoder_filter=
+videoframe/video_decoder_filter=

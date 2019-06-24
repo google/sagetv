@@ -1,27 +1,44 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
   xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension" 
+  xmlns:difx="http://schemas.microsoft.com/wix/DifxAppExtension"
   xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
   <?include SageTVVersionInclude.wxi ?>
-  <?include SageTVInclude.wxi ?>	
+  <?include SageTVInclude.wxi ?>
+  
+  <!-- Some definitions that change based on the platform -->
+  <?if $(var.Platform) = x64 ?>
+    <?define PlatformProgramFilesFolder = "ProgramFiles64Folder" ?>
+    <?define WindowsSystemFolder = "System64Folder" ?>
+  <?else ?>
+    <?define PlatformProgramFilesFolder = "ProgramFilesFolder" ?>
+    <?define WindowsSystemFolder = "SystemFolder" ?>
+  <?endif ?>
+
+  <!-- Some folder source locations that change based on the platform -->
+  <?define SourceNative = "..\..\..\native\Build\$(var.VSPlatform)\Release\" ?>
+  <?define SourceNativeWin32 = "..\..\..\native\Build\Win32\Release\" ?>
+  <?define SourceNativex64 = "..\..\..\native\Build\x64\Release\" ?>
+  
   <Product Id="*" Name="$(var.ProductName)" Language="1033" Version="$(var.VersionNumber)" Manufacturer="$(var.Manufacturer)" UpgradeCode="$(var.UpgradeCodeMSI)">
-		<Package InstallerVersion="405" Compressed="yes" InstallScope="perMachine" InstallPrivileges="elevated" />
-		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed."
-                  AllowSameVersionUpgrades="no"/>
-		<MediaTemplate EmbedCab="yes" />
+  <Package 
+    InstallerVersion="405" 
+    Compressed="yes" 
+    InstallScope="perMachine" 
+    Platform="$(var.Platform)"
+    InstallPrivileges="elevated" />
+  <MajorUpgrade 
+    DowngradeErrorMessage="A newer version of [ProductName] is already installed."
+    AllowSameVersionUpgrades="no"/>
+  <MediaTemplate EmbedCab="yes" />
 
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
 
-    <Property Id="MPEGDecoderMoved" Value="0" />
-    <Binary Id="KeepMPEGDecoder.vbs" SourceFile="redist\KeepMPEGDecoder.vbs" />
-
-    <!-- Check if the SageTV MPEG Decoder is already installed 
-    <Property Id="MPEGDECODERFOUND">
-      <DirectorySearch Id="MPEGDecoderCheckFileDir" Path="[APPCOMMONFOLDER]" Depth="0">
-        <FileSearch Id="MPEGDecoderCheckFile" Name="stvmpgadec.dll" />
-      </DirectorySearch>
-    </Property>
-    -->
+    <!-- The legacy V7 MPEG decoders will not work under x64 so skip all of this related MPEG stuff below -->
+    <?if $(var.Platform) != x64 ?>
+      <Property Id="MPEGDecoderMoved" Value="0" />
+      <Binary Id="KeepMPEGDecoder.vbs" SourceFile="redist\KeepMPEGDecoder.vbs" />
+    <?endif ?>
 
     <Feature Id="ProductFeature" Title="SageTVSetup" Level="1">
       <ComponentGroupRef Id="ProductSageTVLicenseComponents" />
@@ -30,14 +47,16 @@
         <ComponentGroupRef Id="CommonSourceComponents" />
         <ComponentGroupRef Id="STVsComponents" />
         <ComponentGroupRef Id="CoreTranslationComponents" />
-			  <ComponentGroupRef Id="InstallConfigComponents" />
-			  <ComponentGroupRef Id="ProductSageTVJARComponents" />
+        <ComponentGroupRef Id="InstallConfigComponents" />
+        <ComponentGroupRef Id="ProductSageTVJARComponents" />
         <ComponentGroupRef Id="ProductSageTVSelfRegComponents" />
         <ComponentGroupRef Id="ProductCommonSelfRegComponents" />
         <ComponentGroupRef Id="ProductCommonComponents" />
         <ComponentGroupRef Id="ProductSageTVAllComponents" />
-  			<ComponentGroupRef Id="ProductThirdPartyLuceneComponents" />
+        <ComponentGroupRef Id="ProductThirdPartyLuceneComponents" />
         <ComponentGroupRef Id="HarvestedRegistryComponents" />
+        <ComponentRef Id="cmpRegFreyCommonDSFiltersAudioDec" />
+        <ComponentRef Id="cmpRegFreyCommonDirectShow" />
       <?endif?>      
       
       <?if $(var.Configuration) = SetupServer ?>
@@ -51,13 +70,25 @@
       <?elseif $(var.Configuration) = SetupPlaceshifter?>
         <ComponentGroupRef Id="PlaceshifterSourceComponents" />
         <ComponentGroupRef Id="ProductSageTVPlaceshifterComponents" />
-			  <ComponentGroupRef Id="ProductSageTVPlaceshifterJARComponents" />
+        <ComponentGroupRef Id="ProductSageTVPlaceshifterJARComponents" />
         <ComponentGroupRef Id="SageTVPlaceshifterShortcuts" />
         <ComponentGroupRef Id="SageTVPlaceshifterDesktopShortcuts" />
       <?endif?>      
       <ComponentRef Id="INSTALLFOLDER_Permission" />
       <ComponentRef Id="SageTVRegistryComponent" />
     </Feature>
+
+    <?if $(var.Platform) = x64 ?>
+      <Feature Id="USBUIRTFeature" Title="USB-UIRTSetup" Level="0">
+        <?if ($(var.Configuration) = SetupServer) Or ($(var.Configuration) = SetupClient) ?>
+          <ComponentRef Id="cmpUSBUIRTAMD64" />
+          <ComponentRef Id="cmpUSBUIRTI386" />
+          <ComponentRef Id="cmpUSBUIRT" />
+          <ComponentRef Id="CopyofUSBUIRT64" />
+        <?endif?>      
+        <Condition Level="1"><![CDATA[USBUIRTCHECKBOX="1"]]></Condition>
+      </Feature>
+    <?endif?>
     
     <CustomAction Id="InstallDirectX"
                   FileKey="DXSETUPEXE"
@@ -66,65 +97,99 @@
                   Impersonate="no"
                   Return="check"/>
     
-    <?if ($(var.Configuration) = SetupServer) Or ($(var.Configuration) = SetupClient) ?>
-      <CustomAction
+    <?if $(var.Platform) != x64 ?>
+      <?if ($(var.Configuration) = SetupServer) Or ($(var.Configuration) = SetupClient) ?>
+        <CustomAction
           Id="KeepMPEGDecoder.vbs_CAmove"
           BinaryKey="KeepMPEGDecoder.vbs"
           VBScriptCall="moveMPEGFilters"
           Execute="immediate"
           Return="check"  />
-      <CustomAction 
+        <CustomAction 
             Id="SetInstallFolderonDeferredCA"
             Return="check"
             Execute="immediate"
             Property="KeepMPEGDecoder.vbs_CAregister"
             Value="[INSTALLFOLDER]" />
-      <CustomAction
+        <CustomAction
             Id="KeepMPEGDecoder.vbs_CAregister"
             BinaryKey="KeepMPEGDecoder.vbs"
             VBScriptCall="registerMPEGFilters"
             Execute="deferred"
             Return="check"  />
+      <?endif?>
+    <?endif?>
+
+    <!-- Custom Action to register the COM Server for HCWIRBlasterCOM.exe -->
+    <?if $(var.Platform) = x64 ?>
+      <?if ($(var.Configuration) = SetupServer) Or ($(var.Configuration) = SetupClient) ?>
+        <CustomAction Id="RegisterHCWIRBlasterCOM"
+                  Directory="APPCOMMONFOLDER"
+                  ExeCommand="&quot;[APPCOMMONFOLDER]HCWIRBlasterCOM.exe&quot; /regserver"
+                  Execute="deferred"
+                  Return="ignore"  
+                  Impersonate="no"
+                 />
+        <CustomAction Id="UnRegisterHCWIRBlasterCOM"
+                  Directory="APPCOMMONFOLDER"
+                  ExeCommand="&quot;[APPCOMMONFOLDER]HCWIRBlasterCOM.exe&quot; /unregserver"
+                  Execute="deferred"
+                  Return="ignore"  
+                  Impersonate="no"
+                 />
+      <?endif?>
     <?endif?>
     
     <InstallExecuteSequence>
       <Custom Action="InstallDirectX" Before="InstallFinalize">
         <![CDATA[NOT REMOVE]]>
       </Custom>
-      <?if ($(var.Configuration) = SetupServer) Or ($(var.Configuration) = SetupClient) ?>
-        <Custom Action="KeepMPEGDecoder.vbs_CAmove" Before="RemoveExistingProducts">NOT Installed AND NOT PATCH </Custom>
-        <Custom Action="SetInstallFolderonDeferredCA" Before="KeepMPEGDecoder.vbs_CAregister">NOT Installed AND NOT PATCH </Custom>
-        <Custom Action="KeepMPEGDecoder.vbs_CAregister" After="InstallInitialize">NOT Installed AND NOT PATCH </Custom>
+      <?if $(var.Platform) != x64 ?>
+        <?if ($(var.Configuration) = SetupServer) Or ($(var.Configuration) = SetupClient) ?>
+          <Custom Action="KeepMPEGDecoder.vbs_CAmove" Before="RemoveExistingProducts">NOT Installed AND NOT PATCH </Custom>
+          <Custom Action="SetInstallFolderonDeferredCA" Before="KeepMPEGDecoder.vbs_CAregister">NOT Installed AND NOT PATCH </Custom>
+          <Custom Action="KeepMPEGDecoder.vbs_CAregister" After="InstallInitialize">NOT Installed AND NOT PATCH </Custom>
+        <?endif?>
+      <?endif?>
+      <?if $(var.Platform) = x64 ?>
+        <?if ($(var.Configuration) = SetupServer) Or ($(var.Configuration) = SetupClient) ?>
+          <Custom Action="RegisterHCWIRBlasterCOM" Before="InstallFinalize">NOT Installed</Custom>
+          <Custom Action="UnRegisterHCWIRBlasterCOM" After="InstallInitialize">REMOVE="ALL"</Custom>          
+        <?endif?>
       <?endif?>
       <!-- Add the below in 1.009 to avoid the existing service from being delete and losing the account-->      
       <InstallServices>NOT WIX_UPGRADE_DETECTED</InstallServices>
     </InstallExecuteSequence>    
-	</Product>
+  </Product>
 
-	<Fragment>
-		<Directory Id="TARGETDIR" Name="SourceDir">
-			<Directory Id="ProgramFilesFolder">
-        <Directory Id="MicrosoftDirectXFolder" Name="Microsoft DirectX"/>
-        <Directory Id="INSTALLFOLDER" Name="SageTV">
-          <Directory Id="APPFOLDER" Name="SageTV">
+  <Fragment>
+          <Directory Id="TARGETDIR" Name="SourceDir">
+            <Directory Id="$(var.WindowsSystemFolder)"/>
+            <Directory Id="$(var.PlatformProgramFilesFolder)">
+              <Directory Id="MicrosoftDirectXFolder" Name="Microsoft DirectX"/>
+              <Directory Id="INSTALLFOLDER" Name="SageTV">
+                <Directory Id="REDISTFOLDER" Name="redist"/>
+                <Directory Id="APPFOLDER" Name="SageTV">
     				<Directory Id="STVs" Name="STVs" />
     				<Directory Id="JARs" Name="JARs" />
-    			</Directory>
-          <Directory Id="PLACESHIFTERFOLDER" Name="Placeshifter"/>
-          <Directory Id="APPMPEGDECODERFOLDER" Name="MPEGDecoder">
-            <Directory Id="APPMPEGLEGACYFOLDER" Name="Legacy"/>
+                </Directory>
+                <Directory Id="PLACESHIFTERFOLDER" Name="Placeshifter"/>
+                <?if $(var.Platform) != x64 ?>
+                  <Directory Id="APPMPEGDECODERFOLDER" Name="MPEGDecoder">
+                    <Directory Id="APPMPEGLEGACYFOLDER" Name="Legacy"/>
+                  </Directory>
+                <?endif?>
+                <Directory Id="APPCOMMONFOLDER" Name="Common">
+                  <Directory Id="APPCOMMONLEGACYFOLDER" Name="Legacy"/>
+                </Directory>
+              </Directory>
+            </Directory>
+            <Directory Id="ProgramMenuFolder">
+              <Directory Id="SageTVProgramsFolder" Name="SageTV"/>
+            </Directory> 
+            <Directory Id="DesktopFolder" Name="Desktop"></Directory>
           </Directory>
-          <Directory Id="APPCOMMONFOLDER" Name="Common">
-            <Directory Id="APPCOMMONLEGACYFOLDER" Name="Legacy"/>
-          </Directory>
-        </Directory>
-			</Directory>
-      <Directory Id="ProgramMenuFolder">
-          <Directory Id="SageTVProgramsFolder" Name="SageTV"/>
-      </Directory> 
-      <Directory Id="DesktopFolder" Name="Desktop"></Directory>
-    </Directory>
- 	</Fragment>
+  </Fragment>
 
   <!-- Fragment for Setting user permissions on install folder-->
   <Fragment>
@@ -137,23 +202,60 @@
     </DirectoryRef>    
   </Fragment>
 
+  <!-- Fragment for installing USBUIRT driver-->
+  <Fragment>
+    <DirectoryRef Id="REDISTFOLDER">
+      <Directory Id="USBUIRTFOLDER" Name="usbuirt">
+        <Directory Id="USBUIRTAMD64FOLDER" Name="amd64">
+          <Component Id="cmpUSBUIRTAMD64" Win64="$(var.Win64)" Guid="{C91ED66E-C303-41ee-A00D-3265BBE427BD}">
+            <File Id="amd64_uuirtdrv.dll" Source="redist\usbuirt\amd64\uuirtdrv.dll" Vital="no" />
+            <File Id="amd64_ftd2xx64.dll" Source="redist\usbuirt\amd64\ftd2xx64.dll" Vital="no" />
+            <?if $(var.Platform) = x64 ?>
+              <File Id="amd64_ftdibus.sys" Source="redist\usbuirt\amd64\ftdibus.sys" Vital="no" />
+              <File Id="amd64_ftd2xx.lib" Source="redist\usbuirt\amd64\ftd2xx.lib" Vital="no" />
+            <?endif?>
+          </Component>
+          <Component Guid="142AF22A-6348-478B-8EE8-26CDE14F63AA" Id="CopyofUSBUIRT64">
+              <CreateFolder/>
+              <CopyFile Id="Copyofamd64_uuirtdrv.dll" FileId="amd64_uuirtdrv.dll" DestinationDirectory="$(var.WindowsSystemFolder)"/>
+          </Component>
+        </Directory>    
+        <Directory Id="USBUIRTI386FOLDER" Name="i386">
+          <Component Id="cmpUSBUIRTI386" Win64="$(var.Win64)" Guid="{CF671285-A15D-4c48-89EB-3276AE2A1BC7}">
+            <File Id="i386_uuirtdrv.dll" Source="redist\usbuirt\i386\uuirtdrv.dll" Vital="no" />
+            <File Id="i386_ftd2xx.dll" Source="redist\usbuirt\i386\ftd2xx.dll" Vital="no" />
+            <?if $(var.Platform) != x64 ?>
+              <File Id="i386_ftdibus.sys" Source="redist\usbuirt\i386\ftdibus.sys" Vital="no" />
+              <File Id="i386_ftd2xx.lib" Source="redist\usbuirt\i386\ftd2xx.lib" Vital="no" />
+            <?endif?>
+          </Component>
+        </Directory>    
+        <Component Id="cmpUSBUIRT" Win64="$(var.Win64)" Guid="{3A0B1862-D9DE-40bc-BFB7-C37E737E06BD}">
+          <difx:Driver Legacy="yes" PlugAndPlayPrompt="no" ForceInstall="yes" AddRemovePrograms="yes" />
+          <File Id="ftdibus.inf" Source="redist\usbuirt\ftdibus.inf" Vital="no" />
+          <File Id="ftdibus.cat" Source="redist\usbuirt\ftdibus.cat" Vital="no" />
+        </Component>
+      </Directory>    
+    </DirectoryRef>  
+  </Fragment>
+
   <!-- Fragment for ProductSageTVJAR-->
-	<Fragment>
-		<ComponentGroup Id="ProductSageTVJARComponents" Directory="APPFOLDER">
-      <Component Id="cmpSage.jar" Guid="{EA0FCA05-2398-4AA9-B7C9-E246BBE40796}">
+    <Fragment>
+      <ComponentGroup Id="ProductSageTVJARComponents" Directory="APPFOLDER">
+        <Component Id="cmpSage.jar" Guid="{EA0FCA05-2398-4AA9-B7C9-E246BBE40796}">
           <File Id="filSage.jar" KeyPath="yes" Source="..\..\..\build\release\Sage.jar" />
-      </Component>
-    </ComponentGroup>
-	</Fragment>
+        </Component>
+      </ComponentGroup>
+    </Fragment>
 
   <!-- Fragment for ProductSageTVPlaceshifterJAR-->
-	<Fragment>
-		<ComponentGroup Id="ProductSageTVPlaceshifterJARComponents" Directory="PLACESHIFTERFOLDER">
-      <Component Id="cmpMiniClient.jar" Guid="{1572A121-8012-46BD-B3C7-9A91DD2BBF0F}">
+    <Fragment>
+      <ComponentGroup Id="ProductSageTVPlaceshifterJARComponents" Directory="PLACESHIFTERFOLDER">
+        <Component Id="cmpMiniClient.jar" Guid="{1572A121-8012-46BD-B3C7-9A91DD2BBF0F}">
           <File Id="filMiniClient.jar" KeyPath="yes" Source="..\..\..\build\minirelease\MiniClient.jar" />
-      </Component>
-    </ComponentGroup>
-	</Fragment>
+        </Component>
+      </ComponentGroup>
+    </Fragment>
 
   <!-- Fragment for ProductSageTVLicense-->
   <Fragment>
@@ -165,41 +267,40 @@
   </Fragment>
 
   <!-- Fragment for ProductThirdPartyLucene-->
-  <!-- TODO: copy these to the JARs Folder in Pre-Build and use Heat against them -->
   <Fragment>
-		<ComponentGroup Id="ProductThirdPartyLuceneComponents" Directory="JARs">
+    <ComponentGroup Id="ProductThirdPartyLuceneComponents" Directory="JARs">
       <Component Id="cmplucenecore3.6.0.jar" Guid="{032A9298-18D6-45AE-896F-700F3570DB4C}">
           <File Id="fillucenecore3.6.0.jar" KeyPath="yes" Source="..\..\..\third_party\Lucene\lucene-core-3.6.0.jar" />
       </Component>
     </ComponentGroup>
-	</Fragment>
+  </Fragment>
 
   <!-- Fragment for ProductCommonSelfReg-->
   <Fragment>
     <ComponentGroup Id="ProductCommonSelfRegComponents" Directory="APPCOMMONFOLDER">
-      <Component Id="cmpMPEG2Dump.ax" Guid="{7AE8EFC1-BD71-4B9B-9CF5-871C7B2EDEFC}">
-        <File Id="filMPEG2Dump.ax" KeyPath="yes" SelfRegCost="0" Source="..\..\..\native\Build\Release\MPEG2Dump.ax" />
+      <Component Id="cmpMPEG2Dump.ax" Win64="$(var.Win64)" Guid="{7AE8EFC1-BD71-4B9B-9CF5-871C7B2EDEFC}">
+        <File Id="filMPEG2Dump.ax" KeyPath="yes" SelfRegCost="0" Source="$(var.SourceNative)MPEG2Dump.ax" />
       </Component>
-      <Component Id="cmpMpegAudioEnc2.ax" Guid="{71F8A53F-E9A7-445E-BCE5-E3FD61B3BFD8}">
-        <File Id="filMpegAudioEnc2.ax" KeyPath="yes" SelfRegCost="0" Source="..\..\..\native\Build\Release\MpegAudioEnc2.ax" />
+      <Component Id="cmpMpegAudioEnc2.ax" Win64="$(var.Win64)" Guid="{71F8A53F-E9A7-445E-BCE5-E3FD61B3BFD8}">
+        <File Id="filMpegAudioEnc2.ax" KeyPath="yes" SelfRegCost="0" Source="$(var.SourceNative)MpegAudioEnc2.ax" />
       </Component>
-      <Component Id="cmpMpegDeMux.ax" Guid="{16BDDF42-DAAE-49A7-89E2-23CF1DDBB168}">
-        <File Id="filMpegDeMux.ax" KeyPath="yes" SelfRegCost="0" Source="..\..\..\native\Build\Release\MpegDeMux.ax" />
+      <Component Id="cmpMpegDeMux.ax" Win64="$(var.Win64)" Guid="{16BDDF42-DAAE-49A7-89E2-23CF1DDBB168}">
+        <File Id="filMpegDeMux.ax" KeyPath="yes" SelfRegCost="0" Source="$(var.SourceNative)MpegDeMux.ax" />
       </Component>
-      <Component Id="cmpMpegMux.ax" Guid="{9B41E2C1-D2FF-47F3-861E-025F2D33D136}">
-        <File Id="filMpegMux.ax" KeyPath="yes" SelfRegCost="0" Source="..\..\..\native\Build\Release\MpegMux.ax" />
+      <Component Id="cmpMpegMux.ax" Win64="$(var.Win64)" Guid="{9B41E2C1-D2FF-47F3-861E-025F2D33D136}">
+        <File Id="filMpegMux.ax" KeyPath="yes" SelfRegCost="0" Source="$(var.SourceNative)MpegMux.ax" />
       </Component>
-      <Component Id="cmpMusicVisFilter.ax" Guid="{CBD9A2FB-40F7-4421-8DA9-E730A26C4E6C}">
-        <File Id="filMusicVisFilter.ax" KeyPath="yes" SelfRegCost="0" Source="..\..\..\native\Build\Release\MusicVisFilter.ax" />
+      <Component Id="cmpMusicVisFilter.ax" Win64="$(var.Win64)" Guid="{CBD9A2FB-40F7-4421-8DA9-E730A26C4E6C}">
+        <File Id="filMusicVisFilter.ax" KeyPath="yes" SelfRegCost="0" Source="$(var.SourceNative)MusicVisFilter.ax" />
       </Component>
-      <Component Id="cmpSageTVFileSrc.ax" Guid="{AE8B5902-C651-4AA7-9ADC-2F8C7769BADB}">
-        <File Id="filSageTVFileSrc.ax" KeyPath="yes" SelfRegCost="0" Source="..\..\..\native\Build\Release\SageTVFileSrc.ax" />
+      <Component Id="cmpSageTVFileSrc.ax" Win64="$(var.Win64)" Guid="{AE8B5902-C651-4AA7-9ADC-2F8C7769BADB}">
+        <File Id="filSageTVFileSrc.ax" KeyPath="yes" SelfRegCost="0" Source="$(var.SourceNative)SageTVFileSrc.ax" />
       </Component>
-      <Component Id="cmpStrmDeMux.ax" Guid="{8E8BA5B0-4A63-416F-AA38-88BE23DEF021}">
-        <File Id="filStrmDeMux.ax" KeyPath="yes" SelfRegCost="0" Source="..\..\..\native\Build\Release\StrmDeMux.ax" />
+      <Component Id="cmpStrmDeMux.ax" Win64="$(var.Win64)" Guid="{8E8BA5B0-4A63-416F-AA38-88BE23DEF021}">
+        <File Id="filStrmDeMux.ax" KeyPath="yes" SelfRegCost="0" Source="$(var.SourceNative)StrmDeMux.ax" />
       </Component>
-      <Component Id="cmpTSSplitter.ax" Guid="{D755FDCE-DA45-4108-95CB-916A618EAA73}">
-        <File Id="filTSSplitter.ax" KeyPath="yes" SelfRegCost="0" Source="..\..\..\native\Build\Release\TSSplitter.ax" />
+      <Component Id="cmpTSSplitter.ax" Win64="$(var.Win64)" Guid="{D755FDCE-DA45-4108-95CB-916A618EAA73}">
+        <File Id="filTSSplitter.ax" KeyPath="yes" SelfRegCost="0" Source="$(var.SourceNative)TSSplitter.ax" />
       </Component>
     </ComponentGroup>
   </Fragment>
@@ -207,9 +308,9 @@
   <!-- Fragment for ProductSageTVSelfReg-->
   <Fragment>
     <ComponentGroup Id="ProductSageTVSelfRegComponents" Directory="APPFOLDER">
-      <Component Id="cmpSTVEVRPrstr.dll" Guid="{CDD7905A-C83D-4929-BF4B-E0CC3AF25588}">
-        <File Id="filSTVEVRPrstr.dll" KeyPath="yes" SelfRegCost="0" Source="..\..\..\native\Build\Release\STVEVRPrstr.dll" />
-      </Component>
+    <Component Id="cmpSTVEVRPrstr.dll" Win64="$(var.Win64)" Guid="{CDD7905A-C83D-4929-BF4B-E0CC3AF25588}">
+      <File Id="filSTVEVRPrstr.dll" KeyPath="yes" SelfRegCost="0" Source="$(var.SourceNative)STVEVRPrstr.dll" />
+    </Component>
     </ComponentGroup>
   </Fragment>
    
@@ -217,8 +318,22 @@
   <Fragment>
     <ComponentGroup Id="ProductCommonComponents" Directory="APPCOMMONFOLDER">
       <Component Id="cmp7E6BB3DE5235138D8AE38B9D5F64B9E8" Guid="{2C936FC3-E5BA-42C2-8A33-0D50BAADED7B}">
-        <File Id="filB65FAE09C007AB493BA1A07B680A18AA" KeyPath="yes" Source="..\..\..\native\Build\Release\TunerStub.dll" />
+        <File Id="filB65FAE09C007AB493BA1A07B680A18AA" KeyPath="yes" Source="$(var.SourceNative)TunerStub.dll" />
       </Component>
+      <Component Id="cmp5BC679734B1A470bB0CB6480B02EF5BD" Guid="{188C7C06-BA52-4a54-A615-3D2C0F1D6E46}">
+        <File Id="fil03D1C1C66CC6475389E73AAE532BF78B" KeyPath="yes" Source="$(var.SourceNative)uu_irsage.dll" />
+      </Component>
+      <Component Id="cmp64245AAB05194798872CE52163814445" Guid="{811ACA52-E790-421a-B206-F395471100B1}">
+        <File Id="filC80342EABF304526B4B9E39563D32745" KeyPath="yes" Source="$(var.SourceNative)EXEMultiTunerPlugin.dll" />
+      </Component>
+      <Component Id="cmp975E730BBA4A42adB896A4E616DDD977" Guid="{E301FFF7-55AF-48d6-A615-12ACD1CCA30C}">
+        <File Id="fil975E730BBA4A42adB896A4E616DDD977" KeyPath="yes" Source="$(var.SourceNative)HCWIRBlaster.dll" />
+      </Component>
+      <?if $(var.Platform) = x64 ?>
+        <Component Id="cmpHCWIRBlasterCOM.exe" Win64="no" Guid="{8E542E75-31A3-4303-93EF-B16FDAB20662}">
+          <File Id="filHCWIRBlasterCOM.exe" KeyPath="yes" Source="$(var.SourceNativeWin32)HCWIRBlasterCOM.exe" />
+        </Component>
+      <?endif?>
     </ComponentGroup>
   </Fragment>
   
@@ -226,40 +341,40 @@
 	<Fragment>
 		<ComponentGroup Id="ProductSageTVAllComponents" Directory="APPFOLDER">
       <Component Id="cmp12DFD2F7AAF004004B4729D0B6EFF057" Guid="{463878A3-FAB2-4287-A493-CC0980635AC7}">
-          <File Id="filDFECC8333A8AB1FED9BEA0E235F676D2" KeyPath="yes" Source="..\..\..\native\Build\Release\DirecTVSerialControl.dll" />
+          <File Id="filDFECC8333A8AB1FED9BEA0E235F676D2" KeyPath="yes" Source="$(var.SourceNative)DirecTVSerialControl.dll" />
       </Component>
       <Component Id="cmpC5D65209762C756367193E86F8168832" Guid="{C52EA04C-CFFF-4F10-B883-5FED0B7EA6FB}">
-          <File Id="filEB3BDD17BB37650304A429A13EAFB95F" KeyPath="yes" Source="..\..\..\native\Build\Release\DShowCapture.dll" />
+          <File Id="filEB3BDD17BB37650304A429A13EAFB95F" KeyPath="yes" Source="$(var.SourceNative)DShowCapture.dll" />
       </Component>
       <Component Id="cmp1327FFBF7CB6B103F4D0CD8C37056D1F" Guid="{616D85B7-08E5-4B79-BBE4-7BD26A92F5BB}">
-          <File Id="fil1B8AD5F10153601B80C7F40E844FC746" KeyPath="yes" Source="..\..\..\native\Build\Release\DShowPlayer.dll" />
+          <File Id="fil1B8AD5F10153601B80C7F40E844FC746" KeyPath="yes" Source="$(var.SourceNative)DShowPlayer.dll" />
       </Component>
       <Component Id="cmpF0FC2EA07DA779EB67837DC6CF75CA56" Guid="{C03CD42D-67CA-4F8B-BFA1-F63C8071FECF}">
-          <File Id="fil13477E986362D419F500B8631958E2C5" KeyPath="yes" Source="..\..\..\native\Build\Release\DShowTranscode.dll" />
+          <File Id="fil13477E986362D419F500B8631958E2C5" KeyPath="yes" Source="$(var.SourceNative)DShowTranscode.dll" />
       </Component>
       <Component Id="cmp6CAAEA0536F36D9D6DB04B37133B4D3D" Guid="{D848FAFB-E002-4BF2-B403-89FA26B5EB93}">
-          <File Id="filAFF81F0E3D95F1E7B0BA0A75C6AAD394" KeyPath="yes" Source="..\..\..\native\Build\Release\PVR350OSDPlugin.dll" />
+          <File Id="filAFF81F0E3D95F1E7B0BA0A75C6AAD394" KeyPath="yes" Source="$(var.SourceNative)PVR350OSDPlugin.dll" />
       </Component>
       <Component Id="cmpSageTVDX93D.dll" Guid="{1AF2B368-3ADF-4BB4-9EA0-CA21868FBACC}">
-          <File Id="filSageTVDX93D.dll" KeyPath="yes" Source="..\..\..\native\Build\Release\SageTVDX93D.dll" />
+          <File Id="filSageTVDX93D.dll" KeyPath="yes" Source="$(var.SourceNative)SageTVDX93D.dll" />
       </Component>
       <Component Id="cmpSageTVInfraredReceive.dll" Guid="{48004C30-C85F-4A22-AAD8-85BFA0E553B0}">
-          <File Id="filSageTVInfraredReceive.dll" KeyPath="yes" Source="..\..\..\native\Build\Release\SageTVInfraredReceive.dll" />
+          <File Id="filSageTVInfraredReceive.dll" KeyPath="yes" Source="$(var.SourceNative)SageTVInfraredReceive.dll" />
       </Component>
       <Component Id="cmpSageTVWin32.dll" Guid="{B0762AF4-F4DE-4E85-9799-D9FE9854F2E7}">
-          <File Id="filSageTVWin32.dll" KeyPath="yes" Source="..\..\..\native\Build\Release\SageTVWin32.dll" />
+          <File Id="filSageTVWin32.dll" KeyPath="yes" Source="$(var.SourceNative)SageTVWin32.dll" />
       </Component>
       <Component Id="cmpWin32ShellHook.dll" Guid="{B4FEF48F-0975-47E8-9504-44FD993A737D}">
-          <File Id="filWin32ShellHook.dll" KeyPath="yes" Source="..\..\..\native\Build\Release\Win32ShellHook.dll" />
+          <File Id="filWin32ShellHook.dll" KeyPath="yes" Source="$(var.SourceNative)Win32ShellHook.dll" />
       </Component>
       <Component Id="cmpWinKeyboardHook.dll" Guid="{C4B6DD4E-6C10-4B31-A8DE-493C303852E1}">
-          <File Id="filWinKeyboardHook.dll" KeyPath="yes" Source="..\..\..\native\Build\Release\WinKeyboardHook.dll" />
+          <File Id="filWinKeyboardHook.dll" KeyPath="yes" Source="$(var.SourceNative)WinKeyboardHook.dll" />
       </Component>
       <Component Id="cmpWinRawInput.dll" Guid="{1D454346-C404-42BD-B83A-2975D7F8B5BE}">
-          <File Id="filWinRawInput.dll" KeyPath="yes" Source="..\..\..\native\Build\Release\WinRawInput.dll" />
+          <File Id="filWinRawInput.dll" KeyPath="yes" Source="$(var.SourceNative)WinRawInput.dll" />
       </Component>
       <Component Id="cmpJavaRemuxer2.dll" Guid="{36C4D588-28C2-42A7-94A1-E8378FEF0C1A}">
-          <File Id="filJavaRemuxer2.dll" KeyPath="yes" Source="..\..\..\native\Build\Release\JavaRemuxer2.dll" />
+          <File Id="filJavaRemuxer2.dll" KeyPath="yes" Source="$(var.SourceNative)JavaRemuxer2.dll" />
       </Component>
     </ComponentGroup>
 	</Fragment>
@@ -267,23 +382,23 @@
   <!-- Fragment for ProductSageTVServer-->
   <?if $(var.Configuration) = SetupServer ?>
     <Fragment>
-		  <ComponentGroup Id="ProductSageTVServerComponents" Directory="APPFOLDER">
-        <Component Id="cmpSageTV.exe" Guid="{1BA2CC3E-EA22-4F4E-BE88-262C8E56A98B}">
-            <File Id="filSageTV.exe" KeyPath="yes" Source="..\..\..\native\Build\Release\SageTV.exe">
-              <fire:FirewallException Id="FWXSageTVEXETCP" Name="SageTV TCP" Protocol="tcp" Scope="any" IgnoreFailure="yes"/>
-              <fire:FirewallException Id="FWXSageTVEXEUDP" Name="SageTV UDP" Protocol="udp" Scope="any" IgnoreFailure="yes"/>
+      <ComponentGroup Id="ProductSageTVServerComponents" Directory="APPFOLDER">
+        <Component Id="cmpSageTV.exe" Win64="$(var.Win64)" Guid="{1BA2CC3E-EA22-4F4E-BE88-262C8E56A98B}">
+            <File Id="filSageTV.exe" KeyPath="yes" Source="$(var.SourceNative)SageTV.exe">
+              <fire:FirewallException Id="FWXSageTVEXETCP" Name="SageTV$(var.NameAddon) TCP" Protocol="tcp" Scope="any" IgnoreFailure="yes"/>
+              <fire:FirewallException Id="FWXSageTVEXEUDP" Name="SageTV$(var.NameAddon) UDP" Protocol="udp" Scope="any" IgnoreFailure="yes"/>
             </File>
         </Component>
-        <Component Id="cmpSageTVService.exe" Guid="{B958869A-64A9-4926-BC5E-E6A2AF88732E}">
-            <File Id="filSageTVService.exe" KeyPath="yes" Source="..\..\..\native\Build\Release\SageTVService.exe" >
-              <fire:FirewallException Id="FWXSageTVServiceTCP" Name="SageTV Service TCP" Protocol="tcp" Scope="any" IgnoreFailure="yes"/>
-              <fire:FirewallException Id="FWXSageTVServiceUDP" Name="SageTV Service UDP" Protocol="udp" Scope="any" IgnoreFailure="yes"/>
+        <Component Id="cmpSageTVService.exe" Win64="$(var.Win64)" Guid="{B958869A-64A9-4926-BC5E-E6A2AF88732E}">
+            <File Id="filSageTVService.exe" KeyPath="yes" Source="$(var.SourceNative)SageTVService.exe" >
+              <fire:FirewallException Id="FWXSageTVServiceTCP" Name="SageTV$(var.NameAddon) Service TCP" Protocol="tcp" Scope="any" IgnoreFailure="yes"/>
+              <fire:FirewallException Id="FWXSageTVServiceUDP" Name="SageTV$(var.NameAddon) Service UDP" Protocol="udp" Scope="any" IgnoreFailure="yes"/>
             </File>
             <ServiceInstall Id="SageTVService" 
                             Type="ownProcess" 
-                            Name="SageTV" 
-                            DisplayName="SageTV"
-                            Description="Service for the SageTV Server" 
+                            Name="SageTV$(var.NameAddonShort)" 
+                            DisplayName="SageTV$(var.NameAddonShort)"
+                            Description="Service for the SageTV$(var.NameAddon) Server" 
                             Start="demand" 
                             Account="LocalSystem" 
                             ErrorControl="ignore">
@@ -300,10 +415,10 @@
                             Name="SageTVService" 
                             Wait="no" />
         </Component>
-        <Component Id="cmpSageTVServiceControl.exe" Guid="{610DF4DB-B779-4CC8-9E3A-04C09E762D66}">
-            <File Id="filSageTVServiceControl.exe" KeyPath="yes" Source="..\..\..\native\Build\Release\SageTVServiceControl.exe" >
-              <fire:FirewallException Id="FWXSageTVServiceControlTCP" Name="SageTV Service Control TCP" Protocol="tcp" Scope="any" IgnoreFailure="yes"/>
-              <fire:FirewallException Id="FWXSageTVServiceControlUDP" Name="SageTV Service Control UDP" Protocol="udp" Scope="any" IgnoreFailure="yes"/>
+        <Component Id="cmpSageTVServiceControl.exe" Win64="$(var.Win64)" Guid="{610DF4DB-B779-4CC8-9E3A-04C09E762D66}">
+            <File Id="filSageTVServiceControl.exe" KeyPath="yes" Source="$(var.SourceNative)SageTVServiceControl.exe" >
+              <fire:FirewallException Id="FWXSageTVServiceControlTCP" Name="SageTV$(var.NameAddon) Service Control TCP" Protocol="tcp" Scope="any" IgnoreFailure="yes"/>
+              <fire:FirewallException Id="FWXSageTVServiceControlUDP" Name="SageTV$(var.NameAddon) Service Control UDP" Protocol="udp" Scope="any" IgnoreFailure="yes"/>
             </File>
             <RegistryValue
                 Root="HKLM"
@@ -313,15 +428,15 @@
                 Type="string"/>
         </Component>
       </ComponentGroup>
-	  </Fragment>
+    </Fragment>
   <?elseif $(var.Configuration) = SetupClient?>
     <!-- Fragment for ProductSageTVClient-->
-	  <Fragment>
-		  <ComponentGroup Id="ProductSageTVClientComponents" Directory="APPFOLDER">
-        <Component Id="cmpSageTVClient.exe" Guid="{18F05B56-C40E-4B73-BE2B-CE0327294727}">
-          <File Id="filSageTVClient.exe" KeyPath="yes" Source="..\..\..\native\Build\Release\SageTVClient.exe" >
-            <fire:FirewallException Id="FWXSageTVClientTCP" Name="SageTV Client TCP" Protocol="tcp" Scope="any" IgnoreFailure="yes"/>
-            <fire:FirewallException Id="FWXSageTVClientUDP" Name="SageTV Client UDP" Protocol="udp" Scope="any" IgnoreFailure="yes"/>
+    <Fragment>
+      <ComponentGroup Id="ProductSageTVClientComponents" Directory="APPFOLDER">
+        <Component Id="cmpSageTVClient.exe" Win64="$(var.Win64)" Guid="{18F05B56-C40E-4B73-BE2B-CE0327294727}">
+          <File Id="filSageTVClient.exe" KeyPath="yes" Source="$(var.SourceNative)SageTVClient.exe" >
+            <fire:FirewallException Id="FWXSageTVClientTCP" Name="SageTV$(var.NameAddon) Client TCP" Protocol="tcp" Scope="any" IgnoreFailure="yes"/>
+            <fire:FirewallException Id="FWXSageTVClientUDP" Name="SageTV$(var.NameAddon) Client UDP" Protocol="udp" Scope="any" IgnoreFailure="yes"/>
           </File>
           <RegistryValue
                   Root="HKLM"
@@ -331,15 +446,15 @@
                   Type="string"/>
         </Component>
       </ComponentGroup>
-	  </Fragment>
+    </Fragment>
   <?elseif $(var.Configuration) = SetupPlaceshifter?>
     <!-- Fragment for ProductSageTVPlaceshifter-->
-	  <Fragment>
-		  <ComponentGroup Id="ProductSageTVPlaceshifterComponents" Directory="PLACESHIFTERFOLDER">
-        <Component Id="cmpSageTVPlaceshifter.exe" Guid="{8842517C-0F01-49C8-AC9A-BF681791062F}">
-          <File Id="filSageTVPlaceshifter.exe" KeyPath="yes" Source="..\..\..\native\Build\Release\SageTVPlaceshifter.exe" >
-            <fire:FirewallException Id="FWXSageTVPlaceshifterTCP" Name="SageTV Placeshifter TCP" Protocol="tcp" Scope="any" IgnoreFailure="yes"/>
-            <fire:FirewallException Id="FWXSageTVPlaceshifterUDP" Name="SageTV Placeshifter UDP" Protocol="udp" Scope="any" IgnoreFailure="yes"/>
+    <Fragment>
+      <ComponentGroup Id="ProductSageTVPlaceshifterComponents" Directory="PLACESHIFTERFOLDER">
+        <Component Id="cmpSageTVPlaceshifter.exe" Win64="$(var.Win64)" Guid="{8842517C-0F01-49C8-AC9A-BF681791062F}">
+          <File Id="filSageTVPlaceshifter.exe" KeyPath="yes" Source="$(var.SourceNative)SageTVPlaceshifter.exe" >
+            <fire:FirewallException Id="FWXSageTVPlaceshifterTCP" Name="SageTV$(var.NameAddon) Placeshifter TCP" Protocol="tcp" Scope="any" IgnoreFailure="yes"/>
+            <fire:FirewallException Id="FWXSageTVPlaceshifterUDP" Name="SageTV$(var.NameAddon) Placeshifter UDP" Protocol="udp" Scope="any" IgnoreFailure="yes"/>
           </File>
           <RegistryValue
                   Root="HKLM"
@@ -348,23 +463,23 @@
                   Value="[PLACESHIFTERFOLDER]SageTVPlaceshifter.exe"
                   Type="string"/>
         </Component>
-        <Component Id="cmpPSSageTVDX93D.dll" Guid="{DE688527-BB81-4F37-91BF-B9EB846DA05F}">
-            <File Id="filPSSageTVDX93D.dll" KeyPath="yes" Source="..\..\..\native\Build\Release\SageTVDX93D.dll" />
+        <Component Id="cmpPSSageTVDX93D.dll" Win64="$(var.Win64)" Guid="{DE688527-BB81-4F37-91BF-B9EB846DA05F}">
+            <File Id="filPSSageTVDX93D.dll" KeyPath="yes" Source="$(var.SourceNative)SageTVDX93D.dll" />
         </Component>
-        <Component Id="cmpPSSageTVInfraredReceive.dll" Guid="{818B719F-6A21-43F4-8343-35A88D79B83E}">
-            <File Id="filPSSageTVInfraredReceive.dll" KeyPath="yes" Source="..\..\..\native\Build\Release\SageTVInfraredReceive.dll" />
+        <Component Id="cmpPSSageTVInfraredReceive.dll" Win64="$(var.Win64)" Guid="{818B719F-6A21-43F4-8343-35A88D79B83E}">
+            <File Id="filPSSageTVInfraredReceive.dll" KeyPath="yes" Source="$(var.SourceNative)SageTVInfraredReceive.dll" />
         </Component>
-        <Component Id="cmpPSSageTVWin32.dll" Guid="{B21D184F-2EA1-4748-B37F-17F88982BE3C}">
-            <File Id="filPSSageTVWin32.dll" KeyPath="yes" Source="..\..\..\native\Build\Release\SageTVWin32.dll" />
+        <Component Id="cmpPSSageTVWin32.dll" Win64="$(var.Win64)" Guid="{B21D184F-2EA1-4748-B37F-17F88982BE3C}">
+            <File Id="filPSSageTVWin32.dll" KeyPath="yes" Source="$(var.SourceNative)SageTVWin32.dll" />
         </Component>
-        <Component Id="cmpPSWin32ShellHook.dll" Guid="{B560DD3D-6989-4D9C-B432-ED216FD1D2F0}">
-            <File Id="filPSWin32ShellHook.dll" KeyPath="yes" Source="..\..\..\native\Build\Release\Win32ShellHook.dll" />
+        <Component Id="cmpPSWin32ShellHook.dll" Win64="$(var.Win64)" Guid="{B560DD3D-6989-4D9C-B432-ED216FD1D2F0}">
+            <File Id="filPSWin32ShellHook.dll" KeyPath="yes" Source="$(var.SourceNative)Win32ShellHook.dll" />
         </Component>
-        <Component Id="cmpPSWinKeyboardHook.dll" Guid="{41B9C987-F0DC-4102-B4E6-204C0267F998}">
-            <File Id="filPSWinKeyboardHook.dll" KeyPath="yes" Source="..\..\..\native\Build\Release\WinKeyboardHook.dll" />
+        <Component Id="cmpPSWinKeyboardHook.dll" Win64="$(var.Win64)" Guid="{41B9C987-F0DC-4102-B4E6-204C0267F998}">
+            <File Id="filPSWinKeyboardHook.dll" KeyPath="yes" Source="$(var.SourceNative)WinKeyboardHook.dll" />
         </Component>
-        <Component Id="cmpPSWinRawInput.dll" Guid="{BAAB7518-DB6C-4D12-A77F-BA4ACCCDA8D2}">
-            <File Id="filPSWinRawInput.dll" KeyPath="yes" Source="..\..\..\native\Build\Release\WinRawInput.dll" />
+        <Component Id="cmpPSWinRawInput.dll" Win64="$(var.Win64)" Guid="{BAAB7518-DB6C-4D12-A77F-BA4ACCCDA8D2}">
+            <File Id="filPSWinRawInput.dll" KeyPath="yes" Source="$(var.SourceNative)WinRawInput.dll" />
         </Component>
       </ComponentGroup>
 	  </Fragment>
@@ -372,8 +487,8 @@
 
   <!-- Fragment for CoreTranslations-->
   <!-- TODO: copy these to the APP Folder in Pre-Build and use Heat against them -->
-	<Fragment>
-		<ComponentGroup Id="CoreTranslationComponents" Directory="APPFOLDER">
+    <Fragment>
+      <ComponentGroup Id="CoreTranslationComponents" Directory="APPFOLDER">
       <Component Id="cmpSageTVCoreTranslations_de.properties" Guid="{F65F0B55-28D7-4971-8B86-206A1C863B98}">
         <File Id="filSageTVCoreTranslations_de.properties" KeyPath="yes" Source="..\..\..\i18n\SageTVCoreTranslations_de.properties" />
       </Component>
@@ -386,47 +501,47 @@
       <Component Id="cmpSageTVCoreTranslations_nl.properties" Guid="{526A39CC-44EB-4DDB-BDA5-D66CC7B36380}">
         <File Id="filSageTVCoreTranslations_nl.properties" KeyPath="yes" Source="..\..\..\i18n\SageTVCoreTranslations_nl.properties" />
       </Component>
-		</ComponentGroup>
-	</Fragment>
+      </ComponentGroup>
+    </Fragment>
 
   <!-- Fragment for InstallConfig-->
   <!-- TODO: copy these to the APP Folder in Pre-Build and use Heat against them -->
-	<Fragment>
-		<ComponentGroup Id="InstallConfigComponents" Directory="APPFOLDER">
-      <Component Id="cmpPredefinedDVBC.frq" Guid="{567BD1AC-0D66-47F0-9F17-8DB705C61F01}">
-        <File Id="filPredefinedDVBC.frq" KeyPath="yes" Source="..\..\..\install\config\PredefinedDVBC.frq" />
-      </Component>
-      <Component Id="cmpPredefinedDVBS.frq" Guid="{4AFFE608-1303-4F8F-9995-FE84C9A66E82}">
-        <File Id="filPredefinedDVBS.frq" KeyPath="yes" Source="..\..\..\install\config\PredefinedDVBS.frq" />
-      </Component>
-      <Component Id="cmpPredefinedDVBT.frq" Guid="{FFB8905B-84F1-40BA-898B-1B372C2B5749}">
-        <File Id="filPredefinedDVBT.frq" KeyPath="yes" Source="..\..\..\install\config\PredefinedDVBT.frq" />
-      </Component>
-      <Component Id="cmpRemoteClients.properties.defaults" Guid="{54EC770F-52D3-429F-900E-D4E0E56490DB}">
-        <File Id="filRemoteClients.properties.defaults" KeyPath="yes" Source="..\..\..\install\config\RemoteClients.properties.defaults" />
-      </Component>
-      <Component Id="cmpSage.properties.defaults" Guid="{6CB9801E-951D-4284-A29B-7E107000CE44}">
-        <File Id="filSage.properties.defaults" KeyPath="yes" Source="..\..\..\install\config\Sage.properties.defaults" />
-      </Component>
-		</ComponentGroup>
-	</Fragment>
+    <Fragment>
+      <ComponentGroup Id="InstallConfigComponents" Directory="APPFOLDER">
+        <Component Id="cmpPredefinedDVBC.frq" Guid="{567BD1AC-0D66-47F0-9F17-8DB705C61F01}">
+          <File Id="filPredefinedDVBC.frq" KeyPath="yes" Source="..\..\..\install\config\PredefinedDVBC.frq" />
+        </Component>
+        <Component Id="cmpPredefinedDVBS.frq" Guid="{4AFFE608-1303-4F8F-9995-FE84C9A66E82}">
+          <File Id="filPredefinedDVBS.frq" KeyPath="yes" Source="..\..\..\install\config\PredefinedDVBS.frq" />
+        </Component>
+        <Component Id="cmpPredefinedDVBT.frq" Guid="{FFB8905B-84F1-40BA-898B-1B372C2B5749}">
+          <File Id="filPredefinedDVBT.frq" KeyPath="yes" Source="..\..\..\install\config\PredefinedDVBT.frq" />
+        </Component>
+        <Component Id="cmpRemoteClients.properties.defaults" Guid="{54EC770F-52D3-429F-900E-D4E0E56490DB}">
+          <File Id="filRemoteClients.properties.defaults" KeyPath="yes" Source="..\..\..\install\config\RemoteClients.properties.defaults" />
+        </Component>
+        <Component Id="cmpSage.properties.defaults" Guid="{6CB9801E-951D-4284-A29B-7E107000CE44}">
+          <File Id="filSage.properties.defaults" KeyPath="yes" Source="..\..\..\install\config\Sage.properties.defaults" />
+        </Component>
+      </ComponentGroup>
+    </Fragment>
 
   <?if $(var.Configuration) = SetupServer ?>
     <Fragment>
       <ComponentGroup Id="SageTVServerShortcuts" Directory="SageTVProgramsFolder">
-        <Component Id="SageTVShortcut" Guid="{37B651F3-06E6-408B-B737-94136555A8B4}">
+        <Component Id="SageTVShortcut" Win64="$(var.Win64)" Guid="{37B651F3-06E6-408B-B737-94136555A8B4}">
           <Shortcut Id="SageTVStartMenuShortcut" 
-              Name="SageTV 9" 
-              Description="SageTV Server Application" 
+              Name="SageTV$(var.NameAddon) 9" 
+              Description="SageTV$(var.NameAddon) Server Application" 
               Target="[!filSageTV.exe]" 
               WorkingDirectory="APPFOLDER"
           />
           <RegistryValue Root="HKCU" Key="Software\SageTVServerShortcut" Name="installed" Type="integer" Value="1" KeyPath="yes" />
         </Component>
-        <Component Id="SageTVServiceControlShortcut" Guid="{851B61DD-8558-4B26-A3EB-66D1EC03E140}">
+        <Component Id="SageTVServiceControlShortcut" Win64="$(var.Win64)" Guid="{851B61DD-8558-4B26-A3EB-66D1EC03E140}">
           <Shortcut Id="SageTVServiceControlStartMenuShortcut" 
-              Name="SageTV 9 Service Control" 
-              Description="SageTV 9 Service Control Application" 
+              Name="SageTV$(var.NameAddon) 9 Service Control" 
+              Description="SageTV$(var.NameAddon) 9 Service Control Application" 
               Target="[!filSageTVServiceControl.exe]" 
           />
           <RemoveFolder Id="RemoveSageTVProgramsFolder" Directory="SageTVProgramsFolder" On="uninstall" />
@@ -434,10 +549,10 @@
         </Component>
       </ComponentGroup>
       <ComponentGroup Id="SageTVServerDesktopShortcuts" Directory="DesktopFolder">
-        <Component Id="SageTVShortcutDesktop" Guid="{1080F99D-74AF-49BA-8BF7-CD39475C962F}">
+        <Component Id="SageTVShortcutDesktop" Win64="$(var.Win64)" Guid="{1080F99D-74AF-49BA-8BF7-CD39475C962F}">
           <Shortcut Id="SageTVDesktopShortcut" 
-              Name="SageTV 9" 
-              Description="SageTV 9 Server Application" 
+              Name="SageTV$(var.NameAddon) 9" 
+              Description="SageTV$(var.NameAddon) 9 Server Application" 
               Target="[!filSageTV.exe]" 
           />
           <RegistryValue Root="HKCU" Key="Software\SageTVServerDesktop" Name="installed" Type="integer" Value="1" KeyPath="yes" />
@@ -449,10 +564,10 @@
   <?if $(var.Configuration) = SetupClient ?>
     <Fragment>
       <ComponentGroup Id="SageTVClientShortcuts" Directory="SageTVProgramsFolder">
-        <Component Id="SageTVClientShortcut" Guid="{24B01AB7-6786-4647-BB72-54F601E243C2}">
+        <Component Id="SageTVClientShortcut" Win64="$(var.Win64)" Guid="{24B01AB7-6786-4647-BB72-54F601E243C2}">
           <Shortcut Id="SageTVClientStartMenuShortcut"
-              Name="SageTV 9 Client"
-              Description="SageTV 9 Client Application"
+              Name="SageTV$(var.NameAddon) 9 Client"
+              Description="SageTV$(var.NameAddon) 9 Client Application"
               Target="[!filSageTVClient.exe]"
               WorkingDirectory="APPFOLDER"
           />
@@ -461,10 +576,10 @@
         </Component>
       </ComponentGroup>
       <ComponentGroup Id="SageTVClientDesktopShortcuts" Directory="DesktopFolder">
-        <Component Id="SageTVClientShortcutDesktop" Guid="{D1FEDD0E-E8AC-42CC-A1E1-82484C5E7364}">
+        <Component Id="SageTVClientShortcutDesktop" Win64="$(var.Win64)" Guid="{D1FEDD0E-E8AC-42CC-A1E1-82484C5E7364}">
           <Shortcut Id="SageTVClientDesktopShortcut"
-              Name="SageTV 9 Client"
-              Description="SageTV 9 Client Application"
+              Name="SageTV$(var.NameAddon) 9 Client"
+              Description="SageTV$(var.NameAddon) 9 Client Application"
               Target="[!filSageTVClient.exe]"
           />
           <RegistryValue Root="HKCU" Key="Software\SageTVClientDesktop" Name="installed" Type="integer" Value="1" KeyPath="yes" />
@@ -476,10 +591,10 @@
   <?if $(var.Configuration) = SetupPlaceshifter ?>
     <Fragment>
       <ComponentGroup Id="SageTVPlaceshifterShortcuts" Directory="SageTVProgramsFolder">
-        <Component Id="SageTVPlaceshifterShortcut" Guid="{048EC71C-CB25-4465-A0FA-C160B9448FC8}">
+        <Component Id="SageTVPlaceshifterShortcut" Win64="$(var.Win64)" Guid="{048EC71C-CB25-4465-A0FA-C160B9448FC8}">
           <Shortcut Id="SageTVPlaceshifterStartMenuShortcut"
-              Name="SageTV 9 Placeshifter"
-              Description="SageTV 9 Placeshifter Application"
+              Name="SageTV$(var.NameAddon) 9 Placeshifter"
+              Description="SageTV$(var.NameAddon) 9 Placeshifter Application"
               Target="[!filSageTVPlaceshifter.exe]"
               WorkingDirectory="PLACESHIFTERFOLDER"
           />
@@ -488,10 +603,10 @@
         </Component>
       </ComponentGroup>
       <ComponentGroup Id="SageTVPlaceshifterDesktopShortcuts" Directory="DesktopFolder">
-        <Component Id="SageTVPlaceshifterShortcutDesktop" Guid="{13AB24AF-E5B3-4FE8-BEFA-314EA6932BED}">
+        <Component Id="SageTVPlaceshifterShortcutDesktop" Win64="$(var.Win64)" Guid="{13AB24AF-E5B3-4FE8-BEFA-314EA6932BED}">
           <Shortcut Id="SageTVPlaceshifterDesktopShortcut"
-              Name="SageTV 9 Placeshifter"
-              Description="SageTV 9 Placeshifter Application"
+              Name="SageTV$(var.NameAddon) 9 Placeshifter"
+              Description="SageTV$(var.NameAddon) 9 Placeshifter Application"
               Target="[!filSageTVPlaceshifter.exe]"
           />
           <RegistryValue Root="HKCU" Key="Software\SageTVPlaceshifterDesktop" Name="installed" Type="integer" Value="1" KeyPath="yes" />
@@ -502,10 +617,16 @@
   
   <Fragment>
     <DirectoryRef Id="TARGETDIR">
-      <Component Id="SageTVRegistryComponent" Guid="{6CD6B9C6-06CE-4A01-B2AA-3438D08EDEE1}" KeyPath="yes">
+      <Component Id="SageTVRegistryComponent" Win64="$(var.Win64)" Guid="{6CD6B9C6-06CE-4A01-B2AA-3438D08EDEE1}" KeyPath="yes">
         <RegistryKey ForceCreateOnInstall="yes" Key="SOFTWARE\Frey Technologies" Root="HKLM" >
           <Permission GenericAll="yes" User="Everyone"/>
           <RegistryValue Name="LastInstallDir" Value="[INSTALLFOLDER]" Type="string" />
+          <?if $(var.Configuration) != SetupPlaceshifter ?>
+            <RegistryValue Name="LastInstallLAVFILTERS" Value="[LAVFILTERSCHECKBOX]" Type="string" />
+          <?endif ?>
+          <?if $(var.Platform) = x64 ?>
+            <RegistryValue Name="LastInstallUSBUIRT" Value="[USBUIRTCHECKBOX]" Type="string" />
+          <?endif ?>
         </RegistryKey>
         <?if $(var.Configuration) = SetupServer ?>
           <RegistryKey Key="SOFTWARE\Frey Technologies\Common" Root="HKLM">
@@ -513,6 +634,20 @@
           </RegistryKey>
         <?endif?>      
       </Component>
+      <?if $(var.Configuration) != SetupPlaceshifter ?>
+        <Component Id="cmpRegFreyCommonDSFiltersAudioDec" Win64="$(var.Win64)" Guid="{0C973459-C436-4b73-B11A-69819455E3CB}" KeyPath="yes">
+          <RegistryKey ForceCreateOnInstall="yes" Key="SOFTWARE\Frey Technologies\Common\DSFilters\AudioDec" Root="HKLM">
+            <Permission GenericAll="yes" User="Everyone"/>
+            <RegistryValue Name="AlwaysSwapForAC3Filter" Value="[ALWAYSSWAPFORAC3FILTER]" Type="integer" />
+          </RegistryKey>  
+        </Component>
+        <Component Id="cmpRegFreyCommonDirectShow" Win64="$(var.Win64)" Guid="{A53E8F1E-25E5-43bc-82B0-FB5F8B422C80}" KeyPath="yes">
+          <RegistryKey ForceCreateOnInstall="yes" Key="SOFTWARE\Frey Technologies\Common\DirectShow" Root="HKLM">
+            <Permission GenericAll="yes" User="Everyone"/>
+            <RegistryValue Name="EnableSageTVStreamDemux" Value="[ENABLESAGETVSTREAMDEMUX]" Type="integer" />
+          </RegistryKey>  
+        </Component>
+      <?endif ?>
     </DirectoryRef>
   </Fragment>
 

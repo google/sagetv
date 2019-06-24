@@ -1,7 +1,7 @@
 /*
  * hdhomerun_video.h
  *
- * Copyright © 2006 Silicondust USA Inc. <www.silicondust.com>.
+ * Copyright © 2006-2016 Silicondust USA Inc. <www.silicondust.com>.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -48,21 +48,26 @@ struct hdhomerun_video_stats_t {
  *
  * When no longer needed, the socket should be destroyed by calling hdhomerun_control_destroy.
  */
-extern LIBTYPE struct hdhomerun_video_sock_t *hdhomerun_video_create(uint16_t listen_port, bool_t allow_port_reuse, size_t buffer_size, struct hdhomerun_debug_t *dbg);
-extern LIBTYPE void hdhomerun_video_destroy(struct hdhomerun_video_sock_t *vs);
+extern LIBHDHOMERUN_API struct hdhomerun_video_sock_t *hdhomerun_video_create(uint16_t listen_port, bool allow_port_reuse, size_t buffer_size, struct hdhomerun_debug_t *dbg);
+extern LIBHDHOMERUN_API void hdhomerun_video_destroy(struct hdhomerun_video_sock_t *vs);
+
+/*
+ * Configure to send a keepalive packet every second.
+ */
+extern LIBHDHOMERUN_API void hdhomerun_video_set_keepalive(struct hdhomerun_video_sock_t *vs, uint32_t remote_addr, uint16_t remote_port, uint32_t lockkey);
 
 /*
  * Get the port the socket is listening on.
  *
  * Returns 16-bit port with native endianness, or 0 on error.
  */
-extern LIBTYPE uint16_t hdhomerun_video_get_local_port(struct hdhomerun_video_sock_t *vs);
+extern LIBHDHOMERUN_API uint16_t hdhomerun_video_get_local_port(struct hdhomerun_video_sock_t *vs);
 
 /*
  * Join/leave multicast group.
  */
-extern LIBTYPE int hdhomerun_video_join_multicast_group(struct hdhomerun_video_sock_t *vs, uint32_t multicast_ip, uint32_t local_ip);
-extern LIBTYPE void hdhomerun_video_leave_multicast_group(struct hdhomerun_video_sock_t *vs, uint32_t multicast_ip, uint32_t local_ip);
+extern LIBHDHOMERUN_API int hdhomerun_video_join_multicast_group(struct hdhomerun_video_sock_t *vs, uint32_t multicast_ip, uint32_t local_ip);
+extern LIBHDHOMERUN_API void hdhomerun_video_leave_multicast_group(struct hdhomerun_video_sock_t *vs, uint32_t multicast_ip, uint32_t local_ip);
 
 /*
  * Read data from buffer.
@@ -81,23 +86,23 @@ extern LIBTYPE void hdhomerun_video_leave_multicast_group(struct hdhomerun_video
  * The buffer is implemented as a ring buffer. It is possible for this function to return a small
  * amount of data when more is available due to the wrap-around case.
  */
-extern LIBTYPE uint8_t *hdhomerun_video_recv(struct hdhomerun_video_sock_t *vs, size_t max_size, size_t *pactual_size);
+extern LIBHDHOMERUN_API uint8_t *hdhomerun_video_recv(struct hdhomerun_video_sock_t *vs, size_t max_size, size_t *pactual_size);
 
 /*
  * Flush the buffer.
  */
-extern LIBTYPE void hdhomerun_video_flush(struct hdhomerun_video_sock_t *vs);
+extern LIBHDHOMERUN_API void hdhomerun_video_flush(struct hdhomerun_video_sock_t *vs);
 
 /*
  * Debug print internal stats.
  */
-extern LIBTYPE void hdhomerun_video_debug_print_stats(struct hdhomerun_video_sock_t *vs);
-extern LIBTYPE void hdhomerun_video_get_stats(struct hdhomerun_video_sock_t *vs, struct hdhomerun_video_stats_t *stats);
+extern LIBHDHOMERUN_API void hdhomerun_video_debug_print_stats(struct hdhomerun_video_sock_t *vs);
+extern LIBHDHOMERUN_API void hdhomerun_video_get_stats(struct hdhomerun_video_sock_t *vs, struct hdhomerun_video_stats_t *stats);
 
 /*
  * Internal use only.
  */
-extern LIBTYPE hdhomerun_sock_t hdhomerun_video_get_sock(struct hdhomerun_video_sock_t *vs);
+extern LIBHDHOMERUN_API struct hdhomerun_sock_t *hdhomerun_video_get_sock(struct hdhomerun_video_sock_t *vs);
 
 #ifdef __cplusplus
 }

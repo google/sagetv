@@ -2544,7 +2544,7 @@ bool  PopupPacket( TSSPLT* splt, unsigned char* pData, unsigned int* Size )
 	} else
 	{
 			//check data 
-			unsigned long   size = (unsigned long)Size;
+			unsigned long   size = (unsigned long)*Size;
 			if ( PopPSPacket( splt->ps_builder, &type, (char*)pData , &size )  )
 			{
 				*Size = size;

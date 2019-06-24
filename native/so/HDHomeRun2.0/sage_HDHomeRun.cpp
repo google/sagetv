@@ -217,7 +217,7 @@ static void DiscoverNewDevices(JNIEnv *env)
 		pthread_mutex_unlock(&gInputListLock);
 	}
 	
-	count = hdhomerun_discover_find_devices_custom(0, HDHOMERUN_DEVICE_TYPE_TUNER, HDHOMERUN_DEVICE_ID_WILDCARD, list, 64);
+	count = hdhomerun_discover_find_devices_custom_v2(0, HDHOMERUN_DEVICE_TYPE_TUNER, HDHOMERUN_DEVICE_ID_WILDCARD, list, 64);
 	if(count < 0) {
 		sysOutPrint(env, "Error discovering new HDHR devices! (%d)\n", count);
 		return;

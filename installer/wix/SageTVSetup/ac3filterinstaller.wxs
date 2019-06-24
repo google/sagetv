@@ -1,42 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+  <?include SageTVInclude.wxi ?>	
   <Fragment>
 
-    <!-- Detect existing version of VC ++ 2010 x86 libraries -->
-    <util:FileSearch Id="GetAC3X86onX64Exists" Condition="VersionNT64" Variable="ac3x86Exists" Path="[ProgramFilesFolder]AC3Filter\ac3filter.ax" Result="exists"/>
-    <util:FileSearch Id="GetAC3X86onX86Exists" Condition="NOT VersionNT64" Variable="ac3x86Exists" Path="[ProgramFiles64Folder]AC3Filter\ac3filter.ax" Result="exists"/>
+    <!-- Detect existing version of AC3Filter -->
+    <?if $(var.Platform) = x64 ?>
+      <util:FileSearch Id="GetAC3onX64Exists" Condition="VersionNT64" Variable="ac3Exists" Path="[ProgramFilesFolder]AC3Filter\x64\ac3filter64.ax" Result="exists"/>
+    <?else?>
+      <util:FileSearch Id="GetAC3onX86Exists" Condition="NOT VersionNT64" Variable="ac3Exists" Path="[ProgramFilesFolder]AC3Filter\ac3filter.ax" Result="exists"/>
+    <?endif?>
 
     <PackageGroup Id="redist_ac3filter">
-      <?if $(var.InstallerType) = Full ?>
-	      <ExePackage Id="ac3filter" 
-			  DisplayName="AC3 Filter(offline)"
-			  Cache="yes" 
-			  PerMachine="yes" 
-			  Permanent="yes" 
-			  Vital="yes" 
-			  Compressed="yes"
-			  SourceFile="redist\ac3filter_2_6_0b_lite.exe"
-			  Name="Redist\ac3filter_2_6_0b_lite.exe"
-			  DetectCondition="ac3x86Exists"
-			  InstallCommand="/VERYSILENT /NORESTART /NOICONS"
-			  />
-      <?else?>
-	      <ExePackage Id="ac3filter" 
-			  DisplayName="AC3 Filter(online)"
-			  Cache="yes" 
-			  PerMachine="yes" 
-			  Permanent="yes" 
-			  Vital="yes" 
-			  Compressed="no"
-			  SourceFile="redist\ac3filter_2_6_0b_lite.exe"
-	                  DownloadUrl="https://dl.bintray.com/opensagetv/sagetv/installersupportfiles/1.002/ac3filter_2_6_0b_lite.exe"
-			  Name="Redist\ac3filter_2_6_0b_lite.exe"
-			  DetectCondition="ac3x86Exists"
-			  InstallCommand="/VERYSILENT /NORESTART /NOICONS"
-			  />
-      <?endif?>
-
+      <ExePackage Id="ac3filter" 
+		  DisplayName="AC3 Filter"
+		  Cache="yes" 
+		  PerMachine="yes" 
+		  Permanent="yes" 
+		  Vital="yes" 
+		  Compressed="yes"
+		  SourceFile="redist\ac3filter_2_6_0b.exe"
+		  Name="Redist\ac3filter_2_6_0b.exe"
+		  DetectCondition="ac3Exists"
+		  InstallCommand="/VERYSILENT /NORESTART /NOICONS"
+		  />
     </PackageGroup>
   </Fragment>
 </Wix>

@@ -16,10 +16,17 @@
             Source="redist\directx9\dsetup32.dll"/>
           <File Id="dsetup.dll"
             Source="redist\directx9\dsetup.dll"/>
-          <File Id="Jun2010_d3dx9_43_x86.cab"
-            Source="redist\directx9\Jun2010_d3dx9_43_x86.cab"/>
-          <File Id="Jun2010_D3DCompiler_43_x86.cab"
-            Source="redist\directx9\Jun2010_D3DCompiler_43_x86.cab"/>
+          <?if $(var.Platform) = x64 ?>
+            <File Id="Jun2010_d3dx9_43_x64.cab"
+              Source="redist\directx9\Jun2010_d3dx9_43_x64.cab"/>
+            <File Id="Jun2010_D3DCompiler_43_x64.cab"
+              Source="redist\directx9\Jun2010_D3DCompiler_43_x64.cab"/>
+          <?else ?>
+            <File Id="Jun2010_d3dx9_43_x86.cab"
+              Source="redist\directx9\Jun2010_d3dx9_43_x86.cab"/>
+            <File Id="Jun2010_D3DCompiler_43_x86.cab"
+              Source="redist\directx9\Jun2010_D3DCompiler_43_x86.cab"/>
+          <?endif ?>
         </Component>
       </Directory>
     </DirectoryRef>

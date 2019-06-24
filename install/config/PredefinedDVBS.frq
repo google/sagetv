@@ -3,8 +3,8 @@
 #
 #fec:          1:VBC, 2:RS/2048, 3:maximum
 #polarisation: 1:linear_H, 2:Linear_V, 3:Circular_L, 4:Circular_R
-#modualtion:   1:16QAM:1, 2:32QAM, 3:64QAM, 4:80QAM, 5:96QAM, 6:112QAM, 7:128QAM, 8:160QAM, 9:192QAM, 10:224QAM, 
-#              11:256QAM, 12:320QAM, 13:384QAM, 14:448QAM, 15:512QAM, 16:640QAM, 17:768QAM, 18:896QAM, 19:1024QAM, 
+#modualtion:   1:16QAM:1, 2:32QAM, 3:64QAM, 4:80QAM, 5:96QAM, 6:112QAM, 7:128QAM, 8:160QAM, 9:192QAM, 10:224QAM,
+#              11:256QAM, 12:320QAM, 13:384QAM, 14:448QAM, 15:512QAM, 16:640QAM, 17:768QAM, 18:896QAM, 19:1024QAM,
 #              20:QPSK, 21:BPSK, 22:OQPSK, 23:8VSB:23, 24:16VSB 31:NBC_QPSK 32:NBC_8PSK
 #
 #  frq:11914000 rate:27500 mod:30 fec_rate_in:3 pol:1
@@ -20,15 +20,15 @@
 "Astra (19.2)"
 	frq:11876000 rate:27500 fec_rate_in:3  pol:1
 	frq:12721000 rate:22000 mod:32 fec_rate_in:2 pol:1 roll:35 pilot:0
-	frq:11914000 rate:27500 mod:31 fec_rate_in:14 pol:1 roll:35 pilot:1 
+	frq:11914000 rate:27500 mod:31 fec_rate_in:14 pol:1 roll:35 pilot:1
 	frq:12580000 rate:22000 mod:32 fec_rate_in:2 pol:2 roll:35 pilot:1
 	frq:12522000 rate:22000 mod:32 fec_rate_in:2 pol:2 roll:35 pilot:1
 	frq:12610000 rate:22000 fec_rate_in:6 pol:2
 	frq:12581000 rate:22000 mod:30 fec_rate_in:2  pol:2
-	frq:10788000 rate:22000 fec_rate_in:6  pol:2 
-	frq:11758000 rate:27500 fec_rate_in:3  pol:1 
-	frq:11798000 rate:27500 fec_rate_in:3  pol:1 
-	frq:12032000 rate:27500 fec_rate_in:3  pol:1 
+	frq:10788000 rate:22000 fec_rate_in:6  pol:2
+	frq:11758000 rate:27500 fec_rate_in:3  pol:1
+	frq:11798000 rate:27500 fec_rate_in:3  pol:1
+	frq:12032000 rate:27500 fec_rate_in:3  pol:1
 	frq:11973000 rate:27500 fec_rate_in:3  pol:2
 	frq:12246000 rate:27500 fec_rate_in:3  pol:2
 	frq:10773000 rate:22000 fec_rate_in:6  pol:1
@@ -84,36 +84,36 @@
 	frq:12295000 rate:22500 mod:32 fec_rate_in:2 pol:1
 	frq:12331000 rate:22500 mod:32 fec_rate_in:2 pol:1
 	frq:12358000 rate:22500 mod:32 fec_rate_in:2 pol:1
-	frq:12394000 rate:22500 fec_rate_in:3 pol:1
-	frq:12421000 rate:22500 fec_rate_in:3 pol:1
+	frq:12394000 rate:22500 mod:32 fec_rate_in:2 pol:1
+	frq:12421000 rate:22500 mod:32 fec_rate_in:2 pol:1
 	frq:12456000 rate:22500 fec_rate_in:3 pol:1
 	frq:12483000 rate:22500 fec_rate_in:3 pol:1
 	frq:12519000 rate:22500 fec_rate_in:3 pol:1
-	frq:12546000 rate:22500 fec_rate_in:3 pol:1
-	frq:12581000 rate:22500 fec_rate_in:3 pol:1
-	frq:12608000 rate:22500 fec_rate_in:3 pol:1
-	frq:12644000 rate:22500 fec_rate_in:3 pol:1
-	frq:12671000 rate:22500 fec_rate_in:3 pol:1
-	frq:12707000 rate:22500 fec_rate_in:3 pol:1
-	frq:12734000 rate:22500 fec_rate_in:3 pol:1
+	frq:12546000 rate:22500 mod:32 fec_rate_in:2 pol:1
+	frq:12581000 rate:22500 mod:32 fec_rate_in:2 pol:1
+	frq:12608000 rate:22500 mod:32 fec_rate_in:2 pol:1
+	frq:12644000 rate:22500 mod:32 fec_rate_in:2 pol:1
+	frq:12671000 rate:22500 mod:32 fec_rate_in:2 pol:1
+	frq:12707000 rate:22500 mod:32 fec_rate_in:2 pol:1
+	frq:12734000 rate:22500 mod:32 fec_rate_in:2 pol:1
 
 "OPTUS D1 (160.0 E) New Zealand"
 	frq:12267000 rate:22500 mod:32 fec_rate_in:2 pol:1
 	frq:12295000 rate:22500 mod:32 fec_rate_in:2 pol:1
 	frq:12331000 rate:22500 mod:32 fec_rate_in:2 pol:1
 	frq:12358000 rate:22500 mod:32 fec_rate_in:2 pol:1
-	frq:12394000 rate:22500 fec_rate_in:3 pol:1
-	frq:12421000 rate:22500 fec_rate_in:3 pol:1
+	frq:12394000 rate:22500 mod:32 fec_rate_in:2 pol:1
+	frq:12421000 rate:22500 mod:32 fec_rate_in:2 pol:1
 	frq:12456000 rate:22500 fec_rate_in:3 pol:1
 	frq:12483000 rate:22500 fec_rate_in:3 pol:1
 	frq:12519000 rate:22500 fec_rate_in:3 pol:1
-	frq:12546000 rate:22500 fec_rate_in:3 pol:1
-	frq:12581000 rate:22500 fec_rate_in:3 pol:1
-	frq:12608000 rate:22500 fec_rate_in:3 pol:1
-	frq:12644000 rate:22500 fec_rate_in:3 pol:1
-	frq:12671000 rate:22500 fec_rate_in:3 pol:1
-	frq:12707000 rate:22500 fec_rate_in:3 pol:1
-	frq:12734000 rate:22500 fec_rate_in:3 pol:1
+	frq:12546000 rate:22500 mod:32 fec_rate_in:2 pol:1
+	frq:12581000 rate:22500 mod:32 fec_rate_in:2 pol:1
+	frq:12608000 rate:22500 mod:32 fec_rate_in:2 pol:1
+	frq:12644000 rate:22500 mod:32 fec_rate_in:2 pol:1
+	frq:12671000 rate:22500 mod:32 fec_rate_in:2 pol:1
+	frq:12707000 rate:22500 mod:32 fec_rate_in:2 pol:1
+	frq:12734000 rate:22500 mod:32 fec_rate_in:2 pol:1
 
 "OPTUS C1 (156.0 E)"
 	frq:12305000 rate:30000 fec_rate_in:3 pol:1

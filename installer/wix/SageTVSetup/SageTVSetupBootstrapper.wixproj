@@ -4,7 +4,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProductVersion>3.10</ProductVersion>
-    <InstallType Condition=" '$(InstallType)' == '' ">Full</InstallType>
+    <InstallType Condition=" '$(InstallType)' == '' ">Base</InstallType>
     <ProdVersion Condition=" '$(ProdVersion)' == '' ">0.0.0.0</ProdVersion>
     <ProjectGuid>5b01df4d-2e11-43e0-adfe-b71f8082407a</ProjectGuid>
     <SchemaVersion>2.0</SchemaVersion>
@@ -12,33 +12,54 @@
     <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
     <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'SetupServer' ">
-    <OutputName>SageTVSetup</OutputName>
-    <OutputPath>release\$(Configuration)\</OutputPath>
-    <IntermediateOutputPath>obj\bootstrapper\$(Configuration)\</IntermediateOutputPath>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'SetupServer|x86' ">
+    <OutputName>SageTVSetup$(Platform)$(InstallType)_$(ProdVersionStr)</OutputName>
+    <OutputPath>release\$(Configuration)$(Platform)\</OutputPath>
+    <IntermediateOutputPath>obj\bootstrapper\$(Configuration)$(Platform)\</IntermediateOutputPath>
     <DefineSolutionProperties>false</DefineSolutionProperties>
     <DefineConstants>InstallerType=$(InstallType);ProdVersion=$(ProdVersionStr)</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'SetupClient' ">
-    <OutputName>SageTVClientSetup</OutputName>
-    <OutputPath>release\$(Configuration)\</OutputPath>
-    <IntermediateOutputPath>obj\bootstrapper\$(Configuration)\</IntermediateOutputPath>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'SetupServer|x64' ">
+    <OutputName>SageTVSetup$(Platform)$(InstallType)_$(ProdVersionStr)</OutputName>
+    <OutputPath>release\$(Configuration)$(Platform)\</OutputPath>
+    <IntermediateOutputPath>obj\bootstrapper\$(Configuration)$(Platform)\</IntermediateOutputPath>
     <DefineSolutionProperties>false</DefineSolutionProperties>
     <DefineConstants>InstallerType=$(InstallType);ProdVersion=$(ProdVersionStr)</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'SetupPlaceshifter' ">
-    <OutputName>SageTVPlaceshifterSetup</OutputName>
-    <OutputPath>release\$(Configuration)\</OutputPath>
-    <IntermediateOutputPath>obj\bootstrapper\$(Configuration)\</IntermediateOutputPath>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'SetupClient|x86' ">
+    <OutputName>SageTVClientSetup$(Platform)$(InstallType)_$(ProdVersionStr)</OutputName>
+    <OutputPath>release\$(Configuration)$(Platform)\</OutputPath>
+    <IntermediateOutputPath>obj\bootstrapper\$(Configuration)$(Platform)\</IntermediateOutputPath>
+    <DefineSolutionProperties>false</DefineSolutionProperties>
+    <DefineConstants>InstallerType=$(InstallType);ProdVersion=$(ProdVersionStr)</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'SetupClient|x64' ">
+    <OutputName>SageTVClientSetup$(Platform)$(InstallType)_$(ProdVersionStr)</OutputName>
+    <OutputPath>release\$(Configuration)$(Platform)\</OutputPath>
+    <IntermediateOutputPath>obj\bootstrapper\$(Configuration)$(Platform)\</IntermediateOutputPath>
+    <DefineSolutionProperties>false</DefineSolutionProperties>
+    <DefineConstants>InstallerType=$(InstallType);ProdVersion=$(ProdVersionStr)</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'SetupPlaceshifter|x86' ">
+    <OutputName>SageTVPlaceshifterSetup$(Platform)$(InstallType)_$(ProdVersionStr)</OutputName>
+    <OutputPath>release\$(Configuration)$(Platform)\</OutputPath>
+    <IntermediateOutputPath>obj\bootstrapper\$(Configuration)$(Platform)\</IntermediateOutputPath>
+    <DefineSolutionProperties>false</DefineSolutionProperties>
+    <DefineConstants>InstallerType=$(InstallType);ProdVersion=$(ProdVersionStr)</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'SetupPlaceshifter|x64' ">
+    <OutputName>SageTVPlaceshifterSetup$(Platform)$(InstallType)_$(ProdVersionStr)</OutputName>
+    <OutputPath>release\$(Configuration)$(Platform)\</OutputPath>
+    <IntermediateOutputPath>obj\bootstrapper\$(Configuration)$(Platform)\</IntermediateOutputPath>
     <DefineSolutionProperties>false</DefineSolutionProperties>
     <DefineConstants>InstallerType=$(InstallType);ProdVersion=$(ProdVersionStr)</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="ac3filterinstaller.wxs" />
-    <Compile Include="Bundle.wxs" />
     <Compile Include="vsruntime10installer.wxs" />
     <Compile Include="vsruntime14installer.wxs" />
-    <Compile Include="java7installer.wxs" />
+    <Compile Include="Bundle.wxs" />
+    <Compile Include="java8installer.wxs" />
+    <Compile Include="lavfiltersinstaller.wxs" />
   </ItemGroup>
   <ItemGroup>
     <WixExtension Include="WixBalExtension">

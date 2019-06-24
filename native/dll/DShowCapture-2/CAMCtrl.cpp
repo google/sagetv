@@ -238,7 +238,7 @@ int OpenCAM( JNIEnv *env, DShowCaptureInfo* pCapInfo )
 		ret = OpenTechnoTrendCI( env, pCapInfo );
 	} else
 	{
-		slog(( "CAM:unkown CAM/CI device %s %s-%d\r\n", pTag,
+		slog(( "CAM:unknown CAM/CI device %s %s-%d\r\n", pTag,
 			            pCapInfo->videoCaptureFilterName, pCapInfo->videoCaptureFilterNum ));
 		ret = -1;
 	}
@@ -273,7 +273,7 @@ int CloseCAM( JNIEnv *env, DShowCaptureInfo* pCapInfo )
 		ret = CloseTechnoTrendCI( env, pCapInfo );
 	} else
 	{
-		slog(( "CAM:unkown device %s %s-%d\r\n", pTag,
+		slog(( "CAM:unknown device %s %s-%d\r\n", pTag,
 			            pCapInfo->videoCaptureFilterName, pCapInfo->videoCaptureFilterNum ));
 		ret = -1;
 	}
@@ -306,7 +306,7 @@ void EnableCAMPMT( JNIEnv *env, DShowCaptureInfo* pCapInfo )
 		((CAM_CTRL_HEADER*)pCapInfo->pCamCtrlData)->OnPMTEnable = true;
 	} else
 	{
-		slog(( "CAM:unkown device %s %s-%d\r\n", pTag,
+		slog(( "CAM:unknown device %s %s-%d\r\n", pTag,
 			            pCapInfo->videoCaptureFilterName, pCapInfo->videoCaptureFilterNum ));
 	}
 }
@@ -334,7 +334,7 @@ void DisableCAMPMT( JNIEnv *env, DShowCaptureInfo* pCapInfo )
 		((CAM_CTRL_HEADER*)pCapInfo->pCamCtrlData)->OnPMTEnable = false;
 	} else
 	{
-		slog(( "CAM:unkown device %s %s-%d\r\n", pTag,
+		slog(( "CAM:unknown device %s %s-%d\r\n", pTag,
 			            pCapInfo->videoCaptureFilterName, pCapInfo->videoCaptureFilterNum ));
 	}
 }
@@ -368,7 +368,7 @@ int  SwitchCamChannel( JNIEnv *env, DShowCaptureInfo* pCapInfo, int serviceId, i
 		ret = TechnoTrendCamSwitchChannel( env, pCapInfo, serviceId );
 	} else
 	{
-		slog(( "CAM:unkown device %s %s-%d\r\n", pTag,
+		slog(( "CAM:unknown device %s %s-%d\r\n", pTag,
 			            pCapInfo->videoCaptureFilterName, pCapInfo->videoCaptureFilterNum ));
 		ret = -1;
 	}
@@ -429,7 +429,7 @@ long OnCamPMT( void* context, short bytes, void* mesg )
 	} else
 	{
 		return 0;
-		 slog(( "CAM: Unknown card type for OnCamPTM: unkown name %s-%d\r\n", 
+		 slog(( "CAM: Unknown card type for OnCamPTM: unknown name %s-%d\r\n", 
 														   pCapInfo->videoCaptureFilterName, 
 			                                               pCapInfo->videoCaptureFilterNum ));
 	}
@@ -1144,7 +1144,7 @@ static int OpenAnyseeCam( JNIEnv *env, DShowCaptureInfo* pCapInfo )
 		if ( pAnysee->CILib->OpenCILib(NULL, ADList.dwADIndex[i]) == S_OK )
 		{
 			pAnysee->portNum = i;
-			int ret = pAnysee->CILib->CI_Control(CI_CONTROL_IS_PLUG_OPEN, (long *)&fCIStateFunc, (long *)fCIMessageFunc);
+			int ret = pAnysee->CILib->CI_Control(CI_CONTROL_IS_PLUG_OPEN, (LPARAM *)&fCIStateFunc, (LPARAM *)fCIMessageFunc);
 			if ( !SUCCEEDED( ret ) )
 			{
 				slog(( "CAM: Anysee failed seeting CI fCIStateFunc,  fCIMessageFunc on port %d\r\n", pAnysee->portNum ));
@@ -1292,8 +1292,8 @@ static long OnAnyseePMT(  JNIEnv *env, DShowCaptureInfo* pCapInfo, short bytes, 
 //////////////////////////////////////////////////////////////////////////////
 //TechnoTrend CI 
 //////////////////////////////////////////////////////////////////////////////
-static void __stdcall OnCAStatus(DWORD Context, char nSlot, char nReplyTag, unsigned short wStatus );
-static void __stdcall OnSlotStatus( DWORD Context, char nSlot, char nStatus, SLOTINF* csInfo );
+static void __stdcall OnCAStatus(void * Context, char nSlot, char nReplyTag, unsigned short wStatus );
+static void __stdcall OnSlotStatus( void * Context, char nSlot, char nStatus, SLOTINF* csInfo );
 
 
 
@@ -1534,7 +1534,7 @@ static int GetTechnoTrendDeviceType( JNIEnv *env, DShowCaptureInfo* pCapInfo )
       {
         // _log.Info("Technotrend Unknown card type");
          deviceType = TypeUnknown;
-		 slog(( "CAM:TechnoTrend card type: unkown name %s-%d\r\n", pCapInfo->videoCaptureFilterName, 
+		 slog(( "CAM:TechnoTrend card type: unknown name %s-%d\r\n", pCapInfo->videoCaptureFilterName, 
 			                                               pCapInfo->videoCaptureFilterNum ));
       }
 
@@ -1567,7 +1567,7 @@ static int OpenTechnoTrendCI( JNIEnv *env, DShowCaptureInfo* pCapInfo )
 
 	if ( pTechnoTrend->deviceType == TypeUnknown )
 	{
-		slog(( "CAM:Failed open TechnoTrend device, due to unkown device type %s-%d\r\n", 
+		slog(( "CAM:Failed open TechnoTrend device, due to unknown device type %s-%d\r\n", 
 			 pCapInfo->videoCaptureFilterName, pCapInfo->videoCaptureFilterNum ));
 		return -1;
 	}
@@ -1726,7 +1726,7 @@ static long OnTechnoTrendPMT( JNIEnv *env, DShowCaptureInfo* pCapInfo, short byt
 	return 0;
 }
 
-static void __stdcall OnSlotStatus( DWORD context, char nSlot, char Status, SLOTINF* csInfo )
+static void __stdcall OnSlotStatus( void *context, char nSlot, char Status, SLOTINF* csInfo )
 {
 	DShowCaptureInfo* pCapInfo;
 	if ( context == NULL )
@@ -1760,7 +1760,7 @@ static void __stdcall OnSlotStatus( DWORD context, char nSlot, char Status, SLOT
 	slog(( "CAM:*slot TechnoTrend CAM/CI slot status changed %d\r\n", Status )); 
 }
 
-static void __stdcall OnCAStatus(DWORD Context, char nSlot, char nReplyTag, unsigned short wStatus )
+static void __stdcall OnCAStatus(void *Context, char nSlot, char nReplyTag, unsigned short wStatus )
 {
 	//printf( "TechnoTrend CA status change\n" );
 	slog(( "CAM:#slot TechnoTrend CAM/CI slot status changed:%d slot:%d tag:%d\r\n", wStatus, nSlot, nReplyTag ));

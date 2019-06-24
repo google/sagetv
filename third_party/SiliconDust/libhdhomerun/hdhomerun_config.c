@@ -1,7 +1,7 @@
 /*
  * hdhomerun_config.c
  *
- * Copyright © 2006-2008 Silicondust USA Inc. <www.silicondust.com>.
+ * Copyright © 2006-2017 Silicondust USA Inc. <www.silicondust.com>.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,16 +19,6 @@
  */
 
 #include "hdhomerun.h"
-
-/*
- * The console output format should be set to UTF-8, however in XP and Vista this breaks batch file processing.
- * Attempting to restore on exit fails to restore if the program is terminated by the user.
- * Solution - set the output format each printf.
- */
-#if defined(__WINDOWS__)
-#define printf console_printf
-#define vprintf console_vprintf
-#endif
 
 static const char *appname;
 
@@ -60,23 +50,23 @@ static void extract_appname(const char *argv0)
 	appname = argv0;
 }
 
-static bool_t contains(const char *arg, const char *cmpstr)
+static bool contains(const char *arg, const char *cmpstr)
 {
 	if (strcmp(arg, cmpstr) == 0) {
-		return TRUE;
+		return true;
 	}
 
 	if (*arg++ != '-') {
-		return FALSE;
+		return false;
 	}
 	if (*arg++ != '-') {
-		return FALSE;
+		return false;
 	}
 	if (strcmp(arg, cmpstr) == 0) {
-		return TRUE;
+		return true;
 	}
 
-	return FALSE;
+	return false;
 }
 
 static uint32_t parse_ip_addr(const char *str)
@@ -101,7 +91,7 @@ static int discover_print(char *target_ip_str)
 	}
 
 	struct hdhomerun_discover_device_t result_list[64];
-	int count = hdhomerun_discover_find_devices_custom(target_ip, HDHOMERUN_DEVICE_TYPE_TUNER, HDHOMERUN_DEVICE_ID_WILDCARD, result_list, 64);
+	int count = hdhomerun_discover_find_devices_custom_v2(target_ip, HDHOMERUN_DEVICE_TYPE_TUNER, HDHOMERUN_DEVICE_ID_WILDCARD, result_list, 64);
 	if (count < 0) {
 		fprintf(stderr, "error sending discover request\n");
 		return -1;
@@ -190,17 +180,17 @@ static int cmd_set(const char *item, const char *value)
 	return cmd_set_internal(item, value);
 }
 
-static volatile sig_atomic_t sigabort_flag = FALSE;
-static volatile sig_atomic_t siginfo_flag = FALSE;
+static volatile sig_atomic_t sigabort_flag = false;
+static volatile sig_atomic_t siginfo_flag = false;
  
 static void sigabort_handler(int arg)
 {
-	sigabort_flag = TRUE;
+	sigabort_flag = true;
 }
 
 static void siginfo_handler(int arg)
 {
-	siginfo_flag = TRUE;
+	siginfo_flag = true;
 }
 
 static void register_signal_handlers(sig_t sigpipe_handler, sig_t sigint_handler, sig_t siginfo_handler)
@@ -389,7 +379,7 @@ static int cmd_save(const char *tuner_str, const char *filename)
 		if (siginfo_flag) {
 			fprintf(stderr, "\n");
 			cmd_save_print_stats();
-			siginfo_flag = FALSE;
+			siginfo_flag = false;
 		}
 
 		size_t actual_size;
@@ -413,7 +403,7 @@ static int cmd_save(const char *tuner_str, const char *filename)
 			}
 
 			/* Windows - indicate activity to suppress auto sleep mode. */
-			#if defined(__WINDOWS__)
+			#if defined(_WIN32)
 			SetThreadExecutionState(ES_SYSTEM_REQUIRED);
 			#endif
 
@@ -570,7 +560,7 @@ static int main_cmd(int argc, char *argv[])
 		if (argc < 2) {
 			return help();
 		}
-		uint32_t lockkey = strtoul(argv[0], NULL, 0);
+		uint32_t lockkey = (uint32_t)strtoul(argv[0], NULL, 0);
 		hdhomerun_device_tuner_lockkey_use_value(hd, lockkey);
 
 		cmd = argv[1];
@@ -625,7 +615,9 @@ static int main_cmd(int argc, char *argv[])
 
 static int main_internal(int argc, char *argv[])
 {
-#if defined(__WINDOWS__)
+#if defined(_WIN32)
+	/* Configure console for UTF-8. */
+	SetConsoleOutputCP(CP_UTF8);
 	/* Initialize network socket support. */
 	WORD wVersionRequested = MAKEWORD(2, 0);
 	WSADATA wsaData;

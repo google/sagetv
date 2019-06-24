@@ -1,7 +1,7 @@
 /*
  * hdhomerun_device_selector.c
  *
- * Copyright © 2009-2010 Silicondust USA Inc. <www.silicondust.com>.
+ * Copyright © 2009-2016 Silicondust USA Inc. <www.silicondust.com>.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -39,7 +39,7 @@ struct hdhomerun_device_selector_t *hdhomerun_device_selector_create(struct hdho
 	return hds;
 }
 
-void hdhomerun_device_selector_destroy(struct hdhomerun_device_selector_t *hds, bool_t destroy_devices)
+void hdhomerun_device_selector_destroy(struct hdhomerun_device_selector_t *hds, bool destroy_devices)
 {
 	if (destroy_devices) {
 		size_t index;
@@ -56,7 +56,7 @@ void hdhomerun_device_selector_destroy(struct hdhomerun_device_selector_t *hds, 
 	free(hds);
 }
 
-LIBTYPE int hdhomerun_device_selector_get_device_count(struct hdhomerun_device_selector_t *hds)
+int hdhomerun_device_selector_get_device_count(struct hdhomerun_device_selector_t *hds)
 {
 	return (int)hds->hd_count;
 }
@@ -71,12 +71,13 @@ void hdhomerun_device_selector_add_device(struct hdhomerun_device_selector_t *hd
 		}
 	}
 
-	hds->hd_list = (struct hdhomerun_device_t **)realloc(hds->hd_list, (hds->hd_count + 1) * sizeof(struct hdhomerun_device_selector_t *));
-	if (!hds->hd_list) {
+	struct hdhomerun_device_t **hd_list = (struct hdhomerun_device_t **)realloc(hds->hd_list, (hds->hd_count + 1) * sizeof(struct hdhomerun_device_t *));
+	if (!hd_list) {
 		hdhomerun_debug_printf(hds->dbg, "hdhomerun_device_selector_add_device: failed to allocate device list\n");
 		return;
 	}
 
+	hds->hd_list = hd_list;
 	hds->hd_list[hds->hd_count++] = hd;
 }
 
@@ -124,25 +125,22 @@ struct hdhomerun_device_t *hdhomerun_device_selector_find_device(struct hdhomeru
 
 static int hdhomerun_device_selector_load_from_str_discover(struct hdhomerun_device_selector_t *hds, uint32_t target_ip, uint32_t device_id)
 {
-	struct hdhomerun_discover_device_t result_list[64];
-	int discover_count = hdhomerun_discover_find_devices_custom(target_ip, HDHOMERUN_DEVICE_TYPE_TUNER, device_id, result_list, 64);
+	struct hdhomerun_discover_device_t result;
+	int discover_count = hdhomerun_discover_find_devices_custom_v2(target_ip, HDHOMERUN_DEVICE_TYPE_TUNER, device_id, &result, 1);
+	if (discover_count != 1) {
+		return 0;
+	}
 
 	int count = 0;
-	int result_index;
-	struct hdhomerun_discover_device_t *result = result_list;
-	for (result_index = 0; result_index < discover_count; result_index++) {
-		unsigned int tuner_index;
-		for (tuner_index = 0; tuner_index < result->tuner_count; tuner_index++) {
-			struct hdhomerun_device_t *hd = hdhomerun_device_create(result->device_id, result->ip_addr, tuner_index, hds->dbg);
-			if (!hd) {
-				continue;
-			}
-
-			hdhomerun_device_selector_add_device(hds, hd);
-			count++;
+	unsigned int tuner_index;
+	for (tuner_index = 0; tuner_index < result.tuner_count; tuner_index++) {
+		struct hdhomerun_device_t *hd = hdhomerun_device_create(result.device_id, result.ip_addr, tuner_index, hds->dbg);
+		if (!hd) {
+			continue;
 		}
 
-		result++;
+		hdhomerun_device_selector_add_device(hds, hd);
+		count++;
 	}
 
 	return count;
@@ -162,7 +160,7 @@ int hdhomerun_device_selector_load_from_str(struct hdhomerun_device_selector_t *
 		 */
 		unsigned int port;
 		if (sscanf(device_str, "%u.%u.%u.%u:%u", &a[0], &a[1], &a[2], &a[3], &port) == 5) {
-			struct hdhomerun_device_t *hd = hdhomerun_device_create_multicast(ip_addr, port, hds->dbg);
+			struct hdhomerun_device_t *hd = hdhomerun_device_create_multicast(ip_addr, (uint16_t)port, hds->dbg);
 			if (!hd) {
 				return 0;
 			}
@@ -263,7 +261,7 @@ int hdhomerun_device_selector_load_from_file(struct hdhomerun_device_selector_t 
 	return count;
 }
 
-#if defined(__WINDOWS__)
+#if defined(_WIN32) && !defined(_WINRT)
 int hdhomerun_device_selector_load_from_windows_registry(struct hdhomerun_device_selector_t *hds, wchar_t *wsource)
 {
 	HKEY tuners_key;
@@ -315,22 +313,22 @@ int hdhomerun_device_selector_load_from_windows_registry(struct hdhomerun_device
 }
 #endif
 
-static bool_t hdhomerun_device_selector_choose_test(struct hdhomerun_device_selector_t *hds, struct hdhomerun_device_t *test_hd)
+static bool hdhomerun_device_selector_choose_test(struct hdhomerun_device_selector_t *hds, struct hdhomerun_device_t *test_hd)
 {
 	const char *name = hdhomerun_device_get_name(test_hd);
 
 	/*
 	 * Attempt to aquire lock.
 	 */
-	char *error;
+	char *error = NULL;
 	int ret = hdhomerun_device_tuner_lockkey_request(test_hd, &error);
 	if (ret > 0) {
 		hdhomerun_debug_printf(hds->dbg, "hdhomerun_device_selector_choose_test: device %s chosen\n", name);
-		return TRUE;
+		return true;
 	}
 	if (ret < 0) {
 		hdhomerun_debug_printf(hds->dbg, "hdhomerun_device_selector_choose_test: device %s communication error\n", name);
-		return FALSE;
+		return false;
 	}
 
 	/*
@@ -340,52 +338,52 @@ static bool_t hdhomerun_device_selector_choose_test(struct hdhomerun_device_sele
 	ret = hdhomerun_device_get_tuner_target(test_hd, &target);
 	if (ret < 0) {
 		hdhomerun_debug_printf(hds->dbg, "hdhomerun_device_selector_choose_test: device %s communication error\n", name);
-		return FALSE;
+		return false;
 	}
 	if (ret == 0) {
 		hdhomerun_debug_printf(hds->dbg, "hdhomerun_device_selector_choose_test: device %s in use, failed to read target\n", name);
-		return FALSE;
+		return false;
 	}
 
 	if (strcmp(target, "none") == 0) {
 		hdhomerun_debug_printf(hds->dbg, "hdhomerun_device_selector_choose_test: device %s in use, no target set\n", name);
-		return FALSE;
+		return false;
 	}
 
 	if ((strncmp(target, "udp://", 6) != 0) && (strncmp(target, "rtp://", 6) != 0)) {
 		hdhomerun_debug_printf(hds->dbg, "hdhomerun_device_selector_choose_test: device %s in use by %s\n", name, target);
-		return FALSE;
+		return false;
 	}
 
 	unsigned int a[4];
 	unsigned int target_port;
 	if (sscanf(target + 6, "%u.%u.%u.%u:%u", &a[0], &a[1], &a[2], &a[3], &target_port) != 5) {
 		hdhomerun_debug_printf(hds->dbg, "hdhomerun_device_selector_choose_test: device %s in use, unexpected target set (%s)\n", name, target);
-		return FALSE;
+		return false;
 	}
 
 	uint32_t target_ip = (uint32_t)((a[0] << 24) | (a[1] << 16) | (a[2] << 8) | (a[3] << 0));
 	uint32_t local_ip = hdhomerun_device_get_local_machine_addr(test_hd);
 	if (target_ip != local_ip) {
 		hdhomerun_debug_printf(hds->dbg, "hdhomerun_device_selector_choose_test: device %s in use by %s\n", name, target);
-		return FALSE;
+		return false;
 	}
 
 	/*
 	 * Test local port.
 	 */
-	hdhomerun_sock_t test_sock = hdhomerun_sock_create_udp();
-	if (test_sock == HDHOMERUN_SOCK_INVALID) {
+	struct hdhomerun_sock_t *test_sock = hdhomerun_sock_create_udp();
+	if (!test_sock) {
 		hdhomerun_debug_printf(hds->dbg, "hdhomerun_device_selector_choose_test: device %s in use, failed to create test sock\n", name);
-		return FALSE;
+		return false;
 	}
 
-	bool_t inuse = (hdhomerun_sock_bind(test_sock, INADDR_ANY, (uint16_t)target_port, FALSE) == FALSE);
+	bool inuse = (hdhomerun_sock_bind(test_sock, INADDR_ANY, (uint16_t)target_port, false) == false);
 	hdhomerun_sock_destroy(test_sock);
 
 	if (inuse) {
 		hdhomerun_debug_printf(hds->dbg, "hdhomerun_device_selector_choose_test: device %s in use by local machine\n", name);
-		return FALSE;
+		return false;
 	}
 
 	/*
@@ -394,11 +392,11 @@ static bool_t hdhomerun_device_selector_choose_test(struct hdhomerun_device_sele
 	ret = hdhomerun_device_tuner_lockkey_force(test_hd);
 	if (ret < 0) {
 		hdhomerun_debug_printf(hds->dbg, "hdhomerun_device_selector_choose_test: device %s communication error\n", name);
-		return FALSE;
+		return false;
 	}
 	if (ret == 0) {
 		hdhomerun_debug_printf(hds->dbg, "hdhomerun_device_selector_choose_test: device %s in use by local machine, dead target, failed to force release lockkey\n", name);
-		return FALSE;
+		return false;
 	}
 
 	hdhomerun_debug_printf(hds->dbg, "hdhomerun_device_selector_choose_test: device %s in use by local machine, dead target, lockkey force successful\n", name);
@@ -409,15 +407,15 @@ static bool_t hdhomerun_device_selector_choose_test(struct hdhomerun_device_sele
 	ret = hdhomerun_device_tuner_lockkey_request(test_hd, &error);
 	if (ret > 0) {
 		hdhomerun_debug_printf(hds->dbg, "hdhomerun_device_selector_choose_test: device %s chosen\n", name);
-		return TRUE;
+		return true;
 	}
 	if (ret < 0) {
 		hdhomerun_debug_printf(hds->dbg, "hdhomerun_device_selector_choose_test: device %s communication error\n", name);
-		return FALSE;
+		return false;
 	}
 
 	hdhomerun_debug_printf(hds->dbg, "hdhomerun_device_selector_choose_test: device %s still in use after lockkey force (%s)\n", name, error);
-	return FALSE;
+	return false;
 }
 
 struct hdhomerun_device_t *hdhomerun_device_selector_choose_and_lock(struct hdhomerun_device_selector_t *hds, struct hdhomerun_device_t *prefered)

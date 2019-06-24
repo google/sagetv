@@ -30,7 +30,7 @@ CAsyncRequest::Request(
     BOOL bAligned,
     BYTE* pBuffer,
     LPVOID pContext,	// filter's context
-    DWORD dwUser)	// downstream filter's context
+    DWORD_PTR dwUser)	// downstream filter's context
 {
     m_pAsyncIO = pIo;
     m_pStream = pStream;
@@ -159,12 +159,12 @@ CAsyncIo::Request(
             BOOL bAligned,
             BYTE* pBuffer,
             LPVOID pContext,
-            DWORD dwUser)
+            DWORD_PTR dwUser)
 {
     if (bAligned) {
         if (!IsAligned(llPos) ||
     	!IsAligned(lLength) ||
-    	!IsAligned( (LONG)pBuffer )) {
+    	!IsAligned((LONGLONG)pBuffer )) {
             return VFW_E_BADALIGN;
         }
     }
@@ -197,7 +197,7 @@ HRESULT
 CAsyncIo::WaitForNext(
     DWORD dwTimeout,
     LPVOID *ppContext,
-    DWORD * pdwUser,
+    DWORD_PTR * pdwUser,
     LONG* pcbActual)
 {
     // some errors find a sample, others don't. Ensure that
@@ -274,7 +274,7 @@ CAsyncIo::SyncReadAligned(
 {
     if (!IsAligned(llPos) ||
 	!IsAligned(lLength) ||
-	!IsAligned((LONG) pBuffer)) {
+	!IsAligned((LONGLONG) pBuffer)) {
         return VFW_E_BADALIGN;
     }
 
@@ -617,7 +617,7 @@ CAsyncIo::SyncRead(
 {
     if (IsAligned(llPos) &&
 	IsAligned(lLength) &&
-	IsAligned((LONG)pBuffer)) {
+	IsAligned((LONGLONG)pBuffer)) {
         LONG cbUnused;
 	    return SyncReadAligned(llPos, lLength, pBuffer, &cbUnused, NULL);
     }

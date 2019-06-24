@@ -3088,21 +3088,35 @@ public class Wizard implements EPGDBPublic2
       series.airDow = (airDOW == null) ? "" : new String(airDOW);
       series.airHrMin = (airHrMin == null) ? "" : new String(airHrMin);
       series.imageUrl = (imageUrl == null) ? "" : new String(imageUrl);
-      if (people == null || people.length == 0)
+      int sz = 0;
+      if (people != null && characters != null)
+      {
+        if (people.length != characters.length)
+          throw new InternalError("ERROR length of people & character arrays do not match!");
+
+        for (int i = 0; i < people.length; i++)
+        {
+          if ((people[i] != null) && (characters[i] != null)) sz++;
+        }
+      }
+      if (people == null || characters == null || sz == 0)
       {
         series.people = Pooler.EMPTY_PERSON_ARRAY;
         series.characters = Pooler.EMPTY_STRING_ARRAY;
       }
       else
       {
-        series.people = new Person[people.length];
-        series.characters = new String[characters.length];
-        if (people.length != characters.length)
-          throw new InternalError("ERROR length of people & character arrays do not match!");
-        for (int i = 0; i < people.length; i++)
+        series.people = new Person[sz];
+        series.characters = new String[sz];
+        for (int i = 0, j = 0; i < people.length; i++)
         {
-          series.people[i] = people[i];
-          series.characters[i] = new String(characters[i]);
+          if ((people[i] != null) && (characters[i] != null))
+          {
+            series.people[j] = people[i];
+            series.characters[j] = new String(characters[i]);
+            j++;
+          }
+          else if (Sage.DBG) System.out.println("addSeriesInfo: Attempting to add null person or character!  Series=" + series.getTitle() + ", person #" + i);
         }
       }
       if (seriesImages == null || seriesImages.length == 0)
@@ -4541,9 +4555,7 @@ public class Wizard implements EPGDBPublic2
       s.duration = duration;
       s.title = getTitleForName(title, mediaMask);
       s.episodeNameStr = (episodeName == null) ? "" : new String(episodeName);
-      s.episodeNameBytes = null;
       s.descStr = (desc == null) ? "" : new String(desc);
-      s.descBytes = null;
       if (!fromAPlugin && extID.startsWith("MV") && (categories == null || categories.length == 0 || !Sage.rez("Movie").equals(categories[0])))
       {
         if (categories == null)
