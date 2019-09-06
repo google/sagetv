@@ -22,6 +22,12 @@
 #include <direct.h>
 #include <windows.h>
 
+#ifdef _WIN64
+  #define SAGETV_SERVICE_NAME "SageTV64"
+#else
+  #define SAGETV_SERVICE_NAME "SageTV"
+#endif
+
 #define MYOUT(x) WriteConsole(stdOutHandle, x, strlen(x), &numWrit, NULL)
 LRESULT CALLBACK WndProc( HWND hWnd, UINT messg,
 								WPARAM wParam, LPARAM lParam );
@@ -505,8 +511,8 @@ int WINAPI WinMain( HINSTANCE hInst, 	/*Win32 entry-point routine */
 		GetModuleFileName(NULL, appPath, 2048);
 		SC_HANDLE schService = CreateService( 
 			schSCManager,              // SCManager database 
-			"SageTV",              // name of service 
-			"SageTV",           // service name to display 
+			SAGETV_SERVICE_NAME,              // name of service 
+			SAGETV_SERVICE_NAME,           // service name to display 
 			SERVICE_START,        // desired access 
 			SERVICE_WIN32_OWN_PROCESS, // service type 
 			SERVICE_AUTO_START,      // start type 
@@ -555,7 +561,7 @@ int WINAPI WinMain( HINSTANCE hInst, 	/*Win32 entry-point routine */
 		// Remove the windows service
 		SC_HANDLE schService = OpenService( 
 			schSCManager,       // SCManager database 
-			"SageTV",       // name of service 
+			SAGETV_SERVICE_NAME,       // name of service 
 			DELETE | SERVICE_STOP | SERVICE_QUERY_STATUS);            // only need DELETE access 
  
 		if (schService == NULL)
@@ -647,7 +653,7 @@ int WINAPI WinMain( HINSTANCE hInst, 	/*Win32 entry-point routine */
 
 		SERVICE_TABLE_ENTRY   DispatchTable[] = 
 		{ 
-			{ "SageTV", SageServiceStart      }, 
+			{ SAGETV_SERVICE_NAME, SageServiceStart      }, 
 			{ NULL,              NULL          } 
 		}; 
 		if (StartServiceCtrlDispatcher( DispatchTable)) 
@@ -714,7 +720,7 @@ int WINAPI WinMain( HINSTANCE hInst, 	/*Win32 entry-point routine */
 			// Get the windows service
 			SC_HANDLE schService = OpenService( 
 				schSCManager,       // SCManager database 
-				"SageTV",       // name of service 
+				SAGETV_SERVICE_NAME,       // name of service 
 				SERVICE_START | SERVICE_QUERY_CONFIG | SERVICE_QUERY_STATUS);// only need start access 
 
 			if (schService)
@@ -1103,8 +1109,13 @@ int launchJVMSage(LPSTR lpszCmdLine, HWND hWnd, BOOL bClient, BOOL bService)
 	// performance w/ that setting...and also people have a lot more RAM nowadays. :)
 	// NARFLEX: 5-26-09 Change this to be 384MB because that's more appropriate now I think
 	// NARFLEX: 3-25-15 Times have changed...how about 768 as a default now. :)
+	// wnjj: 9-2-19 Increase 64-bit default to 1G since that's the main reason to use 64-bit
 	char memString[32];
-	strcpy(memString, "-Xmx768m");
+  #ifdef _WIN64
+  	strcpy(memString, "-Xmx1024m");
+  #else
+  	strcpy(memString, "-Xmx768m");
+  #endif
 //#ifdef SAGE_TV_SERVICE
 	// We definitely don't need as much memory for the service since it doesn't have any UI stuff
 //	strcpy(memString, "-Xmx128m");
@@ -1685,7 +1696,7 @@ void WINAPI SageServiceStart (DWORD argc, LPTSTR *argv)
     SageServiceStatus.dwWaitHint           = 0; 
  
     SageServiceStatusHandle = RegisterServiceCtrlHandlerEx( 
-        "SageTV", SageServiceCtrlHandlerEx, NULL);
+        SAGETV_SERVICE_NAME, SageServiceCtrlHandlerEx, NULL);
  
     if (SageServiceStatusHandle == (SERVICE_STATUS_HANDLE)0) 
     { 
