@@ -32,7 +32,7 @@ public class DirecTVSerialControl
       while (walker.hasNext())
       {
         Long currHandle = (Long) walker.next();
-        closeHandle0(currHandle.intValue());
+        closeHandle0(currHandle);
         // Don't forget to remove it since its no longer valid!
         walker.remove();
       }

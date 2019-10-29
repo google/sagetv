@@ -1,5 +1,8 @@
 # Change Log
 
+* Fix DirecTVSerialControl
+* Fix 64-bit service launcher (Windows)
+* Set default 1G heap for 64-bit (Windows)
 * Updates for OPTUS D1 transponder changes to DVB-S2
 
 ## Version 9.2.1 (2019-03-23)

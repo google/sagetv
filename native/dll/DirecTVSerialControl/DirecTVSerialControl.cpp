@@ -190,7 +190,7 @@ static int nonblock_write(int fd, void *buf, size_t count)
 static int initdCmdData = 0;
 static int dtvCmdStyle[NUM_CMD_STYLE_SLOTS];
 static jint channelBase[NUM_CMD_STYLE_SLOTS];
-static jint portHandles[NUM_CMD_STYLE_SLOTS];
+static jlong portHandles[NUM_CMD_STYLE_SLOTS];
 static int confirmedChannelBase[NUM_CMD_STYLE_SLOTS];
 
 /*
@@ -483,7 +483,7 @@ JNIEXPORT jlong JNICALL Java_sage_DirecTVSerialControl_openDTVSerial0
 		if (portHandles[i] == 0)
 		{
 			cmdStyleIndex = i;
-			portHandles[i] = (jint) comHandle;
+			portHandles[i] = comHandle;
 			break;
 		}
 	}
@@ -595,7 +595,7 @@ slog((env, "DTVSerialX num=%d cmd[0]=0x%x.\r\n", num, cmd[0]));
 /*
  * Class:     sage_DirecTVSerialControl
  * Method:    closeHandle0
- * Signature: (I)V
+ * Signature: (J)V
  */
 JNIEXPORT void JNICALL Java_sage_DirecTVSerialControl_closeHandle0
   (JNIEnv *env, jobject jo, jlong jhand)
@@ -622,7 +622,7 @@ JNIEXPORT void JNICALL Java_sage_DirecTVSerialControl_closeHandle0
 /*
  * Class:     sage_DirecTVSerialControl
  * Method:    dtvSerialChannel0
- * Signature: (II)Z
+ * Signature: (JI)Z
  */
 JNIEXPORT jboolean JNICALL Java_sage_DirecTVSerialControl_dtvSerialChannel0
   (JNIEnv *env, jobject jo, jlong comHandle, jint channel)
