@@ -4,6 +4,7 @@
 * Fix 64-bit service launcher (Windows)
 * Set default 1G heap for 64-bit (Windows)
 * Updates for OPTUS D1 transponder changes to DVB-S2
+* Fix: Schedules Direct EPG grabber failed to finish updating some satellite-based lineups 
 
 ## Version 9.2.1 (2019-03-23)
 * 64-bit AVI playback and music fixes (Windows)
