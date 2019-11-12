@@ -20,7 +20,7 @@ import sage.epg.sd.json.map.SDChannelMap;
 public class SDAdvancedChannelMap extends SDChannelMap
 {
   // Source: http://forums.schedulesdirect.org/viewtopic.php?f=17&t=2722&p=8917
-  private int frequencyHz;
+  private long frequencyHz;
   private String polarization;
   private String deliverySystem; // (DVB-C, DVB-S, DVB-T, ATSC)
   private String modulationSystem; // (QPSK, QAM64, QAM256, 8VSB)
@@ -42,7 +42,7 @@ public class SDAdvancedChannelMap extends SDChannelMap
   private int channelMinor;
   private String matchType; // (providerChannel, providerCallsign, logicalChannelNumber)
 
-  public int getFrequencyHz()
+  public long getFrequencyHz()
   {
     return frequencyHz;
   }
