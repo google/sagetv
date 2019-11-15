@@ -113,11 +113,15 @@ JNIEXPORT jlong JNICALL Java_sage_DShowCaptureDevice_initGraph0
 
 	if ( (deviceCaps & BDA_CAPTURE_ALL) && BDATypeNum( deviceCaps ) > 0 ) ////ZQ REMOVE ME
 	{
+		/* ----------------
+		* JRE: HVR-55xx have 3 BDA tuners
+		* Future proof by setting a maximum of 4 BDA tuners
+		*/
 		DShowCaptureInfo *rv;
-		DShowCaptureInfo *rvs[2]={0};
-		if ( BDATypeNum( deviceCaps ) > 2 )
+		DShowCaptureInfo *rvs[4]={0};
+		if ( BDATypeNum( deviceCaps ) > 4 )
 		{
-			slog((env, "Capture has more than 2 BDA tuners %d, we support maxium 2.\r\n", BDATypeNum( deviceCaps ) ));
+			slog((env, "Capture has more than 4 BDA tuners %d, we support maxium 4.\r\n", BDATypeNum( deviceCaps ) ));
 			return 0;
 		}
 		DeviceCaps = deviceCaps & ~BDA_CAPTURE_ALL;
@@ -133,15 +137,26 @@ JNIEXPORT jlong JNICALL Java_sage_DShowCaptureDevice_initGraph0
 		rvs[1] = CreateDshowCaptureInfo( env, videoCaptureFilterName, capDevNum, deviceCaps, tvType, 
 			                                 TuningMode, Country );
 
+		strncpy(TuningMode, GetBDAType(deviceCaps, 2), sizeof(TuningMode));
+		slog((env, "Create first DshowCapture %s.\r\n", TuningMode));
+		rvs[0] = CreateDshowCaptureInfo(env, videoCaptureFilterName, capDevNum, deviceCaps, tvType,
+			TuningMode, Country);
+
+
+		strncpy(TuningMode, GetBDAType(deviceCaps, 3), sizeof(TuningMode));
+		slog((env, "Create second DshowCapture %s.\r\n", TuningMode));
+		rvs[1] = CreateDshowCaptureInfo(env, videoCaptureFilterName, capDevNum, deviceCaps, tvType,
+			TuningMode, Country);
+
 		if ( rvs[0] )
 		{
-			rvs[0]->captureNum = 2;
+			rvs[0]->captureNum = 4;
 			rvs[0]->captures[0] = rvs[0];
 			rvs[0]->captures[1] = rvs[1];
 		}
 		if ( rvs[1] )
 		{
-			rvs[1]->captureNum = 2;
+			rvs[1]->captureNum = 4;
 			rvs[1]->captures[0] = rvs[0];
 			rvs[1]->captures[1] = rvs[1];
 		}
@@ -155,7 +170,13 @@ JNIEXPORT jlong JNICALL Java_sage_DShowCaptureDevice_initGraph0
 		if ( rvs[1] ) 
 			memcpy( rv, rvs[1], sizeof(DShowCaptureInfo) );
 		else
-			return 0;
+		if (rvs[2])
+			memcpy(rv, rvs[2], sizeof(DShowCaptureInfo));
+		else
+		if (rvs[3])
+			memcpy(rv, rvs[3], sizeof(DShowCaptureInfo));
+		else
+		return 0;
 		
 		setChannelDev( (CHANNEL_DATA*)rv->channel, (void*)rv );
 		return (jlong)rv;

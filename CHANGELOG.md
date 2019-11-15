@@ -1,5 +1,7 @@
 # Change Log
 
+* Change maximum number of BDA tuners from 2 to 4 to cater for HVR55xx which have 3 BDA tuners
+* Fix Tuner Type Selection on Hauppauge 885 variants with Hauppauge WinTV 885 Alt TS Capture (Windows)
 * Fix DirecTVSerialControl
 * Fix 64-bit service launcher (Windows)
 * Set default 1G heap for 64-bit (Windows)

@@ -876,9 +876,9 @@ JNIEXPORT jint JNICALL Java_sage_DShowCaptureDevice_getDeviceCaps0
 		}
 		else
 
-		// hard code for HVR-4400 and (3300, 5500, 4405,5505)? desc:"Hauppauge WinTV HVR-4400 (Model 121xxx, Hybrid DVB-T/S2, IR)"
+		// hard code for HVR-4400, 3300 and 4405. desc:"Model 121xxx, Hybrid DVB-T/S2" and "Model 53xxx, Hybrid DVB-T/S"
 		// it's a hybrid, but has DVB-T and DVB-S connected to two different TS Capture filters
-		if ( strstr(CaptureDrvInfo.device_desc, "Hybrid DVB-T/S"))
+		if ( strstr(CaptureDrvInfo.device_desc, "Model 121xxx, Hybrid DVB-T/S2") || strstr(CaptureDrvInfo.device_desc, "Model 53xxx, Hybrid DVB-T/S"))
 		{
 			isHybridCapture = false;
 			hasCaptureDetails = false;
@@ -889,9 +889,9 @@ JNIEXPORT jint JNICALL Java_sage_DShowCaptureDevice_getDeviceCaps0
 		}
 		else
 
-		// hard code for HVR-5525 desc:"Hybrid DVB-T/C/S2, IR)"
+		// hard code for HVR-5525, 5500 and 5505. desc:"Model 150xxx, Hybrid DVB-T/T2/C/S2" and "Model 121xxx, Hybrid DVB-T/C/S2"
 		// it's a hybrid, but has DVB-T,DVB-C and DVB-S connected to two different TS Capture filters
-		if (strstr(CaptureDrvInfo.device_desc, "Hybrid DVB-T/C"))
+		if (strstr(CaptureDrvInfo.device_desc, "Model 150xxx, Hybrid DVB-T/T2/C/S2") || strstr(CaptureDrvInfo.device_desc, "Model 121xxx, Hybrid DVB-T/C/S2"))
 		{
 			isHybridCapture = false;
 			hasCaptureDetails = false;
@@ -901,6 +901,36 @@ JNIEXPORT jint JNICALL Java_sage_DShowCaptureDevice_getDeviceCaps0
 			slog((env, "A bundle card is found (Analog+DVB-T+DVB-S+DVB-C), DVB-T|DVB-S|DVB-C added into source.\r\n"));
 		}
 		else
+
+		// hard code for WinTV-quadHD. desc:"Dual DVB-T/T2/C"
+		// it's a hybrid, with DVB-T and DVB-C
+// Hasn't had sufficient testing, but will leave it here for future
+//		if (strstr(CaptureDrvInfo.device_desc, "1662xx-1, Dual DVB-T/T2/C,") || strstr(CaptureDrvInfo.device_desc, "1661xx-1, Dual DVB-T/T2/C,") || 
+//			strstr(CaptureDrvInfo.device_desc, "1662xx-2, Dual DVB-T/T2/C)") || strstr(CaptureDrvInfo.device_desc, "1661xx-2, Dual DVB-T/T2/C)"))
+//		{
+//			isHybridCapture = false;
+//			hasCaptureDetails = false;
+//			detailsCaptureMask = 0x000800;  // sage_DShowCaptureDevice_MPEG_AV_CAPTURE_MASK
+//			detailsChipsetMask = 0;
+//			BDAInputType = sage_DShowCaptureDevice_BDA_DVB_T | sage_DShowCaptureDevice_BDA_DVB_C;
+//			slog((env, "A bundle card is found (DVB-T+DVB-C), DVB-T|DVB-C added into source.\r\n"));
+//		}
+//		else
+
+		// hard code for WinTV-quadHD. desc:"Dual ATSC/QAM"
+		// it's a hybrid, with Dual ATSC and QAM
+// Hasn't had sufficient testing, but will leave it here for future
+//			if (strstr(CaptureDrvInfo.device_desc, "1652xx-1, Dual ATSC/QAM,") || strstr(CaptureDrvInfo.device_desc, "1651xx-1, Dual ATSC/QAM,") ||
+//			strstr(CaptureDrvInfo.device_desc, "1652xx-2, Dual ATSC/QAM)") || strstr(CaptureDrvInfo.device_desc, "1651xx-2, Dual ATSC/QAM)"))
+//		{
+//			isHybridCapture = false;
+//			hasCaptureDetails = false;
+//			detailsCaptureMask = 0x000800;  // sage_DShowCaptureDevice_MPEG_AV_CAPTURE_MASK
+//			detailsChipsetMask = 0;
+//			BDAInputType = sage_DShowCaptureDevice_BDA_ATSC | sage_DShowCaptureDevice_BDA_QAM;
+//			slog((env, "A bundle card is found (ATSC+QAM), ATSC+QAM added into source.\r\n"));
+//		}
+//		else
 
 		if ( strstr( CaptureDrvInfo.device_desc, "WinTV HVR-930C") )
 		{
