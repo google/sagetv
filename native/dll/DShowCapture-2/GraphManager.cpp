@@ -396,18 +396,10 @@ JNIEXPORT void JNICALL Java_sage_DShowCaptureDevice_teardownGraph0
 	if ( pCapInfo->captureNum > 0 )
 	{
 		if ( pCapInfo->captures[0]->dwBDAType != pCapInfo->dwBDAType )
+		for (int i = 0; i<4; i++)
 		{
-			TeardownBDAGraph( env, pCapInfo->captures[0] );
-		} else
-		{
-			TeardownBDAGraph( env, pCapInfo->captures[1] );
-		} else
-		{
-			TeardownBDAGraph( env, pCapInfo->captures[2] );
-		} else
-		{
-			TeardownBDAGraph( env, pCapInfo->captures[3] );
-		}
+			TeardownBDAGraph( env, pCapInfo->captures[i] );
+		} 
 	}
 
 	//Release CAM
@@ -524,14 +516,12 @@ slog((env, "teardownGraph0 step9 \r\n" ));
 		closeChannel( ( CHANNEL_DATA*)pCapInfo->channel );
 		free( pCapInfo->channel );
 	}
-	if ( pCapInfo->captures[0] )
-		delete pCapInfo->captures[0];
-	if ( pCapInfo->captures[1] )
-		delete pCapInfo->captures[1];
-	if (pCapInfo->captures[2])
-		delete pCapInfo->captures[2];
-	if (pCapInfo->captures[3])
-		delete pCapInfo->captures[3];
+
+	for (int i = 0; i<4; i++)
+	{
+		if (pCapInfo->captures[i])
+			delete pCapInfo->captures[i];
+	}
 
 	delete pCapInfo;
 	//memory intruder detecte ZQ.
