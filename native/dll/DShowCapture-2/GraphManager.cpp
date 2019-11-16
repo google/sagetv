@@ -131,34 +131,52 @@ JNIEXPORT jlong JNICALL Java_sage_DShowCaptureDevice_initGraph0
 		rvs[0] = CreateDshowCaptureInfo( env, videoCaptureFilterName, capDevNum, deviceCaps, tvType, 
 			                                 TuningMode, Country );
 
-
 		strncpy( TuningMode, GetBDAType( deviceCaps, 1 ), sizeof(TuningMode) );
 		slog((env, "Create second DshowCapture %s.\r\n", TuningMode ));
 		rvs[1] = CreateDshowCaptureInfo( env, videoCaptureFilterName, capDevNum, deviceCaps, tvType, 
 			                                 TuningMode, Country );
 
-		strncpy(TuningMode, GetBDAType(deviceCaps, 2), sizeof(TuningMode));
-		slog((env, "Create first DshowCapture %s.\r\n", TuningMode));
-		rvs[0] = CreateDshowCaptureInfo(env, videoCaptureFilterName, capDevNum, deviceCaps, tvType,
-			TuningMode, Country);
+		strncpy( TuningMode, GetBDAType( deviceCaps, 2), sizeof(TuningMode) );
+		slog((env, "Create third DshowCapture %s.\r\n", TuningMode));
+		rvs[2] = CreateDshowCaptureInfo( env, videoCaptureFilterName, capDevNum, deviceCaps, tvType, 
+											TuningMode, Country );
 
-
-		strncpy(TuningMode, GetBDAType(deviceCaps, 3), sizeof(TuningMode));
-		slog((env, "Create second DshowCapture %s.\r\n", TuningMode));
-		rvs[1] = CreateDshowCaptureInfo(env, videoCaptureFilterName, capDevNum, deviceCaps, tvType,
-			TuningMode, Country);
+		strncpy( TuningMode, GetBDAType( deviceCaps, 3), sizeof(TuningMode) );
+		slog((env, "Create forth DshowCapture %s.\r\n", TuningMode));
+		rvs[3] = CreateDshowCaptureInfo( env, videoCaptureFilterName, capDevNum, deviceCaps, tvType, 
+											TuningMode, Country );
 
 		if ( rvs[0] )
 		{
 			rvs[0]->captureNum = 4;
 			rvs[0]->captures[0] = rvs[0];
 			rvs[0]->captures[1] = rvs[1];
+			rvs[0]->captures[2] = rvs[2];
+			rvs[0]->captures[3] = rvs[3];
 		}
 		if ( rvs[1] )
 		{
 			rvs[1]->captureNum = 4;
 			rvs[1]->captures[0] = rvs[0];
 			rvs[1]->captures[1] = rvs[1];
+			rvs[1]->captures[2] = rvs[2];
+			rvs[1]->captures[3] = rvs[3];
+		}
+		if (rvs[2])
+		{
+			rvs[2]->captureNum = 4;
+			rvs[2]->captures[0] = rvs[0];
+			rvs[2]->captures[1] = rvs[1];
+			rvs[2]->captures[2] = rvs[2];
+			rvs[2]->captures[3] = rvs[3];
+		}
+		if (rvs[3])
+		{
+			rvs[3]->captureNum = 4;
+			rvs[3]->captures[0] = rvs[0];
+			rvs[3]->captures[1] = rvs[1];
+			rvs[3]->captures[2] = rvs[2];
+			rvs[3]->captures[3] = rvs[3];
 		}
 
 		rv = new DShowCaptureInfo;
@@ -171,10 +189,10 @@ JNIEXPORT jlong JNICALL Java_sage_DShowCaptureDevice_initGraph0
 			memcpy( rv, rvs[1], sizeof(DShowCaptureInfo) );
 		else
 		if (rvs[2])
-			memcpy(rv, rvs[2], sizeof(DShowCaptureInfo));
+			memcpy( rv, rvs[2], sizeof(DShowCaptureInfo) );
 		else
 		if (rvs[3])
-			memcpy(rv, rvs[3], sizeof(DShowCaptureInfo));
+			memcpy( rv, rvs[3], sizeof(DShowCaptureInfo) );
 		else
 		return 0;
 		
@@ -383,8 +401,13 @@ JNIEXPORT void JNICALL Java_sage_DShowCaptureDevice_teardownGraph0
 		} else
 		{
 			TeardownBDAGraph( env, pCapInfo->captures[1] );
+		} else
+		{
+			TeardownBDAGraph( env, pCapInfo->captures[2] );
+		} else
+		{
+			TeardownBDAGraph( env, pCapInfo->captures[3] );
 		}
-
 	}
 
 	//Release CAM
@@ -505,6 +528,10 @@ slog((env, "teardownGraph0 step9 \r\n" ));
 		delete pCapInfo->captures[0];
 	if ( pCapInfo->captures[1] )
 		delete pCapInfo->captures[1];
+	if (pCapInfo->captures[2])
+		delete pCapInfo->captures[2];
+	if (pCapInfo->captures[3])
+		delete pCapInfo->captures[3];
 
 	delete pCapInfo;
 	//memory intruder detecte ZQ.
@@ -1449,7 +1476,7 @@ HRESULT SetupBDATuningSpace( JNIEnv* env, DShowCaptureInfo *pCapInfo, IGraphBuil
 		CComQIPtr <IATSCChannelTuneRequest> piATSCTuneRequest(pTuneRequest);
 		if (FAILED(hr = pCapInfo->pTuner->put_TuneRequest(piATSCTuneRequest)))
 		{
-			slog( (env, "Failed to submit ATSC Tune Tequest to the Network Provider\r\n") );
+			slog( (env, "Failed to submit ATSC tune request to the Network Provider\r\n") );
 		}
 
 	} else
@@ -1459,17 +1486,17 @@ HRESULT SetupBDATuningSpace( JNIEnv* env, DShowCaptureInfo *pCapInfo, IGraphBuil
 		CComPtr <ITuneRequest> pTuneRequest;
 		if ( FAILED (hr = graphTools.CreateDVBTTuneRequest( piTuningSpace, pTuneRequest, 4112, 544, 545 )))
 		{
-			slog( (env, "Failed to create DBV-T tuning request to tuner hr:%x\r\n", hr) );
+			slog( (env, "Failed to create DVB-T tuning request to tuner hr:%x\r\n", hr) );
 		} else
 		if (FAILED( pCapInfo->pTuner->put_TuningSpace( piTuningSpace )) )
 		{
-			slog( (env, "Failed to set BDA DVB-T tuning space to tuner\r\n") );
+			slog( (env, "Failed to set DVB-T tuning space to tuner\r\n") );
 		}
 
 		CComQIPtr <IDVBTuneRequest> piDVBTuneRequest(pTuneRequest);
 		if (FAILED(hr = pCapInfo->pTuner->put_TuneRequest(piDVBTuneRequest)))
 		{
-			slog( (env, "Failed to submit DVB-T the Tune Tequest to the Network Provider\r\n") );
+			slog( (env, "Failed to submit DVB-T tune request to the Network Provider\r\n") );
 		}
 	}else
 	if ( BDATVType == DVBC )
@@ -1478,7 +1505,7 @@ HRESULT SetupBDATuningSpace( JNIEnv* env, DShowCaptureInfo *pCapInfo, IGraphBuil
 		CComPtr <ITuneRequest> pTuneRequest;
 		if ( FAILED( hr=graphTools.CreateDVBCTuneRequest( piTuningSpace, pTuneRequest, 338000, 6875, BDA_MOD_64QAM ) ))
 		{
-			slog( (env, "Failed to create DBV-C tuning request to tuner hr:%x\r\n", hr) );
+			slog( (env, "Failed to create DVB-C tuning request to tuner hr:%x\r\n", hr) );
 		} else
 		if (FAILED( pCapInfo->pTuner->put_TuningSpace( piTuningSpace )) )
 		{
@@ -1493,7 +1520,7 @@ HRESULT SetupBDATuningSpace( JNIEnv* env, DShowCaptureInfo *pCapInfo, IGraphBuil
 
 		if (FAILED(hr = pCapInfo->pTuner->put_TuneRequest(piDVBTuneRequest)))
 		{
-			slog( (env, "Failed to submit DVB-C the Tune Tequest to the Network Provider\r\n") );
+			slog( (env, "Failed to submit DVB-C tune request to the Network Provider\r\n") );
 		}
 	} else
 	if ( BDATVType == DVBS )
@@ -1502,17 +1529,17 @@ HRESULT SetupBDATuningSpace( JNIEnv* env, DShowCaptureInfo *pCapInfo, IGraphBuil
 		CComPtr <ITuneRequest> pTuneRequest;
 		if ( FAILED( hr=graphTools.CreateDVBSTuneRequest( piTuningSpace, pTuneRequest, 338000, 6875, 1, 20 ) ))
 		{
-			slog( (env, "Failed to create DBV-S tuning request to tuner hr:%x\r\n", hr) );
+			slog( (env, "Failed to create DVB-S tuning request to tuner hr:%x\r\n", hr) );
 		} else
 		if (FAILED( pCapInfo->pTuner->put_TuningSpace( piTuningSpace )) )
 		{
-			slog( (env, "Failed to set DBV-S tuning space to tuner\r\n") );
+			slog( (env, "Failed to set DVB-S tuning space to tuner\r\n") );
 		}
 
 		CComQIPtr <IDVBTuneRequest> piDVBTuneRequest(pTuneRequest);
 		if (FAILED(hr = pCapInfo->pTuner->put_TuneRequest(piDVBTuneRequest)))
 		{
-			slog( (env, "Failed to submit DVB-S the Tune Tequest to the Network Provider\r\n") );
+			slog( (env, "Failed to submit DVB-S tune request to the Network Provider\r\n") );
 		}
 
 	} else
@@ -1532,7 +1559,7 @@ HRESULT SetupBDATuningSpace( JNIEnv* env, DShowCaptureInfo *pCapInfo, IGraphBuil
 		CComQIPtr <IATSCChannelTuneRequest> piATSCTuneRequest(pTuneRequest);
 		if (FAILED(hr = pCapInfo->pTuner->put_TuneRequest(piATSCTuneRequest)))
 		{
-			slog( (env, "Failed to submit QAM Tune Tequest to the Network Provider hr:0x%x (wait for connecting)\r\n", hr) );
+			slog( (env, "Failed to submit QAM tune request to the Network Provider hr:0x%x (wait for connecting)\r\n", hr) );
 		}
 		
 		SetupBDAQAM( env, pCapInfo );
@@ -1619,8 +1646,8 @@ void AddBDAVideoCaptureFilters(JNIEnv* env, DShowCaptureInfo *pCapInfo, IGraphBu
 				}
 			}
 
-			//ZQ if we have multiple BDA cards, we need find right one for BDA capture, 
-			//but before tuner connected to network provider, we can't determente if tuner is connectable
+			//ZQ if we have multiple BDA cards, we need find the right one for BDA capture, 
+			//but before the tuner is connected to network provider, we can't determine if tuner is connectable
 			CComPtr <IBaseFilter> piBDADemux;
 			if (FAILED(hr = graphTools.AddFilter( pGraph, CLSID_MPEG2Demultiplexer, &piBDADemux, L"BDA MPEG-2 Demultiplexer" )))
 			{
