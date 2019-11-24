@@ -1,5 +1,6 @@
 # Change Log
 
+* Change maximum number of BDA tuners from 2 to 4 (HVR-5525 has 3 BDA tuners)
 * Fix DirecTVSerialControl
 * Fix 64-bit service launcher (Windows)
 * Set default 1G heap for 64-bit (Windows)

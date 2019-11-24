@@ -38,7 +38,7 @@
 #include <pshpack1.h>
 #endif
 
-#define CAPTURE_NUM 2
+#define CAPTURE_NUM 4
 typedef struct TUNING_TBL
 {
 	unsigned short  channel;
