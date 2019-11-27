@@ -60,7 +60,6 @@ static char* BDATypeCapString( DWORD BDACap );
 int BDATypeNum( DWORD dwBDACap );
 static char* GetBDAType( DWORD dwBDACap, int nIndex );
 void SwitchBDAConnect( DShowCaptureInfo* pCapInfo );
-long int DETECTED_CAPTURE_NUM;
 
 HANDLE mutex350Encoder = NULL;
 
@@ -95,6 +94,7 @@ JNIEXPORT jlong JNICALL Java_sage_DShowCaptureDevice_initGraph0
 	char Country[256];
 	char TuningMode[32];
 	long int DeviceCaps;
+	int detectedCaptureNum = BDATypeNum(deviceCaps);		//Determine the number of BDA tuners 
 
 	const char* tempStr = env->GetStringUTFChars(jcapDevName, NULL);
 	strncpy(videoCaptureFilterName, tempStr, sizeof(videoCaptureFilterName));
@@ -112,8 +112,7 @@ JNIEXPORT jlong JNICALL Java_sage_DShowCaptureDevice_initGraph0
 	strncpy( TuningMode, pTuningMode, sizeof(TuningMode) );
 	env->ReleaseStringUTFChars( jtuningMode, pTuningMode);
 
-	DETECTED_CAPTURE_NUM = BDATypeNum(deviceCaps);		//Determine the number of BDA tuners 
-	if ( (deviceCaps & BDA_CAPTURE_ALL) && DETECTED_CAPTURE_NUM > 0 ) ////ZQ REMOVE ME
+	if ( (deviceCaps & BDA_CAPTURE_ALL) && detectedCaptureNum > 0 ) ////ZQ REMOVE ME
 	{
 		/* ----------------
 		* JRE: HVR-55xx have 3 BDA tuners
@@ -122,16 +121,16 @@ JNIEXPORT jlong JNICALL Java_sage_DShowCaptureDevice_initGraph0
 		DShowCaptureInfo *rv;
 		DShowCaptureInfo *rvs[MAX_CAPTURE_NUM]={0};
 
-		if (DETECTED_CAPTURE_NUM > MAX_CAPTURE_NUM)
+		if (detectedCaptureNum > MAX_CAPTURE_NUM)
 		{
-			slog((env, "Capture has %i BDA tuners, we support a maximum of %i.\r\n", DETECTED_CAPTURE_NUM, MAX_CAPTURE_NUM));
+			slog((env, "Capture has %i BDA tuners, we support a maximum of %i.\r\n", detectedCaptureNum, MAX_CAPTURE_NUM));
 			return 0;
 		}
 		DeviceCaps = deviceCaps & ~BDA_CAPTURE_ALL;
 		
 		int i, j;
 
-		for (i = 0; i<DETECTED_CAPTURE_NUM; i++)
+		for (i = 0; i<detectedCaptureNum; i++)
 		{
 			strncpy(TuningMode, GetBDAType(deviceCaps, i), sizeof(TuningMode));
 			slog((env, "Create DshowCapture %d %s.\r\n", i, TuningMode));
@@ -140,12 +139,12 @@ JNIEXPORT jlong JNICALL Java_sage_DShowCaptureDevice_initGraph0
 		}
 
 
-		for (i = 0; i<DETECTED_CAPTURE_NUM; i++)
+		for (i = 0; i<detectedCaptureNum; i++)
 		{
 			if (rvs[i])
 			{
-				rvs[i]->captureNum = DETECTED_CAPTURE_NUM;
-				for (j = 0; j<DETECTED_CAPTURE_NUM; j++)
+				rvs[i]->captureNum = detectedCaptureNum;
+				for (j = 0; j<detectedCaptureNum; j++)
 					rvs[i]->captures[j] = rvs[j];
 			}
 		}
@@ -153,7 +152,7 @@ JNIEXPORT jlong JNICALL Java_sage_DShowCaptureDevice_initGraph0
 		rv = new DShowCaptureInfo;
 		memset( rv, 0, sizeof(rv) );
 
-		for (i = 0; i<DETECTED_CAPTURE_NUM; i++)
+		for (i = 0; i<detectedCaptureNum; i++)
 		{
 			if (rvs[i])
 			{
@@ -162,7 +161,7 @@ JNIEXPORT jlong JNICALL Java_sage_DShowCaptureDevice_initGraph0
 			}
 		}
 
-		if (i == DETECTED_CAPTURE_NUM)		// no valid rvs
+		if (i == detectedCaptureNum)		// no valid rvs
 			return 0;
 
 		setChannelDev( (CHANNEL_DATA*)rv->channel, (void*)rv );
@@ -362,11 +361,11 @@ JNIEXPORT void JNICALL Java_sage_DShowCaptureDevice_teardownGraph0
 
 	GETENCODERMUTEX;
 	
-	DETECTED_CAPTURE_NUM = pCapInfo->captureNum;
-	if (DETECTED_CAPTURE_NUM > 0)
+	int detectedCaptureNum = pCapInfo->captureNum;
+	if (detectedCaptureNum > 0)
 	{
 		int i;
-		for (i = 0; i < DETECTED_CAPTURE_NUM; i++)
+		for (i = 0; i < detectedCaptureNum; i++)
 		{
 			if (pCapInfo->captures[i]->dwBDAType != pCapInfo->dwBDAType)
 			{
@@ -491,7 +490,7 @@ slog((env, "teardownGraph0 step9 \r\n" ));
 		free( pCapInfo->channel );
 	}
 
-	for (int i = 0; i<4; i++)
+	for (int i = 0; i<detectedCaptureNum; i++)
 	{
 		if (pCapInfo->captures[i])
 			delete pCapInfo->captures[i];
