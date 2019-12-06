@@ -885,19 +885,15 @@ JNIEXPORT jint JNICALL Java_sage_DShowCaptureDevice_getDeviceCaps0
 			hasCaptureDetails = false;
 			detailsCaptureMask = 0x000800;  // sage_DShowCaptureDevice_MPEG_AV_CAPTURE_MASK
 			detailsChipsetMask = 0;
-			if (strstr(capFiltName, "Hauppauge WinTV 885 Alt TS Capture"))
 			// set up DVB-S on Hauppauge WinTV 885 Alt TS Capture
-			{
-				BDAInputType = sage_DShowCaptureDevice_BDA_DVB_S;
-				slog((env, "An AltBDATunerModel tuner card is found, DVB-S added into source.\r\n"));
-			}
+			if (strstr(capFiltName, "Hauppauge WinTV 885 Alt TS Capture"))
+				AltBDATunerDVBS(BDAInputType, env);
 			else
 			if (strstr(capFiltName, "Hauppauge WinTV 885 TS Capture"))
 			// set up DVB-T on Hauppauge WinTV 885 TS Capture
-			{
-				BDAInputType = sage_DShowCaptureDevice_BDA_DVB_T;
-				slog((env, "A bundle card is found (Analog+DVB-T), DVB-T added into source.\r\n"));
-			}
+				BDATunerDVBT(BDAInputType, env);
+			else
+				slog((env, "BDA tuners are only on TS Capture Devices.\r\n"));
 		}
 		else
 
@@ -910,32 +906,28 @@ JNIEXPORT jint JNICALL Java_sage_DShowCaptureDevice_getDeviceCaps0
 			hasCaptureDetails = false;
 			detailsCaptureMask = 0x000800;  // sage_DShowCaptureDevice_MPEG_AV_CAPTURE_MASK
 			detailsChipsetMask = 0;
-			if (strstr(capFiltName, "Hauppauge WinTV 885 Alt TS Capture"))
 			// set up DVB-S on Hauppauge WinTV 885 Alt TS Capture
-			{
-				BDAInputType = sage_DShowCaptureDevice_BDA_DVB_S;
-				slog((env, "An AltBDATunerModel tuner card is found, DVB-S added into source.\r\n"));
-			}
+			if (strstr(capFiltName, "Hauppauge WinTV 885 Alt TS Capture"))
+				AltBDATunerDVBS(BDAInputType, env);
 			else
 			if (strstr(capFiltName, "Hauppauge WinTV 885 TS Capture"))
 			// set up DVB-T & DVB-C on Hauppauge WinTV 885 TS Capture
-			{
-				BDAInputType = sage_DShowCaptureDevice_BDA_DVB_T | sage_DShowCaptureDevice_BDA_DVB_C;
-				slog((env, "A bundle card is found (Analog+DVB-T+DVB-C), DVB-T|DVB-C added into source.\r\n"));
-			}
+				BDATunerDVBTC(BDAInputType, env);
+			else
+				slog((env, "BDA tuners are only on TS Capture Devices.\r\n"));
 		}
 		else
 
-		// hard code for HVR-2200, 2210 and 2205. desc:"WinTV-HVR-2210", "WinTV-HVR-2200"and "WinTV-HVR-2205"
+		// hard code for HVR-2200 and 2210. desc:"WinTV-HVR-2210" and "WinTV-HVR-2200"
 		// it's a multi-tuner DVB-T but takes takes a long time to initialize as it steps through all the BDA tuners types to find DVB-T
-		if (strstr(CaptureDrvInfo.device_desc, "HVR-2200") || strstr(CaptureDrvInfo.device_desc, "HVR-2210") || strstr(CaptureDrvInfo.device_desc, "HVR-2205"))
+		if (strstr(CaptureDrvInfo.device_desc, "HVR-2200") || strstr(CaptureDrvInfo.device_desc, "HVR-2210"))
 		{
 			isHybridCapture = false;
 			hasCaptureDetails = false;
 			detailsCaptureMask = 0x000800;  // sage_DShowCaptureDevice_MPEG_AV_CAPTURE_MASK
 			detailsChipsetMask = 0;
 			BDAInputType = sage_DShowCaptureDevice_BDA_DVB_T;
-			slog((env, "A multi-tuner card is found (Analog+DVB-T), 2 x DVB-T added into source.\r\n"));
+			slog((env, "A multi-tuner card is found, DVB-T added into source.\r\n"));
 		}
 		else
 
@@ -1169,6 +1161,33 @@ JNIEXPORT jint JNICALL Java_sage_DShowCaptureDevice_getDeviceCaps0
 //	CoUninitialize();
 	slog((env, "DeviceCap: 0x%x\r\n", newCaptureType   ) );
 	return newCaptureType;
+}
+
+void BDATunerDVBT(DWORD &BDAInputType, JNIEnv * &env)
+{
+	{
+		BDAInputType = sage_DShowCaptureDevice_BDA_DVB_T;
+		slog((env, "A bundle tuner card is found, DVB-T added into source.\r\n"));
+	}
+
+}
+
+void BDATunerDVBTC(DWORD &BDAInputType, JNIEnv * &env)
+{
+	{
+		BDAInputType = sage_DShowCaptureDevice_BDA_DVB_T | sage_DShowCaptureDevice_BDA_DVB_C;
+		slog((env, "A bundle tuner card is found, DVB-T|DVB-C added into source.\r\n"));
+	}
+
+}
+
+void AltBDATunerDVBS(DWORD &BDAInputType, JNIEnv * &env)
+{
+	{
+		BDAInputType = sage_DShowCaptureDevice_BDA_DVB_S;
+		slog((env, "An AltBDATunerModel tuner card is found, DVB-S added into source.\r\n"));
+	}
+
 }
 
 int GetTunerNum( JNIEnv *env,  char* devName, REFCLSID devClassid, DEVICE_DRV_INF* devBDAInfo )
