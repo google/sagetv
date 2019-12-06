@@ -1,11 +1,12 @@
 # Change Log
 
+* Fix for Hauppauge 885 tuners with Alt TS Capture Devices (Windows)
 * Change maximum number of BDA tuners from 2 to 4 (HVR-5525 has 3 BDA tuners)
 * Fix DirecTVSerialControl
 * Fix 64-bit service launcher (Windows)
 * Set default 1G heap for 64-bit (Windows)
 * Updates for OPTUS D1 transponder changes to DVB-S2
-* Fix: Schedules Direct EPG grabber failed to finish updating some satellite-based lineups 
+* Fix: Schedules Direct EPG grabber failed to finish updating some satellite-based lineups
 
 ## Version 9.2.1 (2019-03-23)
 * 64-bit AVI playback and music fixes (Windows)
