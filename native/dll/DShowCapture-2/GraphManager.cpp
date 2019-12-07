@@ -612,7 +612,7 @@ JNIEXPORT jintArray JNICALL Java_sage_DShowCaptureDevice_updateColors0
 	{
 		hr = videoProc->Get(VideoProcAmp_Brightness, &val, &pCaps);
 		retColors[0] = ((val-pMin)*255)/(pMax-pMin);
-		slog(( "Get captue brightness: %d hr:0x%x %s-%d\r\n", val, hr, pCapInfo->videoCaptureFilterName, pCapInfo->videoCaptureFilterNum)); 
+		slog(( "Get capture brightness: %d hr:0x%x %s-%d\r\n", val, hr, pCapInfo->videoCaptureFilterName, pCapInfo->videoCaptureFilterNum)); 
 	}
 
 	hr = videoProc->GetRange(VideoProcAmp_Contrast, &pMin, &pMax, &pSteppingDelta, &pDefault, &pCaps);
@@ -630,7 +630,7 @@ JNIEXPORT jintArray JNICALL Java_sage_DShowCaptureDevice_updateColors0
 	{
 		hr = videoProc->Get(VideoProcAmp_Contrast, &val, &pCaps);
 		retColors[1] = ((val-pMin)*255)/(pMax-pMin);
-		//slog(( "Get captue contrast:%d hr:0x%x %s-%d\r\n", val, hr, pCapInfo->videoCaptureFilterName, pCapInfo->videoCaptureFilterNum)); 
+		//slog(( "Get capture contrast:%d hr:0x%x %s-%d\r\n", val, hr, pCapInfo->videoCaptureFilterName, pCapInfo->videoCaptureFilterNum)); 
 	}
 
 	hr = videoProc->GetRange(VideoProcAmp_Hue, &pMin, &pMax, &pSteppingDelta, &pDefault, &pCaps);
@@ -648,7 +648,7 @@ JNIEXPORT jintArray JNICALL Java_sage_DShowCaptureDevice_updateColors0
 	{
 		hr = videoProc->Get(VideoProcAmp_Hue, &val, &pCaps);
 		retColors[2] = ((val-pMin)*255)/(pMax-pMin);
-		//slog(( "Get captue hue:%d hr:0x%x %s-%d\r\n", val, hr, pCapInfo->videoCaptureFilterName, pCapInfo->videoCaptureFilterNum)); 
+		//slog(( "Get capture hue:%d hr:0x%x %s-%d\r\n", val, hr, pCapInfo->videoCaptureFilterName, pCapInfo->videoCaptureFilterNum)); 
 	}
 
 	hr = videoProc->GetRange(VideoProcAmp_Saturation, &pMin, &pMax, &pSteppingDelta, &pDefault, &pCaps);
@@ -666,7 +666,7 @@ JNIEXPORT jintArray JNICALL Java_sage_DShowCaptureDevice_updateColors0
 	{
 		hr = videoProc->Get(VideoProcAmp_Saturation, &val, &pCaps);
 		retColors[3] = ((val-pMin)*255)/(pMax-pMin);
-		//slog(( "Get captue Saturation: %d hr:0x%x%s-%d\r\n", val, hr, pCapInfo->videoCaptureFilterName, pCapInfo->videoCaptureFilterNum)); 
+		//slog(( "Get capture Saturation: %d hr:0x%x%s-%d\r\n", val, hr, pCapInfo->videoCaptureFilterName, pCapInfo->videoCaptureFilterNum)); 
 	}
 
 	hr = videoProc->GetRange(VideoProcAmp_Sharpness, &pMin, &pMax, &pSteppingDelta, &pDefault, &pCaps);
@@ -684,7 +684,7 @@ JNIEXPORT jintArray JNICALL Java_sage_DShowCaptureDevice_updateColors0
 	{
 		hr = videoProc->Get(VideoProcAmp_Sharpness, &val, &pCaps);
 		retColors[4] = ((val-pMin)*255)/(pMax-pMin);
-		//slog(( "Get captue sharpness: %d hr:0x%x %s-%d\r\n", val, hr, pCapInfo->videoCaptureFilterName, pCapInfo->videoCaptureFilterNum)); 
+		//slog(( "Get capture sharpness: %d hr:0x%x %s-%d\r\n", val, hr, pCapInfo->videoCaptureFilterName, pCapInfo->videoCaptureFilterNum)); 
 	}
 
 	SAFE_RELEASE(videoProc);
