@@ -16,7 +16,6 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#define _CRT_SECURE_CPP_OVERLOAD_SECURE_NAMES 1
 #include <stdio.h>
 #include <stdlib.h>
 #include "common.h"
@@ -483,16 +482,16 @@ void avcodec_string(char *buf, int buf_size, AVCodecContext *enc, int encode)
                  codec_name);
         switch (enc->channels) {
             case 1:
-                strcpy_s(channels_str, "mono");
+                strcpy(channels_str, "mono"); // throws warning C4996 my be unsafe
                 break;
             case 2:
-                strcpy_s(channels_str, "stereo");
+                strcpy(channels_str, "stereo"); // throws warning C4996 my be unsafe
                 break;
             case 6:
-                strcpy_s(channels_str, "5:1");
+                strcpy(channels_str, "5:1"); // throws warning C4996 my be unsafe
                 break;
             default:
-                sprintf_s(channels_str, "%d channels", enc->channels);
+                sprintf(channels_str, "%d channels", enc->channels); // throws warning C4996 my be unsafe
                 break;
         }
         if (enc->sample_rate) {
