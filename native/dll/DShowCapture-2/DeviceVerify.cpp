@@ -81,7 +81,7 @@ char* GetTypeFromTunerTag( char* filterName, char* typeBuf, int bufSize )
 	{
 		if ( ( pe = strstr( ++ps, ">" ) ) )
 		{
-			int len;
+			size_t len;
 			len = min( pe - ps, bufSize-1 );
 			strncpy( typeBuf, ps, len );
 			typeBuf[len] = 0x0;
@@ -1190,7 +1190,7 @@ int GetTunerNum( JNIEnv *env,  char* devName, REFCLSID devClassid, DEVICE_DRV_IN
 		hr = graphTools.EnumFilterPathFirst( devClassid, &pEnum, &pName ); 
 		while ( hr == S_OK && devNum < MAX_BDA_TUNER_NUM )
 		{
-			int length = wcslen(pName);
+			size_t length = wcslen(pName);
 			length =length > sizeof(captureName)? sizeof(captureName) : length;
 			memset( Name, 0x0, sizeof(Name) );
 			wcstombs( Name, pName, length );
@@ -1339,7 +1339,7 @@ BOOL CheckFakeBDACrossBar( JNIEnv *env, char* capFiltName, int CapFiltNum, char*
 		hr = graphTools.EnumFilterPathFirst( KSCATEGORY_BDA_RECEIVER_COMPONENT, &pEnum, &pName ); 
 		while ( hr == S_OK )
 		{
-			int length = wcslen(pName);
+			size_t length = wcslen(pName);
 			length =length > sizeof(captureName)? sizeof(captureName) : length;
 			memset( captureName, 0x0, sizeof(captureName) );
 			wcstombs( captureName, pName, length );

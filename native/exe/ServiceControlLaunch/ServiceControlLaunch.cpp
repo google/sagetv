@@ -180,8 +180,8 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	HMODULE exeMod = GetModuleHandle(NULL);
 	LPTSTR appPath = new TCHAR[512];
 	GetModuleFileName(exeMod, appPath, 512);
-	int appLen = strlen(appPath);
-	for (int i = appLen - 1; i > 0; i--)
+	size_t appLen = strlen(appPath);
+	for (size_t i = appLen - 1; i > 0; i--)
 	{
 		if (appPath[i] == '\\')
 		{
@@ -256,7 +256,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 		char *errStr = new char[env->GetStringLength(throwStr) + 64];
 		sprintf(errStr, "An exception occured in Java:\n%s", cThrowStr);
 		errorMsg(errStr, "Java Exception");
-		delete errStr;
+		delete [] errStr;
 		return FALSE;
 	}
 

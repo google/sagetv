@@ -159,7 +159,7 @@ static WORD GetRawInputCode( void* RawInData, BYTE* pCode )
 			ret = raw->data.hid.bRawData[1];
 	}
 
-	delete lpb;
+	delete [] lpb;
 	return ret;
 }
 static HWND gRawInputWnd = NULL;

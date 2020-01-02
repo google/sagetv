@@ -3038,7 +3038,7 @@ HRESULT CPushReader::SetSubTitleMediaType( CMediaType *cmt, SUBTITLE *pSubtitle 
 	psi->dwOffset = sizeof(SUBTITLEINFO);
 	strcpy(psi->IsoLang, "eng");
 	char *name = "Subtitles";
-	int size = MultiByteToWideChar(CP_ACP, 0, name, strlen(name), psi->TrackName, sizeof(psi->TrackName)*2 );
+	size_t size = MultiByteToWideChar(CP_ACP, 0, name, strlen(name), psi->TrackName, sizeof(psi->TrackName)*2 );
 	//SUBTITLEINFO subinfo={0};
 	//subinfo.dwOffset = sizeof(SUBTITLEINFO);
 	//subinfo.IsoLang[0] = (CHAR)((pSubtitle->language >>24)&0xff);

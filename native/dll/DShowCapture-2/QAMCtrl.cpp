@@ -752,7 +752,7 @@ BOOL SearchMatchFilter( JNIEnv *env, CLSID clsid, char* capFiltName, int CapFilt
 	hr = graphTools.EnumFilterPathFirst( clsid, &pEnum, &pName ); 
 	while ( hr == S_OK )
 	{
-			int length = wcslen(pName);
+			size_t length = wcslen(pName);
 			length =length > sizeof(enumName)? sizeof(enumName) : length;
 			memset( enumName, 0x0, sizeof(enumName) );
 			wcstombs( enumName, pName, length );

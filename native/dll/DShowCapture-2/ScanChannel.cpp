@@ -81,7 +81,7 @@ JNIEXPORT jstring JNICALL Java_sage_DShowCaptureDevice_scanBDAChannel0
 		wcstombs( countryRegion, (wchar_t*)country, sizeof(countryRegion)-2 );
 
 	//trime space
-	int len = strlen(countryRegion);
+	size_t len = strlen(countryRegion);
 	while( len-- > 0 )
 	{
 		if ( countryRegion[len] == ' ' ) countryRegion[len] = 0x0;
@@ -139,7 +139,7 @@ JNIEXPORT jstring JNICALL Java_sage_DShowCaptureDevice_scanBDAChannel0
 			   
 	char* scanResult = scanChannel( (CHANNEL_DATA*)pCapInfo->channel, deviceName, tuningString,  
 		                               countryRegion,  (int)streamType );
-	len = strlen( scanResult );
+	(size_t) len = strlen( scanResult );
 	//trim \r\n
 	while ( len > 1 && scanResult[len-1] == '\r' || scanResult[len-1] == '\n' ) 
 	{

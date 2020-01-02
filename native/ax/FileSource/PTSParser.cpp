@@ -273,7 +273,7 @@ HRESULT CPTSParser::Init( CAsyncStream *pStream )
 			break;
 	};
 
-	delete pbData;	
+	delete [] pbData;	
 	LockDemuxTSPPmt( (DEMUXER*)m_pDemuxer );
 	//select PTS track
 	{
@@ -368,7 +368,7 @@ LONGLONG  CPTSParser::ReadFileFirstPTS( CAsyncStream *pStream )
 		i++;
 	}
 
-	delete pbData;
+	delete [] pbData;
 	return m_llUpdatedPTS;
 }
 
@@ -406,7 +406,7 @@ LONGLONG  CPTSParser::ReadFileLastPTS( CAsyncStream *pStream )
 		i++;
 	}
 
-	delete pbData;
+	delete [] pbData;
 	return m_llUpdatedPTS;
 
 }

@@ -38,7 +38,7 @@ public:
 	  m_pFileName(NULL),
 	  m_sd(INVALID_SOCKET)
 	{ 	
-		int cc = strlen(pHostName)+1;
+		size_t cc = strlen(pHostName)+1;
 		m_pHostname = new TCHAR[cc];
 		strncpy_s( m_pHostname, cc, pHostName, cc ); 
 	};

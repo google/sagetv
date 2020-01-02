@@ -326,7 +326,7 @@ HRESULT CPlayerData::SetSourceFilename(const WCHAR** pwFilename, DWORD dwNumFile
 		{
 			slog(("Using the default source filter\r\n"));
 			// Check the file extension
-			int wlen = wcslen(pwFilename[0]);
+			size_t wlen = wcslen(pwFilename[0]);
 			if (wlen > 4)
 			{
 				if (!_wcsicmp(&(pwFilename[0])[wlen - 4], L".wmv") ||

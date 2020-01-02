@@ -616,7 +616,7 @@ static int LoadDeviceNameFrormRegistry( JNIEnv *env, DEVNAME* DevName, int maxNu
 
 	char *p = names;
 	char *pe;
-	int len;
+	size_t len;
 	while ( *p != 0 )
 	{
 		pe = strchr( p, ',' );

@@ -825,7 +825,7 @@ void setQAMScheme(  CHANNEL_DATA *Channel, int QAMScheme )
 
 void setFrqFilePath( CHANNEL_DATA *Channel, char* FileLocation )
 {
-	int len = strlen( FileLocation );
+	size_t len = strlen( FileLocation );
 	if ( len == 0 )
 	{
 		 Channel->frqTableFilePath[0] = 0x0;
@@ -3506,7 +3506,7 @@ static int _CopyFile( char* src, char *tar )
 	
 	while ( !feof( fs ) )
 	{
-		n = fread( buf, 1, sizeof(buf), fs );
+		size_t n = fread( buf, 1, sizeof(buf), fs );
 		if ( n == 0 ) break;
 		sum += fwrite( buf, 1, n, ft );
 	}

@@ -2414,7 +2414,8 @@ void CSDeMuxFilter::dump_data( char* pData, int dwBytes )
 void CSDeMuxFilter::dump_sample( IMediaSample *pSample )
 {
 	BYTE* pBuffer;
-	int   Length;
+	size_t Length = 0;
+	size_t offset = 0;
 	if ( fd == NULL ) return;
 	if ( FAILED(  pSample->GetPointer( &pBuffer ) ) ) return;
 	Length = pSample->GetActualDataLength( );
@@ -2430,7 +2431,7 @@ void CSDeMuxFilter::open_dump( )
 {
 	char fname[MAX_PATH];
 	char path[MAX_PATH]={0};
-	int len;
+	size_t len;
 	sprintf_s( fname, sizeof(fname), "DUMP_FILTER_DATA.ENABLE" );
 	fd = fopen( fname, "r" );
 	if ( fd == NULL ) return;

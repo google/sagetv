@@ -1282,7 +1282,7 @@ HRESULT CMPEG2Dump::WriteNetwork(PBYTE data, DWORD len)
 		temp[--pos] = (TCHAR) digit+L'0';
 	} while (li.QuadPart);
 	sprintf(request, "WRITE %s %d\r\n", temp+pos, m_bRegOptimizeTransfers ? m_bytesLeftInNetworkWrite : len);
-	int dataSize = strlen(request);
+	size_t dataSize = strlen(request);
 	if (send(sd, request, dataSize, 0) < dataSize)
 	{
 		DbgLog((LOG_TRACE, 2, TEXT("socket write failed, reopening connection...")));
@@ -1675,7 +1675,7 @@ HRESULT CMPEG2Dump::OpenConnection()
 	char data[512];
 	sprintf(data, "WRITEOPEN %s %d\r\n", lpszFileName, m_dwUploadKey);
 	delete [] lpszFileName;
-	int dataSize = strlen(data);
+	size_t dataSize = strlen(data);
 	if (send(sd, data, dataSize, 0) < dataSize)
 	{
 		DbgLog((LOG_TRACE, 2, TEXT("socket write failed")));
@@ -1698,7 +1698,7 @@ HRESULT CMPEG2Dump::CloseConnection()
 {
 	DbgLog((LOG_TRACE, 2, TEXT("CloseConnection() IN")));
 	char* data = "QUIT\r\n";
-	int dataSize = strlen(data);
+	size_t dataSize = strlen(data);
 	send(sd, data, dataSize, 0);
 	closesocket(sd);
 	WSACleanup();
