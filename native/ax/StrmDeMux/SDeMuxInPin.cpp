@@ -514,7 +514,6 @@ void CSDeMuxInPin::dump_sample( IMediaSample *pSample )
 {
 	BYTE* pBuffer;
 	size_t Length = 0;
-	size_t offset = 0;
 	if ( fd == NULL ) return;
 	if ( FAILED(  pSample->GetPointer( &pBuffer ) ) ) return;
 	Length = pSample->GetActualDataLength( );

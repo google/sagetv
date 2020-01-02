@@ -150,7 +150,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	LPTSTR appPath = new TCHAR[512];
 	GetModuleFileName(exeMod, appPath, 512);
 	size_t appLen = strlen(appPath);
-	for (size_t i = appLen - 1; i > 0; i--)
+	for (size_t i = appLen; i-- > 0;) // this does the check for continuation on the value before decrement, but still uses the decremented value inside the loop 
 	{
 		if (appPath[i] == '\\')
 		{

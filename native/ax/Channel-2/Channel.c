@@ -2053,8 +2053,8 @@ char* scanChannel( CHANNEL_DATA* channel, char* deviceName, char* tuningString, 
 	} else
 	{
 		scanResult = (char*)malloc( 64 );
-		SPRINTF( scanResult, 64, "ERROR:Unknow source format %s\r\n", getSourceType( channel) );
-		SageLog(( _LOG_TRACE, 3, "ERROR:Unknow source format %s\r\n", getSourceType( channel) ));
+		SPRINTF( scanResult, 64, "ERROR:Unknown source format %s\r\n", getSourceType( channel) );
+		SageLog(( _LOG_TRACE, 3, "ERROR:Unknown source format %s\r\n", getSourceType( channel) ));
 	}
 	SageEnableCAM( channel->Dev );
 

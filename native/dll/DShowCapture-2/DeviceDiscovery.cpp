@@ -203,8 +203,8 @@ JNIEXPORT jobjectArray JNICALL Java_sage_DShowCaptureDevice_getDevicesInCategory
 		}
 	}
 
-	delete pDevName;
-	delete pDevName1;
+	delete [] pDevName;
+	delete [] pDevName1;
 	return rv;
 
 }

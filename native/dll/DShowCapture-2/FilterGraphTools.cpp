@@ -68,10 +68,10 @@ void CLogMsg::Log(LPWSTR sz,...)
 		   wcstombs(dest, pStr, length);
 		   dest[length] = 0x0;
 		   slog( ((JNIEnv*)m_output, dest ) );
-           delete dest;
+           delete [] dest;
 //         
     }
-    delete pStr;
+    delete [] pStr;
 }
 
 

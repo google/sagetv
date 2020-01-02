@@ -147,7 +147,7 @@ static WORD GetRawInputCode( void* RawInData, BYTE* pCode )
     if (  GetRawInputData( hRawInput, RID_INPUT, lpb, &dwSize, 
 									sizeof(RAWINPUTHEADER)) != dwSize )
 	{
-		delete lpb;
+		delete [] lpb;
 		return 0;
 	}
     RAWINPUT* raw = (RAWINPUT*)lpb;

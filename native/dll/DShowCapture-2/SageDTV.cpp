@@ -1042,7 +1042,7 @@ long AVInf_Dumper( void* context, void* mesg , int bytes )
   //printf( "%s", (char*)mesg );
   ret = postMessage( pSrc, (char*)mesg, bytes, AV_INF_TYPE, 100 );
   slog( ( "AVINF:(bytes:%d) %s %s\r\n", bytes, pSrc, mesg ));
-  delete pSrc;
+  delete [] pSrc;
 
   return ret; //return 0, if success
 }
@@ -1670,7 +1670,7 @@ void _ClearPIDMap(  DShowCaptureInfo *pCapInfo )
 				{
 					flog( ("native.log", "UnmapPID TIF Pin total:%d \r\n", pid_total ) );
 				}
-				delete unmap_pids;
+				delete [] unmap_pids;
 
 			} else
 				flog( ("native.log", "Failed to get EnumPIDMap on TIF Pin of Dumexlexer hr=0x%x \r\n", hr ) );

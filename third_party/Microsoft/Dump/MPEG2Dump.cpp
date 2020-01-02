@@ -1138,7 +1138,7 @@ HRESULT CMPEG2Dump::AsyncWriteFile( BYTE* pbData, DWORD lData )
 		m_dwByteInBuffer = 0;
 		if ( hr != S_OK )
 		{
-			_flog( "MPEG2Dump.LOG", "Data droped due to buffer maxuim limition hr=0x%x\n", hr );
+			_flog( "MPEG2Dump.LOG", "Data dropped due to buffer maximum limition hr=0x%x\n", hr );
 			return hr;
 		}
 	}
@@ -1282,7 +1282,8 @@ HRESULT CMPEG2Dump::WriteNetwork(PBYTE data, DWORD len)
 		temp[--pos] = (TCHAR) digit+L'0';
 	} while (li.QuadPart);
 	sprintf(request, "WRITE %s %d\r\n", temp+pos, m_bRegOptimizeTransfers ? m_bytesLeftInNetworkWrite : len);
-	size_t dataSize = strlen(request);
+// this throws a warning C4267, but send needs int
+	int dataSize = strlen(request);
 	if (send(sd, request, dataSize, 0) < dataSize)
 	{
 		DbgLog((LOG_TRACE, 2, TEXT("socket write failed, reopening connection...")));
@@ -1675,7 +1676,8 @@ HRESULT CMPEG2Dump::OpenConnection()
 	char data[512];
 	sprintf(data, "WRITEOPEN %s %d\r\n", lpszFileName, m_dwUploadKey);
 	delete [] lpszFileName;
-	size_t dataSize = strlen(data);
+// this throws a warning C4267, but send needs int
+	int dataSize = strlen(data);
 	if (send(sd, data, dataSize, 0) < dataSize)
 	{
 		DbgLog((LOG_TRACE, 2, TEXT("socket write failed")));
@@ -1698,7 +1700,8 @@ HRESULT CMPEG2Dump::CloseConnection()
 {
 	DbgLog((LOG_TRACE, 2, TEXT("CloseConnection() IN")));
 	char* data = "QUIT\r\n";
-	size_t dataSize = strlen(data);
+// this throws a warning C4267, but send needs int
+	int dataSize = strlen(data);
 	send(sd, data, dataSize, 0);
 	closesocket(sd);
 	WSACleanup();

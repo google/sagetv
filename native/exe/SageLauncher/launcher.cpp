@@ -626,7 +626,7 @@ int WINAPI WinMain( HINSTANCE hInst, 	/*Win32 entry-point routine */
 	LPTSTR folderPath = new TCHAR[2048];
 	GetModuleFileName(NULL, folderPath, 2048);
 	size_t appLen = strlen(folderPath);
-	for (size_t i = appLen - 1; i > 0; i--)
+	for (size_t i = appLen; i-- > 0;) // this does the check for continuation on the value before decrement, but still uses the decremented value inside the loop 
 	{
 		if (folderPath[i] == '\\')
 		{
@@ -920,7 +920,7 @@ int launchJVMSage(LPSTR lpszCmdLine, HWND hWnd, BOOL bClient, BOOL bService)
 	LPTSTR appPath = new TCHAR[2048];
 	GetModuleFileName(NULL, appPath, 2048);
 	size_t appLen = strlen(appPath);
-	for (size_t i = appLen - 1; i > 0; i--)
+	for (size_t i = appLen; i-- > 0;) // this does the check for continuation on the value before decrement, but still uses the decremented value inside the loop 
 	{
 		if (appPath[i] == '\\')
 		{

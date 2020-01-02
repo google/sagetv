@@ -139,7 +139,7 @@ JNIEXPORT jstring JNICALL Java_sage_DShowCaptureDevice_scanBDAChannel0
 			   
 	char* scanResult = scanChannel( (CHANNEL_DATA*)pCapInfo->channel, deviceName, tuningString,  
 		                               countryRegion,  (int)streamType );
-	(size_t) len = strlen( scanResult );
+	len = strlen( scanResult );
 	//trim \r\n
 	while ( len > 1 && scanResult[len-1] == '\r' || scanResult[len-1] == '\n' ) 
 	{
