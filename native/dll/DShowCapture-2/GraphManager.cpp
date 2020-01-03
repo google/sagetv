@@ -1643,8 +1643,8 @@ void AddBDAVideoCaptureFilters(JNIEnv* env, DShowCaptureInfo *pCapInfo, IGraphBu
 
 		LPWSTR CaptureDevName=NULL;
 		LPWSTR CaptureFriendName=NULL;
-		graphTools.strCopyA2W( CaptureDevName,  pCapInfo->bdaCaptureFilterName, strlen(pCapInfo->bdaCaptureFilterName) ) ;
-		graphTools.strCopyA2W( CaptureFriendName,  pCapInfo->videoCaptureFilterName, strlen(pCapInfo->videoCaptureFilterName) ) ;
+		graphTools.strCopyA2W( CaptureDevName,  pCapInfo->bdaCaptureFilterName, (LONG)strlen(pCapInfo->bdaCaptureFilterName) ) ;
+		graphTools.strCopyA2W( CaptureFriendName,  pCapInfo->videoCaptureFilterName, (LONG)strlen(pCapInfo->videoCaptureFilterName) ) ;
 		CComPtr <IBaseFilter> piBDACapture;
 
 		if (FAILED(hr = graphTools.AddFilterByDevicePath2( pGraph, &piBDACapture, CaptureDevName, CaptureFriendName )))
@@ -1710,7 +1710,7 @@ void AddBDAVideoCaptureFilters(JNIEnv* env, DShowCaptureInfo *pCapInfo, IGraphBu
 			if ( PluginName[0] )
 			{
 				LPWSTR pName=NULL;
-				graphTools.strCopyA2W( pName,  PluginName, strlen(PluginName) ) ;
+				graphTools.strCopyA2W( pName,  PluginName, (LONG)strlen(PluginName) ) ;
 
 				try
 				{

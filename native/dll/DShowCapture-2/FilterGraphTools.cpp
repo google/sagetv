@@ -62,16 +62,16 @@ void CLogMsg::Log(LPWSTR sz,...)
     {
 //#ifdef UNICODE
 		   char* dest; 
-		   int length;
+		   size_t length;
 		   length = wcslen(pStr);
 		   dest = new char[length + 2];
 		   wcstombs(dest, pStr, length);
 		   dest[length] = 0x0;
 		   slog( ((JNIEnv*)m_output, dest ) );
-           delete dest;
+           delete [] dest;
 //         
     }
-    delete pStr;
+    delete [] pStr;
 }
 
 
@@ -343,7 +343,7 @@ HRESULT FilterGraphTools::EnumFilterNameFirst( CLSID clsidDeviceClass, IEnumMoni
 		*(*pName+length) = 0x0;
 		*/
 
-		int length = wcslen( varBSTR.bstrVal );
+		size_t length = wcslen( varBSTR.bstrVal );
 		*pName = new wchar_t[length + 1]; 
 		wcsncpy( *pName, varBSTR.bstrVal, length );
 		*(*pName+length) = 0x0;
@@ -384,7 +384,7 @@ HRESULT FilterGraphTools::EnumFilterNameNext(  IEnumMoniker *pEnum, LPWSTR *pNam
 			return hr;
 		}
 
-		int length = wcslen( varBSTR.bstrVal );
+		size_t length = wcslen( varBSTR.bstrVal );
 		*pName = new wchar_t[length + 1];
 		wcsncpy( *pName, varBSTR.bstrVal, length );
 		*(*pName+length) = 0x0;
@@ -432,7 +432,7 @@ HRESULT FilterGraphTools::EnumFilterPathFirst( CLSID clsidDeviceClass, IEnumMoni
 		hr = CreateBindCtx(0, &pBindCtx);
 		hr = pMoniker->GetDisplayName(pBindCtx, NULL, &pStr);
 
-		int length = wcslen( pStr );
+		size_t length = wcslen( pStr );
 		*pName = new wchar_t[length + 1];
 		wcsncpy( *pName, pStr, length );
 		*(*pName+length) = 0x0;
@@ -459,7 +459,7 @@ HRESULT FilterGraphTools::EnumFilterPathNext(  IEnumMoniker *pEnum, LPWSTR *pNam
 		hr = CreateBindCtx(0, &pBindCtx);
 		hr = pMoniker->GetDisplayName(pBindCtx, NULL, &pStr);
 
-		int length = wcslen( pStr );
+		size_t length = wcslen( pStr );
 		*pName = new wchar_t[length + 1];
 		wcsncpy( *pName, pStr, length );
 		*(*pName+length) = 0x0;

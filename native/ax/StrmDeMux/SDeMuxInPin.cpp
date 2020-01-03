@@ -513,7 +513,7 @@ void CSDeMuxInPin::dump_data( char* pData, int dwBytes )
 void CSDeMuxInPin::dump_sample( IMediaSample *pSample )
 {
 	BYTE* pBuffer;
-	int   Length;
+	size_t Length = 0;
 	if ( fd == NULL ) return;
 	if ( FAILED(  pSample->GetPointer( &pBuffer ) ) ) return;
 	Length = pSample->GetActualDataLength( );
@@ -548,7 +548,7 @@ void CSDeMuxInPin::open_dump( )
 {
 	char fname[MAX_PATH];
 	char path[MAX_PATH]={0};
-	int len;
+	size_t len;
 	sprintf( fname, "DUMP_INPUT_DATA.ENABLE" );
 	fd = fopen( fname, "r" );
 	if ( fd == NULL ) return;

@@ -203,8 +203,8 @@ JNIEXPORT jobjectArray JNICALL Java_sage_DShowCaptureDevice_getDevicesInCategory
 		}
 	}
 
-	delete pDevName;
-	delete pDevName1;
+	delete [] pDevName;
+	delete [] pDevName1;
 	return rv;
 
 }
@@ -616,7 +616,7 @@ static int LoadDeviceNameFrormRegistry( JNIEnv *env, DEVNAME* DevName, int maxNu
 
 	char *p = names;
 	char *pe;
-	int len;
+	size_t len;
 	while ( *p != 0 )
 	{
 		pe = strchr( p, ',' );

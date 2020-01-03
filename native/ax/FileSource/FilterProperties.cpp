@@ -221,7 +221,7 @@ void CFilterProperties::LoadFiles()
 	int  nEditTextSize=2048, nEditTextLen=0;
 	char FName[256];
 
-	int line=0, i, serial = 0;
+	size_t line=0, i, serial = 0;
 	GetDlgItemText( m_hwndDialog, IDC_EDIT_FILENAME, m_szListFileName,  sizeof( m_szListFileName ) );
 	fp = fopen( m_szListFileName, "r" );
 	if ( fp == NULL )
@@ -255,7 +255,7 @@ void CFilterProperties::LoadFiles()
 		if ( pFileName && pFileName[0] )
 		{
 			FileNameStripPath( pFileName, FName, sizeof(FName ) );
-			int cc =  strlen(pFileName)+1;
+			size_t cc =  strlen(pFileName)+1;
 			LPCOLESTR pszW = (LPOLESTR)CoTaskMemAlloc(cc*2);
 			if ( MultiByteToWideChar(CP_ACP, 0, pFileName, cc, (LPWSTR)pszW, cc ))
 			{
@@ -280,7 +280,7 @@ void CFilterProperties::LoadFiles()
 
 	fclose( fp );
 	if ( pEditText != NULL )
-		delete pEditText;
+		delete [] pEditText;
 
 	SaveSettings();
 

@@ -1254,7 +1254,7 @@ static int loadQAMFreqData(  FILE *fp, struct bcast_qam *freqTbl, int max, int* 
 	line = 0;
 	while( !feof( fp ) && num < max )
 	{
-		int i;
+		size_t i;
 		memset( buf, 0, sizeof(buf) );
 		fgets( buf, sizeof(buf), fp );
 		line++;

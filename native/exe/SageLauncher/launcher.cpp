@@ -143,8 +143,8 @@ static TCHAR toHex(int nibble)
 void writeEscapedPropString(FILE* fp, const LPWSTR wstr)
 {
 	static const TCHAR specialSaveChars[] = "=: \t\r\n\f#!";
-    int len = wcslen(wstr);
-	int x;
+	size_t len = wcslen(wstr);
+	size_t x;
     for(x=0; x<len; x++) 
 	{
 		if (wstr[x] == ' ')
@@ -256,7 +256,7 @@ BOOL CheckForMutex(HANDLE *pMutex, LPCSTR szMutexName, LPSTR appName)
 
 void removeTrailingWS(char* line)
 {
-	int len = strlen(line);
+	size_t len = strlen(line);
 	while (len > 0 && (line[len - 1] == ' ' || line[len - 1] == '\r' || line[len-1] == '\n'))
 	{
 		line[len - 1] = '\0';
@@ -625,13 +625,16 @@ int WINAPI WinMain( HINSTANCE hInst, 	/*Win32 entry-point routine */
 	// Fix the current working directory to be where the EXE is located
 	LPTSTR folderPath = new TCHAR[2048];
 	GetModuleFileName(NULL, folderPath, 2048);
-	int appLen = strlen(folderPath);
-	for (int i = appLen - 1; i > 0; i--)
+	size_t appLen = strlen(folderPath);
+	if (appLen > 0)  // Shouldn't be 0 as the following would be an infinite loop
 	{
-		if (folderPath[i] == '\\')
+		for (size_t i = appLen - 1; i > 0; i--)
 		{
-			folderPath[i + 1] = 0;
-			break;
+			if (folderPath[i] == '\\')
+			{
+				folderPath[i + 1] = 0;
+				break;
+			}
 		}
 	}
 	chdir(folderPath);
@@ -919,15 +922,19 @@ int launchJVMSage(LPSTR lpszCmdLine, HWND hWnd, BOOL bClient, BOOL bService)
 	
 	LPTSTR appPath = new TCHAR[2048];
 	GetModuleFileName(NULL, appPath, 2048);
-	int appLen = strlen(appPath);
-	for (int i = appLen - 1; i > 0; i--)
+	size_t appLen = strlen(appPath);
+	if (appLen > 0)  // Shouldn't be 0 as the following would be an infinite loop
 	{
-		if (appPath[i] == '\\')
+		for (size_t i = appLen - 1; i > 0; i--)
 		{
-			appPath[i + 1] = 0;
-			break;
+			if (appPath[i] == '\\')
+			{
+				appPath[i + 1] = 0;
+				break;
+			}
 		}
 	}
+
 	// See if we've got a JVM in our own directory to load
 	TCHAR includedJRE[1024];
 	strcpy(includedJRE, appPath);

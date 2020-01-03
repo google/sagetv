@@ -482,16 +482,16 @@ void avcodec_string(char *buf, int buf_size, AVCodecContext *enc, int encode)
                  codec_name);
         switch (enc->channels) {
             case 1:
-                strcpy(channels_str, "mono");
+                strcpy(channels_str, "mono"); // throws warning C4996 my be unsafe
                 break;
             case 2:
-                strcpy(channels_str, "stereo");
+                strcpy(channels_str, "stereo"); // throws warning C4996 my be unsafe
                 break;
             case 6:
-                strcpy(channels_str, "5:1");
+                strcpy(channels_str, "5:1"); // throws warning C4996 my be unsafe
                 break;
             default:
-                sprintf(channels_str, "%d channels", enc->channels);
+                sprintf(channels_str, "%d channels", enc->channels); // throws warning C4996 my be unsafe
                 break;
         }
         if (enc->sample_rate) {

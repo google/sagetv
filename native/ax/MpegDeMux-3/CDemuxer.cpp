@@ -812,7 +812,7 @@ HRESULT CDemuxer::Init()
 	//	 (unsigned long)(availLength)/( m_rtDur/UNITS + 1) ));  
 
 	DbgLog((LOG_TRACE, 2, TEXT("MPEG2 DeMux  Init Done with successed")));
-	delete pbData;	
+	delete [] pbData;	
 	delete pRdr;
 	return S_OK;
 
@@ -2498,7 +2498,7 @@ LONGLONG  CDemuxer::ReadFileLastPTS(  CParseReader *pRdr )
 		i++;
 	}
 
-	delete pbData;
+	delete [] pbData;
 	return m_llUpdatedPTS;
 
 }
@@ -2535,7 +2535,7 @@ LONGLONG  CDemuxer::ReadFileFirstPTS(  CParseReader *pRdr )
 		i++;
 	}
 
-	delete pbData;
+	delete [] pbData;
 	return m_llUpdatedPTS;
 }
 
@@ -2992,7 +2992,7 @@ LONGLONG CDemuxer::Seek( LONGLONG rtSeekPTS, DWORD dwBlockSize  )
 	}
 
 	delete pRdr;
-	delete pbData;
+	delete [] pbData;
 
 	//enable output
 	//env.start_output = old_start_output;
