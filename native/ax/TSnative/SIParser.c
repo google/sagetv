@@ -4202,14 +4202,14 @@ static int MakeTERRESTRIALString( char* Buf, int Size,  TERRESTRIAL_DATA* data  
 	*p = 0x0;
 
 	sprintf( tmp, "frq:%ld ", data->freq );
-	if ( (size_t)strlen( tmp )+ (size_t)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
+	if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
 	sprintf( tmp, "band:%d ", data->band );
-	if ( (size_t)strlen( tmp )+ (size_t)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
+	if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
 	
 	if ( data->trans_mode != 0xff ) 
 	{
 		sprintf( tmp, "mode:%d ", data->trans_mode );
-		if ( (size_t)strlen( tmp )+ (size_t)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
+		if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
 	}
 
 	return strlen(Buf);
@@ -4236,12 +4236,12 @@ static int MakeCABLEString( char* Buf, int Size,  CABLE_DATA* data  )
 	if ( data->fec_out != 0xff && data->fec_out != (char)0  ) 
 	{
 		sprintf( tmp, "fec_out:%d ", data->fec_out );
-		if ( (size_t)strlen( tmp )+ (size_t)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
+		if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
 	}
 	if ( data->fec_in_rate != 0xff && data->fec_in_rate != (char)0  ) 
 	{
 		sprintf( tmp, "fec_rate_in:%d ", data->fec_in_rate );
-		if ( (size_t)strlen( tmp )+ (size_t)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
+		if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
 	}
 
 	return strlen(Buf);
@@ -4255,37 +4255,37 @@ static int MakeSATELLITEString( char* Buf, int Size,  SATELLITE_DATA* data  )
 	*p = 0x0;
 
 	sprintf( tmp, "frq:%ld ", data->freq );
-	if ( (size_t)strlen( tmp )+ (size_t)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
+	if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
 	sprintf( tmp, "rate:%ld ", data->symbol_rate );
-	if ( (size_t)strlen( tmp )+ (size_t)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
+	if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
 	
 	if ( data->modulation != 0xff ) 
 	{
 		sprintf( tmp, "mod:%d ", data->modulation );
-		if ( (size_t)strlen( tmp )+ (size_t)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
+		if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
 	}
 
 	if ( data->pol!= 0xff ) 
 	{
 		sprintf( tmp, "pol:%d ", data->pol );
-		if ( (size_t)strlen( tmp )+ (size_t)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
+		if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
 	}
 
 	if ( data->fec != 0xff && data->fec != (char)0  ) 
 	{
 		sprintf( tmp, "fec_in:%d ", data->fec );
-		if ( (size_t)strlen( tmp )+ (size_t)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
+		if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
 	}
 	if ( data->fec_rate != 0xff && data->fec_rate != (char)0  ) 
 	{
 		sprintf( tmp, "fec_rate_in:%d ", data->fec_rate );
-		if ( (size_t)strlen( tmp )+ (size_t)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
+		if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
 	}
 
 	if ( data->orbit != -1  ) 
 	{
 		sprintf( tmp, "orbit:%d ", data->orbit );
-		if ( (size_t)strlen( tmp )+ (size_t)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
+		if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
 	}
 
 	return strlen(Buf);
@@ -4294,15 +4294,15 @@ static int MakeSATELLITEString( char* Buf, int Size,  SATELLITE_DATA* data  )
 static int MakeDVBSNIT_INFString( char*Buf, int Size, NIT_INF *nit_inf )
 {
 	char tmp[100], *p;
-	size_t len;
+	int len;
 	if ( Buf == NULL || Size <= 0 ) return 0;
 	p = Buf;
 	*p = 0x0;
 
 	sprintf( tmp, "onid:%d ", nit_inf->ONID );
-	if ( (size_t)strlen( tmp )+ (size_t)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
+	if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
 	sprintf( tmp, "tsid:%d ", nit_inf->TSID );
-	if ( (size_t)strlen( tmp )+ (size_t)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
+	if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
 	
 	len = strlen(Buf);
 	p = Buf+len;
@@ -4326,7 +4326,7 @@ static int MakeDVBSNIT_INFString( char*Buf, int Size, NIT_INF *nit_inf )
 static int MakeDVBSNITString( char*Buf, int Size, NIT *nit )
 {
 	char tmp[100], *p;
-	size_t len, i;
+	int len, i;
 	char *type = "";
 	if ( Buf == NULL || Size <= 0 ) return 0;
 	p = Buf;
@@ -4340,17 +4340,17 @@ static int MakeDVBSNITString( char*Buf, int Size, NIT *nit )
 	sprintf( tmp, "#Network:%s ID:%d \nTYPE %s\n", nit->network_name, nit->network_id, type  );
 	if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
 	sprintf( tmp, "#Total:%d\n", nit->NIT_inf_num );
-	if ( (size_t)strlen( tmp )+ (size_t)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
+	if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
 	
 	for ( i=0; i<nit->NIT_inf_num; i++ )
 	{
 		sprintf( tmp, "CH:%d ", i+1 );
-		if ( (size_t)strlen( tmp )+ (size_t)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
-		size_t len = strlen(Buf);
+		if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
+		len = strlen(Buf);
 		p = Buf+len;
 		if ( Size <= len ) break;
 		MakeDVBSNIT_INFString( p, Size-len,  &nit->NIT_inf[i] );
-		if ( (size_t)strlen( Buf ) +2 <Size )
+		if ( (int)strlen( Buf ) +2 <Size )
 			strcat( Buf, "\n" );
 	}
 	return strlen(Buf);
