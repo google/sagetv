@@ -626,12 +626,15 @@ int WINAPI WinMain( HINSTANCE hInst, 	/*Win32 entry-point routine */
 	LPTSTR folderPath = new TCHAR[2048];
 	GetModuleFileName(NULL, folderPath, 2048);
 	size_t appLen = strlen(folderPath);
-	for (size_t i = appLen; i-- > 0;) // this does the check for continuation on the value before decrement, but still uses the decremented value inside the loop 
+	if (appLen > 0)  // Shouldn't be 0 as the following would be an infinite loop
 	{
-		if (folderPath[i] == '\\')
+		for (size_t i = appLen - 1; i > 0; i--)
 		{
-			folderPath[i + 1] = 0;
-			break;
+			if (folderPath[i] == '\\')
+			{
+				folderPath[i + 1] = 0;
+				break;
+			}
 		}
 	}
 	chdir(folderPath);
@@ -920,14 +923,18 @@ int launchJVMSage(LPSTR lpszCmdLine, HWND hWnd, BOOL bClient, BOOL bService)
 	LPTSTR appPath = new TCHAR[2048];
 	GetModuleFileName(NULL, appPath, 2048);
 	size_t appLen = strlen(appPath);
-	for (size_t i = appLen; i-- > 0;) // this does the check for continuation on the value before decrement, but still uses the decremented value inside the loop 
+	if (appLen > 0)  // Shouldn't be 0 as the following would be an infinite loop
 	{
-		if (appPath[i] == '\\')
+		for (size_t i = appLen - 1; i > 0; i--)
 		{
-			appPath[i + 1] = 0;
-			break;
+			if (appPath[i] == '\\')
+			{
+				appPath[i + 1] = 0;
+				break;
+			}
 		}
 	}
+
 	// See if we've got a JVM in our own directory to load
 	TCHAR includedJRE[1024];
 	strcpy(includedJRE, appPath);

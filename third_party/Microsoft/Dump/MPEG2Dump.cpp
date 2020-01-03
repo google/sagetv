@@ -1282,8 +1282,8 @@ HRESULT CMPEG2Dump::WriteNetwork(PBYTE data, DWORD len)
 		temp[--pos] = (TCHAR) digit+L'0';
 	} while (li.QuadPart);
 	sprintf(request, "WRITE %s %d\r\n", temp+pos, m_bRegOptimizeTransfers ? m_bytesLeftInNetworkWrite : len);
-// this throws a warning C4267, but send needs int
-	int dataSize = strlen(request);
+	// strlen cast as int to prevent warning C4267, as send needs dataSize to be int
+	int dataSize = (int)strlen(request);
 	if (send(sd, request, dataSize, 0) < dataSize)
 	{
 		DbgLog((LOG_TRACE, 2, TEXT("socket write failed, reopening connection...")));
@@ -1676,8 +1676,8 @@ HRESULT CMPEG2Dump::OpenConnection()
 	char data[512];
 	sprintf(data, "WRITEOPEN %s %d\r\n", lpszFileName, m_dwUploadKey);
 	delete [] lpszFileName;
-// this throws a warning C4267, but send needs int
-	int dataSize = strlen(data);
+	// strlen cast as int to prevent warning C4267, as send needs dataSize to be int
+	int dataSize = (int)strlen(data);
 	if (send(sd, data, dataSize, 0) < dataSize)
 	{
 		DbgLog((LOG_TRACE, 2, TEXT("socket write failed")));
@@ -1700,8 +1700,8 @@ HRESULT CMPEG2Dump::CloseConnection()
 {
 	DbgLog((LOG_TRACE, 2, TEXT("CloseConnection() IN")));
 	char* data = "QUIT\r\n";
-// this throws a warning C4267, but send needs int
-	int dataSize = strlen(data);
+	// strlen cast as int to prevent warning C4267, as send needs dataSize to be int
+	int dataSize = (int)strlen(data);
 	send(sd, data, dataSize, 0);
 	closesocket(sd);
 	WSACleanup();
