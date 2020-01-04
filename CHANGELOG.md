@@ -1,6 +1,7 @@
 # Change Log
 
-* Tidy up warnings in VS2015 for data type conversions
+* Change watch ignore times from constants to properties
+* Tidy up warnings in VS2015 for data type conversions (Windows)
 * Fix for Hauppauge 885 tuners with Alt TS Capture Devices (Windows)
 * Change maximum number of BDA tuners from 2 to 4 (HVR-5525 has 3 BDA tuners)
 * Fix DirecTVSerialControl

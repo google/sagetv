@@ -189,6 +189,7 @@ public class BigBrother
     triggerWatchedChangeEvent(a);
   }
 
+  public static boolean alwaysUseAiringWatched = Sage.getBoolean("wizard/always_use_airing_for_watched_status", false);
   public static boolean setWatched(Airing a)
   {
     return setWatched(a, 0, 0, 0, 0, false);
@@ -240,7 +241,7 @@ public class BigBrother
       // as being completely seen.
       long validDuration = (a.isDVD() && !a.isBluRay()) ? Long.MAX_VALUE : a.duration;
       if (s != null && s.duration > 10000 && s.duration < a.duration && // ignore running times that are in the wrong units
-          a.duration - s.duration < MAX_DURATION_DIFF_TO_USE_SHOW)
+          a.duration - s.duration < MAX_DURATION_DIFF_TO_USE_SHOW && !alwaysUseAiringWatched)
         validDuration = s.duration;
       if (priorWatch != null) {
         // Include prior watched data in calculating whether or not this new one
@@ -296,9 +297,12 @@ public class BigBrother
         (((double) w.getWatchDuration())/wa.duration) > COMPLETE_WATCH_FRACTION);
   }
 
+  public static long watchIgnoreTime = Sage.getLong("wizard/watch_ignore_time", WATCH_IGNORE_TIME);
+  public static long watchIgnoreTimeMovie = Sage.getLong("wizard/watch_ignore_time_movie", WATCH_IGNORE_TIME_MOVIE);
+
   public static long getWatchIgnoreTime(Airing a)
   {
-    return (a == null || a.getShow() == null || !a.getShow().isMovie()) ? WATCH_IGNORE_TIME : WATCH_IGNORE_TIME_MOVIE;
+    return (a == null || a.getShow() == null || !a.getShow().isMovie()) ? watchIgnoreTime : watchIgnoreTimeMovie;
   }
 
   public static boolean areSameShow(Airing a1, Airing a2, boolean matchFavs)
