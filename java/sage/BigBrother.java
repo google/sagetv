@@ -19,8 +19,9 @@ public class BigBrother
 {
   static final long MILLIS_PER_HOUR = 60*60000L;
   static final long MILLIS_PER_DAY = 24*MILLIS_PER_HOUR;
-  static final long WATCH_IGNORE_TIME = 5*60000L;
-  static final long WATCH_IGNORE_TIME_MOVIE = 10*60000L;
+  static final long watchIgnoreTime = Sage.getLong("wizard/watch_ignore_time", 5*60000L);
+  static final long watchIgnoreTimeMovie = Sage.getLong("wizard/watch_ignore_time_movie", 10*60000L);
+  static final boolean dontUseRunningTimeForWatched = Sage.getBoolean("wizard/dont_use_running_time_for_watched", false);
   static final long MIN_WATCH_TIME = 5000L;
   // The duration of the Show cannot be more than this less than the Airing
   // duration in order to use the Show duration. This is to account for channels
@@ -189,7 +190,6 @@ public class BigBrother
     triggerWatchedChangeEvent(a);
   }
 
-  public static boolean alwaysUseAiringWatched = Sage.getBoolean("wizard/always_use_airing_for_watched_status", false);
   public static boolean setWatched(Airing a)
   {
     return setWatched(a, 0, 0, 0, 0, false);
@@ -241,7 +241,7 @@ public class BigBrother
       // as being completely seen.
       long validDuration = (a.isDVD() && !a.isBluRay()) ? Long.MAX_VALUE : a.duration;
       if (s != null && s.duration > 10000 && s.duration < a.duration && // ignore running times that are in the wrong units
-          a.duration - s.duration < MAX_DURATION_DIFF_TO_USE_SHOW && !alwaysUseAiringWatched)
+          a.duration - s.duration < MAX_DURATION_DIFF_TO_USE_SHOW && !dontUseRunningTimeForWatched)
         validDuration = s.duration;
       if (priorWatch != null) {
         // Include prior watched data in calculating whether or not this new one
@@ -296,9 +296,6 @@ public class BigBrother
     return (wa.duration - w.getWatchDuration() < getWatchIgnoreTime(wa) &&
         (((double) w.getWatchDuration())/wa.duration) > COMPLETE_WATCH_FRACTION);
   }
-
-  public static long watchIgnoreTime = Sage.getLong("wizard/watch_ignore_time", WATCH_IGNORE_TIME);
-  public static long watchIgnoreTimeMovie = Sage.getLong("wizard/watch_ignore_time_movie", WATCH_IGNORE_TIME_MOVIE);
 
   public static long getWatchIgnoreTime(Airing a)
   {
