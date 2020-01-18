@@ -106,7 +106,7 @@ _inline int   SeekPmtByProgram( TS_PARSER* pParser, unsigned short Program );
 static  short GetChannelNum( TS_PARSER* pParser, short ProgramNum );
 //static  bool  IsSelectedChannel( TS_PARSER* pParser, short ChannelNum );
 static  int   SetSeletedChannelByProgramNum( TS_PARSER* pParser, unsigned short ProgramNum );
-static  int   ParseData( TS_PARSER* pParser, const unsigned char* pStartData, long dwBytes );
+static  int   ParseData( TS_PARSER* pParser, const unsigned char* pStartData, LONGLONG dwBytes );
 static  void  CalcStreamPacketInterval( TS_PARSER* pParser, LONGLONG PCR, unsigned long packets );
 static void SavePAT( TS_PARSER* pParser, TS_PAT* Pat );
 int static LookUpPidHit( TS_PARSER* pParser, unsigned pid );
@@ -1149,7 +1149,7 @@ bool UnpackSectionData( bool bStartFlag, TS_SECTION* pSection, const unsigned ch
 		if ( section_data > pbData + nSize )
 			return false;
 
-		last_bytes = section_data - pbData - 1;
+		last_bytes = (int)(section_data - pbData) - 1;
 		if ( last_bytes > 0 )
 		{
 			//if ( pSection->data_size == pSection->bytes + last_bytes && pSection->data != NULL )
@@ -1195,7 +1195,7 @@ bool UnpackSectionData( bool bStartFlag, TS_SECTION* pSection, const unsigned ch
     if ( pSection->data == NULL )
 		  return false;
 
-	if ( PushSectionData( pSection, (char*)section_data, nSize-(section_data-pbData) ) )
+	if ( PushSectionData( pSection, (char*)section_data, nSize-(int)(section_data-pbData) ) )
 	{
 		if ( SectionCrcCheck( pSection ) )
 			return true;
@@ -1934,12 +1934,12 @@ void StartParser( TS_PARSER* pParser )
 	pParser->abort = false;
 }
 
-static int ParseData( TS_PARSER* pParser, const unsigned char* pStartData, long dwBytes )
+static int ParseData( TS_PARSER* pParser, const unsigned char* pStartData, LONGLONG dwBytes )
 {
 	const unsigned char	*pData;
 	const unsigned char	*pPayload;	
 	int	 dwSearchBytes;	
-	unsigned short used_bytes;
+	unsigned used_bytes;
 	//bool bPacketParsed = false;	
 	bool bSyncFound;
 	int ret;
@@ -1960,7 +1960,7 @@ static int ParseData( TS_PARSER* pParser, const unsigned char* pStartData, long 
 		if ( pParser->abort ) return used_bytes;
 
 		/* if we don't have	a whole	packet,	we don't parse it */
-		dwSearchBytes =	( pStartData + dwBytes ) - pData;
+		dwSearchBytes =	(int)(( pStartData + dwBytes ) - pData);
 		if (  dwSearchBytes	< (TS_PACKET_LENGTH*2)  )	
 			break;
 
@@ -1975,11 +1975,11 @@ static int ParseData( TS_PARSER* pParser, const unsigned char* pStartData, long 
 			bSyncFound = SearchTsHeader( pData, dwSearchBytes, &pHeader );
 
 		if ( bSyncFound ) {
-			used_bytes += (pHeader - pData);
+			used_bytes += (unsigned)(pHeader - pData);
 			pData = pHeader;
 		} else {
 			if(pHeader)
-				used_bytes += (pHeader - pData);	// only skip past what we've already searched
+				used_bytes += (unsigned)(pHeader - pData);	// only skip past what we've already searched
 			else
 				used_bytes += dwSearchBytes;
 		}
@@ -1996,7 +1996,7 @@ static int ParseData( TS_PARSER* pParser, const unsigned char* pStartData, long 
 			 int Bytes = 0;
 			 short map_channel;
 			 int pid_array_id = -1;
-			 unsigned header_bytes = pPayload - pHeader;
+			 unsigned header_bytes = (unsigned)(pPayload - pHeader);
 
 			 pParser->data_offset = used_bytes;
 
@@ -2023,7 +2023,7 @@ static int ParseData( TS_PARSER* pParser, const unsigned char* pStartData, long 
 			 }
 
 			 if ( pPayload != NULL )
-				 Bytes = TS_PACKET_LENGTH - (pPayload - pHeader);
+				 Bytes = TS_PACKET_LENGTH - (int)(pPayload - pHeader);
 			 if ( pParser->enable_pid_stat )
 			 {
 				if ( ( pid_array_id = LookUpPidHit( pParser, pParser->TSHeader.pid ) )<0 )

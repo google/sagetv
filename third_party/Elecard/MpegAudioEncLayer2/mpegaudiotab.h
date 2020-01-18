@@ -72,7 +72,7 @@ static int scale_factor_table[64];
 static float scale_factor_inv_table[64];
 #else
 static INT8 scale_factor_shift[64];
-static unsigned short scale_factor_mult[64];
+static double scale_factor_mult[64];
 #endif
 static unsigned char scale_diff_table[128];
 

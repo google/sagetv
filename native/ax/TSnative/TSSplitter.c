@@ -1609,7 +1609,7 @@ static void NotifySteamInfo( TSSPLT* ts )
 
 	if ( ts->pfnAVInfDump != NULL &&  ts->avinfo_ctrl != 0 )
 	{
-		ts->pfnAVInfDump( ts->AVInfContext, strlen(buf)+1, buf );
+		ts->pfnAVInfDump( ts->AVInfContext, (short)strlen(buf)+1, buf );
 	}
 	flog(( "native.log", "AVINF was posted to 0x%x (ctrl:%d): %s\n", ts->pfnAVInfDump, ts->avinfo_ctrl, buf ));
 }

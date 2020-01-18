@@ -37,7 +37,7 @@ void *av_mallocz(unsigned int size)
 }
 
 /* allocation of static arrays - do not use for normal allocation */
-static unsigned int last_static = 0;
+static int last_static = 0;
 static char*** array_static = NULL;
 static const unsigned int grow_static = 64; // ^2
 void *__av_mallocz_static(void** location, unsigned int size)
@@ -61,7 +61,7 @@ void av_free_static()
 {
     if (array_static)
     {
-	unsigned i;
+	int i;
 	for (i = 0; i < last_static; i++)
 	{
 	    free(*array_static[i]);
@@ -225,7 +225,7 @@ void avcodec_get_context_defaults(AVCodecContext *s){
     s->max_qdiff= 3;
     s->b_quant_factor=1.25;
     s->b_quant_offset=1.25;
-    s->i_quant_factor=-0.8;
+    s->i_quant_factor=-0.8f; // resolve warning C4305 truncation from 'double' to 'float'
     s->i_quant_offset=0.0;
     s->error_concealment= 3;
     s->error_resilience= 1;
@@ -482,16 +482,16 @@ void avcodec_string(char *buf, int buf_size, AVCodecContext *enc, int encode)
                  codec_name);
         switch (enc->channels) {
             case 1:
-                strcpy(channels_str, "mono"); // throws warning C4996 my be unsafe
+                strcpy_s(channels_str, strlen("mono"), "mono");
                 break;
             case 2:
-                strcpy(channels_str, "stereo"); // throws warning C4996 my be unsafe
+				strcpy_s(channels_str, strlen("stereo"), "stereo");
                 break;
             case 6:
-                strcpy(channels_str, "5:1"); // throws warning C4996 my be unsafe
+                strcpy_s(channels_str, strlen("5:1"), "5:1");
                 break;
             default:
-                sprintf(channels_str, "%d channels", enc->channels); // throws warning C4996 my be unsafe
+                sprintf_s(channels_str, strlen(channels_str), "%d channels", enc->channels);
                 break;
         }
         if (enc->sample_rate) {

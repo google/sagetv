@@ -3506,9 +3506,9 @@ static int _CopyFile( char* src, char *tar )
 	
 	while ( !feof( fs ) )
 	{
-		size_t n = fread( buf, 1, sizeof(buf), fs );
+		n = (int)fread( buf, 1, sizeof(buf), fs );
 		if ( n == 0 ) break;
-		sum += fwrite( buf, 1, n, ft );
+		sum += (int)fwrite( buf, 1, n, ft );
 	}
 	fclose( fs );
 	fclose( ft );

@@ -218,7 +218,7 @@ static BOOL OnAirQAMSupportCheck( JNIEnv *env, DShowCaptureInfo* pCapInfo, void*
 		return FALSE;
 
 	*pData = NULL;
-	graphTools.strCopyA2W( pTunerDevName, TunerName, strlen(TunerName)  ) ;
+	graphTools.strCopyA2W( pTunerDevName, TunerName, (int)strlen(TunerName)  ) ;
 	CComPtr <IBaseFilter> piTVTunerFilter;
 	hr = graphTools.AddFilterByDevicePath( pCapInfo->pGraph, &piTVTunerFilter, pTunerDevName, L"Fake Tuner for BDA" );
 	if ( hr == S_OK )
@@ -299,7 +299,7 @@ static HRESULT OnAirQAMSSetup( JNIEnv *env, DShowCaptureInfo* pCapInfo, void* pD
 		return S_OK;
 
 	TunerName = (char*)pData;
-	graphTools.strCopyA2W( pTunerDevName, TunerName, strlen(TunerName)  ) ;
+	graphTools.strCopyA2W( pTunerDevName, TunerName, (int)strlen(TunerName)  ) ;
 	CComPtr <IBaseFilter> piTVTunerFilter;
 	hr = graphTools.AddFilterByDevicePath( pCapInfo->pGraph, &piTVTunerFilter, pTunerDevName, L"USB HDTV-GT Tuner" );
 	if ( hr == S_OK )

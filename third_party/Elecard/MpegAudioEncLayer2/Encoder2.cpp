@@ -216,7 +216,7 @@ HRESULT CEncoder2::Encode(LPVOID pSrc, DWORD dwSrcSize, LPVOID pDst, LPDWORD lpd
 		DbgLog((LOG_TRACE, 1, TEXT("Encode filled=%d srcSize=%d"), filled, dwSrcSize));
 		int left=0;
 		int cpylen=dwSrcSize;
-		if(filled+dwSrcSize>frame_size*4)
+		if(filled+(int)dwSrcSize>frame_size*4)
 		{
 			cpylen=frame_size*4-filled;
 			left=filled+dwSrcSize-frame_size*4;

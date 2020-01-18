@@ -134,7 +134,7 @@ HRESULT CNetStreamData::OpenConnection( )
 	// Check if we need to use the Unicode version
 	size_t wlen = wcslen(m_pFileName);
 	int needUni = 0;
-	for (int i = 0; i < wlen; i++)
+	for (size_t i = 0; i < wlen; i++)
 	{
 		if (m_pFileName[i] > 0x7F)
 		{
@@ -147,8 +147,8 @@ HRESULT CNetStreamData::OpenConnection( )
 		strcpy(data, "OPENW ");
 	else
 		strcpy(data, "OPEN ");
-	size_t dataIdx = strlen(data);
-	for (int i = 0; i < wlen; i++, dataIdx+=(needUni?2:1))
+	int dataIdx = (int)strlen(data);
+	for (size_t i = 0; i < wlen; i++, dataIdx+=(needUni?2:1))
 	{
 		if (needUni)
 		{
@@ -189,7 +189,7 @@ void CNetStreamData::CloseConnection()
 	if (m_sd != INVALID_SOCKET)
 	{
 		char* data = "QUIT\r\n";
-		size_t dataSize = strlen(data);
+		int dataSize = (int)strlen(data);
 		send(m_sd, data, dataSize, 0);
 		closesocket(m_sd);
 		m_sd = INVALID_SOCKET;
@@ -286,7 +286,7 @@ HRESULT CNetStreamData::SetPointer(LONGLONG llPos)
 	}
 	char data[512];
 	sprintf(data, "SIZE\r\n");
-	size_t dataSize = strlen(data);
+	int dataSize = (int)strlen(data);
 	if (send(m_sd, data, dataSize, 0) < dataSize)
 	{
 		DbgLog((LOG_TRACE, 2, TEXT("socket write failed, reopening...")));
@@ -370,7 +370,7 @@ HRESULT CNetStreamData::Read(PBYTE pbBuffer, DWORD dwBytesToRead, BOOL bAlign, L
 		temp[--pos] = (TCHAR) digit+L'0';
 	} while (li.QuadPart);
 	sprintf(data, "READ %s %d\r\n", temp+pos, dwBytesToRead);
-	size_t dataSize = strlen(data);
+	int dataSize = (int)strlen(data);
 	if (send(m_sd, data, dataSize, 0) < dataSize)
 	{
 		DbgLog((LOG_TRACE, 2, TEXT("socket write failed, reopening connection...")));
@@ -442,7 +442,7 @@ LONGLONG CNetStreamData::Size( LONGLONG *pSizeAvailable , LONGLONG *pOverwritten
 	LONGLONG SizeAvailable;
 	char data[512];
 	sprintf(data, "SIZE\r\n");
-	size_t dataSize = strlen(data);
+	int dataSize = (int)strlen(data);
 	if (send(m_sd, data, dataSize, 0) < dataSize)
 	{
 		DbgLog((LOG_TRACE, 3, TEXT("socket write failed, reopening...")));

@@ -117,7 +117,7 @@ int MPA_encode_init(AVCodecContext *avctx)
 
     /* compute total header size & pad bit */
     
-    a = (float)(bitrate * 1000 * MPA_FRAME_SIZE) / (freq * 8.0);
+    a = (float)(bitrate * 1000 * MPA_FRAME_SIZE) / (freq * 8.0f); // resolve warning C4305 truncation from 'double' to 'float'
     s->frame_size = ((int)a) * 8;
 
     /* frame fractional size to compute padding */
@@ -528,7 +528,7 @@ static void compute_bit_allocation(MpegAudioContext *s,
     for(i=0;i<s->sblimit;i++) {
         incr = alloc[0];
         current_frame_size += incr * s->nb_channels;
-        alloc += 1 << incr;
+        alloc += 1i64 << incr;
     }
     for(;;) {
         /* look for the subband with the largest signal to mask ratio */
@@ -551,7 +551,7 @@ static void compute_bit_allocation(MpegAudioContext *s,
            pointer table) */
         alloc = s->alloc_table;
         for(i=0;i<max_sb;i++) {
-            alloc += 1 << alloc[0];
+            alloc += 1i64 << alloc[0];
         }
 
         if (subband_status[max_ch][max_sb] == SB_NOTALLOCATED) {
@@ -682,10 +682,10 @@ static void encode_frame(MpegAudioContext *s,
                             }
 #else
                             {
-                                int q1, e, shift, mult;
+								int q1, e, shift, mult;
                                 e = s->scale_factors[ch][i][k];
                                 shift = scale_factor_shift[e];
-                                mult = scale_factor_mult[e];
+                                mult = (int)scale_factor_mult[e];
                                 
                                 /* normalize to P bits */
                                 if (shift < 0)
@@ -754,7 +754,7 @@ int MPA_encode_frame(AVCodecContext *avctx,
     encode_frame(s, bit_alloc, padding);
     
     s->nb_samples += MPA_FRAME_SIZE;
-    return pbBufPtr(&s->pb) - s->pb.buf;
+    return (int)(pbBufPtr(&s->pb) - s->pb.buf);
 }
 
 static int MPA_encode_close(AVCodecContext *avctx)

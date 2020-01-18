@@ -118,7 +118,7 @@ private:
 	IMemAllocator*  m_pAlloc;
 	DWORD			m_dwBlockSize;
 	DWORD			m_dwAllocSize;
-	DWORD		    m_dwBufferAlign; 
+	DWORD_PTR	    m_dwBufferAlign; 
 
     //  Get a properly case pointer to our filter
 	ULONGLONG tNext,  tCurrent;
@@ -128,7 +128,7 @@ private:
 
 	//for debug 
 	FILE* fd;
-	unsigned long offset;
+	size_t offset;
 	void *_sample;
 	unsigned long _cksum;
 
