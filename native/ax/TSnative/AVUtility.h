@@ -288,7 +288,7 @@ typedef	struct {
 	long		   lXPelsPerMeter;	   //  Pel aspect ratio	
 	long		   lYPelsPerMeter;	   //  Pel aspect ratio	
 	unsigned long  StartTimeCode;	   //  First GOP time code (or -1)
-	short		   ActualHeaderLen;	   //  Length of valid bytes in	raw	seq	hdr	
+	int		   ActualHeaderLen;	   //  Length of valid bytes in	raw	seq	hdr	
 	unsigned char		   RawHeader[150];	   //  The real	sequence header	
 } SEQHDR;
 
@@ -344,8 +344,8 @@ typedef	struct	{
 	bool		   HasDts;
 	LONGLONG	   llPts;
 	LONGLONG	   llDts;
-	unsigned	   short PTSOffset;
-	unsigned	   short DTSOffset;
+	LONGLONG	   PTSOffset;  // integral promotion results in LONGLONG
+	LONGLONG	   DTSOffset;  // integral promotion results in LONGLONG
 	char		   type;	//0:unknowm, 1:mpeg1, 2:mpeg2
 	LONGLONG       SCR;
 	bool           bGroupStart;

@@ -17,8 +17,8 @@
 //#define _CRT_SECURE_NO_DEPRECATE 1
 //#define _CRT_NONSTDC_NO_DEPRECATE 1
 //#define _CRT_SECURE_NO_WARNINGS 1
-#pragma warning(disable : 4995)
-#pragma warning(disable : 234)
+// #pragma warning(disable : 4995)
+// #pragma warning(disable : 234)
 #ifndef _WIN64
   #define _USE_32BIT_TIME_T
 #endif
@@ -894,7 +894,7 @@ void CSDeMuxFilter::ReleasedSample( IMediaSample * pSample )
 				if ( m_pfnEventDump != NULL  )
 				{
 					snprintf( message, sizeof(message), "EndOfStream pos:%s", (LPCSTR)Disp( (LONGLONG)Props.tStart, DISP_DEC ) );  
-							((EVENT_DUMP)m_pfnEventDump)( m_EventDumpContext, strlen(message), message ); 
+							((EVENT_DUMP)m_pfnEventDump)( m_EventDumpContext, (short)strlen(message), message ); 
 					DbgLog((LOG_TRACE, 2, TEXT("Sent Message %s"), message ));
 				}
 			}
@@ -909,7 +909,7 @@ void CSDeMuxFilter::ReleasedSample( IMediaSample * pSample )
 			if ( m_pfnEventDump != NULL  )
 			{
 				snprintf( message, sizeof(message), "EndOfStream pos:%s", (LPCSTR)Disp( (LONGLONG)m_rtCurrPTS, DISP_DEC ) );  
-						((EVENT_DUMP)m_pfnEventDump)( m_EventDumpContext, strlen(message), message ); 
+						((EVENT_DUMP)m_pfnEventDump)( m_EventDumpContext, (short)strlen(message), message ); 
 				DbgLog((LOG_TRACE, 2, TEXT("Sent Message %s"), message ));
 			}
 		}

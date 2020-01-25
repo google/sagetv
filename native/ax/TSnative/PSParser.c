@@ -255,7 +255,7 @@ void PSFlushout( PS_PARSER* pParser )
 	if 	( pParser->data_block_remain > pParser->data_block_buffer )
 	{
 		ProcessPacketData( pParser, pParser->data_block_buffer, 
-			               pParser->data_block_remain - pParser->data_block_buffer, false );
+			               (int)(pParser->data_block_remain - pParser->data_block_buffer), false );
 	}
 
 }
@@ -700,7 +700,7 @@ static int ProcessNewPacketData( PS_PARSER* pParser, char* pData, int Size )
 
 		if ( SearchMPEG2StartCode( (unsigned char*)pData+used_bytes, Size-used_bytes, PACK_START_CODE, &ptr )  )
 		{
-			used_bytes += ptr - ((unsigned char*)pData+used_bytes);
+			used_bytes += (int)(ptr - ((unsigned char*)pData+used_bytes));
 			bytes = UnpackPackHeader( pData+used_bytes, Size, &demux, &ref_time );
 			if ( bytes == 0 ) bytes++;
 
@@ -917,7 +917,7 @@ void PSProcessBlock( PS_PARSER* pParser, int Size, char* pData )
 	
 	while ( Size > 0 )
 	{
-		remain_bytes = ( pParser->data_block_remain - pParser->data_block_buffer );
+		remain_bytes = (int)( pParser->data_block_remain - pParser->data_block_buffer );
 		bytes = _MIN( Size, pParser->data_block_size - remain_bytes );
 		memcpy( pParser->data_block_remain, pData, bytes );
 		pData += bytes;
@@ -928,7 +928,7 @@ void PSProcessBlock( PS_PARSER* pParser, int Size, char* pData )
 		if ( SearchStartCode( (unsigned char*)pParser->data_block_buffer, total_bytes, &ptr ) )
 		{
 			int uncommited_bytes;
-			uncommited_bytes = ptr - (unsigned char*)pParser->data_block_buffer;
+			uncommited_bytes = (int)(ptr - (unsigned char*)pParser->data_block_buffer);
 			if ( uncommited_bytes )
 			{
 				used_bytes = ProcessPacketData( pParser, pParser->data_block_buffer, uncommited_bytes, false );
@@ -996,7 +996,7 @@ unsigned long PSProcessBlockWithoutBuffer( PS_PARSER* pParser, int Size, char* p
 
 		} else
 		{
-			used_bytes += ptr - ((unsigned char*)pData+used_bytes);
+			used_bytes += (int)(ptr - ((unsigned char*)pData+used_bytes));
 		}
 
 		ref_time = 0;

@@ -871,7 +871,7 @@ void CDeMuxFilter::ReleasedSample( IMediaSample * pSample )
 					if ( m_pfnEventDump != NULL  )
 					{
 						snprintf( message, sizeof(message), "EndOfStream pos:%s", (LPCSTR)Disp( (LONGLONG)Props.tStart, DISP_DEC ) );  
-									((EVENT_DUMP)m_pfnEventDump)( m_EventDumpContext, strlen(message), message ); 
+									((EVENT_DUMP)m_pfnEventDump)( m_EventDumpContext, (short)strlen(message), message ); 
 						DbgLog((LOG_TRACE, 2, TEXT("Sent Message %s"), message ));
 					}
 				}
@@ -884,7 +884,7 @@ void CDeMuxFilter::ReleasedSample( IMediaSample * pSample )
 				if ( m_pfnEventDump != NULL  )
 				{
 					snprintf( message, sizeof(message), "EndOfStream pos:%s", (LPCSTR)Disp( (LONGLONG)m_rtCurrPTS, DISP_DEC ) );  
-							((EVENT_DUMP)m_pfnEventDump)( m_EventDumpContext, strlen(message), message ); 
+							((EVENT_DUMP)m_pfnEventDump)( m_EventDumpContext, (short)strlen(message), message ); 
 					DbgLog((LOG_TRACE, 2, TEXT("Sent Message %s"), message ));
 				}
 

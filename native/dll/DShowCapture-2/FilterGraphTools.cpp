@@ -2424,7 +2424,7 @@ void FilterGraphTools::strCopy(LPSTR &dest, LPCSTR src, long length)
 	if (dest)
 		delete[] dest;
 	if (length < 0)
-		length = strlen(src);
+		length = lstrlenA(src);
 	dest = new char[length + 1];
 	memcpy(dest, src, length);
 	dest[length] = 0;
@@ -2435,7 +2435,7 @@ void FilterGraphTools::strCopy(LPWSTR &dest, LPCWSTR src, long length)
 	if (dest)
 		delete[] dest;
 	if (length < 0)
-		length = wcslen(src);
+		length = (int)wcslen(src);
 	dest = new wchar_t[length + 1];
 	memcpy(dest, src, length*2);
 	dest[length] = 0;
@@ -2446,7 +2446,7 @@ void FilterGraphTools::strCopyA2W(LPWSTR &dest, LPCSTR src, long length)
 	if (dest)
 		delete[] dest;
 	if (length < 0)
-		length = strlen(src);
+		length = lstrlenA(src);
 	dest = new wchar_t[length + 1];
 	mbstowcs(dest, src, length);
 	dest[length] = 0;
@@ -2457,7 +2457,7 @@ void FilterGraphTools::strCopyW2A(LPSTR &dest, LPCWSTR src, long length)
 	if (dest)
 		delete[] dest;
 	if (length < 0)
-		length = wcslen(src);
+		length = (int)wcslen(src);
 	dest = new char[length + 1];
 	wcstombs(dest, src, length);
 	dest[length]=0;

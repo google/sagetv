@@ -298,7 +298,7 @@ int PushPat( TS_BUILDER* pBuilder )
 			pPayload += *pPayload + 1; 
 		}
 
-		bytes = PopSectionData( &pBuilder->Pat.section, (char*)pPayload, TS_PACKET_LENGTH-(pPayload-data) );
+		bytes = PopSectionData( &pBuilder->Pat.section, (char*)pPayload, TS_PACKET_LENGTH-(int)(pPayload-data) );
 		if ( bytes )
 		{
 			PutPacket( pBuilder, (char*)data, 0, (short)(data-pPayload) );
@@ -399,7 +399,7 @@ int PushPmt( TS_BUILDER* pBuilder, int PrgrmID )
 			pPayload += *pPayload + 1; 
 		}
 	
-		bytes = PopSectionData( pBuilder->Pmt[i].section, (char*)pPayload, TS_PACKET_LENGTH-(pPayload-data) );
+		bytes = PopSectionData( pBuilder->Pmt[i].section, (char*)pPayload, TS_PACKET_LENGTH-(int)(pPayload-data) );
 		if ( bytes )
 		{
 			PutPacket( pBuilder, (char*)data, 1, (short)(data-pPayload) );
@@ -493,7 +493,7 @@ int PushBlockData( TS_BUILDER* pBuilder, int PrgrmID, int StreamID, char* pData,
 			pPayload += *pPayload + 1; 
 		}
 
-		bytes = TS_PACKET_LENGTH-(pPayload-data);
+		bytes = TS_PACKET_LENGTH-(int)(pPayload-data);
 		memcpy( pPayload, pData + total_bytes, bytes);
 		PutPacket( pBuilder, data, 2, (short)(data-pPayload) );
 		i++;

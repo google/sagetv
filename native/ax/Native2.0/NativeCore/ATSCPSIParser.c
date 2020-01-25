@@ -528,7 +528,7 @@ static int ConvertAdvisoryInfo( ATSC_PSI* pATSCPSI, CAD *cad, char* buf, int max
 
 				if ( cad_name[0] && cad_value[0] )
 				{
-					if ( strlen( p ) + strlen( cad_name) + strlen( cad_value ) + 2 < (int32_t)max_bytes )
+					if ( strlen( p ) + strlen( cad_name) + strlen( cad_value ) + 2 < (size_t)max_bytes )
 					{
 						strcat( p, cad_name ); p += (int)strlen(cad_name);
 						strcat( p, ":" );	   p++;
@@ -539,7 +539,7 @@ static int ConvertAdvisoryInfo( ATSC_PSI* pATSCPSI, CAD *cad, char* buf, int max
 				}
 			}
 
-			if ( cad->description[i].bytes && strlen( p )+ cad->description[i].bytes+3< (int32_t)max_bytes  )
+			if ( cad->description[i].bytes && strlen( p )+ cad->description[i].bytes+3< (size_t)max_bytes  )
 			{
 				strcat(p,"(");   p++;
 				memcpy( p,  (char*)cad->description[i].data, cad->description[i].bytes );

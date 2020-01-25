@@ -3493,7 +3493,7 @@ static int _CopyFile( char* src, char *tar )
 {
 	FILE *fs, *ft;
 	char buf[512];
-	int n, sum=0;
+	size_t n, sum=0;
 	fs = fopen( src, "rb" );
 	if ( fs == NULL )
 		return -1;
@@ -3506,13 +3506,13 @@ static int _CopyFile( char* src, char *tar )
 	
 	while ( !feof( fs ) )
 	{
-		size_t n = fread( buf, 1, sizeof(buf), fs );
+		n = fread( buf, 1, sizeof(buf), fs );
 		if ( n == 0 ) break;
 		sum += fwrite( buf, 1, n, ft );
 	}
 	fclose( fs );
 	fclose( ft );
-	return sum;
+	return (int)sum;
 }
 
 #ifdef WIN32

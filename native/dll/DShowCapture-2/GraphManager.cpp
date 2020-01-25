@@ -227,7 +227,7 @@ DShowCaptureInfo *CreateDshowCaptureInfo( JNIEnv *env, char* videoCaptureFilterN
 
 		SPRINTF( rv.TunerIDName, sizeof(rv.TunerIDName), "%s-%d", rv.videoCaptureFilterName, rv.videoCaptureFilterNum );
 		//convert  illegal characters
-		for ( i = 0; i<(int)strlen(rv.TunerIDName) && i<(int)sizeof(rv.TunerIDName); i++ )
+		for ( i = 0; i<lstrlenA(rv.TunerIDName) && i<(int)sizeof(rv.TunerIDName); i++ )
 		{
 			if ( rv.TunerIDName[i] == '\\' || rv.TunerIDName[i] == '/' || rv.TunerIDName[i] == ':' || rv.TunerIDName[i] == '?' ||
 				 rv.TunerIDName[i] == '*'  || rv.TunerIDName[i] == '<' || rv.TunerIDName[i] == '>'  || rv.TunerIDName[i] == '|' )
