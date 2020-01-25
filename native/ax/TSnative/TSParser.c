@@ -1975,11 +1975,11 @@ static int ParseData( TS_PARSER* pParser, const unsigned char* pStartData, LONGL
 			bSyncFound = SearchTsHeader( pData, dwSearchBytes, &pHeader );
 
 		if ( bSyncFound ) {
-			used_bytes += (unsigned)(pHeader - pData);
+			used_bytes += (unsigned int)(pHeader - pData);
 			pData = pHeader;
 		} else {
 			if(pHeader)
-				used_bytes += (unsigned)(pHeader - pData);	// only skip past what we've already searched
+				used_bytes += (unsigned int)(pHeader - pData);	// only skip past what we've already searched
 			else
 				used_bytes += dwSearchBytes;
 		}
@@ -1996,7 +1996,7 @@ static int ParseData( TS_PARSER* pParser, const unsigned char* pStartData, LONGL
 			 int Bytes = 0;
 			 short map_channel;
 			 int pid_array_id = -1;
-			 unsigned header_bytes = (unsigned)(pPayload - pHeader);
+			 unsigned header_bytes = (unsigned int)(pPayload - pHeader);
 
 			 pParser->data_offset = used_bytes;
 
