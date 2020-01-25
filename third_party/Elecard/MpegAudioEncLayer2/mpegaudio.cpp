@@ -551,7 +551,7 @@ static void compute_bit_allocation(MpegAudioContext *s,
            pointer table) */
         alloc = s->alloc_table;
         for(i=0;i<max_sb;i++) {
-            alloc += 1i64 << alloc[0];
+            alloc += 1LL << alloc[0];
         }
 
         if (subband_status[max_ch][max_sb] == SB_NOTALLOCATED) {

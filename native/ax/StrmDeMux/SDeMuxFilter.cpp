@@ -17,8 +17,8 @@
 //#define _CRT_SECURE_NO_DEPRECATE 1
 //#define _CRT_NONSTDC_NO_DEPRECATE 1
 //#define _CRT_SECURE_NO_WARNINGS 1
-#pragma warning(disable : 4995)
-#pragma warning(disable : 234)
+// #pragma warning(disable : 4995)
+// #pragma warning(disable : 234)
 #ifndef _WIN64
   #define _USE_32BIT_TIME_T
 #endif

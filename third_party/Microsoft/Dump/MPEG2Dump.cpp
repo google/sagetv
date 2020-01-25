@@ -1282,7 +1282,6 @@ HRESULT CMPEG2Dump::WriteNetwork(PBYTE data, DWORD len)
 		temp[--pos] = (TCHAR) digit+L'0';
 	} while (li.QuadPart);
 	sprintf(request, "WRITE %s %d\r\n", temp+pos, m_bRegOptimizeTransfers ? m_bytesLeftInNetworkWrite : len);
-	// strlen cast as int to prevent warning C4267, as send needs dataSize to be int
 	int dataSize = lstrlenA(request);
 	if (send(sd, request, dataSize, 0) < dataSize)
 	{
@@ -1676,7 +1675,6 @@ HRESULT CMPEG2Dump::OpenConnection()
 	char data[512];
 	sprintf(data, "WRITEOPEN %s %d\r\n", lpszFileName, m_dwUploadKey);
 	delete [] lpszFileName;
-	// strlen cast as int to prevent warning C4267, as send needs dataSize to be int
 	int dataSize = lstrlenA(data);
 	if (send(sd, data, dataSize, 0) < dataSize)
 	{
@@ -1700,7 +1698,6 @@ HRESULT CMPEG2Dump::CloseConnection()
 {
 	DbgLog((LOG_TRACE, 2, TEXT("CloseConnection() IN")));
 	char* data = "QUIT\r\n";
-	// strlen cast as int to prevent warning C4267, as send needs dataSize to be int
 	int dataSize = lstrlenA(data);
 	send(sd, data, dataSize, 0);
 	closesocket(sd);

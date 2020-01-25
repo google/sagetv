@@ -344,7 +344,7 @@ typedef	struct	{
 	bool		   HasDts;
 	LONGLONG	   llPts;
 	LONGLONG	   llDts;
-	LONGLONG       PTSOffset;  // integral promotion results in LONGLONG
+	LONGLONG	   PTSOffset;  // integral promotion results in LONGLONG
 	LONGLONG	   DTSOffset;  // integral promotion results in LONGLONG
 	char		   type;	//0:unknowm, 1:mpeg1, 2:mpeg2
 	LONGLONG       SCR;

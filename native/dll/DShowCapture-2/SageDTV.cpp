@@ -15,8 +15,8 @@
  */
 
 // Eliminate silly MS compiler security warnings about using POSIX functions
-#pragma warning(disable : 4996)
-#pragma warning(disable: 4702)
+// #pragma warning(disable : 4996)
+// #pragma warning(disable: 4702)
 #ifndef _WIN64
   #define _USE_32BIT_TIME_T
 #endif
