@@ -30,7 +30,7 @@ GraphPluginHandler::GraphPluginHandler(void)
 	
 	dwLen = GetModuleFileName(NULL, szModulePath, MAX_PATH);
 	pch=strrchr(szModulePath,'\\')+1;
-	dwLen = dwLen - (int)strlen(pch);
+	dwLen = dwLen - lstrlenA(pch);
 	strncpy(szExePath, szModulePath, dwLen);
 	szExePath[dwLen] = '\0';
 

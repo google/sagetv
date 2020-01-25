@@ -318,7 +318,7 @@ int  CMPEG2FrameParser::ParseData( int nSession, const unsigned char *pbData, in
 		{
 			if ( m_nSessionState == OPEN_FLAG ) //OPEN_FLAG, last frame hasn't end yet
 			{
-				*pStartOffset = int(pStart - m_szBoundary)-3;
+				*pStartOffset = (int)(pStart - m_szBoundary)-3;
 				*pStopOffset = *pStartOffset;
 				ret |=  CLOSE_FLAG | CONTINUE_FLAG;
 				m_nNextStartOffset = *pStartOffset;
@@ -328,7 +328,7 @@ int  CMPEG2FrameParser::ParseData( int nSession, const unsigned char *pbData, in
 			{
 				UpdateState( type );
 				ret = m_bDropFrame ? 0 : VALID_FLAG;
-				*pStartOffset = int(pStart - m_szBoundary)-3;
+				*pStartOffset = (int)(pStart - m_szBoundary)-3;
 				*pStopOffset = *pStartOffset;
 				ret |= OPEN_FLAG;
 				m_nNextStartOffset = 0;
@@ -357,22 +357,22 @@ int  CMPEG2FrameParser::ParseData( int nSession, const unsigned char *pbData, in
 			int Bytes;
 			if ( SeekSequenceHeader( pbData+m_nNextStartOffset, nBytes-m_nNextStartOffset, &pSeqHdr ) )
 			{
-				pNext = pSeqHdr+4; Bytes = nBytes-int(pNext-pbData);
+				pNext = pSeqHdr+4; Bytes = nBytes-(int)(pNext-pbData);
 				if ( SeekExtensionHeader( pNext, Bytes, &pExtHdr ) )
 				{
-					pNext = pExtHdr+4; Bytes = nBytes-int(pNext-pbData);
+					pNext = pExtHdr+4; Bytes = nBytes-(int)(pNext-pbData);
 				} 
 				if ( SeekGroupHeader( pNext, Bytes, &pGrpHdr ) )
 				{
-					pNext = pGrpHdr+4; Bytes = nBytes-int(pNext-pbData);
+					pNext = pGrpHdr+4; Bytes = nBytes-(int)(pNext-pbData);
 
 					if ( SeekFrameType( pNext, Bytes,  &pStart ) == 1 )
 					{
-						m_nSeqHdrBytes = int(pStart - pSeqHdr);
+						m_nSeqHdrBytes = (int)(pStart - pSeqHdr);
 
 						if ( m_nSessionState == OPEN_FLAG )
 						{
-							*pStopOffset = int(pSeqHdr - pbData);
+							*pStopOffset = (int)(pSeqHdr - pbData);
 							m_nNextStartOffset = *pStopOffset;
 							ret |= CLOSE_FLAG ;
 							ret |= CONTINUE_FLAG;
@@ -382,20 +382,20 @@ int  CMPEG2FrameParser::ParseData( int nSession, const unsigned char *pbData, in
 						{
 							m_dwSeqFrameNum++;
 
-							m_nSeqHdrBytes = int(pGrpHdr - pSeqHdr);
+							m_nSeqHdrBytes = (int)(pGrpHdr - pSeqHdr);
 
 							if ( !m_bParserReady || memcmp( m_szSeqHdr, pSeqHdr, m_nSeqHdrBytes ) )
 							{
 								if ( m_nSeqHdrBytes < sizeof( m_szSeqHdr ) )
 									memcpy( m_szSeqHdr, pSeqHdr, m_nSeqHdrBytes );
-								*pStartOffset = int(pSeqHdr - pbData);
-								*pStopOffset  = int(pGrpHdr- pbData);
+								*pStartOffset = (int)(pSeqHdr - pbData);
+								*pStopOffset  = (int)(pGrpHdr- pbData);
 								m_nFrameType = 4;
 								m_bParserReady = TRUE;
 								ret = VALID_FLAG;
 								ret |= OPEN_FLAG | CLOSE_FLAG ;
 								ret |= CONTINUE_FLAG;
-								m_nNextStartOffset = int(pStart-pbData);
+								m_nNextStartOffset = (int)(pStart-pbData);
 								return ret;
 
 							}
@@ -409,7 +409,7 @@ int  CMPEG2FrameParser::ParseData( int nSession, const unsigned char *pbData, in
 		{
 			if ( m_nSessionState == OPEN_FLAG )
 			{
-				*pStopOffset = int(pStart - pbData);
+				*pStopOffset = (int)(pStart - pbData);
 				m_nNextStartOffset = *pStopOffset;
 				ret |= CLOSE_FLAG ;
 				ret |= CONTINUE_FLAG;
@@ -419,8 +419,8 @@ int  CMPEG2FrameParser::ParseData( int nSession, const unsigned char *pbData, in
 			{
 				UpdateState( type );
 				ret = m_bDropFrame ? 0 : VALID_FLAG;
-				*pStartOffset = int(pStart - pbData);
-				m_nNextStartOffset = int(pStart - pbData)+4;
+				*pStartOffset = (int)(pStart - pbData);
+				m_nNextStartOffset = (int)(pStart - pbData)+4;
 				ret |= OPEN_FLAG ;
 				m_nSessionState = OPEN_FLAG ;
 

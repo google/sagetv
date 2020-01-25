@@ -528,7 +528,7 @@ static void compute_bit_allocation(MpegAudioContext *s,
     for(i=0;i<s->sblimit;i++) {
         incr = alloc[0];
         current_frame_size += incr * s->nb_channels;
-        alloc += 1i64 << incr;
+        alloc += 1LL << incr;
     }
     for(;;) {
         /* look for the subband with the largest signal to mask ratio */
@@ -682,7 +682,7 @@ static void encode_frame(MpegAudioContext *s,
                             }
 #else
                             {
-								int q1, e, shift, mult;
+                                int q1, e, shift, mult;
                                 e = s->scale_factors[ch][i][k];
                                 shift = scale_factor_shift[e];
                                 mult = (int)scale_factor_mult[e];

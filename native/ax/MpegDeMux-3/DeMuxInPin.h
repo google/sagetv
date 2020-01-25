@@ -118,7 +118,7 @@ private:
 	IMemAllocator*  m_pAlloc;
 	DWORD			m_dwBlockSize;
 	DWORD			m_dwAllocSize;
-	DWORD_PTR	    m_dwBufferAlign; 
+	ULONGLONG		m_dwBufferAlign;
 
     //  Get a properly case pointer to our filter
 	ULONGLONG tNext,  tCurrent;

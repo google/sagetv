@@ -1939,7 +1939,7 @@ static int ParseData( TS_PARSER* pParser, const unsigned char* pStartData, LONGL
 	const unsigned char	*pData;
 	const unsigned char	*pPayload;	
 	int	 dwSearchBytes;	
-	unsigned used_bytes;
+	unsigned int used_bytes;
 	//bool bPacketParsed = false;	
 	bool bSyncFound;
 	int ret;

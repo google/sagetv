@@ -900,10 +900,10 @@ static int ContentAdvisoryBytes( SI_PARSER* pParser, CAD *cad )
 
 				if ( cad_name[0] && cad_value )
 				{
-					total_bytes += (int)strlen( cad_name) + (int)strlen( cad_value ) + 2;
+					total_bytes += strlen( cad_name) + strlen( cad_value ) + 2;
 				}
 
-				total_bytes += (int)strlen((char*)cad->rating[i].description)+3;
+				total_bytes += strlen((char*)cad->rating[i].description)+3;
 			}
 		}
 	}
@@ -959,7 +959,7 @@ static int ContentAdvisoryString( SI_PARSER* pParser, CAD *cad, char* buf, int m
 						strcat( p, ":" );
 						strcat( p, cad_value );
 						strcat( p, "," );
-						total_bytes += 2 + (int)strlen(cad_name)+(int)strlen(cad_value);
+						total_bytes += 2 + strlen(cad_name)+strlen(cad_value);
 					}
 				}
 			}
@@ -969,7 +969,7 @@ static int ContentAdvisoryString( SI_PARSER* pParser, CAD *cad, char* buf, int m
 				strcat(p,"(");
 				strcat( p,  (char*)cad->rating[i].description );
 				strcat(p,")," );
-				total_bytes += 3 + (int)strlen((char*)cad->rating[i].description);
+				total_bytes += 3 + strlen((char*)cad->rating[i].description);
 			}
 		}
 	}
@@ -1024,7 +1024,7 @@ int EPGNotifyATSC( SI_PARSER* pParser, EIT* pEit )
 
 	for ( i = 0; i<MAX_GENRE_NUM; i++ )
 	{
-		bytes += (int)strlen( genre_string(pEit->genre[i]))+1;
+		bytes += strlen( genre_string(pEit->genre[i]))+1;
 	}
 	
 	bytes += ContentAdvisoryBytes( pParser, pEit->cad );
@@ -1038,7 +1038,7 @@ int EPGNotifyATSC( SI_PARSER* pParser, EIT* pEit )
 		pVct->major_num, pVct->minor_num, pVct->minor_num == 0 ? "AN" :"DT", 
 		(long long) pEit->start_time, pEit->during_length, language	);
 
-	used_bytes += (int)strlen( buf );
+	used_bytes += strlen( buf );
 	if ( used_bytes >= bytes )
 		return ret;
 
@@ -1134,7 +1134,7 @@ int EPGNotifyATSC( SI_PARSER* pParser, EIT* pEit )
 			strcat( p, string );
 			strcat( p, "," );
 			p += strlen(string) + 1;
-			used_bytes += (int)strlen(string) + 1;
+			used_bytes += strlen(string) + 1;
 		}
 	}
 
@@ -1193,7 +1193,7 @@ int EPGNotifyDVB( SI_PARSER* pParser, DEIT* pEit )
 	{
 		int len = 0;
 		for ( i = 0; i<MAX_GENRE_NUM && pEit->content_desc[i]; i++ )
-			len += (int)strlen( dvb_genre_string(pEit->content_desc[i]) );
+			len += strlen( dvb_genre_string(pEit->content_desc[i]) );
 
 		bytes += len;
 	}
@@ -1241,7 +1241,7 @@ int EPGNotifyDVB( SI_PARSER* pParser, DEIT* pEit )
 	p = buf+strlen( buf );
 	if ( pEvent->title != NULL && pEvent->title_length > 0  )
 	{
-		p += MakeTextMesgString( p, (int)(bytes-(p-buf)), (char*)pEvent->title, pEvent->title_length );
+		p += MakeTextMesgString( p, bytes-(p-buf), (char*)pEvent->title, pEvent->title_length );
 		*p++ = '|';
 		*p = 0x0;
 	} else
@@ -1254,7 +1254,7 @@ int EPGNotifyDVB( SI_PARSER* pParser, DEIT* pEit )
 	{
 		if ( pEvent->message!= NULL && pEvent->mesg_length > 0 )
 		{
-			p += MakeTextMesgString( p, (int)(bytes-(p-buf)), (char*)pEvent->message, pEvent->mesg_length );
+			p += MakeTextMesgString( p, bytes-(p-buf), (char*)pEvent->message, pEvent->mesg_length );
 		}
 		if ( ext_mesg_length ) 
 		{
@@ -1262,7 +1262,7 @@ int EPGNotifyDVB( SI_PARSER* pParser, DEIT* pEit )
 			{
 				if ( pEit->ext_event[i]->text_length )
 				{
-					p  += MakeTextMesgString( p, (int)(bytes-(p-buf)), (char*)pEit->ext_event[i]->text, 
+					p  += MakeTextMesgString( p, bytes-(p-buf), (char*)pEit->ext_event[i]->text, 
 						                                   pEit->ext_event[i]->text_length );
 				}
 			}
@@ -1280,12 +1280,12 @@ int EPGNotifyDVB( SI_PARSER* pParser, DEIT* pEit )
 						{
 							int len;
 							*p++ = '{';
-							len = MakeTextMesgString( p, (int)(bytes-(p-buf)), 
+							len = MakeTextMesgString( p, bytes-(p-buf), 
 								(char*)pEit->ext_event[i]->items[j].item_desc, 
 								pEit->ext_event[i]->items[j].item_desc_length );
 							p += len;
 							*p++ = ':';
-							len = MakeTextMesgString( p, (int)(bytes-(p-buf)),
+							len = MakeTextMesgString( p, bytes-(p-buf),
 								(char*)pEit->ext_event[i]->items[j].item_text, 
 								pEit->ext_event[i]->items[j].item_text_length );
 							p += len;
@@ -4128,14 +4128,14 @@ static int  MakeTextMesgString ( char* buffer, int buffer_size, char* message, i
 		return 0;
 	if ( bytes + (int)strlen(data_desc) > buffer_size ) return 0;
 	strcpy( p, data_desc );
-	p += (int)strlen(data_desc); bytes += (int)strlen(data_desc);
+	p += strlen(data_desc); bytes += strlen(data_desc);
 
 	length = TotalDVBTextCtrlCodeNum( (unsigned char*)message+start_offset, mesg_length-start_offset, code_byte );
 	sprintf( data_desc, "[len=%d]", mesg_length-start_offset-length );
 	if ( bytes + (int)strlen(data_desc) > buffer_size ) return 0;
 
 	strcat( p, data_desc );
-	p += (int)strlen(data_desc); bytes += (int)strlen(data_desc);
+	p += strlen(data_desc); bytes += strlen(data_desc);
 
 	if ( bytes + mesg_length-start_offset > buffer_size-1 ) return 0;
 	
@@ -4165,7 +4165,7 @@ int TranslateJWideString2( char* buf_out, int buf_out_size, unsigned short* buf_
 	int len=0, i=0;
 	unsigned short* p = (unsigned short*)buf_in;
 	wchar_t* v;
-	size_t ret;
+	int ret;
 	if ( buf_out == NULL ) return 0;
 	while (  *p++  ) len++;
 
@@ -4190,7 +4190,7 @@ int TranslateJWideString2( char* buf_out, int buf_out_size, unsigned short* buf_
 		buf_out[len] = 0x0;
 	}
 	free( v );
-	return (int)strlen( buf_out );
+	return strlen( buf_out );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -4212,7 +4212,7 @@ static int MakeTERRESTRIALString( char* Buf, int Size,  TERRESTRIAL_DATA* data  
 		if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
 	}
 
-	return (int)strlen(Buf);
+	return strlen(Buf);
 }
 
 static int MakeCABLEString( char* Buf, int Size,  CABLE_DATA* data  )
@@ -4244,7 +4244,7 @@ static int MakeCABLEString( char* Buf, int Size,  CABLE_DATA* data  )
 		if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
 	}
 
-	return (int)strlen(Buf);
+	return strlen(Buf);
 }
 
 static int MakeSATELLITEString( char* Buf, int Size,  SATELLITE_DATA* data  )
@@ -4288,7 +4288,7 @@ static int MakeSATELLITEString( char* Buf, int Size,  SATELLITE_DATA* data  )
 		if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
 	}
 
-	return (int)strlen(Buf);
+	return strlen(Buf);
 }
 
 static int MakeDVBSNIT_INFString( char*Buf, int Size, NIT_INF *nit_inf )
@@ -4304,7 +4304,7 @@ static int MakeDVBSNIT_INFString( char*Buf, int Size, NIT_INF *nit_inf )
 	sprintf( tmp, "tsid:%d ", nit_inf->TSID );
 	if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
 	
-	len = (int)strlen(Buf);
+	len = strlen(Buf);
 	p = Buf+len;
 	
 	switch ( nit_inf->delivery_type )
@@ -4320,7 +4320,7 @@ static int MakeDVBSNIT_INFString( char*Buf, int Size, NIT_INF *nit_inf )
 		break;
 	}
 	
-	return (int)strlen(Buf);
+	return strlen(Buf);
 }
 
 static int MakeDVBSNITString( char*Buf, int Size, NIT *nit )
@@ -4346,14 +4346,14 @@ static int MakeDVBSNITString( char*Buf, int Size, NIT *nit )
 	{
 		sprintf( tmp, "CH:%d ", i+1 );
 		if ( (int)strlen( tmp )+ (int)strlen( Buf ) + 1 < Size ) strcat( Buf, tmp );
-		len = (int)strlen(Buf);
+		len = strlen(Buf);
 		p = Buf+len;
 		if ( Size <= len ) break;
 		MakeDVBSNIT_INFString( p, Size-len,  &nit->NIT_inf[i] );
 		if ( (int)strlen( Buf ) +2 <Size )
 			strcat( Buf, "\n" );
 	}
-	return (int)strlen(Buf);
+	return strlen(Buf);
 }
 
 int  GetSINetworkNum( SI_PARSER* pParser )

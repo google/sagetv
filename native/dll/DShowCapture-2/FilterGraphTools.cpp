@@ -2424,7 +2424,7 @@ void FilterGraphTools::strCopy(LPSTR &dest, LPCSTR src, long length)
 	if (dest)
 		delete[] dest;
 	if (length < 0)
-		length = (int)strlen(src);
+		length = lstrlenA(src);
 	dest = new char[length + 1];
 	memcpy(dest, src, length);
 	dest[length] = 0;
@@ -2446,7 +2446,7 @@ void FilterGraphTools::strCopyA2W(LPWSTR &dest, LPCSTR src, long length)
 	if (dest)
 		delete[] dest;
 	if (length < 0)
-		length = (int)strlen(src);
+		length = lstrlenA(src);
 	dest = new wchar_t[length + 1];
 	mbstowcs(dest, src, length);
 	dest[length] = 0;

@@ -482,16 +482,16 @@ void avcodec_string(char *buf, int buf_size, AVCodecContext *enc, int encode)
                  codec_name);
         switch (enc->channels) {
             case 1:
-                strcpy_s(channels_str, strlen("mono"), "mono");
+                strcpy_s(channels_str, sizeof(channels_str), "mono");
                 break;
             case 2:
-				strcpy_s(channels_str, strlen("stereo"), "stereo");
+                strcpy_s(channels_str, sizeof(channels_str), "stereo");
                 break;
             case 6:
-                strcpy_s(channels_str, strlen("5:1"), "5:1");
+                strcpy_s(channels_str, sizeof(channels_str), "5:1");
                 break;
             default:
-                sprintf_s(channels_str, strlen(channels_str), "%d channels", enc->channels);
+                sprintf_s(channels_str, sizeof(channels_str), "%d channels", enc->channels);
                 break;
         }
         if (enc->sample_rate) {
