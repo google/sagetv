@@ -65,17 +65,17 @@ typedef struct URLContext URLContext;
 
 typedef struct URLProtocol {
     const char *name;
-    int64_t (*url_open)(URLContext *h, const char *filename, int flags);
-    int64_t (*url_read)(URLContext *h, unsigned char *buf, int size);
-    int64_t (*url_write)(URLContext *h, unsigned char *buf, int size);
+    int (*url_open)(URLContext *h, const char *filename, int flags);
+    int (*url_read)(URLContext *h, unsigned char *buf, int size);
+    int (*url_write)(URLContext *h, unsigned char *buf, int size);
     int64_t (*url_seek)(URLContext *h, int64_t pos, int whence);
-    int64_t (*url_close)(URLContext *h);
+    int (*url_close)(URLContext *h);
     struct URLProtocol *next;
-    int64_t (*url_read_pause)(URLContext *h, int pause);
+    int (*url_read_pause)(URLContext *h, int pause);
     int64_t (*url_read_seek)(URLContext *h, int stream_index,
                              int64_t timestamp, int flags);
-    int64_t (*url_get_file_handle)(URLContext *h);
-    int64_t priv_data_size;
+    int (*url_get_file_handle)(URLContext *h);
+    int priv_data_size;
 //    const AVClass *priv_data_class; not used here but in avio.h
     void *priv_data_class;
 } URLProtocol;
@@ -237,12 +237,12 @@ static const GUID FORMAT_SubtitleInfo =
 ///////////////////////////////////////////////////////////////////////////////////////////
 //Setup data feeder for push reader
 extern "C" {
-	static int64_t feeder_open(URLContext *h, const char *filename, int flags);
-	static int64_t feeder_read(URLContext *h, unsigned char *buf, int size);
-	static int64_t feeder_write(URLContext *h, unsigned char *buf, int size);
+	static int feeder_open(URLContext *h, const char *filename, int flags);
+	static int feeder_read(URLContext *h, unsigned char *buf, int size);
+	static int feeder_write(URLContext *h, unsigned char *buf, int size);
 	static int64_t feeder_seek(URLContext *h, int64_t pos, int whence);
-	static int64_t feeder_close(URLContext *h);
-	static int64_t feeder_get_handle(URLContext *h);
+	static int feeder_close(URLContext *h);
+	static int feeder_get_handle(URLContext *h);
 	URLProtocol* setupFeeder();
 }
 
@@ -254,7 +254,7 @@ CSDeMuxInPin* gpSageTVInPin=NULL;
 #undef _FILE_TEST_
 //#define _FILE_TEST_
 #ifdef _FILE_TEST_
-static int64_t feeder_open(URLContext *h, const char *filename, int flags)
+static int feeder_open(URLContext *h, const char *filename, int flags)
 {
     int fd;
 	const char *p;
@@ -270,7 +270,7 @@ static int64_t feeder_open(URLContext *h, const char *filename, int flags)
     return 0;
 }
 
-static int64_t feeder_read(URLContext *h, unsigned char *buf, int size)
+static int feeder_read(URLContext *h, unsigned char *buf, int size)
 {
     int fd = (intptr_t) h->priv_data;
     int rv;
@@ -279,7 +279,7 @@ static int64_t feeder_read(URLContext *h, unsigned char *buf, int size)
 	return rv;
 }
 
-static int64_t feeder_write(URLContext *h, unsigned char *buf, int size)
+static int feeder_write(URLContext *h, unsigned char *buf, int size)
 {
 	DbgLog( (LOG_TRACE, 2, TEXT("Feeder write is called %d"), size  ) );  
     return 0;
@@ -294,14 +294,14 @@ static int64_t feeder_seek(URLContext *h, int64_t pos, int whence)
 	return file_pos;
 }
 
-static int64_t feeder_close(URLContext *h)
+static int feeder_close(URLContext *h)
 {
     int fd = (intptr_t) h->priv_data;
 	DbgLog( (LOG_TRACE, 2, TEXT("Feeder is closed %d") ) );  
     return close(fd);
 }
 #else
-static int64_t feeder_open(URLContext *h, const char *filename, int flags)
+static int feeder_open(URLContext *h, const char *filename, int flags)
 {
 	DbgLog( (LOG_TRACE, 2, TEXT("Source feeder open."), filename  ) );  
 	URLPath *url_path_ptr = (URLPath *)filename;
@@ -313,7 +313,7 @@ static int64_t feeder_open(URLContext *h, const char *filename, int flags)
     return 0;
 }
 
-static int64_t feeder_read(URLContext *h, unsigned char *buf, int size)
+static int feeder_read(URLContext *h, unsigned char *buf, int size)
 {
 	if ( gpSageTVInPin == NULL ) 
 		return 0;
@@ -323,7 +323,7 @@ static int64_t feeder_read(URLContext *h, unsigned char *buf, int size)
 	return bytes;
 }
 
-static int64_t feeder_write(URLContext *h, unsigned char *buf, int size)
+static int feeder_write(URLContext *h, unsigned char *buf, int size)
 {
 	DbgLog( (LOG_TRACE, 2, TEXT("Feeder write is called %d"), size  ) );  
     return 0;
@@ -362,14 +362,14 @@ static int64_t feeder_seek(URLContext *h, int64_t pos, int whence)
 	return file_pos;
 }
 
-static int64_t feeder_close(URLContext *h)
+static int feeder_close(URLContext *h)
 {
 	return 0;
 }
 
 #endif 
 
-static int64_t feeder_get_handle(URLContext *h)
+static int feeder_get_handle(URLContext *h)
 {
     return (intptr_t) h->priv_data;
 }
