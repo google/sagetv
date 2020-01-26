@@ -1017,11 +1017,3 @@ native/.vs/SageWorkspace/v14/.suo
 *.log
 native/SageWorkspace.VC.db
 native/SageWorkspace.VC.VC.opendb
-third_party/Elecard/MpegAudioEncLayer2/Win32/Release/allcodecs.obj
-*.exp
-*.obj
-*.tlog
-*.pdb
-*.map
-*.lib
-*.res
