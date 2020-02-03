@@ -14,20 +14,16 @@
  * limitations under the License.
  */
 // ServiceControlLaunch.cpp : Defines the entry point for the application.
-//
-
-#include "stdafx.h"
-
-
-// ServiceControlLauncher.cpp : Defines the entry point for the console application.
-//
-
-#include "stdafx.h"
-
 
 /*
- * Copyright 2001-2004 Frey Technologies, LLC. All rights reserved.
- */
+*		*********************************************************
+*		Microsoft Visual Studio project codepage set to MBCS 
+*		as JAVA does not support being passed Unicode parameters
+*		*********************************************************
+*/
+
+#include "stdafx.h"
+
 #include <windows.h>
 #include <stdlib.h>
 #include <jni.h>
@@ -35,8 +31,14 @@
 #include <direct.h>
 
 
-#define JVM_MISSING MessageBox(NULL, "Could not get information on current JVM.\nPlease install Java Runtime Environment 1.4","Java Missing", MB_OK);\
+#define JVM_MISSING MessageBox(NULL, "Could not get information on current JVM.\nPlease install Java Runtime Environment 1.7 or higher (Java 1.8 preferred)", "Java Missing", MB_OK);\
 
+#ifndef _MSC_VER // Cater for compiling not in MSVC
+#define strcpy_s(dst, dst_length, src) strcpy(dst, src)
+#define strcat_s(dst, dst_length, src) strcat(dst, src)
+#define vsprintf_s(dst, dst_length, format, args) vsprintf(dst, format, args)
+#define sprintf_s(dst, dst_length, format, args) sprintf(dst, format, args)
+#endif
 
 static JNIEnv* globalenv = 0;
 
@@ -45,7 +47,7 @@ JavaVM *vm;
 void sysOutPrint(const char* cstr, ...)
 {
 	JNIEnv* env;
-	jint threadState = vm->GetEnv((void**)&env, JNI_VERSION_1_2);
+	jint threadState = vm->GetEnv((void**)&env, JNI_VERSION_1_6); // JNI in JRE 1.6 and greater
 	if (threadState == JNI_EDETACHED)
 		vm->AttachCurrentThread((void**)&env, NULL);
 	jthrowable oldExcept = env->ExceptionOccurred();
@@ -53,8 +55,9 @@ void sysOutPrint(const char* cstr, ...)
 		env->ExceptionClear();
     va_list args;
     va_start(args, cstr);
-    char buf[1024];
-    vsprintf(buf, cstr, args);
+    int const bufsize = 1024;
+    char buf[bufsize];
+    vsprintf_s(buf, bufsize, cstr, args);
     va_end(args);
 	jstring jstr = env->NewStringUTF(buf);
 	static jclass cls = (jclass) env->NewGlobalRef(env->FindClass("java/lang/System"));
@@ -77,8 +80,9 @@ void sysOutPrint(JNIEnv* env, const char* cstr, ...)
 		env->ExceptionClear();
     va_list args;
     va_start(args, cstr);
-    char buf[1024];
-    vsprintf(buf, cstr, args);
+    int const bufsize = 1024;
+    char buf[bufsize];
+    vsprintf_s(buf, bufsize, cstr, args);
     va_end(args);
 	jstring jstr = env->NewStringUTF(buf);
 	static jclass cls = (jclass) env->NewGlobalRef(env->FindClass("java/lang/System"));
@@ -105,9 +109,11 @@ void popupExceptionError(JNIEnv* env, jthrowable thrower, char* errTitle)
 	jstring throwStr = (jstring)env->CallObjectMethod(thrower, toStr);
 	const char* cThrowStr = env->GetStringUTFChars(throwStr, 0);
 	char *errStr = (char*) malloc(env->GetStringLength(throwStr) + 64);
-	sprintf(errStr, "An exception occured in Java:\n%s", cThrowStr);
+	size_t errStrlen = strlen(cThrowStr) + 64;  // Need to know this size for the sprintf_s
+	sprintf_s(errStr, errStrlen, "An exception occured in Java:\n%s", cThrowStr);
 	errorMsg(errStr, errTitle);
 	free(errStr);
+	env->ReleaseStringUTFChars(throwStr, cThrowStr);
 }
 
 
@@ -117,7 +123,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
                      int       nCmdShow)
 {
 	/*
-	 * Explicitly load jvm.dll by using the Windows Registry to locate the current version to use.
+	 * Explicitly load jvm.dll.
 	 */
 	HKEY rootKey = HKEY_LOCAL_MACHINE;
 	char currVer[16];
@@ -126,60 +132,10 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	DWORD dwRead = 0;
 	DWORD hsize = sizeof(dwRead);
 	hsize = sizeof(currVer);
-	if (RegOpenKeyEx(rootKey, "Software\\JavaSoft\\Java Runtime Environment", 0, KEY_QUERY_VALUE, &myKey) != ERROR_SUCCESS)
-	{
-		JVM_MISSING;
-		return FALSE;
-	}
-	
-	if (RegQueryValueEx(myKey, "CurrentVersion", 0, &readType, (LPBYTE)currVer, &hsize) != ERROR_SUCCESS)
-	{
-		RegCloseKey(myKey);
-		JVM_MISSING;
-		return FALSE;
-	}
-	RegCloseKey(myKey);
-	char pathKey[1024];
-	strcpy(pathKey, "Software\\JavaSoft\\Java Runtime Environment\\");
-	strcat(pathKey, currVer);
-	char jvmPath[1024];
-	if (RegOpenKeyEx(rootKey, pathKey, 0, KEY_QUERY_VALUE, &myKey) != ERROR_SUCCESS)
-	{
-		JVM_MISSING;
-		return FALSE;
-	}
-	hsize = sizeof(jvmPath);
-	if (RegQueryValueEx(myKey, "RuntimeLib", 0, &readType, (LPBYTE)jvmPath, &hsize) != ERROR_SUCCESS)
-	{
-		RegCloseKey(myKey);
-		JVM_MISSING;
-		return FALSE;
-	}
-	RegCloseKey(myKey);
-
-	HMODULE hLib = LoadLibrary(jvmPath);
-	if(hLib == NULL) 
-	{
-		errorMsg("Could not find jvm.dll.\nPlease install Java Runtime Environment 1.4", "Java Missing");
-		return FALSE;
-	}
-	
-	// Retrieve address of JNI_CreateJavaVM()
-	typedef  jint (JNICALL *P_JNI_CreateJavaVM)
-		(JavaVM **pvm, void** penv, void *args);
-	
-	P_JNI_CreateJavaVM createJavaVM = (P_JNI_CreateJavaVM) 
-		GetProcAddress(hLib, "JNI_CreateJavaVM");
-	
-	if (createJavaVM==NULL)
-	{
-		errorMsg("Could not execute jvm.dll.\nPlease install Java Runtime Environment 1.4", "Java Missing");
-		return FALSE;
-	}
-
 	HMODULE exeMod = GetModuleHandle(NULL);
-	LPTSTR appPath = new TCHAR[512];
-	GetModuleFileName(exeMod, appPath, 512);
+	size_t const appPathsize = 512;
+	LPTSTR appPath = new TCHAR[appPathsize];
+	GetModuleFileName(exeMod, appPath, appPathsize);
 	size_t appLen = strlen(appPath);
 	if (appLen > 0)  // Shouldn't be 0 as the following would be an infinite loop
 	{
@@ -193,40 +149,105 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 		}
 	}
 
-	// Set the current working directory to be the folder the EXE is in.
-	chdir(appPath);
+	// See if we've got a JVM in our own directory to load
+	size_t const includedJREsize = 1024;
+	TCHAR includedJRE[includedJREsize];
+	strcpy_s(includedJRE, includedJREsize, appPath);
+	strcat_s(includedJRE, includedJREsize, "jre\\bin\\client\\jvm.dll");
+	HMODULE hLib = LoadLibrary(includedJRE);
 
-	LPTSTR jarPath = new TCHAR[1024];
-	LPTSTR libraryPath = new TCHAR[512];
+	if (hLib == NULL)
+	{
+		// Failed to find JRE in SageTV directory, load the JVM from the registry instead, by using the Windows Registry to locate the current version to use.
+
+		if (RegOpenKeyEx(rootKey, "Software\\JavaSoft\\Java Runtime Environment", 0, KEY_QUERY_VALUE, &myKey) != ERROR_SUCCESS)
+		{
+			JVM_MISSING;
+			return FALSE;
+		}
+
+		if (RegQueryValueEx(myKey, "CurrentVersion", 0, &readType, (LPBYTE)currVer, &hsize) != ERROR_SUCCESS)
+		{
+			RegCloseKey(myKey);
+			JVM_MISSING;
+			return FALSE;
+		}
+		RegCloseKey(myKey);
+		int const pathKeysize = 1024;
+		char pathKey[pathKeysize];
+		strcpy_s(pathKey, pathKeysize, "Software\\JavaSoft\\Java Runtime Environment\\");
+		strcat_s(pathKey, pathKeysize, currVer);
+		int const jvmPathsize = 1024;
+		char jvmPath[jvmPathsize];
+		if (RegOpenKeyEx(rootKey, pathKey, 0, KEY_QUERY_VALUE, &myKey) != ERROR_SUCCESS)
+		{
+			JVM_MISSING;
+			return FALSE;
+		}
+		hsize = jvmPathsize;
+		if (RegQueryValueEx(myKey, "RuntimeLib", 0, &readType, (LPBYTE)jvmPath, &hsize) != ERROR_SUCCESS)
+		{
+			RegCloseKey(myKey);
+			JVM_MISSING;
+			return FALSE;
+		}
+		RegCloseKey(myKey);
+
+		hLib = LoadLibrary(jvmPath);
+		if (hLib == NULL)
+		{
+			errorMsg("Could not find jvm.dll.\nPlease install Java Runtime Environment 1.7 or higher (Java 1.8 preferred)", "Java Missing");
+			return FALSE;
+		}
+	}
+
+	// Retrieve address of JNI_CreateJavaVM()
+	typedef  jint (JNICALL *P_JNI_CreateJavaVM)
+		(JavaVM **pvm, void** penv, void *args);
+	
+	P_JNI_CreateJavaVM createJavaVM = (P_JNI_CreateJavaVM) 
+		GetProcAddress(hLib, "JNI_CreateJavaVM");
+	
+	if (createJavaVM==NULL)
+	{
+		errorMsg("Could not execute jvm.dll.\nPlease install Java Runtime Environment 1.7 or higher (Java 1.8 preferred)", "Java VM Creation Failed");
+		return FALSE;
+	}
+
+	// Set the current working directory to be the folder the EXE is in.
+	_chdir(appPath);
+
+	// Set up the JAVA VM
+	int const jarPathsize = 1024; // Define the size of jarPath
+	int const libraryPathsize = 512; // Define the size of libraryPath
+	LPTSTR jarPath = new TCHAR[jarPathsize];
+	LPTSTR libraryPath = new TCHAR[libraryPathsize];
 	
     JNIEnv *env;       /* pointer to native method interface */
 	JavaVMInitArgs vm_args;
 	JavaVMOption options[32];
 	vm_args.nOptions = 0;
-	strcpy(jarPath, "-Djava.class.path=");
-	strcat(jarPath, appPath);
+	strcpy_s(jarPath, jarPathsize, "-Djava.class.path=");
+	strcat_s(jarPath, jarPathsize, appPath);
+
 #ifdef SAGE_TV_LITE
-	strcat(jarPath, "SageLite.jar");
+	strcat_s(jarPath, jarPathsize, "SageLite.jar");
 #else
-	strcat(jarPath, "Sage.jar");
+	strcat_s(jarPath, jarPathsize, "Sage.jar");
 #endif
 	options[vm_args.nOptions++].optionString = jarPath;
-	strcpy(libraryPath, "-Djava.library.path=");
-	strcat(libraryPath, appPath);
+	strcpy_s(libraryPath, libraryPathsize, "-Djava.library.path=");
+	strcat_s(libraryPath, libraryPathsize, appPath);
 	options[vm_args.nOptions++].optionString = libraryPath;  /* set native library path */
 
-	vm_args.version = JNI_VERSION_1_2;
+	vm_args.version = JNI_VERSION_1_6;
 	vm_args.options = options;
 	vm_args.ignoreUnrecognized = true;
-
-    /* Note that in the Java 2 SDK, there is no longer any need to call 
-	 * JNI_GetDefaultJavaVMInitArgs. 
-	 */
 
 	int res = (*createJavaVM)(&vm, (void**) &env, &vm_args); 
 	if (res != 0)
 	{
-		errorMsg("Could not create JVM.\nPlease reinstall Java Runtime Environment 1.7 or greater", "Java Missing");
+		errorMsg("Could not create JVM.\nPlease reinstall Java Runtime Environment 1.7 or higher (Java 1.8 preferred)", "Java VM Creation Failed");
 		return FALSE;
 	}
 	globalenv = env;
@@ -257,9 +278,11 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 		jstring throwStr = (jstring)env->CallObjectMethod(mainThrow, toStr);
 		const char* cThrowStr = env->GetStringUTFChars(throwStr, 0);
 		char *errStr = new char[env->GetStringLength(throwStr) + 64];
-		sprintf(errStr, "An exception occured in Java:\n%s", cThrowStr);
+		size_t errStrlen = strlen(cThrowStr) + 64;  // Need to know this size for the sprintf_s
+		sprintf_s(errStr, errStrlen, "An exception occured in Java:\n%s", cThrowStr);
 		errorMsg(errStr, "Java Exception");
 		delete [] errStr;
+		env->ReleaseStringUTFChars(throwStr, cThrowStr);
 		return FALSE;
 	}
 
