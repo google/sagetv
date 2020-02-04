@@ -16,11 +16,13 @@
 // ServiceControlLaunch.cpp : Defines the entry point for the application.
 
 /*
-*		*********************************************************
-*		Microsoft Visual Studio project codepage set to MBCS 
-*		as JAVA does not support being passed Unicode parameters
-*		*********************************************************
-*/
+ *       ******************************************************************************************
+ *       Microsoft Visual Studio project codepage intentionally set to MBCS
+ *       The strings passed in the JavaVMOption struct use the platform default character encoding,
+ *       so they can't be passed as 16-bit Unicode chars.
+ *
+ *       *******************************************************************************************
+ */
 
 #include "stdafx.h"
 
@@ -33,13 +35,6 @@
 
 #define JVM_MISSING MessageBox(NULL, "Could not get information on current JVM.\nPlease install Java Runtime Environment 1.7 or higher (Java 1.8 preferred)", "Java Missing", MB_OK);\
 
-#ifndef _MSC_VER // Cater for compiling not in MSVC
-#define strcpy_s(dst, dst_length, src) strcpy(dst, src)
-#define strcat_s(dst, dst_length, src) strcat(dst, src)
-#define vsprintf_s(dst, dst_length, format, args) vsprintf(dst, format, args)
-#define sprintf_s(dst, dst_length, format, args) sprintf(dst, format, args)
-#endif
-
 static JNIEnv* globalenv = 0;
 
 JavaVM *vm;    
@@ -47,18 +42,17 @@ JavaVM *vm;
 void sysOutPrint(const char* cstr, ...)
 {
 	JNIEnv* env;
-	jint threadState = vm->GetEnv((void**)&env, JNI_VERSION_1_6); // JNI in JRE 1.6 and greater
+	jint threadState = vm->GetEnv((void**)&env, JNI_VERSION_1_2); // JNI in JRE 1.2 and greater
 	if (threadState == JNI_EDETACHED)
 		vm->AttachCurrentThread((void**)&env, NULL);
 	jthrowable oldExcept = env->ExceptionOccurred();
 	if (oldExcept)
 		env->ExceptionClear();
-    va_list args;
-    va_start(args, cstr);
-    int const bufsize = 1024;
-    char buf[bufsize];
-    vsprintf_s(buf, bufsize, cstr, args);
-    va_end(args);
+	va_list args;
+	va_start(args, cstr);
+	char buf[1024];
+	vsprintf_s(buf, sizeof(buf), cstr, args);
+	va_end(args);
 	jstring jstr = env->NewStringUTF(buf);
 	static jclass cls = (jclass) env->NewGlobalRef(env->FindClass("java/lang/System"));
 	static jfieldID outField = env->GetStaticFieldID(cls, "out", "Ljava/io/PrintStream;");
@@ -78,12 +72,11 @@ void sysOutPrint(JNIEnv* env, const char* cstr, ...)
 	jthrowable oldExcept = env->ExceptionOccurred();
 	if (oldExcept)
 		env->ExceptionClear();
-    va_list args;
-    va_start(args, cstr);
-    int const bufsize = 1024;
-    char buf[bufsize];
-    vsprintf_s(buf, bufsize, cstr, args);
-    va_end(args);
+	va_list args;
+	va_start(args, cstr);
+	char buf[1024];
+	vsprintf_s(buf, sizeof(buf), cstr, args);
+	va_end(args);
 	jstring jstr = env->NewStringUTF(buf);
 	static jclass cls = (jclass) env->NewGlobalRef(env->FindClass("java/lang/System"));
 	static jfieldID outField = env->GetStaticFieldID(cls, "out", "Ljava/io/PrintStream;");
@@ -108,8 +101,8 @@ void popupExceptionError(JNIEnv* env, jthrowable thrower, char* errTitle)
 	jmethodID toStr = env->GetMethodID(env->GetObjectClass(thrower), "toString", "()Ljava/lang/String;");
 	jstring throwStr = (jstring)env->CallObjectMethod(thrower, toStr);
 	const char* cThrowStr = env->GetStringUTFChars(throwStr, 0);
-	char *errStr = (char*) malloc(env->GetStringLength(throwStr) + 64);
-	size_t errStrlen = strlen(cThrowStr) + 64;  // Need to know this size for the sprintf_s
+	size_t errStrlen = env->GetStringLength(throwStr) + 64;
+	char *errStr = (char*) malloc(errStrlen);
 	sprintf_s(errStr, errStrlen, "An exception occured in Java:\n%s", cThrowStr);
 	errorMsg(errStr, errTitle);
 	free(errStr);
@@ -133,9 +126,8 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	DWORD hsize = sizeof(dwRead);
 	hsize = sizeof(currVer);
 	HMODULE exeMod = GetModuleHandle(NULL);
-	size_t const appPathsize = 512;
-	LPTSTR appPath = new TCHAR[appPathsize];
-	GetModuleFileName(exeMod, appPath, appPathsize);
+	char appPath[512];
+	GetModuleFileName(exeMod, appPath, sizeof(appPath));
 	size_t appLen = strlen(appPath);
 	if (appLen > 0)  // Shouldn't be 0 as the following would be an infinite loop
 	{
@@ -150,10 +142,9 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	}
 
 	// See if we've got a JVM in our own directory to load
-	size_t const includedJREsize = 1024;
-	TCHAR includedJRE[includedJREsize];
-	strcpy_s(includedJRE, includedJREsize, appPath);
-	strcat_s(includedJRE, includedJREsize, "jre\\bin\\client\\jvm.dll");
+	char includedJRE[1024];
+	strcpy_s(includedJRE, sizeof(includedJRE), appPath);
+	strcat_s(includedJRE, sizeof(includedJRE), "jre\\bin\\client\\jvm.dll");
 	HMODULE hLib = LoadLibrary(includedJRE);
 
 	if (hLib == NULL)
@@ -173,18 +164,16 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 			return FALSE;
 		}
 		RegCloseKey(myKey);
-		int const pathKeysize = 1024;
-		char pathKey[pathKeysize];
-		strcpy_s(pathKey, pathKeysize, "Software\\JavaSoft\\Java Runtime Environment\\");
-		strcat_s(pathKey, pathKeysize, currVer);
-		int const jvmPathsize = 1024;
-		char jvmPath[jvmPathsize];
+		char pathKey[1024];
+		strcpy_s(pathKey, sizeof(pathKey), "Software\\JavaSoft\\Java Runtime Environment\\");
+		strcat_s(pathKey, sizeof(pathKey), currVer);
+		char jvmPath[1024];
 		if (RegOpenKeyEx(rootKey, pathKey, 0, KEY_QUERY_VALUE, &myKey) != ERROR_SUCCESS)
 		{
 			JVM_MISSING;
 			return FALSE;
 		}
-		hsize = jvmPathsize;
+		hsize = sizeof(jvmPath);
 		if (RegQueryValueEx(myKey, "RuntimeLib", 0, &readType, (LPBYTE)jvmPath, &hsize) != ERROR_SUCCESS)
 		{
 			RegCloseKey(myKey);
@@ -218,29 +207,27 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	_chdir(appPath);
 
 	// Set up the JAVA VM
-	int const jarPathsize = 1024; // Define the size of jarPath
-	int const libraryPathsize = 512; // Define the size of libraryPath
-	LPTSTR jarPath = new TCHAR[jarPathsize];
-	LPTSTR libraryPath = new TCHAR[libraryPathsize];
+	char jarPath[1024];
+	char libraryPath[512];
 	
     JNIEnv *env;       /* pointer to native method interface */
 	JavaVMInitArgs vm_args;
 	JavaVMOption options[32];
 	vm_args.nOptions = 0;
-	strcpy_s(jarPath, jarPathsize, "-Djava.class.path=");
-	strcat_s(jarPath, jarPathsize, appPath);
+	strcpy_s(jarPath, sizeof(jarPath), "-Djava.class.path=");
+	strcat_s(jarPath, sizeof(jarPath), appPath);
 
 #ifdef SAGE_TV_LITE
-	strcat_s(jarPath, jarPathsize, "SageLite.jar");
+	strcat_s(jarPath, sizeof(jarPath), "SageLite.jar");
 #else
-	strcat_s(jarPath, jarPathsize, "Sage.jar");
+	strcat_s(jarPath, sizeof(jarPath), "Sage.jar");
 #endif
 	options[vm_args.nOptions++].optionString = jarPath;
-	strcpy_s(libraryPath, libraryPathsize, "-Djava.library.path=");
-	strcat_s(libraryPath, libraryPathsize, appPath);
+	strcpy_s(libraryPath, sizeof(libraryPath), "-Djava.library.path=");
+	strcat_s(libraryPath, sizeof(libraryPath), appPath);
 	options[vm_args.nOptions++].optionString = libraryPath;  /* set native library path */
 
-	vm_args.version = JNI_VERSION_1_6;
+	vm_args.version = JNI_VERSION_1_2;
 	vm_args.options = options;
 	vm_args.ignoreUnrecognized = true;
 
@@ -290,10 +277,6 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	{
 		Sleep(60000);
 	}
-
-	delete [] appPath;
-	delete [] jarPath;
-	delete [] libraryPath;
 
 	FreeLibrary(hLib);
 	return 0;
