@@ -264,8 +264,8 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 //env->ExceptionDescribe();
 		jstring throwStr = (jstring)env->CallObjectMethod(mainThrow, toStr);
 		const char* cThrowStr = env->GetStringUTFChars(throwStr, 0);
-		char *errStr = new char[env->GetStringLength(throwStr) + 64];
-		size_t errStrlen = strlen(cThrowStr) + 64;  // Need to know this size for the sprintf_s
+		size_t errStrlen = env->GetStringLength(throwStr) + 64;
+		char *errStr = (char*)malloc(errStrlen);
 		sprintf_s(errStr, errStrlen, "An exception occured in Java:\n%s", cThrowStr);
 		errorMsg(errStr, "Java Exception");
 		delete [] errStr;
