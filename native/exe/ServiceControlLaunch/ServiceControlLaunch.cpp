@@ -103,31 +103,23 @@ void popupExceptionError(JNIEnv* env, jthrowable thrower, char* errTitle)
 	const char* cThrowStr = env->GetStringUTFChars(throwStr, 0);
 	size_t errStrlen = env->GetStringLength(throwStr) + 64;
 	char *errStr = (char*) malloc(errStrlen);
-	sprintf_s(errStr, errStrlen, "An exception occured in Java:\n%s", cThrowStr);
-	errorMsg(errStr, errTitle);
-	free(errStr);
+	if (errStr != nullptr)  // Should never be NULL
+	{
+		sprintf_s(errStr, errStrlen, "An exception occured in Java:\n%s", cThrowStr);
+		errorMsg(errStr, errTitle);
+		free(errStr);
+	}
 	env->ReleaseStringUTFChars(throwStr, cThrowStr);
 }
 
 
-int APIENTRY WinMain(HINSTANCE hInstance,
-                     HINSTANCE hPrevInstance,
-                     LPSTR     lpCmdLine,
-                     int       nCmdShow)
+int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow)
 {
 	/*
 	 * Explicitly load jvm.dll.
 	 */
-	HKEY rootKey = HKEY_LOCAL_MACHINE;
-	char currVer[16];
-	HKEY myKey;
-	DWORD readType;
-	DWORD dwRead = 0;
-	DWORD hsize = sizeof(dwRead);
-	hsize = sizeof(currVer);
-	HMODULE exeMod = GetModuleHandle(NULL);
-	char appPath[512];
-	GetModuleFileName(exeMod, appPath, sizeof(appPath));
+	char appPath[_MAX_PATH];
+	GetModuleFileName(NULL, appPath, sizeof(appPath));
 	size_t appLen = strlen(appPath);
 	if (appLen > 0)  // Shouldn't be 0 as the following would be an infinite loop
 	{
@@ -142,7 +134,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	}
 
 	// See if we've got a JVM in our own directory to load
-	char includedJRE[1024];
+	char includedJRE[_MAX_PATH];
 	strcpy_s(includedJRE, sizeof(includedJRE), appPath);
 	strcat_s(includedJRE, sizeof(includedJRE), "jre\\bin\\client\\jvm.dll");
 	HMODULE hLib = LoadLibrary(includedJRE);
@@ -150,6 +142,11 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	if (hLib == NULL)
 	{
 		// Failed to find JRE in SageTV directory, load the JVM from the registry instead, by using the Windows Registry to locate the current version to use.
+		HKEY rootKey = HKEY_LOCAL_MACHINE;
+		char currVer[16];
+		HKEY myKey;  // myKey to NULL for RegQueryValueEx
+		DWORD readType;  // readType to NULL for RegQueryValueEx
+		DWORD hsize = sizeof(currVer);
 
 		if (RegOpenKeyEx(rootKey, "Software\\JavaSoft\\Java Runtime Environment", 0, KEY_QUERY_VALUE, &myKey) != ERROR_SUCCESS)
 		{
@@ -167,12 +164,12 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 		char pathKey[1024];
 		strcpy_s(pathKey, sizeof(pathKey), "Software\\JavaSoft\\Java Runtime Environment\\");
 		strcat_s(pathKey, sizeof(pathKey), currVer);
-		char jvmPath[1024];
 		if (RegOpenKeyEx(rootKey, pathKey, 0, KEY_QUERY_VALUE, &myKey) != ERROR_SUCCESS)
 		{
 			JVM_MISSING;
 			return FALSE;
 		}
+		char jvmPath[_MAX_PATH];
 		hsize = sizeof(jvmPath);
 		if (RegQueryValueEx(myKey, "RuntimeLib", 0, &readType, (LPBYTE)jvmPath, &hsize) != ERROR_SUCCESS)
 		{
@@ -204,11 +201,16 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	}
 
 	// Set the current working directory to be the folder the EXE is in.
-	_chdir(appPath);
+	errno_t err;
+	if ((err = _chdir(appPath)) != 0) // If this returns 0 we have bigger problems
+	{
+		errorMsg("Could set the working directory", "Change to working directory failed");
+		return FALSE;
+	}
 
 	// Set up the JAVA VM
-	char jarPath[1024];
-	char libraryPath[512];
+	char jarPath[_MAX_PATH];
+	char libraryPath[_MAX_PATH];
 	
     JNIEnv *env;       /* pointer to native method interface */
 	JavaVMInitArgs vm_args;
@@ -266,9 +268,12 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 		const char* cThrowStr = env->GetStringUTFChars(throwStr, 0);
 		size_t errStrlen = env->GetStringLength(throwStr) + 64;
 		char *errStr = (char*)malloc(errStrlen);
-		sprintf_s(errStr, errStrlen, "An exception occured in Java:\n%s", cThrowStr);
-		errorMsg(errStr, "Java Exception");
-		delete [] errStr;
+		if (errStr != nullptr)  // Should never be NULL
+		{
+			sprintf_s(errStr, errStrlen, "An exception occured in Java:\n%s", cThrowStr);
+			errorMsg(errStr, "Java Exception");
+			free(errStr);
+		}
 		env->ReleaseStringUTFChars(throwStr, cThrowStr);
 		return FALSE;
 	}
