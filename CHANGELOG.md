@@ -1,5 +1,6 @@
 # Change Log
 
+* Change service launcher (Windows) to support local JRE
 * Change watch ignore times from constants to properties
 * Tidy up warnings in VS2015 for data type conversions (Windows)
 * Fix for Hauppauge 885 tuners with Alt TS Capture Devices (Windows)
