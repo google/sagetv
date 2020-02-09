@@ -244,7 +244,7 @@ void CFilterProperties::LoadFiles()
 		line++;
 		
 		//rip off '\n'
-		for ( i = strlen(buf); i>=0 ; i-- )
+		for ( i = lstrlenA(buf); i>=0 ; i-- )
 			if ( buf[i] == '\n' || buf[i] == '\r' ) buf[i] = 0x0;
 			
 		//skip white space
@@ -255,7 +255,7 @@ void CFilterProperties::LoadFiles()
 		if ( pFileName && pFileName[0] )
 		{
 			FileNameStripPath( pFileName, FName, sizeof(FName ) );
-			int cc =  strlen(pFileName)+1;
+			int cc =  lstrlenA(pFileName)+1;
 			LPCOLESTR pszW = (LPOLESTR)CoTaskMemAlloc(cc*2);
 			if ( MultiByteToWideChar(CP_ACP, 0, pFileName, cc, (LPWSTR)pszW, cc ))
 			{
@@ -280,7 +280,7 @@ void CFilterProperties::LoadFiles()
 
 	fclose( fp );
 	if ( pEditText != NULL )
-		delete pEditText;
+		delete [] pEditText;
 
 	SaveSettings();
 

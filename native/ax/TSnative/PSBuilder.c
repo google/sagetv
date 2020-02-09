@@ -919,7 +919,7 @@ int OutputVideoData( PS_BUILDER* pBuilder, int Index, unsigned char StreamType, 
 
 		if ( pBuilder->video_data_bytes[trk] != 0 )
 		{
-			bytes = pBuilder->video_buffer[trk] + pBuilder->video_data_bytes[trk] - pBuilder->video_PES_ptr[trk];
+			bytes = (int)(pBuilder->video_buffer[trk] + pBuilder->video_data_bytes[trk] - pBuilder->video_PES_ptr[trk]);
 			FillPESLength( pBuilder, pBuilder->video_PES_ptr[trk], bytes );
 			bytes = pBuilder->video_data_bytes[trk];
 			PadBuffer( pBuilder, pBuilder->video_buffer[trk]+bytes, PACKETSIZE-bytes );
@@ -1170,7 +1170,7 @@ int OutputAudioData( PS_BUILDER* pBuilder, int Index, unsigned char StreamType, 
 		size -= AudioPES.HeaderLen;
 		if ( pBuilder->audio_data_bytes[trk] != 0 )
 		{
-			bytes = pBuilder->audio_buffer[trk] + pBuilder->audio_data_bytes[trk] - pBuilder->audio_PES_ptr[trk];
+			bytes = (int)(pBuilder->audio_buffer[trk] + pBuilder->audio_data_bytes[trk] - pBuilder->audio_PES_ptr[trk]);
 
 			FillPESLength( pBuilder, pBuilder->audio_PES_ptr[trk], bytes );
 			bytes = pBuilder->audio_data_bytes[trk];

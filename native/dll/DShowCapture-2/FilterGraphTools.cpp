@@ -62,16 +62,16 @@ void CLogMsg::Log(LPWSTR sz,...)
     {
 //#ifdef UNICODE
 		   char* dest; 
-		   int length;
+		   size_t length;
 		   length = wcslen(pStr);
 		   dest = new char[length + 2];
 		   wcstombs(dest, pStr, length);
 		   dest[length] = 0x0;
 		   slog( ((JNIEnv*)m_output, dest ) );
-           delete dest;
+           delete [] dest;
 //         
     }
-    delete pStr;
+    delete [] pStr;
 }
 
 
@@ -343,7 +343,7 @@ HRESULT FilterGraphTools::EnumFilterNameFirst( CLSID clsidDeviceClass, IEnumMoni
 		*(*pName+length) = 0x0;
 		*/
 
-		int length = wcslen( varBSTR.bstrVal );
+		size_t length = wcslen( varBSTR.bstrVal );
 		*pName = new wchar_t[length + 1]; 
 		wcsncpy( *pName, varBSTR.bstrVal, length );
 		*(*pName+length) = 0x0;
@@ -384,7 +384,7 @@ HRESULT FilterGraphTools::EnumFilterNameNext(  IEnumMoniker *pEnum, LPWSTR *pNam
 			return hr;
 		}
 
-		int length = wcslen( varBSTR.bstrVal );
+		size_t length = wcslen( varBSTR.bstrVal );
 		*pName = new wchar_t[length + 1];
 		wcsncpy( *pName, varBSTR.bstrVal, length );
 		*(*pName+length) = 0x0;
@@ -432,7 +432,7 @@ HRESULT FilterGraphTools::EnumFilterPathFirst( CLSID clsidDeviceClass, IEnumMoni
 		hr = CreateBindCtx(0, &pBindCtx);
 		hr = pMoniker->GetDisplayName(pBindCtx, NULL, &pStr);
 
-		int length = wcslen( pStr );
+		size_t length = wcslen( pStr );
 		*pName = new wchar_t[length + 1];
 		wcsncpy( *pName, pStr, length );
 		*(*pName+length) = 0x0;
@@ -459,7 +459,7 @@ HRESULT FilterGraphTools::EnumFilterPathNext(  IEnumMoniker *pEnum, LPWSTR *pNam
 		hr = CreateBindCtx(0, &pBindCtx);
 		hr = pMoniker->GetDisplayName(pBindCtx, NULL, &pStr);
 
-		int length = wcslen( pStr );
+		size_t length = wcslen( pStr );
 		*pName = new wchar_t[length + 1];
 		wcsncpy( *pName, pStr, length );
 		*(*pName+length) = 0x0;
@@ -2424,7 +2424,7 @@ void FilterGraphTools::strCopy(LPSTR &dest, LPCSTR src, long length)
 	if (dest)
 		delete[] dest;
 	if (length < 0)
-		length = strlen(src);
+		length = lstrlenA(src);
 	dest = new char[length + 1];
 	memcpy(dest, src, length);
 	dest[length] = 0;
@@ -2435,7 +2435,7 @@ void FilterGraphTools::strCopy(LPWSTR &dest, LPCWSTR src, long length)
 	if (dest)
 		delete[] dest;
 	if (length < 0)
-		length = wcslen(src);
+		length = (int)wcslen(src);
 	dest = new wchar_t[length + 1];
 	memcpy(dest, src, length*2);
 	dest[length] = 0;
@@ -2446,7 +2446,7 @@ void FilterGraphTools::strCopyA2W(LPWSTR &dest, LPCSTR src, long length)
 	if (dest)
 		delete[] dest;
 	if (length < 0)
-		length = strlen(src);
+		length = lstrlenA(src);
 	dest = new wchar_t[length + 1];
 	mbstowcs(dest, src, length);
 	dest[length] = 0;
@@ -2457,7 +2457,7 @@ void FilterGraphTools::strCopyW2A(LPSTR &dest, LPCWSTR src, long length)
 	if (dest)
 		delete[] dest;
 	if (length < 0)
-		length = wcslen(src);
+		length = (int)wcslen(src);
 	dest = new char[length + 1];
 	wcstombs(dest, src, length);
 	dest[length]=0;

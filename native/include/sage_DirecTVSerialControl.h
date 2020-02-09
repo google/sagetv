@@ -19,18 +19,18 @@ JNIEXPORT jlong JNICALL Java_sage_DirecTVSerialControl_openDTVSerial0
 /*
  * Class:     sage_DirecTVSerialControl
  * Method:    closeHandle0
- * Signature: (I)V
+ * Signature: (J)V
  */
 JNIEXPORT void JNICALL Java_sage_DirecTVSerialControl_closeHandle0
-  (JNIEnv *, jobject, jint);
+  (JNIEnv *, jobject, jlong);
 
 /*
  * Class:     sage_DirecTVSerialControl
  * Method:    dtvSerialChannel0
- * Signature: (II)Z
+ * Signature: (JI)Z
  */
 JNIEXPORT jboolean JNICALL Java_sage_DirecTVSerialControl_dtvSerialChannel0
-  (JNIEnv *, jobject, jint, jint);
+  (JNIEnv *, jobject, jlong, jint);
 
 #ifdef __cplusplus
 }

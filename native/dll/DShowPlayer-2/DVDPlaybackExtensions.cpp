@@ -945,7 +945,7 @@ JNIEXPORT jint JNICALL Java_sage_DShowDVDPlayer_processEvents0
 						if (SUCCEEDED(hr))
 						{
 							sprintf(langString, "%d ", j + 1);
-							GetLocaleInfo(language, LOCALE_SENGLANGUAGE, langString + strlen(langString), 256 - strlen(langString));
+							GetLocaleInfo(language, LOCALE_SENGLANGUAGE, langString + lstrlenA(langString), 256 - lstrlenA(langString));
 							pInfo->GetSubpictureAttributes(j, &dvdSubpic);
 							if (SUCCEEDED(hr))
 							{
@@ -1001,7 +1001,7 @@ JNIEXPORT jint JNICALL Java_sage_DShowDVDPlayer_processEvents0
 						if (SUCCEEDED(hr))
 						{
 							sprintf(langString, "%d ", j + 1);
-							GetLocaleInfo(language, LOCALE_SENGLANGUAGE, langString + strlen(langString), 256 - strlen(langString));
+							GetLocaleInfo(language, LOCALE_SENGLANGUAGE, langString + lstrlenA(langString), 256 - lstrlenA(langString));
 							pInfo->GetAudioAttributes(j, &dvdAudio);
 							if (SUCCEEDED(hr))
 							{

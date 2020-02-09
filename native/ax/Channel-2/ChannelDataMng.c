@@ -738,7 +738,7 @@ int loadScanTuningTable( CHANNEL_DATA *Channel )
 		line++;
 		
 		//rip off '\n'
-		for ( i = strlen(buf); i>=0 ; i-- )
+		for ( i = (int)strlen(buf); i>=0 ; i-- )
 			if ( buf[i] == '\n' || buf[i] == '\r' ) buf[i] = ' ';
 			
 		//skip white space
@@ -1003,7 +1003,7 @@ int loadScanDataFile( CHANNEL_DATA *Channel )
 			GrowPredefineFreqTable( Channel );
 		
 		//rip off '\n'
-		for ( i = strlen(buf); i>=0 ; i-- )
+		for ( i = (int)strlen(buf); i>=0 ; i-- )
 			if ( buf[i] == '\n' || buf[i] == '\r' ) buf[i] = ' ';
 			
 		//skip white space
@@ -1260,7 +1260,7 @@ static int loadQAMFreqData(  FILE *fp, struct bcast_qam *freqTbl, int max, int* 
 		line++;
 		
 		//rip off '\n'
-		for ( i = strlen(buf); i>=0 ; i-- )
+		for ( i = (int)strlen(buf); i>=0 ; i-- )
 			if ( buf[i] == '\n' || buf[i] == '\r' ) buf[i] = ' ';
 			
 		//skip white space
@@ -2678,7 +2678,7 @@ int TranslateJWideString( char* buf_out, int buf_out_size, uint16_t* buf_in )
 	int len=0, i=0;
 	uint16_t* p = (uint16_t*)buf_in;
 	wchar_t* v;
-	int ret;
+	size_t ret;
 	if ( buf_out == NULL ) return 0;
 	while (  *p++  ) len++;
 
@@ -2702,7 +2702,7 @@ int TranslateJWideString( char* buf_out, int buf_out_size, uint16_t* buf_in )
 		buf_out[len] = 0x0;
 	}
 	free( v );
-	return strlen( buf_out );
+	return (int)strlen( buf_out );
 }
 
 #if !defined(__APPLE__)
@@ -2712,7 +2712,7 @@ int TranslateJWideString2( char* buf_out, int buf_out_size, uint16_t* buf_in )
 	int len=0, i=0;
 	uint16_t* p = (uint16_t*)buf_in;
 	wchar_t* v;
-	int ret;
+	size_t ret;
 	if ( buf_out == NULL ) return 0;
 	while (  *p++  ) len++;
 
@@ -2733,7 +2733,7 @@ int TranslateJWideString2( char* buf_out, int buf_out_size, uint16_t* buf_in )
 		buf_out[len] = 0x0;
 	}
 	free( v );
-	return strlen( buf_out );
+	return (int)strlen( buf_out );
 }
 #endif
 

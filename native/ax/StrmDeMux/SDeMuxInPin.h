@@ -123,7 +123,7 @@ private:
 
 	//for debug 
 	FILE* fd;
-	unsigned long offset;
+	size_t offset;
 	void *_sample;
 	unsigned long _cksum;
 

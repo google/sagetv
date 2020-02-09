@@ -895,7 +895,7 @@ void CDeMuxOutputPin::open_dump( )
 {
 	char fname[MAX_PATH];
 	char path[MAX_PATH]={0};
-	int len;
+	size_t len;
 	sprintf( fname, "DUMP_DATA.ENABLE" );
 	fd = fopen( fname, "r" );
 	if ( fd == NULL ) return;
@@ -912,7 +912,7 @@ void CDeMuxOutputPin::open_dump( int index )
 {
 	char fname[MAX_PATH];
 	char path[MAX_PATH]={0};
-	int len;
+	size_t len;
 	sprintf( fname, "DUMP_DATA.ENABLE" );
 	fd = fopen( fname, "r" );
 	if ( fd == NULL ) return;
@@ -957,7 +957,7 @@ HRESULT CDeMuxOutputPin::FillBuffer(IMediaSample *pSample)
 
 	static FILE* fp=NULL;
 	static int frame = 0;
-	int ct;
+	size_t ct;
 	if ( frame == 0 )
 		fp = fopen( "video.bin", "rb" );
 	if ( fp != NULL )

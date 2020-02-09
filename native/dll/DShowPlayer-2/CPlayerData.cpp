@@ -48,7 +48,7 @@ long CC_DUMP( void* context, short cc_num, void* cc_data, short bar_num, void* b
 	int i;
 	unsigned long* lptr;
 	unsigned short*sptr;
-	unsigned char* cc_ptr;
+	ptrdiff_t cc_ptr;
 	unsigned long  cc_bytes;
 	unsigned short bar_top, bar_bottom, bar_left, bar_right;
 	CPlayerData*  PlayerData = (CPlayerData*)context;
@@ -56,9 +56,7 @@ long CC_DUMP( void* context, short cc_num, void* cc_data, short bar_num, void* b
 	lptr = (unsigned long*)cc_data;
 	for ( i = 0; i<cc_num && *lptr; i++ )
 	{
-// wnjj - NOT 64-bit safe (*lptr is unsigned long but used as an unsigned char * cc_ptr)
-// cc_data source needs modified in caller function but function doesn't seem to be used anyway.
-		cc_ptr = (unsigned char*)*lptr++;
+		cc_ptr = *lptr++;
 		cc_bytes = *lptr++;
 		//printf( "got CC Data %d bytes start from 0x%p\n", cc_bytes, cc_ptr );
 	}
@@ -326,7 +324,7 @@ HRESULT CPlayerData::SetSourceFilename(const WCHAR** pwFilename, DWORD dwNumFile
 		{
 			slog(("Using the default source filter\r\n"));
 			// Check the file extension
-			int wlen = wcslen(pwFilename[0]);
+			size_t wlen = wcslen(pwFilename[0]);
 			if (wlen > 4)
 			{
 				if (!_wcsicmp(&(pwFilename[0])[wlen - 4], L".wmv") ||

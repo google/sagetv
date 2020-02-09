@@ -46,7 +46,7 @@ long CC_DUMP( void* context, short cc_num, void* cc_data, short bar_num, void* b
 	int i;
 	unsigned long* lptr;
 	unsigned short*sptr;
-	unsigned char* cc_ptr;
+	ptrdiff_t cc_ptr;
 	unsigned long  cc_bytes;
 	unsigned short bar_top, bar_bottom, bar_left, bar_right;
 	CPlayerData*  PlayerData = (CPlayerData*)context;
@@ -54,7 +54,7 @@ long CC_DUMP( void* context, short cc_num, void* cc_data, short bar_num, void* b
 	lptr = (unsigned long*)cc_data;
 	for ( i = 0; i<cc_num && *lptr; i++ )
 	{
-		cc_ptr = (unsigned char*)*lptr++;
+		cc_ptr = *lptr++;
 		cc_bytes = *lptr++;
 		//printf( "got CC Data %d bytes start from 0x%x\n", cc_bytes, cc_ptr );
 	}
@@ -286,7 +286,7 @@ HRESULT CPlayerData::SetSourceFilename(const WCHAR* pwFilename, const char* szHo
 		{
 			slog(("Using the default source filter\r\n"));
 			// Check the file extension
-			int wlen = wcslen(pwFilename);
+			size_t wlen = wcslen(pwFilename);
 			if (wlen > 4)
 			{
 				if (!_wcsicmp(&pwFilename[wlen - 4], L".wmv") ||

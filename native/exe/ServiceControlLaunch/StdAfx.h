@@ -26,8 +26,6 @@
 #endif // _MSC_VER > 1000
 
 #define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
-// Eliminate silly MS compiler security warnings about using POSIX functions
-#pragma warning(disable : 4996)
 
 #include <windows.h>
 
