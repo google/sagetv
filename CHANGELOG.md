@@ -14,6 +14,7 @@
 * Added 2160p as a Pretty resolution to VideoFormat
 * Added HEVC as a supported media format
 * Added Forced as a property to SubpictureFormat
+* Added the ability to auto select forced subtitle track based on the default audio language
 
 ## Version 9.2.1 (2019-03-23)
 * 64-bit AVI playback and music fixes (Windows)
