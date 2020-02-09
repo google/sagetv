@@ -187,6 +187,56 @@ public class FormatParser
         }
       }
 
+      FormatParserPlugin plugin = FormatParser.getFormatParserPluginInstance();
+            
+      if(plugin != null)
+      {
+        if (sage.Sage.DBG) System.out.println("Format detector configured");
+        
+        try
+        {
+            plugin.initialize(f);
+            String formatName = plugin.getFormatName();
+            long duration = plugin.getDuration();
+            long bitrate = plugin.getBitrate();
+            BitstreamFormat streams [] = plugin.getStreamFormats();
+
+            if(streams != null && streams.length > 0)
+            {
+                format.setFormatName(formatName);
+                format.setDuration(duration);
+                format.setBitrate((int)bitrate);
+                format.setStreamFormats(streams);
+
+                return format;
+            }
+
+        }
+        catch(Exception ex)
+        {
+            System.out.println("Error in Format Detector Plugin: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        finally
+        {
+            if (sage.Sage.DBG) System.out.println("Finnaly called for format detector plugin");
+
+            try
+            {
+                plugin.deconstruct();
+            }
+            catch(Exception ex)
+            {
+                System.out.println("Error deconstructing plugin: " + ex.getMessage());
+            }
+        }
+
+      }
+      else
+      {
+        if (sage.Sage.DBG) System.out.println("No format detector configured, or error initializing");
+      }
+      
       if (sage.Sage.DBG) System.out.println("Now using external format detector for: " + f);
       String ffmpegInfo = getFFMPEGFormatInfo(f.toString());
       if ("TRUE".equals(sage.Sage.get("debug_ffmpeg_format_info", null)))
@@ -395,6 +445,26 @@ public class FormatParser
     return rv;
   }
 
+  private static FormatParserPlugin getFormatParserPluginInstance()
+  {
+    FormatParserPlugin parsie = null;
+    String parsePlugin = sage.Sage.get("mediafile_mediaformat_parser_plugin", "");
+
+    try
+    {
+        parsie = (FormatParserPlugin) Class.forName(parsePlugin, true, sage.Sage.extClassLoader).newInstance();
+    } 
+    catch (Throwable e1)
+    {
+        if (sage.Sage.DBG)
+        {
+            System.out.println("Error instantiating metadata parser plugin of:" + e1);
+        }
+    }
+
+    return parsie;
+  }
+  
   public static java.util.Map extractMetadataProperties(java.io.File mediaPath, java.io.File propFile, boolean invokePlugins)
   {
     java.util.Map metaProps = null;
