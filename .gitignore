@@ -38,6 +38,8 @@ config*.log
 /.idea
 *.iws
 /sagetv.iml
+/build.xml
+/nbproject
 
 # Apple OS/X system files
 .DS_Store
@@ -1017,3 +1019,4 @@ native/.vs/SageWorkspace/v14/.suo
 *.log
 native/SageWorkspace.VC.db
 native/SageWorkspace.VC.VC.opendb
+/nbproject/private/
