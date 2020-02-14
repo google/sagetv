@@ -902,7 +902,7 @@ public class MediaFileAPI {
        * Format.Video.Resolution, Format.Video.Aspect, Format.Video.Bitrate, Format.Video.Width, Format.Video.Height, Format.Video.FPS,
        * Format.Video.Interlaced, Format.Video.Progressive, Format.Video.Index, Format.Video.ID, Format.Audio.NumStreams, Format.Audio[.#].Codec, Format.Audio[.#].Channels,
        * Format.Audio[.#].Language, Format.Audio[.#].SampleRate, Format.Audio[.#].BitsPerSample, Format.Audio[.#].Index, Format.Audio[.#].ID, Format.Subtitle.NumStreams,
-       * Format.Subtitle[.#].Codec, Format.Subtitle[.#].Language, Format.Subtitle[.#].Index, Format.Subtitle[.#].ID, Format.Container and Picture.Resolution
+       * Format.Subtitle[.#].Codec, Format.Subtitle[.#].Language, Format.Subtitle[.#].Index, Format.Subtitle[.#].ID, Format.Subtitle[.#].Forced, Format.Container and Picture.Resolution
        * @param MediaFile the MediaFile object
        * @param Name the name of the property to get
        * @return a string corresponding to the metadata property value, or the emptry string if it is undefined

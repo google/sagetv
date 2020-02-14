@@ -153,7 +153,7 @@ public class SubpictureFormat extends BitstreamFormat
   public String getPrettyDesc()
   {
     return "Subpic" + ((language != null && language.length() > 0) ? (":" + language) : "") +
-        ((formatName != null && formatName.length() > 0) ? (" " + formatName) : "");
+        ((formatName != null && formatName.length() > 0) ? (" " + formatName) : "") + (this.getForced() ? " [Forced]" : "");
   }
 
   protected String language;
