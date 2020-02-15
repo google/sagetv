@@ -148,17 +148,17 @@ public:
 			switch(attType)
 			{
 			case WMT_TYPE_QWORD:
-				_ui64tow( *((QWORD*)pbValue), attValueName, 10);
+				_ui64tow_s( *((QWORD*)pbValue), attValueName, sizeof(attValueName), 10);
 				break;
 			case WMT_TYPE_DWORD:
 			case WMT_TYPE_WORD:
-				swprintf(attValueName, L"%u", (DWORD) *pbValue);
+				swprintf_s(attValueName, sizeof(attValueName), L"%u", (DWORD) *pbValue);
 				break;
 			case WMT_TYPE_STRING:
-				swprintf(attValueName, L"%s", (WCHAR*) pbValue);
+				swprintf_s(attValueName, sizeof(attValueName), L"%s", (WCHAR*) pbValue);
 				break;
 			case WMT_TYPE_BOOL:
-				swprintf(attValueName, L"%s", ((BOOL) *pbValue == TRUE) ? L"True" : L"False");
+				swprintf_s(attValueName, sizeof(attValueName), L"%s", ((BOOL) *pbValue == TRUE) ? L"True" : L"False");
 				break;
 //			case WMT_TYPE_BINARY:
 //			case WMT_TYPE_GUID:

@@ -13,8 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// Eliminate silly MS compiler security warnings about using POSIX functions
-#pragma warning(disable : 4996)
+
 #include <windows.h>
 #include <string.h>
 #include <stdio.h>

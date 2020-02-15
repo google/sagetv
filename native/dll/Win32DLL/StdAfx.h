@@ -25,10 +25,7 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-// Eliminate silly MS compiler security warnings about using POSIX functions
-#pragma warning(disable : 4996)
-
-#define _WIN32_WINNT 0x0501
+#define _WIN32_WINNT 0x0501  // Can change this if we stop supporting XP
 
 // Insert your headers here
 #define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers

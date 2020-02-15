@@ -32,34 +32,41 @@ JNIEXPORT jint JNICALL Java_sage_miniclient_OpenGLVideoRenderer_initVideoServer
 	fprintf(stderr, "Initializing the OpenGL video system.\r\n");
 	jclass m_glSageClass = (jclass) env->NewGlobalRef(env->FindClass("sage/miniclient/OpenGLVideoRenderer"));
 	if (env->ExceptionOccurred())
-		return JNI_FALSE; // let the exception propogate
+		return JNI_FALSE; // let the exception propagate
 	jmethodID m_glUpdateMethodID = env->GetMethodID(m_glSageClass, "updateVideo", "(ILjava/nio/ByteBuffer;)Z");
 	if (env->ExceptionOccurred())
-		return JNI_FALSE; // let the exception propogate
+		return JNI_FALSE; // let the exception propagate
 	jmethodID m_glCreateMethodID = env->GetMethodID(m_glSageClass, "createVideo", "(III)Z");
 	if (env->ExceptionOccurred())
-		return JNI_FALSE; // let the exception propogate
+		return JNI_FALSE; // let the exception propagate
 	jmethodID m_glCloseMethodID = env->GetMethodID(m_glSageClass, "closeVideo", "()Z");
 	if (env->ExceptionOccurred())
-		return JNI_FALSE; // let the exception propogate
-	sprintf(shmemPrefix, "SageTV-%d-%d", GetCurrentProcessId(), shMemCounter);
+		return JNI_FALSE; // let the exception propagate
+	sprintf_s(shmemPrefix, sizeof(shmemPrefix), "SageTV-%d-%d", GetCurrentProcessId(), shMemCounter);
 	shMemCounter++;
 	glVideoServerActive = 1;
-	HANDLE fileMap = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE,
-		0, 1920*540*3 + 1024, shmemPrefix);
+	HANDLE fileMap = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, 1920*540*3 + 1024, shmemPrefix);
+	if (fileMap == NULL)  // Should never be NULL
+		return JNI_FALSE;
 	char buf[256];
-	strcpy(buf, shmemPrefix);
-	strcat(buf, "FrameReady");
+	strcpy_s(buf, sizeof(buf), shmemPrefix);
+	strcat_s(buf, sizeof(buf), "FrameReady");
 	HANDLE evtReady = CreateEvent(NULL, FALSE, FALSE, buf);
-	strcpy(buf, shmemPrefix);
-	strcat(buf, "FrameDone");
+	if (evtReady == NULL)  // Should never be NULL
+		return JNI_FALSE;
+	strcpy_s(buf, sizeof(buf), shmemPrefix);
+	strcat_s(buf, sizeof(buf), "FrameDone");
 	HANDLE evtDone = CreateEvent(NULL, FALSE, FALSE, buf);
+	if (evtDone == NULL)  // Should never be NULL
+		return JNI_FALSE;
 	fprintf(stderr, "Created FileMap=0x%p evtReady=0x%p evtDone=0x%p\r\n", fileMap, evtReady, evtDone);
-	unsigned char* myPtr = (unsigned char*)MapViewOfFile(fileMap, FILE_MAP_READ|FILE_MAP_WRITE, 0, 0, 0);
+	unsigned char* myPtr = (unsigned char*)MapViewOfFile(fileMap, FILE_MAP_READ | FILE_MAP_WRITE, 0, 0, 0);
 	unsigned int* myData = (unsigned int*) myPtr;
+	if (myData == NULL)  // Should never be NULL
+		return JNI_FALSE;
 	jobject byteBuffer = env->NewDirectByteBuffer(myPtr + 1024, 1920*540*3);
 	if (env->ExceptionOccurred())
-		return JNI_FALSE; // let the exception propogate
+		return JNI_FALSE; // let the exception propagate
 	fprintf(stderr, "Starting to read...0x%p\r\n", myPtr);
 	while (glVideoServerActive)
 	{
@@ -77,7 +84,7 @@ JNIEXPORT jint JNICALL Java_sage_miniclient_OpenGLVideoRenderer_initVideoServer
 			fprintf(stderr, "Creating video of size %d x %d\r\n", width, height);
 			env->CallBooleanMethod(jo, m_glCreateMethodID, width, height, 0);
 			if (env->ExceptionOccurred())
-				return JNI_FALSE; // let the exception propogate
+				return JNI_FALSE; // let the exception propagate
 			// Respond with offset/stride information
 			myData[0] = 1024; // offset y
 			myData[1] = width; // pitch y
@@ -91,21 +98,27 @@ JNIEXPORT jint JNICALL Java_sage_miniclient_OpenGLVideoRenderer_initVideoServer
 		{
 			env->CallBooleanMethod(jo, m_glUpdateMethodID, myData[1], byteBuffer);
 			if (env->ExceptionOccurred())
-				return JNI_FALSE; // let the exception propogate
-			SetEvent(evtDone);
+				return JNI_FALSE; // let the exception propagate
+			if (evtDone !=NULL)
+				SetEvent(evtDone);
 		}
 		else if (currCmd == 0x82)
 		{
 			env->CallBooleanMethod(jo, m_glCloseMethodID);
 			if (env->ExceptionOccurred())
-				return JNI_FALSE; // let the exception propogate
-			ResetEvent(evtDone);
+				return JNI_FALSE; // let the exception propagate
+			if (evtDone != NULL)
+				ResetEvent(evtDone);
 		}
 	}
-	UnmapViewOfFile(myPtr);
-	CloseHandle(evtReady);
-	CloseHandle(evtDone);
-	CloseHandle(fileMap);
+	if (myPtr !=NULL)
+		UnmapViewOfFile(myPtr);
+	if (evtReady != NULL)
+		CloseHandle(evtReady);
+	if (evtDone != NULL)
+		CloseHandle(evtDone);
+	if (fileMap != NULL)
+		CloseHandle(fileMap);
 	return JNI_TRUE;
 }
 

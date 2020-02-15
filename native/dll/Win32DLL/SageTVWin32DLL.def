@@ -3,4 +3,3 @@
 LIBRARY      "SageTVWin32"
 
 SECTIONS
-	.shared READ WRITE SHARED

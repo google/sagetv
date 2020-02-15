@@ -300,22 +300,25 @@ JNIEXPORT void JNICALL Java_sage_DirectX9SageRenderer_asyncVideoRender0
 		return;
 	}
 	const char* cName = env->GetStringUTFChars(sharedMemPrefix, NULL);
-	HANDLE fileMap = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE,
-		0, 1920*540*3 + 1024, cName);
+	HANDLE fileMap = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, 1920 * 540 * 3 + 1024, cName);
+	if (fileMap == NULL)
+		return;
 	char buf[256];
 	asyncRenderCount++;
 	Sleep(100); // wait more than 50 msec so if a prior MPlayer process was killed forcibly the loop below would have
 	// had time to exit and cleanup its pointers before we start on our work
-	strcpy(buf, cName);
-	strcat(buf, "FrameReady");
+	strcpy_s(buf, sizeof(buf), cName);
+	strcat_s(buf, sizeof(buf), "FrameReady");
 	HANDLE evtReady = CreateEvent(NULL, FALSE, FALSE, buf);
-	strcpy(buf, cName);
-	strcat(buf, "FrameDone");
+	strcpy_s(buf, sizeof(buf), cName);
+	strcat_s(buf, sizeof(buf), "FrameDone");
 	HANDLE evtDone = CreateEvent(NULL, FALSE, FALSE, buf);
 	env->ReleaseStringUTFChars(sharedMemPrefix, cName);
 	slog((env, "Created FileMap=0x%p evtReady=0x%p evtDone=0x%p\r\n", fileMap, evtReady, evtDone));
 	unsigned char* myPtr = (unsigned char*)MapViewOfFile(fileMap, FILE_MAP_READ|FILE_MAP_WRITE, 0, 0, 0);
 	unsigned int* myData = (unsigned int*) myPtr;
+	if (myData == NULL)
+		return;
 	slog((env, "Starting to read...0x%p\r\n", myPtr));
 	int configured = 0;
 	int j = 0;
@@ -325,13 +328,14 @@ JNIEXPORT void JNICALL Java_sage_DirectX9SageRenderer_asyncVideoRender0
 		j++;
 		// Decrease this wait time so that if there's case where MPlayer has to be forcibly quit we
 		// can exit this loop in a short amount of time
-		if (WAIT_OBJECT_0 != WaitForSingleObject(evtReady, 50))
-		{
-			if (env->GetLongField(jo, fid_pD3DObject) == 0)
-				break; // 3D system is dead
-			//printf("WAIT TIMEOUT EXPIRED!!!\r\n");
-			continue;
-		}
+		if (evtReady != NULL)
+			if (WAIT_OBJECT_0 != WaitForSingleObject(evtReady, 50))
+			{
+				if (env->GetLongField(jo, fid_pD3DObject) == 0)
+					break; // 3D system is dead
+				//printf("WAIT TIMEOUT EXPIRED!!!\r\n");
+				continue;
+			}
 		int currCmd = (myData[0] >> 24) & 0xFF;
 		//slog((env, "Got video cmd 0x%x\r\n", currCmd));
 		if (currCmd == 0x80)
@@ -363,7 +367,8 @@ JNIEXPORT void JNICALL Java_sage_DirectX9SageRenderer_asyncVideoRender0
 		else
 		{
 		}
-		SetEvent(evtDone);
+		if (evtDone != NULL)
+			SetEvent(evtDone);
 	}
 	env->CallStaticVoidMethod(m_dx9SageClass, m_dx9UpdateMethodID,
 		(jint) 0xCAFEBABE, 0, 0, 0, 0, 0, 0);
@@ -371,9 +376,12 @@ JNIEXPORT void JNICALL Java_sage_DirectX9SageRenderer_asyncVideoRender0
 	SAFE_RELEASE(pVideoTextureY);
 	SAFE_RELEASE(pVideoTextureU);
 	SAFE_RELEASE(pVideoTextureV);
-	UnmapViewOfFile(myPtr);
-	CloseHandle(evtReady);
-	CloseHandle(evtDone);
+	if (myPtr !=NULL)
+		UnmapViewOfFile(myPtr);
+	if (evtReady != NULL)
+		CloseHandle(evtReady);
+	if (evtDone !=NULL)
+		CloseHandle(evtDone);
 	CloseHandle(fileMap);
 	slog((env, "Async video renderer cleanup is complete.\r\n"));
 }
@@ -387,7 +395,9 @@ JNIEXPORT jboolean JNICALL Java_sage_DirectX9SageRenderer_initDX9SageRenderer0(J
 																		   jint width, jint height, jlong winID)
 {
 	JNI_TRY;
-	CoInitializeEx(NULL, COM_THREADING_MODE);
+	HRESULT hr = CoInitializeEx(NULL, COM_THREADING_MODE);
+	if (FAILED(hr))
+		return JNI_FALSE;
 	slog((env, "Initializing DirectX9\r\n"));
 	if (!fid_pD3DObject)
 	{
@@ -457,7 +467,7 @@ JNIEXPORT jboolean JNICALL Java_sage_DirectX9SageRenderer_initDX9SageRenderer0(J
 	}
 
 	D3DDISPLAYMODE d3ddm;
-	HRESULT hr = pD3D->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &d3ddm);
+	hr = pD3D->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &d3ddm);
 	TEST_AND_BAIL_NODEV
 	env->SetLongField(jo, fid_pD3DObject, (jlong) pD3D);
 
@@ -972,7 +982,7 @@ JNIEXPORT jlong JNICALL Java_sage_DirectX9SageRenderer_createD3DTextureFromMemor
 
     DWORD storedWidth = 1;
     DWORD storedHeight = 1;
-    if(requiresPow2Textures)
+    if (requiresPow2Textures)
     {
 //		slog((env, "Converting texture to power of 2 size\r\n"));
         while (storedWidth < ((DWORD) width))
@@ -1036,11 +1046,13 @@ JNIEXPORT jlong JNICALL Java_sage_DirectX9SageRenderer_createD3DTextureFromMemor
 	imgRect.bottom = storedHeight;
 	void* myMemory = env->GetDirectBufferAddress(data);
 	unsigned long* swapOrg = (unsigned long*)myMemory;
-	unsigned long* swapper = (unsigned long*)malloc(storedWidth*storedHeight*sizeof(unsigned long));
-	DWORD x,y;
+	unsigned long* swapper = (unsigned long*)calloc((storedWidth*storedHeight), sizeof(unsigned long));  // change from malloc to calloc to prevent 6386 warning
+	if (swapper == nullptr)
+		return 0;
+	DWORD x, y;
 	DWORD jheight = (DWORD) height;
 	DWORD jwidth = (DWORD) width;
-	for(y = 0; y < jheight; y++)
+	for (y = 0; y < jheight; y++)
 	{
 		int idxNew = y * storedWidth;
 		int idxOld = y * jwidth;
@@ -1065,6 +1077,7 @@ JNIEXPORT jlong JNICALL Java_sage_DirectX9SageRenderer_createD3DTextureFromMemor
 		0); // no color key
 
 	free(swapper);
+
 	TEST_AND_PRINT
 	if (hr != D3D_OK) 
 	{
@@ -3092,7 +3105,7 @@ JNIEXPORT jboolean JNICALL Java_sage_DirectX9SageRenderer_getVideoSnapshot0
 	{
 // NOTE: WE SHOULD FIX THIS SO ITS NOT A PROBLEM
 		pSnapshotSurf->UnlockRect();
-		hr = -1;
+		hr = E_FAIL;
 		TEST_AND_BAIL
 	}
 	memcpy(nativeImageData, lockedRect.pBits, 4*videoWidth*videoHeight);

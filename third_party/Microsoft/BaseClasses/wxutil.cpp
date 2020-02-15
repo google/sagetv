@@ -607,7 +607,10 @@ DWORD WINAPI WaitDispatchingMessages(
 
     HANDLE hObjects[2] = { hObject, hEvent };
     if (dwWait != INFINITE && dwWait != 0) {
-        dwStart = GetTickCount();
+#pragma warning(disable:28159) // Static Code Analysis: When we stop supporting XP we can use GetTickCount64()
+		dwStart = GetTickCount();
+#pragma warning(default:28159) // Static Code Analysis: When we stop supporting XP we can use GetTickCount64()
+		
     }
     for (; ; ) {
         DWORD nCount = NULL != hEvent ? 2 : 1;
@@ -643,7 +646,9 @@ DWORD WINAPI WaitDispatchingMessages(
             PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE);
 
             if (dwWait != INFINITE && dwWait != 0) {
-                DWORD dwNow = GetTickCount();
+#pragma warning(disable:28159) // Static Code Analysis: When we stop supporting XP we can use GetTickCount64()
+					DWORD dwNow = GetTickCount();
+#pragma warning(default:28159) // Static Code Analysis: When we stop supporting XP we can use GetTickCount64()
 
                 // Working with differences handles wrap-around
                 DWORD dwDiff = dwNow - dwStart;

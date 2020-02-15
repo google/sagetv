@@ -202,6 +202,7 @@ JNIEXPORT jboolean JNICALL Java_sage_Sage_writeStringValue(JNIEnv *env,
 	const char* valueNameString = env->GetStringUTFChars(valueName, 0);
 	const char* valueString = env->GetStringUTFChars(value, 0);
 	HKEY rootKey;
+	rootKey = NULL;  // initialize to resolve C6001
 	HKEY myKey;
 	jboolean rv = JNI_FALSE;
 	if (root == sage_Sage_HKEY_CLASSES_ROOT) rootKey = HKEY_CLASSES_ROOT;
@@ -209,16 +210,16 @@ JNIEXPORT jboolean JNICALL Java_sage_Sage_writeStringValue(JNIEnv *env,
 	else if (root == sage_Sage_HKEY_CURRENT_USER) rootKey = HKEY_CURRENT_USER;
 	else if (root == sage_Sage_HKEY_LOCAL_MACHINE) rootKey = HKEY_LOCAL_MACHINE;
 	else if (root == sage_Sage_HKEY_USERS) rootKey = HKEY_USERS;
-
-	if (rootKey && RegCreateKeyEx(rootKey, keyString, 0, 0, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS,
-		0, &myKey, 0) == ERROR_SUCCESS)
+	if (rootKey != NULL)
 	{
-		if (RegSetValueEx(myKey, valueNameString, 0, REG_SZ, (LPBYTE) valueString,
-			env->GetStringLength(value) + 1) == ERROR_SUCCESS)
+		if (rootKey && RegCreateKeyEx(rootKey, keyString, 0, 0, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, 0, &myKey, 0) == ERROR_SUCCESS)
 		{
-			rv = JNI_TRUE;
+			if (RegSetValueEx(myKey, valueNameString, 0, REG_SZ, (LPBYTE)valueString, env->GetStringLength(value) + 1) == ERROR_SUCCESS)
+			{
+				rv = JNI_TRUE;
+			}
+			RegCloseKey(myKey);
 		}
-		RegCloseKey(myKey);
 	}
 	env->ReleaseStringUTFChars(key, keyString);
 	env->ReleaseStringUTFChars(valueName, valueNameString);
@@ -231,12 +232,12 @@ JNIEXPORT jboolean JNICALL Java_sage_Sage_writeStringValue(JNIEnv *env,
  * Method:    writeDwordValue
  * Signature: (ILjava/lang/String;Ljava/lang/String;I)Z
  */
-jboolean JNICALL Java_sage_Sage_writeDwordValue(JNIEnv *env,
-	jclass myClass, jint root, jstring key, jstring valueName, jint value)
+jboolean JNICALL Java_sage_Sage_writeDwordValue(JNIEnv *env, jclass myClass, jint root, jstring key, jstring valueName, jint value)
 {
 	const char* keyString = env->GetStringUTFChars(key, 0);
 	const char* valueNameString = env->GetStringUTFChars(valueName, 0);
 	HKEY rootKey;
+	rootKey = NULL;  // initialize to resolve C6001
 	DWORD dvalue = value;
 	HKEY myKey;
 	jboolean rv = JNI_FALSE;
@@ -245,17 +246,15 @@ jboolean JNICALL Java_sage_Sage_writeDwordValue(JNIEnv *env,
 	else if (root == sage_Sage_HKEY_CURRENT_USER) rootKey = HKEY_CURRENT_USER;
 	else if (root == sage_Sage_HKEY_LOCAL_MACHINE) rootKey = HKEY_LOCAL_MACHINE;
 	else if (root == sage_Sage_HKEY_USERS) rootKey = HKEY_USERS;
-
-	if (rootKey && RegCreateKeyEx(rootKey, keyString, 0, 0, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS,
-		0, &myKey, 0) == ERROR_SUCCESS)
-	{
-		if (RegSetValueEx(myKey, valueNameString, 0, REG_DWORD, (LPBYTE) &dvalue,
-			sizeof(dvalue)) == ERROR_SUCCESS)
+	if (rootKey != NULL)
+		if (rootKey && RegCreateKeyEx(rootKey, keyString, 0, 0, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, 0, &myKey, 0) == ERROR_SUCCESS)
 		{
-			rv = JNI_TRUE;
-		}
+		if (RegSetValueEx(myKey, valueNameString, 0, REG_DWORD, (LPBYTE) &dvalue, sizeof(dvalue)) == ERROR_SUCCESS)
+			{
+				rv = JNI_TRUE;
+			}
 		RegCloseKey(myKey);
-	}
+		}
 	env->ReleaseStringUTFChars(key, keyString);
 	env->ReleaseStringUTFChars(valueName, valueNameString);
 	return rv;
@@ -272,6 +271,7 @@ jboolean JNICALL Java_sage_Sage_removeRegistryValue(JNIEnv *env,
 	const char* keyString = env->GetStringUTFChars(key, 0);
 	const char* valueNameString = env->GetStringUTFChars(valueName, 0);
 	HKEY rootKey;
+	rootKey = NULL;  // initialize to resolve C6001
 	HKEY myKey;
 	jboolean rv = JNI_FALSE;
 	if (root == sage_Sage_HKEY_CLASSES_ROOT) rootKey = HKEY_CLASSES_ROOT;
@@ -279,12 +279,12 @@ jboolean JNICALL Java_sage_Sage_removeRegistryValue(JNIEnv *env,
 	else if (root == sage_Sage_HKEY_CURRENT_USER) rootKey = HKEY_CURRENT_USER;
 	else if (root == sage_Sage_HKEY_LOCAL_MACHINE) rootKey = HKEY_LOCAL_MACHINE;
 	else if (root == sage_Sage_HKEY_USERS) rootKey = HKEY_USERS;
-
-	if (rootKey && RegOpenKeyEx(rootKey, keyString, 0, KEY_ALL_ACCESS, &myKey) == ERROR_SUCCESS)
-	{
-		rv = (RegDeleteValue(myKey, valueNameString) == ERROR_SUCCESS);
-		RegCloseKey(myKey);
-	}
+	if (rootKey != NULL)
+		if (rootKey && RegOpenKeyEx(rootKey, keyString, 0, KEY_ALL_ACCESS, &myKey) == ERROR_SUCCESS)
+		{
+			rv = (RegDeleteValue(myKey, valueNameString) == ERROR_SUCCESS);
+			RegCloseKey(myKey);
+		}
 	env->ReleaseStringUTFChars(key, keyString);
 	env->ReleaseStringUTFChars(valueName, valueNameString);
 	return rv;
@@ -295,8 +295,7 @@ jboolean JNICALL Java_sage_Sage_removeRegistryValue(JNIEnv *env,
  * Method:    getRegistryNames
  * Signature: (ILjava/lang/String;)[Ljava/lang/String;
  */
-JNIEXPORT jobjectArray JNICALL Java_sage_Sage_getRegistryNames(JNIEnv *env, jclass jc, 
-															jint root, jstring key)
+JNIEXPORT jobjectArray JNICALL Java_sage_Sage_getRegistryNames(JNIEnv *env, jclass jc, jint root, jstring key)
 {
 	const char* keyString = env->GetStringUTFChars(key, 0);
 	static jclass strClass = (jclass) env->NewGlobalRef(env->FindClass("java/lang/String"));
@@ -351,8 +350,7 @@ JNIEXPORT jobjectArray JNICALL Java_sage_Sage_getRegistryNames(JNIEnv *env, jcla
  * Method:    getRegistrySubkeys
  * Signature: (ILjava/lang/String;)[Ljava/lang/String;
  */
-JNIEXPORT jobjectArray JNICALL Java_sage_Sage_getRegistrySubkeys(JNIEnv *env, jclass jc, 
-															jint root, jstring key)
+JNIEXPORT jobjectArray JNICALL Java_sage_Sage_getRegistrySubkeys(JNIEnv *env, jclass jc, jint root, jstring key)
 {
 	const char* keyString = env->GetStringUTFChars(key, 0);
 	static jclass strClass = (jclass) env->NewGlobalRef(env->FindClass("java/lang/String"));
@@ -399,8 +397,7 @@ JNIEXPORT jobjectArray JNICALL Java_sage_Sage_getRegistrySubkeys(JNIEnv *env, jc
 	
 	RegCloseKey(myKey);
 	env->ReleaseStringUTFChars(key, keyString);
-	return (jobjectArray) env->CallObjectMethod(vec, vecToArrayMeth,
-		env->NewObjectArray(env->CallIntMethod(vec, vecSizeMeth), strClass, NULL));
+	return (jobjectArray) env->CallObjectMethod(vec, vecToArrayMeth, env->NewObjectArray(env->CallIntMethod(vec, vecSizeMeth), strClass, NULL));
 }
 
 /*
@@ -447,8 +444,7 @@ JNIEXPORT jint JNICALL Java_sage_Sage_getFileSystemIdentifier(JNIEnv *env, jclas
  * Method:    setSystemTime
  * Signature: (IIIIIII)V
  */
-JNIEXPORT void JNICALL Java_sage_Sage_setSystemTime(JNIEnv *env, jclass jc, jint year, jint month,
-													jint day, jint hour, jint minute, jint second, jint millisecond)
+JNIEXPORT void JNICALL Java_sage_Sage_setSystemTime(JNIEnv *env, jclass jc, jint year, jint month, jint day, jint hour, jint minute, jint second, jint millisecond)
 {
 	SYSTEMTIME sysTime;
 	sysTime.wYear = (WORD) year;
@@ -523,8 +519,7 @@ JNIEXPORT jobject JNICALL Java_sage_Sage_getScreenArea0(JNIEnv *env, jclass jc)
 	static jclass rectClass = (jclass) env->NewGlobalRef(env->FindClass("java/awt/Rectangle"));
 	static jmethodID rectConst = env->GetMethodID(rectClass, "<init>",
 		"(IIII)V");
-	jobject myRect = env->NewObject(rectClass, rectConst, (jint)rRW.left,
-		(jint)rRW.top, (jint)(rRW.right - rRW.left), (jint)(rRW.bottom - rRW.top));
+	jobject myRect = env->NewObject(rectClass, rectConst, (jint)rRW.left, (jint)rRW.top, (jint)(rRW.right - rRW.left), (jint)(rRW.bottom - rRW.top));
 
 	return myRect;
 }
@@ -572,7 +567,7 @@ JNIEXPORT void JNICALL Java_sage_Sage_addTaskbarIcon0(JNIEnv *env, jclass jc, jl
 	iconData.hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(iconID));
 	static jclass sagetvClass = (jclass) env->NewGlobalRef(env->FindClass("sage/SageTV"));
 	env->ExceptionClear();
-	strcpy(iconData.szTip, sagetvClass ? "SageTV 2" : "SageRecorder");
+	strcpy_s(iconData.szTip, sizeof(iconData.szTip), sagetvClass ? "SageTV 2" : "SageRecorder");
 	BOOL res = Shell_NotifyIcon(NIM_ADD, &iconData);
 }
 
@@ -593,7 +588,7 @@ JNIEXPORT void JNICALL Java_sage_Sage_updateTaskbarIcon0(JNIEnv *env, jclass jc,
 		iconData.uFlags = NIF_TIP | NIF_ICON;
 
 		const jchar* ctip = env->GetStringChars(tipText, NULL);
-		wcsncpy(iconData.szTip, (const wchar_t*)ctip, sizeof(iconData.szTip) );
+		wcsncpy_s(iconData.szTip, _countof(iconData.szTip), (const wchar_t*)ctip, _countof(iconData.szTip) - 1 );
 		WORD iconID = schedulerHasConflicts(env) ? 111 : 110;
 		iconData.hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(iconID));
 		BOOL res = Shell_NotifyIconW(NIM_MODIFY, &iconData);
@@ -646,7 +641,6 @@ JNIEXPORT jlong JNICALL Java_sage_Sage_getCpuTime
 	return rv;
 }
 
-#define _countof(array) (sizeof(array)/sizeof(array[0])) 
 static UINT dss_GetList[] = {SPI_GETLOWPOWERTIMEOUT, 
     SPI_GETPOWEROFFTIMEOUT, SPI_GETSCREENSAVETIMEOUT};
 static UINT dss_SetList[] = {SPI_SETLOWPOWERTIMEOUT, 
@@ -709,7 +703,9 @@ JNIEXPORT jlong JNICALL Java_sage_Sage_getEventTime0(JNIEnv *env, jclass jc)
 //    }
 	// NARFLEX - I have no idea why this was using GetMessageTime; but that causes the value to
 	// vary between threads which is very, very bad so we don't use that at all anymore.
+#pragma warning(disable:28159) // Static Code Analysis: When we stop supporting XP we can use GetTickCount64()
 	DWORD event_offset = GetTickCount();
+#pragma warning(default:28159) // Static Code Analysis: When we stop supporting XP we can use GetTickCount64()
     // All computations and stored values are in milliseconds. The Win32
     // FILETIME structure is in 100s of nanoseconds, so the FT2INT64 macro
     // divides by 10^4. (10^7 / 10^4 = 10^3).
@@ -747,7 +743,9 @@ JNIEXPORT jlong JNICALL Java_sage_Sage_getEventTime0(JNIEnv *env, jclass jc)
 
     if ((current_time_1601 - boot_time_1601) > WRAP_TIME_MILLIS) {
         // Need to reset boot time
-        DWORD since_boot_millis = GetTickCount();
+#pragma warning(disable:28159) // Static Code Analysis: When we stop supporting XP we can use GetTickCount64()
+		DWORD since_boot_millis = GetTickCount();
+#pragma warning(default:28159) // Static Code Analysis: When we stop supporting XP we can use GetTickCount64()
         boot_time_1601 = current_time_1601 - since_boot_millis;
         boot_time_utc = boot_time_1601 - utc_epoch_1601;
     }
@@ -760,9 +758,7 @@ JNIEXPORT jlong JNICALL Java_sage_Sage_getEventTime0(JNIEnv *env, jclass jc)
  * Method:    setCompoundWindowRegion
  * Signature: (J[Ljava/awt/Rectangle;[IZ)V
  */
-JNIEXPORT void JNICALL Java_sage_UIManager_setCompoundWindowRegion(JNIEnv *env, jclass jc,
-																   jlong winID, jobjectArray jrects, jintArray roundness,
-																   jboolean dontRepaint)
+JNIEXPORT void JNICALL Java_sage_UIManager_setCompoundWindowRegion(JNIEnv *env, jclass jc, jlong winID, jobjectArray jrects, jintArray roundness, jboolean dontRepaint)
 {
 	HWND hwnd = (HWND) winID;
 	HRGN compRgn = NULL;
@@ -791,13 +787,11 @@ JNIEXPORT void JNICALL Java_sage_UIManager_setCompoundWindowRegion(JNIEnv *env, 
 		HRGN currRegn;
 		if (nativeRound[i])
 		{
-			currRegn = CreateRoundRectRgn(currX, currY, currX + env->GetIntField(currRect, rectW),
-				currY + env->GetIntField(currRect, rectH), nativeRound[i], nativeRound[i]);
+			currRegn = CreateRoundRectRgn(currX, currY, currX + env->GetIntField(currRect, rectW), currY + env->GetIntField(currRect, rectH), nativeRound[i], nativeRound[i]);
 		}
 		else
 		{
-			currRegn = CreateRectRgn(currX, currY, currX + env->GetIntField(currRect, rectW),
-				currY + env->GetIntField(currRect, rectH));
+			currRegn = CreateRectRgn(currX, currY, currX + env->GetIntField(currRect, rectW), currY + env->GetIntField(currRect, rectH));
 		}
 		if (!currRegn)
 		{
@@ -824,7 +818,8 @@ JNIEXPORT void JNICALL Java_sage_UIManager_setCompoundWindowRegion(JNIEnv *env, 
 			{
 				slog((env, "CombineRgn 2 failed %d\r\n", GetLastError()));
 			}
-			DeleteObject(currRegn);
+			if (currRegn != NULL)
+				DeleteObject(currRegn);
 		}
 	}
 	// This used to be TRUE, but I think that's the double flashy cause
@@ -885,12 +880,10 @@ JNIEXPORT void JNICALL Java_sage_UIManager_setCursorClip(
  * Method:    sendMessage
  * Signature: (JII)Z
  */
-JNIEXPORT jboolean JNICALL Java_sage_UIManager_sendMessage(
-	JNIEnv *env, jclass jc, jlong winID, jint msgID, jint msgData)
+JNIEXPORT jboolean JNICALL Java_sage_UIManager_sendMessage(JNIEnv *env, jclass jc, jlong winID, jint msgID, jint msgData)
 {
 	DWORD_PTR msgRes;
-	if (SendMessageTimeout((HWND) winID, msgID + WM_USER, msgData, msgData,
-		SMTO_ABORTIFHUNG | SMTO_BLOCK, 15000, &msgRes) == 0)
+	if (SendMessageTimeout((HWND) winID, msgID + WM_USER, msgData, msgData, SMTO_ABORTIFHUNG | SMTO_BLOCK, 15000, &msgRes) == 0)
 		return JNI_FALSE;
 	else
 		return JNI_TRUE;
@@ -928,12 +921,12 @@ JNIEXPORT jlong JNICALL Java_sage_UIManager_findWindow(
 JNIEXPORT jboolean JNICALL Java_sage_DirectX9SageRenderer_hasDirectX90
   (JNIEnv *env, jclass jc)
 {
-    TCHAR szPath[512];
-    TCHAR szFile[512];
-    if (GetSystemDirectory(szPath, 512) != 0)
+    TCHAR szPath[_MAX_PATH];
+    TCHAR szFile[_MAX_PATH];
+    if (GetSystemDirectory(szPath, _MAX_PATH) != 0)
 	{
-        strncpy(szFile, szPath,sizeof(szFile));
-        strcat(szFile, TEXT("\\d3d9.dll"));
+        strncpy_s(szFile, sizeof(szFile), szPath, sizeof(szFile)-1);
+        strcat_s(szFile, sizeof(szFile), TEXT("\\d3d9.dll"));
 		HANDLE fooHand = CreateFile(szFile, 0, 0, NULL, OPEN_EXISTING, 0, NULL);
 		if (fooHand == INVALID_HANDLE_VALUE)
 		{
@@ -952,33 +945,38 @@ void loadAWTLib()
 {
 	if (!sageLoadedAwtLib)
 	{
-		// If they're using a bundled JRE, then try to load it that way first
-		HMODULE exeMod = GetModuleHandle(NULL);
-		LPTSTR appPath = new TCHAR[512];
-		GetModuleFileName(exeMod, appPath, 512);
-		int appLen = (int) strlen(appPath);
-		for (int i = appLen - 1; i > 0; i--)
+		/*
+		* Explicitly load jvm.dll.
+		*/
+		char appPath[_MAX_PATH];
+		GetModuleFileName(NULL, appPath, sizeof(appPath));
+		size_t appLen = strlen(appPath);
+		if (appLen > 0)  // Shouldn't be 0 as the following would be an infinite loop
 		{
-			if (appPath[i] == '\\')
+			for (size_t i = appLen - 1; i > 0; i--)
 			{
-				appPath[i + 1] = 0;
-				break;
+				if (appPath[i] == '\\')
+				{
+					appPath[i + 1] = 0;
+					break;
+				}
 			}
 		}
+
 		// See if we've got a JVM in our own directory to load
-		TCHAR includedJRE[1024];
-		strcpy(includedJRE, appPath);
-		strcat(includedJRE, "jre\\bin\\jawt.dll");
+		char includedJRE[_MAX_PATH];
+		strcpy_s(includedJRE, sizeof(includedJRE), appPath);
+		strcat_s(includedJRE, sizeof(includedJRE), "jre\\bin\\jawt.dll");
 		sageLoadedAwtLib = LoadLibrary(includedJRE);
 		if (sageLoadedAwtLib)
 			return;
 		/*
-		 * Explicitly load jawt.dll by using the Windows Registry to locate the current version to use.
+		 * Failed to find JRE in SageTV directory, load jawt.dll by using the Windows Registry to locate the current version to use.
 		 */
 		HKEY rootKey = HKEY_LOCAL_MACHINE;
 		char currVer[16];
-		HKEY myKey;
-		DWORD readType;
+		HKEY myKey;  // myKey to NULL for RegQueryValueEx
+		DWORD readType;  // readType to NULL for RegQueryValueEx
 		DWORD hsize = sizeof(currVer);
 		if (RegOpenKeyEx(rootKey, "Software\\JavaSoft\\Java Runtime Environment", 0, KEY_QUERY_VALUE, &myKey) != ERROR_SUCCESS)
 		{
@@ -992,13 +990,13 @@ void loadAWTLib()
 		}
 		RegCloseKey(myKey);
 		char pathKey[1024];
-		strcpy(pathKey, "Software\\JavaSoft\\Java Runtime Environment\\");
-		strcat(pathKey, currVer);
-		char jvmPath[1024];
+		strcpy_s(pathKey, sizeof(pathKey), "Software\\JavaSoft\\Java Runtime Environment\\");
+		strcat_s(pathKey, sizeof(pathKey), currVer);
 		if (RegOpenKeyEx(rootKey, pathKey, 0, KEY_QUERY_VALUE, &myKey) != ERROR_SUCCESS)
 		{
 			return;
 		}
+		char jvmPath[_MAX_PATH];
 		hsize = sizeof(jvmPath);
 		if (RegQueryValueEx(myKey, "RuntimeLib", 0, &readType, (LPBYTE)jvmPath, &hsize) != ERROR_SUCCESS)
 		{
@@ -1013,7 +1011,7 @@ void loadAWTLib()
 		*goodSlash = 0;
 		goodSlash = strrchr(jvmPath, '\\');
 		if (!goodSlash) return;
-		strcpy(goodSlash + 1, "jawt.dll");
+		strcpy_s(goodSlash + 1, sizeof(goodSlash) + 1, "jawt.dll");
 
 		sageLoadedAwtLib = LoadLibrary(jvmPath);
 	}
@@ -1173,8 +1171,7 @@ JNIEXPORT void JNICALL Java_sage_UIManager_setAppTaskbarState0
  * Method:    getCursorPosX0
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_sage_UIManager_getCursorPosX0
-  (JNIEnv *env, jclass jc)
+JNIEXPORT jint JNICALL Java_sage_UIManager_getCursorPosX0 (JNIEnv *env, jclass jc)
 {
 	POINT mousePos;
 	GetCursorPos(&mousePos);
@@ -1186,8 +1183,7 @@ JNIEXPORT jint JNICALL Java_sage_UIManager_getCursorPosX0
  * Method:    getCursorPosY0
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_sage_UIManager_getCursorPosY0
-  (JNIEnv *env, jclass jc)
+JNIEXPORT jint JNICALL Java_sage_UIManager_getCursorPosY0 (JNIEnv *env, jclass jc)
 {
 	POINT mousePos;
 	GetCursorPos(&mousePos);
@@ -1211,8 +1207,7 @@ static HANDLE _hRawInputHandle = NULL;
  * Method:    setupSystemHooks0
  * Signature: (J)Z
  */
-JNIEXPORT jboolean JNICALL Java_sage_Sage_setupSystemHooks0
-  (JNIEnv *env, jclass jc, jlong jhwnd)
+JNIEXPORT jboolean JNICALL Java_sage_Sage_setupSystemHooks0 (JNIEnv *env, jclass jc, jlong jhwnd)
 {
 	BOOL ret = TRUE;
 	HKEY hregkey;
@@ -1413,8 +1408,7 @@ JNIEXPORT jboolean JNICALL Java_sage_Sage_setupSystemHooks0
  * Method:    releaseSystemHooks0
  * Signature: (J)Z
  */
-JNIEXPORT jboolean JNICALL Java_sage_Sage_releaseSystemHooks0
-  (JNIEnv *env, jclass jc, jlong jhwnd)
+JNIEXPORT jboolean JNICALL Java_sage_Sage_releaseSystemHooks0 (JNIEnv *env, jclass jc, jlong jhwnd)
 {
 	jboolean rv = JNI_FALSE;
 	DWORD dwWaitResult;
@@ -1519,8 +1513,7 @@ typedef DWORD (STDAPICALLTYPE *lpfnWNetAddConnection2A)(
  * Method:    fixFailedWinDriveMappings
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_sage_Sage_fixFailedWinDriveMappings
-  (JNIEnv *env, jclass jc)
+JNIEXPORT void JNICALL Java_sage_Sage_fixFailedWinDriveMappings (JNIEnv *env, jclass jc)
 {
 	char lwszSysErr[512];
 	DWORD dw_syserr = sizeof(lwszSysErr);
