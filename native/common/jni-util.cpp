@@ -690,7 +690,11 @@ jboolean GetMapStringValue(JNIEnv* env, jobject map, const char* optionName, cha
 	}
 	const char* cstr = env->GetStringUTFChars(jstr, NULL);
 	*rvCount = (unsigned long) MIN(rvlen, strlen(cstr));
+#ifdef WIN32
 	strncpy_s(rv, sizeof(rv), cstr, MIN(rvlen, strlen(cstr)));
+#else
+	strncpy(rv, cstr, MIN(rvlen, strlen(cstr)));
+#endif
 	env->ReleaseStringUTFChars(jstr, cstr);
 	return JNI_TRUE;
 }
