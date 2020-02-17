@@ -63,7 +63,7 @@ public class FormatParser
   private static boolean DISABLE_FORMAT_DETECTION = false;
   private static boolean MINIMIZE_EXIF_MEM_USAGE = false;
   public static final java.io.File FORMAT_DETECT_MOUNT_DIR = new java.io.File("/tmp/formatmount");
-  private static String substituteName(String s)
+  public static String substituteName(String s)
   {
     if (s == null) return null;
     for (int i = 0; i < FORMAT_SUBSTITUTIONS.length; i++)
