@@ -46,24 +46,33 @@ JNIEXPORT jint JNICALL Java_sage_miniclient_OpenGLVideoRenderer_initVideoServer
 	shMemCounter++;
 	glVideoServerActive = 1;
 	HANDLE fileMap = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, 1920*540*3 + 1024, shmemPrefix);
-	if (fileMap == NULL)  // Should never be NULL
-		return JNI_FALSE;
 	char buf[256];
 	strcpy_s(buf, sizeof(buf), shmemPrefix);
 	strcat_s(buf, sizeof(buf), "FrameReady");
 	HANDLE evtReady = CreateEvent(NULL, FALSE, FALSE, buf);
-	if (evtReady == NULL)  // Should never be NULL
-		return JNI_FALSE;
 	strcpy_s(buf, sizeof(buf), shmemPrefix);
 	strcat_s(buf, sizeof(buf), "FrameDone");
 	HANDLE evtDone = CreateEvent(NULL, FALSE, FALSE, buf);
-	if (evtDone == NULL)  // Should never be NULL
+	if (fileMap == NULL || evtDone == NULL || evtReady == NULL)
+	{
+		if (evtReady != NULL)
+			CloseHandle(evtReady);
+		if (evtDone != NULL)
+			CloseHandle(evtDone);
+		if (fileMap != NULL)
+			CloseHandle(fileMap);
 		return JNI_FALSE;
+	}
 	fprintf(stderr, "Created FileMap=0x%p evtReady=0x%p evtDone=0x%p\r\n", fileMap, evtReady, evtDone);
 	unsigned char* myPtr = (unsigned char*)MapViewOfFile(fileMap, FILE_MAP_READ | FILE_MAP_WRITE, 0, 0, 0);
 	unsigned int* myData = (unsigned int*) myPtr;
-	if (myData == NULL)  // Should never be NULL
+	if (myData == NULL || myPtr != NULL)
+	{
+		if (myPtr != NULL)
+			UnmapViewOfFile(myPtr);
 		return JNI_FALSE;
+	}
+
 	jobject byteBuffer = env->NewDirectByteBuffer(myPtr + 1024, 1920*540*3);
 	if (env->ExceptionOccurred())
 		return JNI_FALSE; // let the exception propagate
@@ -99,7 +108,6 @@ JNIEXPORT jint JNICALL Java_sage_miniclient_OpenGLVideoRenderer_initVideoServer
 			env->CallBooleanMethod(jo, m_glUpdateMethodID, myData[1], byteBuffer);
 			if (env->ExceptionOccurred())
 				return JNI_FALSE; // let the exception propagate
-			if (evtDone !=NULL)
 				SetEvent(evtDone);
 		}
 		else if (currCmd == 0x82)
@@ -111,14 +119,10 @@ JNIEXPORT jint JNICALL Java_sage_miniclient_OpenGLVideoRenderer_initVideoServer
 				ResetEvent(evtDone);
 		}
 	}
-	if (myPtr !=NULL)
-		UnmapViewOfFile(myPtr);
-	if (evtReady != NULL)
-		CloseHandle(evtReady);
-	if (evtDone != NULL)
-		CloseHandle(evtDone);
-	if (fileMap != NULL)
-		CloseHandle(fileMap);
+	UnmapViewOfFile(myPtr);
+	CloseHandle(evtReady);
+	CloseHandle(evtDone);
+	CloseHandle(fileMap);
 	return JNI_TRUE;
 }
 

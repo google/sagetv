@@ -317,8 +317,16 @@ JNIEXPORT void JNICALL Java_sage_DirectX9SageRenderer_asyncVideoRender0
 	slog((env, "Created FileMap=0x%p evtReady=0x%p evtDone=0x%p\r\n", fileMap, evtReady, evtDone));
 	unsigned char* myPtr = (unsigned char*)MapViewOfFile(fileMap, FILE_MAP_READ|FILE_MAP_WRITE, 0, 0, 0);
 	unsigned int* myData = (unsigned int*) myPtr;
-	if (myData == NULL)
+	if (myPtr == NULL || evtReady == NULL || evtDone == NULL)
+	{
+		if (myPtr != NULL)
+			UnmapViewOfFile(myPtr);
+		if (evtReady != NULL)
+			CloseHandle(evtReady);
+		if (evtDone != NULL)
+			CloseHandle(evtDone);
 		return;
+	}
 	slog((env, "Starting to read...0x%p\r\n", myPtr));
 	int configured = 0;
 	int j = 0;
@@ -328,14 +336,13 @@ JNIEXPORT void JNICALL Java_sage_DirectX9SageRenderer_asyncVideoRender0
 		j++;
 		// Decrease this wait time so that if there's case where MPlayer has to be forcibly quit we
 		// can exit this loop in a short amount of time
-		if (evtReady != NULL)
-			if (WAIT_OBJECT_0 != WaitForSingleObject(evtReady, 50))
-			{
-				if (env->GetLongField(jo, fid_pD3DObject) == 0)
-					break; // 3D system is dead
-				//printf("WAIT TIMEOUT EXPIRED!!!\r\n");
-				continue;
-			}
+		if (WAIT_OBJECT_0 != WaitForSingleObject(evtReady, 50))
+		{
+			if (env->GetLongField(jo, fid_pD3DObject) == 0)
+				break; // 3D system is dead
+			//printf("WAIT TIMEOUT EXPIRED!!!\r\n");
+			continue;
+		}
 		int currCmd = (myData[0] >> 24) & 0xFF;
 		//slog((env, "Got video cmd 0x%x\r\n", currCmd));
 		if (currCmd == 0x80)
@@ -367,8 +374,7 @@ JNIEXPORT void JNICALL Java_sage_DirectX9SageRenderer_asyncVideoRender0
 		else
 		{
 		}
-		if (evtDone != NULL)
-			SetEvent(evtDone);
+		SetEvent(evtDone);
 	}
 	env->CallStaticVoidMethod(m_dx9SageClass, m_dx9UpdateMethodID,
 		(jint) 0xCAFEBABE, 0, 0, 0, 0, 0, 0);
@@ -376,12 +382,9 @@ JNIEXPORT void JNICALL Java_sage_DirectX9SageRenderer_asyncVideoRender0
 	SAFE_RELEASE(pVideoTextureY);
 	SAFE_RELEASE(pVideoTextureU);
 	SAFE_RELEASE(pVideoTextureV);
-	if (myPtr !=NULL)
-		UnmapViewOfFile(myPtr);
-	if (evtReady != NULL)
-		CloseHandle(evtReady);
-	if (evtDone !=NULL)
-		CloseHandle(evtDone);
+	UnmapViewOfFile(myPtr);
+	CloseHandle(evtReady);
+	CloseHandle(evtDone);
 	CloseHandle(fileMap);
 	slog((env, "Async video renderer cleanup is complete.\r\n"));
 }
@@ -3105,7 +3108,7 @@ JNIEXPORT jboolean JNICALL Java_sage_DirectX9SageRenderer_getVideoSnapshot0
 	{
 // NOTE: WE SHOULD FIX THIS SO ITS NOT A PROBLEM
 		pSnapshotSurf->UnlockRect();
-		hr = E_FAIL;
+		hr = -1;
 		TEST_AND_BAIL
 	}
 	memcpy(nativeImageData, lockedRect.pBits, 4*videoWidth*videoHeight);

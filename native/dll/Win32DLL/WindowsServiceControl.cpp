@@ -634,7 +634,12 @@ to obtain extended error information.
 Scott Field (sfield)    12-Jul-95
 --*/ 
 
-BOOL GetAccountSid(LPTSTR SystemName, LPTSTR AccountName, PSID *Sid)
+BOOL
+GetAccountSid(
+	LPTSTR SystemName,
+	LPTSTR AccountName,
+	PSID *Sid
+	)
 {
     LPTSTR ReferencedDomain=NULL;
     DWORD cbSid=128;    // initial allocation attempt
@@ -647,37 +652,51 @@ BOOL GetAccountSid(LPTSTR SystemName, LPTSTR AccountName, PSID *Sid)
     // 
     // initial memory allocations
     // 
-    if((*Sid=HeapAlloc(GetProcessHeap(), 0, cbSid)) == nullptr) __leave;
+    if((*Sid=HeapAlloc(GetProcessHeap(), 0, cbSid)) == NULL) __leave;
 
     if((ReferencedDomain=(LPTSTR)HeapAlloc(GetProcessHeap(), 0, cchReferencedDomain * sizeof(TCHAR))) == NULL) __leave;
 
     // 
     // Obtain the SID of the specified account on the specified system.
     // 
-	if ((Sid != nullptr) && (ReferencedDomain != NULL))
-		while (!LookupAccountName(
-		SystemName,         // machine to lookup account on
-		AccountName,        // account to lookup
-		*Sid,               // SID of interest
-		&cbSid,             // size of SID
-		ReferencedDomain,   // domain account was found on
-		&cchReferencedDomain,
-		&peUse
-	))
-	{
+	while (!LookupAccountName(
+					SystemName,         // machine to lookup account on
+					AccountName,        // account to lookup
+					*Sid,               // SID of interest
+					&cbSid,             // size of SID
+					ReferencedDomain,   // domain account was found on
+					&cchReferencedDomain,
+					&peUse
+					)) {
 		if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
 		{
 			// 
 			// reallocate memory
 			//
 
-#pragma warning(disable:6308) // Static Code Analysis" 'realloc' might return null pointer, will cause the original memory block to be leaked..
+			PSID tmpSid = NULL;
+			if ((tmpSid = HeapReAlloc(GetProcessHeap(), 0, *Sid, cbSid)) == NULL)
+			{
+				HeapFree(GetProcessHeap(), 0, *Sid);
+				*Sid = NULL;
+				__leave;
+			}
+			else
+			{
+				*Sid = tmpSid;
+			}
 
-			if ((*Sid = HeapReAlloc(GetProcessHeap(), 0, *Sid, cbSid)) == nullptr) __leave;
-
-			if ((ReferencedDomain = (LPTSTR)HeapReAlloc(GetProcessHeap(), 0, ReferencedDomain, cchReferencedDomain * sizeof(TCHAR))) == NULL) __leave;
-
-#pragma warning(default:6308) // Static Code Analysis" 'realloc' might return null pointer, will cause the original memory block to be leaked..
+			LPTSTR tmpReferencedDomain = NULL;
+			if ((tmpReferencedDomain = (LPTSTR)HeapReAlloc(GetProcessHeap(), 0, ReferencedDomain, cchReferencedDomain * sizeof(TCHAR))) == NULL)
+			{
+				HeapFree(GetProcessHeap(), 0, ReferencedDomain);
+				ReferencedDomain = NULL;
+				__leave;
+			}
+			else
+			{
+				ReferencedDomain = tmpReferencedDomain;
+			}
         }
         else __leave;
     }
@@ -696,10 +715,11 @@ BOOL GetAccountSid(LPTSTR SystemName, LPTSTR AccountName, PSID *Sid)
     // 
 
     HeapFree(GetProcessHeap(), 0, ReferencedDomain);
+    ReferencedDomain = NULL;
 
     if(!bSuccess)
 	{
-        if(*Sid != nullptr)
+        if(*Sid)
 		{
             HeapFree(GetProcessHeap(), 0, *Sid);
             *Sid = NULL;
