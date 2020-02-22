@@ -45,7 +45,8 @@ JNIEXPORT jint JNICALL Java_sage_miniclient_OpenGLVideoRenderer_initVideoServer
 	sprintf_s(shmemPrefix, sizeof(shmemPrefix), "SageTV-%d-%d", GetCurrentProcessId(), shMemCounter);
 	shMemCounter++;
 	glVideoServerActive = 1;
-	HANDLE fileMap = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, 1920*540*3 + 1024, shmemPrefix);
+	HANDLE fileMap = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE,
+		0, 1920*540*3 + 1024, shmemPrefix);
 	char buf[256];
 	strcpy_s(buf, sizeof(buf), shmemPrefix);
 	strcat_s(buf, sizeof(buf), "FrameReady");
@@ -64,7 +65,7 @@ JNIEXPORT jint JNICALL Java_sage_miniclient_OpenGLVideoRenderer_initVideoServer
 		return JNI_FALSE;
 	}
 	fprintf(stderr, "Created FileMap=0x%p evtReady=0x%p evtDone=0x%p\r\n", fileMap, evtReady, evtDone);
-	unsigned char* myPtr = (unsigned char*)MapViewOfFile(fileMap, FILE_MAP_READ | FILE_MAP_WRITE, 0, 0, 0);
+	unsigned char* myPtr = (unsigned char*)MapViewOfFile(fileMap, FILE_MAP_READ|FILE_MAP_WRITE, 0, 0, 0);
 	unsigned int* myData = (unsigned int*) myPtr;
 	if (myData == NULL || myPtr != NULL)
 	{
@@ -108,7 +109,7 @@ JNIEXPORT jint JNICALL Java_sage_miniclient_OpenGLVideoRenderer_initVideoServer
 			env->CallBooleanMethod(jo, m_glUpdateMethodID, myData[1], byteBuffer);
 			if (env->ExceptionOccurred())
 				return JNI_FALSE; // let the exception propagate
-				SetEvent(evtDone);
+			SetEvent(evtDone);
 		}
 		else if (currCmd == 0x82)
 		{

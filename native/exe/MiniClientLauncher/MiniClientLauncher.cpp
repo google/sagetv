@@ -114,7 +114,10 @@ void popupExceptionError(JNIEnv* env, jthrowable thrower, char* errTitle)
 }
 
 
-int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow)
+int APIENTRY WinMain(HINSTANCE hInstance,
+                     HINSTANCE hPrevInstance,
+                     LPSTR     lpCmdLine,
+                     int       nCmdShow)
 {
 	WNDCLASS wc;
 	if( !hPrevInstance )			/*set up window class and register it */
@@ -219,7 +222,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 	}
 
 	// Retrieve address of JNI_CreateJavaVM()
-	typedef  jint (JNICALL *P_JNI_CreateJavaVM)
+	typedef  jint (JNICALL *P_JNI_CreateJavaVM) 
 		(JavaVM **pvm, void** penv, void *args);
 
 	P_JNI_CreateJavaVM createJavaVM = (P_JNI_CreateJavaVM)

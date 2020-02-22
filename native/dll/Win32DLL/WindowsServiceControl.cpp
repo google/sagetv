@@ -120,11 +120,13 @@ JNIEXPORT jboolean JNICALL Java_sage_WindowsServiceControl_isServiceAutostart0
 	if (!svcInfo) return 0;
 	// Check if the service is set to load automatically
 	LPQUERY_SERVICE_CONFIG lpqscBuf; 
-	lpqscBuf = (LPQUERY_SERVICE_CONFIG) LocalAlloc(LPTR, 1024); 
+	lpqscBuf = (LPQUERY_SERVICE_CONFIG) LocalAlloc( 
+		LPTR, 1024); 
 	if (lpqscBuf == NULL)  // Should not be NULL
 		return 0;
 	DWORD bytesNeeded;
-	jboolean rv =  (QueryServiceConfig(svcInfo->schService, lpqscBuf, 1024, &bytesNeeded) && lpqscBuf->dwStartType == SERVICE_AUTO_START);
+	jboolean rv =  (QueryServiceConfig(svcInfo->schService, lpqscBuf, 1024, &bytesNeeded) &&
+		lpqscBuf->dwStartType == SERVICE_AUTO_START);
 	LocalFree(lpqscBuf);
 	return rv;
 }
@@ -295,7 +297,8 @@ JNIEXPORT jstring JNICALL Java_sage_WindowsServiceControl_getServiceUser0
 	if (!svcInfo) return env->NewStringUTF("");
 	// Check if the service is set to load automatically
 	LPQUERY_SERVICE_CONFIG lpqscBuf; 
-	lpqscBuf = (LPQUERY_SERVICE_CONFIG) LocalAlloc(LPTR, 1024);
+	lpqscBuf = (LPQUERY_SERVICE_CONFIG) LocalAlloc( 
+		LPTR, 1024); 
 	if (lpqscBuf == NULL)  // Should not be NULL
 		return 0;
 	DWORD bytesNeeded;
@@ -399,12 +402,14 @@ JNIEXPORT jboolean JNICALL Java_sage_WindowsServiceControl_isServiceRecovery0
 
 	}
 	LPSERVICE_FAILURE_ACTIONS lpqscBuf; 
-	lpqscBuf = (LPSERVICE_FAILURE_ACTIONS) LocalAlloc(LPTR, 1024);
+	lpqscBuf = (LPSERVICE_FAILURE_ACTIONS) LocalAlloc( 
+		LPTR, 1024); 
 	if (lpqscBuf == NULL)  // Should not be NULL
 		return 0;
 	DWORD bytesNeeded;
 	jboolean rv = JNI_FALSE;
-	if (qsc2(svcInfo->schService, SERVICE_CONFIG_FAILURE_ACTIONS, (LPBYTE)lpqscBuf, 1024, &bytesNeeded))
+	if (qsc2(svcInfo->schService, SERVICE_CONFIG_FAILURE_ACTIONS,
+			(LPBYTE)lpqscBuf, 1024, &bytesNeeded))
 	{
 		if (lpqscBuf->cActions && lpqscBuf->lpsaActions && lpqscBuf->lpsaActions[0].Type != SC_ACTION_NONE)
 		{
@@ -636,10 +641,10 @@ Scott Field (sfield)    12-Jul-95
 
 BOOL
 GetAccountSid(
-	LPTSTR SystemName,
-	LPTSTR AccountName,
-	PSID *Sid
-	)
+    LPTSTR SystemName,
+    LPTSTR AccountName,
+    PSID *Sid
+    )
 {
     LPTSTR ReferencedDomain=NULL;
     DWORD cbSid=128;    // initial allocation attempt
@@ -652,51 +657,58 @@ GetAccountSid(
     // 
     // initial memory allocations
     // 
-    if((*Sid=HeapAlloc(GetProcessHeap(), 0, cbSid)) == NULL) __leave;
+    if((*Sid=HeapAlloc(
+                    GetProcessHeap(),
+                    0,
+                    cbSid
+                    )) == NULL) __leave;
 
-    if((ReferencedDomain=(LPTSTR)HeapAlloc(GetProcessHeap(), 0, cchReferencedDomain * sizeof(TCHAR))) == NULL) __leave;
+    if((ReferencedDomain=(LPTSTR)HeapAlloc(
+                    GetProcessHeap(),
+                    0,
+                    cchReferencedDomain * sizeof(TCHAR)
+                    )) == NULL) __leave;
 
     // 
     // Obtain the SID of the specified account on the specified system.
     // 
-	while (!LookupAccountName(
-					SystemName,         // machine to lookup account on
-					AccountName,        // account to lookup
-					*Sid,               // SID of interest
-					&cbSid,             // size of SID
-					ReferencedDomain,   // domain account was found on
-					&cchReferencedDomain,
-					&peUse
-					)) {
-		if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
-		{
-			// 
-			// reallocate memory
-			//
+    while(!LookupAccountName(
+                    SystemName,         // machine to lookup account on
+                    AccountName,        // account to lookup
+                    *Sid,               // SID of interest
+                    &cbSid,             // size of SID
+                    ReferencedDomain,   // domain account was found on
+                    &cchReferencedDomain,
+                    &peUse
+                    )) {
+        if (GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
+            // 
+            // reallocate memory
+            // 
 
-			PSID tmpSid = NULL;
-			if ((tmpSid = HeapReAlloc(GetProcessHeap(), 0, *Sid, cbSid)) == NULL)
-			{
-				HeapFree(GetProcessHeap(), 0, *Sid);
-				*Sid = NULL;
-				__leave;
-			}
-			else
-			{
-				*Sid = tmpSid;
-			}
+            PSID tmpSid = NULL;
+            if ((tmpSid = HeapReAlloc(GetProcessHeap(), 0, *Sid, cbSid)) == NULL)
+            {
+                HeapFree(GetProcessHeap(), 0, *Sid);
+                *Sid = NULL;
+                __leave;
+            }
+            else
+            {
+            	*Sid = tmpSid;
+            }
 
-			LPTSTR tmpReferencedDomain = NULL;
-			if ((tmpReferencedDomain = (LPTSTR)HeapReAlloc(GetProcessHeap(), 0, ReferencedDomain, cchReferencedDomain * sizeof(TCHAR))) == NULL)
-			{
-				HeapFree(GetProcessHeap(), 0, ReferencedDomain);
-				ReferencedDomain = NULL;
-				__leave;
-			}
-			else
-			{
-				ReferencedDomain = tmpReferencedDomain;
-			}
+            LPTSTR tmpReferencedDomain = NULL;
+            if ((tmpReferencedDomain = (LPTSTR)HeapReAlloc(GetProcessHeap(), 0, ReferencedDomain, cchReferencedDomain * sizeof(TCHAR))) == NULL)
+            {
+                HeapFree(GetProcessHeap(), 0, ReferencedDomain);
+                ReferencedDomain = NULL;
+                __leave;
+            }
+            else
+            {
+                ReferencedDomain = tmpReferencedDomain;
+            }
         }
         else __leave;
     }
@@ -707,24 +719,23 @@ GetAccountSid(
     bSuccess=TRUE;
 
     } // finally
-    __finally 
-	{
+    __finally {
 
     // 
     // Cleanup and indicate failure, if appropriate.
     // 
 
-    HeapFree(GetProcessHeap(), 0, ReferencedDomain);
-    ReferencedDomain = NULL;
+    if(ReferencedDomain != NULL) {
+        HeapFree(GetProcessHeap(), 0, ReferencedDomain);
+        ReferencedDomain = NULL;
+    }
 
-    if(!bSuccess)
-	{
-        if(*Sid)
-		{
+    if(!bSuccess) {
+        if(*Sid != NULL) {
             HeapFree(GetProcessHeap(), 0, *Sid);
             *Sid = NULL;
         }
-	}
+    }
 
     } // finally
 

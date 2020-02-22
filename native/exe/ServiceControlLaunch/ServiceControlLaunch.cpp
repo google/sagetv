@@ -54,7 +54,7 @@ void sysOutPrint(const char* cstr, ...)
 	vsprintf_s(buf, sizeof(buf), cstr, args);
 	va_end(args);
 	jstring jstr = env->NewStringUTF(buf);
-	static jclass cls = (jclass)env->NewGlobalRef(env->FindClass("java/lang/System"));
+	static jclass cls = (jclass) env->NewGlobalRef(env->FindClass("java/lang/System"));
 	static jfieldID outField = env->GetStaticFieldID(cls, "out", "Ljava/io/PrintStream;");
 	static jmethodID printMeth = env->GetMethodID(env->FindClass("java/io/PrintStream"),
 		"print", "(Ljava/lang/String;)V");
@@ -78,7 +78,7 @@ void sysOutPrint(JNIEnv* env, const char* cstr, ...)
 	vsprintf_s(buf, sizeof(buf), cstr, args);
 	va_end(args);
 	jstring jstr = env->NewStringUTF(buf);
-	static jclass cls = (jclass)env->NewGlobalRef(env->FindClass("java/lang/System"));
+	static jclass cls = (jclass) env->NewGlobalRef(env->FindClass("java/lang/System"));
 	static jfieldID outField = env->GetStaticFieldID(cls, "out", "Ljava/io/PrintStream;");
 	static jmethodID printMeth = env->GetMethodID(env->FindClass("java/io/PrintStream"),
 		"print", "(Ljava/lang/String;)V");

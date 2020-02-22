@@ -300,7 +300,8 @@ JNIEXPORT void JNICALL Java_sage_DirectX9SageRenderer_asyncVideoRender0
 		return;
 	}
 	const char* cName = env->GetStringUTFChars(sharedMemPrefix, NULL);
-	HANDLE fileMap = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, 1920 * 540 * 3 + 1024, cName);
+	HANDLE fileMap = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE,
+		0, 1920*540*3 + 1024, cName);
 	if (fileMap == NULL)
 		return;
 	char buf[256];

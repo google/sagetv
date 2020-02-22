@@ -12,6 +12,9 @@
 #define STRSAFE_NO_DEPRECATE
 #include <strsafe.h>
 
+#pragma warning(disable:28159) // Static Code Analysis: When we stop supporting XP we can use GetTickCount64()
+
+
 
 // --- CAMEvent -----------------------
 CAMEvent::CAMEvent(BOOL fManualReset, __inout_opt HRESULT *phr)
@@ -607,9 +610,7 @@ DWORD WINAPI WaitDispatchingMessages(
 
     HANDLE hObjects[2] = { hObject, hEvent };
     if (dwWait != INFINITE && dwWait != 0) {
-#pragma warning(disable:28159) // Static Code Analysis: When we stop supporting XP we can use GetTickCount64()
 		dwStart = GetTickCount();
-#pragma warning(default:28159) // Static Code Analysis: When we stop supporting XP we can use GetTickCount64()
 		
     }
     for (; ; ) {
@@ -646,9 +647,7 @@ DWORD WINAPI WaitDispatchingMessages(
             PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE);
 
             if (dwWait != INFINITE && dwWait != 0) {
-#pragma warning(disable:28159) // Static Code Analysis: When we stop supporting XP we can use GetTickCount64()
 					DWORD dwNow = GetTickCount();
-#pragma warning(default:28159) // Static Code Analysis: When we stop supporting XP we can use GetTickCount64()
 
                 // Working with differences handles wrap-around
                 DWORD dwDiff = dwNow - dwStart;
