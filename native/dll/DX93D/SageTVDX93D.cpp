@@ -3109,7 +3109,7 @@ JNIEXPORT jboolean JNICALL Java_sage_DirectX9SageRenderer_getVideoSnapshot0
 	{
 // NOTE: WE SHOULD FIX THIS SO ITS NOT A PROBLEM
 		pSnapshotSurf->UnlockRect();
-		hr = -1;
+		hr = E_FAIL;
 		TEST_AND_BAIL
 	}
 	memcpy(nativeImageData, lockedRect.pBits, 4*videoWidth*videoHeight);

@@ -203,8 +203,7 @@ JNIEXPORT jboolean JNICALL Java_sage_Sage_writeStringValue(JNIEnv *env,
 	const char* keyString = env->GetStringUTFChars(key, 0);
 	const char* valueNameString = env->GetStringUTFChars(valueName, 0);
 	const char* valueString = env->GetStringUTFChars(value, 0);
-	HKEY rootKey;
-	rootKey = NULL;  // initialize to resolve C6001
+	HKEY rootKey = NULL;
 	HKEY myKey;
 	jboolean rv = JNI_FALSE;
 	if (root == sage_Sage_HKEY_CLASSES_ROOT) rootKey = HKEY_CLASSES_ROOT;
@@ -240,8 +239,7 @@ jboolean JNICALL Java_sage_Sage_writeDwordValue(JNIEnv *env,
 {
 	const char* keyString = env->GetStringUTFChars(key, 0);
 	const char* valueNameString = env->GetStringUTFChars(valueName, 0);
-	HKEY rootKey;
-	rootKey = NULL;  // initialize to resolve C6001
+	HKEY rootKey = NULL;
 	DWORD dvalue = value;
 	HKEY myKey;
 	jboolean rv = JNI_FALSE;
@@ -277,7 +275,7 @@ jboolean JNICALL Java_sage_Sage_removeRegistryValue(JNIEnv *env,
 	const char* keyString = env->GetStringUTFChars(key, 0);
 	const char* valueNameString = env->GetStringUTFChars(valueName, 0);
 	HKEY rootKey;
-	rootKey = NULL;  // initialize to resolve C6001
+	rootKey = NULL;
 	HKEY myKey;
 	jboolean rv = JNI_FALSE;
 	if (root == sage_Sage_HKEY_CLASSES_ROOT) rootKey = HKEY_CLASSES_ROOT;
@@ -934,12 +932,12 @@ JNIEXPORT jlong JNICALL Java_sage_UIManager_findWindow(
 JNIEXPORT jboolean JNICALL Java_sage_DirectX9SageRenderer_hasDirectX90
   (JNIEnv *env, jclass jc)
 {
-    TCHAR szPath[_MAX_PATH];
-    TCHAR szFile[_MAX_PATH];
-    if (GetSystemDirectory(szPath, sizeof(szPath)) != 0)
+	TCHAR szPath[_MAX_PATH];
+	TCHAR szFile[_MAX_PATH];
+	if (GetSystemDirectory(szPath, sizeof(szPath)) != 0)
 	{
-        strncpy_s(szFile, sizeof(szFile), szPath, sizeof(szFile)-1);
-        strcat_s(szFile, sizeof(szFile), TEXT("\\d3d9.dll"));
+		strncpy_s(szFile, sizeof(szFile), szPath, sizeof(szFile)-1);
+		strcat_s(szFile, sizeof(szFile), TEXT("\\d3d9.dll"));
 		HANDLE fooHand = CreateFile(szFile, 0, 0, NULL, OPEN_EXISTING, 0, NULL);
 		if (fooHand == INVALID_HANDLE_VALUE)
 		{
@@ -988,8 +986,8 @@ void loadAWTLib()
 		 */
 		HKEY rootKey = HKEY_LOCAL_MACHINE;
 		char currVer[16];
-		HKEY myKey;  // myKey to NULL for RegQueryValueEx
-		DWORD readType;  // readType to NULL for RegQueryValueEx
+		HKEY myKey;
+		DWORD readType;
 		DWORD hsize = sizeof(currVer);
 		if (RegOpenKeyEx(rootKey, "Software\\JavaSoft\\Java Runtime Environment", 0, KEY_QUERY_VALUE, &myKey) != ERROR_SUCCESS)
 		{
@@ -1242,7 +1240,6 @@ JNIEXPORT jboolean JNICALL Java_sage_Sage_setupSystemHooks0
  	if ( WAIT_OBJECT_0 != dwWaitResult )
 	{
 		slog((env, "setup system shell hook failed (object is locked)\r\n"));
-		ReleaseMutex(hMutexMessaging);
 		CloseHandle( hMutexMessaging );
 		return JNI_FALSE;
 	}
@@ -1274,7 +1271,6 @@ JNIEXPORT jboolean JNICALL Java_sage_Sage_setupSystemHooks0
 		if (!hShellHookLib)
 		{
 			elog((env, "ERROR Unable to load shell hook library\r\n"));
-			ReleaseMutex(hMutexMessaging);
 			CloseHandle( hMutexMessaging );
 			hMutexMessaging = NULL;
 			return JNI_FALSE;
@@ -1443,7 +1439,6 @@ JNIEXPORT jboolean JNICALL Java_sage_Sage_releaseSystemHooks0
 	 	if ( WAIT_OBJECT_0 != dwWaitResult )
 		{
 			slog((env, "Removing system shell hook failed (object is locked)\r\n"));
-			ReleaseMutex(hMutexMessaging);
 			CloseHandle( hMutexMessaging );
 			return JNI_FALSE;
 		}

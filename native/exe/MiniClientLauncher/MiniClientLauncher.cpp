@@ -178,8 +178,8 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 
 		HKEY rootKey = HKEY_LOCAL_MACHINE;
 		char currVer[16];
-		HKEY myKey;  // myKey to NULL for RegQueryValueEx
-		DWORD readType;  // readType to NULL for RegQueryValueEx
+		HKEY myKey;
+		DWORD readType;
 		DWORD hsize = sizeof(currVer);
 
 		if (RegOpenKeyEx(rootKey, "Software\\JavaSoft\\Java Runtime Environment", 0, KEY_QUERY_VALUE, &myKey) != ERROR_SUCCESS)

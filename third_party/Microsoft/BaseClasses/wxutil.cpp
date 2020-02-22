@@ -610,8 +610,7 @@ DWORD WINAPI WaitDispatchingMessages(
 
     HANDLE hObjects[2] = { hObject, hEvent };
     if (dwWait != INFINITE && dwWait != 0) {
-		dwStart = GetTickCount();
-		
+        dwStart = GetTickCount();
     }
     for (; ; ) {
         DWORD nCount = NULL != hEvent ? 2 : 1;
@@ -647,7 +646,7 @@ DWORD WINAPI WaitDispatchingMessages(
             PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE);
 
             if (dwWait != INFINITE && dwWait != 0) {
-					DWORD dwNow = GetTickCount();
+                DWORD dwNow = GetTickCount();
 
                 // Working with differences handles wrap-around
                 DWORD dwDiff = dwNow - dwStart;

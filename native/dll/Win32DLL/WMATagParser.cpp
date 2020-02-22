@@ -144,8 +144,8 @@ public:
 			// Display the attribute global index and name.
 
 			// Display the attribute depending upon type.
-			WCHAR* attValueName = new WCHAR[cbValue + 64];
 			size_t aVNsize = (cbValue + 64);
+			WCHAR* attValueName = new WCHAR[aVNsize];
 			switch(attType)
 			{
 			case WMT_TYPE_QWORD:

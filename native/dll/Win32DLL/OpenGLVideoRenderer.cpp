@@ -42,19 +42,21 @@ JNIEXPORT jint JNICALL Java_sage_miniclient_OpenGLVideoRenderer_initVideoServer
 	jmethodID m_glCloseMethodID = env->GetMethodID(m_glSageClass, "closeVideo", "()Z");
 	if (env->ExceptionOccurred())
 		return JNI_FALSE; // let the exception propagate
-	sprintf_s(shmemPrefix, sizeof(shmemPrefix), "SageTV-%d-%d", GetCurrentProcessId(), shMemCounter);
+	sprintf_s(shmemPrefix, sizeof(shmemPrefix), "SageTV-%d-%d", (int)GetCurrentProcessId(), shMemCounter);
 	shMemCounter++;
 	glVideoServerActive = 1;
 	HANDLE fileMap = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE,
 		0, 1920*540*3 + 1024, shmemPrefix);
 	char buf[256];
+	if (fileMap == NULL)
+		return JNI_FALSE;
 	strcpy_s(buf, sizeof(buf), shmemPrefix);
 	strcat_s(buf, sizeof(buf), "FrameReady");
 	HANDLE evtReady = CreateEvent(NULL, FALSE, FALSE, buf);
 	strcpy_s(buf, sizeof(buf), shmemPrefix);
 	strcat_s(buf, sizeof(buf), "FrameDone");
 	HANDLE evtDone = CreateEvent(NULL, FALSE, FALSE, buf);
-	if (fileMap == NULL || evtDone == NULL || evtReady == NULL)
+	if (evtReady == NULL || evtDone == NULL)
 	{
 		if (evtReady != NULL)
 			CloseHandle(evtReady);
@@ -66,13 +68,9 @@ JNIEXPORT jint JNICALL Java_sage_miniclient_OpenGLVideoRenderer_initVideoServer
 	}
 	fprintf(stderr, "Created FileMap=0x%p evtReady=0x%p evtDone=0x%p\r\n", fileMap, evtReady, evtDone);
 	unsigned char* myPtr = (unsigned char*)MapViewOfFile(fileMap, FILE_MAP_READ|FILE_MAP_WRITE, 0, 0, 0);
-	unsigned int* myData = (unsigned int*) myPtr;
-	if (myData == NULL || myPtr != NULL)
-	{
-		if (myPtr != NULL)
-			UnmapViewOfFile(myPtr);
+	if (myPtr == NULL)
 		return JNI_FALSE;
-	}
+	unsigned int* myData = (unsigned int*) myPtr;
 
 	jobject byteBuffer = env->NewDirectByteBuffer(myPtr + 1024, 1920*540*3);
 	if (env->ExceptionOccurred())
@@ -116,8 +114,7 @@ JNIEXPORT jint JNICALL Java_sage_miniclient_OpenGLVideoRenderer_initVideoServer
 			env->CallBooleanMethod(jo, m_glCloseMethodID);
 			if (env->ExceptionOccurred())
 				return JNI_FALSE; // let the exception propagate
-			if (evtDone != NULL)
-				ResetEvent(evtDone);
+			ResetEvent(evtDone);
 		}
 	}
 	UnmapViewOfFile(myPtr);

@@ -689,8 +689,6 @@ GetAccountSid(
             PSID tmpSid = NULL;
             if ((tmpSid = HeapReAlloc(GetProcessHeap(), 0, *Sid, cbSid)) == NULL)
             {
-                HeapFree(GetProcessHeap(), 0, *Sid);
-                *Sid = NULL;
                 __leave;
             }
             else
@@ -701,8 +699,6 @@ GetAccountSid(
             LPTSTR tmpReferencedDomain = NULL;
             if ((tmpReferencedDomain = (LPTSTR)HeapReAlloc(GetProcessHeap(), 0, ReferencedDomain, cchReferencedDomain * sizeof(TCHAR))) == NULL)
             {
-                HeapFree(GetProcessHeap(), 0, ReferencedDomain);
-                ReferencedDomain = NULL;
                 __leave;
             }
             else
