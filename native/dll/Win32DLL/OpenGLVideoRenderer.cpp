@@ -47,9 +47,9 @@ JNIEXPORT jint JNICALL Java_sage_miniclient_OpenGLVideoRenderer_initVideoServer
 	glVideoServerActive = 1;
 	HANDLE fileMap = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE,
 		0, 1920*540*3 + 1024, shmemPrefix);
-	char buf[256];
 	if (fileMap == NULL)
 		return JNI_FALSE;
+	char buf[256];
 	strcpy_s(buf, sizeof(buf), shmemPrefix);
 	strcat_s(buf, sizeof(buf), "FrameReady");
 	HANDLE evtReady = CreateEvent(NULL, FALSE, FALSE, buf);

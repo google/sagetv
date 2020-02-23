@@ -274,8 +274,7 @@ jboolean JNICALL Java_sage_Sage_removeRegistryValue(JNIEnv *env,
 {
 	const char* keyString = env->GetStringUTFChars(key, 0);
 	const char* valueNameString = env->GetStringUTFChars(valueName, 0);
-	HKEY rootKey;
-	rootKey = NULL;
+	HKEY rootKey = NULL;
 	HKEY myKey;
 	jboolean rv = JNI_FALSE;
 	if (root == sage_Sage_HKEY_CLASSES_ROOT) rootKey = HKEY_CLASSES_ROOT;
@@ -1271,6 +1270,7 @@ JNIEXPORT jboolean JNICALL Java_sage_Sage_setupSystemHooks0
 		if (!hShellHookLib)
 		{
 			elog((env, "ERROR Unable to load shell hook library\r\n"));
+			ReleaseMutex(hMutexMessaging);
 			CloseHandle( hMutexMessaging );
 			hMutexMessaging = NULL;
 			return JNI_FALSE;
