@@ -956,7 +956,7 @@ void loadAWTLib()
 	if (!sageLoadedAwtLib)
 	{
 		/*
-		* Explicitly load jvm.dll.
+		* Explicitly load jawt.dll.
 		*/
 		char appPath[_MAX_PATH];
 		GetModuleFileName(NULL, appPath, sizeof(appPath));
@@ -979,7 +979,11 @@ void loadAWTLib()
 		strcat_s(includedJRE, sizeof(includedJRE), "jre\\bin\\jawt.dll");
 		sageLoadedAwtLib = LoadLibrary(includedJRE);
 		if (sageLoadedAwtLib)
+		{
+			slog(("INFO:jawt.dll path = %s\r\n", includedJRE));;
 			return;
+		}
+
 		/*
 		 * Failed to find JRE in SageTV directory, load jawt.dll by using the Windows Registry to locate the current version to use.
 		 */
@@ -1021,7 +1025,9 @@ void loadAWTLib()
 		*goodSlash = 0;
 		goodSlash = strrchr(jvmPath, '\\');
 		if (!goodSlash) return;
-		strcpy_s(jvmPath, sizeof(jvmPath), "jawt.dll");
+		*(goodSlash + 1) = 0;
+		strncat_s(jvmPath, sizeof(jvmPath), "jawt.dll", sizeof(jvmPath) - strlen(jvmPath));
+		slog(("INFO:jawt.dll path = %s\r\n", jvmPath));;
 
 		sageLoadedAwtLib = LoadLibrary(jvmPath);
 	}
