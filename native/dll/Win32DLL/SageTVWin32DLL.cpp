@@ -980,12 +980,12 @@ void loadAWTLib()
 		sageLoadedAwtLib = LoadLibrary(includedJRE);
 		if (sageLoadedAwtLib)
 		{
-			slog(("INFO:jawt.dll path = %s\r\n", includedJRE));;
+			slog(("INFO:jawt.dll path = %s\r\n", includedJRE));
 			return;
 		}
 
 		/*
-		 * Failed to find JRE in SageTV directory, load jawt.dll by using the Windows Registry to locate the current version to use.
+		 * Failed to find jawt.dll in SageTV directory, load jawt.dll by using the Windows Registry to locate the current version to use.
 		 */
 		HKEY rootKey = HKEY_LOCAL_MACHINE;
 		char currVer[16];
@@ -1027,7 +1027,7 @@ void loadAWTLib()
 		if (!goodSlash) return;
 		*(goodSlash + 1) = 0;
 		strncat_s(jvmPath, sizeof(jvmPath), "jawt.dll", sizeof(jvmPath) - strlen(jvmPath));
-		slog(("INFO:jawt.dll path = %s\r\n", jvmPath));;
+		slog(("INFO:jawt.dll path = %s\r\n", jvmPath));
 
 		sageLoadedAwtLib = LoadLibrary(jvmPath);
 	}
