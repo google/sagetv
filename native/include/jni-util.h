@@ -56,7 +56,7 @@ extern "C" {
 	jboolean GetMapIntValue(JNIEnv* env, jobject map, const char* optionName, jint* rv);
 	jboolean GetMapLongValue(JNIEnv* env, jobject map, const char* optionName, jlong* rv);
 	jboolean GetMapBoolValue(JNIEnv* env, jobject map, const char* optionName, jboolean* rv);
-	jboolean GetMapStringValue(JNIEnv* env, jobject map, const char* optionName, char* rv, unsigned long rvlen, unsigned long* rvCount);
+	jboolean GetMapStringValue(JNIEnv* env, jobject map, const char* optionName, char* rv, unsigned long rvlen);
 #ifdef __cplusplus
 }
 #endif

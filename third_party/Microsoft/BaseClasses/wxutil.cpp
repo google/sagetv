@@ -12,6 +12,9 @@
 #define STRSAFE_NO_DEPRECATE
 #include <strsafe.h>
 
+#pragma warning(disable:28159) // Static Code Analysis: When we stop supporting XP we can use GetTickCount64()
+
+
 
 // --- CAMEvent -----------------------
 CAMEvent::CAMEvent(BOOL fManualReset, __inout_opt HRESULT *phr)

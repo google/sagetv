@@ -13,8 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// Eliminate silly MS compiler security warnings about using POSIX functions
-#pragma warning(disable : 4996)
 
 #include "../include/jni-util.h"
 #include <string.h>
@@ -667,7 +665,7 @@ jboolean GetMapBoolValue(JNIEnv* env, jobject map, const char* optionName, jbool
 	}
 	return JNI_TRUE;
 }
-jboolean GetMapStringValue(JNIEnv* env, jobject map, const char* optionName, char* rv, unsigned long rvlen, unsigned long* rvCount)
+jboolean GetMapStringValue(JNIEnv* env, jobject map, const char* optionName, char* rv, unsigned long rvlen)
 {
 	jstring keyString = env->NewStringUTF(optionName);
 	static jclass mapClass = (jclass) env->NewGlobalRef(env->FindClass("java/util/Map"));
@@ -691,8 +689,8 @@ jboolean GetMapStringValue(JNIEnv* env, jobject map, const char* optionName, cha
 		return JNI_FALSE;
 	}
 	const char* cstr = env->GetStringUTFChars(jstr, NULL);
-	*rvCount = (unsigned long) MIN(rvlen, strlen(cstr));
-	strncpy(rv, cstr, MIN(rvlen, strlen(cstr)));
+	if (strlen(cstr) + 1 > rvlen) return JNI_FALSE;
+	if (snprintf(rv, rvlen, "%s", cstr) < 0) return JNI_FALSE ;
 	env->ReleaseStringUTFChars(jstr, cstr);
 	return JNI_TRUE;
 }

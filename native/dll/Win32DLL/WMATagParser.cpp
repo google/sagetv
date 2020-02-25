@@ -144,21 +144,22 @@ public:
 			// Display the attribute global index and name.
 
 			// Display the attribute depending upon type.
-			WCHAR* attValueName = new WCHAR[cbValue + 64];
+			size_t aVNsize = (cbValue + 64);
+			WCHAR* attValueName = new WCHAR[aVNsize];
 			switch(attType)
 			{
 			case WMT_TYPE_QWORD:
-				_ui64tow( *((QWORD*)pbValue), attValueName, 10);
+				_ui64tow_s( *((QWORD*)pbValue), attValueName, aVNsize, 10);
 				break;
 			case WMT_TYPE_DWORD:
 			case WMT_TYPE_WORD:
-				swprintf(attValueName, L"%u", (DWORD) *pbValue);
+				swprintf_s(attValueName, aVNsize, L"%u", (DWORD) *pbValue);
 				break;
 			case WMT_TYPE_STRING:
-				swprintf(attValueName, L"%s", (WCHAR*) pbValue);
+				swprintf_s(attValueName, aVNsize, L"%s", (WCHAR*) pbValue);
 				break;
 			case WMT_TYPE_BOOL:
-				swprintf(attValueName, L"%s", ((BOOL) *pbValue == TRUE) ? L"True" : L"False");
+				swprintf_s(attValueName, aVNsize, L"%s", ((BOOL) *pbValue == TRUE) ? L"True" : L"False");
 				break;
 //			case WMT_TYPE_BINARY:
 //			case WMT_TYPE_GUID:
