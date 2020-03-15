@@ -202,7 +202,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 
 	// Set the current working directory to be the folder the EXE is in.
 	errno_t err;
-	if ((err = _chdir(appPath)) != 0) // If this returns 0 we have bigger problems
+	if ((err = _chdir(appPath)) != 0) // If this doesnt return 0 we have bigger problems
 	{
 		errorMsg("Could not set the working directory", "Change to working directory failed");
 		return FALSE;

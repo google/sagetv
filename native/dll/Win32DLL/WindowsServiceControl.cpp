@@ -685,7 +685,6 @@ GetAccountSid(
             // 
             // reallocate memory
             // 
-
             PSID tmpSid = NULL;
             if ((tmpSid = HeapReAlloc(GetProcessHeap(), 0, *Sid, cbSid)) == NULL)
             {

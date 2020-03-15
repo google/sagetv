@@ -665,7 +665,7 @@ jboolean GetMapBoolValue(JNIEnv* env, jobject map, const char* optionName, jbool
 	}
 	return JNI_TRUE;
 }
-jboolean GetMapStringValue(JNIEnv* env, jobject map, const char* optionName, char* rv, unsigned long rvlen)
+jboolean GetMapStringValue(JNIEnv* env, jobject map, const char* optionName, char* rv, unsigned long rvlen, unsigned long* rvCount)
 {
 	jstring keyString = env->NewStringUTF(optionName);
 	static jclass mapClass = (jclass) env->NewGlobalRef(env->FindClass("java/util/Map"));

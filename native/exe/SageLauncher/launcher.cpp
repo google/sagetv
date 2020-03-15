@@ -13,8 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// Eliminate silly MS compiler security warnings about using POSIX functions
-#pragma warning(disable : 4996)
+ /*
+ *       ******************************************************************************************
+ *       Microsoft Visual Studio project codepage intentionally set to MBCS
+ *       The strings passed in the JavaVMOption struct use the platform default character encoding,
+ *       so they can't be passed as 16-bit Unicode chars.
+ *
+ *       *******************************************************************************************
+ */
+
+#pragma warning(disable : 6248) //disable warnings for NULL DACL
 
 #include <stdlib.h>
 #include <jni.h>
@@ -32,8 +40,8 @@
 LRESULT CALLBACK WndProc( HWND hWnd, UINT messg,
 								WPARAM wParam, LPARAM lParam );
 
-#define JVM_MISSING if (hWnd){MessageBox(NULL, "Could not get information on current JVM.\nPlease install Java Runtime Environment 1.7 or greater","Java Missing", MB_OK);}\
-else{OutputDebugStringA("Could not get information on current JVM.\nPlease install Java Runtime Environment 1.7 or greater");}
+#define JVM_MISSING if (hWnd){MessageBox(NULL, "Could not get information on current JVM.\nPlease install Java Runtime Environment 1.7 or higher (Java 1.8 preferred)","Java Missing", MB_OK);}\
+else{OutputDebugString("Could not get information on current JVM.\nPlease install Java Runtime Environment 1.7 or higher (Java 1.8 preferred)");}
 
 static JNIEnv* globalenv = 0;
 static HANDLE stdOutHandle = 0;
@@ -71,7 +79,7 @@ void sysOutPrint(const char* cstr, ...)
     va_list args;
     va_start(args, cstr);
     char buf[1024];
-    vsprintf(buf, cstr, args);
+    vsprintf_s(buf, sizeof(buf), cstr, args);
     va_end(args);
 	jstring jstr = env->NewStringUTF(buf);
 	static jclass cls = (jclass) env->NewGlobalRef(env->FindClass("java/lang/System"));
@@ -95,7 +103,7 @@ void sysOutPrint(JNIEnv* env, const char* cstr, ...)
     va_list args;
     va_start(args, cstr);
     char buf[1024];
-    vsprintf(buf, cstr, args);
+    vsprintf_s(buf, sizeof(buf), cstr, args);
     va_end(args);
 	jstring jstr = env->NewStringUTF(buf);
 	static jclass cls = (jclass) env->NewGlobalRef(env->FindClass("java/lang/System"));
@@ -115,8 +123,8 @@ VOID SvcDebugOut(LPSTR String, DWORD Status)
     CHAR  Buffer[1024]; 
     if (strlen(String) < 1000) 
     { 
-        sprintf(Buffer, String, Status); 
-        OutputDebugStringA(Buffer); 
+        sprintf_s(Buffer, sizeof(Buffer), String, Status);
+        OutputDebugString(Buffer); 
     } 
 }
 
@@ -128,7 +136,7 @@ void errorMsg(char* msg, char* title, HWND hWnd)
 	}
 	else
 	{
-		OutputDebugStringA(msg);
+		OutputDebugString(msg);
 	}
 }
 
@@ -178,20 +186,24 @@ void popupExceptionError(JNIEnv* env, jthrowable thrower, char* errTitle, HWND h
 	jmethodID toStr = env->GetMethodID(env->GetObjectClass(thrower), "toString", "()Ljava/lang/String;");
 	jstring throwStr = (jstring)env->CallObjectMethod(thrower, toStr);
 	const char* cThrowStr = env->GetStringUTFChars(throwStr, 0);
-	char *errStr = (char*) malloc(env->GetStringLength(throwStr) + 64);
-	sprintf(errStr, "An exception occured in Java:\n%s", cThrowStr);
-	errorMsg(errStr, errTitle, hWnd);
-	env->ReleaseStringUTFChars(throwStr, cThrowStr);
-	free(errStr);
+	size_t sizeerrStr = (env->GetStringLength(throwStr) + 64);
+	char *errStr = (char*)malloc(sizeerrStr);
+	if (errStr != NULL)
+	{
+		sprintf_s(errStr, sizeerrStr, "An exception occured in Java:\n%s", cThrowStr);
+		errorMsg(errStr, errTitle, hWnd);
+		env->ReleaseStringUTFChars(throwStr, cThrowStr);
+		free(errStr);
+	}
 }
 
 jint JNICALL my_vfprintf(FILE *fp, const char *format, va_list args)
 {
 	if (stdOutHandle)
 	{
-	    char buf[1024];
+	    char buf[1024] = {0};
 		DWORD numWrit;
-		DWORD len = _vsnprintf(buf, sizeof(buf), format, args);
+		DWORD len = _vsnprintf_s(buf, sizeof(buf), (sizeof(buf) - strlen(buf)), format, args);
 		WriteConsole(stdOutHandle, buf, len, &numWrit, NULL);
 		return len;
 	}
@@ -214,6 +226,9 @@ BOOL CheckForMutex(HANDLE *pMutex, LPCSTR szMutexName, LPSTR appName)
 	SECURITY_ATTRIBUTES sa;
     if (InitializeSecurityDescriptor(&sd, SECURITY_DESCRIPTOR_REVISION))
 	{
+		//
+		// Create a null dacl.
+		//
 		if (SetSecurityDescriptorDacl(&sd, TRUE, (PACL) NULL, FALSE))
 		{
 			ZeroMemory(&sa, sizeof(SECURITY_ATTRIBUTES));
@@ -368,7 +383,8 @@ void doStageCleaning(BOOL bService, BOOL bClient)
 	}
 
 	// Handle the deletions files first
-	FILE* fp = fopen("stageddeletes.txt", "r");
+	FILE* fp;
+	fopen_s(&fp, "stageddeletes.txt", "r");
 	if (fp != NULL)
 	{
 		char line[2048];
@@ -376,7 +392,8 @@ void doStageCleaning(BOOL bService, BOOL bClient)
 		{
 			removeTrailingWS(line);
 			// Only worry about deletion failure if the file exists
-			FILE* delFp = fopen(line, "r");
+			FILE* delFp;
+			fopen_s(&delFp, line, "r");
 			if (delFp)
 			{
 				fclose(delFp);
@@ -396,7 +413,7 @@ void doStageCleaning(BOOL bService, BOOL bClient)
 	// Handle the renames now
 	if (!stagingFailed)
 	{
-		fp = fopen("stagedrenames.txt", "r");
+		fopen_s(&fp, "stagedrenames.txt", "r");
 		if (fp != NULL)
 		{
 			char line1[2048];
@@ -439,10 +456,10 @@ void doStageCleaning(BOOL bService, BOOL bClient)
 
 #define VER_SUITE_WH_SERVER 0x00008000
 
-int WINAPI WinMain( HINSTANCE hInst, 	/*Win32 entry-point routine */
-					HINSTANCE hPreInst, 
-					LPSTR lpszCmdLine, 
-					int nCmdShow )
+int WINAPI WinMain(__in HINSTANCE hInst, 	/*Win32 entry-point routine */
+					__in_opt HINSTANCE hPreInst,
+					__in LPSTR lpszCmdLine,
+					__in int nCmdShow)
 {
 	HWND hWnd;
 	WNDCLASS wc;
@@ -467,26 +484,26 @@ int WINAPI WinMain( HINSTANCE hInst, 	/*Win32 entry-point routine */
 
 #if defined(SAGE_TV_CLIENT)
 	bClient = TRUE;
-	sprintf(appName, "SageClientApp");
+	sprintf_s(appName, sizeof(appName), "SageClientApp");
 	if (strstr(lpszCmdLine, "-multi"))
 		mutexName[0] = '\0';
 	else
-		sprintf(mutexName, "Global\\SageTVClientSingleton");
+		sprintf_s(mutexName, sizeof(mutexName), "Global\\SageTVClientSingleton");
 #else
 
 	if (strstr(lpszCmdLine, "-client"))
 	{
 		bClient = TRUE;
 		bForcedClient = TRUE;
-		sprintf(appName, "SageClientApp");
-		sprintf(mutexName, "Global\\SageTVClientSingleton");
+		sprintf_s(appName, sizeof(appName), "SageClientApp");
+		sprintf_s(mutexName, sizeof(mutexName), "Global\\SageTVClientSingleton");
 	}
 	else
 	{
-		sprintf(appName, "SageApp");
+		sprintf_s(appName, sizeof(appName), "SageApp");
 		if (bWrapped && strstr(lpszCmdLine, "-connect"))
 			bClient = TRUE;
-		sprintf(mutexName, "Global\\SageTVSingleton");
+		sprintf_s(mutexName, sizeof(mutexName), "Global\\SageTVSingleton");
 	}
 #endif // defined(SAGE_TV_CLIENT)
 
@@ -507,8 +524,8 @@ int WINAPI WinMain( HINSTANCE hInst, 	/*Win32 entry-point routine */
 			return FALSE;
 		}
  
-		char appPath[2048];
-		GetModuleFileName(NULL, appPath, 2048);
+		char appPath[_MAX_PATH];
+		GetModuleFileName(NULL, appPath, sizeof(appPath));
 		SC_HANDLE schService = CreateService( 
 			schSCManager,              // SCManager database 
 			SAGETV_SERVICE_NAME,              // name of service 
@@ -637,8 +654,12 @@ int WINAPI WinMain( HINSTANCE hInst, 	/*Win32 entry-point routine */
 			}
 		}
 	}
-	chdir(folderPath);
-	delete [] folderPath;
+	errno_t err;
+	if ((err = _chdir(folderPath)) != 0) // If this doesn't return 0 we have bigger problems
+	{
+		delete[] &folderPath;
+		return FALSE;
+	}
 
 #ifdef SAGE_TV_SERVICE
 	// NOTE: We still need to do the SageTV mutex even for the service because
@@ -694,7 +715,7 @@ int WINAPI WinMain( HINSTANCE hInst, 	/*Win32 entry-point routine */
 		}
 	}
 
-	strcpy(myCmdLine, lpszCmdLine);
+	strcpy_s(myCmdLine, sizeof(myCmdLine), lpszCmdLine);
 #ifdef SAGE_TV
 	// If the SageTV Service is running, then load us up in client mode and autoconnect to localhost
 	// NOTE: If the service is set to start, but it hasn't loaded yet then we need to go into
@@ -757,17 +778,17 @@ int WINAPI WinMain( HINSTANCE hInst, 	/*Win32 entry-point routine */
 						if (startOK || startErr == ERROR_SERVICE_ALREADY_RUNNING)
 						{
 							bClient = TRUE;
-							sprintf(mutexName, "Global\\SageTVPseudoSingleton");
+							sprintf_s(mutexName, sizeof(mutexName), "Global\\SageTVPseudoSingleton");
 							if (strstr(myCmdLine, "-startup"))
-								strcpy(myCmdLine, "-startup -connect 127.0.0.1");
+								strcpy_s(myCmdLine, sizeof(myCmdLine), "-startup -connect 127.0.0.1");
 							else
-								strcpy(myCmdLine, "-connect 127.0.0.1");
+								strcpy_s(myCmdLine, sizeof(myCmdLine), "-connect 127.0.0.1");
 							svcRunning = FALSE;
 						}
 						else
 						{
 							char foobuf[256];
-							sprintf(foobuf, "Win32 Error=0x%x trying to startup the SageTV Service", startErr);
+							sprintf_s(foobuf, sizeof(foobuf), "Win32 Error=0x%x trying to startup the SageTV Service", startErr);
 							MessageBox(NULL, foobuf, "Error", MB_OK);
 						}
 					}
@@ -775,11 +796,11 @@ int WINAPI WinMain( HINSTANCE hInst, 	/*Win32 entry-point routine */
 					{
 						// Service is starting/started....we'll connect to it
 						bClient = TRUE;
-						sprintf(mutexName, "Global\\SageTVPseudoSingleton");
+						sprintf_s(mutexName, sizeof(mutexName), "Global\\SageTVPseudoSingleton");
 						if (strstr(myCmdLine, "-startup"))
-							strcpy(myCmdLine, "-startup -connect 127.0.0.1");
+							strcpy_s(myCmdLine, sizeof(myCmdLine), "-startup -connect 127.0.0.1");
 						else
-							strcpy(myCmdLine, "-connect 127.0.0.1");
+							strcpy_s(myCmdLine, sizeof(myCmdLine), "-connect 127.0.0.1");
 						svcRunning = FALSE;
 					}
 				}
@@ -795,11 +816,11 @@ int WINAPI WinMain( HINSTANCE hInst, 	/*Win32 entry-point routine */
 			// state of the service. But we did find the mutex for it so we can assume it's running and connect to it.
 			// Service is starting/started....we'll connect to it
 			bClient = TRUE;
-			sprintf(mutexName, "Global\\SageTVPseudoSingleton");
+			sprintf_s(mutexName, sizeof(mutexName), "Global\\SageTVPseudoSingleton");
 			if (strstr(myCmdLine, "-startup"))
-				strcpy(myCmdLine, "-startup -connect 127.0.0.1");
+				strcpy_s(myCmdLine, sizeof(myCmdLine), "-startup -connect 127.0.0.1");
 			else
-				strcpy(myCmdLine, "-connect 127.0.0.1");
+				strcpy_s(myCmdLine, sizeof(myCmdLine), "-connect 127.0.0.1");
 		}
 		CloseHandle(serviceMutex);
 	}
@@ -834,20 +855,19 @@ int WINAPI WinMain( HINSTANCE hInst, 	/*Win32 entry-point routine */
 	}
 	else
 	{
-		LPTSTR appPath = new TCHAR[2048];
-		GetModuleFileName(NULL, appPath, 2048);
-		LPTSTR newCmdLine = new TCHAR[2048];
-		strcpy(newCmdLine, appPath);
-		strcat(newCmdLine, " -wrapped ");
+		char appPath[_MAX_PATH];
+		GetModuleFileName(NULL, appPath, sizeof(appPath));
+		char newCmdLine[2048];
+		strcpy_s(newCmdLine, sizeof(newCmdLine), appPath);
+		strcat_s(newCmdLine, sizeof(newCmdLine), " -wrapped ");
 		if (bForcedClient)
-			strcat(newCmdLine, "-client ");
-		strcat(newCmdLine, myCmdLine);
+			strcat_s(newCmdLine, sizeof(newCmdLine), "-client ");
+		strcat_s(newCmdLine, sizeof(newCmdLine), myCmdLine);
 		do
 		{
 			doStageCleaning(FALSE, bClient);
 
 			STARTUPINFO si;
-			PROCESS_INFORMATION pi;
 			memset(&si, 0, sizeof(si));
 			si.cb = sizeof(STARTUPINFO);
 			memset(&pi, 0, sizeof(pi));
@@ -875,8 +895,8 @@ int WINAPI WinMain( HINSTANCE hInst, 	/*Win32 entry-point routine */
 				break;
 			}
 		} while (shouldRestartJVM(FALSE, bClient));
-		delete [] appPath;
-		delete [] newCmdLine;
+		delete [] &appPath;
+		delete [] &newCmdLine;
 	}
 #ifdef SAGE_TV
     if (!bWrapped && m_hMutex)
@@ -897,11 +917,8 @@ int WINAPI WinMain( HINSTANCE hInst, 	/*Win32 entry-point routine */
 
 int launchJVMSage(LPSTR lpszCmdLine, HWND hWnd, BOOL bClient, BOOL bService)
 {
-	/*
-	 * Explicitly load jvm.dll by using the Windows Registry to locate the current version to use.
-	 */
 	HKEY rootKey = HKEY_LOCAL_MACHINE;
-	char currVer[16];
+	char currVer[16] = {0};
 	HKEY myKey;
 	DWORD readType;
 	DWORD dwRead = 0;
@@ -920,6 +937,9 @@ int launchJVMSage(LPSTR lpszCmdLine, HWND hWnd, BOOL bClient, BOOL bService)
 		}
 	}
 	
+	/*
+	* Explicitly load jvm.dll.
+	*/
 	LPTSTR appPath = new TCHAR[2048];
 	GetModuleFileName(NULL, appPath, 2048);
 	size_t appLen = strlen(appPath);
@@ -936,13 +956,14 @@ int launchJVMSage(LPSTR lpszCmdLine, HWND hWnd, BOOL bClient, BOOL bService)
 	}
 
 	// See if we've got a JVM in our own directory to load
-	TCHAR includedJRE[1024];
-	strcpy(includedJRE, appPath);
-	strcat(includedJRE, "jre\\bin\\client\\jvm.dll");
+	char includedJRE[_MAX_PATH];
+	strcpy_s(includedJRE, sizeof(includedJRE), appPath);
+	strcat_s(includedJRE, sizeof(includedJRE), "jre\\bin\\client\\jvm.dll");
 	HMODULE hLib = LoadLibrary(includedJRE);
-	if(hLib == NULL) 
+
+	if(hLib == NULL)
 	{
-		// Failed, load the JVM from the registry instead
+		// Failed to find JRE in SageTV directory, load the JVM from the registry instead, by using the Windows Registry to locate the current version to use.
 
 		hsize = sizeof(currVer);
 		if (RegOpenKeyEx(rootKey, "Software\\JavaSoft\\Java Runtime Environment", 0, KEY_QUERY_VALUE, &myKey) != ERROR_SUCCESS)
@@ -959,14 +980,14 @@ int launchJVMSage(LPSTR lpszCmdLine, HWND hWnd, BOOL bClient, BOOL bService)
 		}
 		RegCloseKey(myKey);
 		char pathKey[1024];
-		strcpy(pathKey, "Software\\JavaSoft\\Java Runtime Environment\\");
-		strcat(pathKey, currVer);
-		char jvmPath[1024];
+		strcpy_s(pathKey, sizeof(pathKey), "Software\\JavaSoft\\Java Runtime Environment\\");
+		strcat_s(pathKey, sizeof(pathKey), currVer);
 		if (RegOpenKeyEx(rootKey, pathKey, 0, KEY_QUERY_VALUE, &myKey) != ERROR_SUCCESS)
 		{
 			JVM_MISSING;
 			return FALSE;
 		}
+		char jvmPath[_MAX_PATH];
 		hsize = sizeof(jvmPath);
 		if (RegQueryValueEx(myKey, "RuntimeLib", 0, &readType, (LPBYTE)jvmPath, &hsize) != ERROR_SUCCESS)
 		{
@@ -979,7 +1000,7 @@ int launchJVMSage(LPSTR lpszCmdLine, HWND hWnd, BOOL bClient, BOOL bService)
 		hLib = LoadLibrary(jvmPath);
 		if(hLib == NULL) 
 		{
-			errorMsg("Could not find jvm.dll.\nPlease install Java Runtime Environment 1.7 or greater", "Java Missing", hWnd);
+			errorMsg("Could not find jvm.dll.\nPlease install Java Runtime Environment 1.7 or higher (Java 1.8 preferred)", "Java Missing", hWnd);
 			return FALSE;
 		}
 	}
@@ -993,13 +1014,16 @@ int launchJVMSage(LPSTR lpszCmdLine, HWND hWnd, BOOL bClient, BOOL bService)
 	
 	if (createJavaVM==NULL)
 	{
-		errorMsg("Could not execute jvm.dll.\nPlease install Java Runtime Environment 1.7 or greater", "Java Missing", hWnd);
+		errorMsg("Could not execute jvm.dll.\nPlease install Java Runtime Environment 1.7 or higher (Java 1.8 preferred)", "Java Missing", hWnd);
 		return FALSE;
 	}
 
-	LPTSTR prefFile = new TCHAR[512];
-	LPTSTR jarPath = new TCHAR[4096];
-	LPTSTR libraryPath = new TCHAR[512];
+	size_t sizeprefFile = 512;
+	LPTSTR prefFile = new TCHAR[sizeprefFile];
+	size_t sizejarPath = 4096;
+	LPTSTR jarPath = new TCHAR[sizejarPath];
+	size_t sizelibraryPath = 512;
+	LPTSTR libraryPath = new TCHAR[sizelibraryPath];
 	
 	stdOutHandle = GetStdHandle(STD_OUTPUT_HANDLE);
     JNIEnv *env;       /* pointer to native method interface */
@@ -1007,49 +1031,53 @@ int launchJVMSage(LPSTR lpszCmdLine, HWND hWnd, BOOL bClient, BOOL bService)
 	JavaVMOption options[32];
 	vm_args.nOptions = 0;
 #ifdef SAGE_TV
-	strcpy(prefFile, bClient ? "sagetvclient " : "sagetv ");
-	strcat(prefFile, appPath);
-	strcat(prefFile, bClient ? "SageClient.properties" : "Sage.properties");
-	strcpy(jarPath, "-Djava.class.path=");
-	strcat(jarPath, appPath);
-	strcat(jarPath, "Sage.jar;");
-  strcat(jarPath, appPath);
-  strcat(jarPath, "JARs\\lucene-core-3.6.0.jar;");
-	strcat(jarPath, appPath);
-	strcat(jarPath, "xerces.jar;");
-	strcat(jarPath, appPath);
-	strcat(jarPath, "plugin.jar;");
-	strcat(jarPath, appPath);
-	strcat(jarPath, ";");
-	char* envcp = getenv("CLASSPATH");
+	strcpy_s(prefFile, sizeprefFile, bClient ? "sagetvclient " : "sagetv ");
+	strcat_s(prefFile, sizeprefFile, appPath);
+	strcat_s(prefFile, sizeprefFile, bClient ? "SageClient.properties" : "Sage.properties");
+	strcpy_s(jarPath, sizejarPath, "-Djava.class.path=");
+	strcat_s(jarPath, sizejarPath, appPath);
+	strcat_s(jarPath, sizejarPath, "Sage.jar;");
+	strcat_s(jarPath, sizejarPath, appPath);
+	strcat_s(jarPath, sizejarPath, "JARs\\lucene-core-3.6.0.jar;");
+	strcat_s(jarPath, sizejarPath, appPath);
+	strcat_s(jarPath, sizejarPath, "xerces.jar;");
+	strcat_s(jarPath, sizejarPath, appPath);
+	strcat_s(jarPath, sizejarPath, "plugin.jar;");
+	strcat_s(jarPath, sizejarPath, appPath);
+	strcat_s(jarPath, sizejarPath, ";");
+	char* envcp = nullptr;
+	size_t sz = 0;
+	_dupenv_s(&envcp, &sz, "CLASSPATH");
 	if (envcp)
-		strcat(jarPath, envcp);
+		strcat_s(jarPath, sizejarPath, envcp);
 	options[vm_args.nOptions++].optionString = jarPath;
 #endif
 #ifdef SAGE_TV_CLIENT
-	strcpy(prefFile, "sagetvclient ");
-	strcat(prefFile, appPath);
-	strcat(prefFile, "SageClient.properties");
-	strcpy(jarPath, "-Djava.class.path=");
-	strcat(jarPath, appPath);
-	strcat(jarPath, "Sage.jar;");
-	strcat(jarPath, appPath);
-  strcat(jarPath, "JARs\\lucene-core-3.6.0.jar;");
-	strcat(jarPath, appPath);
-	strcat(jarPath, "plugin.jar;");
-	strcat(jarPath, appPath);
-	strcat(jarPath, ";");
-	char* envcp = getenv("CLASSPATH");
+	strcpy_s(prefFile, sizeprefFile, "sagetvclient ");
+	strcat_s(prefFile, sizeprefFile, appPath);
+	strcat_s(prefFile, sizeprefFile, "SageClient.properties");
+	strcpy_s(jarPath, sizejarPath, "-Djava.class.path=");
+	strcat_s(jarPath, sizejarPath, appPath);
+	strcat_s(jarPath, sizejarPath, "Sage.jar;");
+	strcat_s(jarPath, sizejarPath, appPath);
+	strcat_s(jarPath, sizejarPath, "JARs\\lucene-core-3.6.0.jar;");
+	strcat_s(jarPath, sizejarPath, appPath);
+	strcat_s(jarPath, sizejarPath, "plugin.jar;");
+	strcat_s(jarPath, sizejarPath, appPath);
+	strcat_s(jarPath, sizejarPath, (";"));
+	char* envcp = nullptr;
+	size_t sz = 0;
+	_dupenv_s(&envcp, &sz, "CLASSPATH");
 	if (envcp)
-		strcat(jarPath, envcp);
+		strcat_s(jarPath, sizejarPath, envcp);
 	options[vm_args.nOptions++].optionString = jarPath;
 #endif
 
 #ifdef JPROFILER_ENABLE
-	strcpy(libraryPath, "-Djava.library.path=");
-	strcat(libraryPath, appPath);
-	strcat(libraryPath, ";");
-	strcat(libraryPath, "C:\\Program Files\\JProfiler3\\bin\\windows");
+	strcpy_s(libraryPath, sizelibraryPath, "-Djava.library.path=");
+	strcat_s(libraryPath, sizelibraryPath, appPath);
+	strcat_s(libraryPath, sizelibraryPath, ";");
+	strcat_s(libraryPath, sizelibraryPath, "C:\\Program Files\\JProfiler3\\bin\\windows");
 	options[vm_args.nOptions++].optionString = libraryPath;  /* set native library path */
 #else
 
@@ -1073,34 +1101,35 @@ int launchJVMSage(LPSTR lpszCmdLine, HWND hWnd, BOOL bClient, BOOL bService)
 		nativePath[0] = '\0';
 
 #ifdef _DEBUG
-	strcpy(libraryPath, "-Djava.library.path=");
-	strcat(libraryPath, appPath);
-	strcat(libraryPath, "..\\DebugDLLs;");
-	strcat(libraryPath, appPath);
-	strcat(libraryPath, ";");
-	strcat(libraryPath, nativePath);
+	strcpy_s(libraryPath, sizelibraryPath, "-Djava.library.path=");
+	strcat_s(libraryPath, sizelibraryPath, appPath);
+	strcat_s(libraryPath, sizelibraryPath, "..\\DebugDLLs;");
+	strcat_s(libraryPath, sizelibraryPath, appPath);
+	strcat_s(libraryPath, sizelibraryPath, ";");
+	strcat_s(libraryPath, sizelibraryPath, nativePath);
 	options[vm_args.nOptions++].optionString = libraryPath;
 #else
-	strcpy(libraryPath, "-Djava.library.path=");
-	strcat(libraryPath, appPath);
-	strcat(libraryPath, ";");
-	strcat(libraryPath, nativePath);
+	strcpy_s(libraryPath, sizelibraryPath, "-Djava.library.path=");
+	strcat_s(libraryPath, sizelibraryPath, appPath);
+	strcat_s(libraryPath, sizelibraryPath, ";");
+	strcat_s(libraryPath, sizelibraryPath, nativePath);
 	options[vm_args.nOptions++].optionString = libraryPath;  /* set native library path */
 #endif
 #endif
 
 	// Now append everything in the JARs subfolder (that's a .jar file) to the classpath
-	char* dirPath = new char[1024];
-	strcpy(dirPath, appPath);
-	strcat(dirPath, "JARs\\*.jar");
+	size_t sizedirPath = _MAX_PATH;
+	char* dirPath = new char[sizedirPath];
+	strcpy_s(dirPath, sizedirPath, appPath);
+	strcat_s(dirPath, sizedirPath, "JARs\\*.jar");
 	WIN32_FIND_DATA findData;
 	HANDLE srchHandle = FindFirstFile(dirPath, &findData);
 	if (srchHandle != INVALID_HANDLE_VALUE)
 	{
 		do
 		{
-			strcat(jarPath, ";JARs\\");
-			strcat(jarPath, findData.cFileName);
+			strcat_s(jarPath, sizejarPath, ";JARs\\");
+			strcat_s(jarPath, sizejarPath, findData.cFileName);
 		}
 		while (FindNextFile(srchHandle, &findData));
 
@@ -1119,13 +1148,13 @@ int launchJVMSage(LPSTR lpszCmdLine, HWND hWnd, BOOL bClient, BOOL bService)
 	// wnjj: 9-2-19 Increase 64-bit default to 1G since that's the main reason to use 64-bit
 	char memString[32];
   #ifdef _WIN64
-  	strcpy(memString, "-Xmx1024m");
+	strcpy_s(memString, sizeof(memString), "-Xmx1024m");
   #else
-  	strcpy(memString, "-Xmx768m");
+	strcpy_s(memString, sizeof(memString), "-Xmx768m");
   #endif
 //#ifdef SAGE_TV_SERVICE
 	// We definitely don't need as much memory for the service since it doesn't have any UI stuff
-//	strcpy(memString, "-Xmx128m");
+//	strcpy_s(memString, sizeof(memString), "-Xmx128m");
 //#endif
 	if (RegCreateKeyEx(HKEY_LOCAL_MACHINE, "SOFTWARE\\Frey Technologies\\SageTV", 0, 0,
 		REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, 0, &myKey, 0) == ERROR_SUCCESS)
@@ -1135,7 +1164,7 @@ int launchJVMSage(LPSTR lpszCmdLine, HWND hWnd, BOOL bClient, BOOL bService)
 		if (RegQueryValueEx(myKey, "JVMMaxHeapSizeMB", 0, &readType, (LPBYTE) &regMemVal, &hsize) == ERROR_SUCCESS)
 		{
 			if (regMemVal > 0)
-				sprintf(memString, "-Xmx%dm", regMemVal);
+				sprintf_s(memString, sizeof(memString), "-Xmx%dm", (int)regMemVal);
 		}
 		else
 		{
@@ -1214,7 +1243,7 @@ int launchJVMSage(LPSTR lpszCmdLine, HWND hWnd, BOOL bClient, BOOL bService)
 				if (regMemVal > 0)
 				{
 					char gcString[128];
-					sprintf(gcString, "-XX:MaxGCPauseMillis=%d", regMemVal);
+					sprintf_s(gcString, sizeof(gcString), "-XX:MaxGCPauseMillis=%d", (int)regMemVal);
 				}
 			}
 			else
@@ -1288,7 +1317,7 @@ int launchJVMSage(LPSTR lpszCmdLine, HWND hWnd, BOOL bClient, BOOL bService)
 	int res = (*createJavaVM)(&vm, (void**) &env, &vm_args); 
 	if (res != 0)
 	{
-		errorMsg("Could not create JVM.\nPlease reinstall Java Runtime Environment 1.7 or greater.", "Java Missing", hWnd);
+		errorMsg("Could not create JVM.\nPlease reinstall Java Runtime Environment 1.7 or higher (Java 1.8 preferred)", "Java Missing", hWnd);
 		return FALSE;
 	}
 	globalenv = env;
@@ -1301,7 +1330,7 @@ int launchJVMSage(LPSTR lpszCmdLine, HWND hWnd, BOOL bClient, BOOL bService)
 	// as of JVM 1.5.
     char serialKey[256]="";
 	if (GetEnvironmentVariable("SAGETVUSERKEY", serialKey, 255) <= 0) {
-		strcpy(serialKey, "NOKEY");
+		strcpy_s(serialKey, sizeof(serialKey), "NOKEY");
 	}
 	jclass sysCls = env->FindClass("java/lang/System");
 	jmethodID sysMeth = env->GetStaticMethodID(sysCls, "setProperty", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;");
@@ -1327,8 +1356,8 @@ int launchJVMSage(LPSTR lpszCmdLine, HWND hWnd, BOOL bClient, BOOL bService)
     char stdOutBuf[16];
 
 	// parsed as base 10 integers from Java
-	sprintf(winBuf, "%lld", (jlong) hWnd);
-    sprintf(stdOutBuf, "%lld", (jlong) stdOutHandle);
+	sprintf_s(winBuf, sizeof(winBuf), "%lld", (jlong)hWnd);
+	sprintf_s(stdOutBuf, sizeof(stdOutBuf), "%lld", (jlong)stdOutHandle);
     jobjectArray args = env->NewObjectArray((prefFile == 0) ? 3 : 4, env->FindClass("java/lang/String"),
     	env->NewStringUTF(winBuf));
 	env->SetObjectArrayElement(args, 1, env->NewStringUTF(stdOutBuf));
@@ -1391,12 +1420,16 @@ int launchJVMSage(LPSTR lpszCmdLine, HWND hWnd, BOOL bClient, BOOL bService)
 //env->ExceptionDescribe();
 		jstring throwStr = (jstring)env->CallObjectMethod(mainThrow, toStr);
 		const char* cThrowStr = env->GetStringUTFChars(throwStr, 0);
-		char *errStr = new char[env->GetStringLength(throwStr) + 64];
-		sprintf(errStr, "An exception occured in Java:\n%s", cThrowStr);
-		errorMsg(errStr, "Java Exception", hWnd);
-		env->ReleaseStringUTFChars(throwStr, cThrowStr);
-		delete errStr;
-		return FALSE;
+		size_t sizeerrStr = (env->GetStringLength(throwStr) + 64);
+		char *errStr = (char*)malloc(sizeerrStr);
+		if (errStr != NULL)
+		{
+			sprintf_s(errStr, sizeerrStr, "An exception occured in Java:\n%s", cThrowStr);
+			errorMsg(errStr, "Java Exception", hWnd);
+			env->ReleaseStringUTFChars(throwStr, cThrowStr);
+			free(errStr);
+			return FALSE;
+		}
 	}
 
 	delete [] jarPath;
@@ -1549,7 +1582,7 @@ int launchJVMSage(LPSTR lpszCmdLine, HWND hWnd, BOOL bClient, BOOL bService)
 			if (((jlong) lpMsg.wParam) < 50000000)
 			{
 				env->CallStaticVoidMethod(cls, segmid, (jlong) lpMsg.lParam);
-sprintf(buf, "Energy=%d time=%d\r\n", (jint) lpMsg.wParam, (jint) lpMsg.lParam);
+sprintf_s(buf, sizeof(buf), "Energy=%d time=%d\r\n", (jint) lpMsg.wParam, (jint) lpMsg.lParam);
 MYOUT(buf);
 			}
 		}*/
@@ -1720,14 +1753,15 @@ void WINAPI SageServiceStart (DWORD argc, LPTSTR *argv)
         status = GetLastError(); 
         SvcDebugOut(" [SageTV] SetServiceStatus error %ld\n",status); 
     } 
-    // 
-    // Create a null dacl.
-    // 
+
 	m_hMutex = NULL;
 	SECURITY_DESCRIPTOR  sd;
 	SECURITY_ATTRIBUTES sa;
     if (InitializeSecurityDescriptor(&sd, SECURITY_DESCRIPTOR_REVISION))
 	{
+		//
+		// Create a null dacl.
+		//
 		if (SetSecurityDescriptorDacl(&sd, TRUE, (PACL) NULL, FALSE))
 		{
 			ZeroMemory(&sa, sizeof(SECURITY_ATTRIBUTES));
@@ -1748,7 +1782,8 @@ void WINAPI SageServiceStart (DWORD argc, LPTSTR *argv)
     // Handle error condition...or just stopping
 //    if (status != NO_ERROR) 
     { 
-		CloseHandle(m_hMutex);
+        if (m_hMutex != NULL)
+            CloseHandle(m_hMutex);
         SageServiceStatus.dwCurrentState       = SERVICE_STOPPED; 
         SageServiceStatus.dwCheckPoint         = 0;
         SageServiceStatus.dwWaitHint           = 0; 
@@ -1773,21 +1808,21 @@ DWORD WINAPI SageServiceInitialization(DWORD   argc, LPTSTR  *argv, DWORD* res)
 		argsLen += strlen(argv[i]);
 	// There should only ever be one argument since you can't pass params to services
 	char lpszCmdLine[256];
-	strcpy(lpszCmdLine, "-wrapped ");
+	strcpy_s(lpszCmdLine, sizeof(lpszCmdLine), "-wrapped ")
 	for (i = 0; i < argc; i++)
 	{
 		if (i > 0)
-			strcat(lpszCmdLine, " ");
-		strcat(lpszCmdLine, argv[i]);
+			strcat_s(lpszCmdLine, sizeof(lpszCmdLine), " ");
+		strcat_s(lpszCmdLine, sizeof(lpszCmdLine), argv[i]);
 	}
 */	BOOL firstRun = TRUE;
 	int intres;
 	DWORD exitCode;
-	LPTSTR appPath = new TCHAR[2048];
-	GetModuleFileName(NULL, appPath, 2048);
-	LPTSTR newCmdLine = new TCHAR[2048];
-	strcpy(newCmdLine, appPath);
-	strcat(newCmdLine, " -wrapped");
+	char appPath[_MAX_PATH];
+	GetModuleFileName(NULL, appPath, sizeof(appPath));
+	char newCmdLine[2048];
+	strcpy_s(newCmdLine, sizeof(newCmdLine), appPath);
+	strcat_s(newCmdLine, sizeof(newCmdLine), " -wrapped");
 	do
 	{
 		doStageCleaning(TRUE, FALSE);
