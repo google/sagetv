@@ -122,8 +122,6 @@ JNIEXPORT jboolean JNICALL Java_sage_WindowsServiceControl_isServiceAutostart0
 	LPQUERY_SERVICE_CONFIG lpqscBuf; 
 	lpqscBuf = (LPQUERY_SERVICE_CONFIG) LocalAlloc( 
 		LPTR, 1024); 
-	if (lpqscBuf == NULL)  // Should not be NULL
-		return 0;
 	DWORD bytesNeeded;
 	jboolean rv =  (QueryServiceConfig(svcInfo->schService, lpqscBuf, 1024, &bytesNeeded) &&
 		lpqscBuf->dwStartType == SERVICE_AUTO_START);
@@ -299,8 +297,6 @@ JNIEXPORT jstring JNICALL Java_sage_WindowsServiceControl_getServiceUser0
 	LPQUERY_SERVICE_CONFIG lpqscBuf; 
 	lpqscBuf = (LPQUERY_SERVICE_CONFIG) LocalAlloc( 
 		LPTR, 1024); 
-	if (lpqscBuf == NULL)  // Should not be NULL
-		return 0;
 	DWORD bytesNeeded;
 	jstring rv;
 	if (QueryServiceConfig(svcInfo->schService, lpqscBuf, 1024, &bytesNeeded))
@@ -404,8 +400,6 @@ JNIEXPORT jboolean JNICALL Java_sage_WindowsServiceControl_isServiceRecovery0
 	LPSERVICE_FAILURE_ACTIONS lpqscBuf; 
 	lpqscBuf = (LPSERVICE_FAILURE_ACTIONS) LocalAlloc( 
 		LPTR, 1024); 
-	if (lpqscBuf == NULL)  // Should not be NULL
-		return 0;
 	DWORD bytesNeeded;
 	jboolean rv = JNI_FALSE;
 	if (qsc2(svcInfo->schService, SERVICE_CONFIG_FAILURE_ACTIONS,
@@ -685,26 +679,19 @@ GetAccountSid(
             // 
             // reallocate memory
             // 
+            if((*Sid=HeapReAlloc(
+                        GetProcessHeap(),
+                        0,
+                        *Sid,
+                        cbSid
+                        )) == NULL) __leave;
 
-            PSID tmpSid = NULL;
-            if ((tmpSid = HeapReAlloc(GetProcessHeap(), 0, *Sid, cbSid)) == NULL)
-            {
-                __leave;
-            }
-            else
-            {
-            	*Sid = tmpSid;
-            }
-
-            LPTSTR tmpReferencedDomain = NULL;
-            if ((tmpReferencedDomain = (LPTSTR)HeapReAlloc(GetProcessHeap(), 0, ReferencedDomain, cchReferencedDomain * sizeof(TCHAR))) == NULL)
-            {
-                __leave;
-            }
-            else
-            {
-                ReferencedDomain = tmpReferencedDomain;
-            }
+            if((ReferencedDomain=(LPTSTR)HeapReAlloc(
+                        GetProcessHeap(),
+                        0,
+                        ReferencedDomain,
+                        cchReferencedDomain * sizeof(TCHAR)
+                        )) == NULL) __leave;
         }
         else __leave;
     }
@@ -721,10 +708,7 @@ GetAccountSid(
     // Cleanup and indicate failure, if appropriate.
     // 
 
-    if(ReferencedDomain != NULL) {
-        HeapFree(GetProcessHeap(), 0, ReferencedDomain);
-        ReferencedDomain = NULL;
-    }
+    HeapFree(GetProcessHeap(), 0, ReferencedDomain);
 
     if(!bSuccess) {
         if(*Sid != NULL) {

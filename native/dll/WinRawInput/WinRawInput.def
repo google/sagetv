@@ -3,3 +3,4 @@
 LIBRARY      "WinRawInput"
 
 SECTIONS
+	.shared READ WRITE SHARED

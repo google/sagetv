@@ -24,8 +24,6 @@
 #include <wininet.h>
 #include <shellapi.h>
 #pragma pack(push, 16)  // align JAWT data struct to DLL call
-#pragma warning(disable:28159) // Static Code Analysis: When we stop supporting XP we can use GetTickCount64()
-
 #include "jawt.h"
 #include "jawt_md.h"
 
@@ -203,7 +201,7 @@ JNIEXPORT jboolean JNICALL Java_sage_Sage_writeStringValue(JNIEnv *env,
 	const char* keyString = env->GetStringUTFChars(key, 0);
 	const char* valueNameString = env->GetStringUTFChars(valueName, 0);
 	const char* valueString = env->GetStringUTFChars(value, 0);
-	HKEY rootKey = NULL;
+	HKEY rootKey;
 	HKEY myKey;
 	jboolean rv = JNI_FALSE;
 	if (root == sage_Sage_HKEY_CLASSES_ROOT) rootKey = HKEY_CLASSES_ROOT;
@@ -222,7 +220,6 @@ JNIEXPORT jboolean JNICALL Java_sage_Sage_writeStringValue(JNIEnv *env,
 		}
 		RegCloseKey(myKey);
 	}
-
 	env->ReleaseStringUTFChars(key, keyString);
 	env->ReleaseStringUTFChars(valueName, valueNameString);
 	env->ReleaseStringUTFChars(value, valueString);
@@ -239,7 +236,7 @@ jboolean JNICALL Java_sage_Sage_writeDwordValue(JNIEnv *env,
 {
 	const char* keyString = env->GetStringUTFChars(key, 0);
 	const char* valueNameString = env->GetStringUTFChars(valueName, 0);
-	HKEY rootKey = NULL;
+	HKEY rootKey;
 	DWORD dvalue = value;
 	HKEY myKey;
 	jboolean rv = JNI_FALSE;
@@ -274,7 +271,7 @@ jboolean JNICALL Java_sage_Sage_removeRegistryValue(JNIEnv *env,
 {
 	const char* keyString = env->GetStringUTFChars(key, 0);
 	const char* valueNameString = env->GetStringUTFChars(valueName, 0);
-	HKEY rootKey = NULL;
+	HKEY rootKey;
 	HKEY myKey;
 	jboolean rv = JNI_FALSE;
 	if (root == sage_Sage_HKEY_CLASSES_ROOT) rootKey = HKEY_CLASSES_ROOT;
@@ -575,7 +572,7 @@ JNIEXPORT void JNICALL Java_sage_Sage_addTaskbarIcon0(JNIEnv *env, jclass jc, jl
 	iconData.hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(iconID));
 	static jclass sagetvClass = (jclass) env->NewGlobalRef(env->FindClass("sage/SageTV"));
 	env->ExceptionClear();
-	strcpy_s(iconData.szTip, sizeof(iconData.szTip), sagetvClass ? "SageTV" : "SageRecorder");
+	strcpy(iconData.szTip, sagetvClass ? "SageTV 2" : "SageRecorder");
 	BOOL res = Shell_NotifyIcon(NIM_ADD, &iconData);
 }
 
@@ -596,7 +593,7 @@ JNIEXPORT void JNICALL Java_sage_Sage_updateTaskbarIcon0(JNIEnv *env, jclass jc,
 		iconData.uFlags = NIF_TIP | NIF_ICON;
 
 		const jchar* ctip = env->GetStringChars(tipText, NULL);
-		wcsncpy_s(iconData.szTip, _countof(iconData.szTip), (const wchar_t*)ctip, _countof(iconData.szTip) - 1 );
+		wcsncpy(iconData.szTip, (const wchar_t*)ctip, sizeof(iconData.szTip) );
 		WORD iconID = schedulerHasConflicts(env) ? 111 : 110;
 		iconData.hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(iconID));
 		BOOL res = Shell_NotifyIconW(NIM_MODIFY, &iconData);
@@ -649,6 +646,7 @@ JNIEXPORT jlong JNICALL Java_sage_Sage_getCpuTime
 	return rv;
 }
 
+#define _countof(array) (sizeof(array)/sizeof(array[0])) 
 static UINT dss_GetList[] = {SPI_GETLOWPOWERTIMEOUT, 
     SPI_GETPOWEROFFTIMEOUT, SPI_GETSCREENSAVETIMEOUT};
 static UINT dss_SetList[] = {SPI_SETLOWPOWERTIMEOUT, 
@@ -826,8 +824,7 @@ JNIEXPORT void JNICALL Java_sage_UIManager_setCompoundWindowRegion(JNIEnv *env, 
 			{
 				slog((env, "CombineRgn 2 failed %d\r\n", GetLastError()));
 			}
-			if (currRegn != NULL)
-				DeleteObject(currRegn);
+			DeleteObject(currRegn);
 		}
 	}
 	// This used to be TRUE, but I think that's the double flashy cause
@@ -931,12 +928,12 @@ JNIEXPORT jlong JNICALL Java_sage_UIManager_findWindow(
 JNIEXPORT jboolean JNICALL Java_sage_DirectX9SageRenderer_hasDirectX90
   (JNIEnv *env, jclass jc)
 {
-	TCHAR szPath[_MAX_PATH];
-	TCHAR szFile[_MAX_PATH];
-	if (GetSystemDirectory(szPath, sizeof(szPath)) != 0)
+    TCHAR szPath[512];
+    TCHAR szFile[512];
+    if (GetSystemDirectory(szPath, 512) != 0)
 	{
-		strncpy_s(szFile, sizeof(szFile), szPath, sizeof(szFile)-1);
-		strcat_s(szFile, sizeof(szFile), TEXT("\\d3d9.dll"));
+        strncpy(szFile, szPath,sizeof(szFile));
+        strcat(szFile, TEXT("\\d3d9.dll"));
 		HANDLE fooHand = CreateFile(szFile, 0, 0, NULL, OPEN_EXISTING, 0, NULL);
 		if (fooHand == INVALID_HANDLE_VALUE)
 		{
@@ -955,37 +952,28 @@ void loadAWTLib()
 {
 	if (!sageLoadedAwtLib)
 	{
-		/*
-		* Explicitly load jawt.dll.
-		*/
-		char appPath[_MAX_PATH];
-		GetModuleFileName(NULL, appPath, sizeof(appPath));
-		size_t appLen = strlen(appPath);
-		if (appLen > 0)  // Shouldn't be 0 as the following would be an infinite loop
+		// If they're using a bundled JRE, then try to load it that way first
+		HMODULE exeMod = GetModuleHandle(NULL);
+		LPTSTR appPath = new TCHAR[512];
+		GetModuleFileName(exeMod, appPath, 512);
+		int appLen = (int) strlen(appPath);
+		for (int i = appLen - 1; i > 0; i--)
 		{
-			for (size_t i = appLen - 1; i > 0; i--)
+			if (appPath[i] == '\\')
 			{
-				if (appPath[i] == '\\')
-				{
-					appPath[i + 1] = 0;
-					break;
-				}
+				appPath[i + 1] = 0;
+				break;
 			}
 		}
-
 		// See if we've got a JVM in our own directory to load
-		char includedJRE[_MAX_PATH];
-		strcpy_s(includedJRE, sizeof(includedJRE), appPath);
-		strcat_s(includedJRE, sizeof(includedJRE), "jre\\bin\\jawt.dll");
+		TCHAR includedJRE[1024];
+		strcpy(includedJRE, appPath);
+		strcat(includedJRE, "jre\\bin\\jawt.dll");
 		sageLoadedAwtLib = LoadLibrary(includedJRE);
 		if (sageLoadedAwtLib)
-		{
-			slog(("INFO:jawt.dll path = %s\r\n", includedJRE));
 			return;
-		}
-
 		/*
-		 * Failed to find jawt.dll in SageTV directory, load jawt.dll by using the Windows Registry to locate the current version to use.
+		 * Explicitly load jawt.dll by using the Windows Registry to locate the current version to use.
 		 */
 		HKEY rootKey = HKEY_LOCAL_MACHINE;
 		char currVer[16];
@@ -1004,13 +992,13 @@ void loadAWTLib()
 		}
 		RegCloseKey(myKey);
 		char pathKey[1024];
-		strcpy_s(pathKey, sizeof(pathKey), "Software\\JavaSoft\\Java Runtime Environment\\");
-		strcat_s(pathKey, sizeof(pathKey), currVer);
+		strcpy(pathKey, "Software\\JavaSoft\\Java Runtime Environment\\");
+		strcat(pathKey, currVer);
+		char jvmPath[1024];
 		if (RegOpenKeyEx(rootKey, pathKey, 0, KEY_QUERY_VALUE, &myKey) != ERROR_SUCCESS)
 		{
 			return;
 		}
-		char jvmPath[_MAX_PATH];
 		hsize = sizeof(jvmPath);
 		if (RegQueryValueEx(myKey, "RuntimeLib", 0, &readType, (LPBYTE)jvmPath, &hsize) != ERROR_SUCCESS)
 		{
@@ -1025,9 +1013,7 @@ void loadAWTLib()
 		*goodSlash = 0;
 		goodSlash = strrchr(jvmPath, '\\');
 		if (!goodSlash) return;
-		*(goodSlash + 1) = 0;
-		strncat_s(jvmPath, sizeof(jvmPath), "jawt.dll", sizeof(jvmPath) - strlen(jvmPath));
-		slog(("INFO:jawt.dll path = %s\r\n", jvmPath));
+		strcpy(goodSlash + 1, "jawt.dll");
 
 		sageLoadedAwtLib = LoadLibrary(jvmPath);
 	}
@@ -1428,7 +1414,7 @@ JNIEXPORT jboolean JNICALL Java_sage_Sage_setupSystemHooks0
  * Signature: (J)Z
  */
 JNIEXPORT jboolean JNICALL Java_sage_Sage_releaseSystemHooks0
-	(JNIEnv *env, jclass jc, jlong jhwnd)
+  (JNIEnv *env, jclass jc, jlong jhwnd)
 {
 	jboolean rv = JNI_FALSE;
 	DWORD dwWaitResult;
