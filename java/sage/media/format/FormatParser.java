@@ -57,13 +57,14 @@ public class FormatParser
     { "dtsc / 0x63737464", MediaFormat.DTS },
     { "mlpa / 0x61706c6d", MediaFormat.DOLBY_HD },
     { "AC-3 / 0X332D6361", MediaFormat.AC3 },
+    { "MATROSKA,WEBM", MediaFormat.MATROSKA },
   };
 
   private static final long MPEG_PARSER_SEARCH_LENGTH = 30*1024*1024;
   private static boolean DISABLE_FORMAT_DETECTION = false;
   private static boolean MINIMIZE_EXIF_MEM_USAGE = false;
   public static final java.io.File FORMAT_DETECT_MOUNT_DIR = new java.io.File("/tmp/formatmount");
-  private static String substituteName(String s)
+  public static String substituteName(String s)
   {
     if (s == null) return null;
     for (int i = 0; i < FORMAT_SUBSTITUTIONS.length; i++)
