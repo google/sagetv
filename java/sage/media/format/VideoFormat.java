@@ -335,6 +335,10 @@ public class VideoFormat extends BitstreamFormat
       return "1080i";
     else if ((height == 1080 || height == 1088) && width == 1920 && !interlaced)
       return "1080p";
+    else if (height == 2160 && (width == 3840 || width == 4096) && interlaced)
+      return "2160i";
+    else if (height == 2160 && (width == 3840 || width == 4096) && !interlaced)
+      return "2160p";
     else
       return null;
   }
