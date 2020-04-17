@@ -231,10 +231,6 @@ public class FormatParser
         }
 
       }
-      else
-      {
-        if (sage.Sage.DBG) System.out.println("No format detector configured, or error initializing");
-      }
       
       if (sage.Sage.DBG) System.out.println("Now using external format detector for: " + f);
       String ffmpegInfo = getFFMPEGFormatInfo(f.toString());
