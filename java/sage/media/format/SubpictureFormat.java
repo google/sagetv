@@ -23,8 +23,8 @@ public class SubpictureFormat extends BitstreamFormat
 {
   public String toString()
   {
-    return "Subpic[" + formatName + (id != null ? (" id=" + id) : "") + (path != null ? (" path=" + path) : "") +
-        (language == null ? "]" : (" " + language + "]"));
+    return "Subpic[" + formatName + (id != null ? (" id=" + id) : "") + (path != null ? (" path=" + path) : "")
+                + (language == null ? "" : (" " + language)) + " forced=" + forced + "]";
   }
 
   public String getLanguage()
@@ -35,6 +35,16 @@ public class SubpictureFormat extends BitstreamFormat
   public void setLanguage(String s)
   {
     language = s != null ? s.intern() : null;
+  }
+  
+  public void setForced(boolean value)
+  {
+    this.forced = value;
+  }
+    
+  public boolean getForced()
+  {
+    return forced;
   }
 
   public String getPath()
@@ -74,6 +84,18 @@ public class SubpictureFormat extends BitstreamFormat
     {
       sb.append("apgid=");
       sb.append(ancillaryPageId);
+      sb.append(';');
+    }
+    if(this.forced == true)
+    {
+      sb.append("forced=");
+      sb.append("true");
+      sb.append(';');
+    }
+    else
+    {
+      sb.append("forced=");
+      sb.append("false");
       sb.append(';');
     }
     return sb.toString();
@@ -121,6 +143,8 @@ public class SubpictureFormat extends BitstreamFormat
           rv.compositionPageId = value.intern();
         else if ("apgid".equals(name))
           rv.ancillaryPageId = value.intern();
+        else if("forced".equals(name))
+          rv.forced = Boolean.parseBoolean(value);      
       }
     }
     return rv;
@@ -129,7 +153,7 @@ public class SubpictureFormat extends BitstreamFormat
   public String getPrettyDesc()
   {
     return "Subpic" + ((language != null && language.length() > 0) ? (":" + language) : "") +
-        ((formatName != null && formatName.length() > 0) ? (" " + formatName) : "");
+        ((formatName != null && formatName.length() > 0) ? (" " + formatName) : "") + (this.getForced() ? " [Forced]" : "");
   }
 
   protected String language;
@@ -137,4 +161,5 @@ public class SubpictureFormat extends BitstreamFormat
   protected String path;
   protected String compositionPageId; // for dvb subpicture
   protected String ancillaryPageId; // for dvb subpicture
+  protected boolean forced = false; //If the track is forced
 }

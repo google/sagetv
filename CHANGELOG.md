@@ -10,6 +10,8 @@
 * Set default 1G heap for 64-bit (Windows)
 * Updates for OPTUS D1 transponder changes to DVB-S2
 * Fix: Schedules Direct EPG grabber failed to finish updating some satellite-based lineups
+* Added Forced as a property to SubpictureFormat
+* Added the ability to auto select forced subtitle track based on the default audio language
 
 ## Version 9.2.1 (2019-03-23)
 * 64-bit AVI playback and music fixes (Windows)

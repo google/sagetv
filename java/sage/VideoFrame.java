@@ -19,6 +19,7 @@ import sage.media.sub.RollupAnimation;
 
 import java.util.ArrayList;
 import java.util.List;
+import sage.media.format.SubpictureFormat;
 
 /*
  * NOTE: I use Sage.preferredServer when specifying the hostname to get around the
@@ -5650,6 +5651,35 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
 
   private boolean selectDefaultSubpicLanguage()
   {
+	String defaultAudioLang = uiMgr.get("default_audio_language", "English"); 
+    MediaLangInfo mli = (MediaLangInfo) mediaLangMap.get(defaultAudioLang);
+    SubpictureFormat [] subs = this.currFile.getFileFormat().getSubpictureFormats();
+
+    for(int i = 0; i < subs.length; i++)
+    {
+      if(subs[i].getForced())      
+      {
+        //Check for a match on the two letter lang code
+        if(subs[i].getLanguage().equalsIgnoreCase(mli.twoChar))
+        {
+          System.out.println("Setting forced subtitle to index: " + i);
+          playbackControl(DVD_CONTROL_SUBTITLE_CHANGE, i, -1);
+          return true;
+        }
+
+        //Check for a match on the three letter lang code
+        for(int j = 0; j < mli.threeChar.length; j++)
+        {
+          if(subs[i].getLanguage().equalsIgnoreCase(mli.threeChar[j]))
+          {
+            System.out.println("Setting forced subtitle to index: " + i);
+            playbackControl(DVD_CONTROL_SUBTITLE_CHANGE, i, -1);
+            return true;
+          }
+        }
+      }
+    }  
+	
     String defaultLang = uiMgr.get("default_subpic_language", "");
     if (defaultLang == null || defaultLang.length() == 0)
       return true; // preferred no subtitles
