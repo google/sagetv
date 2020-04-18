@@ -5655,6 +5655,11 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
     MediaLangInfo mli = (MediaLangInfo) mediaLangMap.get(defaultAudioLang);
     SubpictureFormat [] subs = this.currFile.getFileFormat().getSubpictureFormats();
 
+	/*
+	 * Loop thru all subtitle tracks of the mediafile to see if there is a forced subtitle 
+	 * track that matches the configured default audio language.  If it does it will 
+	 * select the track for playback.
+    */	 
     for(int i = 0; i < subs.length; i++)
     {
       if(subs[i].getForced())      
