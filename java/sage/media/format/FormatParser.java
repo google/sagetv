@@ -60,6 +60,7 @@ public class FormatParser
     { "MATROSKA,WEBM", MediaFormat.MATROSKA },
   };
 
+  private static FormatParserPlugin formatParserPluginInstance;
   private static final long MPEG_PARSER_SEARCH_LENGTH = 30*1024*1024;
   private static boolean DISABLE_FORMAT_DETECTION = false;
   private static boolean MINIMIZE_EXIF_MEM_USAGE = false;
@@ -192,44 +193,44 @@ public class FormatParser
             
       if(plugin != null)
       {
-        if (sage.Sage.DBG) System.out.println("Format detector configured");
+        if (sage.Sage.DBG) System.out.println("Using the format detector plugin");
         
         try
         {
-            plugin.initialize(f);
-            String formatName = plugin.getFormatName();
-            long duration = plugin.getDuration();
-            long bitrate = plugin.getBitrate();
-            BitstreamFormat streams [] = plugin.getStreamFormats();
+          plugin.initialize(f);
+          String formatName = plugin.getFormatName();
+          long duration = plugin.getDuration();
+          long bitrate = plugin.getBitrate();
+          BitstreamFormat streams [] = plugin.getStreamFormats();
 
-            if(streams != null && streams.length > 0)
-            {
-                format.setFormatName(formatName);
-                format.setDuration(duration);
-                format.setBitrate((int)bitrate);
-                format.setStreamFormats(streams);
+          if(streams != null && streams.length > 0)
+          {
+            format.setFormatName(formatName);
+            format.setDuration(duration);
+            format.setBitrate((int)bitrate);
+            format.setStreamFormats(streams);
+            addAdditionalMetadata(f, format);
 
-                return format;
-            }
+            return format;
+          }
 
         }
         catch(Exception ex)
         {
-            System.out.println("Error in Format Detector Plugin: " + ex.getMessage());
-            ex.printStackTrace();
+          System.out.println("Error in Format Detector Plugin: " + ex.getMessage());
+          ex.printStackTrace();
         }
         finally
         {
-            try
-            {
-                plugin.deconstruct();
-            }
-            catch(Exception ex)
-            {
-                System.out.println("Error deconstructing plugin: " + ex.getMessage());
-            }
+          try
+          {
+            plugin.deconstruct();
+          }
+          catch(Exception ex)
+          {
+            System.out.println("Error deconstructing plugin: " + ex.getMessage());
+          }
         }
-
       }
       
       if (sage.Sage.DBG) System.out.println("Now using external format detector for: " + f);
@@ -442,22 +443,34 @@ public class FormatParser
 
   private static FormatParserPlugin getFormatParserPluginInstance()
   {
-    FormatParserPlugin parsie = null;
-    String parsePlugin = sage.Sage.get("mediafile_mediaformat_parser_plugin", "");
-
-    try
+    /*
+     * Check to see if an instance has already been created.  If not check to see if one is configured and attempt to create an instance
+    */
+    if(FormatParser.formatParserPluginInstance == null)
     {
-        parsie = (FormatParserPlugin) Class.forName(parsePlugin, true, sage.Sage.extClassLoader).newInstance();
-    } 
-    catch (Throwable e1)
-    {
-        if (sage.Sage.DBG)
+      String parsePlugin = sage.Sage.get("mediafile_mediaformat_parser_plugin", "");
+      
+      if(parsePlugin.isEmpty())
+      {
+        FormatParser.formatParserPluginInstance = null;
+      }
+      else
+      {
+        try
         {
-            System.out.println("Error instantiating metadata parser plugin of:" + e1);
+          FormatParser.formatParserPluginInstance = (FormatParserPlugin) Class.forName(parsePlugin, true, sage.Sage.extClassLoader).newInstance();
+        } 
+        catch (Throwable e1)
+        {
+          if (sage.Sage.DBG)
+          {
+              System.out.println("Error instantiating metadata parser plugin of: " + e1);
+          }
         }
+      }
     }
 
-    return parsie;
+    return FormatParser.formatParserPluginInstance;
   }
   
   public static java.util.Map extractMetadataProperties(java.io.File mediaPath, java.io.File propFile, boolean invokePlugins)

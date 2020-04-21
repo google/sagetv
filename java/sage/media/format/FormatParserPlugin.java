@@ -18,15 +18,16 @@ package sage.media.format;
 
 public interface FormatParserPlugin 
 {
-    public void initialize(java.io.File file);
+  public void initialize(java.io.File file);
             
-    public String getFormatName();
+  public String getFormatName();
     
-    public long getDuration();
+  public long getDuration();
     
-    public long getBitrate();
+  public long getBitrate();
     
-    public BitstreamFormat[] getStreamFormats();
+  public BitstreamFormat[] getStreamFormats();
     
-    public void deconstruct();
+  public void deconstruct();
+    
 }
