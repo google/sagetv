@@ -197,39 +197,18 @@ public class FormatParser
         
         try
         {
-          plugin.initialize(f);
-          String formatName = plugin.getFormatName();
-          long duration = plugin.getDuration();
-          long bitrate = plugin.getBitrate();
-          BitstreamFormat streams [] = plugin.getStreamFormats();
-
-          if(streams != null && streams.length > 0)
+          ContainerFormat pluingFormat = plugin.parseFormat(f);
+            
+          if(pluingFormat.streamFormats != null && pluingFormat.streamFormats.length > 0)
           {
-            format.setFormatName(formatName);
-            format.setDuration(duration);
-            format.setBitrate((int)bitrate);
-            format.setStreamFormats(streams);
-            addAdditionalMetadata(f, format);
-
-            return format;
+            addAdditionalMetadata(f, pluingFormat);
+            return pluingFormat;
           }
-
         }
         catch(Exception ex)
         {
           System.out.println("Error in Format Detector Plugin: " + ex.getMessage());
           ex.printStackTrace();
-        }
-        finally
-        {
-          try
-          {
-            plugin.deconstruct();
-          }
-          catch(Exception ex)
-          {
-            System.out.println("Error deconstructing plugin: " + ex.getMessage());
-          }
         }
       }
       
