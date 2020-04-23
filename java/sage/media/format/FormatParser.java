@@ -15,6 +15,8 @@
  */
 package sage.media.format;
 
+import java.util.concurrent.locks.ReentrantLock;
+
 /**
  *
  * @author Narflex
@@ -61,6 +63,7 @@ public class FormatParser
   };
 
   private static FormatParserPlugin formatParserPluginInstance;
+  private static Object  formatParserPluginLock = new Object();
   private static final long MPEG_PARSER_SEARCH_LENGTH = 30*1024*1024;
   private static boolean DISABLE_FORMAT_DETECTION = false;
   private static boolean MINIMIZE_EXIF_MEM_USAGE = false;
@@ -199,13 +202,13 @@ public class FormatParser
         {
           ContainerFormat pluginFormat = plugin.parseFormat(f);
             
-          if (pluginFormat.streamFormats != null && pluginFormat.streamFormats.length > 0)
+          if (pluginFormat != null && pluginFormat.streamFormats != null && pluginFormat.streamFormats.length > 0)
           {
             addAdditionalMetadata(f, pluginFormat);
             return pluginFormat;
           }
         }
-        catch (Exception ex)
+        catch (Throwable ex)
         {
           System.out.println("Error in Format Detector Plugin: " + ex.getMessage());
           ex.printStackTrace();
@@ -420,7 +423,7 @@ public class FormatParser
     return rv;
   }
 
-  private synchronized static FormatParserPlugin getFormatParserPluginInstance()
+  private static FormatParserPlugin getFormatParserPluginInstance()
   {
     /*
      * Check to see if an instance has already been created.  If not check to see if one is configured and attempt to create an instance
@@ -428,27 +431,35 @@ public class FormatParser
     if (FormatParser.formatParserPluginInstance == null)
     {
       String parsePlugin = sage.Sage.get("mediafile_mediaformat_parser_plugin", "");
-      
+
       if (parsePlugin.isEmpty())
       {
         FormatParser.formatParserPluginInstance = null;
       }
       else
       {
-        try
+        synchronized (formatParserPluginLock)
         {
-          FormatParser.formatParserPluginInstance = (FormatParserPlugin) Class.forName(parsePlugin, true, sage.Sage.extClassLoader).newInstance();
-        } 
-        catch (Throwable e1)
-        {
-          if (sage.Sage.DBG)
+          if (FormatParser.formatParserPluginInstance != null)
           {
+              return FormatParser.formatParserPluginInstance;
+          }
+          
+          try
+          {
+            FormatParser.formatParserPluginInstance = (FormatParserPlugin) Class.forName(parsePlugin, true, sage.Sage.extClassLoader).newInstance();
+          } 
+          catch (Throwable e1)
+          {
+            if (sage.Sage.DBG)
+            {
               System.out.println("Error instantiating metadata parser plugin of: " + e1);
+            }
           }
         }
       }
     }
-
+    
     return FormatParser.formatParserPluginInstance;
   }
   
