@@ -191,21 +191,21 @@ public class FormatParser
 
       FormatParserPlugin plugin = FormatParser.getFormatParserPluginInstance();
             
-      if(plugin != null)
+      if (plugin != null)
       {
         if (sage.Sage.DBG) System.out.println("Using the format detector plugin");
         
         try
         {
-          ContainerFormat pluingFormat = plugin.parseFormat(f);
+          ContainerFormat pluginFormat = plugin.parseFormat(f);
             
-          if(pluingFormat.streamFormats != null && pluingFormat.streamFormats.length > 0)
+          if (pluginFormat.streamFormats != null && pluginFormat.streamFormats.length > 0)
           {
-            addAdditionalMetadata(f, pluingFormat);
-            return pluingFormat;
+            addAdditionalMetadata(f, pluginFormat);
+            return pluginFormat;
           }
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
           System.out.println("Error in Format Detector Plugin: " + ex.getMessage());
           ex.printStackTrace();
@@ -420,16 +420,16 @@ public class FormatParser
     return rv;
   }
 
-  private static FormatParserPlugin getFormatParserPluginInstance()
+  private synchronized static FormatParserPlugin getFormatParserPluginInstance()
   {
     /*
      * Check to see if an instance has already been created.  If not check to see if one is configured and attempt to create an instance
     */
-    if(FormatParser.formatParserPluginInstance == null)
+    if (FormatParser.formatParserPluginInstance == null)
     {
       String parsePlugin = sage.Sage.get("mediafile_mediaformat_parser_plugin", "");
       
-      if(parsePlugin.isEmpty())
+      if (parsePlugin.isEmpty())
       {
         FormatParser.formatParserPluginInstance = null;
       }

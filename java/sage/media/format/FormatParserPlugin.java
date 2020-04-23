@@ -19,7 +19,11 @@ package sage.media.format;
  * This class provides an interface for the creation of a plug to override
  * the built in file format detection.  This will allow the community to create
  * plugins that will allow SageTV to be able to recognize newer media formates
- * that the core is not currently able to handle. 
+ * that the core is not currently able to handle.
+ * 
+ * This plugin interaface does not allow for overriding the built in formate detection 
+ * for MPEG2-TS/PS, MP3 or Images.  This is intended to be able to replace the
+ * FFmpeg format detector only.
  * 
  * @author jvl711
  */
@@ -28,7 +32,7 @@ public interface FormatParserPlugin
 
   /**
    * SageTV will pass a file to this method when it needs to know its format.  This 
-   * could because it is the first time it saw the file, or because SageTV needed to
+   * could be because it is the first time it saw the file, or because SageTV needed to
    * rediscover the file format because of some other trigger. The implementor should 
    * construct a ContainerFormat and provide information about the media file.
    * 
@@ -68,7 +72,9 @@ public interface FormatParserPlugin
    * detector to attempt to determine what the files format is.
    * 
    * @param file Media file to determine the media format for
-   * @return ContainerFormat populated with the format of the given file
+   * @return ContainerFormat populated with the format of the given file.  If you retrun
+   * a null ContainerFormat, or an empty list of streams, sage will ignore your container
+   * format.
    */
   public ContainerFormat parseFormat(java.io.File file);
     
