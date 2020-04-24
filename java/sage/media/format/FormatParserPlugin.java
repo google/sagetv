@@ -16,12 +16,12 @@
 package sage.media.format;
 
 /**
- * This class provides an interface for the creation of a plug to override
+ * This class provides an interface for the creation of a plugin to override
  * the built in file format detection.  This will allow the community to create
  * plugins that will allow SageTV to be able to recognize newer media formates
  * that the core is not currently able to handle.
  * 
- * This plugin interaface does not allow for overriding the built in formate detection 
+ * This plugin interface does not allow for overriding the built in format detection 
  * for MPEG2-TS/PS, MP3 or Images.  This is intended to be able to replace the
  * FFmpeg format detector only.
  * 

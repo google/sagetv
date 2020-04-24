@@ -15,8 +15,6 @@
  */
 package sage.media.format;
 
-import java.util.concurrent.locks.ReentrantLock;
-
 /**
  *
  * @author Narflex
@@ -63,7 +61,7 @@ public class FormatParser
   };
 
   private static FormatParserPlugin formatParserPluginInstance;
-  private static Object  formatParserPluginLock = new Object();
+  private static Object formatParserPluginLock = new Object();
   private static final long MPEG_PARSER_SEARCH_LENGTH = 30*1024*1024;
   private static boolean DISABLE_FORMAT_DETECTION = false;
   private static boolean MINIMIZE_EXIF_MEM_USAGE = false;
@@ -192,7 +190,7 @@ public class FormatParser
         }
       }
 
-      FormatParserPlugin plugin = FormatParser.getFormatParserPluginInstance();
+      FormatParserPlugin plugin = getFormatParserPluginInstance();
             
       if (plugin != null)
       {
@@ -428,26 +426,22 @@ public class FormatParser
     /*
      * Check to see if an instance has already been created.  If not check to see if one is configured and attempt to create an instance
     */
-    if (FormatParser.formatParserPluginInstance == null)
+    if (formatParserPluginInstance == null)
     {
       String parsePlugin = sage.Sage.get("mediafile_mediaformat_parser_plugin", "");
 
-      if (parsePlugin.isEmpty())
-      {
-        FormatParser.formatParserPluginInstance = null;
-      }
-      else
+      if (!parsePlugin.isEmpty())
       {
         synchronized (formatParserPluginLock)
         {
-          if (FormatParser.formatParserPluginInstance != null)
+          if (formatParserPluginInstance != null)
           {
-              return FormatParser.formatParserPluginInstance;
+              return formatParserPluginInstance;
           }
           
           try
           {
-            FormatParser.formatParserPluginInstance = (FormatParserPlugin) Class.forName(parsePlugin, true, sage.Sage.extClassLoader).newInstance();
+            formatParserPluginInstance = (FormatParserPlugin) Class.forName(parsePlugin, true, sage.Sage.extClassLoader).newInstance();
           } 
           catch (Throwable e1)
           {
@@ -460,7 +454,7 @@ public class FormatParser
       }
     }
     
-    return FormatParser.formatParserPluginInstance;
+    return formatParserPluginInstance;
   }
   
   public static java.util.Map extractMetadataProperties(java.io.File mediaPath, java.io.File propFile, boolean invokePlugins)
