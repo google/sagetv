@@ -1514,7 +1514,7 @@ public class MediaFile extends DBObject implements SegmentedFile
           else if (lcName.equals("id"))
             return sf[streamIdx].getId();
           else if (lcName.equals("forced"))
-            return sf[streamIdx].getForced() ? "true" : "false";
+            return Boolean.toString(sf[streamIdx].getForced());
         }
       }
       else if (lcName.equals("container"))

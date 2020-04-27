@@ -5651,43 +5651,42 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
 
   private boolean selectDefaultSubpicLanguage()
   {
-	String defaultAudioLang = uiMgr.get("default_audio_language", "English"); 
-    MediaLangInfo mli = (MediaLangInfo) mediaLangMap.get(defaultAudioLang);
-    SubpictureFormat [] subs = this.currFile.getFileFormat().getSubpictureFormats();
-
-	/*
-	 * Loop thru all subtitle tracks of the mediafile to see if there is a forced subtitle 
-	 * track that matches the configured default audio language.  If it does it will 
-	 * select the track for playback.
-    */	 
-    for(int i = 0; i < subs.length; i++)
+    String defaultAudioLang = uiMgr.get("default_audio_language", "English"); 
+    MediaLangInfo mli = (MediaLangInfo) mediaLangMap.get(defaultAudioLang);	
+    
+    String defaultLang = uiMgr.get("default_subpic_language", "");
+    
+    //Check for forced subtitles if there is not a defaul subtitle language set
+    if(defaultLang == null || defaultLang.length() == 0)
     {
-      if(subs[i].getForced())      
-      {
-        //Check for a match on the two letter lang code
-        if(subs[i].getLanguage().equalsIgnoreCase(mli.twoChar))
-        {
-          System.out.println("Setting forced subtitle to index: " + i);
-          playbackControl(DVD_CONTROL_SUBTITLE_CHANGE, i, -1);
-          return true;
-        }
+      String [] subs = getDVDAvailableSubpictures();
+      boolean hasForcedSub = false;        
 
-        //Check for a match on the three letter lang code
-        for(int j = 0; j < mli.threeChar.length; j++)
+      /*
+      * Loop thru all subtitle tracks to see if there is a forced subtitle track. 
+      * Clear the tracks that are not forced
+      */
+      for(int i = 0; i < subs.length; i++)
+      {
+        if(subs[i].toLowerCase().indexOf("[forced]") != -1)
         {
-          if(subs[i].getLanguage().equalsIgnoreCase(mli.threeChar[j]))
-          {
-            System.out.println("Setting forced subtitle to index: " + i);
-            playbackControl(DVD_CONTROL_SUBTITLE_CHANGE, i, -1);
-            return true;
-          }
+          hasForcedSub = true;
+        }
+        else
+        {
+          subs[i] = "";  
         }
       }
-    }  
-	
-    String defaultLang = uiMgr.get("default_subpic_language", "");
-    if (defaultLang == null || defaultLang.length() == 0)
-      return true; // preferred no subtitles
+        
+      if(hasForcedSub)
+      {
+        return performLanguageMatch(defaultAudioLang, subs, DVD_CONTROL_SUBTITLE_CHANGE, getDVDSubpicture());
+      }
+      else
+      {
+        return true;
+      }
+    }
 
     return performLanguageMatch(defaultLang, getDVDAvailableSubpictures(), DVD_CONTROL_SUBTITLE_CHANGE, getDVDSubpicture());
   }

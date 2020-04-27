@@ -24,7 +24,7 @@ public class SubpictureFormat extends BitstreamFormat
   public String toString()
   {
     return "Subpic[" + formatName + (id != null ? (" id=" + id) : "") + (path != null ? (" path=" + path) : "")
-                + (language == null ? "" : (" " + language)) + " forced=" + forced + "]";
+                + (language == null ? "" : (" " + language)) + (forced ? " forced" : "") + "]";
   }
 
   public String getLanguage()
@@ -89,7 +89,7 @@ public class SubpictureFormat extends BitstreamFormat
     if(this.forced == true)
     {
       sb.append("forced=");
-      sb.append("true");
+      sb.append(forced);
       sb.append(';');
     }
     else
