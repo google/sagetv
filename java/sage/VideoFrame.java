@@ -5651,7 +5651,7 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
         selectedIndex = i;
         
         //Prefer subtitle tracks that are not forced
-        if(langOptions[i].toLowerCase().indexOf("[" + Sage.rez("forced") + "]") != -1)
+        if(langOptions[i].toLowerCase().indexOf("[" + Sage.rez("forced") + "]") == -1)
         {
             return selectedIndex;
         }
