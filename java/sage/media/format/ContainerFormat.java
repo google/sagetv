@@ -15,6 +15,8 @@
  */
 package sage.media.format;
 
+import sage.Sage;
+
 /**
  *
  * @author Narflex
@@ -737,7 +739,7 @@ public class ContainerFormat extends MediaFormat
       rv[i] = "# " + (i + 1);
       String lang = afs[i].getLanguage();
       if (lang != null && lang.length() > 0)
-        rv[i] += " " + lang + (afs[i].getForced() ? " [Forced]" : "");
+        rv[i] += " " + lang + (afs[i].getForced() ? " [" + Sage.rez("Forced") + "]" : "");
     }
     return rv;
   }

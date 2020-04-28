@@ -5640,26 +5640,36 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
 
   private int getMatchingLangIndex(String[] langOptions, String targetLang)
   {
+    
+    int selectedIndex = -1;  
+      
     targetLang = targetLang.toLowerCase();
     for (int i = 0; i < langOptions.length; i++)
     {
       if (langOptions[i].toLowerCase().indexOf(targetLang) != -1)
-        return i;
+      {
+        selectedIndex = i;
+        
+        //Prefer subtitle tracks that are not forced
+        if(langOptions[i].toLowerCase().indexOf("[" + Sage.rez("forced") + "]") != -1)
+        {
+            return selectedIndex;
+        }
+      }
     }
-    return -1;
+    return selectedIndex;
   }
 
   private boolean selectDefaultSubpicLanguage()
   {
     String defaultAudioLang = uiMgr.get("default_audio_language", "English"); 
-    MediaLangInfo mli = (MediaLangInfo) mediaLangMap.get(defaultAudioLang);	
-    
     String defaultLang = uiMgr.get("default_subpic_language", "");
     
     //Check for forced subtitles if there is not a defaul subtitle language set
     if(defaultLang == null || defaultLang.length() == 0)
     {
       String [] subs = getDVDAvailableSubpictures();
+      String [] forcedSubs = new String[subs.length];
       boolean hasForcedSub = false;        
 
       /*
@@ -5668,19 +5678,20 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
       */
       for(int i = 0; i < subs.length; i++)
       {
-        if(subs[i].toLowerCase().indexOf("[forced]") != -1)
+        if(subs[i].toLowerCase().indexOf("[" + Sage.rez("forced") + "]") != -1)
         {
+          forcedSubs[i] = subs[i];
           hasForcedSub = true;
         }
         else
         {
-          subs[i] = "";  
+          forcedSubs[i] = "";
         }
       }
         
       if(hasForcedSub)
       {
-        return performLanguageMatch(defaultAudioLang, subs, DVD_CONTROL_SUBTITLE_CHANGE, getDVDSubpicture());
+        return performLanguageMatch(defaultAudioLang, forcedSubs, DVD_CONTROL_SUBTITLE_CHANGE, getDVDSubpicture());
       }
       else
       {

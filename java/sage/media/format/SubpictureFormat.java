@@ -86,18 +86,10 @@ public class SubpictureFormat extends BitstreamFormat
       sb.append(ancillaryPageId);
       sb.append(';');
     }
-    if(this.forced == true)
-    {
-      sb.append("forced=");
-      sb.append(forced);
-      sb.append(';');
-    }
-    else
-    {
-      sb.append("forced=");
-      sb.append("false");
-      sb.append(';');
-    }
+    sb.append("forced=");
+    sb.append(forced);
+    sb.append(';');
+
     return sb.toString();
   }
 
