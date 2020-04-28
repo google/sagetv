@@ -12,6 +12,9 @@
 * Fix: Schedules Direct EPG grabber failed to finish updating some satellite-based lineups
 * Added Forced as a property to SubpictureFormat
 * Added the ability to auto select forced subtitle track based on the default audio language
+* Added the ability to use a Plugin for format detection of media files instead of built in ffmpeg.
+* Added 2160p as a Pretty resolution to VideoFormat
+* Added HEVC as a supported media format
 
 ## Version 9.2.1 (2019-03-23)
 * 64-bit AVI playback and music fixes (Windows)
