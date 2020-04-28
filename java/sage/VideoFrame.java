@@ -19,7 +19,6 @@ import sage.media.sub.RollupAnimation;
 
 import java.util.ArrayList;
 import java.util.List;
-import sage.media.format.SubpictureFormat;
 
 /*
  * NOTE: I use Sage.preferredServer when specifying the hostname to get around the
