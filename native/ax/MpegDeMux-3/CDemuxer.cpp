@@ -911,15 +911,18 @@ HRESULT CDemuxer::SetMpeg2VideoMediaType(CMediaType *cmt, MPEG_VIDEO *pMpegVideo
     cmt->majortype = MEDIATYPE_Video;
     cmt->subtype = MEDIASUBTYPE_MPEG2_VIDEO;
 
+    int header_padded_length = pMpegVideo->actual_header_length + (4 - (pMpegVideo->actual_header_length % 4)) % 4; // pad length to DWORD boundary
+
     MPEG2VIDEOINFO *videoInfo = // This macro finds the pointer to the last element in the sedhdr block to determine size
         //(MPEG2VIDEOINFO*)cmt->AllocFormatBuffer(FIELD_OFFSET(MPEG2VIDEOINFO, dwSequenceHeader[pMpegVideo->lActualHeaderLen]));
 		// There's already a DWORD in the block for the sequence header, so subtract 4 bytes
-		(MPEG2VIDEOINFO*)cmt->AllocFormatBuffer(sizeof(MPEG2VIDEOINFO) + pMpegVideo->actual_header_length - 4);
+		(MPEG2VIDEOINFO*)cmt->AllocFormatBuffer(sizeof(MPEG2VIDEOINFO) + header_padded_length - 4);
     if (videoInfo == NULL) {
         return E_OUTOFMEMORY;
     }
+
 	// reset the header's memory
-	ZeroMemory((PVOID)(videoInfo), sizeof(MPEG2VIDEOINFO) + pMpegVideo->actual_header_length - 4);
+	ZeroMemory((PVOID)(videoInfo), sizeof(MPEG2VIDEOINFO) + header_padded_length - 4);
 
     videoInfo->hdr.dwBitRate          = pMpegVideo->bit_rate;
     videoInfo->hdr.rcSource.right     = pMpegVideo->width;
@@ -953,7 +956,7 @@ HRESULT CDemuxer::SetMpeg2VideoMediaType(CMediaType *cmt, MPEG_VIDEO *pMpegVideo
 	
 	videoInfo->hdr.dwInterlaceFlags = pMpegVideo->progressive ? 0 : (AMINTERLACE_IsInterlaced);
 	videoInfo->hdr.AvgTimePerFrame = pMpegVideo->picture_time;
-    videoInfo->cbSequenceHeader = pMpegVideo->actual_header_length;
+    videoInfo->cbSequenceHeader = header_padded_length;
     CopyMemory((PVOID)videoInfo->dwSequenceHeader,
 			   (PVOID)pMpegVideo->raw_header,
                pMpegVideo->actual_header_length);
@@ -1003,12 +1006,13 @@ HRESULT CDemuxer::SetH264VideoMediaType(CMediaType *cmt, H264_VIDEO *pH264Video 
 
 	const DWORD H264FOURCC = 0x34363248; //DWORD('H264');
 
+  int header_padded_length = pH264Video->sps_length + (4 - (pH264Video->sps_length % 4)) % 4; // pad length to DWORD boundary
 
 	//VIDEOINFOHEADER2 *videoInfo = (VIDEOINFOHEADER2*)cmt->AllocFormatBuffer( sizeof(VIDEOINFOHEADER2)+pH264Video->sps_length-4 );
 	 MPEG2VIDEOINFO *videoInfo = // This macro finds the pointer to the last element in the sedhdr block to determine size
         //(MPEG2VIDEOINFO*)cmt->AllocFormatBuffer(FIELD_OFFSET(MPEG2VIDEOINFO, dwSequenceHeader[pMpegVideo->lActualHeaderLen]));
 		// There's already a DWORD in the block for the sequence header, so subtract 4 bytes
-		(MPEG2VIDEOINFO*)cmt->AllocFormatBuffer(sizeof(MPEG2VIDEOINFO) + pH264Video->sps_length-4);
+		(MPEG2VIDEOINFO*)cmt->AllocFormatBuffer(sizeof(MPEG2VIDEOINFO) + header_padded_length-4);
 	
 	cmt->bFixedSizeSamples = 1;
 	cmt->SetTemporalCompression( FALSE );
@@ -1031,7 +1035,7 @@ HRESULT CDemuxer::SetH264VideoMediaType(CMediaType *cmt, H264_VIDEO *pH264Video 
 	videoInfo->hdr.bmiHeader.biCompression = H264FOURCC;
 	videoInfo->hdr.bmiHeader.biSizeImage = 0;
 	videoInfo->hdr.bmiHeader.biClrUsed = 0;//0x73; //DIBSIZE(videoInfo->bmiHeader); //6619248
-	videoInfo->cbSequenceHeader = pH264Video->sps_length;
+	videoInfo->cbSequenceHeader = header_padded_length;
     CopyMemory((PVOID)videoInfo->dwSequenceHeader,
 			   (PVOID)pH264Video->sps,  pH264Video->sps_length);
 	videoInfo->dwProfile = pH264Video->profile;
@@ -1091,11 +1095,13 @@ HRESULT CDemuxer::SetH264VideoMediaType4Cyberlink(CMediaType *cmt, H264_VIDEO *p
 
 	const DWORD H264FOURCC = 0x34363248; //DWORD('H264');
 
+  int header_padded_length = pH264Video->sps_length + (4 - (pH264Video->sps_length % 4)) % 4; // pad length to DWORD boundary
+
 	//VIDEOINFOHEADER2 *videoInfo = (VIDEOINFOHEADER2*)cmt->AllocFormatBuffer( sizeof(VIDEOINFOHEADER2)+pH264Video->sps_length-4 );
 	 MPEG2VIDEOINFO *videoInfo = // This macro finds the pointer to the last element in the sedhdr block to determine size
         //(MPEG2VIDEOINFO*)cmt->AllocFormatBuffer(FIELD_OFFSET(MPEG2VIDEOINFO, dwSequenceHeader[pMpegVideo->lActualHeaderLen]));
 		// There's already a DWORD in the block for the sequence header, so subtract 4 bytes
-		(MPEG2VIDEOINFO*)cmt->AllocFormatBuffer(sizeof(MPEG2VIDEOINFO) + pH264Video->sps_length-4);
+		(MPEG2VIDEOINFO*)cmt->AllocFormatBuffer(sizeof(MPEG2VIDEOINFO) + header_padded_length-4);
 	
 	cmt->bFixedSizeSamples = 0;
 	cmt->SetTemporalCompression( TRUE );
@@ -1121,7 +1127,7 @@ HRESULT CDemuxer::SetH264VideoMediaType4Cyberlink(CMediaType *cmt, H264_VIDEO *p
 	videoInfo->dwProfile = pH264Video->profile;
 	videoInfo->dwLevel = pH264Video->level;
 	videoInfo->dwFlags = 0;
-	videoInfo->cbSequenceHeader = pH264Video->sps_length;
+	videoInfo->cbSequenceHeader = header_padded_length;
     CopyMemory((PVOID)videoInfo->dwSequenceHeader,
 			   (PVOID)pH264Video->sps,  pH264Video->sps_length);
 	// Determine the aspect ratio
