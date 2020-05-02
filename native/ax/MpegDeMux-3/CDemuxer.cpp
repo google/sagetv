@@ -911,7 +911,7 @@ HRESULT CDemuxer::SetMpeg2VideoMediaType(CMediaType *cmt, MPEG_VIDEO *pMpegVideo
     cmt->majortype = MEDIATYPE_Video;
     cmt->subtype = MEDIASUBTYPE_MPEG2_VIDEO;
 
-    int header_padded_length = pMpegVideo->actual_header_length + (4 - (pMpegVideo->actual_header_length % 4)) % 4; // pad length to DWORD boundary
+    int header_padded_length = ALIGN_DWORD(pMpegVideo->actual_header_length);
 
     MPEG2VIDEOINFO *videoInfo = // This macro finds the pointer to the last element in the sedhdr block to determine size
         //(MPEG2VIDEOINFO*)cmt->AllocFormatBuffer(FIELD_OFFSET(MPEG2VIDEOINFO, dwSequenceHeader[pMpegVideo->lActualHeaderLen]));
@@ -1006,7 +1006,7 @@ HRESULT CDemuxer::SetH264VideoMediaType(CMediaType *cmt, H264_VIDEO *pH264Video 
 
 	const DWORD H264FOURCC = 0x34363248; //DWORD('H264');
 
-  int header_padded_length = pH264Video->sps_length + (4 - (pH264Video->sps_length % 4)) % 4; // pad length to DWORD boundary
+  int header_padded_length = ALIGN_DWORD(pH264Video->sps_length);
 
 	//VIDEOINFOHEADER2 *videoInfo = (VIDEOINFOHEADER2*)cmt->AllocFormatBuffer( sizeof(VIDEOINFOHEADER2)+pH264Video->sps_length-4 );
 	 MPEG2VIDEOINFO *videoInfo = // This macro finds the pointer to the last element in the sedhdr block to determine size
@@ -1095,7 +1095,7 @@ HRESULT CDemuxer::SetH264VideoMediaType4Cyberlink(CMediaType *cmt, H264_VIDEO *p
 
 	const DWORD H264FOURCC = 0x34363248; //DWORD('H264');
 
-  int header_padded_length = pH264Video->sps_length + (4 - (pH264Video->sps_length % 4)) % 4; // pad length to DWORD boundary
+  int header_padded_length = ALIGN_DWORD(pH264Video->sps_length);
 
 	//VIDEOINFOHEADER2 *videoInfo = (VIDEOINFOHEADER2*)cmt->AllocFormatBuffer( sizeof(VIDEOINFOHEADER2)+pH264Video->sps_length-4 );
 	 MPEG2VIDEOINFO *videoInfo = // This macro finds the pointer to the last element in the sedhdr block to determine size
