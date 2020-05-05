@@ -16,6 +16,7 @@
 * Added the ability to use a Plugin for format detection of media files instead of built in ffmpeg.
 * Added 2160p as a Pretty resolution to VideoFormat
 * Added HEVC as a supported media format
+* Test Travis CI Integration
 
 ## Version 9.2.1 (2019-03-23)
 * 64-bit AVI playback and music fixes (Windows)
