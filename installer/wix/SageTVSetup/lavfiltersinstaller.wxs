@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+  <?include SageTVInclude.wxi ?>
+  <Fragment>
+
+    <!-- NEED TO TEST I FWE CAN DO THIS Detect existing version of LAVFilters
+    <?if $(var.Platform) = x64 ?>
+      <util:FileSearch Id="GetAC3onX64Exists" Condition="VersionNT64" Variable="ac3Exists" Path="[ProgramFilesFolder]AC3Filter\x64\ac3filter64.ax" Result="exists"/>
+    <?else?>
+      <util:FileSearch Id="GetAC3onX86Exists" Condition="NOT VersionNT64" Variable="ac3Exists" Path="[ProgramFilesFolder]AC3Filter\ac3filter.ax" Result="exists"/>
+    <?endif?>
+     DetectCondition="ac3Exists"
+     -->
+
+    <PackageGroup Id="redist_lavfilters">
+      <ExePackage Id="lavfilters"
+		  DisplayName="LAV Filters"
+		  Cache="yes"
+		  PerMachine="yes"
+		  Permanent="yes"
+		  Vital="yes"
+		  Compressed="yes"
+		  InstallCondition="NOT Installed AND NOT PATCH AND LAVFILTERSCHECKBOX"
+		  SourceFile="redist\LAVFilters-0.73.1-Installer.exe"
+		  Name="Redist\LAVFilters-0.73.1-Installer.exe"
+		  InstallCommand="/VERYSILENT /NORESTART"
+		  />
+    </PackageGroup>
+  </Fragment>
+</Wix>
