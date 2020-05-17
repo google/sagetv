@@ -388,8 +388,6 @@ function Upload-Binaries {
     [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip,$zipsource,$zipsourcefilename,"Optimal")
     $zip.Dispose()
 
-    return $rc 
-
     #$sourcefile = ".\release\Binaries\testfile.zip"
     If ($uploadType -eq $upGithub) {
         #upload to github

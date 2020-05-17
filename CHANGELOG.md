@@ -1,5 +1,6 @@
 # Change Log
 
+## Version 9.2.2 (2020-05-16)
 * Fixed MpegDeMux that crashed some MPEG2 playback (Windows)
 * Change service launcher (Windows) to support local JRE
 * Change watch ignore times from constants to properties

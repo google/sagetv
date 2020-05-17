@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+  <?include SageTVInclude.wxi ?>
+  <Fragment>
+    <util:RegistrySearch
+      Id="Java8FamilyVersion"
+        Root="HKLM" Key="SOFTWARE\JavaSoft\Java Runtime Environment"
+        Value="CurrentVersion"
+        Win64="$(var.Win64)"
+        Variable="JavaCurrentVersion" />
+    <PackageGroup Id="Java8Runtime">
+      <?if $(var.Platform) = x64 ?>
+	      <?if $(var.InstallerType) = "_Java" ?>
+		      <ExePackage Id="Java8Runtime"
+			DisplayName="Java Runtime Version 8(x64 offline)"
+			Cache="no"
+			Compressed="yes"
+			PerMachine="yes"
+			Permanent="yes"
+			Vital="yes"
+			Name="Redist\jre-8u191-windows-x64.exe"
+			SourceFile="redist\jre-8u191-windows-x64.exe"
+			InstallCommand=" /s AUTO_UPDATE=0 INSTALL_SILENT=1 REBOOT=0 /L*v &quot;[WixBundleLog_Java8Runtime]&quot;"
+			DetectCondition="JavaCurrentVersion AND (JavaCurrentVersion &gt;= v1.7)">
+		      </ExePackage>
+	      <?else?>
+		      <ExePackage Id="Java8Runtime"
+			DisplayName="Java Runtime Version 8(x64 online)"
+			Cache="no"
+			Compressed="no"
+			PerMachine="yes"
+			Permanent="yes"
+			Vital="yes"
+			Name="Redist\jre-8u191-windows-x64.exe"
+			SourceFile="redist\jre-8u191-windows-x64.exe"
+			DownloadUrl="https://dl.bintray.com/opensagetv/sagetv/installersupportfiles/1.101/jre-8u191-windows-x64.exe"
+			InstallCommand=" /s AUTO_UPDATE=0 INSTALL_SILENT=1 REBOOT=0 /L*v &quot;[WixBundleLog_Java8Runtime]&quot;"
+			DetectCondition="JavaCurrentVersion AND (JavaCurrentVersion &gt;= v1.7)">
+		      </ExePackage>
+	      <?endif?>
+      <?else?>
+	      <?if $(var.InstallerType) = "_Java" ?>
+		      <ExePackage Id="Java8Runtime"
+			DisplayName="Java Runtime Version 8(x86 offline)"
+			Cache="no"
+			Compressed="yes"
+			PerMachine="yes"
+			Permanent="yes"
+			Vital="yes"
+			Name="Redist\jre-8u191-windows-i586.exe"
+			SourceFile="redist\jre-8u191-windows-i586.exe"
+			InstallCommand=" /s AUTO_UPDATE=0 INSTALL_SILENT=1 REBOOT=0 /L*v &quot;[WixBundleLog_Java8Runtime]&quot;"
+			DetectCondition="JavaCurrentVersion AND (JavaCurrentVersion &gt;= v1.7)">
+		      </ExePackage>
+	      <?else?>
+		      <ExePackage Id="Java8Runtime"
+			DisplayName="Java Runtime Version 8(x86 online)"
+			Cache="no"
+			Compressed="no"
+			PerMachine="yes"
+			Permanent="yes"
+			Vital="yes"
+			Name="Redist\jre-8u191-windows-i586.exe"
+			SourceFile="redist\jre-8u191-windows-i586.exe"
+			DownloadUrl="https://dl.bintray.com/opensagetv/sagetv/installersupportfiles/1.101/jre-8u191-windows-i586.exe"
+			InstallCommand=" /s AUTO_UPDATE=0 INSTALL_SILENT=1 REBOOT=0 /L*v &quot;[WixBundleLog_Java8Runtime]&quot;"
+			DetectCondition="JavaCurrentVersion AND (JavaCurrentVersion &gt;= v1.7)">
+		      </ExePackage>
+	      <?endif?>
+      <?endif?>
+    </PackageGroup>
+  </Fragment>
+</Wix>
