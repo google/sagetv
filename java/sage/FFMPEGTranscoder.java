@@ -15,6 +15,8 @@
  */
 package sage;
 
+import java.text.DecimalFormat;
+
 public class FFMPEGTranscoder implements TranscodeEngine
 {
   private static final boolean XCODE_DEBUG = Sage.DBG && Sage.getBoolean("media_server/transcode_debug", false);
@@ -576,6 +578,12 @@ public class FFMPEGTranscoder implements TranscodeEngine
           {
             if ("videocodec".equals(propName))
               vcodec = propVal;
+            else if ("audiochannels".equals(propName))
+            {
+              //Only set property if the source audio has atleast as many channels as the setting
+              if(Integer.parseInt(propVal) <= sourceFormat.getAudioFormat().getChannels())
+                ac = propVal;
+            }
             else if ("audiocodec".equals(propName))
               acodec = propVal;
             else if ("videobitrate".equals(propName))
@@ -593,7 +601,14 @@ public class FFMPEGTranscoder implements TranscodeEngine
             else if ("bframes".equals(propName))
               bf = propVal;
             else if ("fps".equals(propName))
-              r = propVal;
+              if("SOURCE".equals(propVal))
+              {
+                DecimalFormat twoDForm = new DecimalFormat("#.##");
+                r = twoDForm.format(sourceFormat.getVideoFormat().getFps());
+                g = (Math.round(sourceFormat.getVideoFormat().getFps()) * 10) + "";
+              }
+              else    
+                r = propVal;
             else if ("audiosampling".equals(propName))
               ar = propVal;
             else if ("resolution".equals(propName))
@@ -603,6 +618,12 @@ public class FFMPEGTranscoder implements TranscodeEngine
                 s = MMC.getInstance().isNTSCVideoFormat() ? "720x480" : "720x576";
                 deinterlace = false;
               }
+              else if("720".equals(propVal))
+                s = "1280x720";
+              else if("1080".equals(propVal))
+                s = "1920x1080";
+              else if("SOURCE".equals(propVal))
+                s = inSourceFormat.getVideoFormat().getWidth() + "x" + inSourceFormat.getVideoFormat().getHeight();
               else
                 s = MMC.getInstance().isNTSCVideoFormat() ? "352x240" : "352x288";
             }
