@@ -57,7 +57,6 @@ public class FormatParser
     { "dtsc / 0x63737464", MediaFormat.DTS },
     { "mlpa / 0x61706c6d", MediaFormat.DOLBY_HD },
     { "AC-3 / 0X332D6361", MediaFormat.AC3 },
-    { "MATROSKA,WEBM", MediaFormat.MATROSKA },
   };
 
   private static FormatParserPlugin formatParserPluginInstance;
