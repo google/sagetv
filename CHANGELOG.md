@@ -1,10 +1,13 @@
 # Change Log
 
+
 ##Next
 * Added ability to used fixed push format when transcoding is required, but not low bandwidth
 * Added 720, 1080 and SOURCE (use video source resolution) options to FFMPEGTranscoder for fixed transcoding
 * Added SOURCE option to FPS that calculates GOP automatically and uses FPS of source videos
 * Added an option for Audio Channels.  Does not allow a value greater than source audio
+* Fix for conversion to MKV. Removed Format substitution of "MATROSKA" -> "MATROSKA,WEBM"
+
 
 ## Version 9.2.2 (2020-05-16)
 * Fixed MpegDeMux that crashed some MPEG2 playback (Windows)
