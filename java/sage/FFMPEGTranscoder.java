@@ -601,6 +601,7 @@ public class FFMPEGTranscoder implements TranscodeEngine
             else if ("bframes".equals(propName))
               bf = propVal;
             else if ("fps".equals(propName))
+            {
               if("SOURCE".equals(propVal))
               {
                 DecimalFormat twoDForm = new DecimalFormat("#.##");
@@ -609,6 +610,7 @@ public class FFMPEGTranscoder implements TranscodeEngine
               }
               else    
                 r = propVal;
+            }
             else if ("audiosampling".equals(propName))
               ar = propVal;
             else if ("resolution".equals(propName))
