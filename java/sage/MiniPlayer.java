@@ -1097,6 +1097,14 @@ public class MiniPlayer implements DVDMediaPlayer
             sage.media.format.ContainerFormat currFileFormat = currMF.getFileFormat();
             if (currFileFormat != null && "true".equals(currFileFormat.getMetadataProperty("VARIED_FORMAT")))
               currFileFormat = sage.media.format.FormatParser.getFileFormat(file);
+            
+            //Check to see if there was a fixed format defined for transcoding and that the file has video
+            if(fixedPushFormat != null && fixedPushFormat.length() > 0 
+                    && currFileFormat != null && currFileFormat.getVideoFormats().length > 0)
+            {
+                if (Sage.DBG) System.out.println("Overriding transcode mode because a fixed format was set by client");
+                prefTranscodeMode = fixedPushFormat;
+            }
             mpegSrc.setStreamTranscodeMode(prefTranscodeMode, currFileFormat);
             transcoded = false;
             serverSideTranscoding = true;
