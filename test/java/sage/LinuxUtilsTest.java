@@ -34,7 +34,7 @@ public class LinuxUtilsTest
 
     // no IP on this one, but it is UP, but should return null
     String inetinfo3 = "eth0      Link encap:Ethernet  HWaddr 94:de:80:01:64:bb  \n" +
-      "          UP BROADCAST RUNNING SLAVE MULTICAST  MTU:1500  Metric:1\n" +
+      "          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1\n" +
       "          RX packets:11966319 errors:0 dropped:0 overruns:0 frame:0\n" +
       "          TX packets:17523316 errors:0 dropped:0 overruns:0 carrier:0\n" +
       "          collisions:0 txqueuelen:1000 \n" +
