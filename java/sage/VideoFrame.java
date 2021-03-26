@@ -4829,6 +4829,25 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
     return (testInput != null) && testInput.getCaptureDevice().equals(capDev);
   }
 
+  /***
+   * Determine if the client is currently transcoding the mediafile
+   * @param mf The media file object check
+   * @return Returns true if the client is currently transcoding the given mediafile
+   */
+  public boolean isTranscodingMediaFile(MediaFile mf)
+  {    
+    if(player instanceof MiniPlayer)
+    {
+      //((MiniPlayer)player).getFi
+      if(this.getCurrFile() == mf && ((MiniPlayer)player).isTranscoding())
+      {
+        return true;
+      }
+    }
+      
+    return false;
+  }
+  
   // This returns true if there is another operation sitting in the job queue that would terminate
   // the currently processing playback request. This is used to avoid error situations where we are
   // transitioning between pieces of content quickly and one that we are trying to watch may have already

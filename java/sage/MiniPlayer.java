@@ -617,6 +617,20 @@ public class MiniPlayer implements DVDMediaPlayer
     }
   }
 
+  /***
+   * Determines if this instance of the miniplayer is transcoding
+   * @return Returns true if the miniplayer is transcoding 
+   */
+  public boolean isTranscoding()
+  {
+    if(this.mpegSrc.getTranscoder() != null && serverSideTranscoding)
+    {
+      return true;
+    }      
+    
+    return false;
+  }
+  
   public void load(byte majorTypeHint, byte minorTypeHint, String encodingHint, java.io.File file, String hostname, boolean timeshifted, long bufferSize) throws PlaybackException
   {
     VideoFrame vf = VideoFrame.getVideoFrameForPlayer(MiniPlayer.this);
