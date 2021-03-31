@@ -623,7 +623,7 @@ public class MiniPlayer implements DVDMediaPlayer
    */
   public boolean isTranscoding()
   {
-    if(this.mpegSrc.getTranscoder() != null && serverSideTranscoding)
+    if(mpegSrc != null && mpegSrc.getTranscoder() != null && serverSideTranscoding)
     {
       return true;
     }      

@@ -4174,7 +4174,7 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
 
             switchThis = fastMuxSwitch && es.capDev.supportsFastMuxSwitch() && es.capDev.getRecordedBytes() > 0 && es.currRecordFile.getSize() > 0;
 
-            if(this.isAClientControllingCaptureDevice(es.capDev) && this.isClientTranscodingMediaFile(es.currRecordFile))
+            if (isAClientControllingCaptureDevice(es.capDev) && isClientTranscodingMediaFile(es.currRecordFile))
             {
               if (Sage.DBG) System.out.println("Disabling FastMuxSwitch because a client is actively transcoding the recording");
               switchThis = false;
@@ -4432,20 +4432,19 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
         }
 
         if ((es.currRecord != newRecord) && (es.currRecord != null))
-	{
-	  if (Sage.DBG) System.out.println("Change in record, logging recorded data.");
-	  
-	  switchThis = fastMuxSwitch && es.capDev.supportsFastMuxSwitch() && es.capDev.getRecordedBytes() > 0 && es.currRecordFile.getSize() > 0;
-	  
-	  if(this.isAClientControllingCaptureDevice(es.capDev) && this.isClientTranscodingMediaFile(es.currRecordFile))
-	  {
+        {
+          if (Sage.DBG) System.out.println("Change in record, logging recorded data.");
+          switchThis = fastMuxSwitch && es.capDev.supportsFastMuxSwitch() && es.capDev.getRecordedBytes() > 0 && es.currRecordFile.getSize() > 0;
+
+          if(this.isAClientControllingCaptureDevice(es.capDev) && this.isClientTranscodingMediaFile(es.currRecordFile))
+          {
             if (Sage.DBG) System.out.println("Disabling FastMuxSwitch because a client is actively transcoding the recording");
             switchThis = false;
-	  }
-	  
-	  endRecord(es, currTime, switchThis);
-	  switchAny = true;
-	}
+          }
+
+          endRecord(es, currTime, switchThis);
+          switchAny = true;
+        }
 
         if ((es.currRecord != newRecord) && (newRecord != null))
         {
