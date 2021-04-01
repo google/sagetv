@@ -4836,10 +4836,9 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
    */
   public boolean isTranscodingMediaFile(MediaFile mf)
   {    
-    if(player instanceof MiniPlayer)
+    if (player instanceof MiniPlayer)
     {
-      //((MiniPlayer)player).getFi
-      if(this.getCurrFile() == mf && ((MiniPlayer)player).isTranscoding())
+      if (this.getCurrFile() == mf && ((MiniPlayer)player).isTranscoding())
       {
         return true;
       }
