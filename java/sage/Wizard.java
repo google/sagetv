@@ -820,7 +820,8 @@ public class Wizard implements EPGDBPublic2
           if (currWaste != null)
           {
             Airing wasteAir = currWaste.getAiring();
-            if (wasteAir != null && wasteAir.isTV())
+            if (wasteAir != null && wasteAir.isTV() &&
+                (currWaste.manual || wasteAir.getStartTime() > wasteExpireTime))
             {
               toSave.add(wasteAir);
             }
