@@ -34,7 +34,7 @@
 			Vital="yes"
 			Name="Redist\jre-8u191-windows-x64.exe"
 			SourceFile="redist\jre-8u191-windows-x64.exe"
-			DownloadUrl="https://dl.bintray.com/opensagetv/sagetv/installersupportfiles/1.101/jre-8u191-windows-x64.exe"
+			DownloadUrl="https://github.com/OpenSageTV/sagetv-windows/releases/download/v1.0/jre-8u191-windows-x64.exe"
 			InstallCommand=" /s AUTO_UPDATE=0 INSTALL_SILENT=1 REBOOT=0 /L*v &quot;[WixBundleLog_Java8Runtime]&quot;"
 			DetectCondition="JavaCurrentVersion AND (JavaCurrentVersion &gt;= v1.7)">
 		      </ExePackage>
@@ -63,7 +63,7 @@
 			Vital="yes"
 			Name="Redist\jre-8u191-windows-i586.exe"
 			SourceFile="redist\jre-8u191-windows-i586.exe"
-			DownloadUrl="https://dl.bintray.com/opensagetv/sagetv/installersupportfiles/1.101/jre-8u191-windows-i586.exe"
+			DownloadUrl="https://github.com/OpenSageTV/sagetv-windows/releases/download/v1.0/jre-8u191-windows-i586.exe"
 			InstallCommand=" /s AUTO_UPDATE=0 INSTALL_SILENT=1 REBOOT=0 /L*v &quot;[WixBundleLog_Java8Runtime]&quot;"
 			DetectCondition="JavaCurrentVersion AND (JavaCurrentVersion &gt;= v1.7)">
 		      </ExePackage>

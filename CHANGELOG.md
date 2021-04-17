@@ -1,10 +1,10 @@
 # Change Log
 
-## Version 9.2.4 (2021-04-02)
+## Version 9.2.4 (2021-04-16)
 * Fixed database clearing of non-manual Wasted objects that were over a year old (comment indicated it happened, but was never implemented before)
 * Fixed crash on extenders when loading 4K images that use diffused textures
 
-## Version 9.2.3
+## Version 9.2.3 (not released)
 * Added ability to use fixed push format when transcoding is required, but not low bandwidth
 * Added 720, 1080 and SOURCE (use video source resolution) options to FFMPEGTranscoder for fixed transcoding
 * Added SOURCE option to FPS that calculates GOP automatically and uses FPS of source videos
