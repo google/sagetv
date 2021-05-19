@@ -1,5 +1,10 @@
 # Change Log
 
+* Fixed 32-bit installer incorrectly removing uu_irsage.dll which broke USB-UIRT (Windows)
+* Visual Studio launcher project cleanup (Windows)
+* Added Detailed Setup -> Customize option to disable display of thumbnails/artwork for shows.
+* Added Detailed Setup -> Customize option to disable display of channel logos.
+
 ## Version 9.2.4 (2021-04-16)
 * Fixed database clearing of non-manual Wasted objects that were over a year old (comment indicated it happened, but was never implemented before)
 * Fixed crash on extenders when loading 4K images that use diffused textures

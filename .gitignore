@@ -1,5 +1,6 @@
 # Lines that start with '#' are comments.
 *~
+*.bak
 config*.log
 
 .buildnumber
@@ -15,9 +16,18 @@ config*.log
 /native/**/*.a
 /native/**/*.so
 /native/**/*.vcxproj.user
+/native/**/*.aps
 /native/**/Win32/
 /native/**/x64/
+/native/**/Release
+/native/exe/HCWIRBlasterCOM/HCWIRBlasterCOM_*
 
+/third_party/ffmpeg/lib*/*_list.c
+/third_party/ffmpeg/lib*/*.ver 
+/third_party/ffmpeg/doc/*.3
+/third_party/ffmpeg/*/*.a
+/third_party/ffmpeg/*/*.def
+/third_party/ffmpeg/*/*.dll
 /third_party/**/*.o
 /third_party/**/*.lo
 /third_party/**/*.la
