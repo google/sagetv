@@ -165,10 +165,13 @@ test {
  */
 tasks.withType(JavaCompile) {
   //options.fork=true
-  options.compilerArgs << "-sourcepath" << sourceSets.main.java.srcDirs.join(java.io.File.pathSeparator)
+  options.sourcepath = project.files([])
+  options.sourcepath.setFrom(sourceSets.main.java.srcDirs)
 }
 
-task miniclient(type: JavaCompile) << {
+task miniclient(type: JavaCompile) {
+  doLast {
+  }
 }
 
 // remove the Sage.jar before updating it
@@ -181,7 +184,7 @@ task sageJar(type: Jar) {
   description = 'Build the Sage.jar'
   archiveName = sageJarName
   destinationDir = file(sageJarDestinationDir)
-  from files(sourceSets.main.output.classesDir) {
+  from files(sourceSets.main.output.classesDirs) {
     // exclude the Mac stuff for now
     excludes = [
       'sage/miniclient/**',
@@ -213,7 +216,7 @@ task cleanMiniJar(type: Delete) {
 task miniclientJar(type: Jar) {
   archiveName = miniJarName
   destinationDir = file(miniJarDestinationDir)
-  from files(sourceSets.miniclient.output.classesDir) {
+  from files(sourceSets.miniclient.output.classesDirs) {
   }
 
   // Add in images and localization files
@@ -238,39 +241,41 @@ def linuxScript(String script) {
 }
 
 // currently Linux Only -- Need to look at supporting Windows 
-task(linuxMiniClientRelease) << {
-  if (!OperatingSystem.current().isLinux()) {
-    throw new GradleException('This target is not supported on Windows, yet.');
-  }
-
-  if (!(new File('build/so/libSage.so')).exists()) {
-    linuxScript('./buildso.sh');
-  }
-
-  if (!(new File('build/elf/mplayer')).exists()) {
-    linuxScript('./build3rdparty.sh');
-  }
-
-  delete miniclientReleaseDestinationDir
-
-  copy {
-    from('build/minirelease/MiniClient.jar') {
+task(linuxMiniClientRelease) {
+  doLast {
+    if (!OperatingSystem.current().isLinux()) {
+      throw new GradleException('This target is not supported on Windows, yet.');
     }
-    from('build/clientfiles/')
-    from 'third_party/swscale/libswscale.so'
 
-    from('build/so/libSageX11.so') {
-      rename 'libSageX11.so', 'libSage.so'
+    if (!(new File('build/so/libSage.so')).exists()) {
+      linuxScript('./buildso.sh');
     }
-    from('build/so/libjtux.so')
-    from('build/so/libImageLoader.so')
-    from('build/elf/mplayer')
 
-    from(configurations.miniclientRuntime)
+    if (!(new File('build/elf/mplayer')).exists()) {
+      linuxScript('./build3rdparty.sh');
+    }
 
-    into(miniclientReleaseDestinationDir)
+    delete miniclientReleaseDestinationDir
 
-    exclude '**/*-macosx-*', '**/*-solaris-*', '**/*-windows-*', '**/*-android-*', '**/*-linux-arm*'
+    copy {
+      from('build/minirelease/MiniClient.jar') {
+      }
+      from('build/clientfiles/')
+      from 'third_party/swscale/libswscale.so'
+
+      from('build/so/libSageX11.so') {
+        rename 'libSageX11.so', 'libSage.so'
+      }
+      from('build/so/libjtux.so')
+      from('build/so/libImageLoader.so')
+      from('build/elf/mplayer')
+
+      from(configurations.miniclientRuntime)
+
+      into(miniclientReleaseDestinationDir)
+
+      exclude '**/*-macosx-*', '**/*-solaris-*', '**/*-windows-*', '**/*-android-*', '**/*-linux-arm*'
+    }
   }
 }
 
@@ -282,16 +287,18 @@ task sageJavadoc(type: Javadoc) {
 /**
  * Package SageTV jar and the STV together
  */
-task(packageSageJar) << {
-  file(sageJarPackageDestinationDir).mkdirs();
+task(packageSageJar)  {
+  doLast {
+    file(sageJarPackageDestinationDir).mkdirs();
 
-  ant.zip(destfile: new File(sageJarPackageDestinationDir, "SageJar-${baseVersion}.zip").getAbsolutePath()) {
-    fileset(dir: sageJarDestinationDir) {
-      include(name: '*.jar')
-    }
-    zipfileset(dir: 'stvs/SageTV7', prefix: 'STVs/SageTV7/') {
-      include(name: 'SageTV7.xml')
+    ant.zip(destfile: new File(sageJarPackageDestinationDir, "SageJar-${baseVersion}.zip").getAbsolutePath()) {
+      fileset(dir: sageJarDestinationDir) {
+        include(name: '*.jar')
+      }
+      zipfileset(dir: 'stvs/SageTV7', prefix: 'STVs/SageTV7/') {
+        include(name: 'SageTV7.xml')
 
+      }
     }
   }
 }
@@ -340,47 +347,51 @@ def getBuildNumber() {
  * Task to update the build number in SageConstants based on the # of git commits
  * Not sure I like it, yet.
  */
-task(updateBuildNumber) << {
-  buildVersion = getBuildNumber()
+task(updateBuildNumber)  {
+  doLast {
+    buildVersion = getBuildNumber()
 
-  def file = new File('java/sage/SageConstants.java');
-  def fileBak = new File('java/sage/SageConstants.java.bak');
+    def file = new File('java/sage/SageConstants.java');
+    def fileBak = new File('java/sage/SageConstants.java.bak');
 
-  if (!fileBak.exists()) {
-    fileBak.text = file.text
-    System.out.println("Backed up ${file}")
+    if (!fileBak.exists()) {
+      fileBak.text = file.text
+      System.out.println("Backed up ${file}")
+    }
+
+    // update SageConstants.java
+    ant.replaceregexp(
+      file: 'java/sage/SageConstants.java',
+      match: "public static final int BUILD_VERSION = [0-9]+;",
+      replace: "public static final int BUILD_VERSION = ${buildVersion};"
+    )
+
+    // reupdate these values since buildVersion changes	
+    baseVersion = "${majorVersion}.${minorVersion}.${microVersion}.${buildVersion}"
+    versionArch = "${baseVersion}_" + (arch == 64 ? 'amd64' : 'i386')
+
+    System.out.println("SAGETV VERSION ${versionArch}");
+
+    // save buildnumber to file
+    // we'll be referencing it later
+    // Eventually we'll do this, but for now, fetch it every time
+    // new File('.buildnumber').write(buildVersion)
   }
-
-  // update SageConstants.java
-  ant.replaceregexp(
-    file: 'java/sage/SageConstants.java',
-    match: "public static final int BUILD_VERSION = [0-9]+;",
-    replace: "public static final int BUILD_VERSION = ${buildVersion};"
-  )
-
-  // reupdate these values since buildVersion changes	
-  baseVersion = "${majorVersion}.${minorVersion}.${microVersion}.${buildVersion}"
-  versionArch = "${baseVersion}_" + (arch == 64 ? 'amd64' : 'i386')
-
-  System.out.println("SAGETV VERSION ${versionArch}");
-
-  // save buildnumber to file
-  // we'll be referencing it later
-  // Eventually we'll do this, but for now, fetch it every time
-  // new File('.buildnumber').write(buildVersion)
 }
 
 /**
  * restore the SageConstants.java that was modified during updateBuildNumber
  */
-task(restoreSageConstants) << {
-  def file = new File('java/sage/SageConstants.java');
-  def fileBak = new File('java/sage/SageConstants.java.bak');
+task(restoreSageConstants) {
+  doLast {
+    def file = new File('java/sage/SageConstants.java');
+    def fileBak = new File('java/sage/SageConstants.java.bak');
 
-  if (fileBak.exists()) {
-    file.text = fileBak.text
-    System.out.println("Restored ${file}");
-    fileBak.deleteOnExit()
+    if (fileBak.exists()) {
+      file.text = fileBak.text
+      System.out.println("Restored ${file}");
+      fileBak.deleteOnExit()
+    }
   }
 }
 
