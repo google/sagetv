@@ -24,13 +24,13 @@ config*.log
 
 /third_party/ffmpeg/lib*/*_list.c
 /third_party/ffmpeg/lib*/*.ver 
-/third_party/ffmpeg/doc 
+/third_party/ffmpeg/doc/*.3
+/third_party/ffmpeg/*/*.a
+/third_party/ffmpeg/*/*.def
 /third_party/**/*.o
 /third_party/**/*.lo
-/third_party/**/*.a
 /third_party/**/*.la
 /third_party/**/*.pc
-/third_party/**/*.def
 /third_party/**/*.dll
 /third_party/**/*.vcxproj.user
 /third_party/Microsoft/**/Win32/
