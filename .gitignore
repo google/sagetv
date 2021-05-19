@@ -27,11 +27,11 @@ config*.log
 /third_party/ffmpeg/doc/*.3
 /third_party/ffmpeg/*/*.a
 /third_party/ffmpeg/*/*.def
+/third_party/ffmpeg/*/*.dll
 /third_party/**/*.o
 /third_party/**/*.lo
 /third_party/**/*.la
 /third_party/**/*.pc
-/third_party/**/*.dll
 /third_party/**/*.vcxproj.user
 /third_party/Microsoft/**/Win32/
 /third_party/Microsoft/**/x64/
