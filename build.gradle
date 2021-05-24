@@ -1,7 +1,7 @@
 import org.gradle.internal.os.OperatingSystem
 
 plugins {
-  id "com.jfrog.bintray" version "1.7.3"
+  id "com.github.breadmoirai.github-release" version "2.2.12"
 }
 
 apply plugin: "java"
@@ -30,17 +30,22 @@ ext {
   releaseBuild = (System.getProperty("SAGETV_RELEASE", System.getenv("SAGETV_RELEASE")) != null)
   snapshotId = (releaseBuild ? "" : ("SNAPSHOT-" + new java.text.SimpleDateFormat("yyyyMMdd_hhmm").format(new java.util.Date())))
 
-  versionText = new File('java/sage/Version.java').text
+  versionText = file('java/sage/Version.java').text
   majorVersion = (versionText =~ /MAJOR_VERSION = ([0-9]+)/)[0][1]
   minorVersion = (versionText =~ /MINOR_VERSION = ([0-9]+)/)[0][1]
   microVersion = (versionText =~ /MICRO_VERSION = ([0-9]+)/)[0][1]
   buildVersion = getBuildNumber()
 
-  baseVersion = "${majorVersion}.${minorVersion}.${microVersion}.${buildVersion}"
-  versionArch = "${baseVersion}_" + (arch == 64 ? 'amd64' : 'i386')
+  baseVersion  = "${majorVersion}.${minorVersion}.${microVersion}"
+  fullVersion = "${baseVersion}.${buildVersion}"
+  versionArch = "${fullVersion}_" + (arch == 64 ? 'amd64' : 'i386')
+
+  changelogText = file('CHANGELOG.md').text
+  releaseVersion = (changelogText =~ /## (Version ${baseVersion} .*)/)[0][1]
+  releaseVersion = releaseVersion.replaceAll("[\\.\\(\\)]", "").replaceAll("[\\s]", "-").toLowerCase()
 }
 
-version = baseVersion
+version = fullVersion
 
 // Just printing out the SAGETV build version for informational purposes
 // System.out.println("SAGETV VERSION ${versionArch}");
@@ -291,7 +296,7 @@ task(packageSageJar)  {
   doLast {
     file(sageJarPackageDestinationDir).mkdirs();
 
-    ant.zip(destfile: new File(sageJarPackageDestinationDir, "SageJar-${baseVersion}.zip").getAbsolutePath()) {
+    ant.zip(destfile: new File(sageJarPackageDestinationDir, "SageJar-${fullVersion}.zip").getAbsolutePath()) {
       fileset(dir: sageJarDestinationDir) {
         include(name: '*.jar')
       }
@@ -367,8 +372,8 @@ task(updateBuildNumber)  {
     )
 
     // reupdate these values since buildVersion changes	
-    baseVersion = "${majorVersion}.${minorVersion}.${microVersion}.${buildVersion}"
-    versionArch = "${baseVersion}_" + (arch == 64 ? 'amd64' : 'i386')
+    fullVersion = "${majorVersion}.${minorVersion}.${microVersion}.${buildVersion}"
+    versionArch = "${fullVersion}_" + (arch == 64 ? 'amd64' : 'i386')
 
     System.out.println("SAGETV VERSION ${versionArch}");
 
@@ -475,38 +480,24 @@ linuxRunServer.doFirst {
 }
 
 // Upload tasks
-// use ./gradlew bintrayUpload
-// make sure your BINTRAY_API is set in the environment
+// use ./gradlew githubRelease
+// make sure your OPENSAGETV_TOKEN is set in the environment
 // 
-bintray {
-  user = System.getenv("BINTRAY_USER")
-  key = System.getenv("BINTRAY_API");
-  filesSpec {
-    // from 'build/release'
-    from('build') {
-      include '*.tar.gz', '*.deb', '*.zip'
-    }
-    into "sagetv/${baseVersion}"
-  }
-  dryRun = false //Whether to run this as dry-run, without deploying
-  publish = true //If version should be auto published after an upload
-  pkg {
-    repo = 'sagetv'
-    name = 'SageTV'
-    userOrg = 'opensagetv'
-    desc = "SageTV Release"
-    licenses = ['Apache-2.0']
-    vcsUrl = 'https://github.com/google/sagetv'
-    labels = ['sagetv']
-    publicDownloadNumbers = true
-    version {
-      name = "$baseVersion"
-      released = new Date()
-      desc = "SageTV ${baseVersion}"
-      //vcsTag = "V${version}"
-      //attributes = ['gradle-plugin': 'com.use.less:com.use.less.gradle:gradle-useless-plugin']
-    }
-  }
+githubRelease
+{
+  token System.getenv("OPENSAGETV_TOKEN") 
+  owner "OpenSageTV"
+  repo "sagetv-linux"
+  tagName "${version}"
+  targetCommitish "main"
+  body {"""\
+# SageTV Version ${version} for Linux
+
+Changelog for this version:  https://github.com/google/sagetv/blob/master/CHANGELOG.md#${releaseVersion}
+
+Source code for SageTV:  https://github.com/google/sagetv
+""" }
+  releaseAssets = fileTree(dir: stageBuildDir, includes: ['*.tar.gz', '*.deb', '*.zip'])
 }
 
 // This get run when you call ./gradlew without any targets
