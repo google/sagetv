@@ -47,9 +47,6 @@ ext {
 
 version = fullVersion
 
-System.out.println("DEBUG TEST_TOKEN:" + System.getenv("TEST_TOKEN"))
-System.out.println("DEBUG HIDDEN_TOKEN:" + System.getenv("HIDDEN_TOKEN"))
-
 // Just printing out the SAGETV build version for informational purposes
 // System.out.println("SAGETV VERSION ${versionArch}");
 
@@ -488,7 +485,7 @@ linuxRunServer.doFirst {
 // 
 githubRelease
 {
-  token System.getenv("OPENSAGETV_TOKEN") 
+  token System.getenv("OPENSAGETV_TOKEN") ?: 'null'
   owner "OpenSageTV"
   repo "sagetv-linux"
   tagName "${version}"
