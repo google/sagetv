@@ -48,6 +48,7 @@ ext {
 version = fullVersion
 
 System.out.println("DEBUG TEST_TOKEN:" + System.getenv("TEST_TOKEN"))
+System.out.println("DEBUG HIDDEN_TOKEN:" + System.getenv("HIDDEN_TOKEN"))
 
 // Just printing out the SAGETV build version for informational purposes
 // System.out.println("SAGETV VERSION ${versionArch}");
