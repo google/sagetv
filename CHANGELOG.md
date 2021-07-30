@@ -1,5 +1,8 @@
 # Change Log
 
+## Next ##
+* Added option to FFMPEGTranscoder to allow for a setting to copy video or audio 
+
 ## Version 9.2.5 (2021-05-24)
 * Fixed 32-bit installer incorrectly removing uu_irsage.dll which broke USB-UIRT (Windows)
 * Visual Studio launcher project cleanup (Windows)

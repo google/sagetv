@@ -635,9 +635,29 @@ public class FFMPEGTranscoder implements TranscodeEngine
           catch (NumberFormatException e)
           {}
         }
-
-        xcodeParams = "-f " + f + " -vcodec " + vcodec + " -s " + s + " -ac " + ac + " -g " + g + " -bf " + bf + (deinterlace ? " -deinterlace " : "") +
-            " -acodec " + acodec + " -r " + r + " -b " + b + " -ar " + ar + " -ab " + ab + " -packetsize " + packetsize;
+        
+        xcodeParams = "-f " + f;
+        
+        if(vcodec.equals("COPY"))
+        {
+          xcodeParams += " -vcodec copy";
+        }
+        else
+        {
+          xcodeParams += " -vcodec " + vcodec  + " -b " + b + " -r " + r + " -s " + s  + " -g " + g + " -bf " + bf + (deinterlace ? " -deinterlace " : "");
+        }
+        
+        if(acodec.equals("COPY"))
+        {
+          xcodeParams += " -acodec copy";
+        }
+        else
+        {
+          xcodeParams += " -acodec " + acodec + " -ab " + ab + " -ar " + ar  + " -ac " + ac;
+        }
+        
+        xcodeParams += " -packetsize " + packetsize;
+        
       }
       dynamicRateAdjust = false;
     }
