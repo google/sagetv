@@ -644,7 +644,7 @@ public class FFMPEGTranscoder implements TranscodeEngine
         }
         else
         {
-          xcodeParams += " -vcodec " + vcodec + " -s " + s + " -ac " + ac + " -g " + g + " -bf " + bf + (deinterlace ? " -deinterlace " : "");
+          xcodeParams += " -vcodec " + vcodec  + " -b " + b + " -r " + r + " -s " + s  + " -g " + g + " -bf " + bf + (deinterlace ? " -deinterlace " : "");
         }
         
         if(acodec.equals("COPY"))
@@ -653,7 +653,7 @@ public class FFMPEGTranscoder implements TranscodeEngine
         }
         else
         {
-          xcodeParams += " -acodec " + acodec + " -r " + r + " -b " + b + " -ar " + ar + " -ab " + ab;
+          xcodeParams += " -acodec " + acodec + " -ab " + ab + " -ar " + ar  + " -ac " + ac;
         }
         
         xcodeParams += " -packetsize " + packetsize;
