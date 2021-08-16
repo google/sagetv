@@ -1,7 +1,9 @@
 # Change Log
 
 ## Next ##
-* Added option to FFMPEGTranscoder to allow for a setting to copy video or audio 
+* Added option to FFMPEGTranscoder to allow for a setting to copy video or audio
+* Added a new option to the Miniclient for fixed remux profile.  This is used when the audio/video codec are supported, but the container is not
+* Added some additional constraints on -aspect swith in FFMPEGTranscoder to make sure an invalid aspect ratio is not passed to the transcoder
 
 ## Version 9.2.5 (2021-05-24)
 * Fixed 32-bit installer incorrectly removing uu_irsage.dll which broke USB-UIRT (Windows)
