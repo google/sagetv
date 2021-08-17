@@ -916,7 +916,7 @@ public class FFMPEGTranscoder implements TranscodeEngine
       if (sourceFormat != null)
       {
         sage.media.format.VideoFormat vidForm = sourceFormat.getVideoFormat();
-        if (vidForm != null)
+        if (vidForm != null && ((vidForm.getArNum() > 0 && vidForm.getArDen() > 0) || (vidForm.getWidth() > 0 && vidForm.getHeight() > 0)))
         {
           xcodeParamsVec.add("-aspect");
           if (vidForm.getArNum() > 0 && vidForm.getArDen() > 0)
@@ -1012,7 +1012,7 @@ public class FFMPEGTranscoder implements TranscodeEngine
       if (sourceFormat != null)
       {
         sage.media.format.VideoFormat vidForm = sourceFormat.getVideoFormat();
-        if (vidForm != null)
+        if (vidForm != null && ((vidForm.getArNum() > 0 && vidForm.getArDen() > 0) || (vidForm.getWidth() > 0 && vidForm.getHeight() > 0)))
         {
           xcodeParamsVec.add("-aspect");
           if (vidForm.getArNum() > 0 && vidForm.getArDen() > 0)
@@ -1110,7 +1110,7 @@ public class FFMPEGTranscoder implements TranscodeEngine
       {
         // Preserve aspect ratio properly
         sage.media.format.VideoFormat vidForm = sourceFormat.getVideoFormat();
-        if (vidForm != null)
+        if (vidForm != null && ((vidForm.getArNum() > 0 && vidForm.getArDen() > 0) || (vidForm.getWidth() > 0 && vidForm.getHeight() > 0)))
         {
           xcodeParamsVec.add("-aspect");
           if (vidForm.getArNum() > 0 && vidForm.getArDen() > 0)
