@@ -3849,6 +3849,7 @@ public class MiniClientSageRenderer extends SageRenderer
         sendGetPropertyAsync("PUSH_AV_CONTAINERS");
         sendGetPropertyAsync("STREAMING_PROTOCOLS");
         sendGetPropertyAsync("FIXED_PUSH_MEDIA_FORMAT");
+        sendGetPropertyAsync("FIXED_PUSH_REMUX_FORMAT");
         sendGetPropertyAsync("OPENURL_INIT");
         sendGetPropertyAsync("FRAME_STEP");
         sendGetPropertyAsync("GFX_CURSORPROP");
@@ -4259,6 +4260,9 @@ public class MiniClientSageRenderer extends SageRenderer
 
         fixedPushMediaFormatProp = recvr.getStringReply();
         if (Sage.DBG) System.out.println("MiniClient FIXED_PUSH_MEDIA_FORMAT=" + fixedPushMediaFormatProp);
+        
+        fixedPushRemuxFormatProp = recvr.getStringReply();
+        if (Sage.DBG) System.out.println("MiniClient FIXED_PUSH_REMUX_FORMAT=" + fixedPushRemuxFormatProp);
 
         String openUrlInit = recvr.getStringReply();
         if (Sage.DBG) System.out.println("MiniClient OPENURL_INIT=" + openUrlInit);
@@ -6463,6 +6467,11 @@ public class MiniClientSageRenderer extends SageRenderer
     return fixedPushMediaFormatProp;
   }
 
+  public String getFixedPushRemuxFormat()
+  {
+    return fixedPushRemuxFormatProp;
+  }
+  
   public boolean isLocalConnection()
   {
     return localConnection;
@@ -7423,6 +7432,7 @@ public class MiniClientSageRenderer extends SageRenderer
   private java.util.Set pushContainers;
   private java.util.Set streamingProtocols;
   private String fixedPushMediaFormatProp;
+  private String fixedPushRemuxFormatProp;
   private boolean detailedPushBufferStats;
   private boolean pushBufferSeeking;
 

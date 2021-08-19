@@ -745,6 +745,10 @@ public class MiniPlayer implements DVDMediaPlayer
       boolean clientCanDoMPEGHD = false;
       hdMediaPlayer = false;
       String fixedPushFormat = null;
+      String fixedPushRemuxFormat = null;
+      boolean containerSupported = false;
+      boolean audioCodecSupported = false;
+      boolean videoCodecSupported = false;
       mediaExtender = true;
       lowBandwidth = false;
       enableBufferFillPause = Sage.getBoolean("miniclient/enable_buffer_fill_on_seek", false);
@@ -782,18 +786,24 @@ public class MiniPlayer implements DVDMediaPlayer
         }
         else
         {
-          clientDoesPull = mcsr.isSupportedPullContainerFormat(currMF.getContainerFormat());
+          containerSupported = clientDoesPull = mcsr.isSupportedPullContainerFormat(currMF.getContainerFormat());
+          
+          // Check the audio & video formats
+          String vidForm = currMF.getPrimaryVideoFormat();
+          String audForm = currMF.getPrimaryAudioFormat();
+          
+          videoCodecSupported = mcsr.isSupportedVideoCodec(vidForm);
+          audioCodecSupported = mcsr.isSupportedAudioCodec(audForm);
+          
           if (clientDoesPull)
           {
-            // Check the audio & video formats
-            String vidForm = currMF.getPrimaryVideoFormat();
-            String audForm = currMF.getPrimaryAudioFormat();
             if (vidForm.length() > 0 && !mcsr.isSupportedVideoCodec(vidForm))
               clientDoesPull = false;
             if (audForm.length() > 0 && !mcsr.isSupportedAudioCodec(audForm))
               clientDoesPull = false;
           }
           fixedPushFormat = mcsr.getFixedPushMediaFormat();
+          fixedPushRemuxFormat = mcsr.getFixedPushRemuxFormat();
 
           // We use HTTP Live Streaming for this
           if (mcsr.isIOSClient() && (currMF.isVideo() || currMF.isTV()))
@@ -1116,8 +1126,18 @@ public class MiniPlayer implements DVDMediaPlayer
             if(fixedPushFormat != null && fixedPushFormat.length() > 0 
                     && currFileFormat != null && currFileFormat.getVideoFormats().length > 0)
             {
-                if (Sage.DBG) System.out.println("Overriding transcode mode because a fixed format was set by client");
-                prefTranscodeMode = fixedPushFormat;
+                if(fixedPushRemuxFormat != null && fixedPushRemuxFormat.length() > 0 
+                        && videoCodecSupported && audioCodecSupported && !containerSupported)
+                {
+                  if (Sage.DBG) System.out.println("Overriding transcode mode because a fixed remux format was set by client and only the container is not supported");
+                  prefTranscodeMode = fixedPushRemuxFormat;
+                }
+                else
+                {
+                  if (Sage.DBG) System.out.println("Overriding transcode mode because a fixed format was set by client");
+                  prefTranscodeMode = fixedPushFormat;
+                }
+                
             }
             mpegSrc.setStreamTranscodeMode(prefTranscodeMode, currFileFormat);
             transcoded = false;
