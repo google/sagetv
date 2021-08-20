@@ -1,6 +1,7 @@
 # Change Log
 
 ## Next ##
+* Updated weather in STV to use OpenWeatherMap
 * Added option to FFMPEGTranscoder to allow for a setting to copy video or audio
 * Added a new option to the Miniclient for fixed remux profile.  This is used when the audio/video codec are supported, but the container is not
 * Added some additional constraints on -aspect switch in FFMPEGTranscoder to make sure an invalid aspect ratio is not passed to the transcoder
