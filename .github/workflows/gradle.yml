@@ -8,7 +8,6 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
-    types: [opened, edited, synchronize, reopened]
 jobs:
   build:
 
@@ -28,8 +27,7 @@ jobs:
     - name: Install packages from apt
       run: sudo apt-get install -y unzip build-essential git libx11-dev libxt-dev libraw1394-dev libavc1394-dev libiec61883-dev libfreetype6-dev yasm autoconf libtool libaudio-dev libpulse-dev libasound-dev
     - name: Setup environment
-      run: export JDK_HOME=$JAVA_HOME
-      run: export JAVA_ARCH=amd64
+      run: export JDK_HOME=$JAVA_HOME && export JAVA_ARCH=amd64
     - name: Build everything
       run: cd build && ./buildall.sh && cd ..
 #    - name: Deploy
