@@ -128,7 +128,7 @@ void SavageStreamsOn(void);
 /**
  * @brief Information on PCI device.
  */
-pciinfo_t pci_info;
+static pciinfo_t pci_info;
 
 uint8_t *vio;
 uint8_t mclk_save[3];

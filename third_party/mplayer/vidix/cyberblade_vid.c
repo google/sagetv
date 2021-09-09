@@ -53,7 +53,7 @@
 
 #include "cyberblade_regs.h"
 
-pciinfo_t pci_info;
+static pciinfo_t pci_info;
 
 char save_colourkey[6];
 char *cyberblade_mem;
