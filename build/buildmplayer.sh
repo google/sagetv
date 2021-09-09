@@ -38,7 +38,7 @@ if [ "$MPLAYER_NEW" = "1" ] ; then
 else
 	# use legacy mplayer build
 	cd ../third_party/mplayer/
-	EXTRA_CFLAGS="-fno-common -DMINGW_MEMALIGN=1" ./configure --host-cc=gcc --disable-gcc-check --enable-runtime-cpudetection --disable-mencoder --disable-gl --enable-directx --enable-largefiles --disable-langinfo --disable-tv --disable-dvdread --disable-dvdread-internal --disable-menu --disable-libdvdcss-internal --enable-pthreads --disable-debug --disable-freetype --disable-fontconfig --enable-stv --enable-stream-sagetv --disable-ivtv --disable-x264 --extra-libs=-lpthread || { echo "Build failed, exiting."; exit 1; }
+	EXTRA_CFLAGS="-fno-common -DMINGW_MEMALIGN=1" ./configure --host-cc=gcc --disable-gcc-check --enable-runtime-cpudetection --disable-mencoder --disable-gl --enable-directx --enable-largefiles --disable-langinfo --disable-tv --disable-dvdread --disable-dvdread-internal --disable-menu --disable-libdvdcss-internal --enable-pthreads --disable-debug --disable-freetype --disable-fontconfig --enable-stv --enable-stream-sagetv --disable-ivtv --disable-x264 --extra-libs=-lpthread --disable-png || { echo "Build failed, exiting."; exit 1; }
 	make -j32 || { echo "Build failed, exiting."; exit 1; }
   echo "Built OLD mplayer"
 	cp -v mplayer ../../build/elf
