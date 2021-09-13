@@ -33,7 +33,7 @@ GCC_VERSION=`(echo 4.6; ${CC:-gcc} -dumpversion) | sort -V | tail -n 1`
 if [ "$GCC_VERSION" != "4.6" ]; then
   OPT_LIBX264_CFLAG="-fno-aggressive-loop-optimizations"
 fi
-./configure "--extra-cflags=-fasm -fno-common -D_FILE_OFFSET_BITS=64 $OPT_LIBX264_CFLAG" || { echo "Build failed, exiting."; exit 1; }
+./configure "--extra-cflags=-fasm -fno-common -D_FILE_OFFSET_BITS=64 $OPT_LIBX264_CFLAG" --enable-shared || { echo "Build failed, exiting."; exit 1; }
 make -j32 || { echo "Build failed, exiting."; exit 1; }
 
 cd ../xvidcore/build/generic

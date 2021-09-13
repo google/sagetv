@@ -74,7 +74,7 @@ extern const Word16 dfh_M24k[];
 /* overall table with the parameters of the
    decoder homing frames for all modes */
 
-const Word16 *dhf[10];
+static const Word16 *dhf[10];
 
 
 /*

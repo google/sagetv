@@ -43,7 +43,7 @@
 #define TRACE_EXIT()
 #endif
 
-pciinfo_t pci_info;
+static pciinfo_t pci_info;
 
 void *pm3_reg_base;
 void *pm3_mem;
