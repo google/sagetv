@@ -30,7 +30,7 @@ jobs:
     if: ${{ github.event_name == 'push' }}
     needs: build
     steps:
-      env:
-        OPENSAGETV_TOKEN: ${{ secrets.opensagetv_token }}
     - name: Deploy
       run: build/deploy.sh
+      env:
+        OPENSAGETV_TOKEN: ${{ secrets.opensagetv_token }}
