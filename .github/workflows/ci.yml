@@ -27,9 +27,17 @@ jobs:
     - name: Build everything
       run: export JDK_HOME=$JAVA_HOME && export JAVA_ARCH=amd64 && cd build && ./buildall.sh && cd ..
   deploy:
+    runs-on: ubuntu-18.04
     if: ${{ github.event_name == 'push' }}
     needs: build
     steps:
+    - uses: actions/checkout@v2
+    - name: Set up Oracle JDK 9
+      uses: actions/setup-java@v2
+      with:
+        java-version: '9'
+        distribution: 'adopt'
+        cache: gradle
     - name: Deploy
       run: build/deploy.sh
       env:
