@@ -1,6 +1,6 @@
 # Change Log
 
-## Next ##
+## Version 9.2.6 (2021-09-13)
 * Updated weather in STV to use OpenWeatherMap
 * Added option to FFMPEGTranscoder to allow for a setting to copy video or audio
 * Added a new option to the Miniclient for fixed remux profile.  This is used when the audio/video codec are supported, but the container is not
