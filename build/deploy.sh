@@ -28,6 +28,12 @@
 # GITHUB_USER       : For tagging
 # GITHUB_EMAIL      : For tagging
 
+# Just exit if we are pull request
+if [ "${PULL_REQUEST}" != "false" ]; then
+    echo "Pull Request.  Will not deploy."
+    exit 0
+fi
+
 MAJOR_VERSION=`grep MAJOR_VERSION java/sage/Version.java | grep -o [0-9]*`
 MINOR_VERSION=`grep MINOR_VERSION java/sage/Version.java | grep -o [0-9]*`
 MICRO_VERSION=`grep MICRO_VERSION java/sage/Version.java | grep -o [0-9]*`
