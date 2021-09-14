@@ -29,7 +29,7 @@
 # GITHUB_EMAIL      : For tagging
 
 # Just exit if we are pull request
-if [ "${PULL_REQUEST}" != "false" ]; then
+if [ -n "${PULL_REQUEST}" ]; then
     echo "Pull Request.  Will not deploy."
     exit 0
 fi
