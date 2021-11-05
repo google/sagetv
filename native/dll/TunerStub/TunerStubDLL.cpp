@@ -35,6 +35,11 @@
 //0x494D38ED, 0x7C44, 0x4666, 0xB8, 0x96, 0x97, 0x74, 0xA8, 0x45, 0x23, 0xBC);
 #endif
 
+#ifdef DIRECTV_TUNER
+  #include <WinHttp.h>
+#endif
+
+
 #define Line_Length 200
 
 BOOL APIENTRY DllMain( HANDLE hModule, 
@@ -144,10 +149,15 @@ TUNERSTUBDLL_API const char* DeviceName() {
   #ifdef EXE_MULTITUNER
 	  return "EXEMultiTunerPlugin";
   #else
-	  return "Stub Transmitter";
+    #ifdef DIRECTV_TUNER
+  	  return "DirecTV HTTP Tuner";
+    #else
+	    return "Stub Transmitter";
+	  #endif
 	#endif
 #endif
 }
+
 TUNERSTUBDLL_API bool OpenDevice(int ComPort) 
 {
 #ifdef HCW_BLASTER
@@ -630,8 +640,69 @@ TUNERSTUBDLL_API void MacroTune(int newNum)
 	CloseHandle(&pi);
 }
   #else
-    TUNERSTUBDLL_API bool CanMacroTune(void) { return false; }
-    TUNERSTUBDLL_API void MacroTune(int channel){}
+    #ifdef DIRECTV_TUNER
+void HttpGetRequest(HINTERNET hConnect, LPCWSTR wstrRequest)
+{
+  DWORD dwSize = 0;
+  DWORD dwDownloaded = 0;
+  LPSTR pszOutBuffer;
+  BOOL  bResults = FALSE;
+  HINTERNET hRequest = NULL;
+
+  if (hConnect) hRequest = WinHttpOpenRequest(hConnect, L"GET", wstrRequest, NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, WINHTTP_FLAG_REFRESH);
+  if (hRequest) bResults = WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0, WINHTTP_NO_REQUEST_DATA, 0, 0, 0);
+  if (bResults) bResults = WinHttpReceiveResponse(hRequest, NULL);
+  if (bResults)
+  {
+    do 
+    {
+      dwSize = 0;
+      WinHttpQueryDataAvailable(hRequest, &dwSize);
+
+      pszOutBuffer = new char[dwSize+1];
+      if (!pszOutBuffer)
+        dwSize=0;
+      else
+      {
+        ZeroMemory (pszOutBuffer, dwSize+1);
+        WinHttpReadData(hRequest, (LPVOID)pszOutBuffer, dwSize, &dwDownloaded);
+        delete [] pszOutBuffer;
+      }
+    } while(dwSize > 0);
+  }
+
+  if (hRequest) WinHttpCloseHandle(hRequest);
+}
+
+TUNERSTUBDLL_API bool CanMacroTune(void) { return true; }
+TUNERSTUBDLL_API void MacroTune(int newNum)
+{
+  HINTERNET hSession = NULL;
+  HINTERNET hConnect = NULL;
+
+  INTERNET_PORT port = 8080;
+
+  wchar_t wstrHost[200];
+  wchar_t wstrPoweron[200];
+  wchar_t wstrTune[200];
+
+  swprintf_s(wstrHost, 200, L"%hs", loadedDevName);
+  swprintf_s(wstrPoweron, 200, L"/remote/processKey?key=poweron");
+  swprintf_s(wstrTune, 200, L"/tv/tune?major=%d", newNum);
+
+  hSession = WinHttpOpen(L"DirecTV Tune/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+  if (hSession) hConnect = WinHttpConnect(hSession, wstrHost, port, 0);
+
+  HttpGetRequest(hConnect, wstrPoweron);
+  HttpGetRequest(hConnect, wstrTune);
+
+  if (hConnect) WinHttpCloseHandle(hConnect);
+  if (hSession) WinHttpCloseHandle(hSession);
+}
+    #else
+      TUNERSTUBDLL_API bool CanMacroTune(void) { return false; }
+      TUNERSTUBDLL_API void MacroTune(int channel){}
+    #endif
   #endif
 
 #endif
