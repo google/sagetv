@@ -1,5 +1,7 @@
 # Change Log
 
+* Added DirecTVTuner DLL for http tuning (Windows)
+
 ## Version 9.2.6 (2021-09-13)
 * Updated weather in STV to use OpenWeatherMap
 * Added option to FFMPEGTranscoder to allow for a setting to copy video or audio

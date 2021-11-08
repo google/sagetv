@@ -326,6 +326,9 @@
       <Component Id="cmp64245AAB05194798872CE52163814445" Guid="{811ACA52-E790-421a-B206-F395471100B1}">
         <File Id="filC80342EABF304526B4B9E39563D32745" KeyPath="yes" Source="$(var.SourceNative)EXEMultiTunerPlugin.dll" />
       </Component>
+      <Component Id="cmpE532319C89724AFDA2132414C2557DF5" Guid="{D3E02EA7-322B-4C29-9AB4-0CE03CE045A1}">
+        <File Id="fil8709DE86D7624B3CA2FBD71FB9475497" KeyPath="yes" Source="$(var.SourceNative)DirecTVTuner.dll" />
+      </Component>
       <Component Id="cmp975E730BBA4A42adB896A4E616DDD977" Guid="{E301FFF7-55AF-48d6-A615-12ACD1CCA30C}">
         <File Id="fil975E730BBA4A42adB896A4E616DDD977" KeyPath="yes" Source="$(var.SourceNative)HCWIRBlaster.dll" />
       </Component>
