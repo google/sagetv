@@ -60,7 +60,7 @@ repositories {
 }
 
 configurations {
-  miniclient.extendsFrom compile
+  miniclient.extendsFrom implementation
 }
 
 // Maybe someday we'll target >1.7 (hopefully)
@@ -69,6 +69,7 @@ sourceCompatibility = 1.7
 
 compileJava {
   options.warnings = false
+  options.compilerArgs.addAll(['--release', '8'])
   //options.incremental = true
   //options.debugOptions.debugLevel = "source,lines,vars"
 }
@@ -125,10 +126,10 @@ sourceSets {
 }
 
 dependencies {
-  testCompile 'org.testng:testng:6.1.1'
-  testCompile "org.mockito:mockito-core:1.9.5"
+  testImplementation 'org.testng:testng:6.1.1'
+  testImplementation "org.mockito:mockito-core:1.9.5"
 
-  compile files(
+  implementation files(
     'third_party/UPnPLib/sbbi-upnplib-1.0.3.jar',
 
     'third_party/Oracle/vecmath.jar',
@@ -136,14 +137,14 @@ dependencies {
     'third_party/JCIFS/jcifs-1.1.6.jar',
   )
 
-  compile 'com.apple:AppleJavaExtensions:1.4'
-  compile "org.jogamp.jogl:jogl-all:$jogampVer"
-  compile "org.jogamp.gluegen:gluegen-rt-main:$jogampVer"
+  implementation 'com.apple:AppleJavaExtensions:1.4'
+  implementation "org.jogamp.jogl:jogl-all:$jogampVer"
+  implementation "org.jogamp.gluegen:gluegen-rt-main:$jogampVer"
 
 
   // Miniclient dependencies for compiling
-  miniclientCompile "org.jogamp.gluegen:gluegen-rt-main:$jogampVer"
-  miniclientCompile "org.jogamp.jogl:jogl-all-main:$jogampVer"
+  miniclientImplementation "org.jogamp.gluegen:gluegen-rt-main:$jogampVer"
+  miniclientImplementation "org.jogamp.jogl:jogl-all-main:$jogampVer"
 }
 
 test {
@@ -275,7 +276,7 @@ task(linuxMiniClientRelease) {
       from('build/so/libImageLoader.so')
       from('build/elf/mplayer')
 
-      from(configurations.miniclientRuntime)
+      from(configurations.miniclientRuntimeClasspath)
 
       into(miniclientReleaseDestinationDir)
 
