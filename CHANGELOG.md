@@ -1,6 +1,6 @@
 # Change Log
 
-## Version 9.2.7 (2022-01-03)
+## Version 9.2.7 (2022-01-04)
 * Update to build process to support build on JDK 11 while supporting Java 8 dockers to run SageTV
 * Added DirecTVTuner DLL for http tuning (Windows)
 
