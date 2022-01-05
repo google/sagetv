@@ -1,3 +1,4 @@
+# No longer in use.  Moved to Github actions
 language: java
 dist: xenial 
 
