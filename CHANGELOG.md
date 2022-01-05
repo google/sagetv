@@ -1,5 +1,9 @@
 # Change Log
 
+## Version 9.2.8 (2022-01-05)
+* Update to build process to support Linux build on Ubuntu 18.04 and JDK 11
+* removed Travis process as no longer used for builds
+
 ## Version 9.2.7 (2022-01-04)
 * Update to build process to support build on JDK 11 while supporting Java 8 dockers to run SageTV
 * Added DirecTVTuner DLL for http tuning (Windows)
