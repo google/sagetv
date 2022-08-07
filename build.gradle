@@ -69,7 +69,7 @@ sourceCompatibility = 1.7
 
 compileJava {
   options.warnings = false
-  options.compilerArgs.addAll(['--release', '8'])
+  //options.compilerArgs.addAll(['--release', '8'])
   //options.incremental = true
   //options.debugOptions.debugLevel = "source,lines,vars"
 }
@@ -315,10 +315,13 @@ task(packageSageJar)  {
  *
  * @return build number
  */
-def getBuildNumber() {
-  def buildVerText = new File('java/sage/SageConstants.java').text
+def getBuildNumber() 
+{
+  def buildVer
+
+  def buildVerText = file('java/sage/SageConstants.java').text
   // pull the build number from the .buildnumber, if it exists, otherwise, look in SageConstants.java
-  def buildVer = (new File('.buildnumber').exists()) ? (new File(".buildnumber").text) : (buildVerText =~ /BUILD_VERSION = ([0-9]+)/)[0][1]
+  buildVer = (file('.buildnumber').exists()) ? (file(".buildnumber").text) : (buildVerText =~ /BUILD_VERSION = ([0-9]+)/)[0][1]
 
   if (OperatingSystem.current().isLinux()) {
     // use git to find the build version
@@ -355,10 +358,14 @@ def getBuildNumber() {
  */
 task(updateBuildNumber)  {
   doLast {
+
+
     buildVersion = getBuildNumber()
 
-    def file = new File('java/sage/SageConstants.java');
-    def fileBak = new File('java/sage/SageConstants.java.bak');
+    println("Project: " + projectDir.absolutePath)
+
+    def file = new File(projectDir.absolutePath + '/java/sage/SageConstants.java');
+    def fileBak = new File(projectDir.absolutePath + '/java/sage/SageConstants.java.bak');
 
     if (!fileBak.exists()) {
       fileBak.text = file.text

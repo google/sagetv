@@ -1367,16 +1367,24 @@ public class FFMPEGTranscoder implements TranscodeEngine
               int timeIdx = sb.indexOf("time=");
               int kbIdx = sb.indexOf("kB", sizeIdx);
               int bitrateIdx = sb.indexOf("bitrate=");
+              
               if (sizeIdx != -1 && timeIdx != -1 && kbIdx != -1 && bitrateIdx != -1)
               {
                 String sizeStr = sb.substring(sizeIdx + 5, kbIdx).trim();
                 String timeStr = sb.substring(timeIdx + 5, bitrateIdx).trim();
+                
                 if (sizeStr.indexOf('.') == -1)
                 {
                   try
                   {
+                    System.out.println("FFMPEG: " + sb.toString().trim());
+                    System.out.println("timeStr: " + timeStr);
+                    
                     lastXcodeStreamTime = Math.round(1000 * Double.parseDouble(timeStr));
                     lastXcodeStreamPosition = Long.parseLong(sizeStr) * 1024;
+                    
+                    System.out.println("lastXcodeStreamTime: " + lastXcodeStreamTime);
+                    System.out.println("lastXcodeStreamPosition: " + lastXcodeStreamPosition);
                   }
                   catch (NumberFormatException e)
                   {
