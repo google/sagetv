@@ -43,6 +43,7 @@ config*.log
 /.cproject
 /.gradle/
 /.settings/
+gradle.properties
 
 # IDEA / jetbrains stuff
 /.idea
@@ -50,6 +51,7 @@ config*.log
 /sagetv.iml
 /build.xml
 /nbproject
+nb-actions-continuous.xml
 
 # Apple OS/X system files
 .DS_Store
