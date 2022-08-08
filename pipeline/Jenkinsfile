@@ -103,7 +103,7 @@ pipeline
             {
                 script
                 {
-                    sh "gradlew sageJar"
+                    sh "./gradlew sageJar"
                     
 
                     //archiveArtifacts artifacts: "dist/TheMovieDB.jar", onlyIfSuccessful: true
