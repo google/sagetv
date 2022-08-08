@@ -105,24 +105,22 @@ pipeline
                 {
                     sh "./gradlew sageJar"
                     
-
-                    //archiveArtifacts artifacts: "dist/TheMovieDB.jar", onlyIfSuccessful: true
+                    archiveArtifacts artifacts: "build/release/Sage.jar", onlyIfSuccessful: true
                 }
             }
         }
 
 
  
-        /*
+        
         stage('Publish local')
         {
              steps
              {
-                cifsPublisher(publishers: [[configName: 'Jars', transfers: [[cleanRemote: false, excludes: '', flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: "builds/${version}", remoteDirectorySDF: false, removePrefix: "dist", sourceFiles: "dist/TheMovieDB.jar"]], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: true]])
-
+                cifsPublisher(publishers: [[configName: 'SageTV', transfers: [[cleanRemote: false, excludes: '', flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: "builds/latest", remoteDirectorySDF: false, removePrefix: "build/release", sourceFiles: "build/release/Sage.jar"]], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: true]])
              }
         }
-        */
+        
         
 
         /*
