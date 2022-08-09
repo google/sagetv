@@ -120,6 +120,10 @@ pipeline
              steps
              {
                 cifsPublisher(publishers: [[configName: 'SageTV', transfers: [[cleanRemote: false, excludes: '', flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: "builds/latest", remoteDirectorySDF: false, removePrefix: "build/release", sourceFiles: "build/release/Sage.jar"]], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: true]])
+                cifsPublisher(publishers: [[configName: 'SageTV', transfers: [[cleanRemote: false, excludes: '', flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: "builds/latest", remoteDirectorySDF: false, removePrefix: "", sourceFiles: "CHANGELOG.md"]], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: true]]) 
+                
+                cifsPublisher(publishers: [[configName: 'SageTV', transfers: [[cleanRemote: false, excludes: '', flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: "builds/${version}", remoteDirectorySDF: false, removePrefix: "build/release", sourceFiles: "build/release/Sage.jar"]], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: true]])
+                cifsPublisher(publishers: [[configName: 'SageTV', transfers: [[cleanRemote: false, excludes: '', flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: "builds/${version}", remoteDirectorySDF: false, removePrefix: "", sourceFiles: "CHANGELOG.md"]], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: true]]) 
              }
         }
         
