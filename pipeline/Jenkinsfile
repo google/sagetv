@@ -73,6 +73,8 @@ pipeline
     {
         appName = 'SageTV'
 
+        version = sh (script: "./gradlew properties -q | grep \"version:\" | awk '{print \$2}'", returnStdout: true).trim()
+        snapshotid = sh (script: "./gradlew properties -q | grep \"snapshotId:\" | awk '{print \$2}'", returnStdout: true).trim()
         GIT_HUB_USER = credentials('GitHubUser')
         GIT_HUB_TOKEN = credentials('GitHubToken')
     }
@@ -81,7 +83,7 @@ pipeline
     {
 
 
-        /*
+        
         stage('Set build informaction')
         {
             steps
@@ -91,11 +93,11 @@ pipeline
                     currentBuild.displayName = "${version}"
                     
                     currentBuild.description = "<B>Version:</B> ${version}<BR>\n"
-                    currentBuild.description += "<B>Build Number:</B> ${buildnumber}<BR>\n"
+                    currentBuild.description += "<B>SnapshotID:</B> ${snapshotid}<BR>\n"
                 }
             }
         }
-        */
+        
 
         stage('Build')
         {
