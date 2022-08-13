@@ -1361,7 +1361,6 @@ public class FFMPEGTranscoder implements TranscodeEngine
             }
             else if (c == '\r')
             {
-              //JVL: frame=25703 fps=2547 q=-1.0 size= 1231360kB time=0.010 bitrate=11753.7kbits/s speed=  85x
               // Parse to get the byte position for the specified time
               if (XCODE_DEBUG) System.out.println(sb.toString().trim());
               int frameIdx = sb.indexOf("frame=");
@@ -1377,29 +1376,26 @@ public class FFMPEGTranscoder implements TranscodeEngine
                 String sizeStr = sb.substring(sizeIdx + 5, kbIdx).trim();
                 String timeStr = sb.substring(timeIdx + 5, bitrateIdx).trim();
                 
-               
-                if(frameIdx != -1)
-                {
-                  frameStr = sb.substring(frameIdx + 6, fpsIdx).trim();
-                }
-                
                 if (sizeStr.indexOf('.') == -1)
                 {
                   try
                   {
-                    System.out.println("FFMPEG: " + sb.toString().trim());
-                    System.out.println("timeStr: " + timeStr);
-                    System.out.println("frameStr: " + frameStr);
-                
                     double time = Double.parseDouble(timeStr);
                     
-                    //Fallback to using frames to determin time if the time is < 0
+                    //Fallback to using frame count to determin time if the time is < 0
                     if(time > 1)
                     {
                       lastXcodeStreamTime = Math.round(1000 * time);  
                     }
                     else
                     {
+                      if (XCODE_DEBUG) System.out.println("Using framecount to calculate transcoder progress");
+                      
+                      if(frameIdx != -1)
+                      {
+                        frameStr = sb.substring(frameIdx + 6, fpsIdx).trim();
+                      }
+                      
                       int frame = Integer.parseInt(frameStr);
                       float fps = FFMPEGTranscoder.this.sourceFormat.getVideoFormat().getFps();
                       
@@ -1409,13 +1405,10 @@ public class FFMPEGTranscoder implements TranscodeEngine
                     
                     lastXcodeStreamPosition = Long.parseLong(sizeStr) * 1024;
                     
-                    System.out.println("lastXcodeStreamTime: " + lastXcodeStreamTime);
-                    System.out.println("lastXcodeStreamPosition: " + lastXcodeStreamPosition);
-
                   }
                   catch (NumberFormatException e)
                   {
-                    System.out.println("ERROR parsing transcoder time of:" + e);
+                    System.out.println("ERROR parsing transcoder status of:" + e);
                   }
                 }
               }
