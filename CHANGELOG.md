@@ -1,8 +1,8 @@
 # Change Log
 
 ## Next
-* Updated grable script so that it could build in Netbeans
-* Updated the FFMPEGTranscoder to fallback to frame instead of time to calculate progress
+* Updated grable script so that project could build in Netbeans
+* Updated the FFMPEGTranscoder to fallback to frame count instead of time to calculate progress
 
 ## Version 9.2.8 (2022-01-05)
 * Update to build process to support Linux build on Ubuntu 18.04 and JDK 11
