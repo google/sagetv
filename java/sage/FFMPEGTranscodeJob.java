@@ -120,7 +120,6 @@ public class FFMPEGTranscodeJob extends TranscodeJob
     if (tempy != null)
     {
       long fullLength = clipDuration == 0 ? (mf.getDuration(transcodeSegment) - clipStartTime) : clipDuration;
-      
       long currTime = tempy.getCurrentTranscodeStreamTime();
       float rv = ((float) currTime) / fullLength;
       if (enableMultipass)

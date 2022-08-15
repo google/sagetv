@@ -1382,7 +1382,7 @@ public class FFMPEGTranscoder implements TranscodeEngine
                   {
                     double time = Double.parseDouble(timeStr);
                     
-                    //Fallback to using frame count to determin time if the time is < 0
+                    //Fallback to using frame count to determin time if the time is < 1
                     if(time > 1)
                     {
                       lastXcodeStreamTime = Math.round(1000 * time);  

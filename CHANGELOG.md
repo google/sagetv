@@ -1,7 +1,7 @@
 # Change Log
 
 ## Next
-* Updated grable script so that project could build in Netbeans
+* Updated gradle script so that project could build in Netbeans
 * Updated the FFMPEGTranscoder to fallback to frame count instead of time to calculate progress
 
 ## Version 9.2.8 (2022-01-05)
