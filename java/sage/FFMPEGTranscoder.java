@@ -1363,24 +1363,52 @@ public class FFMPEGTranscoder implements TranscodeEngine
             {
               // Parse to get the byte position for the specified time
               if (XCODE_DEBUG) System.out.println(sb.toString().trim());
+              int frameIdx = sb.indexOf("frame=");
+              int fpsIdx = sb.indexOf("fps=");
               int sizeIdx = sb.indexOf("size=");
               int timeIdx = sb.indexOf("time=");
               int kbIdx = sb.indexOf("kB", sizeIdx);
               int bitrateIdx = sb.indexOf("bitrate=");
+              
               if (sizeIdx != -1 && timeIdx != -1 && kbIdx != -1 && bitrateIdx != -1)
               {
+                String frameStr = "";
                 String sizeStr = sb.substring(sizeIdx + 5, kbIdx).trim();
                 String timeStr = sb.substring(timeIdx + 5, bitrateIdx).trim();
+                
                 if (sizeStr.indexOf('.') == -1)
                 {
                   try
                   {
-                    lastXcodeStreamTime = Math.round(1000 * Double.parseDouble(timeStr));
+                    double time = Double.parseDouble(timeStr);
+                    
+                    //Fallback to using frame count to determin time if the time is < 1
+                    if(time > 1)
+                    {
+                      lastXcodeStreamTime = Math.round(1000 * time);  
+                    }
+                    else
+                    {
+                      if (XCODE_DEBUG) System.out.println("Using framecount to calculate transcoder progress");
+                      
+                      if(frameIdx != -1)
+                      {
+                        frameStr = sb.substring(frameIdx + 6, fpsIdx).trim();
+                      }
+                      
+                      int frame = Integer.parseInt(frameStr);
+                      float fps = FFMPEGTranscoder.this.sourceFormat.getVideoFormat().getFps();
+                      
+                      //Determine time from frames
+                      lastXcodeStreamTime = Math.round(1000 * (frame / fps));
+                    }
+                    
                     lastXcodeStreamPosition = Long.parseLong(sizeStr) * 1024;
+                    
                   }
                   catch (NumberFormatException e)
                   {
-                    System.out.println("ERROR parsing transcoder time of:" + e);
+                    System.out.println("ERROR parsing transcoder status of:" + e);
                   }
                 }
               }
