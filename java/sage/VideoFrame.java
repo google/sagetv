@@ -5682,7 +5682,7 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
     String defaultAudioLang = uiMgr.get("default_audio_language", "English"); 
     String defaultLang = uiMgr.get("default_subpic_language", "");
     
-    //Check for forced subtitles if there is not a defaul subtitle language set
+    //Check for forced subtitles if there is not a default subtitle language set
     if(defaultLang == null || defaultLang.length() == 0)
     {
       String [] subs = getDVDAvailableSubpictures();

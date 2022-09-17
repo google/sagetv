@@ -1,6 +1,7 @@
 # Change Log
 
 ## Next
+* Fix Subtitles on Extender only using 1st subtitle irrespective of which subtitle is selected
 * Updated gradle script so that project could build in Netbeans
 * Updated the FFMPEGTranscoder to fallback to frame count instead of time to calculate progress
 

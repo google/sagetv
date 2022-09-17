@@ -2575,6 +2575,7 @@ public class MiniPlayer implements DVDMediaPlayer
                   target = Integer.parseInt(tag, 16);
                 else
                   target = (Integer.parseInt(tag, 16) << 8);
+                if (Sage.DBG) System.out.println("Subtitle Toggle tag.length" + target); // Only uses subtitle 0 without this for some reason
               }
               catch (NumberFormatException nfe)
               {
@@ -2587,6 +2588,7 @@ public class MiniPlayer implements DVDMediaPlayer
               {
                 target = (Integer.parseInt(tag.substring(0, dashIdx), 16) << 8) |
                     Integer.parseInt(tag.substring(dashIdx + 1, dashIdx + 3), 16);
+                if (Sage.DBG) System.out.println("Subtitle Toggle dashIdx " + target); // Only uses subtitle 0 without this for some reason
               }
               catch (NumberFormatException nfe)
               {
@@ -2629,6 +2631,7 @@ public class MiniPlayer implements DVDMediaPlayer
                   target = Integer.parseInt(tag, 16);
                 else
                   target = (Integer.parseInt(tag, 16) << 8);
+                if (Sage.DBG) System.out.println("Subtitle Change tag.length " + target); // Only uses subtitle 0 without this for some reason
               }
               catch (NumberFormatException nfe)
               {
@@ -2641,6 +2644,7 @@ public class MiniPlayer implements DVDMediaPlayer
               {
                 target = (Integer.parseInt(tag.substring(0, dashIdx), 16) << 8) |
                     Integer.parseInt(tag.substring(dashIdx + 1, dashIdx + 3), 16);
+                if (Sage.DBG) System.out.println("Subtitle Change dashIdx " + target); // Only uses subtitle 0 without this for some reason
               }
               catch (NumberFormatException nfe)
               {
