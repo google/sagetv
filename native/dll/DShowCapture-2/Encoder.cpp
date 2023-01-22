@@ -2806,7 +2806,7 @@ void ClearPIDMap(  JNIEnv* env, DShowCaptureInfo *pCapInfo )
 				{
 					slog( (env, "UnmapPID on TIF pin total:%d \r\n", pid_total ) );
 				}
-				delete unmap_pids;
+				delete [] unmap_pids;
 
 			} else
 				slog( (env, "Failed to get TIF EnumPIDMap hr=0x%x \r\n", hr ) );

@@ -218,7 +218,7 @@ static BOOL OnAirQAMSupportCheck( JNIEnv *env, DShowCaptureInfo* pCapInfo, void*
 		return FALSE;
 
 	*pData = NULL;
-	graphTools.strCopyA2W( pTunerDevName, TunerName, strlen(TunerName)  ) ;
+	graphTools.strCopyA2W( pTunerDevName, TunerName, lstrlenA(TunerName)  ) ;
 	CComPtr <IBaseFilter> piTVTunerFilter;
 	hr = graphTools.AddFilterByDevicePath( pCapInfo->pGraph, &piTVTunerFilter, pTunerDevName, L"Fake Tuner for BDA" );
 	if ( hr == S_OK )
@@ -299,7 +299,7 @@ static HRESULT OnAirQAMSSetup( JNIEnv *env, DShowCaptureInfo* pCapInfo, void* pD
 		return S_OK;
 
 	TunerName = (char*)pData;
-	graphTools.strCopyA2W( pTunerDevName, TunerName, strlen(TunerName)  ) ;
+	graphTools.strCopyA2W( pTunerDevName, TunerName, lstrlenA(TunerName)  ) ;
 	CComPtr <IBaseFilter> piTVTunerFilter;
 	hr = graphTools.AddFilterByDevicePath( pCapInfo->pGraph, &piTVTunerFilter, pTunerDevName, L"USB HDTV-GT Tuner" );
 	if ( hr == S_OK )
@@ -752,7 +752,7 @@ BOOL SearchMatchFilter( JNIEnv *env, CLSID clsid, char* capFiltName, int CapFilt
 	hr = graphTools.EnumFilterPathFirst( clsid, &pEnum, &pName ); 
 	while ( hr == S_OK )
 	{
-			int length = wcslen(pName);
+			size_t length = wcslen(pName);
 			length =length > sizeof(enumName)? sizeof(enumName) : length;
 			memset( enumName, 0x0, sizeof(enumName) );
 			wcstombs( enumName, pName, length );

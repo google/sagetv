@@ -90,7 +90,7 @@ static char* ExtractMfg( char* mfg_string, int len )
 
 static char* ExtractHardwareID( char* id_string, int len )
 {
-	int i;
+	size_t i;
 	//Stream\HCW88BDA.M69xx#PCI#VEN_14F1&DEV_8800&SUBSYS_69020070&REV_05
 	if ( id_string == NULL || id_string[0] == 0x0  )
 		return "";

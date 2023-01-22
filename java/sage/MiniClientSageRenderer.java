@@ -2284,10 +2284,17 @@ public class MiniClientSageRenderer extends SageRenderer
           // If there's a server-side effect being applied to this image and it represents a thumbnail then be sure the original one is loaded
           // as well so we avoid doing nasty reloading on things the UI thinks is not cached (but we can't know if its a thumbnail...so we do it for all of them)
           MetaImage freeMe = null;
+          int freeMeIndex = 0;
           if (op.texture.getSource() instanceof java.util.Vector)
           {
             freeMe = (MetaImage) ((java.util.Vector) op.texture.getSource()).get(0);
-            freeMe.getNativeImage(this, 0);
+            int maxDim = Math.max(freeMe.getWidth(), freeMe.getHeight());
+            if (maxDim > maxTextureDim) {
+              float freeMeScale = ((float)maxTextureDim)/maxDim;
+              freeMeIndex = freeMe.getImageIndex(Math.round(freeMe.getWidth() * freeMeScale),
+                                                 Math.round(freeMe.getHeight() * freeMeScale));
+            }
+            freeMe.getNativeImage(this, freeMeIndex);
           }
           int srcx = (int)(op.srcRect.x + 0.5f);
           int srcy = (int)(op.srcRect.y + 0.5f);
@@ -2302,7 +2309,7 @@ public class MiniClientSageRenderer extends SageRenderer
               Math.min(op.texture.getHeight() - srcy, (int)(op.srcRect.height + 0.5f)),
               getCompositedColor(op.renderColor, op.alphaFactor * currEffectAlpha), true); // Don't blend for now*/
           if (freeMe != null)
-            freeMe.removeNativeRef(this, 0);
+            freeMe.removeNativeRef(this, freeMeIndex);
         }
       }
     }
@@ -3842,6 +3849,7 @@ public class MiniClientSageRenderer extends SageRenderer
         sendGetPropertyAsync("PUSH_AV_CONTAINERS");
         sendGetPropertyAsync("STREAMING_PROTOCOLS");
         sendGetPropertyAsync("FIXED_PUSH_MEDIA_FORMAT");
+        sendGetPropertyAsync("FIXED_PUSH_REMUX_FORMAT");
         sendGetPropertyAsync("OPENURL_INIT");
         sendGetPropertyAsync("FRAME_STEP");
         sendGetPropertyAsync("GFX_CURSORPROP");
@@ -4252,6 +4260,9 @@ public class MiniClientSageRenderer extends SageRenderer
 
         fixedPushMediaFormatProp = recvr.getStringReply();
         if (Sage.DBG) System.out.println("MiniClient FIXED_PUSH_MEDIA_FORMAT=" + fixedPushMediaFormatProp);
+        
+        fixedPushRemuxFormatProp = recvr.getStringReply();
+        if (Sage.DBG) System.out.println("MiniClient FIXED_PUSH_REMUX_FORMAT=" + fixedPushRemuxFormatProp);
 
         String openUrlInit = recvr.getStringReply();
         if (Sage.DBG) System.out.println("MiniClient OPENURL_INIT=" + openUrlInit);
@@ -6456,6 +6467,11 @@ public class MiniClientSageRenderer extends SageRenderer
     return fixedPushMediaFormatProp;
   }
 
+  public String getFixedPushRemuxFormat()
+  {
+    return fixedPushRemuxFormatProp;
+  }
+  
   public boolean isLocalConnection()
   {
     return localConnection;
@@ -7416,6 +7432,7 @@ public class MiniClientSageRenderer extends SageRenderer
   private java.util.Set pushContainers;
   private java.util.Set streamingProtocols;
   private String fixedPushMediaFormatProp;
+  private String fixedPushRemuxFormatProp;
   private boolean detailedPushBufferStats;
   private boolean pushBufferSeeking;
 

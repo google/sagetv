@@ -121,8 +121,8 @@ static sample_t __attribute__((aligned(16))) xsin1[128];
 #if defined(ARCH_X86) || defined(ARCH_X86_64)
 // NOTE: SSE needs 16byte alignment or it will segfault 
 // 
-static float __attribute__((aligned(16))) sseSinCos1c[256];
-static float __attribute__((aligned(16))) sseSinCos1d[256];
+static float attribute_used __attribute__((aligned(16))) sseSinCos1c[256];
+static float attribute_used __attribute__((aligned(16))) sseSinCos1d[256];
 static float attribute_used __attribute__((aligned(16))) ps111_1[4]={1,1,1,-1};
 //static float __attribute__((aligned(16))) sseW0[4];
 static float __attribute__((aligned(16))) sseW1[8];
@@ -133,7 +133,7 @@ static float __attribute__((aligned(16))) sseW5[128];
 static float __attribute__((aligned(16))) sseW6[256];
 static float __attribute__((aligned(16))) *sseW[7]=
 	{NULL /*sseW0*/,sseW1,sseW2,sseW3,sseW4,sseW5,sseW6};
-static float __attribute__((aligned(16))) sseWindow[512];
+static float attribute_used __attribute__((aligned(16))) sseWindow[512];
 #endif
 
 /* Root values for IFFT */

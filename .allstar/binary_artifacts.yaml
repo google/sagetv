@@ -1,0 +1,6 @@
+# Exemption reason: There are lots of legacy binary files used for utility purposes
+#                   in this project and removing them would be an incredible amount
+#                   of work which would not be justifiable.
+# Exemption timeframe: permanent
+optConfig:
+  optOut: true

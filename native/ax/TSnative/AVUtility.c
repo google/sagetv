@@ -653,7 +653,7 @@ int UnpackPESHeader( const unsigned char* pbData, int Bytes, PES_INFO *pPESInfo 
 					memset(	pPESInfo,	0, sizeof(PES_INFO));
 					return 0;
 				}
-				pPESInfo->PTSOffset = p-pbData;
+				pPESInfo->PTSOffset = p-pbData; // integral promotion results in LONGLONG
 			}
 
 			if ( Bytes < 5 ) return 0;
@@ -667,7 +667,7 @@ int UnpackPESHeader( const unsigned char* pbData, int Bytes, PES_INFO *pPESInfo 
 					memset(	pPESInfo,	0, sizeof(PES_INFO));
 					return 0;
 				}
-				pPESInfo->DTSOffset = p+5-pbData;
+				pPESInfo->DTSOffset = p+5-pbData; // integral promotion results in LONGLONG
 
 			}
 			pPESInfo->HeaderLen++;
@@ -1362,7 +1362,7 @@ static bool UnpackMpegVideoHeader( AV_CONTEXT* av, const unsigned char* pStart, 
 	if ( Size > (start - pStart) + av->Mpeg2Hdr.SeqHdr.ActualHeaderLen-10 )
 	{
 		data = (const unsigned	char*)start + av->Mpeg2Hdr.SeqHdr.ActualHeaderLen-10;
-		size = Size - (start - pStart) - (av->Mpeg2Hdr.SeqHdr.ActualHeaderLen-10);
+		size = Size - (int)(start - pStart) - (av->Mpeg2Hdr.SeqHdr.ActualHeaderLen-10);
 
 		if ( size >= 7 )
 		{
@@ -1385,7 +1385,7 @@ static bool UnpackMpegVideoHeader( AV_CONTEXT* av, const unsigned char* pStart, 
 			av->PacketBufLen = 0;
 		} else
 		{
-			int len = Size - ( start - pStart );
+			int len = Size - (int)( start - pStart );
 			if ( ( len <= sizeof( av->PacketBuf ) ) && av->PacketBufLen == 0 )
 			{
 				av->PacketBufLen = len;
@@ -1395,7 +1395,7 @@ static bool UnpackMpegVideoHeader( AV_CONTEXT* av, const unsigned char* pStart, 
 		}
 	} else
 	{
-		int len = Size - ( start - pStart );
+		int len = Size - (int)( start - pStart );
 		if ( ( len <= sizeof( av->PacketBuf ) ) && av->PacketBufLen == 0 )
 		{
 			av->PacketBufLen = len;
@@ -1433,7 +1433,7 @@ static bool UnpackMpegUserDataHeader( MPEG_USER_DATA* ud, const unsigned char* p
 			break; 
 		
 		data = start + 4;
-		size = Size - ( data - pStart );
+		size = Size - (int)( data - pStart );
 		if ( size <= 4 ) break;
 	
 		code = DWORD_SWAP(*(unsigned long *)data);
@@ -1449,7 +1449,7 @@ static bool UnpackMpegUserDataHeader( MPEG_USER_DATA* ud, const unsigned char* p
 		
 		data += bytes;
 		if ( data >= pStart + Size ) break;
-		size = Size - ( data - pStart );
+		size = Size - (int)( data - pStart );
 	}
 	
 	return ud->DataType != 0;;
@@ -1488,7 +1488,7 @@ static int UnpackATSCUserData( MPEG_USER_DATA* ud, const unsigned char* pStart, 
 			const unsigned char* start;
 			if ( SearchMPEG2StartCode( pStart+used_bytes, Size-used_bytes, 0,  &start ) && *(start+4) == 1 )
 			{
-				used_bytes = start-pStart+5;
+				used_bytes = (int)(start-pStart+5);
 			}
 		}
 	} else
@@ -1933,7 +1933,7 @@ static bool UnpackMpeg4VideoHeader( AV_CONTEXT* av, const unsigned char* pStart,
 	if ( Size > (start - pStart) + 6 )
 	{
 		data = start;
-		size = Size - (start - pStart);
+		size = Size - (int)(start - pStart);
 		ret	= SearchMPEG2StartCode(	data, size, VISUAL_OBJECT_START_CODE,  &start );
 		if ( !ret )	
 		{
@@ -1943,21 +1943,21 @@ static bool UnpackMpeg4VideoHeader( AV_CONTEXT* av, const unsigned char* pStart,
 		{
 			const unsigned char *p;
 			data = start;
-			size = Size - (start - pStart);
+			size = Size - (int)(start - pStart);
 			ret = SearchMPEG4VOLCode( data, size,  &start );
 			if ( !ret )	
 			{
 				return false;
 			}
 			data = start;
-			size = Size - (start - pStart);
+			size = Size - (int)(start - pStart);
 			if ( !SearchMPEG2StartCode(	data, size, VOP_START_CODE,  &p ) && 
 				 !SearchMPEG2StartCode(	data, size, GROUP_OF_VOP_START_CODE,  &p ) )
 			{
 				return false;
 			}
 
-			size = Size - (start - pStart);
+			size = Size - (int)(start - pStart);
 			ret	= UnpackMPEG4VOL( av, (const unsigned char*)start, size );	
 			av->SubId = 0;
 			if ( ret )
@@ -2107,7 +2107,7 @@ static bool UnpackMpegVC1VideoHeader( AV_CONTEXT* av, const unsigned char* pStar
 	if ( Size > (start - pStart) + 12 )
 	{
 		data = start;
-		size = Size - (start - pStart);
+		size = Size - (int)(start - pStart);
 		ret	= SearchMPEG2StartCode(	data, size, VC1_CODE_ENTRYPOINT,  &start );
 		if ( !ret )
 		{
@@ -2120,7 +2120,7 @@ static bool UnpackMpegVC1VideoHeader( AV_CONTEXT* av, const unsigned char* pStar
 			}
 		}
 
-		size = Size - (seq_start - pStart);
+		size = Size - (int)(seq_start - pStart);
 		ret = UnpackMPEGVC1SEQHeader( av, seq_start, size );
 		if ( ret )
 		{
@@ -2556,7 +2556,7 @@ static bool UnpackAACAudioADTS( AV_CONTEXT* av,  const unsigned char * pbData, i
 				
 				id_syn_ele = ((*pData)>>5)&0x07;
 				if ( id_syn_ele == 0x05 /*ID_PCE */ )
-					ret = UnpackAACAudioPCEChannel( pData, Size-(pData-pbData) );
+					ret = UnpackAACAudioPCEChannel( pData, Size-(int)(pData-pbData) );
 			} else
 			{
 				for ( i = 0; i<number_of_raw_data_blocks_in_frame; i++ )
@@ -2569,7 +2569,7 @@ static bool UnpackAACAudioADTS( AV_CONTEXT* av,  const unsigned char * pbData, i
 
 				id_syn_ele = ((*pData)>>5)&0x07;
 				if ( id_syn_ele == 5 /*ID_PCE */ )
-					ret = UnpackAACAudioPCEChannel( pData, Size-(pData-pbData) );
+					ret = UnpackAACAudioPCEChannel( pData, Size-(int)(pData-pbData) );
 			}
 			channel_configuration = ret;
 		}
@@ -3830,7 +3830,7 @@ bool UnpackH264VideoHeader( AV_CONTEXT* av, const unsigned char* pData, int Size
 			//static_type[nal_unit_type]++;
 			if ( nal_unit_type == NAL_SPS )
 			{
-				int bytes = ( Size-(p-pData) < (int)sizeof(rbsp) ) ? Size-(p-pData) : (int)sizeof(rbsp) ;
+				int bytes = ( Size-(int)(p-pData) < (int)sizeof(rbsp) ) ? Size-(int)(p-pData) : (int)sizeof(rbsp) ;
 				bytes = NAL2RBSP( (unsigned char*)p, (unsigned char*)rbsp, bytes );
 				p += bytes;
 				if ( bytes < 4 )
@@ -3957,7 +3957,7 @@ bool UnpackH264VideoHeader( AV_CONTEXT* av, const unsigned char* pData, int Size
 			} else
 			if ( nal_unit_type == NAL_SEI )
 			{
-				int bytes = ( Size-(p-pData) < (int)sizeof(rbsp) ) ? Size-(p-pData) : (int)sizeof(rbsp) ;
+				int bytes = ( Size-(int)(p-pData) < (int)sizeof(rbsp) ) ? Size-(int)(p-pData) : (int)sizeof(rbsp) ;
 				//printf( "NALU SEI:%d\n", nal_unit_type );
 				bytes = NAL2RBSP( (unsigned char*)p, (unsigned char*)rbsp, bytes );
 				p += bytes;

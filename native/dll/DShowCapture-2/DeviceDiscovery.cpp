@@ -203,8 +203,8 @@ JNIEXPORT jobjectArray JNICALL Java_sage_DShowCaptureDevice_getDevicesInCategory
 		}
 	}
 
-	delete pDevName;
-	delete pDevName1;
+	delete [] pDevName;
+	delete [] pDevName1;
 	return rv;
 
 }
@@ -389,7 +389,7 @@ static int PurgeNameList( JNIEnv *env, DEVNAME* DevName, int numDev, REFCLSID de
     Return: resultant number of elements in DevName[]
 
     Notes: Overall, the general assumtion is that a given Video Capture Source will only have a 
-        single BDA Reciever Component associated with it at the Source's hardware_loc.
+        single BDA Receiver Component associated with it at the Source's hardware_loc.
         "Hybrid" Video Capture Sources have multiple Receivers at a given hardware_loc, 
         but they can't be used at the same time.
         Here we also handle a few special cases that DO have multiple Receivers associated with
@@ -461,7 +461,7 @@ static int MergeNameList( JNIEnv *env, DEVNAME* DevName, int numDev, DEVNAME* De
 
 
                 /* ----------------
-                 * KSF: hardcode for Hauppauge WinTV-quadHD, which has 2 BDA Reciever Components 
+                 * KSF: hardcode for Hauppauge WinTV-quadHD, which has 2 BDA Receiver Components 
                  * (885 TS Capture, 885 TS Capture 2) for both of it's 2 Video Capture Sources
                  * (i.e., at both of it's 2 PCIe hardware locations).
                  *
@@ -473,9 +473,10 @@ static int MergeNameList( JNIEnv *env, DEVNAME* DevName, int numDev, DEVNAME* De
                     j = numDev;
 
 				/* ----------------
-				* JRE: hardcode for Hauppauge HVR-4400, which has 2 BDA Receiver Components
-				* (885 TS Capture, 885 Alt TS Capture) for it's 2 BDA Video Capture Sources
-				*
+				* JRE: hardcode for Hauppauge 885 AltBDATunerModels (HVR-3300, HVR-4400, HVR-5500, HVR-4400, HVR-5505, HVR-4405, HVR-5525),
+				* which have 2 BDA Receiver Components (885 TS Capture, with a hybrid tuner and 885 Alt TS Capture, with a DVBS2 tuner)
+				* Hauppauge WinTV 885 TS Capture should have all tuners except DVB-S/S2
+				* Hauppauge WinTV 885 Alt TS Capture should only have DVB-S/S2
 				*/
 				else if (!strncmp(DevName1[i].FriendlyName, "Hauppauge WinTV 885 Alt TS Capture", 34))
 					j = numDev;
@@ -557,7 +558,7 @@ static int MergeNameList( JNIEnv *env, DEVNAME* DevName, int numDev, DEVNAME* De
 				SPRINTF( NewCaptureName, sizeof(NewCaptureName) , "%s<%s>-%d", szHybridCapture, TunerType, DevName[num-1].index  ); 
 			slog((env, "found hybrid tuner '%s' for '%s' #%d (%d)\r\n", NewCaptureName,
 				                                    DevName[num-1].FriendlyName, DevName[num-1].index, num-1 ) );
-			bool IsHybrideTuner = true;
+			bool IsHybridTuner = true;
 
 			char FilterName[256]={0};
 			if ( CheckFakeBDACrossBar( env, NewCaptureName, DevName[num-1].index, FilterName, sizeof( FilterName ) ) )
@@ -569,21 +570,21 @@ static int MergeNameList( JNIEnv *env, DEVNAME* DevName, int numDev, DEVNAME* De
 					if ( strstr( CaptureDrvInfo.device_desc, "HVR-1250") || strstr( CaptureDrvInfo.device_desc, "HVR-1255") ||
 						 strstr( CaptureDrvInfo.device_desc, "HVR-1550")  )
 					{
-						slog((env, "it's a HVR-1250 share tuner, not a real hybride tuner! (%s) \r\n", CaptureDrvInfo.device_desc ) );				
-						IsHybrideTuner = false;
+						slog((env, "it's a HVR-1250 share tuner, not a real hybrid tuner! (%s) \r\n", CaptureDrvInfo.device_desc ) );				
+						IsHybridTuner = false;
 					} else
 					{
-						slog((env, "It's a hybride tuner %s '%s'. \r\n", NewCaptureName, CaptureDrvInfo.device_desc ) );				
+						slog((env, "It's a hybrid tuner %s '%s'. \r\n", NewCaptureName, CaptureDrvInfo.device_desc ) );				
 					}
 				} else
 				{
 					DEVICE_DRV_INF  CaptureDrvInfo={0};
 					GetDeviceInfo( FilterName, &CaptureDrvInfo );
-					slog((env, "It's a hybride tuner %s '%s'. \r\n", NewCaptureName, CaptureDrvInfo.device_desc ) );					
+					slog((env, "It's a hybrid tuner %s '%s'. \r\n", NewCaptureName, CaptureDrvInfo.device_desc ) );					
 				}
 			}
 
-			if ( IsHybrideTuner )
+			if ( IsHybridTuner )
 			{
 				 //add a hybrid tuner into device list
 				strncpy( DevName[num].FriendlyName, NewCaptureName, sizeof(DevName[num].FriendlyName) );
@@ -615,7 +616,7 @@ static int LoadDeviceNameFrormRegistry( JNIEnv *env, DEVNAME* DevName, int maxNu
 
 	char *p = names;
 	char *pe;
-	int len;
+	size_t len;
 	while ( *p != 0 )
 	{
 		pe = strchr( p, ',' );

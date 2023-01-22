@@ -81,7 +81,7 @@ char* GetTypeFromTunerTag( char* filterName, char* typeBuf, int bufSize )
 	{
 		if ( ( pe = strstr( ++ps, ">" ) ) )
 		{
-			int len;
+			size_t len;
 			len = min( pe - ps, bufSize-1 );
 			strncpy( typeBuf, ps, len );
 			typeBuf[len] = 0x0;
@@ -842,7 +842,7 @@ JNIEXPORT jint JNICALL Java_sage_DShowCaptureDevice_getDeviceCaps0
 	//Processing Hauppauge tuners
 	if ( hcw && bFoundDevice )
 	{
-		slog((env, "It's Hauppauge device.\r\n") );
+		slog((env, "It's a Hauppauge device.\r\n") );
 		if ( strstr( CaptureDrvInfo.device_desc, "HVR-1250") || strstr( CaptureDrvInfo.device_desc, "HVR-1255") || 
 			 strstr( CaptureDrvInfo.device_desc, "HVR-1550") )
 		{  
@@ -876,31 +876,87 @@ JNIEXPORT jint JNICALL Java_sage_DShowCaptureDevice_getDeviceCaps0
 		}
 		else
 
-		// hard code for HVR-4400 and (3300, 5500, 4405,5505)? desc:"Hauppauge WinTV HVR-4400 (Model 121xxx, Hybrid DVB-T/S2, IR)"
-		// it's a hybrid, but has DVB-T and DVB-S connected to two different TS Capture filters
-		if ( strstr(CaptureDrvInfo.device_desc, "Hybrid DVB-T/S"))
+		// hard code for HVR-4400, 3300 and 4405. desc:"Model 121xxx, Hybrid DVB-T/S2" and "Model 53xxx, Hybrid DVB-T/S"
+		// it has two different TS Capture filters, one with DVB-T and one with DVB-S 
+		// This still needs more work as the Analog capture doesn't work
+		if (strstr(CaptureDrvInfo.device_desc, "Model 121xxx, Hybrid DVB-T/S2") || strstr(CaptureDrvInfo.device_desc, "Model 53xxx, Hybrid DVB-T/S"))
 		{
 			isHybridCapture = false;
 			hasCaptureDetails = false;
 			detailsCaptureMask = 0x000800;  // sage_DShowCaptureDevice_MPEG_AV_CAPTURE_MASK
 			detailsChipsetMask = 0;
-			BDAInputType = sage_DShowCaptureDevice_BDA_DVB_S | sage_DShowCaptureDevice_BDA_DVB_T;
-			slog((env, "A bundle card is found (Analog+DVB-T+DVB-S), DVB-T|DVB-S added into source.\r\n"));
+			if (strstr(capFiltName, "Hauppauge WinTV 885 Alt TS Capture"))
+			{
+				// set up DVB-S on Hauppauge WinTV 885 Alt TS Capture
+				BDAInputType = sage_DShowCaptureDevice_BDA_DVB_S;
+				slog((env, "An AltBDATunerModel tuner card is found, DVB-S added into Alt TS Capture source.\r\n"));
+			}
+			else
+			if (strstr(capFiltName, "Hauppauge WinTV 885 TS Capture"))
+			{
+				// set up DVB-T on Hauppauge WinTV 885 TS Capture
+				BDAInputType = sage_DShowCaptureDevice_BDA_DVB_T;
+				slog((env, "A bundle tuner card is found, DVB-T  added into TS Capture source.\r\n"));
+			}
+			else
+				slog((env, "BDA tuners are only on HVR-4400, 3300 and 4405 TS Capture Devices so not doing anything here.\r\n"));
 		}
 		else
 
-		// hard code for HVR-5525 desc:"Hybrid DVB-T/C/S2, IR)"
-		// it's a hybrid, but has DVB-T,DVB-C and DVB-S connected to two different TS Capture filters
-		if (strstr(CaptureDrvInfo.device_desc, "Hybrid DVB-T/C"))
+		// hard code for HVR-5525, 5500 and 5505. desc:"Model 150xxx, Hybrid DVB-T/T2/C/S2" and "Model 121xxx, Hybrid DVB-T/C/S2"
+		// it has two different TS Capture filters, one hybrid with DVB-T and DVB-C and one with DVB-S
+		// This still needs more work as the Analog capture doesn't work
+		if (strstr(CaptureDrvInfo.device_desc, "Model 150xxx, Hybrid DVB-T/T2/C/S2") || strstr(CaptureDrvInfo.device_desc, "Model 121xxx, Hybrid DVB-T/C/S2"))
 		{
 			isHybridCapture = false;
 			hasCaptureDetails = false;
 			detailsCaptureMask = 0x000800;  // sage_DShowCaptureDevice_MPEG_AV_CAPTURE_MASK
 			detailsChipsetMask = 0;
-			BDAInputType = sage_DShowCaptureDevice_BDA_DVB_S | sage_DShowCaptureDevice_BDA_DVB_T | sage_DShowCaptureDevice_BDA_DVB_C;
-			slog((env, "A bundle card is found (Analog+DVB-T+DVB-S+DVB-C), DVB-T|DVB-S|DVB-C added into source.\r\n"));
+			if (strstr(capFiltName, "Hauppauge WinTV 885 Alt TS Capture"))
+			{
+				// set up DVB-S on Hauppauge WinTV 885 Alt TS Capture
+				BDAInputType = sage_DShowCaptureDevice_BDA_DVB_S;
+				slog((env, "An AltBDATunerModel tuner card is found, DVB-S added into Alt TS Capture source.\r\n"));
+			}
+			else
+			if (strstr(capFiltName, "Hauppauge WinTV 885 TS Capture"))
+			{
+				// set up DVB-T & DVB-C on Hauppauge WinTV 885 TS Capture
+				BDAInputType = sage_DShowCaptureDevice_BDA_DVB_T | sage_DShowCaptureDevice_BDA_DVB_C;
+				slog((env, "A bundle tuner card is found, DVB-T|DVB-C  added into TS Capture source.\r\n"));
+			}
+			else
+				slog((env, "BDA tuners are only on HVR-5525, 5500 and 5505 TS Capture Devices so not doing anything here.\r\n"));
 		}
 		else
+
+		// hard code for HVR-2200 and 2210. desc:"WinTV-HVR-2210" and "WinTV-HVR-2200"and
+		// it's a multi-tuner DVB-T but takes takes a long time to initialize as it steps through all the BDA tuners types to find DVB-T
+		if (strstr(CaptureDrvInfo.device_desc, "HVR-2200") || strstr(CaptureDrvInfo.device_desc, "HVR-2210"))
+		{
+			isHybridCapture = false;
+			hasCaptureDetails = false;
+			detailsCaptureMask = 0x000800;  // sage_DShowCaptureDevice_MPEG_AV_CAPTURE_MASK
+			detailsChipsetMask = 0;
+			BDAInputType = sage_DShowCaptureDevice_BDA_DVB_T;
+			slog((env, "A multi-tuner card is found, DVB-T added into HVR-22x0 source.\r\n"));
+		}
+		else
+
+		// hard code for WinTV-quadHD. desc:"Dual DVB-T/T2/C"
+		// it's a hybrid, with DVB-T and DVB-C
+//		Needs testing
+//		if (strstr(CaptureDrvInfo.device_desc, "1662xx-1, Dual DVB-T/T2/C,") || strstr(CaptureDrvInfo.device_desc, "1661xx-1, Dual DVB-T/T2/C,") || 
+//			strstr(CaptureDrvInfo.device_desc, "1662xx-2, Dual DVB-T/T2/C)") || strstr(CaptureDrvInfo.device_desc, "1661xx-2, Dual DVB-T/T2/C)"))
+//		{
+//			isHybridCapture = false;
+//			hasCaptureDetails = false;
+//			detailsCaptureMask = 0x000800;  // sage_DShowCaptureDevice_MPEG_AV_CAPTURE_MASK
+//			detailsChipsetMask = 0;
+//			BDAInputType = sage_DShowCaptureDevice_BDA_DVB_T | sage_DShowCaptureDevice_BDA_DVB_C;
+//			slog((env, "A bundle tuner card is found, DVB-T|DVB-C added into source.\r\n"));
+//		}
+//		else
 
 		if ( strstr( CaptureDrvInfo.device_desc, "WinTV HVR-930C") )
 		{
@@ -1134,7 +1190,7 @@ int GetTunerNum( JNIEnv *env,  char* devName, REFCLSID devClassid, DEVICE_DRV_IN
 		hr = graphTools.EnumFilterPathFirst( devClassid, &pEnum, &pName ); 
 		while ( hr == S_OK && devNum < MAX_BDA_TUNER_NUM )
 		{
-			int length = wcslen(pName);
+			size_t length = wcslen(pName);
 			length =length > sizeof(captureName)? sizeof(captureName) : length;
 			memset( Name, 0x0, sizeof(Name) );
 			wcstombs( Name, pName, length );
@@ -1161,7 +1217,7 @@ int GetTunerNum( JNIEnv *env,  char* devName, REFCLSID devClassid, DEVICE_DRV_IN
 						} else
 							devNum++;
 
-						slog((env, "BAD Tuner index :%d dev:%s name:%s loc:%s (%d %d) %s\r\n", devNum, devName, Name, 
+						slog((env, "BDA Tuner index :%d dev:%s name:%s loc:%s (%d %d) %s\r\n", devNum, devName, Name, 
 							devBDAInfo->hardware_loc, devNum, i, skip?"skip":"select" ) );
 						char *p = strstr( Name, "\\\\" );
 						if ( p != NULL && !stricmp( p, devName ) )
@@ -1189,7 +1245,7 @@ int GetTunerNum( JNIEnv *env,  char* devName, REFCLSID devClassid, DEVICE_DRV_IN
 						} else
 							devNum++;
 
-						slog((env, "BAD Tuner index :%d dev:%s name:'%s' id:'%s' (%d %d) %s\r\n", devNum, devName, Name, 
+						slog((env, "BDA Tuner index :%d dev:%s name:'%s' id:'%s' (%d %d) %s\r\n", devNum, devName, Name, 
 							devBDAInfo->hardware_id, devNum, i, skip?"skip":"select" ) );
 						char *p = strstr( Name, "\\\\" );
 						if ( p != NULL && !stricmp( p, devName ) )
@@ -1283,7 +1339,7 @@ BOOL CheckFakeBDACrossBar( JNIEnv *env, char* capFiltName, int CapFiltNum, char*
 		hr = graphTools.EnumFilterPathFirst( KSCATEGORY_BDA_RECEIVER_COMPONENT, &pEnum, &pName ); 
 		while ( hr == S_OK )
 		{
-			int length = wcslen(pName);
+			size_t length = wcslen(pName);
 			length =length > sizeof(captureName)? sizeof(captureName) : length;
 			memset( captureName, 0x0, sizeof(captureName) );
 			wcstombs( captureName, pName, length );

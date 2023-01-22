@@ -22,6 +22,12 @@
 #include <direct.h>
 #include <windows.h>
 
+#ifdef _WIN64
+  #define SAGETV_SERVICE_NAME "SageTV64"
+#else
+  #define SAGETV_SERVICE_NAME "SageTV"
+#endif
+
 #define MYOUT(x) WriteConsole(stdOutHandle, x, strlen(x), &numWrit, NULL)
 LRESULT CALLBACK WndProc( HWND hWnd, UINT messg,
 								WPARAM wParam, LPARAM lParam );
@@ -137,8 +143,8 @@ static TCHAR toHex(int nibble)
 void writeEscapedPropString(FILE* fp, const LPWSTR wstr)
 {
 	static const TCHAR specialSaveChars[] = "=: \t\r\n\f#!";
-    int len = wcslen(wstr);
-	int x;
+	size_t len = wcslen(wstr);
+	size_t x;
     for(x=0; x<len; x++) 
 	{
 		if (wstr[x] == ' ')
@@ -250,7 +256,7 @@ BOOL CheckForMutex(HANDLE *pMutex, LPCSTR szMutexName, LPSTR appName)
 
 void removeTrailingWS(char* line)
 {
-	int len = strlen(line);
+	size_t len = strlen(line);
 	while (len > 0 && (line[len - 1] == ' ' || line[len - 1] == '\r' || line[len-1] == '\n'))
 	{
 		line[len - 1] = '\0';
@@ -505,8 +511,8 @@ int WINAPI WinMain( HINSTANCE hInst, 	/*Win32 entry-point routine */
 		GetModuleFileName(NULL, appPath, 2048);
 		SC_HANDLE schService = CreateService( 
 			schSCManager,              // SCManager database 
-			"SageTV",              // name of service 
-			"SageTV",           // service name to display 
+			SAGETV_SERVICE_NAME,              // name of service 
+			SAGETV_SERVICE_NAME,           // service name to display 
 			SERVICE_START,        // desired access 
 			SERVICE_WIN32_OWN_PROCESS, // service type 
 			SERVICE_AUTO_START,      // start type 
@@ -555,7 +561,7 @@ int WINAPI WinMain( HINSTANCE hInst, 	/*Win32 entry-point routine */
 		// Remove the windows service
 		SC_HANDLE schService = OpenService( 
 			schSCManager,       // SCManager database 
-			"SageTV",       // name of service 
+			SAGETV_SERVICE_NAME,       // name of service 
 			DELETE | SERVICE_STOP | SERVICE_QUERY_STATUS);            // only need DELETE access 
  
 		if (schService == NULL)
@@ -619,13 +625,16 @@ int WINAPI WinMain( HINSTANCE hInst, 	/*Win32 entry-point routine */
 	// Fix the current working directory to be where the EXE is located
 	LPTSTR folderPath = new TCHAR[2048];
 	GetModuleFileName(NULL, folderPath, 2048);
-	int appLen = strlen(folderPath);
-	for (int i = appLen - 1; i > 0; i--)
+	size_t appLen = strlen(folderPath);
+	if (appLen > 0)  // Shouldn't be 0 as the following would be an infinite loop
 	{
-		if (folderPath[i] == '\\')
+		for (size_t i = appLen - 1; i > 0; i--)
 		{
-			folderPath[i + 1] = 0;
-			break;
+			if (folderPath[i] == '\\')
+			{
+				folderPath[i + 1] = 0;
+				break;
+			}
 		}
 	}
 	chdir(folderPath);
@@ -647,7 +656,7 @@ int WINAPI WinMain( HINSTANCE hInst, 	/*Win32 entry-point routine */
 
 		SERVICE_TABLE_ENTRY   DispatchTable[] = 
 		{ 
-			{ "SageTV", SageServiceStart      }, 
+			{ SAGETV_SERVICE_NAME, SageServiceStart      }, 
 			{ NULL,              NULL          } 
 		}; 
 		if (StartServiceCtrlDispatcher( DispatchTable)) 
@@ -714,7 +723,7 @@ int WINAPI WinMain( HINSTANCE hInst, 	/*Win32 entry-point routine */
 			// Get the windows service
 			SC_HANDLE schService = OpenService( 
 				schSCManager,       // SCManager database 
-				"SageTV",       // name of service 
+				SAGETV_SERVICE_NAME,       // name of service 
 				SERVICE_START | SERVICE_QUERY_CONFIG | SERVICE_QUERY_STATUS);// only need start access 
 
 			if (schService)
@@ -913,15 +922,19 @@ int launchJVMSage(LPSTR lpszCmdLine, HWND hWnd, BOOL bClient, BOOL bService)
 	
 	LPTSTR appPath = new TCHAR[2048];
 	GetModuleFileName(NULL, appPath, 2048);
-	int appLen = strlen(appPath);
-	for (int i = appLen - 1; i > 0; i--)
+	size_t appLen = strlen(appPath);
+	if (appLen > 0)  // Shouldn't be 0 as the following would be an infinite loop
 	{
-		if (appPath[i] == '\\')
+		for (size_t i = appLen - 1; i > 0; i--)
 		{
-			appPath[i + 1] = 0;
-			break;
+			if (appPath[i] == '\\')
+			{
+				appPath[i + 1] = 0;
+				break;
+			}
 		}
 	}
+
 	// See if we've got a JVM in our own directory to load
 	TCHAR includedJRE[1024];
 	strcpy(includedJRE, appPath);
@@ -1103,8 +1116,13 @@ int launchJVMSage(LPSTR lpszCmdLine, HWND hWnd, BOOL bClient, BOOL bService)
 	// performance w/ that setting...and also people have a lot more RAM nowadays. :)
 	// NARFLEX: 5-26-09 Change this to be 384MB because that's more appropriate now I think
 	// NARFLEX: 3-25-15 Times have changed...how about 768 as a default now. :)
+	// wnjj: 9-2-19 Increase 64-bit default to 1G since that's the main reason to use 64-bit
 	char memString[32];
-	strcpy(memString, "-Xmx768m");
+  #ifdef _WIN64
+  	strcpy(memString, "-Xmx1024m");
+  #else
+  	strcpy(memString, "-Xmx768m");
+  #endif
 //#ifdef SAGE_TV_SERVICE
 	// We definitely don't need as much memory for the service since it doesn't have any UI stuff
 //	strcpy(memString, "-Xmx128m");
@@ -1685,7 +1703,7 @@ void WINAPI SageServiceStart (DWORD argc, LPTSTR *argv)
     SageServiceStatus.dwWaitHint           = 0; 
  
     SageServiceStatusHandle = RegisterServiceCtrlHandlerEx( 
-        "SageTV", SageServiceCtrlHandlerEx, NULL);
+        SAGETV_SERVICE_NAME, SageServiceCtrlHandlerEx, NULL);
  
     if (SageServiceStatusHandle == (SERVICE_STATUS_HANDLE)0) 
     { 

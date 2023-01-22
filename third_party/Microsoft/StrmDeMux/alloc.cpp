@@ -310,7 +310,7 @@ HRESULT CSequentialAllocator::Alloc()
 /*  Get buffer index */
 int CSequentialAllocator::BufferIndex(PBYTE pbBuffer)
 {
-    int iPos = (pbBuffer - m_pBuffer) / m_lSize;
+    int iPos = int(pbBuffer - m_pBuffer) / m_lSize;
     ASSERT(iPos <= m_lCount && iPos >= 0);
     return iPos;
 }

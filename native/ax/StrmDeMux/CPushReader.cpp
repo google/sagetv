@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#pragma warning(disable : 4996)
+// #pragma warning(disable : 4996)
 
 #ifndef _WIN64
   #define _USE_32BIT_TIME_T
@@ -371,7 +371,7 @@ static int feeder_close(URLContext *h)
 
 static int feeder_get_handle(URLContext *h)
 {
-    return (int) h->priv_data;
+    return (intptr_t) h->priv_data;
 }
 
 URLProtocol sagetv_protocol = {
@@ -2730,7 +2730,7 @@ HRESULT CPushReader::SetVORBISAuidoMediaType( CMediaType *cmt, MPEG_AUDIO *pMpeg
 		nExtraDataSize = 0;
 	else
 	{
-		nExtraDataSize -= pHeader-pExtraData;//HeaderSize[0]+HeaderSize[1]+HeaderSize[2];
+		nExtraDataSize -= (int)(pHeader-pExtraData);//HeaderSize[0]+HeaderSize[1]+HeaderSize[2];
 	}
 	cmt->SetType( &MEDIATYPE_Audio ); 
 	cmt->SetSubtype( &MEDIASUBTYP_VORBIS );
@@ -3038,7 +3038,7 @@ HRESULT CPushReader::SetSubTitleMediaType( CMediaType *cmt, SUBTITLE *pSubtitle 
 	psi->dwOffset = sizeof(SUBTITLEINFO);
 	strcpy(psi->IsoLang, "eng");
 	char *name = "Subtitles";
-	int size = MultiByteToWideChar(CP_ACP, 0, name, strlen(name), psi->TrackName, sizeof(psi->TrackName)*2 );
+	MultiByteToWideChar(CP_ACP, 0, name, lstrlenA(name), psi->TrackName, sizeof(psi->TrackName)*2 );
 	//SUBTITLEINFO subinfo={0};
 	//subinfo.dwOffset = sizeof(SUBTITLEINFO);
 	//subinfo.IsoLang[0] = (CHAR)((pSubtitle->language >>24)&0xff);

@@ -51,6 +51,7 @@ public abstract class MediaFormat
   public static final String MP3 = "MP3";
   public static final String MPEG1_VIDEO = "MPEG1-Video";
   public static final String MPEG4_VIDEO = "MPEG4-Video";
+  public static final String HEVC = "HEVC";
   public static final String MPEG4X = "MPEG4X"; // this is our private stream format we put inside MPEG2 PS for MPEG4/DivX video on Windows
   public static final String AVI = "AVI";
   public static final String WAV = "WAV";

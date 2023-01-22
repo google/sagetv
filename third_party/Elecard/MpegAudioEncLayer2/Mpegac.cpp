@@ -22,7 +22,6 @@
 #include <streams.h>
 #include <olectl.h>
 #include <initguid.h>
-#include <olectlid.h>
 #include "uids.h"
 #include "iaudioprops.h"
 #include "mpegac.h"

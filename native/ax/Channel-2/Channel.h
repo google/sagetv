@@ -54,6 +54,7 @@
 
 #define MAX_SATELLATE_NUM  6
 
+#ifdef WIN32
 #ifndef bool
 #define bool int
 #endif
@@ -65,7 +66,6 @@
 #endif
 
 //data structure byte packing throughout
-#ifdef WIN32
 #include <pshpack1.h>
 #endif
 

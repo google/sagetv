@@ -225,7 +225,7 @@ void CScan::PushChannelScanFileData(   )
 		}
 
 	}
-	delete pData;
+	delete [] pData;
 }
 
 int CScan::IsCacheDataFull( )

@@ -55,7 +55,7 @@ public class Person extends DBObject
       extID = in.readInt();
       dateOfBirth = in.readInt();
       dateOfDeath = in.readInt();
-      birthPlace = wiz.getBonusForID(in.readInt());
+      birthPlace = wiz.getBonusForID(readID(in, idMap));
       short numAwards = in.readShort();
       if (numAwards > 0)
       {
@@ -64,7 +64,7 @@ public class Person extends DBObject
           yearList[i] = in.readShort();
         awardNames = new Stringer[numAwards];
         for (int i = 0; i < numAwards; i++)
-          awardNames[i] = wiz.getBonusForID(in.readInt());
+          awardNames[i] = wiz.getBonusForID(readID(in, idMap));
       }
       else
       {

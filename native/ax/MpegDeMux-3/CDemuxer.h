@@ -36,6 +36,9 @@
 #define PTS_ROUND_UP( LastPTS, FirstPTS ) ((LastPTS + PTS_OF_3HOUR < FirstPTS &&  FirstPTS + PTS_OF_3HOUR > MAX_PTS_VALUE ) ? LastPTS+MAX_PTS_VALUE : LastPTS ) 
 //#define PTS_ROUND_UP( LastPTS, FirstPTS ) LastPTS
 
+#define ALIGN_DWORD( x ) ( (x)+(4-((x)%4))%4 ); // pad size to DWORD (modulo 4) boundary
+
+
 #define AC3_ENABLE	0x01
 #define EAC3_ENABLE	0x02
 #define TAC3_ENABLE	0x04

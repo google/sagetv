@@ -871,7 +871,7 @@ void CDeMuxFilter::ReleasedSample( IMediaSample * pSample )
 					if ( m_pfnEventDump != NULL  )
 					{
 						snprintf( message, sizeof(message), "EndOfStream pos:%s", (LPCSTR)Disp( (LONGLONG)Props.tStart, DISP_DEC ) );  
-									((EVENT_DUMP)m_pfnEventDump)( m_EventDumpContext, strlen(message), message ); 
+									((EVENT_DUMP)m_pfnEventDump)( m_EventDumpContext, (short)strlen(message), message ); 
 						DbgLog((LOG_TRACE, 2, TEXT("Sent Message %s"), message ));
 					}
 				}
@@ -884,7 +884,7 @@ void CDeMuxFilter::ReleasedSample( IMediaSample * pSample )
 				if ( m_pfnEventDump != NULL  )
 				{
 					snprintf( message, sizeof(message), "EndOfStream pos:%s", (LPCSTR)Disp( (LONGLONG)m_rtCurrPTS, DISP_DEC ) );  
-							((EVENT_DUMP)m_pfnEventDump)( m_EventDumpContext, strlen(message), message ); 
+							((EVENT_DUMP)m_pfnEventDump)( m_EventDumpContext, (short)strlen(message), message ); 
 					DbgLog((LOG_TRACE, 2, TEXT("Sent Message %s"), message ));
 				}
 
@@ -985,7 +985,7 @@ HRESULT CDeMuxFilter::CompleteConnect(IPin *pReceivePin, CBasePin* pFilterPin )
 
 BOOL CDeMuxFilter::IsDeclineFilter( char *pFilterName )
 {
-	int len = strlen( pFilterName );
+	size_t len = strlen( pFilterName );
 	char* p = pFilterName;
 
 	while (*p) {*p=tolower(*p);p++;} //incase sensitive
@@ -2059,7 +2059,7 @@ void CDeMuxFilter::dump_data( char* pData, int dwBytes )
 void CDeMuxFilter::dump_sample( IMediaSample *pSample )
 {
 	BYTE* pBuffer;
-	int   Length;
+	size_t   Length;
 	if ( fd == NULL ) return;
 	if ( FAILED(  pSample->GetPointer( &pBuffer ) ) ) return;
 	Length = pSample->GetActualDataLength( );
@@ -2075,7 +2075,7 @@ void CDeMuxFilter::open_dump( )
 {
 	char fname[MAX_PATH];
 	char path[MAX_PATH]={0};
-	int len;
+	size_t len;
 	sprintf_s( fname, sizeof(fname), "DUMP_FILTER_DATA.ENABLE" );
 	fd = fopen( fname, "r" );
 	if ( fd == NULL ) return;

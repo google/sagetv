@@ -737,7 +737,7 @@ public class ContainerFormat extends MediaFormat
       rv[i] = "# " + (i + 1);
       String lang = afs[i].getLanguage();
       if (lang != null && lang.length() > 0)
-        rv[i] += " " + lang;
+        rv[i] += " " + lang + (afs[i].getForced() ? " [" + sage.Sage.rez("Forced") + "]" : "");
     }
     return rv;
   }

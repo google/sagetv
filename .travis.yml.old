@@ -1,7 +1,9 @@
+# No longer in use.  Moved to Github actions 09/2021
 language: java
+dist: xenial 
 
 jdk:
-  - oraclejdk8
+  - oraclejdk9
 
 before_install:
   - sudo apt-get update -qq

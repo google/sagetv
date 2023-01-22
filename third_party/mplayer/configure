@@ -1444,7 +1444,7 @@ If the problem _still_ exists, then read DOCS/HTML/en/bugreports.html !
 
 EOF
 
-read _answer
+# read _answer
 
 fi
 echocheck "host cc"

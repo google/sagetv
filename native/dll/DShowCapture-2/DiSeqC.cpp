@@ -930,7 +930,7 @@ int SetupSatelliteLNB( DShowCaptureInfo* pCapInfo, int reload  )
 	while( !feof( fp ) )
 	{
 		char *p;
-		int i;
+		size_t i;
 		memset( buf, 0, sizeof(buf) );
 		fgets( buf, sizeof(buf)-1, fp );
 		

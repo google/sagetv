@@ -312,7 +312,7 @@ private:
 	DWORD _max_video_size_;
 
 	FILE* fd;
-	unsigned long offset;
+	size_t offset;
 	void open_dump();
 	void close_dump();
 	void rewind_dump( );

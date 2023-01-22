@@ -38,7 +38,7 @@
 #include <pshpack1.h>
 #endif
 
-#define CAPTURE_NUM 2
+#define MAX_CAPTURE_NUM 4	//The maximum number of BDA tuners that are supported
 typedef struct TUNING_TBL
 {
 	unsigned short  channel;
@@ -128,7 +128,7 @@ typedef struct DShowCaptureInfo
 	int EPG_post_flow_rate_ctrl;
 
 	int captureNum;
-	DShowCaptureInfo* captures[CAPTURE_NUM];
+	DShowCaptureInfo* captures[MAX_CAPTURE_NUM];
 
 } DShowCaptureInfo;
 

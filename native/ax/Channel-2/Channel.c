@@ -825,7 +825,7 @@ void setQAMScheme(  CHANNEL_DATA *Channel, int QAMScheme )
 
 void setFrqFilePath( CHANNEL_DATA *Channel, char* FileLocation )
 {
-	int len = strlen( FileLocation );
+	size_t len = strlen( FileLocation );
 	if ( len == 0 )
 	{
 		 Channel->frqTableFilePath[0] = 0x0;
@@ -2053,8 +2053,8 @@ char* scanChannel( CHANNEL_DATA* channel, char* deviceName, char* tuningString, 
 	} else
 	{
 		scanResult = (char*)malloc( 64 );
-		SPRINTF( scanResult, 64, "ERROR:Unknow source format %s\r\n", getSourceType( channel) );
-		SageLog(( _LOG_TRACE, 3, "ERROR:Unknow source format %s\r\n", getSourceType( channel) ));
+		SPRINTF( scanResult, 64, "ERROR:Unknown source format %s\r\n", getSourceType( channel) );
+		SageLog(( _LOG_TRACE, 3, "ERROR:Unknown source format %s\r\n", getSourceType( channel) ));
 	}
 	SageEnableCAM( channel->Dev );
 
@@ -3493,7 +3493,7 @@ static int _CopyFile( char* src, char *tar )
 {
 	FILE *fs, *ft;
 	char buf[512];
-	int n, sum=0;
+	size_t n, sum=0;
 	fs = fopen( src, "rb" );
 	if ( fs == NULL )
 		return -1;
@@ -3512,7 +3512,7 @@ static int _CopyFile( char* src, char *tar )
 	}
 	fclose( fs );
 	fclose( ft );
-	return sum;
+	return (int)sum;
 }
 
 #ifdef WIN32

@@ -52,7 +52,7 @@
 /**
  * @brief Information on PCI device.
  */
-pciinfo_t pci_info;
+static pciinfo_t pci_info;
 
 /**
  * @brief Unichrome driver colorkey settings.
@@ -60,10 +60,10 @@ pciinfo_t pci_info;
 static vidix_grkey_t uc_grkey;
 
 static int frames[VID_PLAY_MAXFRAMES];
-uint8_t *vio;
-uint8_t *uc_mem;
-uint8_t mclk_save[3];
-uint8_t hwrev;
+static uint8_t *vio;
+static uint8_t *uc_mem;
+static uint8_t mclk_save[3];
+static uint8_t hwrev;
 
 #define VIA_OUT(hwregs, reg, val)	*(volatile uint32_t *)((hwregs) + (reg)) = (val)
 #define VIA_IN(hwregs, reg)		*(volatile uint32_t *)((hwregs) + (reg))

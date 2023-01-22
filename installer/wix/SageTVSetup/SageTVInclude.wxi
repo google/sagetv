@@ -2,17 +2,32 @@
 <Include>
 
   <!-- Installer (not the application) Version needs updating here. -->
-  <?define SageInstallerVersion="1.013" ?>
+  <!--   first 64 bit installer is version 1.101 -->
+  <?define SageInstallerVersion="1.105" ?>
+
+  <!-- VSPlatform is used as the platform in Visual Studio is Win32 vs x86 so output directories are different -->
+  <?if $(var.Platform) = x64 ?>
+    <?define Win64 = "yes" ?>
+    <?define VSPlatform=$(var.Platform) ?>
+    <?define NameAddon="(x64)" ?>
+    <?define NameAddonShort="64" ?>
+  <?else ?>
+    <?define Win64 = "no" ?>
+    <?define VSPlatform="Win32" ?>
+    <?define NameAddon="" ?>
+    <?define NameAddonShort="" ?>
+  <?endif?>
+
 
   <!-- Set the product name -->
   <?if $(var.Configuration) = SetupServer ?>
-    <?define ProductName="SageTV" ?>
+    <?define ProductName="SageTV$(var.NameAddon)" ?>
     <?define LaunchTargetEXE="SageTVServiceControl.exe" ?>
   <?elseif $(var.Configuration) = SetupClient ?>
-    <?define ProductName="SageTV Client" ?>
+    <?define ProductName="SageTV Client$(var.NameAddon)" ?>
     <?define LaunchTargetEXE="SageTVClient.exe" ?>
   <?elseif $(var.Configuration) = SetupPlaceshifter ?>
-    <?define ProductName="SageTV Placeshifter" ?>
+    <?define ProductName="SageTV Placeshifter$(var.NameAddon)" ?>
     <?define LaunchTargetEXE="SageTVPlaceshifter.exe" ?>
   <?endif?>
 
@@ -20,18 +35,23 @@
   <?define DefaultInstallFolder="SageTV" ?>
 
   <!-- Upgrade code HAS to be the same for all updates to the same product -->
-  <?if $(var.Configuration) = SetupServer ?>
-  <!-- <?define UpgradeCodeMSI="{43225CBF-80C8-446C-9F4D-7765A591F1C1}" ?> -->
-    <?define UpgradeCodeMSI="{2E558C75-7E26-4438-820A-C03710626B48}" ?>
-    <?define UpgradeCodeEXE="{E1F7C8EF-809C-4060-993F-C15D14B9AFA5}" ?>
-  <?elseif $(var.Configuration) = SetupClient ?>
-    <!-- <?define UpgradeCodeMSI="{5D70C396-3511-40DF-8EAB-0ECD3AE22400}" ?> -->
-    <?define UpgradeCodeMSI="{2E558C75-7E26-4438-820A-C03710626B48}" ?>
-    <?define UpgradeCodeEXE="{95102090-9A0B-4488-856B-0541EFD99D3A}" ?>
-  <?elseif $(var.Configuration) = SetupPlaceshifter ?>
-    <!-- <?define UpgradeCodeMSI="{093BB04A-DEC7-4FA3-8574-41705F692967}" ?> -->
-    <?define UpgradeCodeMSI="{020CD8D6-72AB-4395-B727-D539FBCF4A09}" ?>
-    <?define UpgradeCodeEXE="{F1C16FCF-3953-47CA-8131-6D0164F04680}" ?>
+  <!--   we will consider the x64 versions to be a different product so we change the Upgrade Code -->
+  <?if $(var.Platform) = x64 ?>
+    <?if $(var.Configuration) = SetupServer ?>
+      <?define UpgradeCodeMSI="{C909D2BC-0E54-45e5-A106-9E32DAEED790}" ?>
+    <?elseif $(var.Configuration) = SetupClient ?>
+      <?define UpgradeCodeMSI="{C909D2BC-0E54-45e5-A106-9E32DAEED790}" ?>
+    <?elseif $(var.Configuration) = SetupPlaceshifter ?>
+      <?define UpgradeCodeMSI="{63CC0C8F-6925-4885-BEB8-320248C9797C}" ?>
+    <?endif?>
+  <?else ?>
+    <?if $(var.Configuration) = SetupServer ?>
+      <?define UpgradeCodeMSI="{2E558C75-7E26-4438-820A-C03710626B48}" ?>
+    <?elseif $(var.Configuration) = SetupClient ?>
+      <?define UpgradeCodeMSI="{2E558C75-7E26-4438-820A-C03710626B48}" ?>
+    <?elseif $(var.Configuration) = SetupPlaceshifter ?>
+      <?define UpgradeCodeMSI="{020CD8D6-72AB-4395-B727-D539FBCF4A09}" ?>
+    <?endif?>
   <?endif?>
   <?define Manufacturer="TheSageTVAuthors" ?>
 

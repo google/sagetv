@@ -15,9 +15,12 @@
  */
 package sage;
 
+import java.text.DecimalFormat;
+
 public class FFMPEGTranscoder implements TranscodeEngine
 {
   private static final boolean XCODE_DEBUG = Sage.DBG && Sage.getBoolean("media_server/transcode_debug", false);
+  static final String BITRATE_OPTIONS_SIZE_KEY = "httpls_bandwidth/%s/video_size";
 
   public FFMPEGTranscoder()
   {
@@ -575,6 +578,12 @@ public class FFMPEGTranscoder implements TranscodeEngine
           {
             if ("videocodec".equals(propName))
               vcodec = propVal;
+            else if ("audiochannels".equals(propName))
+            {
+              //Only set property if the source audio has atleast as many channels as the setting
+              if(Integer.parseInt(propVal) <= sourceFormat.getAudioFormat().getChannels())
+                ac = propVal;
+            }
             else if ("audiocodec".equals(propName))
               acodec = propVal;
             else if ("videobitrate".equals(propName))
@@ -592,7 +601,16 @@ public class FFMPEGTranscoder implements TranscodeEngine
             else if ("bframes".equals(propName))
               bf = propVal;
             else if ("fps".equals(propName))
-              r = propVal;
+            {
+              if("SOURCE".equals(propVal))
+              {
+                DecimalFormat twoDForm = new DecimalFormat("#.##");
+                r = twoDForm.format(sourceFormat.getVideoFormat().getFps());
+                g = (Math.round(sourceFormat.getVideoFormat().getFps()) * 10) + "";
+              }
+              else    
+                r = propVal;
+            }
             else if ("audiosampling".equals(propName))
               ar = propVal;
             else if ("resolution".equals(propName))
@@ -602,6 +620,12 @@ public class FFMPEGTranscoder implements TranscodeEngine
                 s = MMC.getInstance().isNTSCVideoFormat() ? "720x480" : "720x576";
                 deinterlace = false;
               }
+              else if("720".equals(propVal))
+                s = "1280x720";
+              else if("1080".equals(propVal))
+                s = "1920x1080";
+              else if("SOURCE".equals(propVal))
+                s = inSourceFormat.getVideoFormat().getWidth() + "x" + inSourceFormat.getVideoFormat().getHeight();
               else
                 s = MMC.getInstance().isNTSCVideoFormat() ? "352x240" : "352x288";
             }
@@ -611,9 +635,29 @@ public class FFMPEGTranscoder implements TranscodeEngine
           catch (NumberFormatException e)
           {}
         }
-
-        xcodeParams = "-f " + f + " -vcodec " + vcodec + " -s " + s + " -ac " + ac + " -g " + g + " -bf " + bf + (deinterlace ? " -deinterlace " : "") +
-            " -acodec " + acodec + " -r " + r + " -b " + b + " -ar " + ar + " -ab " + ab + " -packetsize " + packetsize;
+        
+        xcodeParams = "-f " + f;
+        
+        if(vcodec.equals("COPY"))
+        {
+          xcodeParams += " -vcodec copy";
+        }
+        else
+        {
+          xcodeParams += " -vcodec " + vcodec  + " -b " + b + " -r " + r + " -s " + s  + " -g " + g + " -bf " + bf + (deinterlace ? " -deinterlace " : "");
+        }
+        
+        if(acodec.equals("COPY"))
+        {
+          xcodeParams += " -acodec copy";
+        }
+        else
+        {
+          xcodeParams += " -acodec " + acodec + " -ab " + ab + " -ar " + ar  + " -ac " + ac;
+        }
+        
+        xcodeParams += " -packetsize " + packetsize;
+        
       }
       dynamicRateAdjust = false;
     }
@@ -781,14 +825,22 @@ public class FFMPEGTranscoder implements TranscodeEngine
       xcodeParamsVec.add("mpegts");
       xcodeParamsVec.add("-vcodec");
       xcodeParamsVec.add(videoCodec = "libx264");
-      targetWidth = 480;
-      targetHeight = 272;
+      String sizeKey = String.format(BITRATE_OPTIONS_SIZE_KEY, estimatedBandwidth/1000);
+      String xcodeSize = Sage.get(sizeKey, Sage.get(String.format(BITRATE_OPTIONS_SIZE_KEY, "default"), "480x272"));
+      if (Sage.DBG)
+        System.out.println("FFMpegTranscoder: httpls: Using framesize "+xcodeSize+" for bandwidth: "+(estimatedBandwidth/1000)+" base on key: " + sizeKey);
+      // this will always return a valid 2 element array of w and h
+      int size[] = parseFrameSize(xcodeSize, 480, 272);
+      if (Sage.DBG)
+        System.out.println("FFMpegTranscoder: httpls: Calculated framesize " + size[0] + "x" + size[1]);
+      targetWidth = size[0];
+      targetHeight = size[1];
       currAudioBitrateKbps = 32;
       currVideoBitrateKbps = (int)Math.max(64000, (estimatedBandwidth - 32000))/1000;
       xcodeParamsVec.add("-b");
       xcodeParamsVec.add(currVideoBitrateKbps*1000 + "");
       xcodeParamsVec.add("-s");
-      xcodeParamsVec.add("480x272");
+      xcodeParamsVec.add(targetWidth + "x" + targetHeight);
       xcodeParamsVec.add("-r");
       // Trying to lower the frame rate here caused problems...
       xcodeParamsVec.add("29.97");
@@ -864,7 +916,7 @@ public class FFMPEGTranscoder implements TranscodeEngine
       if (sourceFormat != null)
       {
         sage.media.format.VideoFormat vidForm = sourceFormat.getVideoFormat();
-        if (vidForm != null)
+        if (vidForm != null && ((vidForm.getArNum() > 0 && vidForm.getArDen() > 0) || (vidForm.getWidth() > 0 && vidForm.getHeight() > 0)))
         {
           xcodeParamsVec.add("-aspect");
           if (vidForm.getArNum() > 0 && vidForm.getArDen() > 0)
@@ -960,7 +1012,7 @@ public class FFMPEGTranscoder implements TranscodeEngine
       if (sourceFormat != null)
       {
         sage.media.format.VideoFormat vidForm = sourceFormat.getVideoFormat();
-        if (vidForm != null)
+        if (vidForm != null && ((vidForm.getArNum() > 0 && vidForm.getArDen() > 0) || (vidForm.getWidth() > 0 && vidForm.getHeight() > 0)))
         {
           xcodeParamsVec.add("-aspect");
           if (vidForm.getArNum() > 0 && vidForm.getArDen() > 0)
@@ -1058,7 +1110,7 @@ public class FFMPEGTranscoder implements TranscodeEngine
       {
         // Preserve aspect ratio properly
         sage.media.format.VideoFormat vidForm = sourceFormat.getVideoFormat();
-        if (vidForm != null)
+        if (vidForm != null && ((vidForm.getArNum() > 0 && vidForm.getArDen() > 0) || (vidForm.getWidth() > 0 && vidForm.getHeight() > 0)))
         {
           xcodeParamsVec.add("-aspect");
           if (vidForm.getArNum() > 0 && vidForm.getArDen() > 0)
@@ -1311,24 +1363,52 @@ public class FFMPEGTranscoder implements TranscodeEngine
             {
               // Parse to get the byte position for the specified time
               if (XCODE_DEBUG) System.out.println(sb.toString().trim());
+              int frameIdx = sb.indexOf("frame=");
+              int fpsIdx = sb.indexOf("fps=");
               int sizeIdx = sb.indexOf("size=");
               int timeIdx = sb.indexOf("time=");
               int kbIdx = sb.indexOf("kB", sizeIdx);
               int bitrateIdx = sb.indexOf("bitrate=");
+              
               if (sizeIdx != -1 && timeIdx != -1 && kbIdx != -1 && bitrateIdx != -1)
               {
+                String frameStr = "";
                 String sizeStr = sb.substring(sizeIdx + 5, kbIdx).trim();
                 String timeStr = sb.substring(timeIdx + 5, bitrateIdx).trim();
+                
                 if (sizeStr.indexOf('.') == -1)
                 {
                   try
                   {
-                    lastXcodeStreamTime = Math.round(1000 * Double.parseDouble(timeStr));
+                    double time = Double.parseDouble(timeStr);
+                    
+                    //Fallback to using frame count to determin time if the time is < 1
+                    if(time > 1)
+                    {
+                      lastXcodeStreamTime = Math.round(1000 * time);  
+                    }
+                    else
+                    {
+                      if (XCODE_DEBUG) System.out.println("Using framecount to calculate transcoder progress");
+                      
+                      if(frameIdx != -1)
+                      {
+                        frameStr = sb.substring(frameIdx + 6, fpsIdx).trim();
+                      }
+                      
+                      int frame = Integer.parseInt(frameStr);
+                      float fps = FFMPEGTranscoder.this.sourceFormat.getVideoFormat().getFps();
+                      
+                      //Determine time from frames
+                      lastXcodeStreamTime = Math.round(1000 * (frame / fps));
+                    }
+                    
                     lastXcodeStreamPosition = Long.parseLong(sizeStr) * 1024;
+                    
                   }
                   catch (NumberFormatException e)
                   {
-                    System.out.println("ERROR parsing transcoder time of:" + e);
+                    System.out.println("ERROR parsing transcoder status of:" + e);
                   }
                 }
               }
@@ -1523,6 +1603,87 @@ public class FFMPEGTranscoder implements TranscodeEngine
 
     xcodeStdin = xcodeProcess.getOutputStream();
     //try{Thread.sleep(Sage.getInt("media_server/xcode_start_delay", 1000));}catch (Exception e){}
+  }
+
+  /**
+   * Given a string like, '1280x720' it will return a 2 element array where element 0 is width and element 1 is height.
+   * If the string is unparseable, then it will return the defaults.
+   * If the string is 'original' it will attempt to get the size from the original video stream.
+   *
+   * @param xcodeWxH
+   * @param defWidth
+   * @param defHeight
+   * @return
+   */
+  int[] parseFrameSize(String xcodeWxH, int defWidth, int defHeight)
+  {
+    int size[] = new int[] {defWidth, defHeight};
+    if (xcodeWxH == null)
+    {
+      return size;
+    }
+
+    xcodeWxH = xcodeWxH.toLowerCase();
+
+    // if we pass 'original' then try to use the original size of the video
+    if ("original".equals(xcodeWxH))
+    {
+      if (sourceFormat!=null && sourceFormat.getVideoFormat()!=null)
+      {
+        size[0] = sourceFormat.getVideoFormat().getWidth();
+        size[1] = sourceFormat.getVideoFormat().getHeight();
+        size[0] = (size[0]<=0) ? defWidth : size[0];
+        size[1] = (size[1]<=0) ? defHeight : size[1];
+        return size;
+      }
+      else
+      {
+        if (Sage.DBG)
+          System.out.println("FFMpegTranscoder: parseFrameSize(): 'original' was passed but there isn't any video information.  Using defaults.");
+        return size;
+      }
+    }
+
+    // need to parse widthxheight, ie, 1280x720
+    String parts[] = xcodeWxH.split("x");
+    if (parts.length != 2)
+    {
+      if (Sage.DBG)
+        System.out.println("FFMpegTranscoder: parseFrameSize(): Invalid xcode size option "+xcodeWxH+" (should be widthxheight, eg, 1280x720)");
+      return size;
+    }
+
+    int w,h;
+    try
+    {
+      w = Integer.parseInt(parts[0].trim());
+    }
+    catch (Throwable t)
+    {
+      if (Sage.DBG)
+        System.out.println("FFMpegTranscoder: parseFrameSize(): Invalid xcode size option "+xcodeWxH+" (should be widthxheight, eg, 1280x720)");
+      return size;
+    }
+
+    try
+    {
+      h = Integer.parseInt(parts[1].trim());
+    }
+    catch (Throwable t)
+    {
+      if (Sage.DBG)
+        System.out.println("FFMpegTranscoder: parseFrameSize(): Invalid xcode size option "+xcodeWxH+" (should be widthxheight, eg, 1280x720)");
+      return size;
+    }
+
+    // great, we have a valid height and width
+    if (h>0 && w>0)
+    {
+      size[0]=w;
+      size[1]=h;
+    }
+
+    return size;
   }
 
   public void stopTranscode()

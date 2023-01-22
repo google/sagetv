@@ -81,7 +81,7 @@ JNIEXPORT jstring JNICALL Java_sage_DShowCaptureDevice_scanBDAChannel0
 		wcstombs( countryRegion, (wchar_t*)country, sizeof(countryRegion)-2 );
 
 	//trime space
-	int len = strlen(countryRegion);
+	size_t len = strlen(countryRegion);
 	while( len-- > 0 )
 	{
 		if ( countryRegion[len] == ' ' ) countryRegion[len] = 0x0;

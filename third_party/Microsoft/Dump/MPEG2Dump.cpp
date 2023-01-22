@@ -837,7 +837,7 @@ STDMETHODIMP CMPEG2Dump::SetFileName(LPCOLESTR pszFileName,const AM_MEDIA_TYPE *
 					if (firstSlash)
 					{
 						// Now extract the hostname and the file path
-						WideCharToMultiByte(GetACP(), 0, atSign + 1, (firstSlash - atSign) - 1,
+						WideCharToMultiByte(GetACP(), 0, atSign + 1, (int)(firstSlash - atSign) - 1,
     							m_pHostname, 256, NULL, NULL);
 						m_pHostname[(int)(firstSlash - atSign - 1)] = L'\0';
 						DbgLog((LOG_TRACE, 2, TEXT("Upload host=%s"), m_pHostname));
@@ -1138,7 +1138,7 @@ HRESULT CMPEG2Dump::AsyncWriteFile( BYTE* pbData, DWORD lData )
 		m_dwByteInBuffer = 0;
 		if ( hr != S_OK )
 		{
-			_flog( "MPEG2Dump.LOG", "Data droped due to buffer maxuim limition hr=0x%x\n", hr );
+			_flog( "MPEG2Dump.LOG", "Data dropped due to buffer maximum limition hr=0x%x\n", hr );
 			return hr;
 		}
 	}
@@ -1282,7 +1282,7 @@ HRESULT CMPEG2Dump::WriteNetwork(PBYTE data, DWORD len)
 		temp[--pos] = (TCHAR) digit+L'0';
 	} while (li.QuadPart);
 	sprintf(request, "WRITE %s %d\r\n", temp+pos, m_bRegOptimizeTransfers ? m_bytesLeftInNetworkWrite : len);
-	int dataSize = strlen(request);
+	int dataSize = lstrlenA(request);
 	if (send(sd, request, dataSize, 0) < dataSize)
 	{
 		DbgLog((LOG_TRACE, 2, TEXT("socket write failed, reopening connection...")));
@@ -1675,7 +1675,7 @@ HRESULT CMPEG2Dump::OpenConnection()
 	char data[512];
 	sprintf(data, "WRITEOPEN %s %d\r\n", lpszFileName, m_dwUploadKey);
 	delete [] lpszFileName;
-	int dataSize = strlen(data);
+	int dataSize = lstrlenA(data);
 	if (send(sd, data, dataSize, 0) < dataSize)
 	{
 		DbgLog((LOG_TRACE, 2, TEXT("socket write failed")));
@@ -1698,7 +1698,7 @@ HRESULT CMPEG2Dump::CloseConnection()
 {
 	DbgLog((LOG_TRACE, 2, TEXT("CloseConnection() IN")));
 	char* data = "QUIT\r\n";
-	int dataSize = strlen(data);
+	int dataSize = lstrlenA(data);
 	send(sd, data, dataSize, 0);
 	closesocket(sd);
 	WSACleanup();

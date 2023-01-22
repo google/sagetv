@@ -174,7 +174,7 @@ HRESULT CFilterProperties::OnApplyChanges()
 	m_pMpegDemux->SetPlayRate( rate );
 
 	GetDlgItemText( m_hwndDialog, IDC_EDIT_TS_CHANNEL, txt, sizeof(txt) );
-	for ( i = 0; i<(int)strlen(txt)-1 && i<(int)sizeof(txt); i++ )
+	for ( i = 0; i<lstrlenA(txt)-1 && i<(int)sizeof(txt); i++ )
 		if ( txt[i] >= '0' && txt[i] <= '9' ) break;
 
 	if ( txt[i] >= '0' && txt[i] <= '9' ) 
