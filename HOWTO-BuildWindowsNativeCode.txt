@@ -62,6 +62,14 @@ C) Create the following Environment Variables:
 
   Do NOT quote the path, even though it may contain embedded spaces.
 
+    JAVA_HOME
+
+  It's value should be the path to where JDK was installed, i.e.,
+  something like:
+    C:\Program Files\Java\jdk1.8.0_60
+
+  Do NOT quote the path, even though it may contain embedded spaces.
+
 
 =====================================================================
 2. Install GitHub Desktop
@@ -216,8 +224,8 @@ Prerequisites:
 -----
   - Packages listed above are installed.
   - You're in the proper shell (MINGW32 or MINGW64 after the prompt).
-  - SAGEDEVJDK & SAGEDEVJDK64 environment variables are set.  Confirm by
-    typing 'env'.
+  - SAGEDEVJDK, SAGEDEVJDK64 & JAVA_HOME environment variables are set.
+    Confirm by typing 'env'.
 
 Steps:
 -----
@@ -226,7 +234,7 @@ A.  Navigate to the sagetv/buildwin directory.  The C drive is mounted as
 
 B.  run ./buildwin.sh
 
-This builds the following support DLL's an places them in buildwin/Win32 or
+This builds the following support DLL's and places them in buildwin/Win32 or
 buildwin/x64:
   - swscale.dll
   - ImageLoader.dll
@@ -252,6 +260,7 @@ Prerequisites:
     DXSDK_DIR
     SAGEDEVJDK
     SAGEDEVJDK64
+    JAVA_HOME
 
 Steps:
 -----
@@ -295,3 +304,7 @@ Common build failures:
 
 *  "fatal error C1083: Cannot open include file: 'D3dX9.h' "
   This occurs if DXSDK_DIR is missing or incorrect
+
+* "cannot find tools.jar."
+  This occurs if JAVA_HOME is missing or incorrect.
+

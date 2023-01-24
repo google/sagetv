@@ -602,16 +602,16 @@ public class SFIRTuner implements Runnable
       if (Sage.DBG) System.out.println("Playing IR tune command of " + cmdString);
       if (!ensureRemoteLoaded(remoteName)) return;
 
-      try {
-         int cmdNum = Integer.parseInt(cmdString);
-      } catch (Exception e) {
-         String cmdStringNumeric = cmdString.replaceAll("\\D", ""); // remove all non-digits
-         cmdString = cmdStringNumeric;
-         if (Sage.DBG) System.out.println("IR tune command must be all digits; converted it to: " + cmdString);
-      }
-
       if (canMacroTune())
       {
+        try {
+          int cmdNum = Integer.parseInt(cmdString);
+        } catch (Exception e) {
+          String cmdStringNumeric = cmdString.replaceAll("\\D", ""); // remove all non-digits
+          cmdString = cmdStringNumeric;
+          if (Sage.DBG) System.out.println("IR tune command was not all digits; converted to: " + cmdString);
+        }
+
          try {
             macroTune(Integer.parseInt(cmdString));
          } 
@@ -631,19 +631,22 @@ public class SFIRTuner implements Runnable
         }
         try
         {
-          int cmdNum = Integer.parseInt(cmdString);
-	
-          if (baseRemote.channelDigits != 0)
+          // channelDigits corresponds to 'Digits per Channel' in the UI
+          if (baseRemote.channelDigits > 0)
           {
-             if (cmdString.length() != baseRemote.channelDigits)
-             {
-            	int hiChan = (int)Math.round(Math.pow(10, baseRemote.channelDigits));
-            	while (hiChan/10 > cmdNum)
-            	{
-                    cmdString = "0" + cmdString;
-                    hiChan /= 10;
-                }
-             }
+            // cmdString may include non-numeric chars, eg. '-' or '.'
+            int digitCnt = 0;
+            for (int i = 0; i < cmdString.length(); i++)
+            {
+              if (Character.isDigit(cmdString.charAt(i)))
+                digitCnt++;
+            }               
+
+            while (digitCnt < baseRemote.channelDigits)
+            {
+              cmdString = "0" + cmdString;
+              digitCnt++;
+            }
           }
         }catch (Exception e){}
         if (baseRemote.prefixCmd != null && baseRemote.prefixCmd.length() > 0)
