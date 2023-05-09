@@ -1,0 +1,16 @@
+Version Information
+===================
+
+Version:           4.4-57
+Host spec(s):      i686-pc-linux-gnu i686-mingw32
+Target:            mips-linux-gnu
+
+Build Information
+=================
+
+Build date:             20091015
+Build machine:          ike1
+Build operating system: 5.0
+Build uname:            Linux ike1 2.6.28-11-server #42-Ubuntu SMP Fri Apr 17 02:45:36 UTC 2009 x86_64 GNU/Linux
+Build user:             clm
+

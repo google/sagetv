@@ -1,0 +1,12 @@
+This document describes the technique that can be used in order to replace any of the GPLv3 open source software components running on the HD300:
+
+1. Go into Setup->System Information and type '5309' on your remote control, a blue dot should appear in the top left hand corner of the screen
+2. Go into Setup->Advanced Setup->General and enable 'Debug Logging'
+3. Go into Setup->Advanced Setup->Server and enable the Windows File Server
+4. Exit out to the main menu and power cycle the device
+5. There should now be an SMB share exposed from the device called 'InternalFlash'. Place any modified files/folders you want to use in here.
+6. Telnet into the device and login as 'root'
+7. Create a file named /rw/startupmods which has executable permissions; it should be a shell script (i.e. leading with '#!/bin/sh')
+8. Either editing the file over SMB, or locally with 'vi'; you can replace components of the filesystem with lines such as this:
+mount -o bind /rw/samba /app/samba
+9. Save the startupmods file and reboot the box. When it comes back up it will be using the modified versions of the files from /rw.
