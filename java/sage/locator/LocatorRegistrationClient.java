@@ -175,7 +175,7 @@ public class LocatorRegistrationClient implements Runnable, LocatorConstants
 
   private static java.net.Socket connectToServer() throws java.io.IOException
   {
-    String theAddress = LOCATOR_SERVER;
+    String theAddress = sage.Sage.get(LOCATOR_SERVER_PROP, LOCATOR_SERVER);
     try
     {
       java.net.Socket sock = new java.net.Socket(theAddress, LOCATOR_PORT);
@@ -187,7 +187,7 @@ public class LocatorRegistrationClient implements Runnable, LocatorConstants
     catch (java.net.UnknownHostException e2)
     {
     }
-    theAddress = BACKUP_LOCATOR_SERVER;
+    theAddress = sage.Sage.get(BACKUP_LOCATOR_SERVER_PROP, BACKUP_LOCATOR_SERVER);
     java.net.Socket sock = new java.net.Socket(theAddress, LOCATOR_PORT);
     return sock;
   }
