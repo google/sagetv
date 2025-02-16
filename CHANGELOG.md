@@ -6,10 +6,10 @@
 * Updated gradle script so that project could build in Netbeans
 * Updated the FFMPEGTranscoder to fallback to frame count instead of time to calculate progress
 * Allow IR blasters that support it to xmit non-numeric Tune strings (eg 42-1).
-* SD EPG changes to correct image retreival without token and other API corrections/updates
+* SD EPG changes to correct image retrieval without token and other API corrections/updates
 * SD EPG added debug_sd_support property to enable extra debug info when contacting SD support
 * SD EPG added sdepg_core/bypassCelebrityImages to allow users in the future to bypass reteiving Celebrity images from SD if causing issues
-* SD EPG added sdepg_core/bypassProgramImages to allow users in the future to bypass reteiving Program images from SD if causing issues
+* SD EPG added sdepg_core/bypassProgramImages to allow users in the future to bypass retrieving Program images from SD if causing issues
 
 ## Version 9.2.8 (2022-01-05)
 * Update to build process to support Linux build on Ubuntu 18.04 and JDK 11
