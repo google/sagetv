@@ -51,6 +51,9 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Vector;
 import java.util.WeakHashMap;
+import sage.epg.sd.SDRipper;
+import sage.epg.sd.SDSageSession;
+import sage.epg.sd.SDSession;
 
 /*
  * NOTE: DON'T DO THUMBNAIL GENERATION IN HERE. WE WANT TO STORE THEM IN SEPARATE FILES
@@ -3207,8 +3210,9 @@ public class MetaImage
         }
       }
       InputStream is = null;
-      if (src instanceof String)
-        is = getClass().getClassLoader().getResourceAsStream((String) src);
+      if (src instanceof String){
+          is = getClass().getClassLoader().getResourceAsStream((String) src);
+      }
       else
       {
         HttpURLConnection.setFollowRedirects(true);
@@ -3222,6 +3226,27 @@ public class MetaImage
             myURLConn = myURL.openConnection();
             myURLConn.setConnectTimeout(30000);
             myURLConn.setReadTimeout(30000);
+            if(src.toString().startsWith(SDSession.URL_VERSIONED)){
+                //this is an SD supplied image so a token is required to retreive it
+                if (Sage.DBG) System.out.println("MetaImage.loadCacheFile: Found SD image url. src = '" + src + "'");
+
+                String sdToken = null;
+                sdToken = SDRipper.ensureSession().getToken();
+                if(sdToken==null){
+                    //no token so skip SD Image
+                    if (Sage.DBG) System.out.println("MetaImage.loadCacheFile: No token so skipping src = '" + src + "'");
+                    break;
+                }else{
+                    if (Sage.DBG) System.out.println("MetaImage.loadCacheFile: Adding token to Request. token = '" + sdToken + "'");
+                    myURLConn.addRequestProperty("token", sdToken);
+                    //secret SD debug mode that will send requests to their debug server. Only enable when working with SD Support
+                    if(Sage.getBoolean("debug_sd_support", false)) {
+                      myURLConn.addRequestProperty("RouteTo", "debug");
+                      if (Sage.DBG) System.out.println("****debug_sd_support**** property set. This should only be true when you are working directly with SD Support staff");
+                    }
+                }
+            }
+            
             is = myURLConn.getInputStream();
             if (myURLConn instanceof HttpURLConnection)
             {

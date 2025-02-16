@@ -74,6 +74,12 @@ public class SDSageSession extends SDSession
     connection.setRequestProperty("Accept-Charset", "ISO-8859-1");
     // PUT must have a length or we will not get a reply.
     connection.setRequestProperty("Content-Length", Integer.toString(len));
+    //secret SD debug mode that will send requests to their debug server. Only enable when working with SD Support
+    if(Sage.getBoolean("debug_sd_support", false)) {
+      connection.setRequestProperty("RouteTo", "debug");
+      if (Sage.DBG) System.out.println("****debug_sd_support**** property set. This should only be true when you are working directly with SD Support staff");
+    }
+
     if (token != null)
       connection.setRequestProperty("token", token);
     try
@@ -129,7 +135,17 @@ public class SDSageSession extends SDSession
     connection.setRequestProperty("Accept-Charset", "ISO-8859-1");
     // POST must have a length or we will not get a reply.
     connection.setRequestProperty("Content-Length", Integer.toString(len));
+    //secret SD debug mode that will send requests to their debug server. Only enable when working with SD Support
+    if(Sage.getBoolean("debug_sd_support", false)) {
+      connection.setRequestProperty("RouteTo", "debug");
+      if (Sage.DBG) System.out.println("****debug_sd_support**** property set. This should only be true when you are working directly with SD Support staff");
+    }
     if (token != null)
+        if (SDSession.debugEnabled())
+        {
+            SDSession.writeDebugLine("POST Adding token '" + token + "' to post");
+        }
+        
       connection.setRequestProperty("token", token);
     try
     {
@@ -143,6 +159,10 @@ public class SDSageSession extends SDSession
       if (retry && connection.getResponseCode() == 403)
       {
         token = null;
+      if (SDSession.debugEnabled())
+        {
+            SDSession.writeDebugLine("POST response 403 received. setting token to null");
+        }
 
         try
         {
@@ -154,6 +174,10 @@ public class SDSageSession extends SDSession
         } catch (InterruptedException e) {}
 
         authenticate();
+        if (SDSession.debugEnabled())
+          {
+              SDSession.writeDebugLine("POST retry after authenticate call. token = '" + token + "'");
+          }
         return post(url, sendBytes, off, len, false);
       }
 
@@ -188,14 +212,28 @@ public class SDSageSession extends SDSession
     connection.setRequestProperty("Accept", "application/json");
     connection.setRequestProperty("Accept-Encoding", "deflate,gzip");
     connection.setRequestProperty("Accept-Charset", "ISO-8859-1");
+    //secret SD debug mode that will send requests to their debug server. Only enable when working with SD Support
+    if(Sage.getBoolean("debug_sd_support", false)) {
+      connection.setRequestProperty("RouteTo", "debug");
+      if (Sage.DBG) System.out.println("****debug_sd_support**** property set. This should only be true when you are working directly with SD Support staff");
+    }
     if (token != null)
-      connection.setRequestProperty("token", token);
+        if (SDSession.debugEnabled())
+        {
+            SDSession.writeDebugLine("GET Adding token '" + token + "' to get");
+        }
+
+        connection.setRequestProperty("token", token);
 
     // Schedules Direct will return an http error 403 if the token has expired. The token can expire
     // because another program is using the same account, so we try once to get the token back.
     if (retry && connection.getResponseCode() == 403)
     {
       token = null;
+      if (SDSession.debugEnabled())
+        {
+            SDSession.writeDebugLine("GET response 403 received. setting token to null");
+        }
 
       try
       {
@@ -207,6 +245,10 @@ public class SDSageSession extends SDSession
       } catch (InterruptedException e) {}
 
       authenticate();
+      if (SDSession.debugEnabled())
+        {
+            SDSession.writeDebugLine("GET retry after authenticate call. token = '" + token + "'");
+        }
       return get(url, false);
     }
 
@@ -243,6 +285,11 @@ public class SDSageSession extends SDSession
     connection.setRequestProperty("Accept", "application/json");
     connection.setRequestProperty("Accept-Encoding", "deflate,gzip");
     connection.setRequestProperty("Accept-Charset", "ISO-8859-1");
+    //secret SD debug mode that will send requests to their debug server. Only enable when working with SD Support
+    if(Sage.getBoolean("debug_sd_support", false)) {
+      connection.setRequestProperty("RouteTo", "debug");
+      if (Sage.DBG) System.out.println("****debug_sd_support**** property set. This should only be true when you are working directly with SD Support staff");
+    }
     if (token != null)
       connection.setRequestProperty("token", token);
 

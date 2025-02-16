@@ -15,6 +15,7 @@ public enum SDErrors
   INVALID_PARAMETER_COUNTRY(2050 /*, "The COUNTRY parameter must be ISO-3166-1 alpha 3. See http://en.wikipedia.org/wiki/ISO_3166-1_alpha-3."*/),
   INVALID_PARAMETER_POSTALCODE(2051 /*, "The POSTALCODE parameter must be valid for the country you are searching. Post message to http://forums.schedulesdirect.org/viewforum.php?f=6 if you are having issues."*/),
   INVALID_PARAMETER_FETCHTYPE(2052 /*, "You provided a fetch type I don't know how to handle."*/),
+  INVALID_PARAMETER_DEBUG(2055 /*, "Unexpected debug connection from client."*/),
   DUPLICATE_LINEUP(2100 /*, "Lineup already in account."*/),
   LINEUP_NOT_FOUND(2101 /*, "Lineup not in account. Add lineup to account before requesting mapping."*/),
   UNKNOWN_LINEUP(2102 /*, "Invalid lineup requested. Check your COUNTRY / POSTALCODE combination for validity."*/),

@@ -55,6 +55,8 @@ import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidParameterException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 
 public abstract class SDSession
@@ -205,6 +207,16 @@ public abstract class SDSession
   }
 
   /**
+   * Returns the provided token.
+   *
+   * @return The current token.
+   */
+  public String getToken()
+  {
+    return token;
+  }
+
+  /**
    * Enable debug logging for all JSON in and out.
    */
   public static void enableDebug()
@@ -232,7 +244,7 @@ public abstract class SDSession
     }
     catch (IOException e)
     {
-      System.out.println("Unable to open sd_epg.log");
+      System.out.println("enableDebug - Unable to open sd_epg.log");
       e.printStackTrace(System.out);
     }
   }
@@ -253,7 +265,7 @@ public abstract class SDSession
       {
         String message = line.getMessage();
         if (message == null) message = "null";
-        debugWriter.write("#### Exception Start ####");
+        debugWriter.write(debugDateTime() + "#### Exception Start ####");
         debugWriter.write(message);
         debugWriter.write(System.lineSeparator());
         line.printStackTrace(debugWriter);
@@ -268,7 +280,7 @@ public abstract class SDSession
     }
     catch (Exception e)
     {
-      System.out.println("Unable to write to sd_epg.log");
+      System.out.println("writeDebugException - Unable to write to sd_epg.log");
       e.printStackTrace(System.out);
     }
   }
@@ -283,7 +295,7 @@ public abstract class SDSession
       synchronized (debugLock)
       {
         if (line == null) line = "null";
-        debugWriter.write(line);
+        debugWriter.write(debugDateTime() + line);
         debugWriter.write(System.lineSeparator());
         debugWriter.flush();
         debugBytes += line.length() + 2;
@@ -292,7 +304,7 @@ public abstract class SDSession
     }
     catch (Exception e)
     {
-      System.out.println("Unable to write to sd_epg.log");
+      System.out.println("writeDebugLine - Unable to write to sd_epg.log");
       e.printStackTrace(System.out);
     }
   }
@@ -306,6 +318,9 @@ public abstract class SDSession
     {
       synchronized (debugLock)
       {
+        debugWriter.write(System.lineSeparator());
+        debugWriter.write(debugDateTime() + ".....");
+        debugWriter.write(System.lineSeparator());
         debugWriter.write(line, offset, length);
         debugBytes += length;
         // Don't perform a rollover in this method because we could cut a String of JSON in half.
@@ -313,7 +328,7 @@ public abstract class SDSession
     }
     catch (Exception e)
     {
-      System.out.println("Unable to write to sd_epg.log");
+      System.out.println("writeDebug - Unable to write to sd_epg.log");
       e.printStackTrace(System.out);
     }
   }
@@ -332,6 +347,16 @@ public abstract class SDSession
     }
   }
 
+  private static String debugDateTime(){
+        LocalDateTime now = LocalDateTime.now();
+        
+        // Define a DateTimeFormatter to format the LocalDateTime object
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        
+        // Format the LocalDateTime object into a string
+        return now.format(formatter) + ": ";
+  }
+  
   /**
    * Connect to Schedules Direct and get a token if there isn't a token or 12 hours has passed since
    * the last token was acquired.
@@ -1026,6 +1051,13 @@ public abstract class SDSession
    */
   public SDProgramImages[] getProgramImages(String[] programs) throws IOException, SDException
   {
+     
+    //check for image processing bypass property and skip all images if set to true
+    if(Sage.getBoolean("sdepg_core/bypassProgramImages", false)){
+      if (Sage.DBG) System.out.println("getProgramImages: sdepg_core/bypassProgramImages=true so skipping image load for programs = " + programs);
+      return null;
+    }
+    
     if (programs.length > 500)
       throw new InvalidParameterException("You cannot get more than 500 images in one query.");
 
@@ -1038,7 +1070,8 @@ public abstract class SDSession
         submit.add(program);
     }
 
-    SDProgramImages[] returnValues = postJson(GET_PROGRAMS_IMAGES, SDProgramImages[].class, submit);
+    // JUSJOKEN: 2025-02-13 - SD now require a token for images
+    SDProgramImages[] returnValues = postAuthJson(GET_PROGRAMS_IMAGES, SDProgramImages[].class, submit);
     return returnValues;
   }
 
@@ -1056,10 +1089,16 @@ public abstract class SDSession
     if (personId == null || personId.length() == 0 || personId.equals("0"))
       return SDProgramImages.EMPTY_IMAGES;
 
+    //check for image processing bypass property and skip all images if set to true
+    if(Sage.getBoolean("sdepg_core/bypassCelebrityImages", false)){
+      if (Sage.DBG) System.out.println("getCelebrityImages: sdepg_core/bypassCelebrityImages=true so skipping image load for personId = " + personId);
+      return SDProgramImages.EMPTY_IMAGES;
+    }
+    
     try
     {
-      // A token is not required to perform this lookup.
-      return getJson(new URL(GET_CELEBRITY_IMAGES + personId), SDImage[].class);
+      // JUSJOKEN: 2025-02-13 - SD now require a token for images
+      return getAuthJson(new URL(GET_CELEBRITY_IMAGES + personId), SDImage[].class);
     }
     catch (JsonSyntaxException e)
     {

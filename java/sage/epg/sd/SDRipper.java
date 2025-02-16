@@ -81,6 +81,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -2477,12 +2479,15 @@ public class SDRipper extends EPGDataSource
         case INVALID_HASH:
         case INVALID_USER:
           sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createSDInvalidUsernamePasswordMsg());
+          resetToken();
           break;
         case ACCOUNT_LOCKOUT:
           sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createSDAccountLockOutMsg());
+          resetToken();
           break;
         case ACCOUNT_DISABLED:
           sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createSDAccountDisabledMsg());
+          resetToken();
           break;
       }
       setExceptionTimeout(e.ERROR);
@@ -2928,6 +2933,7 @@ public class SDRipper extends EPGDataSource
           case INVALID_HASH:
           case INVALID_USER:
             Arrays.fill(returnValues, i, returnValues.length, new SDInProgressSport(SDErrors.SAGETV_NO_PASSWORD.CODE));
+            resetToken();
             return returnValues;
           default:
             returnValues[i] = new SDInProgressSport(SDErrors.SAGETV_UNKNOWN.CODE);
@@ -2962,10 +2968,32 @@ public class SDRipper extends EPGDataSource
         // Set this to an hour so we aren't too obnoxious about the authentication error messages
         // and so we shouldn't accidentally lock the account out.
         SDRipper.retryWait = Sage.time() + Sage.MILLIS_PER_HR;
+        resetToken();
         break;
       case ACCOUNT_LOCKOUT:
         SDRipper.retryWait = Sage.time() + Sage.MILLIS_PER_HR;
+        resetToken();
         break;
     }
   }
+  
+  //reset token to null by ending the session when SD sends an error that requires getting a new token
+  //JUSJOKEN:2025-02-13
+  private static void resetToken(){
+      try {
+          ensureSession().endSession();
+      } catch (SDException ex) {
+          if (Sage.DBG)
+          {
+            System.out.println("SDEPG invalid SD authentication - token reset so next call will get a new token");
+          }
+      } catch (IOException ex) {
+          if (Sage.DBG)
+          {
+            System.out.println("SDEPG invalid SD authentication - token reset so next call will get a new token");
+          }
+      }
+      
+  }
+  
 }
