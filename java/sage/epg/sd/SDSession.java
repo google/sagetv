@@ -88,6 +88,8 @@ public abstract class SDSession
   // These are set in the static constructor because they can throw format exceptions.
   // Returns a token if the credentials are valid.
   protected static final URL GET_TOKEN;
+  // Returns the current token if the credentials are valid.
+  protected static final URL GET_TOKEN_CURRENT;
   // Get the current account status/saved lineups.
   private static final URL GET_STATUS;
   // Get a list of available services.
@@ -109,6 +111,7 @@ public abstract class SDSession
   {
     // Work around so that the URL's are constants.
     URL newGetToken;
+    URL newGetTokenCurrent;
     URL newGetStatus;
     URL newGetAvailable;
     URL newGetLineups;
@@ -121,6 +124,7 @@ public abstract class SDSession
     try
     {
       newGetToken = new URL(URL_VERSIONED + "/token");
+      newGetTokenCurrent = new URL(URL_VERSIONED + "/token/current");
       newGetStatus = new URL(URL_VERSIONED + "/status");
       newGetAvailable = new URL(URL_VERSIONED + "/available");
       newGetLineups = new URL(URL_VERSIONED + "/lineups");
@@ -137,6 +141,7 @@ public abstract class SDSession
       e.printStackTrace(System.out);
 
       newGetToken = null;
+      newGetTokenCurrent = null;
       newGetStatus = null;
       newGetAvailable = null;
       newGetLineups = null;
@@ -148,6 +153,7 @@ public abstract class SDSession
     }
 
     GET_TOKEN = newGetToken;
+    GET_TOKEN_CURRENT = newGetTokenCurrent;
     GET_STATUS = newGetStatus;
     GET_AVAILABLE = newGetAvailable;
     GET_LINEUPS = newGetLineups;
@@ -240,6 +246,14 @@ public abstract class SDSession
         }
 
         debugBytes = (int) fileSize;
+        //check if the image bypass settings are set and log that in the sagetv debug log file so the use is aware
+        if(Sage.DBG && Sage.getBoolean("sdepg_core/bypassCelebrityImages", false)){
+            System.out.println("sdepg_core/bypassCelebrityImages=true so skipping image load for celebrities");
+        }
+        if(Sage.DBG && Sage.getBoolean("sdepg_core/bypassProgramImages", false)){
+            System.out.println("sdepg_core/bypassProgramImages=true so skipping image load for programs");
+        }
+        
       }
     }
     catch (IOException e)
@@ -380,7 +394,7 @@ public abstract class SDSession
     authRequest.addProperty("username", username);
     authRequest.addProperty("password", passHash);
 
-    InputStreamReader reader = post(GET_TOKEN, authRequest);
+    InputStreamReader reader = post(GET_TOKEN_CURRENT, authRequest);
     JsonObject response = gson.fromJson(reader, JsonObject.class);
 
     try
@@ -1054,7 +1068,9 @@ public abstract class SDSession
      
     //check for image processing bypass property and skip all images if set to true
     if(Sage.getBoolean("sdepg_core/bypassProgramImages", false)){
-      if (Sage.DBG) System.out.println("getProgramImages: sdepg_core/bypassProgramImages=true so skipping image load for programs = " + programs);
+      if (SDSession.debugEnabled()){
+          writeDebugLine("getProgramImages: sdepg_core/bypassProgramImages=true so skipping image load for programs = " + programs);
+      }
       return null;
     }
     
@@ -1091,7 +1107,9 @@ public abstract class SDSession
 
     //check for image processing bypass property and skip all images if set to true
     if(Sage.getBoolean("sdepg_core/bypassCelebrityImages", false)){
-      if (Sage.DBG) System.out.println("getCelebrityImages: sdepg_core/bypassCelebrityImages=true so skipping image load for personId = " + personId);
+      if (SDSession.debugEnabled()){
+          writeDebugLine("getCelebrityImages: sdepg_core/bypassCelebrityImages=true so skipping image load for personId = " + personId);
+      }
       return SDProgramImages.EMPTY_IMAGES;
     }
     
