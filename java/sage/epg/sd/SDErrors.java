@@ -1,5 +1,8 @@
 package sage.epg.sd;
 
+import sage.Sage;
+import sage.SageTV;
+
 public enum SDErrors
 {
   OK(0 /*, "OK"*/),
@@ -33,6 +36,7 @@ public enum SDErrors
   ACCOUNT_LOCKOUT(4004 /*, "Too many login failures. Locked for 15 minutes."*/),
   ACCOUNT_DISABLED(4005 /*, "Account has been disabled. Please contact Schedules Direct support: admin@schedulesdirect.org for more information."*/),
   TOKEN_EXPIRED(4006 /*, "Token has expired. Request new token."*/),
+  TOO_MANY_LOGINS(4009 /*, "Exceeded maximum number of logins in 24 hours."*/),
   MAX_LINEUP_CHANGES_REACHED(4100 /*, "Exceeded maximum number of lineup changes for today."*/),
   MAX_LINEUPS(4101 /*, "Exceeded number of lineups for this account."*/),
   NO_LINEUPS(4102 /*, "No lineups have been added to this account."*/),
@@ -109,8 +113,26 @@ public enum SDErrors
     {
       for (SDErrors error : SDErrors.values())
       {
-        if (code == error.CODE)
+        if (code == error.CODE){
+          if(error.CODE == error.TOO_MANY_LOGINS.CODE){
+              if (Sage.DBG) System.out.println("**EPG** ERROR HANDLER code = " + error.CODE + " creating a system message");
+              //log a system message
+            try{
+              java.util.Properties props = new java.util.Properties();
+              props.setProperty("Error number", "4009");
+              props.setProperty("Error", "Too many logins error");
+              SageTV.api("PostSystemMessage", new Object[] {new Integer(sage.msg.SystemMessage.LINEUP_SD_ACCOUNT_LOCKOUT_MSG),
+                    new Integer(sage.msg.SystemMessage.ERROR_PRIORITY), sage.Sage.rez("TOO_MANY_LOGINS Error from SD",
+                        new Object[] { "Contact SD Support", "to unlock account" }), props});
+            }catch(Exception e){
+              
+            }
+          }else{
+              if (Sage.DBG) System.out.println("**EPG** ERROR HANDLER code = " + error.CODE + " EXTRA Code needed here !!!");
+              
+          }
           throw new SDException(error);
+        }
       }
     }
 

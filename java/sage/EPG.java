@@ -646,10 +646,10 @@ public final class EPG implements Runnable
             //determine if we need to add 1 to the date if we are AFTER the scheduledMaintenance time for today
             if(Sage.time()>nextScheuldedMaintenanceTime){
                 cal.add(java.util.Calendar.DATE,1);
-                if (Sage.DBG) System.out.println("EPG****** ADDING 1 to the date");
+                //if (Sage.DBG) System.out.println("EPG****** ADDING 1 to the date");
                 nextScheuldedMaintenanceTime = cal.getTimeInMillis();
             }
-            if (Sage.DBG) System.out.println("EPG**** Sage.time:" + Sage.time() + " wiz.getLastMaintenance():" + wiz.getLastMaintenance() + " result:" + (Sage.time() - wiz.getLastMaintenance()) + " MAINTENANCE_FREQ:" + MAINTENANCE_FREQ);
+            //if (Sage.DBG) System.out.println("EPG**** Sage.time:" + Sage.time() + " wiz.getLastMaintenance():" + wiz.getLastMaintenance() + " result:" + (Sage.time() - wiz.getLastMaintenance()) + " MAINTENANCE_FREQ:" + MAINTENANCE_FREQ);
 
             if ((Sage.time() - wiz.getLastMaintenance() > MAINTENANCE_FREQ) && ((nextScheuldedMaintenanceTime - MAINTENANCE_FREQ) < Sage.time())){
                 if (Sage.DBG) System.out.println("EPG next scheduled update is ready to run as we are past the maintenance window and/or scheduled time");
@@ -678,14 +678,14 @@ public final class EPG implements Runnable
         }
         
         //******TEMP*****check out some variables
-        if (Sage.DBG) System.out.println("EPG****** reqMaintenanceType:" + reqMaintenanceType + " inactive:" + inactive + " downloadWhileInactive:" + downloadWhileInactive);
+        //if (Sage.DBG) System.out.println("EPG****** reqMaintenanceType:" + reqMaintenanceType + " inactive:" + inactive + " downloadWhileInactive:" + downloadWhileInactive);
 
 
         if (reqMaintenanceType != MaintenanceType.NONE
             && (!downloadWhileInactive || inactive))
         {
           //******TEMP*****check out some variables
-          if (Sage.DBG) System.out.println("EPG****** reqMaintenanceType != MaintenanceType.NONE && (!downloadWhileInactive || inactive))");
+          //if (Sage.DBG) System.out.println("EPG****** reqMaintenanceType != MaintenanceType.NONE && (!downloadWhileInactive || inactive))");
           try {
             epgState=EpgState.MAINTENANCE;
             wiz.maintenance(reqMaintenanceType);
@@ -699,7 +699,7 @@ public final class EPG implements Runnable
         if (minWait <= 0) minWait = 1;
 
         //******TEMP*****check out some variables
-        if (Sage.DBG) System.out.println("EPG****** minWait:" + minWait);
+        //if (Sage.DBG) System.out.println("EPG****** minWait:" + minWait);
         
         synchronized (sources)
         {
@@ -717,7 +717,7 @@ public final class EPG implements Runnable
                 long currWait = sources.elementAt(i).getTimeTillUpdate();
                 minWait = Math.min(minWait, currWait);
                 //******TEMP*****check out some variables
-                if (Sage.DBG) System.out.println("EPG****** within syncronized for loop i:" + i + " minWait:" + minWait + " currWait:" + currWait);
+                //if (Sage.DBG) System.out.println("EPG****** within syncronized for loop i:" + i + " minWait:" + minWait + " currWait:" + currWait);
 
                 if (Sage.DBG) System.out.println(sources.elementAt(i) + " needs an update in " + Sage.durFormat(currWait));
             }
@@ -727,7 +727,7 @@ public final class EPG implements Runnable
         if (minWait > 0)
         {
           //******TEMP*****check out some variables
-          if (Sage.DBG) System.out.println("EPG****** minWait > 0");
+          //if (Sage.DBG) System.out.println("EPG****** minWait > 0");
           if (!updateFinished && (downloadFrequency != 0))
           {
             nextDownloadTime += downloadFrequency;
@@ -739,16 +739,16 @@ public final class EPG implements Runnable
           synchronized (sources)
           {
             //******TEMP*****check out some variables
-            if (Sage.DBG) System.out.println("EPG****** PRIOR to WAIT alive:" + alive + " minWait:" + minWait + " +15000L");
+            //if (Sage.DBG) System.out.println("EPG****** PRIOR to WAIT alive:" + alive + " minWait:" + minWait + " +15000L");
             if (alive)
               try{sources.wait(minWait + 15000L);} catch(InterruptedException e){}
-            if (Sage.DBG) System.out.println("EPG****** AFTER WAIT alive:" + alive);
+            //if (Sage.DBG) System.out.println("EPG****** AFTER WAIT alive:" + alive);
           }
         }
         else if (downloadWhileInactive && !inactive)
         {
           //******TEMP*****check out some variables
-          if (Sage.DBG) System.out.println("EPG****** (downloadWhileInactive && !inactive)");
+          //if (Sage.DBG) System.out.println("EPG****** (downloadWhileInactive && !inactive)");
           if (Sage.DBG) System.out.println("EPG is waiting because of system activity...");
           Sage.disconnectInternet();
           synchronized (sources)
@@ -760,7 +760,7 @@ public final class EPG implements Runnable
         else if (nextDownloadTime > Sage.time())
         {
           //******TEMP*****check out some variables
-          if (Sage.DBG) System.out.println("EPG****** (nextDownloadTime > Sage.time())");
+          //if (Sage.DBG) System.out.println("EPG****** (nextDownloadTime > Sage.time())");
           long nextWait = Math.min(minWait, nextDownloadTime - Sage.time());
           if (nextWait > 0)
           {
@@ -775,21 +775,21 @@ public final class EPG implements Runnable
         else
         {
           //******TEMP*****check out some variables
-          if (Sage.DBG) System.out.println("EPG****** We fell into the last ELSE");
+          //if (Sage.DBG) System.out.println("EPG****** We fell into the last ELSE");
           updateFinished = false;
           boolean updatesFailed = false;
           // Connect when we become active
           if (!autodial || Sage.connectToInternet())
           {
             //******TEMP*****check out some variables
-            if (Sage.DBG) System.out.println("EPG****** Connected so processing");
+            //if (Sage.DBG) System.out.println("EPG****** Connected so processing");
             java.util.List<EPGDataSource> highPriorityDownloads = new java.util.ArrayList<EPGDataSource>();
             synchronized (sources)
             {
               for (int i = 0; i < sources.size(); i++)
               {
                 //******TEMP*****check out some variables
-                if (Sage.DBG) System.out.println("EPG****** Connected: source i:" + i + " adding to high priority downloads");
+                //if (Sage.DBG) System.out.println("EPG****** Connected: source i:" + i + " adding to high priority downloads");
                 if (!sources.get(i).isChanDownloadComplete())
                   highPriorityDownloads.add(sources.get(i));
               }
@@ -798,14 +798,14 @@ public final class EPG implements Runnable
             {
               currDS = highPriorityDownloads.get(i);
               //******TEMP*****check out some variables
-              if (Sage.DBG) System.out.println("EPG****** Connected: Prior to syncronized");
+              //if (Sage.DBG) System.out.println("EPG****** Connected: Prior to syncronized");
               synchronized (sources)
               {
                 if (!sources.contains(currDS))
                   continue;
               }
               //******TEMP*****check out some variables
-              if (Sage.DBG) System.out.println("EPG****** Connected: After syncronized");
+              //if (Sage.DBG) System.out.println("EPG****** Connected: After syncronized");
               currDS.clearAbort();
               if (Sage.DBG) System.out.println("EPG PRIORITY EXPANSION attempting to expand " + currDS.getName());
               boolean updateSucceeded=false;
@@ -853,7 +853,7 @@ public final class EPG implements Runnable
               try{
                 epgState=EpgState.UPDATING;
                 //******TEMP*****check out some variables
-                if (Sage.DBG) System.out.println("EPG****** Connected: expanding non high prior source. i:" + i);
+                //if (Sage.DBG) System.out.println("EPG****** Connected: expanding non high prior source. i:" + i);
                 updateSucceeded=currDS.expand();
               } finally {
                 epgState=EpgState.IDLE;
@@ -867,7 +867,7 @@ public final class EPG implements Runnable
                 reqMaintenanceType = checkEpgDsMaintenanceType(reqMaintenanceType);
                 epgErrorSleepTime = 60000;
                 //******TEMP*****check out some variables
-                if (Sage.DBG) System.out.println("EPG****** UpdateSucceeded:" + updateSucceeded + " reqMaintenanceType:" + reqMaintenanceType);
+                //if (Sage.DBG) System.out.println("EPG****** UpdateSucceeded:" + updateSucceeded + " reqMaintenanceType:" + reqMaintenanceType);
               }
               synchronized (sources)
               {
@@ -895,7 +895,7 @@ public final class EPG implements Runnable
         }
 
         //******TEMP*****check out some variables
-        if (Sage.DBG) System.out.println("EPG****** PRIOR last alive check alive:" + alive);
+        //if (Sage.DBG) System.out.println("EPG****** PRIOR last alive check alive:" + alive);
         // Don't try to save the prefs if we're going down to avoid corrupting it since the main shutdown code will handle this
         if (alive)
           Sage.savePrefs();
