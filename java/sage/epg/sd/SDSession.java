@@ -394,7 +394,14 @@ public abstract class SDSession
     authRequest.addProperty("username", username);
     authRequest.addProperty("password", passHash);
 
-    InputStreamReader reader = post(GET_TOKEN_CURRENT, authRequest);
+    //use new token/current endpoint if set in properties
+    InputStreamReader reader;
+    if(Sage.getBoolean("sdepg_core/useCurrentEndpointForToken", false)){
+        reader = post(GET_TOKEN_CURRENT, authRequest);
+    }else{
+        reader = post(GET_TOKEN, authRequest);
+    }
+
     JsonObject response = gson.fromJson(reader, JsonObject.class);
 
     try

@@ -85,6 +85,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import static sage.epg.sd.SDErrors.ACCOUNT_DISABLED;
+import static sage.epg.sd.SDErrors.ACCOUNT_LOCKOUT;
+import static sage.epg.sd.SDErrors.INVALID_USER;
+import static sage.epg.sd.SDErrors.SAGETV_UNKNOWN;
+import static sage.epg.sd.SDErrors.SERVICE_OFFLINE;
+import static sage.epg.sd.SDErrors.TOO_MANY_LOGINS;
 
 public class SDRipper extends EPGDataSource
 {
@@ -2489,6 +2495,10 @@ public class SDRipper extends EPGDataSource
           sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createSDAccountDisabledMsg());
           resetToken();
           break;
+        case TOO_MANY_LOGINS:
+          sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createSDTooManyLoginsMsg());
+          resetToken();
+          break;
       }
       setExceptionTimeout(e.ERROR);
       System.out.println("SDEPG Exception: " + e.getMessage() + " code=" + e.ERROR.CODE);
@@ -2965,14 +2975,20 @@ public class SDRipper extends EPGDataSource
       case SAGETV_NO_PASSWORD:
       case INVALID_HASH:
       case INVALID_USER:
+      case TOO_MANY_LOGINS:
+      case ACCOUNT_LOCKOUT:
+      case ACCOUNT_DISABLED:
         // Set this to an hour so we aren't too obnoxious about the authentication error messages
         // and so we shouldn't accidentally lock the account out.
         SDRipper.retryWait = Sage.time() + Sage.MILLIS_PER_HR;
         resetToken();
         break;
-      case ACCOUNT_LOCKOUT:
-        SDRipper.retryWait = Sage.time() + Sage.MILLIS_PER_HR;
-        resetToken();
+      case SAGETV_UNKNOWN:
+      case SAGETV_COMMUNICATION_ERROR:
+      case SAGETV_SERVICE_MISSING:
+      case SAGETV_TOKEN_RETURN_MISSING:
+        // wait 30 minutes before continuing as the error is unknown or service affecting but may lockout the account
+        SDRipper.retryWait = -(Sage.time() + Sage.MILLIS_PER_MIN * 30);
         break;
     }
   }

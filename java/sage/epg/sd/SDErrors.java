@@ -114,23 +114,6 @@ public enum SDErrors
       for (SDErrors error : SDErrors.values())
       {
         if (code == error.CODE){
-          if(error.CODE == error.TOO_MANY_LOGINS.CODE){
-              if (Sage.DBG) System.out.println("**EPG** ERROR HANDLER code = " + error.CODE + " creating a system message");
-              //log a system message
-            try{
-              java.util.Properties props = new java.util.Properties();
-              props.setProperty("Error number", "4009");
-              props.setProperty("Error", "Too many logins error");
-              SageTV.api("PostSystemMessage", new Object[] {new Integer(sage.msg.SystemMessage.LINEUP_SD_ACCOUNT_LOCKOUT_MSG),
-                    new Integer(sage.msg.SystemMessage.ERROR_PRIORITY), sage.Sage.rez("TOO_MANY_LOGINS Error from SD",
-                        new Object[] { "Contact SD Support", "to unlock account" }), props});
-            }catch(Exception e){
-              
-            }
-          }else{
-              if (Sage.DBG) System.out.println("**EPG** ERROR HANDLER code = " + error.CODE + " EXTRA Code needed here !!!");
-              
-          }
           throw new SDException(error);
         }
       }
