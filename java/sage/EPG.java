@@ -762,114 +762,116 @@ public final class EPG implements Runnable
         }
         else
         {
-          //******TEMP*****check out some variables
-          //if (Sage.DBG) System.out.println("EPG****** We fell into the last ELSE");
-          updateFinished = false;
-          boolean updatesFailed = false;
-          // Connect when we become active
-          if (!autodial || Sage.connectToInternet())
-          {
+          if(!Sage.getBoolean("sdepg_core/bypassEPGUpdates", false)){
             //******TEMP*****check out some variables
-            //if (Sage.DBG) System.out.println("EPG****** Connected so processing");
-            java.util.List<EPGDataSource> highPriorityDownloads = new java.util.ArrayList<EPGDataSource>();
-            synchronized (sources)
+            //if (Sage.DBG) System.out.println("EPG****** We fell into the last ELSE");
+            updateFinished = false;
+            boolean updatesFailed = false;
+            // Connect when we become active
+            if (!autodial || Sage.connectToInternet())
             {
-              for (int i = 0; i < sources.size(); i++)
-              {
-                //******TEMP*****check out some variables
-                //if (Sage.DBG) System.out.println("EPG****** Connected: source i:" + i + " adding to high priority downloads");
-                if (!sources.get(i).isChanDownloadComplete())
-                  highPriorityDownloads.add(sources.get(i));
-              }
-            }
-            for (int i = 0; (i < highPriorityDownloads.size()) && alive; i++)
-            {
-              currDS = highPriorityDownloads.get(i);
               //******TEMP*****check out some variables
-              //if (Sage.DBG) System.out.println("EPG****** Connected: Prior to syncronized");
+              //if (Sage.DBG) System.out.println("EPG****** Connected so processing");
+              java.util.List<EPGDataSource> highPriorityDownloads = new java.util.ArrayList<EPGDataSource>();
               synchronized (sources)
               {
-                if (!sources.contains(currDS))
-                  continue;
-              }
-              //******TEMP*****check out some variables
-              //if (Sage.DBG) System.out.println("EPG****** Connected: After syncronized");
-              currDS.clearAbort();
-              if (Sage.DBG) System.out.println("EPG PRIORITY EXPANSION attempting to expand " + currDS.getName());
-              boolean updateSucceeded=false;
-              try{
-                epgState=EpgState.UPDATING;
-                updateSucceeded=currDS.expand();
-              } finally {
-                epgState=EpgState.IDLE;
-              }
-              if (! updateSucceeded)
-              {
-                updatesFailed = handleEpgDsUpdateFailed(updatesFailed);
-              }
-              else
-              {
-                // set the next maintenance type based on how mucgh
-                // this EPG update thinks should be done...
-                reqMaintenanceType = checkEpgDsMaintenanceType(reqMaintenanceType);
-                epgErrorSleepTime = 60000;
-              }
-              synchronized (sources)
-              {
-                currDS.clearAbort();
-                currDS = null;
-              }
-            }
-            for (int i = 0; (i < sources.size()) && alive; i++)
-            {
-              synchronized (sources)
-              {
-                if ((i < sources.size()) && alive)
+                for (int i = 0; i < sources.size(); i++)
                 {
-                  currDS = sources.elementAt(i);
+                  //******TEMP*****check out some variables
+                  //if (Sage.DBG) System.out.println("EPG****** Connected: source i:" + i + " adding to high priority downloads");
+                  if (!sources.get(i).isChanDownloadComplete())
+                    highPriorityDownloads.add(sources.get(i));
+                }
+              }
+              for (int i = 0; (i < highPriorityDownloads.size()) && alive; i++)
+              {
+                currDS = highPriorityDownloads.get(i);
+                //******TEMP*****check out some variables
+                //if (Sage.DBG) System.out.println("EPG****** Connected: Prior to syncronized");
+                synchronized (sources)
+                {
+                  if (!sources.contains(currDS))
+                    continue;
+                }
+                //******TEMP*****check out some variables
+                //if (Sage.DBG) System.out.println("EPG****** Connected: After syncronized");
+                currDS.clearAbort();
+                if (Sage.DBG) System.out.println("EPG PRIORITY EXPANSION attempting to expand " + currDS.getName());
+                boolean updateSucceeded=false;
+                try{
+                  epgState=EpgState.UPDATING;
+                  updateSucceeded=currDS.expand();
+                } finally {
+                  epgState=EpgState.IDLE;
+                }
+                if (! updateSucceeded)
+                {
+                  updatesFailed = handleEpgDsUpdateFailed(updatesFailed);
                 }
                 else
                 {
-                  break;
+                  // set the next maintenance type based on how mucgh
+                  // this EPG update thinks should be done...
+                  reqMaintenanceType = checkEpgDsMaintenanceType(reqMaintenanceType);
+                  epgErrorSleepTime = 60000;
+                }
+                synchronized (sources)
+                {
+                  currDS.clearAbort();
+                  currDS = null;
                 }
               }
-              if (highPriorityDownloads.contains(currDS))
-                continue;
-              currDS.clearAbort();
-              if (Sage.DBG) System.out.println("EPG attempting to expand " + currDS.getName());
-              boolean updateSucceeded=false;
-              try{
-                epgState=EpgState.UPDATING;
-                //******TEMP*****check out some variables
-                //if (Sage.DBG) System.out.println("EPG****** Connected: expanding non high prior source. i:" + i);
-                updateSucceeded=currDS.expand();
-              } finally {
-                epgState=EpgState.IDLE;
-              }
-              if (! updateSucceeded)
+              for (int i = 0; (i < sources.size()) && alive; i++)
               {
-                updatesFailed = handleEpgDsUpdateFailed(updatesFailed);
-              }
-              else
-              {
-                reqMaintenanceType = checkEpgDsMaintenanceType(reqMaintenanceType);
-                epgErrorSleepTime = 60000;
-                //******TEMP*****check out some variables
-                //if (Sage.DBG) System.out.println("EPG****** UpdateSucceeded:" + updateSucceeded + " reqMaintenanceType:" + reqMaintenanceType);
-              }
-              synchronized (sources)
-              {
+                synchronized (sources)
+                {
+                  if ((i < sources.size()) && alive)
+                  {
+                    currDS = sources.elementAt(i);
+                  }
+                  else
+                  {
+                    break;
+                  }
+                }
+                if (highPriorityDownloads.contains(currDS))
+                  continue;
                 currDS.clearAbort();
-                currDS = null;
+                if (Sage.DBG) System.out.println("EPG attempting to expand " + currDS.getName());
+                boolean updateSucceeded=false;
+                try{
+                  epgState=EpgState.UPDATING;
+                  //******TEMP*****check out some variables
+                  //if (Sage.DBG) System.out.println("EPG****** Connected: expanding non high prior source. i:" + i);
+                  updateSucceeded=currDS.expand();
+                } finally {
+                  epgState=EpgState.IDLE;
+                }
+                if (! updateSucceeded)
+                {
+                  updatesFailed = handleEpgDsUpdateFailed(updatesFailed);
+                }
+                else
+                {
+                  reqMaintenanceType = checkEpgDsMaintenanceType(reqMaintenanceType);
+                  epgErrorSleepTime = 60000;
+                  //******TEMP*****check out some variables
+                  //if (Sage.DBG) System.out.println("EPG****** UpdateSucceeded:" + updateSucceeded + " reqMaintenanceType:" + reqMaintenanceType);
+                }
+                synchronized (sources)
+                {
+                  currDS.clearAbort();
+                  currDS = null;
+                }
               }
-            }
 
-            // NOTE: If the user had 2 sources, and one was failing on the update, we don't want to
-            // continually save the DB each round until the update is complete. That'd be bad.
-            if (updatesFailed)
-              reqMaintenanceType = MaintenanceType.NONE;
-            else
-              sage.plugin.PluginEventManager.postEvent(sage.plugin.PluginEventManager.EPG_UPDATE_COMPLETED, (Object[]) null);
+              // NOTE: If the user had 2 sources, and one was failing on the update, we don't want to
+              // continually save the DB each round until the update is complete. That'd be bad.
+              if (updatesFailed)
+                reqMaintenanceType = MaintenanceType.NONE;
+              else
+                sage.plugin.PluginEventManager.postEvent(sage.plugin.PluginEventManager.EPG_UPDATE_COMPLETED, (Object[]) null);
+          }
           }
           else
           {
