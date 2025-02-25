@@ -3653,7 +3653,7 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
           long testTime = lastSeekerWakeupTime;
           if (testTime != 0 && testTime != lastDumpTime && Sage.eventTime() - testTime > watchdogDur)
           {
-            if (Sage.DBG) System.out.println("ERROR - Seeker has been hung for more than 60 seconds...system appears deadlocked...dumping thread states");
+            if (Sage.DBG) System.out.println("ERROR - Seeker has been hung for more than " + watchdogDur + " milliseconds...system appears deadlocked...dumping thread states");
             AWTThreadWatcher.dumpThreadStates();
             lastDumpTime = testTime;
           }
