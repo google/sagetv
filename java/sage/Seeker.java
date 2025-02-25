@@ -3639,6 +3639,7 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
 
     long altExpireTime = Sage.LINUX_OS ? Sage.getLong("window_size", 0) : 0;
 
+
     verifyFiles(true, false);
 
     Thread watchdog = new Thread("SeekerWatchdog")
@@ -3646,16 +3647,17 @@ if (encState.currRecord.getDuration() + (Sage.time() - encState.lastResetTime) >
       public void run()
       {
         long lastDumpTime = 0;
+        long watchdogDur = Sage.getLong("seeker/duration_for_watchdog", 60000);
         while (alive)
         {
           long testTime = lastSeekerWakeupTime;
-          if (testTime != 0 && testTime != lastDumpTime && Sage.eventTime() - testTime > 60000)
+          if (testTime != 0 && testTime != lastDumpTime && Sage.eventTime() - testTime > watchdogDur)
           {
             if (Sage.DBG) System.out.println("ERROR - Seeker has been hung for more than 60 seconds...system appears deadlocked...dumping thread states");
             AWTThreadWatcher.dumpThreadStates();
             lastDumpTime = testTime;
           }
-          try{Thread.sleep(60000);}catch(Exception e){}
+          try{Thread.sleep(watchdogDur);}catch(Exception e){}
         }
       }
     };
