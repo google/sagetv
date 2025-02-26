@@ -24,10 +24,8 @@ public interface LocatorConstants
   public static final int DATA_OFFSET = 12;
 
   public static final int LOCATOR_PORT = 8018;
-  public static final String LOCATOR_SERVER_PROP = "locator_server";
-  public static final String BACKUP_LOCATOR_SERVER_PROP = "locator_server_backup";
-  public static final String LOCATOR_SERVER = "locator.mu3d.com";
-  public static final String BACKUP_LOCATOR_SERVER = "locator.mu3d.com";
+  public static final String LOCATOR_SERVER = "locator.sagetv.com";
+  public static final String BACKUP_LOCATOR_SERVER = "locator2.sagetv.com";
 
   public static final int MAX_HANDLE_SIZE = 64;
   public static final int MAX_RELATIVE_PATH_SIZE = 1024;

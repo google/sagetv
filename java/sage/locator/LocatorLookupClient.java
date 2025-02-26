@@ -23,7 +23,7 @@ public class LocatorLookupClient implements LocatorConstants
   }
   private static java.net.Socket connectToServer() throws java.io.IOException
   {
-    String theAddress = sage.Sage.get(LOCATOR_SERVER_PROP, LOCATOR_SERVER);
+    String theAddress = LOCATOR_SERVER;
     try
     {
       java.net.Socket sock = new java.net.Socket();
@@ -36,7 +36,7 @@ public class LocatorLookupClient implements LocatorConstants
     catch (java.net.UnknownHostException e2)
     {
     }
-    theAddress = sage.Sage.get(BACKUP_LOCATOR_SERVER_PROP, BACKUP_LOCATOR_SERVER);
+    theAddress = BACKUP_LOCATOR_SERVER;
     java.net.Socket sock = new java.net.Socket();
     sock.connect(new java.net.InetSocketAddress(theAddress, LOCATOR_PORT), 5000);
     return sock;
