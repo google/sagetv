@@ -336,6 +336,7 @@ public abstract class SDSession
         debugWriter.write(debugDateTime() + ".....");
         debugWriter.write(System.lineSeparator());
         debugWriter.write(line, offset, length);
+        debugWriter.write(System.lineSeparator());
         debugBytes += length;
         // Don't perform a rollover in this method because we could cut a String of JSON in half.
       }
@@ -380,9 +381,13 @@ public abstract class SDSession
    */
   public synchronized void authenticate() throws IOException, SDException
   {
+
+    if(Sage.DBG) System.out.println("SDSession/authenticate: checking existing token:" + token + " with expiry:" + tokenExpiration + " against System:" + (System.currentTimeMillis()/1000));
+      
     // The token is still valid.
-    if (System.currentTimeMillis() < tokenExpiration && token != null)
+    if (System.currentTimeMillis()/1000 < tokenExpiration && token != null)
     {
+      if(Sage.DBG) System.out.println("SDSession/authenticate: using existing token:" + token + " with expiry:" + tokenExpiration + " expires in:" + ((tokenExpiration - (System.currentTimeMillis()/1000))/60) + " mins");
       return;
     }
 
@@ -394,13 +399,8 @@ public abstract class SDSession
     authRequest.addProperty("username", username);
     authRequest.addProperty("password", passHash);
 
-    //use new token/current endpoint if set in properties
-    InputStreamReader reader;
-    if(Sage.getBoolean("sdepg_core/useCurrentEndpointForToken", false)){
-        reader = post(GET_TOKEN_CURRENT, authRequest);
-    }else{
-        reader = post(GET_TOKEN, authRequest);
-    }
+    //new token endpoint will either return the current token or a new token and will include the expiry in UTC
+    InputStreamReader reader = post(GET_TOKEN, authRequest);
 
     JsonObject response = gson.fromJson(reader, JsonObject.class);
 
@@ -434,9 +434,18 @@ public abstract class SDSession
     }
 
     token = tokenElement.getAsString();
-    // The token is good for 24 hours, but I don't trust that we won't introduce a race condition by
-    // relying on that down to the millisecond, so we renew at least every 12 hours.
-    tokenExpiration = System.currentTimeMillis() + Sage.MILLIS_PER_DAY / 2;
+
+    JsonElement tokenExpiryElement = response.get("tokenExpiration");
+    if(tokenExpiryElement != null){
+        //The token is good for 24 hours, and now includes the expiration time in UTC
+        //the expiration should be the value of the JSON element
+        tokenExpiration = tokenExpiryElement.getAsLong();
+        if(Sage.DBG) System.out.println("SDSession/authenticate: retreived token:" + token + " with passed expiry:" + tokenExpiration);
+    }else{
+        tokenExpiration = (System.currentTimeMillis()/1000) + (Sage.MILLIS_PER_DAY/1000) / 2;
+        if(Sage.DBG) System.out.println("SDSession/authenticate: retreived token:" + token + " with calculated expiry:" + tokenExpiration);
+    }
+
   }
 
   /**

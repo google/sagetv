@@ -77,7 +77,7 @@ public class SDSageSession extends SDSession
     //secret SD debug mode that will send requests to their debug server. Only enable when working with SD Support
     if(Sage.getBoolean("debug_sd_support", false)) {
       connection.setRequestProperty("RouteTo", "debug");
-      if (Sage.DBG) System.out.println("****debug_sd_support**** property set. This should only be true when you are working directly with SD Support staff");
+      if (Sage.DBG) System.out.println("****debug_sd_support**** property set. Sending 'put' with url '" + url);
     }
 
     if (token != null)
@@ -138,7 +138,7 @@ public class SDSageSession extends SDSession
     //secret SD debug mode that will send requests to their debug server. Only enable when working with SD Support
     if(Sage.getBoolean("debug_sd_support", false)) {
       connection.setRequestProperty("RouteTo", "debug");
-      if (Sage.DBG) System.out.println("****debug_sd_support**** property set. This should only be true when you are working directly with SD Support staff");
+      if (Sage.DBG) System.out.println("****debug_sd_support**** property set. Sending 'post' with url '" + url);
     }
     if (token != null)
         if (SDSession.debugEnabled())
@@ -215,7 +215,7 @@ public class SDSageSession extends SDSession
     //secret SD debug mode that will send requests to their debug server. Only enable when working with SD Support
     if(Sage.getBoolean("debug_sd_support", false)) {
       connection.setRequestProperty("RouteTo", "debug");
-      if (Sage.DBG) System.out.println("****debug_sd_support**** property set. This should only be true when you are working directly with SD Support staff");
+      if (Sage.DBG) System.out.println("****debug_sd_support**** property set. Sending 'get' with url '" + url);
     }
     if (token != null)
         if (SDSession.debugEnabled())
@@ -288,7 +288,7 @@ public class SDSageSession extends SDSession
     //secret SD debug mode that will send requests to their debug server. Only enable when working with SD Support
     if(Sage.getBoolean("debug_sd_support", false)) {
       connection.setRequestProperty("RouteTo", "debug");
-      if (Sage.DBG) System.out.println("****debug_sd_support**** property set. This should only be true when you are working directly with SD Support staff");
+      if (Sage.DBG) System.out.println("****debug_sd_support**** property set. Sending 'delete' with url '" + url);
     }
     if (token != null)
       connection.setRequestProperty("token", token);

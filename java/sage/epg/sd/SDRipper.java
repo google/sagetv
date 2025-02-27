@@ -88,6 +88,8 @@ import java.util.regex.Pattern;
 import static sage.epg.sd.SDErrors.ACCOUNT_DISABLED;
 import static sage.epg.sd.SDErrors.ACCOUNT_LOCKOUT;
 import static sage.epg.sd.SDErrors.INVALID_USER;
+import static sage.epg.sd.SDErrors.MAX_IMAGE_DOWNLOADS;
+import static sage.epg.sd.SDErrors.MAX_IMAGE_DOWNLOADS_TRIAL;
 import static sage.epg.sd.SDErrors.SAGETV_UNKNOWN;
 import static sage.epg.sd.SDErrors.SERVICE_OFFLINE;
 import static sage.epg.sd.SDErrors.TOO_MANY_LOGINS;
@@ -2968,6 +2970,8 @@ public class SDRipper extends EPGDataSource
     switch (error)
     {
       case SERVICE_OFFLINE:
+      case MAX_IMAGE_DOWNLOADS:
+      case MAX_IMAGE_DOWNLOADS_TRIAL:
         // When the service is offline, we should only check every 30 minutes to see if it's back.
         // This might generate EPG warnings in the UI if it goes on for a while.
         SDRipper.retryWait = -(Sage.time() + Sage.MILLIS_PER_MIN * 30);

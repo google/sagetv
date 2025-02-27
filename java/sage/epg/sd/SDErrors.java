@@ -41,6 +41,8 @@ public enum SDErrors
   MAX_LINEUPS(4101 /*, "Exceeded number of lineups for this account."*/),
   NO_LINEUPS(4102 /*, "No lineups have been added to this account."*/),
   IMAGE_NOT_FOUND(5000 /*, "Could not find requested image. Post message to http://forums.schedulesdirect.org/viewforum.php?f=6 if you are having issues."*/),
+  MAX_IMAGE_DOWNLOADS(5002 /*, "Maximum image downloads reached. Counter resets every 24h"*/),
+  MAX_IMAGE_DOWNLOADS_TRIAL(5003 /*, "Maximum image downloads for trial user reached. Counter resets every 24h"*/),
   INVALID_PROGRAMID(6000 /*, "Could not find requested programID. Permanent failure."*/),
   PROGRAMID_QUEUED(6001 /*, "ProgramID should exist at the server, but doesn't. The server will regenerate the JSON for the program, so your application should retry."*/),
   FUTURE_PROGRAM(6002 /*, "The programID you requested has not occurred yet, so isComplete status is unknown."*/),
