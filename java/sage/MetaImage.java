@@ -3230,6 +3230,12 @@ public class MetaImage
                 //this is an SD supplied image so a token is required to retreive it
                 if (Sage.DBG) System.out.println("MetaImage.loadCacheFile: Found SD image url. src = '" + src + "'");
 
+                //skip the image loading if the bypass properties are set
+                if(Sage.getBoolean("bypassCelebrityImages", false) && Sage.getBoolean("bypassProgramImages", false)){
+                    if (Sage.DBG) System.out.println("MetaImage.loadCacheFile: skipping image load as both bypass properties are set. src = '" + src + "'");
+                    break;
+                }
+                
                 String sdToken = null;
                 sdToken = SDRipper.ensureSession().getToken();
                 if(sdToken==null){
@@ -3242,7 +3248,7 @@ public class MetaImage
                     //secret SD debug mode that will send requests to their debug server. Only enable when working with SD Support
                     if(Sage.getBoolean("debug_sd_support", false)) {
                       myURLConn.addRequestProperty("RouteTo", "debug");
-                      if (Sage.DBG) System.out.println("****debug_sd_support**** property set. This should only be true when you are working directly with SD Support staff");
+                      if (Sage.DBG) System.out.println("****debug_sd_support**** property set. MetaImage.loadCacheFile loading sd image");
                     }
                 }
             }
