@@ -382,7 +382,7 @@ public abstract class SDSession
   public synchronized void authenticate() throws IOException, SDException
   {
 
-    if(Sage.DBG) System.out.println("SDSession/authenticate: checking existing token:" + token + " with expiry:" + tokenExpiration + " against System:" + (System.currentTimeMillis()/1000));
+    //if(Sage.DBG) System.out.println("SDSession/authenticate: checking existing token:" + token + " with expiry:" + tokenExpiration + " against System:" + (System.currentTimeMillis()/1000));
       
     // The token is still valid.
     if (System.currentTimeMillis()/1000 < tokenExpiration && token != null)
@@ -435,7 +435,7 @@ public abstract class SDSession
 
     token = tokenElement.getAsString();
 
-    JsonElement tokenExpiryElement = response.get("tokenExpiration");
+    JsonElement tokenExpiryElement = response.get("tokenExpires");
     if(tokenExpiryElement != null){
         //The token is good for 24 hours, and now includes the expiration time in UTC
         //the expiration should be the value of the JSON element
@@ -1101,7 +1101,8 @@ public abstract class SDSession
       if(SDUtils.isValidShortProgramID(program)){
         submit.add(program);
       }else if(SDUtils.isValidProgramID(program)){  //valid BUT is not shortend to 10
-        submit.add(program.substring(0, 10));
+        submit.add(program);  //submit as is as SD now handles the 14 character program ids as well
+        //submit.add(program.substring(0, 10));
       }else{
         if (Sage.DBG) System.out.println("getProgramImages: INVALID program ID - SKIPPING:" + program);
       }

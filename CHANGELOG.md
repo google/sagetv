@@ -2,7 +2,7 @@
 
 ## Next
 
-## Version 9.2.9 (2025-02-25)
+## Version 9.2.9 (2025-03-01)
 * Updated gradle script so that project could build in Netbeans
 * Updated the FFMPEGTranscoder to fallback to frame count instead of time to calculate progress
 * Allow IR blasters that support it to xmit non-numeric Tune strings (eg 42-1).
@@ -12,6 +12,7 @@
 * SD EPG added sdepg_core/bypassProgramImages to allow users in the future to bypass retrieving Program images from SD if causing issues
 * SD EPG added sdepg_core/bypassEPGUpdates to allow users in the future to bypass retrieving EPG from SD if causing issues
 * SD EPG added wizard/scheduled_maintenance and wizard/scheduled_maintenance_offset to allow users to set the hour that the daily maintenance will run
+* SD EPG added code to support SD now passing back the current token along with its expiration
 * Added seeker/duration_for_watchdog property to handle long running watchdog process for larger libraries (defaults to 60000)
 
 ## Version 9.2.8 (2022-01-05)
