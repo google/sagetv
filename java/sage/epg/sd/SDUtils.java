@@ -451,6 +451,37 @@ public class SDUtils
   }
 
   /**
+   * Check if a given program ID is valid to send to SD.
+   *
+   * @param programId The program ID to check.
+   * @return <code>true</code> if a given program ID is valid to send to SD.
+   */
+  public static boolean isValidProgramID(String programId)
+  {
+      if (programId == null || programId.length() == 0 ||
+        (programId.length() != 12 && programId.length() != 14) ||
+        (!programId.startsWith("EP") && !programId.startsWith("SH") &&
+          !programId.startsWith("MV") && !programId.startsWith("SP") && !programId.startsWith("EV")))
+      return false;
+      return true;
+  }
+
+  /**
+   * Check if a given program ID is valid to send to SD for metadata and is already shortened to 10
+   *
+   * @param programId The program ID to check.
+   * @return <code>true</code> if a given program ID is valid to send to SD.
+   */
+  public static boolean isValidShortProgramID(String programId)
+  {
+      if (programId == null || programId.length() == 0 || programId.length() != 10 ||
+        (!programId.startsWith("EP") && !programId.startsWith("SH") &&
+          !programId.startsWith("MV") && !programId.startsWith("SP") && !programId.startsWith("EV")))
+      return false;
+      return true;
+  }
+
+  /**
    * Check if a given external ID will likely have an associated series.
    *
    * @param extID The external ID to check.

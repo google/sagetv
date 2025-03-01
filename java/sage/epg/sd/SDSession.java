@@ -1096,10 +1096,16 @@ public abstract class SDSession
     JsonArray submit = new JsonArray();
     for (String program : programs)
     {
-      if (program.length() != 10)
-        submit.add(program.substring(0, 10));
-      else
+      //03-01-2025 jusjoken: added validation for program ids
+      //first check if its already formated correctly
+      if(SDUtils.isValidShortProgramID(program)){
         submit.add(program);
+      }else if(SDUtils.isValidProgramID(program)){  //valid BUT is not shortend to 10
+        submit.add(program.substring(0, 10));
+      }else{
+        if (Sage.DBG) System.out.println("getProgramImages: INVALID program ID - SKIPPING:" + program);
+      }
+        
     }
 
     // JUSJOKEN: 2025-02-13 - SD now require a token for images

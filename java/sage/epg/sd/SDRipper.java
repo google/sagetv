@@ -100,6 +100,8 @@ public class SDRipper extends EPGDataSource
 
   private static final String PROP_PREFIX = "sdepg_core";
   private static final String AUTH_FILE = "sdauth";
+  private static final String PROP_USERNAME = PROP_PREFIX + "/username";
+  private static final String PROP_PASSWORD = PROP_PREFIX + "/password";
   private static final String PROP_REGION = PROP_PREFIX + "/locale/region";
   private static final String PROP_COUNTRY = PROP_PREFIX + "/locale/country";
   private static final String PROP_POSTAL_CODE = PROP_PREFIX + "/locale/postal_code";
@@ -228,48 +230,89 @@ public class SDRipper extends EPGDataSource
     SDSession returnValue;
     BufferedReader reader = null;
 
-    File authFile = new File(AUTH_FILE);
-    if (!authFile.exists() || authFile.length() == 0)
-      throw new SDException(SDErrors.SAGETV_NO_PASSWORD);
-
-    try
-    {
-      reader = new BufferedReader(new FileReader(authFile));
-      String auth = reader.readLine();
-      if (auth == null)
-      {
-        if (Sage.DBG) System.out.println("SDEPG Error: sdauth file is empty.");
-        throw new SDException(SDErrors.SAGETV_NO_PASSWORD);
-      }
-      int split = auth.indexOf(' ');
-      // If the file is not formatted correctly, it's as good as not existing.
-      if (split == -1)
-      {
-        if (Sage.DBG) System.out.println("SDEPG Error: sdauth file is missing a space between the username and password.");
-        throw new SDException(SDErrors.SAGETV_NO_PASSWORD);
-      }
-
-      String username = auth.substring(0, split);
-      String password = auth.substring(split + 1);
-
-      // This will throw an exception if there are any issues connecting.
-      returnValue = new SDSageSession(username, password);
-    }
-    catch (FileNotFoundException e)
-    {
-      throw new SDException(SDErrors.SAGETV_NO_PASSWORD);
-    }
-    finally
-    {
-      if (reader != null)
-      {
+    //2025-02-28 jusjoken: switch to using sage properties for user/pass so it can be shared with clients that need it
+    String username = null;
+    String password = null;
+    
+    if(Sage.client){ //get the server property
         try
         {
-          reader.close();
-        } catch (Exception e) {}
-      }
+          Object serverProp = SageTV.api("GetServerProperty", new Object[] { PROP_USERNAME, null });
+          username = serverProp.toString();
+          serverProp = SageTV.api("GetServerProperty", new Object[] { PROP_PASSWORD, null });
+          password = serverProp.toString();
+          //if (Sage.DBG) System.out.println("***EPG*** getting from CLIENT user/pass: username:" + username + " password:" + password);
+        }
+        catch (Throwable t)
+        {
+          if (Sage.DBG) System.out.println("ERROR executing server API call of:" + t);
+          t.printStackTrace();
+          username = null;
+          password = null;
+        }
+    }else{
+        username = Sage.get(PROP_USERNAME, null);
+        password = Sage.get(PROP_PASSWORD, null);
+    }
+    
+    //if (Sage.DBG) System.out.println("***EPG*** checking for user/pass: username:" + username + " password:" + password);
+    
+    if(username==null || password==null){ //get from old sdauth file then store in properties for future use
+        //if (Sage.DBG) System.out.println("***EPG*** reading user/pass from old file");
+        File authFile = new File(AUTH_FILE);
+        if (!authFile.exists() || authFile.length() == 0)
+          throw new SDException(SDErrors.SAGETV_NO_PASSWORD);
+
+        try
+        {
+          reader = new BufferedReader(new FileReader(authFile));
+          String auth = reader.readLine();
+          if (auth == null)
+          {
+            if (Sage.DBG) System.out.println("SDEPG Error: sdauth file is empty.");
+            throw new SDException(SDErrors.SAGETV_NO_PASSWORD);
+          }
+          int split = auth.indexOf(' ');
+          // If the file is not formatted correctly, it's as good as not existing.
+          if (split == -1)
+          {
+            if (Sage.DBG) System.out.println("SDEPG Error: sdauth file is missing a space between the username and password.");
+            throw new SDException(SDErrors.SAGETV_NO_PASSWORD);
+          }
+
+          username = auth.substring(0, split);
+          password = auth.substring(split + 1);
+          
+          //store these values in properties to use next time
+          //if (Sage.DBG) System.out.println("***EPG*** saving to properties user/pass: username:" + username + " password:" + password);
+          Sage.put(PROP_USERNAME, username);
+          Sage.put(PROP_PASSWORD, password);
+
+        }
+        catch (FileNotFoundException e)
+        {
+          throw new SDException(SDErrors.SAGETV_NO_PASSWORD);
+        }
+        finally
+        {
+          if (reader != null)
+          {
+            try
+            {
+              reader.close();
+            } catch (Exception e) {}
+          }
+        }
     }
 
+    try {
+        // This will throw an exception if there are any issues connecting.
+        returnValue = new SDSageSession(username, password);
+    } catch (Exception e) {
+        throw new SDException(SDErrors.SAGETV_NO_PASSWORD);
+    }
+    
+    
     // We have just successfully authenticated, so this needs to be cleared so that updates can
     // start immediately.
     SDRipper.retryWait = 0;
