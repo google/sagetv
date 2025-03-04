@@ -129,8 +129,8 @@ public abstract class SDSession
       newGetAvailable = new URL(URL_VERSIONED + "/available");
       newGetLineups = new URL(URL_VERSIONED + "/lineups");
       newGetPrograms = new URL(URL_VERSIONED + "/programs");
-      newGetSeriesDesc = new URL(URL_VERSIONED + "/metadata/description");
-      newGetProgramsImages = new URL(URL_VERSIONED + "/metadata/programs");
+      newGetSeriesDesc = new URL(URL_VERSIONED + "/metadata/description/");
+      newGetProgramsImages = new URL(URL_VERSIONED + "/metadata/programs/");
       newGetSchedules = new URL(URL_VERSIONED + "/schedules");
       newGetSchedulesMd5 = new URL(URL_VERSIONED + "/schedules/md5");
     }
@@ -938,6 +938,11 @@ public abstract class SDSession
    */
   public SDProgram[] getPrograms(Collection<String> programs) throws IOException, SDException
   {
+    //03-03-2025 jusjoken: check for empty array so we do not bother sending it to AD
+    if (programs.size()==0){
+        if (Sage.DBG) System.out.println("EPG getPrograms requested for empty list - returning empty list to avoid sending nothing to SD");
+        return new SDProgram[0];
+    }
     if (programs.size() > 5000)
       throw new InvalidParameterException("You cannot get more than 5000 programs in one query.");
 

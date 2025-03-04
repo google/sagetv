@@ -191,6 +191,16 @@ public class SystemMessage extends SageMsg
         sage.Sage.rez("PLAYLIST_IMPORT_MISSING_SEGMENT_MSG", new Object[] { playlistPath, segmentPath }), props);
   }
 
+  public static SystemMessage createVersionUpdateMsg(String version, String location)
+  {
+    java.util.Properties props = new java.util.Properties();
+    props.setProperty("Version", version);
+    props.setProperty("Location", location);
+    String versionMsg = "New version on github: " + version + " go to:" + location;
+    return new SystemMessage(SOFTWARE_UPDATE_AVAILABLE_MSG, INFO_PRIORITY,
+        sage.Sage.rez(versionMsg, new Object[] { version, location }), props);
+  }
+
   public static SystemMessage createPluginUpdateMsg(String pluginID, String pluginName, String version)
   {
     java.util.Properties props = new java.util.Properties();

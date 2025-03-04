@@ -2155,7 +2155,8 @@ public class SDRipper extends EPGDataSource
                   {
                     newID[0] = 'S';
                     newID[1] = 'H';
-                    singleLookup[0] = new String(newID, 0, 10);
+                    //03-04-2025 jusjoken SD now allows lookup with all 14 characters so no longer shorten to 10
+                    singleLookup[0] = new String(newID);
                     SDProgramImages images[] = ensureSession().getProgramImages(singleLookup);
                     singleLookup[0] = null;
 

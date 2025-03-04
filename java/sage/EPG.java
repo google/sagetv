@@ -598,6 +598,12 @@ public final class EPG implements Runnable
 
   public void run()
   {
+
+    //03-02-2025 jusjoken: added a version check here.  As this EPG process runs basically daily I added the
+    //  version check here.  It may fit best elsewhere but I will leave it here for now to ensure future updates are noticed
+    //check if an updated version is available on github
+    wiz.checkForUpdate();
+      
     // Check if the DB file was deleted
     if (wiz.getChannels().length < 4)
     {
@@ -629,6 +635,7 @@ public final class EPG implements Runnable
     boolean scheduledMaintenance = Sage.getBoolean("wizard/scheduled_maintenance", false);
     while (alive)
     {
+
       try{
 
         if(scheduledMaintenance){
@@ -770,6 +777,12 @@ public final class EPG implements Runnable
             // Connect when we become active
             if (!autodial || Sage.connectToInternet())
             {
+
+              //03-02-2025 jusjoken: added a version check here.  As this EPG process runs basically daily I added the
+              //  version check here.  It may fit best elsewhere but I will leave it here for now to ensure future updates are noticed
+              //check if an updated version is available on github
+              wiz.checkForUpdate();
+                      
               //******TEMP*****check out some variables
               //if (Sage.DBG) System.out.println("EPG****** Connected so processing");
               java.util.List<EPGDataSource> highPriorityDownloads = new java.util.ArrayList<EPGDataSource>();
