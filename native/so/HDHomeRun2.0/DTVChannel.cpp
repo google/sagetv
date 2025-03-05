@@ -463,7 +463,7 @@ int DTVChannel::setTuning(SageTuningParams *params)
 		}
 		
 		if(dbg->debug_source[0]) {
-			if(dbg->source_fd > 0)
+			if(dbg->source_fd != 0)
 				fclose(dbg->source_fd);
 			dbg->source_fd = fopen(dbg->debug_source, "r");
 			if(dbg->source_fd > 0)

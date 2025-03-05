@@ -322,6 +322,8 @@ def getBuildNumber() {
 
   if (OperatingSystem.current().isLinux()) {
     // use git to find the build version
+    //no longer works as deprecated in newer ant
+    /*
     ant.exec(
       command: 'git rev-list HEAD --count',
       os: 'Linux',
@@ -329,6 +331,7 @@ def getBuildNumber() {
       outputproperty: 'sagebuildnum')
 
     buildVer = ant.sagebuildnum
+    */
   } else if (OperatingSystem.current().isWindows()) {
     //ensure full path to git\bin is in the Path Environment variable on windows
     // 04-24-2017 JS: I changed this to remove the dependency on sh. Also we should note that
@@ -381,7 +384,7 @@ task(updateBuildNumber)  {
     // save buildnumber to file
     // we'll be referencing it later
     // Eventually we'll do this, but for now, fetch it every time
-    // new File('.buildnumber').write(buildVersion)
+    new File('.buildnumber').write(buildVersion)
   }
 }
 
@@ -406,7 +409,7 @@ compileJava.dependsOn updateBuildNumber
 sageJar.dependsOn cleanSageJar, classes, test
 miniclientJar.dependsOn clean, miniclientClasses, cleanMiniJar
 linuxMiniClientRelease.dependsOn miniclientJar
-sageJar.finalizedBy restoreSageConstants
+//sageJar.finalizedBy restoreSageConstants
 
 // Eclipse project setup
 eclipse {
