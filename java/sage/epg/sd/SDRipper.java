@@ -227,91 +227,113 @@ public class SDRipper extends EPGDataSource
   // Do not use this method without getting a sessionLock write lock first.
   private static SDSession openNewSession() throws IOException, SDException
   {
-    SDSession returnValue;
+    SDSession returnValue = null;
     BufferedReader reader = null;
 
     //2025-02-28 jusjoken: switch to using sage properties for user/pass so it can be shared with clients that need it
-    String username = null;
-    String password = null;
+    String propUsername = null;
+    String propPassword = null;
+    String fileUsername = null;
+    String filePassword = null;
     
+    //get the property based user/pass if any
     if(Sage.client){ //get the server property
         try
         {
           Object serverProp = SageTV.api("GetServerProperty", new Object[] { PROP_USERNAME, null });
-          username = serverProp.toString();
+          propUsername = serverProp.toString();
           serverProp = SageTV.api("GetServerProperty", new Object[] { PROP_PASSWORD, null });
-          password = serverProp.toString();
+          propPassword = serverProp.toString();
           //if (Sage.DBG) System.out.println("***EPG*** getting from CLIENT user/pass: username:" + username + " password:" + password);
         }
         catch (Throwable t)
         {
           if (Sage.DBG) System.out.println("ERROR executing server API call of:" + t);
           t.printStackTrace();
-          username = null;
-          password = null;
+          propUsername = null;
+          propPassword = null;
         }
     }else{
-        username = Sage.get(PROP_USERNAME, null);
-        password = Sage.get(PROP_PASSWORD, null);
+        propUsername = Sage.get(PROP_USERNAME, null);
+        propPassword = Sage.get(PROP_PASSWORD, null);
     }
     
     //if (Sage.DBG) System.out.println("***EPG*** checking for user/pass: username:" + username + " password:" + password);
     
-    if(username==null || password==null){ //get from old sdauth file then store in properties for future use
-        //if (Sage.DBG) System.out.println("***EPG*** reading user/pass from old file");
-        File authFile = new File(AUTH_FILE);
-        if (!authFile.exists() || authFile.length() == 0)
-          throw new SDException(SDErrors.SAGETV_NO_PASSWORD);
+    //get user/pass from old sdauth file
+    //if (Sage.DBG) System.out.println("***EPG*** reading user/pass from old file");
+    File authFile = new File(AUTH_FILE);
+    if (!authFile.exists() || authFile.length() == 0)
+      throw new SDException(SDErrors.SAGETV_NO_PASSWORD);
 
+    try
+    {
+      reader = new BufferedReader(new FileReader(authFile));
+      String auth = reader.readLine();
+      if (auth == null)
+      {
+        if (Sage.DBG) System.out.println("SDEPG Error: sdauth file is empty.");
+        throw new SDException(SDErrors.SAGETV_NO_PASSWORD);
+      }
+      int split = auth.indexOf(' ');
+      // If the file is not formatted correctly, it's as good as not existing.
+      if (split == -1)
+      {
+        if (Sage.DBG) System.out.println("SDEPG Error: sdauth file is missing a space between the username and password.");
+        throw new SDException(SDErrors.SAGETV_NO_PASSWORD);
+      }
+
+      fileUsername = auth.substring(0, split);
+      filePassword = auth.substring(split + 1);
+
+    }
+    catch (FileNotFoundException e)
+    {
+      throw new SDException(SDErrors.SAGETV_NO_PASSWORD);
+    }
+    finally
+    {
+      if (reader != null)
+      {
         try
         {
-          reader = new BufferedReader(new FileReader(authFile));
-          String auth = reader.readLine();
-          if (auth == null)
-          {
-            if (Sage.DBG) System.out.println("SDEPG Error: sdauth file is empty.");
-            throw new SDException(SDErrors.SAGETV_NO_PASSWORD);
-          }
-          int split = auth.indexOf(' ');
-          // If the file is not formatted correctly, it's as good as not existing.
-          if (split == -1)
-          {
-            if (Sage.DBG) System.out.println("SDEPG Error: sdauth file is missing a space between the username and password.");
-            throw new SDException(SDErrors.SAGETV_NO_PASSWORD);
-          }
-
-          username = auth.substring(0, split);
-          password = auth.substring(split + 1);
-          
-          //store these values in properties to use next time
-          //if (Sage.DBG) System.out.println("***EPG*** saving to properties user/pass: username:" + username + " password:" + password);
-          Sage.put(PROP_USERNAME, username);
-          Sage.put(PROP_PASSWORD, password);
-
-        }
-        catch (FileNotFoundException e)
-        {
-          throw new SDException(SDErrors.SAGETV_NO_PASSWORD);
-        }
-        finally
-        {
-          if (reader != null)
-          {
-            try
-            {
-              reader.close();
-            } catch (Exception e) {}
-          }
-        }
+          reader.close();
+        } catch (Exception e) {}
+      }
     }
 
-    try {
-        // This will throw an exception if there are any issues connecting.
-        returnValue = new SDSageSession(username, password);
-    } catch (Exception e) {
-        throw new SDException(SDErrors.SAGETV_NO_PASSWORD);
+    boolean authenticated = false;
+    if(propUsername!=null && propPassword!=null){ 
+        //try the prop based user/pass
+        try {
+            // This will throw an exception if there are any issues connecting.
+            returnValue = new SDSageSession(propUsername, propPassword);
+            authenticated = true;
+            if (Sage.DBG) System.out.println("***EPG*** checking for prop based user/pass PASSED: username:" + propUsername + " password:" + propPassword);
+        } catch (Exception e) {
+            if (Sage.DBG) System.out.println("***EPG*** checking for prop based user/pass FAILED: username:" + propUsername + " password:" + propPassword);
+        }
     }
     
+    if(!authenticated && fileUsername!=null && filePassword!=null){
+        //try the file based user/pass
+        try {
+            // This will throw an exception if there are any issues connecting.
+            returnValue = new SDSageSession(fileUsername, filePassword);
+            authenticated = true;
+            Sage.put(PROP_USERNAME, fileUsername);
+            Sage.put(PROP_PASSWORD, filePassword);
+            if (Sage.DBG) System.out.println("***EPG*** checking for file based user/pass PASSED: username:" + fileUsername + " password:" + filePassword);
+        } catch (Exception e) {
+            if (Sage.DBG) System.out.println("***EPG*** checking for file based user/pass FAILED: username:" + fileUsername + " password:" + filePassword);
+        }
+    }
+
+    //we have now have tried both prop and file based user/pass
+    if(!authenticated){
+        if (Sage.DBG) System.out.println("***EPG*** checking for BOTH user/pass FAILED: throwing SAGETV_NO_PASSWORD");
+        throw new SDException(SDErrors.SAGETV_NO_PASSWORD);
+    }
     
     // We have just successfully authenticated, so this needs to be cleared so that updates can
     // start immediately.
