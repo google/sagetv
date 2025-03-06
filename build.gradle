@@ -2,6 +2,8 @@ import org.gradle.internal.os.OperatingSystem
 
 plugins {
   id "com.github.breadmoirai.github-release" version "2.2.12"
+  //id "me.qoomon.git-versioning" version "6.4.4"
+  //id "org.meiskalt7.gradle.version" version "0.6.0"
 }
 
 apply plugin: "java"
@@ -45,10 +47,22 @@ ext {
   releaseVersion = releaseVersion.replaceAll("[\\.\\(\\)]", "").replaceAll("[\\s]", "-").toLowerCase()
 }
 
+System.out.println("START Version ${version}");
+
+//System.out.println("TEST Version ${gitVersion.buildNumber}");
+
 version = fullVersion
+/*
+gitVersioning.apply {
+    // see configuration documentation below
+    rev {
+        version = "\${describe.distance}"
+    }
+}
+*/
 
 // Just printing out the SAGETV build version for informational purposes
-// System.out.println("SAGETV VERSION ${versionArch}");
+System.out.println("SAGETV VERSION ${versionArch}");
 
 // set gradle's buildDir to something other than the default 'build', or
 // we'll end up deleting EVERYTHING in 'build' when we ./gradlew clean
@@ -332,6 +346,14 @@ def getBuildNumber() {
 
     buildVer = ant.sagebuildnum
     */
+    new ByteArrayOutputStream().withStream { outputStream ->
+      exec {
+        executable 'git'
+        args 'rev-list', 'HEAD', '--count'
+        standardOutput = outputStream
+      }
+      buildVer = outputStream.toString().trim()
+    }
   } else if (OperatingSystem.current().isWindows()) {
     //ensure full path to git\bin is in the Path Environment variable on windows
     // 04-24-2017 JS: I changed this to remove the dependency on sh. Also we should note that
