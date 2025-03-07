@@ -709,8 +709,15 @@ public final class EPG implements Runnable
           }
         }
         if(Sage.getBoolean("sdepg_core/bypassEPGUpdates", false)){
-            if (Sage.DBG) System.out.println("SD EPG Updates are disabled by sdepg_core/bypassEPGUpdates setting. Exiting maintenance");
-            goodbye();
+            if (Sage.DBG) System.out.println("SD EPG Updates are disabled by sdepg_core/bypassEPGUpdates setting. Check again in " + (minWait/60000) + " minutes");
+            if (minWait > 0)
+            {
+              synchronized (sources)
+              {
+                if (alive)
+                  try{sources.wait(minWait);} catch(InterruptedException e){}
+              }
+            }
         }else{
             if (Sage.DBG) System.out.println("EPG needs an update in " + (minWait/60000) + " minutes");
             if (minWait > 0)
