@@ -632,15 +632,13 @@ public final class EPG implements Runnable
     //boolean[] didAdd = new boolean[1];
     boolean updateFinished = true;
     //JUSJOKEN: 2025-02-19 add ability to run FULL Maintenance at a specific time each day
-    boolean scheduledMaintenance = Sage.getBoolean("wizard/scheduled_maintenance", false);
     while (alive)
     {
 
       try{
 
-        if(scheduledMaintenance){
-            scheduledMaintenanceOffset = Sage.getInt("wizard/" + SCHEDULED_MAINTENANCE_OFFSET, 0);
-            if (Sage.DBG) System.out.println("EPG next scheduled maintenance offset is " + scheduledMaintenanceOffset);
+        if(Sage.getBoolean("wizard/scheduled_maintenance", false)){
+            if (Sage.DBG) System.out.println("EPG next scheduled maintenance offset is " + Sage.getInt("wizard/" + SCHEDULED_MAINTENANCE_OFFSET, 0));
 
             nextScheuldedMaintenanceTime = getNextScheduledMaintenanceTime();
             //if (Sage.DBG) System.out.println("EPG**** Sage.time:" + Sage.time() + " wiz.getLastMaintenance():" + wiz.getLastMaintenance() + " result:" + (Sage.time() - wiz.getLastMaintenance()) + " MAINTENANCE_FREQ:" + MAINTENANCE_FREQ);
@@ -693,7 +691,7 @@ public final class EPG implements Runnable
         {
           for (int i = 0; (i < sources.size()) && alive; i++)
           {
-            if(scheduledMaintenance){
+            if(Sage.getBoolean("wizard/scheduled_maintenance", false)){
                 //determine the wait until the next scheduled update time
                 //calc the next time as the user may have changed the schedule settings
                 nextScheuldedMaintenanceTime = getNextScheduledMaintenanceTime();
@@ -919,7 +917,7 @@ public final class EPG implements Runnable
     cal.set(java.util.Calendar.MINUTE, 0);
     cal.set(java.util.Calendar.SECOND, 0);
     cal.set(java.util.Calendar.MILLISECOND, 0);
-    cal.set(java.util.Calendar.HOUR_OF_DAY, scheduledMaintenanceOffset);
+    cal.set(java.util.Calendar.HOUR_OF_DAY, Sage.getInt("wizard/" + SCHEDULED_MAINTENANCE_OFFSET, 0));
     long calcNextScheuldedMaintenanceTime = cal.getTimeInMillis();
 
     //determine if we need to add 1 to the date if we are AFTER the scheduledMaintenance time for today
@@ -1788,7 +1786,6 @@ public final class EPG implements Runnable
   private boolean downloadWhileInactive;
   private int downloadFrequency;
   private int downloadOffset;
-  private int scheduledMaintenanceOffset;
 
   private long nextDownloadTime;
   private long nextScheuldedMaintenanceTime;
