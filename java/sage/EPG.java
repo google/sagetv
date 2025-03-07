@@ -703,7 +703,7 @@ public final class EPG implements Runnable
             //******TEMP*****check out some variables
             //if (Sage.DBG) System.out.println("EPG****** within syncronized for loop i:" + i + " minWait:" + minWait + " currWait:" + currWait);
 
-            if (Sage.DBG) System.out.println(sources.elementAt(i) + " needs an update in " + Sage.durFormat(currWait));
+            //if (Sage.DBG) System.out.println(sources.elementAt(i) + " needs an update in " + Sage.durFormat(currWait));
           }
         }
         if(Sage.getBoolean("sdepg_core/bypassEPGUpdates", false)){
