@@ -309,9 +309,9 @@ public class SDRipper extends EPGDataSource
             // This will throw an exception if there are any issues connecting.
             returnValue = new SDSageSession(propUsername, propPassword);
             authenticated = true;
-            if (Sage.DBG) System.out.println("***EPG*** checking for prop based user/pass PASSED: username:" + propUsername + " password:" + propPassword);
+            if (Sage.DBG) System.out.println("SDEPG authenticated using prop based user/pass PASSED: username:" + propUsername + " password:" + propPassword);
         } catch (Exception e) {
-            if (Sage.DBG) System.out.println("***EPG*** checking for prop based user/pass FAILED: username:" + propUsername + " password:" + propPassword);
+            if (Sage.DBG) System.out.println("SDEPG checking for prop based user/pass FAILED: username:" + propUsername + " password:" + propPassword);
         }
     }
     
@@ -323,15 +323,15 @@ public class SDRipper extends EPGDataSource
             authenticated = true;
             Sage.put(PROP_USERNAME, fileUsername);
             Sage.put(PROP_PASSWORD, filePassword);
-            if (Sage.DBG) System.out.println("***EPG*** checking for file based user/pass PASSED: username:" + fileUsername + " password:" + filePassword);
+            if (Sage.DBG) System.out.println("SDEPG authenticated using file based user/pass PASSED: username:" + fileUsername + " password:" + filePassword);
         } catch (Exception e) {
-            if (Sage.DBG) System.out.println("***EPG*** checking for file based user/pass FAILED: username:" + fileUsername + " password:" + filePassword);
+            if (Sage.DBG) System.out.println("SDEPG checking for file based user/pass FAILED: username:" + fileUsername + " password:" + filePassword);
         }
     }
 
     //we have now have tried both prop and file based user/pass
     if(!authenticated){
-        if (Sage.DBG) System.out.println("***EPG*** checking for BOTH user/pass FAILED: throwing SAGETV_NO_PASSWORD");
+        if (Sage.DBG) System.out.println("SDEPG ERROR: checking for BOTH user/pass FAILED: throwing SAGETV_NO_PASSWORD");
         throw new SDException(SDErrors.SAGETV_NO_PASSWORD);
     }
     
