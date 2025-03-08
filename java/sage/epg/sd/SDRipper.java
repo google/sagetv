@@ -81,8 +81,18 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import static sage.epg.sd.SDErrors.ACCOUNT_DISABLED;
+import static sage.epg.sd.SDErrors.ACCOUNT_LOCKOUT;
+import static sage.epg.sd.SDErrors.INVALID_USER;
+import static sage.epg.sd.SDErrors.MAX_IMAGE_DOWNLOADS;
+import static sage.epg.sd.SDErrors.MAX_IMAGE_DOWNLOADS_TRIAL;
+import static sage.epg.sd.SDErrors.SAGETV_UNKNOWN;
+import static sage.epg.sd.SDErrors.SERVICE_OFFLINE;
+import static sage.epg.sd.SDErrors.TOO_MANY_LOGINS;
 
 public class SDRipper extends EPGDataSource
 {
@@ -90,6 +100,8 @@ public class SDRipper extends EPGDataSource
 
   private static final String PROP_PREFIX = "sdepg_core";
   private static final String AUTH_FILE = "sdauth";
+  private static final String PROP_USERNAME = PROP_PREFIX + "/username";
+  private static final String PROP_PASSWORD = PROP_PREFIX + "/password";
   private static final String PROP_REGION = PROP_PREFIX + "/locale/region";
   private static final String PROP_COUNTRY = PROP_PREFIX + "/locale/country";
   private static final String PROP_POSTAL_CODE = PROP_PREFIX + "/locale/postal_code";
@@ -215,9 +227,41 @@ public class SDRipper extends EPGDataSource
   // Do not use this method without getting a sessionLock write lock first.
   private static SDSession openNewSession() throws IOException, SDException
   {
-    SDSession returnValue;
+    SDSession returnValue = null;
     BufferedReader reader = null;
 
+    //2025-02-28 jusjoken: switch to using sage properties for user/pass so it can be shared with clients that need it
+    String propUsername = null;
+    String propPassword = null;
+    String fileUsername = null;
+    String filePassword = null;
+    
+    //get the property based user/pass if any
+    if(Sage.client){ //get the server property
+        try
+        {
+          Object serverProp = SageTV.api("GetServerProperty", new Object[] { PROP_USERNAME, null });
+          propUsername = serverProp.toString();
+          serverProp = SageTV.api("GetServerProperty", new Object[] { PROP_PASSWORD, null });
+          propPassword = serverProp.toString();
+          //if (Sage.DBG) System.out.println("***EPG*** getting from CLIENT user/pass: username:" + username + " password:" + password);
+        }
+        catch (Throwable t)
+        {
+          if (Sage.DBG) System.out.println("ERROR executing server API call of:" + t);
+          t.printStackTrace();
+          propUsername = null;
+          propPassword = null;
+        }
+    }else{
+        propUsername = Sage.get(PROP_USERNAME, null);
+        propPassword = Sage.get(PROP_PASSWORD, null);
+    }
+    
+    //if (Sage.DBG) System.out.println("***EPG*** checking for user/pass: username:" + username + " password:" + password);
+    
+    //get user/pass from old sdauth file
+    //if (Sage.DBG) System.out.println("***EPG*** reading user/pass from old file");
     File authFile = new File(AUTH_FILE);
     if (!authFile.exists() || authFile.length() == 0)
       throw new SDException(SDErrors.SAGETV_NO_PASSWORD);
@@ -239,11 +283,9 @@ public class SDRipper extends EPGDataSource
         throw new SDException(SDErrors.SAGETV_NO_PASSWORD);
       }
 
-      String username = auth.substring(0, split);
-      String password = auth.substring(split + 1);
+      fileUsername = auth.substring(0, split);
+      filePassword = auth.substring(split + 1);
 
-      // This will throw an exception if there are any issues connecting.
-      returnValue = new SDSageSession(username, password);
     }
     catch (FileNotFoundException e)
     {
@@ -260,6 +302,39 @@ public class SDRipper extends EPGDataSource
       }
     }
 
+    boolean authenticated = false;
+    if(propUsername!=null && propPassword!=null){ 
+        //try the prop based user/pass
+        try {
+            // This will throw an exception if there are any issues connecting.
+            returnValue = new SDSageSession(propUsername, propPassword);
+            authenticated = true;
+            if (Sage.DBG) System.out.println("SDEPG authenticated using prop based user/pass PASSED: username:" + propUsername + " password:" + propPassword);
+        } catch (Exception e) {
+            if (Sage.DBG) System.out.println("SDEPG checking for prop based user/pass FAILED: username:" + propUsername + " password:" + propPassword);
+        }
+    }
+    
+    if(!authenticated && fileUsername!=null && filePassword!=null){
+        //try the file based user/pass
+        try {
+            // This will throw an exception if there are any issues connecting.
+            returnValue = new SDSageSession(fileUsername, filePassword);
+            authenticated = true;
+            Sage.put(PROP_USERNAME, fileUsername);
+            Sage.put(PROP_PASSWORD, filePassword);
+            if (Sage.DBG) System.out.println("SDEPG authenticated using file based user/pass PASSED: username:" + fileUsername + " password:" + filePassword);
+        } catch (Exception e) {
+            if (Sage.DBG) System.out.println("SDEPG checking for file based user/pass FAILED: username:" + fileUsername + " password:" + filePassword);
+        }
+    }
+
+    //we have now have tried both prop and file based user/pass
+    if(!authenticated){
+        if (Sage.DBG) System.out.println("SDEPG ERROR: checking for BOTH user/pass FAILED: throwing SAGETV_NO_PASSWORD");
+        throw new SDException(SDErrors.SAGETV_NO_PASSWORD);
+    }
+    
     // We have just successfully authenticated, so this needs to be cleared so that updates can
     // start immediately.
     SDRipper.retryWait = 0;
@@ -2102,7 +2177,8 @@ public class SDRipper extends EPGDataSource
                   {
                     newID[0] = 'S';
                     newID[1] = 'H';
-                    singleLookup[0] = new String(newID, 0, 10);
+                    //03-04-2025 jusjoken SD now allows lookup with all 14 characters so no longer shorten to 10
+                    singleLookup[0] = new String(newID);
                     SDProgramImages images[] = ensureSession().getProgramImages(singleLookup);
                     singleLookup[0] = null;
 
@@ -2477,12 +2553,19 @@ public class SDRipper extends EPGDataSource
         case INVALID_HASH:
         case INVALID_USER:
           sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createSDInvalidUsernamePasswordMsg());
+          resetToken();
           break;
         case ACCOUNT_LOCKOUT:
           sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createSDAccountLockOutMsg());
+          resetToken();
           break;
         case ACCOUNT_DISABLED:
           sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createSDAccountDisabledMsg());
+          resetToken();
+          break;
+        case TOO_MANY_LOGINS:
+          sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createSDTooManyLoginsMsg());
+          resetToken();
           break;
       }
       setExceptionTimeout(e.ERROR);
@@ -2928,6 +3011,7 @@ public class SDRipper extends EPGDataSource
           case INVALID_HASH:
           case INVALID_USER:
             Arrays.fill(returnValues, i, returnValues.length, new SDInProgressSport(SDErrors.SAGETV_NO_PASSWORD.CODE));
+            resetToken();
             return returnValues;
           default:
             returnValues[i] = new SDInProgressSport(SDErrors.SAGETV_UNKNOWN.CODE);
@@ -2952,6 +3036,8 @@ public class SDRipper extends EPGDataSource
     switch (error)
     {
       case SERVICE_OFFLINE:
+      case MAX_IMAGE_DOWNLOADS:
+      case MAX_IMAGE_DOWNLOADS_TRIAL:
         // When the service is offline, we should only check every 30 minutes to see if it's back.
         // This might generate EPG warnings in the UI if it goes on for a while.
         SDRipper.retryWait = -(Sage.time() + Sage.MILLIS_PER_MIN * 30);
@@ -2959,13 +3045,41 @@ public class SDRipper extends EPGDataSource
       case SAGETV_NO_PASSWORD:
       case INVALID_HASH:
       case INVALID_USER:
+      case TOO_MANY_LOGINS:
+      case ACCOUNT_LOCKOUT:
+      case ACCOUNT_DISABLED:
         // Set this to an hour so we aren't too obnoxious about the authentication error messages
         // and so we shouldn't accidentally lock the account out.
         SDRipper.retryWait = Sage.time() + Sage.MILLIS_PER_HR;
+        resetToken();
         break;
-      case ACCOUNT_LOCKOUT:
-        SDRipper.retryWait = Sage.time() + Sage.MILLIS_PER_HR;
+      case SAGETV_UNKNOWN:
+      case SAGETV_COMMUNICATION_ERROR:
+      case SAGETV_SERVICE_MISSING:
+      case SAGETV_TOKEN_RETURN_MISSING:
+        // wait 30 minutes before continuing as the error is unknown or service affecting but may lockout the account
+        SDRipper.retryWait = -(Sage.time() + Sage.MILLIS_PER_MIN * 30);
         break;
     }
   }
+  
+  //reset token to null by ending the session when SD sends an error that requires getting a new token
+  //JUSJOKEN:2025-02-13
+  private static void resetToken(){
+      try {
+          ensureSession().endSession();
+      } catch (SDException ex) {
+          if (Sage.DBG)
+          {
+            System.out.println("SDEPG invalid SD authentication - token reset so next call will get a new token");
+          }
+      } catch (IOException ex) {
+          if (Sage.DBG)
+          {
+            System.out.println("SDEPG invalid SD authentication - token reset so next call will get a new token");
+          }
+      }
+      
+  }
+  
 }

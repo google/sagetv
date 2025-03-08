@@ -463,10 +463,10 @@ int DTVChannel::setTuning(SageTuningParams *params)
 		}
 		
 		if(dbg->debug_source[0]) {
-			if(dbg->source_fd > 0)
+			if(dbg->source_fd != 0)
 				fclose(dbg->source_fd);
 			dbg->source_fd = fopen(dbg->debug_source, "r");
-			if(dbg->source_fd > 0)
+			if(dbg->source_fd != 0)
 				flog("Native.log", "DTVChannel: Debug source file open: %s mode:%d (%d).\r\n",
 					  dbg->debug_source, dbg->debug_source_mode, dbg->source_fd );
 		}
@@ -712,7 +712,7 @@ void DTVChannel::splitStream(void *buffer, size_t size)
 	//flog("Native.log", "DTVChannel::splitStream(%p, %d this:0x%x 0x%x 0x%x)\r\n", buffer, size,  (uint32_t)this,
 	//         parserEnabled, scanChannelEnabled  );
 	mBytesIn += (off_t)size;
-	if ( 0 && dbg->dump_fd > 0 && dbg->dump_size > dbg->dumped_bytes )
+	if ( 0 && dbg->dump_fd != 0 && dbg->dump_size > dbg->dumped_bytes )
 	{
 		fwrite( pData, 1, lDataLen, dbg->dump_fd );
 		dbg->dumped_bytes += lDataLen;
@@ -1417,7 +1417,7 @@ int DTVChannel::scanChannelState( int *pScanState, int *pFoundChannelNum )
 	ASSERT( scanFilter != NULL );
 	*pScanState = ScanChannelState( scanFilter );
 	*pFoundChannelNum = ScanChannelNum( scanFilter );
-	return pScanState > 0;
+	return pScanState != 0;
 }
 
 int DTVChannel::scanChannelList( void** ppChannelList  )

@@ -48,7 +48,7 @@ ext {
 version = fullVersion
 
 // Just printing out the SAGETV build version for informational purposes
-// System.out.println("SAGETV VERSION ${versionArch}");
+//System.out.println("SAGETV VERSION ${versionArch}");
 
 // set gradle's buildDir to something other than the default 'build', or
 // we'll end up deleting EVERYTHING in 'build' when we ./gradlew clean
@@ -322,19 +322,22 @@ def getBuildNumber() {
 
   if (OperatingSystem.current().isLinux()) {
     // use git to find the build version
-    ant.exec(
-      command: 'git rev-list HEAD --count',
-      os: 'Linux',
-      failonerror: true,
-      outputproperty: 'sagebuildnum')
-
-    buildVer = ant.sagebuildnum
+    // 03-06-2025 jusjoken: Also we should note that you will get error code 128 if you have git
+    //  installed, but you did not pull this project using git because git will not know where 
+    //  to get the commit count from. 
+    new ByteArrayOutputStream().withStream { outputStream ->
+      exec {
+        executable 'git'
+        args 'rev-list', 'HEAD', '--count'
+        standardOutput = outputStream
+      }
+      buildVer = outputStream.toString().trim()
+    }
   } else if (OperatingSystem.current().isWindows()) {
     //ensure full path to git\bin is in the Path Environment variable on windows
     // 04-24-2017 JS: I changed this to remove the dependency on sh. Also we should note that
     // you will get error code 128 if you have git installed, but you did not pull this project
-    // using git because git will not know where to get the commit count from. This is likely
-    // true for Linux too.
+    // using git because git will not know where to get the commit count from. 
     new ByteArrayOutputStream().withStream { outputStream ->
       exec {
         executable 'git'
@@ -381,7 +384,7 @@ task(updateBuildNumber)  {
     // save buildnumber to file
     // we'll be referencing it later
     // Eventually we'll do this, but for now, fetch it every time
-    // new File('.buildnumber').write(buildVersion)
+    new File('.buildnumber').write(buildVersion)
   }
 }
 
@@ -406,7 +409,7 @@ compileJava.dependsOn updateBuildNumber
 sageJar.dependsOn cleanSageJar, classes, test
 miniclientJar.dependsOn clean, miniclientClasses, cleanMiniJar
 linuxMiniClientRelease.dependsOn miniclientJar
-sageJar.finalizedBy restoreSageConstants
+//sageJar.finalizedBy restoreSageConstants
 
 // Eclipse project setup
 eclipse {

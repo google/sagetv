@@ -55,6 +55,8 @@ import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidParameterException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 
 public abstract class SDSession
@@ -86,6 +88,8 @@ public abstract class SDSession
   // These are set in the static constructor because they can throw format exceptions.
   // Returns a token if the credentials are valid.
   protected static final URL GET_TOKEN;
+  // Returns the current token if the credentials are valid.
+  protected static final URL GET_TOKEN_CURRENT;
   // Get the current account status/saved lineups.
   private static final URL GET_STATUS;
   // Get a list of available services.
@@ -107,6 +111,7 @@ public abstract class SDSession
   {
     // Work around so that the URL's are constants.
     URL newGetToken;
+    URL newGetTokenCurrent;
     URL newGetStatus;
     URL newGetAvailable;
     URL newGetLineups;
@@ -119,12 +124,13 @@ public abstract class SDSession
     try
     {
       newGetToken = new URL(URL_VERSIONED + "/token");
+      newGetTokenCurrent = new URL(URL_VERSIONED + "/token/current");
       newGetStatus = new URL(URL_VERSIONED + "/status");
       newGetAvailable = new URL(URL_VERSIONED + "/available");
       newGetLineups = new URL(URL_VERSIONED + "/lineups");
       newGetPrograms = new URL(URL_VERSIONED + "/programs");
-      newGetSeriesDesc = new URL(URL_VERSIONED + "/metadata/description");
-      newGetProgramsImages = new URL(URL_VERSIONED + "/metadata/programs");
+      newGetSeriesDesc = new URL(URL_VERSIONED + "/metadata/description/");
+      newGetProgramsImages = new URL(URL_VERSIONED + "/metadata/programs/");
       newGetSchedules = new URL(URL_VERSIONED + "/schedules");
       newGetSchedulesMd5 = new URL(URL_VERSIONED + "/schedules/md5");
     }
@@ -135,6 +141,7 @@ public abstract class SDSession
       e.printStackTrace(System.out);
 
       newGetToken = null;
+      newGetTokenCurrent = null;
       newGetStatus = null;
       newGetAvailable = null;
       newGetLineups = null;
@@ -146,6 +153,7 @@ public abstract class SDSession
     }
 
     GET_TOKEN = newGetToken;
+    GET_TOKEN_CURRENT = newGetTokenCurrent;
     GET_STATUS = newGetStatus;
     GET_AVAILABLE = newGetAvailable;
     GET_LINEUPS = newGetLineups;
@@ -205,6 +213,16 @@ public abstract class SDSession
   }
 
   /**
+   * Returns the provided token.
+   *
+   * @return The current token.
+   */
+  public String getToken()
+  {
+    return token;
+  }
+
+  /**
    * Enable debug logging for all JSON in and out.
    */
   public static void enableDebug()
@@ -228,11 +246,19 @@ public abstract class SDSession
         }
 
         debugBytes = (int) fileSize;
+        //check if the image bypass settings are set and log that in the sagetv debug log file so the use is aware
+        if(Sage.DBG && Sage.getBoolean("sdepg_core/bypassCelebrityImages", false)){
+            System.out.println("sdepg_core/bypassCelebrityImages=true so skipping image load for celebrities");
+        }
+        if(Sage.DBG && Sage.getBoolean("sdepg_core/bypassProgramImages", false)){
+            System.out.println("sdepg_core/bypassProgramImages=true so skipping image load for programs");
+        }
+        
       }
     }
     catch (IOException e)
     {
-      System.out.println("Unable to open sd_epg.log");
+      System.out.println("enableDebug - Unable to open sd_epg.log");
       e.printStackTrace(System.out);
     }
   }
@@ -253,7 +279,7 @@ public abstract class SDSession
       {
         String message = line.getMessage();
         if (message == null) message = "null";
-        debugWriter.write("#### Exception Start ####");
+        debugWriter.write(debugDateTime() + "#### Exception Start ####");
         debugWriter.write(message);
         debugWriter.write(System.lineSeparator());
         line.printStackTrace(debugWriter);
@@ -268,7 +294,7 @@ public abstract class SDSession
     }
     catch (Exception e)
     {
-      System.out.println("Unable to write to sd_epg.log");
+      System.out.println("writeDebugException - Unable to write to sd_epg.log");
       e.printStackTrace(System.out);
     }
   }
@@ -283,7 +309,7 @@ public abstract class SDSession
       synchronized (debugLock)
       {
         if (line == null) line = "null";
-        debugWriter.write(line);
+        debugWriter.write(debugDateTime() + line);
         debugWriter.write(System.lineSeparator());
         debugWriter.flush();
         debugBytes += line.length() + 2;
@@ -292,7 +318,7 @@ public abstract class SDSession
     }
     catch (Exception e)
     {
-      System.out.println("Unable to write to sd_epg.log");
+      System.out.println("writeDebugLine - Unable to write to sd_epg.log");
       e.printStackTrace(System.out);
     }
   }
@@ -306,14 +332,18 @@ public abstract class SDSession
     {
       synchronized (debugLock)
       {
+        debugWriter.write(System.lineSeparator());
+        debugWriter.write(debugDateTime() + ".....");
+        debugWriter.write(System.lineSeparator());
         debugWriter.write(line, offset, length);
+        debugWriter.write(System.lineSeparator());
         debugBytes += length;
         // Don't perform a rollover in this method because we could cut a String of JSON in half.
       }
     }
     catch (Exception e)
     {
-      System.out.println("Unable to write to sd_epg.log");
+      System.out.println("writeDebug - Unable to write to sd_epg.log");
       e.printStackTrace(System.out);
     }
   }
@@ -332,6 +362,16 @@ public abstract class SDSession
     }
   }
 
+  private static String debugDateTime(){
+        LocalDateTime now = LocalDateTime.now();
+        
+        // Define a DateTimeFormatter to format the LocalDateTime object
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        
+        // Format the LocalDateTime object into a string
+        return now.format(formatter) + ": ";
+  }
+  
   /**
    * Connect to Schedules Direct and get a token if there isn't a token or 12 hours has passed since
    * the last token was acquired.
@@ -341,9 +381,13 @@ public abstract class SDSession
    */
   public synchronized void authenticate() throws IOException, SDException
   {
+
+    //if(Sage.DBG) System.out.println("SDSession/authenticate: checking existing token:" + token + " with expiry:" + tokenExpiration + " against System:" + (System.currentTimeMillis()/1000));
+      
     // The token is still valid.
-    if (System.currentTimeMillis() < tokenExpiration && token != null)
+    if (System.currentTimeMillis()/1000 < tokenExpiration && token != null)
     {
+      if(Sage.DBG) System.out.println("SDSession/authenticate: using existing token:" + token + " with expiry:" + tokenExpiration + " expires in:" + ((tokenExpiration - (System.currentTimeMillis()/1000))/60) + " mins");
       return;
     }
 
@@ -355,7 +399,9 @@ public abstract class SDSession
     authRequest.addProperty("username", username);
     authRequest.addProperty("password", passHash);
 
+    //new token endpoint will either return the current token or a new token and will include the expiry in UTC
     InputStreamReader reader = post(GET_TOKEN, authRequest);
+
     JsonObject response = gson.fromJson(reader, JsonObject.class);
 
     try
@@ -388,9 +434,18 @@ public abstract class SDSession
     }
 
     token = tokenElement.getAsString();
-    // The token is good for 24 hours, but I don't trust that we won't introduce a race condition by
-    // relying on that down to the millisecond, so we renew at least every 12 hours.
-    tokenExpiration = System.currentTimeMillis() + Sage.MILLIS_PER_DAY / 2;
+
+    JsonElement tokenExpiryElement = response.get("tokenExpires");
+    if(tokenExpiryElement != null){
+        //The token is good for 24 hours, and now includes the expiration time in UTC
+        //the expiration should be the value of the JSON element
+        tokenExpiration = tokenExpiryElement.getAsLong();
+        if(Sage.DBG) System.out.println("SDSession/authenticate: retreived token:" + token + " with passed expiry:" + tokenExpiration);
+    }else{
+        tokenExpiration = (System.currentTimeMillis()/1000) + (Sage.MILLIS_PER_DAY/1000) / 2;
+        if(Sage.DBG) System.out.println("SDSession/authenticate: retreived token:" + token + " with calculated expiry:" + tokenExpiration);
+    }
+
   }
 
   /**
@@ -883,6 +938,11 @@ public abstract class SDSession
    */
   public SDProgram[] getPrograms(Collection<String> programs) throws IOException, SDException
   {
+    //03-03-2025 jusjoken: check for empty array so we do not bother sending it to AD
+    if (programs.size()==0){
+        if (Sage.DBG) System.out.println("EPG getPrograms requested for empty list - returning empty list to avoid sending nothing to SD");
+        return new SDProgram[0];
+    }
     if (programs.size() > 5000)
       throw new InvalidParameterException("You cannot get more than 5000 programs in one query.");
 
@@ -1026,19 +1086,36 @@ public abstract class SDSession
    */
   public SDProgramImages[] getProgramImages(String[] programs) throws IOException, SDException
   {
+     
+    //check for image processing bypass property and skip all images if set to true
+    if(Sage.getBoolean("sdepg_core/bypassProgramImages", false)){
+      if (SDSession.debugEnabled()){
+          writeDebugLine("getProgramImages: sdepg_core/bypassProgramImages=true so skipping image load for programs = " + programs);
+      }
+      return null;
+    }
+    
     if (programs.length > 500)
       throw new InvalidParameterException("You cannot get more than 500 images in one query.");
 
     JsonArray submit = new JsonArray();
     for (String program : programs)
     {
-      if (program.length() != 10)
-        submit.add(program.substring(0, 10));
-      else
+      //03-01-2025 jusjoken: added validation for program ids
+      //first check if its already formated correctly
+      if(SDUtils.isValidShortProgramID(program)){
         submit.add(program);
+      }else if(SDUtils.isValidProgramID(program)){  //valid BUT is not shortend to 10
+        submit.add(program);  //submit as is as SD now handles the 14 character program ids as well
+        //submit.add(program.substring(0, 10));
+      }else{
+        if (Sage.DBG) System.out.println("getProgramImages: INVALID program ID - SKIPPING:" + program);
+      }
+        
     }
 
-    SDProgramImages[] returnValues = postJson(GET_PROGRAMS_IMAGES, SDProgramImages[].class, submit);
+    // JUSJOKEN: 2025-02-13 - SD now require a token for images
+    SDProgramImages[] returnValues = postAuthJson(GET_PROGRAMS_IMAGES, SDProgramImages[].class, submit);
     return returnValues;
   }
 
@@ -1056,10 +1133,18 @@ public abstract class SDSession
     if (personId == null || personId.length() == 0 || personId.equals("0"))
       return SDProgramImages.EMPTY_IMAGES;
 
+    //check for image processing bypass property and skip all images if set to true
+    if(Sage.getBoolean("sdepg_core/bypassCelebrityImages", false)){
+      if (SDSession.debugEnabled()){
+          writeDebugLine("getCelebrityImages: sdepg_core/bypassCelebrityImages=true so skipping image load for personId = " + personId);
+      }
+      return SDProgramImages.EMPTY_IMAGES;
+    }
+    
     try
     {
-      // A token is not required to perform this lookup.
-      return getJson(new URL(GET_CELEBRITY_IMAGES + personId), SDImage[].class);
+      // JUSJOKEN: 2025-02-13 - SD now require a token for images
+      return getAuthJson(new URL(GET_CELEBRITY_IMAGES + personId), SDImage[].class);
     }
     catch (JsonSyntaxException e)
     {

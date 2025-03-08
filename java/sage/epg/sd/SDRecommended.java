@@ -163,11 +163,8 @@ public class SDRecommended
       String programId = recommendation.getProgramId();
       // 05/05/2016 JS: I made this a check for an expected length and specifically prepending with
       // a known prefix because we were throwing some garbage at SD that we shouldn't.
-      if (programId == null || programId.length() == 0 ||
-        (programId.length() != 12 && programId.length() != 14) ||
-        (!programId.startsWith("EP") && !programId.startsWith("SH") &&
-          !programId.startsWith("MV") && !programId.startsWith("SP")))
-        continue;
+      //03.01.2025 jusjoken: move to common util function
+      if(SDUtils.isValidProgramID(programId)) continue;
 
       // Don't recommend movies that we have already seen or don't exist in the Wizard.
       if (programId.startsWith("MV"))

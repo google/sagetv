@@ -60,7 +60,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.Socket;
+import java.net.URL;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -7200,6 +7203,90 @@ public class Wizard implements EPGDBPublic2
         (getAiringForID(x.id) != null);
   }
 
+  /*
+   * Github version checking
+  */
+  public boolean checkForUpdate(){
+      String ghOwner = Sage.get(prefsRoot + "githubReleaseCheckOwner", "OpenSageTV");
+      String ghRepo = Sage.get(prefsRoot + "githubReleaseCheckRepo", "sagetv-linux");
+      boolean ghReleaseCheckDisabled = Sage.getBoolean(prefsRoot + "githubReleaseCheckDisabled", false);
+      String currentVersion = Version.VERSION;
+      String latestVersion = "";
+      URL url;
+      if(ghReleaseCheckDisabled || Sage.client){
+          if (Sage.DBG) System.out.println("checkForUpdate: release check is disabled in properties or this is a client - see " + prefsRoot + "/githubReleaseCheckDisabled");
+          return false;
+      }
+      
+      if (Sage.DBG) System.out.println("checkForUpdate: currentVersion:" + currentVersion);
+      
+      try {
+        url = new URL("https://github.com/" + ghOwner + "/" + ghRepo + "/releases/latest");
+      } catch (MalformedURLException e) {
+          if (Sage.DBG) System.out.println("checkForUpdate ERROR: url creation failed.  Check will not continue");
+          return false;
+      }
+      if (Sage.DBG) System.out.println("checkForUpdate: url:" + url);
+      
+      try {
+            // Connect to GitHub website
+            HttpURLConnection con;
+            con = (HttpURLConnection) url.openConnection();
+            con.setInstanceFollowRedirects(false);
+
+            // Check if the response is a redirect
+            String newUrl = con.getHeaderField("Location");
+
+            if (newUrl == null) {
+                if (Sage.DBG) System.out.println("checkForUpdate ERROR: url redirection was not returned.  Check will not continue");
+                //throw new IOException("Did not get a redirect");
+                return false;
+            }
+
+            // Get the latest version tag from the redirect url
+            String[] split = newUrl.split("/");
+            latestVersion = removePrefix(split[split.length - 1]);
+            
+      } catch (IOException ex) {
+            if (Sage.DBG) System.out.println("checkForUpdate ERROR: exception trying to get latest version from github");
+            return false;
+      }
+      
+      if(compareVersion(latestVersion, currentVersion)==1){
+          if (Sage.DBG) System.out.println("checkForUpdate: currentVersion:" + currentVersion + " latestVersion:" + latestVersion + " New version is available");
+          //add notification of new version
+          sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createVersionUpdateMsg(latestVersion, url.toString()));
+          return true;
+      }
+      if (Sage.DBG) System.out.println("checkForUpdate: currentVersion:" + currentVersion + " latestVersion:" + latestVersion + " No new version is available");
+      return false;
+  }
+  
+  private String removePrefix(String version) {
+      return version.replaceFirst("^v", "");
+  }
+  
+  private int compareVersion(String version1, String version2) {
+    String[] arr1 = version1.split("\\.");
+    String[] arr2 = version2.split("\\.");
+    
+    int i = 0;
+    while (i < arr1.length || i < arr2.length) {
+        int num1 = i < arr1.length ? Integer.parseInt(arr1[i]) : 0;
+        int num2 = i < arr2.length ? Integer.parseInt(arr2[i]) : 0;
+        
+        if (num1 > num2) {
+            return 1;
+        } else if (num1 < num2) {
+            return -1;
+        }
+        
+        i++;
+    }
+    
+    return 0;
+}
+  
   /*
    * File Operations
    */

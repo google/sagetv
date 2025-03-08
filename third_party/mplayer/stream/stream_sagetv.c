@@ -664,7 +664,7 @@ static int open_s(stream_t *stream,int mode, void* opts, int* file_format) {
 #ifdef CONFIG_DARWIN
 		pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
 #else
-		pthread_mutexattr_setkind_np(&attr, PTHREAD_MUTEX_RECURSIVE_NP);
+		pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
 #endif
 		if (pthread_mutex_init(p->mutex, &attr) != 0)
 		{

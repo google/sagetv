@@ -9,8 +9,8 @@ on:
 jobs:
   build:
 
-#    runs-on: ubuntu-latest
-    runs-on: ubuntu-18.04
+#    runs-on: ubuntu-latest 2025-03-04 changed to 22.04 as 20.04 is no longer supported as of 4/1/2025
+    runs-on: ubuntu-22.04
 
     steps:
     - uses: actions/checkout@v2

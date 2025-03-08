@@ -46,6 +46,7 @@ import sage.epg.sd.json.schedules.SDScheduleMd5ArrayDeserializer;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -93,6 +94,7 @@ public class SDUtils
   {
     // Determine how we should get the stream and if we should assume there's an error.
     boolean errorPresent = connection.getResponseCode() == 400;
+    boolean errorPresent403 = connection.getResponseCode() == 403;
     boolean gzipPresent = false;
     InputStream inputStream;
 
@@ -100,7 +102,27 @@ public class SDUtils
     // an exception so we need to treat this error code like it's not an error.
     if (errorPresent)
     {
+      if (SDSession.debugEnabled())
+      {
+        SDSession.writeDebugLine("HTTP 400 returned");
+      }
       inputStream = connection.getErrorStream();
+    }
+    //process 403 error which indicates debug_sd_support is enabled but SD is not accepting that on their side
+    else if (errorPresent403){
+      if (SDSession.debugEnabled())
+      {
+          SDSession.writeDebugLine("HTTP 403 received. Processing");
+          SDSession.writeDebugLine("HTTP 403 Disabling debug_sd_support.  Process will restart");
+          if(Sage.getBoolean("debug_sd_support", false)){
+              Sage.putBoolean("debug_sd_support", false);
+          }
+      }
+
+      //stop processing
+      SDErrors.throwErrorForCode(2055);
+      throw new SDException(SDErrors.SAGETV_UNKNOWN);
+
     }
     else
     {
@@ -131,8 +153,11 @@ public class SDUtils
       reader = new InputStreamReader(inputStream, SDSession.IN_CHARSET);
     }
 
+    //process 400 error
     if (errorPresent)
     {
+      if (SDSession.debugEnabled()){SDSession.writeDebugLine("HTTP 400 processing");}
+
       JsonElement errorElement = GSON.fromJson(reader, JsonElement.class);
 
       if (SDSession.debugEnabled())
@@ -150,7 +175,7 @@ public class SDUtils
 
       throw new SDException(SDErrors.SAGETV_UNKNOWN);
     }
-
+    
     if (SDSession.debugEnabled())
     {
       try
@@ -426,6 +451,37 @@ public class SDUtils
   }
 
   /**
+   * Check if a given program ID is valid to send to SD.
+   *
+   * @param programId The program ID to check.
+   * @return <code>true</code> if a given program ID is valid to send to SD.
+   */
+  public static boolean isValidProgramID(String programId)
+  {
+      if (programId == null || programId.length() == 0 ||
+        (programId.length() != 12 && programId.length() != 14) ||
+        (!programId.startsWith("EP") && !programId.startsWith("SH") &&
+          !programId.startsWith("MV") && !programId.startsWith("SP") && !programId.startsWith("EV")))
+      return false;
+      return true;
+  }
+
+  /**
+   * Check if a given program ID is valid to send to SD for metadata and is already shortened to 10
+   *
+   * @param programId The program ID to check.
+   * @return <code>true</code> if a given program ID is valid to send to SD.
+   */
+  public static boolean isValidShortProgramID(String programId)
+  {
+      if (programId == null || programId.length() == 0 || programId.length() != 10 ||
+        (!programId.startsWith("EP") && !programId.startsWith("SH") &&
+          !programId.startsWith("MV") && !programId.startsWith("SP") && !programId.startsWith("EV")))
+      return false;
+      return true;
+  }
+
+  /**
    * Check if a given external ID will likely have an associated series.
    *
    * @param extID The external ID to check.
@@ -510,6 +566,7 @@ public class SDUtils
 
     // Sports teams will not have any kind of person ID, so all we can do is just add their name.
     if (personId == 0)
+      //JUSJOKEN 2025-02-12 - NO CHANGE but may need to adjust this as these 0 ids are always being fetched
       return wiz.getPersonForName(personName);
 
     if (person.isAlias())
@@ -521,6 +578,7 @@ public class SDUtils
       newPersion = wiz.addPerson(personName, personId, 0, 0, "", Pooler.EMPTY_SHORT_ARRAY,
         Pooler.EMPTY_STRING_ARRAY, Pooler.EMPTY_2D_BYTE_ARRAY, DBObject.MEDIA_MASK_TV);
     }
+    //JUSJOKEN 2025-02-12 - may need to make a change here to NOT return the person if it was already in the DB
     return newPersion;
   }
 

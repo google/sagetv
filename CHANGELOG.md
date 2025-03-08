@@ -1,9 +1,23 @@
 # Change Log
 
 ## Next
+
+## Version 9.2.9 (2025-03-04)
 * Updated gradle script so that project could build in Netbeans
 * Updated the FFMPEGTranscoder to fallback to frame count instead of time to calculate progress
 * Allow IR blasters that support it to xmit non-numeric Tune strings (eg 42-1).
+* SD EPG changes to correct image retrieval without token and other API corrections/updates
+* SD EPG added debug_sd_support property to enable extra debug info when contacting SD support
+* SD EPG added sdepg_core/bypassCelebrityImages to allow users in the future to bypass reteiving Celebrity images from SD if causing issues
+* SD EPG added sdepg_core/bypassProgramImages to allow users in the future to bypass retrieving Program images from SD if causing issues
+* SD EPG added sdepg_core/bypassEPGUpdates to allow users in the future to bypass retrieving EPG from SD if causing issues
+* SD EPG added wizard/scheduled_maintenance and wizard/scheduled_maintenance_offset to allow users to set the hour that the daily maintenance will run
+* SD EPG added code to support SD now passing back the current token along with its expiration
+* SD EPG fix for send SD empty program lists as well as malformed endpoint for metadata/program
+* SD EPG fix enpoint call for metadata/programs to use 14 character programID rather than shortended to 10
+* Added seeker/duration_for_watchdog property to handle long running watchdog process for larger libraries (defaults to 60000)
+* Windows installer build notes updated for location of missing files needed for the build
+* Added ability to notify user if a new version is available on Github (defaults to enabled but can be disabled)
 
 ## Version 9.2.8 (2022-01-05)
 * Update to build process to support Linux build on Ubuntu 18.04 and JDK 11

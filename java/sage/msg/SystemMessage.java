@@ -42,6 +42,7 @@ public class SystemMessage extends SageMsg
   public static final int LINEUP_SD_ACCOUNT_DISABLED_MSG = 1010;
   public static final int LINEUP_SD_ACCOUNT_EXPIRED_MSG = 1011;
   public static final int LINEUP_SD_ACCOUNT_LOCKOUT_MSG = 1012;
+  public static final int LINEUP_SD_TOO_MANY_LOGINS_MSG = 1013;
 
   // Scheduler related
   public static final int MISSED_RECORDING_FROM_CONFLICT_MSG = 1050;
@@ -92,6 +93,8 @@ public class SystemMessage extends SageMsg
         return sage.Sage.rez("LINEUP_SD_ACCOUNT_EXPIRED");
       case LINEUP_SD_ACCOUNT_LOCKOUT_MSG:
         return sage.Sage.rez("LINEUP_SD_ACCOUNT_LOCKOUT");
+      case LINEUP_SD_TOO_MANY_LOGINS_MSG:
+        return sage.Sage.rez("LINEUP_SD_TOO_MANY_LOGINS");
       case MISSED_RECORDING_FROM_CONFLICT_MSG:
         return sage.Sage.rez("MISSED_RECORDING_FROM_CONFLICT");
       case CAPTURE_DEVICE_LOAD_ERROR_MSG:
@@ -186,6 +189,16 @@ public class SystemMessage extends SageMsg
     props.setProperty("SegmentPath", segmentPath);
     return new SystemMessage(PLAYLIST_MISSING_SEGMENT, INFO_PRIORITY,
         sage.Sage.rez("PLAYLIST_IMPORT_MISSING_SEGMENT_MSG", new Object[] { playlistPath, segmentPath }), props);
+  }
+
+  public static SystemMessage createVersionUpdateMsg(String version, String location)
+  {
+    java.util.Properties props = new java.util.Properties();
+    props.setProperty("Version", version);
+    props.setProperty("Location", location);
+    String versionMsg = "New version on github: " + version + " go to:" + location;
+    return new SystemMessage(SOFTWARE_UPDATE_AVAILABLE_MSG, INFO_PRIORITY,
+        sage.Sage.rez(versionMsg, new Object[] { version, location }), props);
   }
 
   public static SystemMessage createPluginUpdateMsg(String pluginID, String pluginName, String version)
@@ -328,6 +341,12 @@ public class SystemMessage extends SageMsg
   {
     return new SystemMessage(LINEUP_SD_ACCOUNT_LOCKOUT_MSG, ERROR_PRIORITY,
         sage.Sage.rez("LINEUP_SD_ACCOUNT_LOCKOUT_MSG"), null);
+  }
+
+  public static SystemMessage createSDTooManyLoginsMsg()
+  {
+    return new SystemMessage(LINEUP_SD_TOO_MANY_LOGINS_MSG, ERROR_PRIORITY,
+        sage.Sage.rez("LINEUP_SD_TOO_MANY_LOGINS_MSG"), null);
   }
 
   public static SystemMessage createOOMMsg()
