@@ -26,11 +26,13 @@ public class SageProperties
     "epg/lineup_overrides", "epg/lineup_physical_overrides", "epg/physical_channel_lineups", "epg_data_sources",
     "videoframe/enable_pc", "videoframe/pc_code", "videoframe/pc_restrict", "mmc/video_format_code",
     "security/profile"/*and profiles*/, "security/default_profile",
-    "videoframe/force_live_playback_on_currently_airing_programs" };
+    "videoframe/force_live_playback_on_currently_airing_programs",
+    "sdepg_core/bypassProgramImages", "sdepg_core/bypassCelebrityImages"};
   public static final String[] CLIENT_DONT_SAVE_PROPERTY_PREFIXES = { "epg/channel_lineups", "epg/service_levels",
     "epg/lineup_overrides", "epg/lineup_physical_overrides", "epg/physical_channel_lineups", "epg_data_sources",
     "mmc/encoders", "videoframe/enable_pc", "videoframe/pc_code", "videoframe/pc_restrict",
-    "security/profile"/*and profiles*/, "security/default_profile", "videoframe/force_live_playback_on_currently_airing_programs" };
+    "security/profile"/*and profiles*/, "security/default_profile", "videoframe/force_live_playback_on_currently_airing_programs",
+    "sdepg_core/bypassProgramImages", "sdepg_core/bypassCelebrityImages"};
   public static final String[] EMBEDDED_SYNCED_PROPERTIES = { "AudioOutput", "VideoSupportedModes", "VideoOutputResolution",
     "VideoConnector", "videoframe/display_aspect_ratio", "time_zone", "ui/ui_overscan_correction_perct_width",
     "ui/ui_overscan_correction_perct_height", "ui/ui_overscan_correction_offset_y", "ui/ui_overscan_correction_offset_x",

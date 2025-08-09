@@ -3231,7 +3231,9 @@ public class MetaImage
                 if (Sage.DBG) System.out.println("MetaImage.loadCacheFile: Found SD image url. src = '" + src + "'");
 
                 //skip the image loading if the bypass properties are set
-                if(Sage.getBoolean("sdepg_core/bypassCelebrityImages", false) && Sage.getBoolean("sdepg_core/bypassProgramImages", false)){
+                //2025-09-18 to ensure the server property is used even on a client SageProperties.java was updated to transfer these properties from the server
+                //  - as we don't know the image is Celebrity vs Program then skip loading for either setting to be safe
+                if(Sage.getBoolean("sdepg_core/bypassCelebrityImages", false) || Sage.getBoolean("sdepg_core/bypassProgramImages", false)){
                     if (Sage.DBG) System.out.println("MetaImage.loadCacheFile: skipping image load as both bypass properties are set. src = '" + src + "'");
                     break;
                 }
