@@ -58,6 +58,8 @@ import java.security.InvalidParameterException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public abstract class SDSession
 {
@@ -213,12 +215,13 @@ public abstract class SDSession
   }
 
   /**
-   * Returns the provided token.
+   * Returns the current valid token.
    *
-   * @return The current token.
+   * @return The current valid token.
    */
-  public synchronized String getToken()
+  public synchronized String getToken() throws IOException, SDException
   {
+    authenticate();
     return token;
   }
 
@@ -1101,6 +1104,9 @@ public abstract class SDSession
     JsonArray submit = new JsonArray();
     for (String program : programs)
     {
+      //08-12-2025 jusjoken - convert program to 14 chars needed by SD
+      program = SDUtils.fromSageTVtoProgram(program);
+      //08-12-2025 jusjoken - the below should no longer be required - remove after testing
       //03-01-2025 jusjoken: added validation for program ids
       //first check if its already formated correctly
       if(SDUtils.isValidShortProgramID(program)){
@@ -1261,7 +1267,7 @@ public abstract class SDSession
     if (programId.length() == 12)
       programId = SDUtils.fromSageTVtoProgram(programId);
 
-    // A token is not required to perform this lookup.
+    // A token is now required to perform this lookup.
     return getAuthJson(new URL(GET_IN_PROGRESS_SPORT + programId), SDInProgressSport.class);
   }
 }

@@ -463,6 +463,7 @@ public class SDUtils
         program = program + "0000";
         return program;
     }
+    if (Sage.DBG && program.length()!=14) System.out.println("SDUtils.fromSageTVtoProgram: After conversion program is NOT 14 characters that SD requires. program = '" + program + "'");
 
     return program;
   }

@@ -2,6 +2,10 @@
 
 ## Next
 
+## Version 9.2.15 (2025-09-16)
+* Fix for lockouts with SD EPG including better handling when run as service and using clients
+* Ensure SD is sent 14 character program IDs
+
 ## Version 9.2.14 (2025-06-16)
 * Fix daily notification of new version.  Should only notify once when new version is available
 
