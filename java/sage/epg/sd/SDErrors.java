@@ -1,7 +1,7 @@
 package sage.epg.sd;
 
+import java.io.IOException;
 import sage.Sage;
-import sage.SageTV;
 
 public enum SDErrors
 {
@@ -56,6 +56,7 @@ public enum SDErrors
   SAGETV_TOKEN_RETURN_MISSING(-2000 /*, "Schedules Direct did not return a valid token."*/),
   SAGETV_SERVICE_MISSING(-2001 /*, "The requested service is not currently available from Schedules Direct."*/),
   SAGETV_NO_PASSWORD(-2002 /*, "A username and password have not been provided to connect to Schedules Direct."*/),
+  SD_ACCOUNT_BLOCKED(-2003 /*, "Schedules Direct account is blocked. Contact SD to resolve."*/),
   SAGETV_UNKNOWN(-9999 /*, "Unknown error to SageTV."*/);
 
   public final int CODE;
@@ -107,15 +108,23 @@ public enum SDErrors
    * @param code The code to look up and throw.
    * @throws SDException Always thrown by this method.
    */
-  public static void throwErrorForCode(int code) throws SDException
+  public static void throwErrorForCode(int code) throws SDException, IOException
   {
     // We don't know why this is an error when the code is 0, but this method was called, so we will
     // throw an error.
+    if (Sage.DBG) System.out.println("SDErrors: code:" + code + " : " + getErrorForCode(code).name());
     if (code != 0)
     {
+      //do an extra check to see if the error is due to the account being blocked
+      //if(SDUtils.isSDBlocked()){
+          //this will indicate the account is blocked
+      //    throw new SDException(getErrorForCode(-2003));
+      //}
+        
       for (SDErrors error : SDErrors.values())
       {
         if (code == error.CODE){
+          if (Sage.DBG) System.out.println("SDErrors: THROWING code:" + code + " : " + getErrorForCode(code).name());
           throw new SDException(error);
         }
       }

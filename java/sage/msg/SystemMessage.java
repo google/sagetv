@@ -43,6 +43,7 @@ public class SystemMessage extends SageMsg
   public static final int LINEUP_SD_ACCOUNT_EXPIRED_MSG = 1011;
   public static final int LINEUP_SD_ACCOUNT_LOCKOUT_MSG = 1012;
   public static final int LINEUP_SD_TOO_MANY_LOGINS_MSG = 1013;
+  public static final int LINEUP_SD_ACCOUNT_BLOCKED_MSG = 1014;
 
   // Scheduler related
   public static final int MISSED_RECORDING_FROM_CONFLICT_MSG = 1050;
@@ -93,6 +94,8 @@ public class SystemMessage extends SageMsg
         return sage.Sage.rez("LINEUP_SD_ACCOUNT_EXPIRED");
       case LINEUP_SD_ACCOUNT_LOCKOUT_MSG:
         return sage.Sage.rez("LINEUP_SD_ACCOUNT_LOCKOUT");
+      case LINEUP_SD_ACCOUNT_BLOCKED_MSG:
+        return sage.Sage.rez("LINEUP_SD_ACCOUNT_BLOCKED");
       case LINEUP_SD_TOO_MANY_LOGINS_MSG:
         return sage.Sage.rez("LINEUP_SD_TOO_MANY_LOGINS");
       case MISSED_RECORDING_FROM_CONFLICT_MSG:
@@ -198,7 +201,7 @@ public class SystemMessage extends SageMsg
     props.setProperty("Location", location);
     String versionMsg = "New version on github: " + version + " go to:" + location;
     return new SystemMessage(SOFTWARE_UPDATE_AVAILABLE_MSG, INFO_PRIORITY,
-        sage.Sage.rez(versionMsg, new Object[] { version, location }), props);
+        sage.Sage.rez("SOFTWARE_UPDATE_AVAILABLE", new Object[] { version, location }), props);
   }
 
   public static SystemMessage createPluginUpdateMsg(String pluginID, String pluginName, String version)
@@ -341,6 +344,12 @@ public class SystemMessage extends SageMsg
   {
     return new SystemMessage(LINEUP_SD_ACCOUNT_LOCKOUT_MSG, ERROR_PRIORITY,
         sage.Sage.rez("LINEUP_SD_ACCOUNT_LOCKOUT_MSG"), null);
+  }
+
+  public static SystemMessage createSDAccountBlockedMsg()
+  {
+    return new SystemMessage(LINEUP_SD_ACCOUNT_BLOCKED_MSG, ERROR_PRIORITY,
+        sage.Sage.rez("LINEUP_SD_ACCOUNT_BLOCKED_MSG"), null);
   }
 
   public static SystemMessage createSDTooManyLoginsMsg()

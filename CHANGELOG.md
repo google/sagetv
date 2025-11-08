@@ -2,6 +2,11 @@
 
 ## Next
 
+## Version 9.2.16 (2025-11-20)
+* Fix for lockouts with SD EPG images bring requested with wrong agent and missing token
+* Further fixes to send 14 character program ids
+* Add SD healthcheck and add system alert if user is blocked
+
 ## Version 9.2.15 (2025-09-16)
 * Fix for lockouts with SD EPG including better handling when run as service and using clients
 * Ensure SD is sent 14 character program IDs
