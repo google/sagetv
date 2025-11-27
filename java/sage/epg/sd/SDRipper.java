@@ -91,6 +91,7 @@ import static sage.epg.sd.SDErrors.MAX_IMAGE_DOWNLOADS_TRIAL;
 import static sage.epg.sd.SDErrors.SAGETV_UNKNOWN;
 import static sage.epg.sd.SDErrors.SERVICE_OFFLINE;
 import static sage.epg.sd.SDErrors.TOO_MANY_LOGINS;
+import static sage.epg.sd.SDSession.debugEnabled;
 
 public class SDRipper extends EPGDataSource
 {
@@ -227,7 +228,7 @@ public class SDRipper extends EPGDataSource
   {
     SDSession returnValue = null;
     BufferedReader reader = null;
-    
+
     //2025-02-28 jusjoken: switch to using sage properties for user/pass so it can be shared with clients that need it
     String propUsername = null;
     String propPassword = null;
@@ -242,7 +243,6 @@ public class SDRipper extends EPGDataSource
           propUsername = serverProp.toString();
           serverProp = SageTV.api("GetServerProperty", new Object[] { PROP_PASSWORD, null });
           propPassword = serverProp.toString();
-          //if (Sage.DBG) System.out.println("***EPG*** getting from CLIENT user/pass: username:" + username + " password:" + password);
         }
         catch (Throwable t)
         {
@@ -256,10 +256,7 @@ public class SDRipper extends EPGDataSource
         propPassword = Sage.get(PROP_PASSWORD, null);
     }
     
-    //if (Sage.DBG) System.out.println("***EPG*** checking for user/pass: username:" + username + " password:" + password);
-    
     //get user/pass from old sdauth file
-    //if (Sage.DBG) System.out.println("***EPG*** reading user/pass from old file");
     File authFile = new File(AUTH_FILE);
     if (!authFile.exists() || authFile.length() == 0)
       throw new SDException(SDErrors.SAGETV_NO_PASSWORD);
@@ -307,9 +304,8 @@ public class SDRipper extends EPGDataSource
             // This will throw an exception if there are any issues connecting.
             returnValue = new SDSageSession(propUsername, propPassword);
             authenticated = true;
-            if (Sage.DBG) System.out.println("SDRipper:openNewSession: Authenticated using prop based user/pass PASSED: username:" + propUsername + " password:" + propPassword);
         } catch (Exception e) {
-            if (Sage.DBG) System.out.println("SDRipper:openNewSession: Checking for prop based user/pass FAILED: username:" + propUsername + " password:" + propPassword);
+            if (Sage.DBG) System.out.println("SDRipper:openNewSession: Checking for prop based user/pass FAILED");
         }
     }
     
@@ -321,9 +317,8 @@ public class SDRipper extends EPGDataSource
             authenticated = true;
             Sage.put(PROP_USERNAME, fileUsername);
             Sage.put(PROP_PASSWORD, filePassword);
-            if (Sage.DBG) System.out.println("SDRipper:openNewSession: Authenticated using file based user/pass PASSED: username:" + fileUsername + " password:" + filePassword);
         } catch (Exception e) {
-            if (Sage.DBG) System.out.println("SDRipper:openNewSession: Checking for file based user/pass FAILED: username:" + fileUsername + " password:" + filePassword);
+            if (Sage.DBG) System.out.println("SDRipper:openNewSession: Checking for file based user/pass FAILED");
         }
     }
 
@@ -336,7 +331,7 @@ public class SDRipper extends EPGDataSource
     // We have just successfully authenticated, so this needs to be cleared so that updates can
     // start immediately.
     SDRipper.retryWait = 0;
-    if (Sage.DBG) System.out.println("SDRipper:openNewSession: Successfully got token: " + returnValue.token);
+    if (Sage.DBG&& debugEnabled()) System.out.println("SDRipper:openNewSession: Successfully got token: " + returnValue.token);
     return returnValue;
   }
 
