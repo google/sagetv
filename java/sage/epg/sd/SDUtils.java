@@ -46,13 +46,13 @@ import sage.epg.sd.json.schedules.SDScheduleMd5ArrayDeserializer;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedInputStream;
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -60,6 +60,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.zip.GZIPInputStream;
+import java.awt.image.BufferedImage;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import javax.imageio.ImageIO;
+import static sage.epg.sd.SDSession.TIMEOUT;
+import static sage.epg.sd.SDSession.USER_AGENT;
 
 public class SDUtils
 {
@@ -81,6 +87,68 @@ public class SDUtils
     gsonBuilder.registerTypeAdapter(SDProgramSchedule.class, new SDProgramScheduleDeserializer());
     GSON = gsonBuilder.create();
   }
+  
+  //use the non token required "ip_isblocked" end point to determine if the user is blocked
+  //if an error is returned by the end point then the user is BLOCKED
+  public static boolean isSDBlocked() throws IOException, SDException
+  {
+    URL url = SDSession.GET_IS_BLOCKED;
+    HttpsURLConnection connection = (HttpsURLConnection)url.openConnection();
+    connection.setRequestMethod("GET");
+    connection.setConnectTimeout(TIMEOUT);
+    connection.setReadTimeout(TIMEOUT);
+    connection.setRequestProperty("User-Agent", USER_AGENT);
+    connection.setRequestProperty("Accept", "application/json");
+    connection.setRequestProperty("Accept-Encoding", "deflate,gzip");
+    connection.setRequestProperty("Accept-Charset", "ISO-8859-1");
+    //secret SD debug mode that will send requests to their debug server. Only enable when working with SD Support
+    if(Sage.getBoolean("debug_sd_support", false)) {
+      connection.setRequestProperty("RouteTo", "debug");
+      if (Sage.DBG) System.out.println("****debug_sd_support**** property set. Sending 'get' with url '" + url);
+    }
+    if (connection.getResponseCode() == 403){
+        if (Sage.DBG) System.out.println("SDUtils:isSDBlocked - 403 response received - account is BLOCKED - raising ALERT");
+        sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createSDAccountBlockedMsg());
+        return true;
+    }else{
+        //if (Sage.DBG) System.out.println("SDUtils:isSDBlocked - connection response:" + connection.getResponseCode());
+        return false;
+    }
+  }
+  public static int handleSDJsonErrorFromHttpResponse(HttpURLConnection httpConn) throws IOException
+  {
+    InputStream inputStream = new BufferedInputStream(httpConn.getInputStream());
+    InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.ISO_8859_1);
+    JsonElement errorElement = GSON.fromJson(reader, JsonElement.class);
+    if (errorElement instanceof JsonObject)
+    {
+        JsonElement codeElement = ((JsonObject) errorElement).get("code");
+        int code = codeElement != null ? codeElement.getAsInt() : -1;
+        if (Sage.DBG) System.out.println("SDUtils.handleSDJsonErrorFromHttpResponse: Error:" + code + " : " + SDErrors.getErrorForCode(code));
+        return code;
+    }else{
+        if (Sage.DBG) System.out.println("SDUtils.handleSDJsonErrorFromHttpResponse: Unknown Error");
+        return -9999;
+    }
+  }
+  
+  public static ByteArrayInputStream createBlankImageInputStream(int width, int height, String format) {
+    // Create a blank BufferedImage (white background)
+    BufferedImage blankImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+    // Fill the image with white color
+    blankImage.createGraphics().fillRect(0, 0, width, height);
+
+    // Convert BufferedImage to byte array using ImageIO
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    try {
+        ImageIO.write(blankImage, format, baos);
+    } catch (IOException e) {
+        throw new RuntimeException("Failed to write blank image to stream", e);
+    }
+
+    // Convert byte array to ByteArrayInputStream
+    return new ByteArrayInputStream(baos.toByteArray());
+  }  
 
   /**
    * Determine what kind of stream is returned and wrap it with an appropriate processing layer.
@@ -443,29 +511,31 @@ public class SDUtils
     return new String(channel, writeFrom, channel.length - writeFrom);
   }
 
+  //enfore sending 14 character programids
   public static String fromSageTVtoProgram(String program)
   {
-    if (program.length() == 12)
-    {
-      char returnValue[] = new char[14];
-      program.getChars(0, 2, returnValue, 0);
-      returnValue[2] = '0';
-      returnValue[3] = '0';
-      program.getChars(2, 12, returnValue, 4);
-      return new String(returnValue);
-    }
-    if (program.length() == 10 && program.startsWith("EP"))
-    {
-        program = program + "0000";
-        program.replace("EP", "SH");
-        return program;
-    }else if(program.length() == 10){
-        program = program + "0000";
-        return program;
-    }
-    if (Sage.DBG && program.length()!=14) System.out.println("SDUtils.fromSageTVtoProgram: After conversion program is NOT 14 characters that SD requires. program = '" + program + "'");
+    if (program.length() == 14) return program;
 
-    return program;
+    if (program.startsWith("EP") && program.length()==12) //add zeros after EP
+    {
+        String programNumber = program.substring(2);
+        program = "EP00" + programNumber;
+        if (Sage.DBG) System.out.println("SDUtils.fromSageTVtoProgram: program = '" + program + "'");
+        return program;
+    }
+    else if (program.startsWith("EP")) //add zeros to end
+    {
+        program = String.format("%-14s", program).replace(' ', '0');   
+        program.replace("EP", "SH");
+        if (Sage.DBG) System.out.println("SDUtils.fromSageTVtoProgram: EP program converted to = '" + program + "'");
+        return program;
+    }else{  //add zerors to the start AFTER the 2 char type
+        String programType = program.substring(0, 2);
+        String programNumber = program.substring(2);
+        program = programType + String.format("%-12s", programNumber).replace(' ', '0');
+        if (Sage.DBG) System.out.println("SDUtils.fromSageTVtoProgram: program = '" + program + "'");
+        return program;
+    }
   }
 
   public static String fromProgramToSageTV(String program)
@@ -488,27 +558,9 @@ public class SDUtils
    */
   public static boolean isValidProgramID(String programId)
   {
-      if (programId == null || programId.length() == 0 ||
-        (programId.length() != 12 && programId.length() != 14) ||
-        (!programId.startsWith("EP") && !programId.startsWith("SH") &&
-          !programId.startsWith("MV") && !programId.startsWith("SP") && !programId.startsWith("EV")))
+      if(programId == null || programId.length() == 0) return false;
+      if (programId.startsWith("EP") || programId.startsWith("SH") || programId.startsWith("MV") || programId.startsWith("SP") || programId.startsWith("EV")) return true;
       return false;
-      return true;
-  }
-
-  /**
-   * Check if a given program ID is valid to send to SD for metadata and is already shortened to 10
-   *
-   * @param programId The program ID to check.
-   * @return <code>true</code> if a given program ID is valid to send to SD.
-   */
-  public static boolean isValidShortProgramID(String programId)
-  {
-      if (programId == null || programId.length() == 0 || programId.length() != 10 ||
-        (!programId.startsWith("EP") && !programId.startsWith("SH") &&
-          !programId.startsWith("MV") && !programId.startsWith("SP") && !programId.startsWith("EV")))
-      return false;
-      return true;
   }
 
   /**

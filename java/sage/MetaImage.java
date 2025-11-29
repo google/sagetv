@@ -22,10 +22,8 @@ import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -52,8 +50,8 @@ import java.util.Set;
 import java.util.Vector;
 import java.util.WeakHashMap;
 import sage.epg.sd.SDRipper;
-import sage.epg.sd.SDSageSession;
 import sage.epg.sd.SDSession;
+import sage.epg.sd.SDUtils;
 
 /*
  * NOTE: DON'T DO THUMBNAIL GENERATION IN HERE. WE WANT TO STORE THEM IN SEPARATE FILES
@@ -3218,6 +3216,7 @@ public class MetaImage
         HttpURLConnection.setFollowRedirects(true);
         URL myURL = (URL) src;
         URLConnection myURLConn;
+        boolean isSDURL = false; //identifies an Schedules Direct image that needs special handling
         try
         {
           while (true)
@@ -3227,6 +3226,7 @@ public class MetaImage
             myURLConn.setConnectTimeout(30000);
             myURLConn.setReadTimeout(30000);
             if(src.toString().startsWith(SDSession.URL_VERSIONED)){
+                isSDURL = true;
                 //this is an SD supplied image so a token is required to retreive it
                 if (Sage.DBG) System.out.println("MetaImage.loadCacheFile: Found SD image url. src = '" + src + "'");
 
@@ -3245,8 +3245,9 @@ public class MetaImage
                     if (Sage.DBG) System.out.println("MetaImage.loadCacheFile: No token so skipping src = '" + src + "'");
                     break;
                 }else{
-                    if (Sage.DBG) System.out.println("MetaImage.loadCacheFile: Adding token to Request. token = '" + sdToken + "'");
+                    if (Sage.DBG && SDSession.debugEnabled()) System.out.println("MetaImage.loadCacheFile: Adding token to Request. token = '" + sdToken + "'");
                     myURLConn.addRequestProperty("token", sdToken);
+                    myURLConn.setRequestProperty("User-Agent", SDSession.USER_AGENT);
                     //secret SD debug mode that will send requests to their debug server. Only enable when working with SD Support
                     if(Sage.getBoolean("debug_sd_support", false)) {
                       myURLConn.addRequestProperty("RouteTo", "debug");
@@ -3259,6 +3260,30 @@ public class MetaImage
             if (myURLConn instanceof HttpURLConnection)
             {
               HttpURLConnection httpConn = (HttpURLConnection) myURLConn;
+              if (isSDURL) {
+                  if ("application/json".equals(httpConn.getContentType())){
+                      //SD returned an error which is within the returned json
+                      int imageErrorCode = SDUtils.handleSDJsonErrorFromHttpResponse(httpConn);
+                      if(imageErrorCode==1004){ //no or invalid token
+                        is.close();
+                        is = null;
+                        break;
+                      }else if(imageErrorCode==5000){ //image does not exist - do not ask again
+                        //create a blank image to store in cache so next request returns the blank rather than asking for an image that does not exist in SD
+                        if (Sage.DBG) System.out.println("MetaImage.loadCacheFile: error 5000 - SD image does not exist - creating a blank image for the cache to avoid re-requesting");
+                        is = SDUtils.createBlankImageInputStream(270,360,"jpg");
+                        break;
+                      }else if(imageErrorCode==5002 || imageErrorCode==5003){ //5002-max downloads, 5003-max downloads trial
+                        is.close();
+                        is = null;
+                        break;
+                      }else{
+                        is.close();
+                        is = null;
+                        break;
+                      }
+                  }
+              }
               if (httpConn.getResponseCode() / 100 == 3)
               {
                 if (Sage.DBG) System.out.println("Internally processing HTTP redirect...");
