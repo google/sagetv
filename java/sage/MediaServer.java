@@ -354,10 +354,10 @@ public class MediaServer implements Runnable
           commBufRead.flip();
         }
         currByte = (commBufRead.get() & 0xFF);
-        //			if (readTillPanic-- < 0)
-        //			{
-        //				throw new java.io.IOException("TOO MANY BYTES RECIEVED FOR A LINE, BAILING TO PREVENT DOS ATTACK");
-        //			}
+        if (readTillPanic-- < 0)
+        {
+          throw new java.io.IOException("TOO MANY BYTES RECIEVED FOR A LINE, BAILING TO PREVENT DOS ATTACK");
+        }
       }
     }
 
@@ -1000,6 +1000,22 @@ public class MediaServer implements Runnable
         }
         commBufRead = java.nio.ByteBuffer.allocate(4096);
         commBufWrite = java.nio.ByteBuffer.allocate(4096);
+        // Shared-secret authentication check
+        String authKey = Sage.get("media_server_auth_key", "");
+        if (authKey.length() > 0)
+        {
+          StringBuffer authLine = readLineBytes();
+          if (authLine == null || !authKey.equals(authLine.toString()))
+          {
+            if (MEDIA_SERVER_DEBUG) System.out.println("MediaServer auth failed, closing connection");
+            try { s.close(); } catch (Exception e) {}
+            return;
+          }
+          commBufWrite.clear();
+          commBufWrite.put(OK_BYTES).flip();
+          s.write(commBufWrite);
+          if (MEDIA_SERVER_DEBUG) System.out.println("MediaServer auth succeeded");
+        }
         // There's only 4 commands we take.
         // 1 - OPEN filename
         // 2 - CLOSE
