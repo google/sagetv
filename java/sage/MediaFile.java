@@ -3685,7 +3685,8 @@ public class MediaFile extends DBObject implements SegmentedFile
         // It returns 0 if there's valid media in the drive (not blank either)
         String burnPath = Sage.get("linux/cd_burn", "cdrecord");
         String devPath = Sage.get("default_burner_device", "/dev/cdrom");
-        int rez = IOUtils.exec2(new String[] { "sh", "-c", burnPath + " -toc dev=" + devPath });
+        // Use array form to avoid shell injection via burnPath/devPath properties
+        int rez = IOUtils.exec2(new String[] { burnPath, "-toc", "dev=" + devPath });
         if (Sage.DBG) System.out.println("Checking DVD status rez: " + rez);
         return rez == 0;
       }

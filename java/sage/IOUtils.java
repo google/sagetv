@@ -1143,8 +1143,9 @@ public class IOUtils
     if (!Sage.LINUX_OS) return NFS_MOUNT_FAILED;
     if (nfsPath.startsWith("nfs://"))
       nfsPath = nfsPath.substring(6);
-    // Check if the mount is already done
-    if (IOUtils.exec2(new String[] { "sh", "-c", "mount -t nfs | grep -i \"" + localPath  + "\"" }) == 0)
+    // Check if the mount is already done — avoid sh -c to prevent shell injection via localPath
+    String mountOutput = IOUtils.exec(new String[] { "mount", "-t", "nfs" });
+    if (mountOutput != null && mountOutput.toLowerCase().contains(localPath.toLowerCase()))
     {
       //if (Sage.DBG) System.out.println("NFS Mount already exists");
       return NFS_MOUNT_EXISTS;
