@@ -1282,6 +1282,8 @@ public class Utility {
        * @declaration public Process ExecuteProcess(String CommandString, Object Arguments, java.io.File WorkingDirectory, boolean ConsoleApp);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
+        if (!Permissions.hasPermission(Permissions.PERMISSION_EXECUTEPROCESS, stack.getUIMgr()))
+          return null;
         boolean consumeIO = evalBool(stack.pop());
         java.io.File wd = getFile(stack);
         Object args = stack.pop();
@@ -1369,6 +1371,8 @@ public class Utility {
        * @declaration public String ExecuteProcessReturnOutput(String CommandString, Object Arguments, java.io.File WorkingDirectory, boolean ReturnStdout, boolean ReturnStderr);
        */
       public Object runSafely(Catbert.FastStack stack) throws Exception{
+        if (!Permissions.hasPermission(Permissions.PERMISSION_EXECUTEPROCESS, stack.getUIMgr()))
+          return null;
         final boolean retStderr = evalBool(stack.pop());
         final boolean retStdout = evalBool(stack.pop());
         java.io.File wd = getFile(stack);
