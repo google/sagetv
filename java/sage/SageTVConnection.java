@@ -1127,8 +1127,8 @@ public class SageTVConnection implements Runnable, Wizard.XctSyncClient, Carny.P
           ("ExecuteProcess".equals(methodName) || "ExecuteProcessReturnOutput".equals(methodName)))
       {
         if (Sage.DBG) System.out.println("Blocked remote " + methodName + " call (security/block_remote_process_execution=true)");
-        dos.writeBoolean(false);
-        writeObjectToStream(null, dos);
+        dos.writeBoolean(true);
+        dos.writeUTF("Remote process execution blocked (security/block_remote_process_execution=true)");
         return new Msg(RESPONSE_MSG, myMsg.type, baos.toByteArray(), myMsg.id);
       }
       String uiContext = null;
