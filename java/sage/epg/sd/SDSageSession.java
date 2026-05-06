@@ -88,9 +88,21 @@ public class SDSageSession extends SDSession
       outStream.write(sendBytes, off, len);
       outStream.close();
 
+      int responseCode = connection.getResponseCode();
+      
+      // Detect SD service outage (5xx errors) and convert to SERVICE_OFFLINE
+      if (responseCode >= 500 && responseCode < 600)
+      {
+        if (SDSession.debugEnabled())
+        {
+          SDSession.writeDebugLine("PUT HTTP " + responseCode + " Server Error received. Service is likely offline.");
+        }
+        throw new SDException(SDErrors.SERVICE_OFFLINE);
+      }
+
       // Schedules Direct will return an http error 403 if the token has expired. The token can expire
       // because another program is using the same account, so we try once to get the token back.
-      if (retry && connection.getResponseCode() == 403)
+      if (retry && responseCode == 403)
       {
         token = null;
         authenticate();
@@ -140,12 +152,14 @@ public class SDSageSession extends SDSession
       if (Sage.DBG) System.out.println("****debug_sd_support**** property set. Sending 'post' with url '" + url);
     }
     if (token != null)
-        if (SDSession.debugEnabled())
-        {
-            SDSession.writeDebugLine("POST Adding token '" + token + "' to post");
-        }
-        
+    {
+      if (SDSession.debugEnabled())
+      {
+        SDSession.writeDebugLine("POST Adding token '" + token + "' to post");
+      }
+
       connection.setRequestProperty("token", token);
+    }
     try
     {
       // We can timeout just getting the OutputStream.
@@ -153,39 +167,39 @@ public class SDSageSession extends SDSession
       outStream.write(sendBytes, off, len);
       outStream.close();
 
+      int responseCode = connection.getResponseCode();
+      
+      // Detect SD service outage (5xx errors) and convert to SERVICE_OFFLINE
+      if (responseCode >= 500 && responseCode < 600)
+      {
+        if (SDSession.debugEnabled())
+        {
+          SDSession.writeDebugLine("POST HTTP " + responseCode + " Server Error received. Service is likely offline.");
+        }
+        throw new SDException(SDErrors.SERVICE_OFFLINE);
+      }
+
       // Schedules Direct will return an http error 403 if the token has expired. The token can expire
       // because another program is using the same account, so we try once to get the token back.
-      if (retry && connection.getResponseCode() == 403)
+      if (retry && responseCode == 403)
       {
-      if (SDSession.debugEnabled())
+        if (SDSession.debugEnabled())
         {
-            SDSession.writeDebugLine("POST response 403 received. Skipping retry.");
-        }
-      //2025-03-28 jusjoken remove the retry as it used to be needed for expired tokens but since we get 
-      //           a new token if expired then this just causes an infinite loop of 403 errors
-      /*
-        token = null;
-      if (SDSession.debugEnabled())
-        {
-            SDSession.writeDebugLine("POST response 403 received. setting token to null");
+          SDSession.writeDebugLine("POST response 403 received. Refreshing token and retrying once.");
         }
 
-        try
+        token = null;
+        if (SDSession.debugEnabled())
         {
-          // Wait a random interval between 1 and 30000 milliseconds in case more than one SageTV
-          // server is updating at the same time. This should effectively get them out of sync each
-          // time they overlap and potentially give the other server a chance to complete it's most
-          // recent communication before we get a new token.
-          Thread.sleep((new Random()).nextInt(30000) + 1);
-        } catch (InterruptedException e) {}
+          SDSession.writeDebugLine("POST response 403 received. setting token to null");
+        }
 
         authenticate();
         if (SDSession.debugEnabled())
-          {
-              SDSession.writeDebugLine("POST retry after authenticate call. token = '" + token + "'");
-          }
+        {
+          SDSession.writeDebugLine("POST retry after authenticate call. token = '" + token + "'");
+        }
         return post(url, sendBytes, off, len, false);
-      */
       }
 
       // We can timeout just getting the InputStream.
@@ -225,50 +239,52 @@ public class SDSageSession extends SDSession
       if (Sage.DBG) System.out.println("****debug_sd_support**** property set. Sending 'get' with url '" + url);
     }
     if (token != null)
-        if (SDSession.debugEnabled())
-        {
-            SDSession.writeDebugLine("GET Adding token '" + token + "' to get");
-        }
-
-        connection.setRequestProperty("token", token);
-
-    // Schedules Direct will return an http error 403 if the token has expired. The token can expire
-    // because another program is using the same account, so we try once to get the token back.
-    if (retry && connection.getResponseCode() == 403)
     {
       if (SDSession.debugEnabled())
-        {
-            SDSession.writeDebugLine("GET response 403 received. Skipping retry.");
-        }
-      //2025-03-28 jusjoken remove the retry as it used to be needed for expired tokens but since we get 
-      //           a new token if expired then this just causes an infinite loop of 403 errors
-      /*
-      token = null;
-      if (SDSession.debugEnabled())
-        {
-            SDSession.writeDebugLine("GET response 403 received. setting token to null");
-        }
-
-      try
       {
-        // Wait a random interval between 1 and 30000 milliseconds in case more than one SageTV
-        // server is updating at the same time. This should effectively get them out of sync each
-        // time they overlap and potentially give the other server a chance to complete it's most
-        // recent communication before we get a new token.
-        Thread.sleep((new Random()).nextInt(30000) + 1);
-      } catch (InterruptedException e) {}
+        SDSession.writeDebugLine("GET Adding token '" + token + "' to get");
+      }
 
-      authenticate();
-      if (SDSession.debugEnabled())
-        {
-            SDSession.writeDebugLine("GET retry after authenticate call. token = '" + token + "'");
-        }
-      return get(url, false);
-      */
+      connection.setRequestProperty("token", token);
     }
 
     try
     {
+      int responseCode = connection.getResponseCode();
+      
+      // Detect SD service outage (5xx errors) and convert to SERVICE_OFFLINE
+      if (responseCode >= 500 && responseCode < 600)
+      {
+        if (SDSession.debugEnabled())
+        {
+          SDSession.writeDebugLine("GET HTTP " + responseCode + " Server Error received. Service is likely offline.");
+        }
+        throw new SDException(SDErrors.SERVICE_OFFLINE);
+      }
+
+      // Schedules Direct will return an http error 403 if the token has expired. The token can expire
+      // because another program is using the same account, so we try once to get the token back.
+      if (retry && responseCode == 403)
+      {
+        if (SDSession.debugEnabled())
+        {
+          SDSession.writeDebugLine("GET response 403 received. Refreshing token and retrying once.");
+        }
+
+        token = null;
+        if (SDSession.debugEnabled())
+        {
+          SDSession.writeDebugLine("GET response 403 received. setting token to null");
+        }
+
+        authenticate();
+        if (SDSession.debugEnabled())
+        {
+          SDSession.writeDebugLine("GET retry after authenticate call. token = '" + token + "'");
+        }
+        return get(url, false);
+      }
+
       // We can timeout just getting the InputStream.
       return SDUtils.getStream(connection);
     }
@@ -308,17 +324,29 @@ public class SDSageSession extends SDSession
     if (token != null)
       connection.setRequestProperty("token", token);
 
-    // Schedules Direct will return an http error 403 if the token has expired. The token can expire
-    // because another program is using the same account, so we try once to get the token back.
-    if (retry && connection.getResponseCode() == 403)
-    {
-      token = null;
-      authenticate();
-      return delete(url, false);
-    }
-
     try
     {
+      int responseCode = connection.getResponseCode();
+      
+      // Detect SD service outage (5xx errors) and convert to SERVICE_OFFLINE
+      if (responseCode >= 500 && responseCode < 600)
+      {
+        if (SDSession.debugEnabled())
+        {
+          SDSession.writeDebugLine("DELETE HTTP " + responseCode + " Server Error received. Service is likely offline.");
+        }
+        throw new SDException(SDErrors.SERVICE_OFFLINE);
+      }
+
+      // Schedules Direct will return an http error 403 if the token has expired. The token can expire
+      // because another program is using the same account, so we try once to get the token back.
+      if (retry && responseCode == 403)
+      {
+        token = null;
+        authenticate();
+        return delete(url, false);
+      }
+
       // We can timeout just getting the InputStream.
       return SDUtils.getStream(connection);
     }

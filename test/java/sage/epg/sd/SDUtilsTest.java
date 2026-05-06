@@ -18,8 +18,15 @@ package sage.epg.sd;
 import org.testng.annotations.Test;
 import sage.epg.sd.SDUtils;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.text.ParseException;
+import java.nio.charset.StandardCharsets;
 import java.util.TimeZone;
+import java.util.zip.DeflaterOutputStream;
+import java.util.zip.GZIPOutputStream;
 
 public class SDUtilsTest
 {
@@ -82,5 +89,57 @@ public class SDUtilsTest
     assert "EP013829350004".equals(cleaned) : "Expected EP013829350004, got " + cleaned;
     cleaned = SDUtils.fromSageTVtoProgram(cleaned);
     assert "EP013829350004".equals(cleaned) : "Expected EP013829350004, got " + cleaned;
+  }
+
+  @Test(groups = {"gson", "schedulesDirect", "stream", "conversion"})
+  public void testDecodeGzipStream() throws IOException
+  {
+    String payload = "{\"code\":0,\"message\":\"OK\"}";
+    byte[] gzipPayload = gzip(payload.getBytes(StandardCharsets.ISO_8859_1));
+    InputStream decodedStream = SDUtils.getDecodedInputStream("gzip", new ByteArrayInputStream(gzipPayload));
+    String decoded = new String(readAll(decodedStream), StandardCharsets.ISO_8859_1);
+
+    assert payload.equals(decoded) : "Expected decoded gzip payload to match original payload.";
+  }
+
+  @Test(groups = {"gson", "schedulesDirect", "stream", "conversion"})
+  public void testDecodeDeflateStream() throws IOException
+  {
+    String payload = "{\"code\":0,\"message\":\"OK\"}";
+    byte[] deflatePayload = deflate(payload.getBytes(StandardCharsets.ISO_8859_1));
+    InputStream decodedStream = SDUtils.getDecodedInputStream("deflate", new ByteArrayInputStream(deflatePayload));
+    String decoded = new String(readAll(decodedStream), StandardCharsets.ISO_8859_1);
+
+    assert payload.equals(decoded) : "Expected decoded deflate payload to match original payload.";
+  }
+
+  private static byte[] gzip(byte[] source) throws IOException
+  {
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    GZIPOutputStream gzipOutputStream = new GZIPOutputStream(outputStream);
+    gzipOutputStream.write(source);
+    gzipOutputStream.close();
+    return outputStream.toByteArray();
+  }
+
+  private static byte[] deflate(byte[] source) throws IOException
+  {
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    DeflaterOutputStream deflaterOutputStream = new DeflaterOutputStream(outputStream);
+    deflaterOutputStream.write(source);
+    deflaterOutputStream.close();
+    return outputStream.toByteArray();
+  }
+
+  private static byte[] readAll(InputStream inputStream) throws IOException
+  {
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    byte[] buffer = new byte[1024];
+    int read;
+    while ((read = inputStream.read(buffer)) != -1)
+    {
+      outputStream.write(buffer, 0, read);
+    }
+    return outputStream.toByteArray();
   }
 }

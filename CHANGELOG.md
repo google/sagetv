@@ -2,6 +2,10 @@
 
 ## Next
 
+## Version 9.2.17 (2026-08-04)
+* Fixes to better match SD API for error handling
+* Fix for running EPG maintenance at specified time
+
 ## Version 9.2.16 (2025-11-20)
 * Fix for lockouts with SD EPG images bring requested with wrong agent and missing token
 * Further fixes to send 14 character program ids
