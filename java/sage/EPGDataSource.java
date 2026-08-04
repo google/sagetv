@@ -1,7 +1,10 @@
+// Context for the first change
+// This is the beginning of the processEPGDataMsg method
+// The following lines are part of the method's logic
 /*
  * Copyright 2015 The SageTV Authors. All Rights Reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+  if (!toker.hasMoreTokens()) return; // Defensive guard
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -162,7 +165,7 @@ public class EPGDataSource
       SeekerSelector.getInstance().kick();
     if (dataScanAllowed && cdi != null && cdi.isActive() && cdi.getCaptureDevice().isDataScanning())
     {
-      if (Sage.DBG) System.out.println("EPGDS " + name + " found a capture device to start data scanning with:" + cdi);
+      if (Sage.DBG) System.out.println("EPGDS sourceId=" + epgSourceID + " " + name + " found a capture device to start data scanning with:" + cdi);
       // Now we need to find the actual stations we want to scan for and go to it!
       int[] allStations = EPG.getInstance().getAllStations(providerID);
       long newScannedUntil = Long.MAX_VALUE;
@@ -266,27 +269,49 @@ public class EPGDataSource
      * EPG-0|major-minor AN/DT|startTimeGPS|durationSeconds|language|title|description|rating|
      */
 
+    byte[] msgData = (byte[]) msg.getData();
     String msgString;
     try
     {
-      msgString = new String((byte[])msg.getData(), Sage.BYTE_CHARSET);
+      msgString = new String(msgData, Sage.BYTE_CHARSET);
     }
     catch (java.io.UnsupportedEncodingException e)
     {
-      msgString = new String((byte[])msg.getData());
+      msgString = new String(msgData);
     }
-    if (((byte[])msg.getData()).length != msgString.length())
+    if (msgData.length != msgString.length())
       throw new InternalError("Byte array length is not the same length as string and we used a byte charset!!!");
     if (msgString.length() == 0) return;
     try
     {
       int offset = 0;
       java.util.StringTokenizer toker = new java.util.StringTokenizer(msgString, "|", true);
+      if (!toker.hasMoreTokens())
+      {
+        logMalformedEPGDataMessage("missing message type token", msgString);
+        return;
+      }
       offset += toker.nextToken().length(); // First token is "EPG-0"
+      if (!toker.hasMoreTokens())
+      {
+        logMalformedEPGDataMessage("missing delimiter after message type", msgString);
+        return;
+      }
       offset += toker.nextToken().length(); // delimiter
+      if (!toker.hasMoreTokens())
+      {
+        logMalformedEPGDataMessage("missing channel token", msgString);
+        return;
+      }
       String chanInfo = toker.nextToken(); // Channel number and DT or AN
       offset += chanInfo.length();
-      String chanNum = chanInfo.substring(0, chanInfo.indexOf(' '));
+      int chanInfoIdx = chanInfo.indexOf(' ');
+      if (chanInfoIdx <= 0)
+      {
+        logMalformedEPGDataMessage("invalid channel token format", msgString);
+        return;
+      }
+      String chanNum = chanInfo.substring(0, chanInfoIdx);
       int stationID = sage.EPG.getInstance().guessStationIDFromPhysicalChannel(providerID, chanNum, chanNum.indexOf('-') != -1);
       if (stationID == 0)
         stationID = sage.EPG.getInstance().guessStationID(providerID, chanNum);
@@ -294,16 +319,24 @@ public class EPGDataSource
       if (stationID > 10000)
       {
         // It has TMS EPG data, so do NOT overwrite it with what we have found here
-        // For TVTV they're station IDs overlap with the generated ones so don't take anything if using their data
-        //if (sage.Sage.DBG) System.out.println("Skipping EPG data message because we have that channel's EPG data from a better source");
         return;
       }
       if (stationID == 0)
       {
-        //if (sage.Sage.DBG) System.out.println("Skipping EPG data message because we don't have a station ID for this channel");
+        // if we don't have a station ID for this channel, ignore the message.
+        return;
+      }
+      if (!toker.hasMoreTokens())
+      {
+        logMalformedEPGDataMessage("missing delimiter before start time", msgString);
         return;
       }
       offset += toker.nextToken().length(); // delimiter
+      if (!toker.hasMoreTokens())
+      {
+        logMalformedEPGDataMessage("missing start time token", msgString);
+        return;
+      }
       String timeStr = toker.nextToken();
       offset += timeStr.length();
       long startTime;
@@ -333,15 +366,42 @@ public class EPGDataSource
         System.out.println("ERROR parsing EPG message start time of:" + e);
         return;
       }
+      if (!toker.hasMoreTokens())
+      {
+        logMalformedEPGDataMessage("missing delimiter before duration", msgString);
+        return;
+      }
       offset += toker.nextToken().length(); // delimiter
+      if (!toker.hasMoreTokens())
+      {
+        logMalformedEPGDataMessage("missing duration token", msgString);
+        return;
+      }
       String durStr = toker.nextToken();
       offset += durStr.length();
       int duration = Integer.parseInt(durStr); // duration
+      if (!toker.hasMoreTokens())
+      {
+        logMalformedEPGDataMessage("missing delimiter before language", msgString);
+        return;
+      }
       offset += toker.nextToken().length(); // delimiter
+      if (!toker.hasMoreTokens())
+      {
+        logMalformedEPGDataMessage("missing language token", msgString);
+        return;
+      }
       String language = toker.nextToken();
       offset += language.length();
       if (!"|".equals(language))
+      {
+        if (!toker.hasMoreTokens())
+        {
+          logMalformedEPGDataMessage("missing delimiter after language", msgString);
+          return;
+        }
         offset += toker.nextToken().length(); // delimiter
+      }
       else
         language = "";
       if (language.length() > 0)
@@ -357,35 +417,51 @@ public class EPGDataSource
         else if ("fra".equalsIgnoreCase(language))
           language = "French";
       }
-      // Now we need to check for alternate character sets which means we'd need to switch to the byte arrays
-      String title="", description="";
+
+      String title = "", description = "";
       for (int i = 0; i < 2 && offset < msgString.length(); i++)
       {
         if (msgString.charAt(offset) != '[')
         {
+          if (!toker.hasMoreTokens())
+          {
+            logMalformedEPGDataMessage("missing text token", msgString);
+            break;
+          }
           if (i == 0)
           {
-            title = toker.nextToken(); // title
+            title = toker.nextToken();
             offset += title.length();
             if ("|".equals(title))
               title = "";
             else if (toker.hasMoreTokens())
-              offset += toker.nextToken().length(); // delimiter
+              offset += toker.nextToken().length();
           }
           else
           {
-            description = toker.nextToken(); // description
+            description = toker.nextToken();
             offset += description.length();
             if ("|".equals(description))
               description = "";
             else if (toker.hasMoreTokens())
-              offset += toker.nextToken().length(); // delimiter
+              offset += toker.nextToken().length();
           }
         }
         else
         {
           String charset = Sage.BYTE_CHARSET;
-          int len = msgString.indexOf('|', offset + 1) - offset;
+          int delimiterIdx = msgString.indexOf('|', offset + 1);
+          if (delimiterIdx == -1)
+          {
+            logMalformedEPGDataMessage("missing text delimiter after charset/length block", msgString);
+            break;
+          }
+          int len = delimiterIdx - offset;
+          if (len < 0)
+          {
+            logMalformedEPGDataMessage("negative text block length", msgString);
+            break;
+          }
           int fullLen = len;
           int baseOffset = offset;
           do
@@ -408,8 +484,11 @@ public class EPGDataSource
                 try
                 {
                   len = Integer.parseInt(attValue);
+                  if (len < 0)
+                    len = 0;
                 }
-                catch (NumberFormatException e){
+                catch (NumberFormatException e)
+                {
                   if (Sage.DBG) System.out.println("Formatting error with EPG data:" + e);
                 }
               }
@@ -418,24 +497,33 @@ public class EPGDataSource
             } while (brack1 != -1 && brack1 < offset + len);
             try
             {
+              if (offset < 0 || len < 0 || offset + len > msgData.length)
+              {
+                logMalformedEPGDataMessage("text block bounds exceeded message size", msgString);
+                break;
+              }
               if (i == 0)
-                title += new String((byte[])msg.getData(), offset, len, charset);
+                title += new String(msgData, offset, len, charset);
               else
-                description += new String((byte[])msg.getData(), offset, len, charset);
+                description += new String(msgData, offset, len, charset);
             }
             catch (java.io.UnsupportedEncodingException e)
             {
               if (Sage.DBG) System.out.println("Unsupported encoding for EPG data of:" + charset + " err=" + e);
               if (i == 0)
-                title += new String((byte[])msg.getData(), offset, len);
+                title += new String(msgData, offset, len);
               else
-                description += new String((byte[])msg.getData(), offset, len);
+                description += new String(msgData, offset, len);
             }
-            //if (Sage.DBG) System.out.println("Parsing EPG data w/ charset=" + charset + " len=" + len + ((i == 0) ? (" title=" + title) : (" desc=" + description)));
             offset += len + 1;
           } while (baseOffset + fullLen > offset);
           do
           {
+            if (!toker.hasMoreTokens())
+            {
+              logMalformedEPGDataMessage("token stream ended while resyncing text offset", msgString);
+              break;
+            }
             baseOffset += toker.nextToken().length();
           } while (baseOffset < offset);
         }
@@ -562,6 +650,19 @@ public class EPGDataSource
     name = s;
     Sage.put(prefsRoot + EPG_NAME, name);
   }
+
+      private void logMalformedEPGDataMessage(String reason, String msgString)
+      {
+        if (!Sage.DBG)
+          return;
+
+        int maxLen = 220;
+        String sample = msgString == null ? "" : msgString;
+        if (sample.length() > maxLen)
+          sample = sample.substring(0, maxLen) + "...";
+
+        System.out.println("Skipping malformed EPG data message: sourceId=" + epgSourceID + " reason=" + reason + " msg=\"" + sample + "\"");
+      }
 
   public final long getLastRun()
   {
@@ -733,6 +834,7 @@ public class EPGDataSource
   {
     return 0;
   }
+
   public final long getTimeTillUpdate()
   {
     return getTimeTillExpand();

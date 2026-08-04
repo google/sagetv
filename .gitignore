@@ -1034,3 +1034,5 @@ native/SageWorkspace.VC.VC.opendb
 /nbproject/private/
 /nbbuild/
 /dist/
+.github/copilot-instructions.md
+.vscode/settings.json

@@ -44,6 +44,10 @@ public class SystemMessage extends SageMsg
   public static final int LINEUP_SD_ACCOUNT_LOCKOUT_MSG = 1012;
   public static final int LINEUP_SD_TOO_MANY_LOGINS_MSG = 1013;
   public static final int LINEUP_SD_ACCOUNT_BLOCKED_MSG = 1014;
+  public static final int LINEUP_SD_APPLICATION_DISABLED_MSG = 1015;
+  public static final int LINEUP_SD_ACCOUNT_INACTIVE_MSG = 1016;
+  public static final int LINEUP_SD_TOO_MANY_UNIQUE_IPS_MSG = 1017;
+  public static final int LINEUP_SD_SERVICE_OFFLINE_MSG = 1018;
 
   // Scheduler related
   public static final int MISSED_RECORDING_FROM_CONFLICT_MSG = 1050;
@@ -99,6 +103,14 @@ public class SystemMessage extends SageMsg
         return sage.Sage.rez("LINEUP_SD_ACCOUNT_BLOCKED");
       case LINEUP_SD_TOO_MANY_LOGINS_MSG:
         return sage.Sage.rez("LINEUP_SD_TOO_MANY_LOGINS");
+      case LINEUP_SD_APPLICATION_DISABLED_MSG:
+        return sage.Sage.rez("LINEUP_SD_APPLICATION_DISABLED");
+      case LINEUP_SD_ACCOUNT_INACTIVE_MSG:
+        return sage.Sage.rez("LINEUP_SD_ACCOUNT_INACTIVE");
+      case LINEUP_SD_TOO_MANY_UNIQUE_IPS_MSG:
+        return sage.Sage.rez("LINEUP_SD_TOO_MANY_UNIQUE_IPS");
+      case LINEUP_SD_SERVICE_OFFLINE_MSG:
+        return sage.Sage.rez("LINEUP_SD_SERVICE_OFFLINE");
       case MISSED_RECORDING_FROM_CONFLICT_MSG:
         return sage.Sage.rez("MISSED_RECORDING_FROM_CONFLICT");
       case CAPTURE_DEVICE_LOAD_ERROR_MSG:
@@ -356,6 +368,30 @@ public class SystemMessage extends SageMsg
   {
     return new SystemMessage(LINEUP_SD_TOO_MANY_LOGINS_MSG, ERROR_PRIORITY,
         sage.Sage.rez("LINEUP_SD_TOO_MANY_LOGINS_MSG"), null);
+  }
+
+  public static SystemMessage createSDApplicationDisabledMsg()
+  {
+    return new SystemMessage(LINEUP_SD_APPLICATION_DISABLED_MSG, ERROR_PRIORITY,
+        sage.Sage.rez("LINEUP_SD_APPLICATION_DISABLED_MSG"), null);
+  }
+
+  public static SystemMessage createSDAccountInactiveMsg()
+  {
+    return new SystemMessage(LINEUP_SD_ACCOUNT_INACTIVE_MSG, ERROR_PRIORITY,
+        sage.Sage.rez("LINEUP_SD_ACCOUNT_INACTIVE_MSG"), null);
+  }
+
+  public static SystemMessage createSDTooManyUniqueIPsMsg()
+  {
+    return new SystemMessage(LINEUP_SD_TOO_MANY_UNIQUE_IPS_MSG, ERROR_PRIORITY,
+        sage.Sage.rez("LINEUP_SD_TOO_MANY_UNIQUE_IPS_MSG"), null);
+  }
+
+  public static SystemMessage createSDServiceOfflineMsg()
+  {
+    return new SystemMessage(LINEUP_SD_SERVICE_OFFLINE_MSG, WARNING_PRIORITY,
+        sage.Sage.rez("LINEUP_SD_SERVICE_OFFLINE_MSG"), null);
   }
 
   public static SystemMessage createOOMMsg()

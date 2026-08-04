@@ -116,6 +116,8 @@ public class SDRipper extends EPGDataSource
   private static final String PROP_DOWNLOAD_ALTERNATE_LOGOS = PROP_PREFIX + "/use_alternate_logos";
   private static final String FILE_PROGRAM_MD5 = "sdmd5prog";
   private static final String FILE_SCHEDULE_MD5 = "sdmd5sched";
+  private static final String FILE_IMAGE_PROGRAM_SKIP = "sdimgskipprog";
+  private static final String FILE_IMAGE_PERSON_SKIP = "sdimgskipperson";
 
   public static final String SOURCE_LABEL = " (sdepg)";
   private static final String SOURCE_LINEUP_ID = "epg_sd_name";
@@ -298,12 +300,16 @@ public class SDRipper extends EPGDataSource
     }
 
     boolean authenticated = false;
+    SDException lastAuthSDException = null;
     if(propUsername!=null && propPassword!=null){ 
         //try the prop based user/pass
         try {
             // This will throw an exception if there are any issues connecting.
             returnValue = new SDSageSession(propUsername, propPassword);
             authenticated = true;
+      } catch (SDException e) {
+        lastAuthSDException = e;
+        if (Sage.DBG) System.out.println("SDRipper:openNewSession: Checking for prop based user/pass FAILED with SDException: " + e.getMessage());
         } catch (Exception e) {
             if (Sage.DBG) System.out.println("SDRipper:openNewSession: Checking for prop based user/pass FAILED");
         }
@@ -317,6 +323,9 @@ public class SDRipper extends EPGDataSource
             authenticated = true;
             Sage.put(PROP_USERNAME, fileUsername);
             Sage.put(PROP_PASSWORD, filePassword);
+      } catch (SDException e) {
+        lastAuthSDException = e;
+        if (Sage.DBG) System.out.println("SDRipper:openNewSession: Checking for file based user/pass FAILED with SDException: " + e.getMessage());
         } catch (Exception e) {
             if (Sage.DBG) System.out.println("SDRipper:openNewSession: Checking for file based user/pass FAILED");
         }
@@ -324,6 +333,8 @@ public class SDRipper extends EPGDataSource
 
     //we have now have tried both prop and file based user/pass
     if(!authenticated){
+        if (lastAuthSDException != null)
+          throw lastAuthSDException;
         if (Sage.DBG) System.out.println("SDRipper:openNewSession: ERROR: checking for BOTH user/pass FAILED: throwing SAGETV_NO_PASSWORD");
         throw new SDException(SDErrors.SAGETV_NO_PASSWORD);
     }
@@ -1252,7 +1263,7 @@ public class SDRipper extends EPGDataSource
         }
         else
         {
-          System.out.println("SDEPG Error: Username and/or password are incorrect or missing. Returning failure.");
+          System.out.println("SDEPG Warning: Schedules Direct retry is delayed due to a previous authentication/account error. Returning failure.");
         }
       }
       return false;
@@ -1613,6 +1624,12 @@ public class SDRipper extends EPGDataSource
       // guide data has been populated. The people aliases are overwritten with the addedPeople
       // before the lookup happens so that we are mostly only looking up non-alias people.
       Set<SDPerson> addedAliases = new HashSet<>();
+      // Track image lookups that returned permanent errors so we do not re-request them repeatedly
+      // during this update cycle.
+      final Set<String> noImageProgramDetails = loadImageSkipSet(FILE_IMAGE_PROGRAM_SKIP);
+      final Set<String> noImagePersonDetails = loadImageSkipSet(FILE_IMAGE_PERSON_SKIP);
+      // If SD indicates image quota issues, stop image lookups for the remainder of this cycle.
+      final java.util.concurrent.atomic.AtomicBoolean skipImageLookups = new java.util.concurrent.atomic.AtomicBoolean(false);
 
       int downloadedPrograms = 0;
       int importAirings = 0;
@@ -1980,22 +1997,56 @@ public class SDRipper extends EPGDataSource
                     int showcardID = 0;
                     byte imageURLs[][] = null;
 
-                    if (!canGetSeries && programDetail.hasImageArtwork())
+                    if (!skipImageLookups.get() && !canGetSeries && programDetail.hasImageArtwork() &&
+                        !noImageProgramDetails.contains(extID))
                     {
                       // Don't fail the show entry if there's an issue parsing the JSON for images.
                       try
                       {
-                        singleLookup[0] = extID;
+                        String imageLookupId = extID;
+                        singleLookup[0] = imageLookupId;
                         SDProgramImages images[] = ensureSession().getProgramImages(singleLookup);
                         singleLookup[0] = null;
 
-                        if (images != null && images.length == 1 && images[0].getCode() == 0)
+                        if (images != null && images.length == 1)
                         {
-                          int showcardIdRef[] = new int[1];
-                          imageURLs = SDImages.encodeImages(
-                            images[0].getImages(), showcardIdRef, SDImages.ENCODE_ALL);
-                          showcardID = showcardIdRef[0];
+                          int imageCode = images[0].getCode();
+                          if (imageCode == 0)
+                          {
+                            int showcardIdRef[] = new int[1];
+                            imageURLs = SDImages.encodeImages(
+                              images[0].getImages(), showcardIdRef, SDImages.ENCODE_ALL);
+                            showcardID = showcardIdRef[0];
+                          }
+                          else if (imageCode == SDErrors.IMAGE_NOT_FOUND.CODE ||
+                                   imageCode == SDErrors.MAX_IMAGE_INVALID_URI_ERRORS.CODE ||
+                                   imageCode == SDErrors.INVALID_PROGRAMID.CODE)
+                          {
+                            noImageProgramDetails.add(imageLookupId);
+                          }
+                          else if (imageCode == SDErrors.MAX_IMAGE_DOWNLOADS.CODE ||
+                                   imageCode == SDErrors.MAX_IMAGE_DOWNLOADS_TRIAL.CODE)
+                          {
+                            skipImageLookups.set(true);
+                            setExceptionTimeout(SDErrors.getErrorForCode(imageCode));
+                          }
                         }
+                      }
+                      catch (SDException e)
+                      {
+                        if (e.ERROR == SDErrors.IMAGE_NOT_FOUND ||
+                            e.ERROR == SDErrors.MAX_IMAGE_INVALID_URI_ERRORS ||
+                            e.ERROR == SDErrors.INVALID_PROGRAMID)
+                        {
+                          noImageProgramDetails.add(extID);
+                        }
+                        else if (e.ERROR == SDErrors.MAX_IMAGE_DOWNLOADS ||
+                                 e.ERROR == SDErrors.MAX_IMAGE_DOWNLOADS_TRIAL)
+                        {
+                          skipImageLookups.set(true);
+                          setExceptionTimeout(e.ERROR);
+                        }
+                        SDSession.writeDebugException(e);
                       }
                       catch (Exception e)
                       {
@@ -2174,20 +2225,48 @@ public class SDRipper extends EPGDataSource
                   if (seriesDesc == null)
                     seriesDesc = "";
 
-                  if (seriesDetail.hasImageArtwork())
+                  if (!skipImageLookups.get() && seriesDetail.hasImageArtwork())
                   {
                     newID[0] = 'S';
                     newID[1] = 'H';
                     //03-04-2025 jusjoken SD now allows lookup with all 14 characters so no longer shorten to 10
-                    singleLookup[0] = new String(newID);
+                    String imageLookupId = new String(newID);
+                    if (noImageProgramDetails.contains(imageLookupId))
+                    {
+                      singleLookup[0] = null;
+                    }
+                    else
+                    {
+                      singleLookup[0] = imageLookupId;
+                    }
+
+                    if (singleLookup[0] != null)
+                    {
                     SDProgramImages images[] = ensureSession().getProgramImages(singleLookup);
                     singleLookup[0] = null;
 
-                    if (images != null && images.length == 1 && images[0].getCode() == 0)
+                    if (images != null && images.length == 1)
                     {
-                      int showcardIdRef[] = new int[1];
-                      seriesURLs = SDImages.encodeImages(images[0].getImages(), showcardIdRef, SDImages.ENCODE_SERIES_ONLY);
-                      showcardID = showcardIdRef[0];
+                      int imageCode = images[0].getCode();
+                      if (imageCode == 0)
+                      {
+                        int showcardIdRef[] = new int[1];
+                        seriesURLs = SDImages.encodeImages(images[0].getImages(), showcardIdRef, SDImages.ENCODE_SERIES_ONLY);
+                        showcardID = showcardIdRef[0];
+                      }
+                      else if (imageCode == SDErrors.IMAGE_NOT_FOUND.CODE ||
+                               imageCode == SDErrors.MAX_IMAGE_INVALID_URI_ERRORS.CODE ||
+                               imageCode == SDErrors.INVALID_PROGRAMID.CODE)
+                      {
+                        noImageProgramDetails.add(imageLookupId);
+                      }
+                      else if (imageCode == SDErrors.MAX_IMAGE_DOWNLOADS.CODE ||
+                               imageCode == SDErrors.MAX_IMAGE_DOWNLOADS_TRIAL.CODE)
+                      {
+                        skipImageLookups.set(true);
+                        setExceptionTimeout(SDErrors.getErrorForCode(imageCode));
+                      }
+                    }
                     }
                   }
 
@@ -2357,21 +2436,47 @@ public class SDRipper extends EPGDataSource
                   byte headShotUrls[][];
                   if (lookupPersonId.length() > 0)
                   {
-                    try
+                    if (skipImageLookups.get() || noImagePersonDetails.contains(lookupPersonId))
                     {
-                      headShotUrls = SDImages.encodeHeadShots(ensureSession().getCelebrityImages(lookupPersonId));
-                    }
-                    catch (Throwable e)
-                    {
-                      // Issues in getting head-shots should not be considered a significant issue,
-                      // but we will report it in case it becomes the source of a major issue.
-                      SDSageSession.writeDebugException(e);
-                      if (Sage.DBG)
-                      {
-                        System.out.println("SDEPG Unable to get head-shots for: " + person);
-                        e.printStackTrace(System.out);
-                      }
                       headShotUrls = Pooler.EMPTY_2D_BYTE_ARRAY;
+                    }
+                    else
+                    {
+                      try
+                      {
+                        headShotUrls = SDImages.encodeHeadShots(ensureSession().getCelebrityImages(lookupPersonId));
+                      }
+                      catch (SDException e)
+                      {
+                        if (e.ERROR == SDErrors.IMAGE_NOT_FOUND || e.ERROR == SDErrors.MAX_IMAGE_INVALID_URI_ERRORS)
+                        {
+                          noImagePersonDetails.add(lookupPersonId);
+                        }
+                        else if (e.ERROR == SDErrors.MAX_IMAGE_DOWNLOADS || e.ERROR == SDErrors.MAX_IMAGE_DOWNLOADS_TRIAL)
+                        {
+                          skipImageLookups.set(true);
+                          setExceptionTimeout(e.ERROR);
+                        }
+                        SDSageSession.writeDebugException(e);
+                        if (Sage.DBG)
+                        {
+                          System.out.println("SDEPG Unable to get head-shots for: " + person);
+                          e.printStackTrace(System.out);
+                        }
+                        headShotUrls = Pooler.EMPTY_2D_BYTE_ARRAY;
+                      }
+                      catch (Throwable e)
+                      {
+                        // Issues in getting head-shots should not be considered a significant issue,
+                        // but we will report it in case it becomes the source of a major issue.
+                        SDSageSession.writeDebugException(e);
+                        if (Sage.DBG)
+                        {
+                          System.out.println("SDEPG Unable to get head-shots for: " + person);
+                          e.printStackTrace(System.out);
+                        }
+                        headShotUrls = Pooler.EMPTY_2D_BYTE_ARRAY;
+                      }
                     }
                   }
                   else
@@ -2495,6 +2600,9 @@ public class SDRipper extends EPGDataSource
       saveStationDayMd5Map(stationDayMd5s);
       // Save the md5 hashes for all programs.
       saveProgramMd5Map(programMd5Map);
+      // Save image lookup skips so we can avoid retrying known invalid image requests.
+      saveImageSkipSet(FILE_IMAGE_PROGRAM_SKIP, noImageProgramDetails);
+      saveImageSkipSet(FILE_IMAGE_PERSON_SKIP, noImagePersonDetails);
 
       // We are tracking the number of teams added so that we have a reference point to verify if
       // the teams are broken or the show in question just does not have more detail.
@@ -2539,6 +2647,10 @@ public class SDRipper extends EPGDataSource
     {
       switch (e.ERROR)
       {
+        case SD_ACCOUNT_BLOCKED:
+          sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createSDAccountBlockedMsg());
+          resetToken();
+          break;
         case NO_LINEUPS:
         case LINEUP_NOT_FOUND:
           sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createSDLineupMissingMsg(this));
@@ -2548,6 +2660,9 @@ public class SDRipper extends EPGDataSource
           break;
         case ACCOUNT_EXPIRED:
           sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createSDAccountExpiredMsg());
+          break;
+        case SERVICE_OFFLINE:
+          sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createSDServiceOfflineMsg());
           break;
         // No password is as good as an authentication failure from a corrective standpoint.
         case SAGETV_NO_PASSWORD:
@@ -2564,11 +2679,28 @@ public class SDRipper extends EPGDataSource
           sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createSDAccountDisabledMsg());
           resetToken();
           break;
+        case APPLICATION_DISABLED:
+          sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createSDApplicationDisabledMsg());
+          resetToken();
+          break;
+        case ACCOUNT_INACTIVE:
+          sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createSDAccountInactiveMsg());
+          resetToken();
+          break;
+        case TOKEN_MISSING:
+        case TOKEN_EXPIRED:
+          resetToken();
+          break;
         case TOO_MANY_LOGINS:
           sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createSDTooManyLoginsMsg());
-          // Set this to an hour so we aren't too obnoxious about the authentication error messages
-          // and so we shouldn't accidentally lock the account out.
-          SDRipper.retryWait = Sage.time() + Sage.MILLIS_PER_HR;
+          // 4009 is a 24h limit; avoid repeated auth attempts once this is triggered.
+          SDRipper.retryWait = Sage.time() + Sage.MILLIS_PER_DAY;
+          resetToken();
+          break;
+        case TOO_MANY_UNIQUE_IPS:
+          sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createSDTooManyUniqueIPsMsg());
+          // 4010 is a 24h limit; avoid all SD calls until the counter resets.
+          SDRipper.retryWait = Sage.time() + Sage.MILLIS_PER_DAY;
           resetToken();
           break;
       }
@@ -2905,6 +3037,87 @@ public class SDRipper extends EPGDataSource
     return returnValue;
   }
 
+  private void saveImageSkipSet(String fileName, Set<String> values)
+  {
+    synchronized (fileName)
+    {
+      BufferedWriter writer = null;
+      try
+      {
+        writer = new BufferedWriter(new FileWriter(fileName));
+        for (String value : values)
+        {
+          if (value == null)
+            continue;
+
+          String trimmed = value.trim();
+          if (trimmed.length() == 0)
+            continue;
+
+          writer.write(trimmed);
+          writer.write(System.lineSeparator());
+        }
+
+        writer.flush();
+      }
+      catch (IOException e)
+      {
+        if (Sage.DBG) System.out.println("SDEPG Unable to save " + fileName + " error of: " + e.getMessage());
+      }
+      finally
+      {
+        if (writer != null)
+        {
+          try
+          {
+            writer.close();
+          } catch (IOException e) {}
+        }
+      }
+    }
+  }
+
+  private Set<String> loadImageSkipSet(String fileName)
+  {
+    synchronized (fileName)
+    {
+      File cacheFile = new File(fileName);
+      if (!cacheFile.exists())
+        return new HashSet<String>();
+
+      BufferedReader reader = null;
+      Set<String> returnValue = new HashSet<String>();
+      try
+      {
+        reader = new BufferedReader(new FileReader(cacheFile));
+        String line;
+        while ((line = reader.readLine()) != null)
+        {
+          if (line.length() == 0)
+            continue;
+
+          returnValue.add(line);
+        }
+      }
+      catch (IOException e)
+      {
+        if (Sage.DBG) System.out.println("SDEPG Unable to load " + fileName + " error of: " + e.getMessage());
+      }
+      finally
+      {
+        if (reader != null)
+        {
+          try
+          {
+            reader.close();
+          } catch (IOException e) {}
+        }
+      }
+
+      return returnValue;
+    }
+  }
+
   /**
    * Is Schedules Direct offline?
    * <p/>
@@ -2953,6 +3166,8 @@ public class SDRipper extends EPGDataSource
           //2025-11-14 add SD Health check to avoid running if SD has the account blocked
         if(SDUtils.isSDBlocked()){
             if (Sage.DBG) System.out.println("SDEPG Account is blocked: Unable to use the Schedules Direct service at this time.");
+        setExceptionTimeout(SDErrors.SD_ACCOUNT_BLOCKED);
+        sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createSDAccountBlockedMsg());
             return false;
         } } catch (IOException ex) {
             if (Sage.DBG) System.out.println("SDEPG Account is blocked: Unable to use the Schedules Direct service at this time. " + ex.getMessage());
@@ -3053,21 +3268,38 @@ public class SDRipper extends EPGDataSource
     switch (error)
     {
       case SERVICE_OFFLINE:
+      case SERVER_BUSY:
       case MAX_IMAGE_DOWNLOADS:
       case MAX_IMAGE_DOWNLOADS_TRIAL:
+      case MAX_IMAGE_INVALID_URI_ERRORS:
         // When the service is offline, we should only check every 30 minutes to see if it's back.
         // This might generate EPG warnings in the UI if it goes on for a while.
         SDRipper.retryWait = -(Sage.time() + Sage.MILLIS_PER_MIN * 30);
         break;
+      case SD_ACCOUNT_BLOCKED:
+      case ACCOUNT_EXPIRED:
       case SAGETV_NO_PASSWORD:
       case INVALID_HASH:
       case INVALID_USER:
-      case TOO_MANY_LOGINS:
+      case TOKEN_MISSING:
+      case TOKEN_EXPIRED:
       case ACCOUNT_LOCKOUT:
       case ACCOUNT_DISABLED:
+      case APPLICATION_DISABLED:
+      case ACCOUNT_INACTIVE:
         // Set this to an hour so we aren't too obnoxious about the authentication error messages
         // and so we shouldn't accidentally lock the account out.
         SDRipper.retryWait = Sage.time() + Sage.MILLIS_PER_HR;
+        resetToken();
+        break;
+      case TOO_MANY_LOGINS:
+        // 4009 is a 24h limit; avoid repeated auth attempts once this is triggered.
+        SDRipper.retryWait = Sage.time() + Sage.MILLIS_PER_DAY;
+        resetToken();
+        break;
+      case TOO_MANY_UNIQUE_IPS:
+        // 4010 is a 24h limit; avoid all SD calls until the counter resets.
+        SDRipper.retryWait = Sage.time() + Sage.MILLIS_PER_DAY;
         resetToken();
         break;
       case SAGETV_UNKNOWN:
@@ -3078,6 +3310,20 @@ public class SDRipper extends EPGDataSource
         SDRipper.retryWait = -(Sage.time() + Sage.MILLIS_PER_MIN * 30);
         break;
     }
+  }
+
+  @Override
+  public long getTimeTillExpand()
+  {
+    long localWait = SDRipper.retryWait;
+    if (localWait != 0)
+    {
+      long remainingWait = Math.abs(localWait) - Sage.time();
+      if (remainingWait > 0)
+        return remainingWait;
+    }
+
+    return super.getTimeTillExpand();
   }
   
   //reset token to null by ending the session when SD sends an error that requires getting a new token

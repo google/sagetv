@@ -401,7 +401,7 @@ public abstract class SDSession
     token = null;
     if(SDUtils.isSDBlocked()){
         if(Sage.DBG) System.out.println("SDSession/authenticate: Account is blocked.  Contact SD to resolve.");
-        return;
+      throw new SDException(SDErrors.SD_ACCOUNT_BLOCKED);
     }
 
     JsonObject authRequest = new JsonObject();

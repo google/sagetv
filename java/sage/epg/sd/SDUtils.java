@@ -60,6 +60,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.InflaterInputStream;
 import java.awt.image.BufferedImage;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -107,8 +108,7 @@ public class SDUtils
       if (Sage.DBG) System.out.println("****debug_sd_support**** property set. Sending 'get' with url '" + url);
     }
     if (connection.getResponseCode() == 403){
-        if (Sage.DBG) System.out.println("SDUtils:isSDBlocked - 403 response received - account is BLOCKED - raising ALERT");
-        sage.msg.MsgManager.postMessage(sage.msg.SystemMessage.createSDAccountBlockedMsg());
+      if (Sage.DBG) System.out.println("SDUtils:isSDBlocked - 403 response received - account is BLOCKED");
         return true;
     }else{
         //if (Sage.DBG) System.out.println("SDUtils:isSDBlocked - connection response:" + connection.getResponseCode());
@@ -117,7 +117,7 @@ public class SDUtils
   }
   public static int handleSDJsonErrorFromHttpResponse(HttpURLConnection httpConn) throws IOException
   {
-    InputStream inputStream = new BufferedInputStream(httpConn.getInputStream());
+    InputStream inputStream = getDecodedInputStream(httpConn.getContentEncoding(), httpConn.getInputStream());
     InputStreamReader reader = new InputStreamReader(inputStream, StandardCharsets.ISO_8859_1);
     JsonElement errorElement = GSON.fromJson(reader, JsonElement.class);
     if (errorElement instanceof JsonObject)
@@ -163,7 +163,6 @@ public class SDUtils
     // Determine how we should get the stream and if we should assume there's an error.
     boolean errorPresent = connection.getResponseCode() == 400;
     boolean errorPresent403 = connection.getResponseCode() == 403;
-    boolean gzipPresent = false;
     InputStream inputStream;
 
     // Schedules Direct returns code 400 for bad JSON and incorrect credentials, but Java will throw
@@ -180,48 +179,54 @@ public class SDUtils
     else if (errorPresent403){
       if (SDSession.debugEnabled())
       {
-          SDSession.writeDebugLine("HTTP 403 received. Processing");
-          if(Sage.getBoolean("debug_sd_support", false)){
-              SDSession.writeDebugLine("HTTP 403 Disabling debug_sd_support.  Process will restart");
-              Sage.putBoolean("debug_sd_support", false);
-            }
+        SDSession.writeDebugLine("HTTP 403 received. Processing");
       }
-      if(Sage.getBoolean("debug_sd_support", false)){
-          Sage.putBoolean("debug_sd_support", false);
-      }
-
-      //stop processing
-      SDErrors.throwErrorForCode(2055);
-      throw new SDException(SDErrors.SAGETV_UNKNOWN);
-
+      inputStream = connection.getErrorStream();
     }
     else
     {
-      // Use a buffered input stream so we can check the first few bytes for encoding so to help
-      // select an appropriate decoder for the input stream.
-      inputStream = new BufferedInputStream(connection.getInputStream());
-
-      // Schedules Direct does not appear to provide any indication in the header of when the data
-      // is gzipped, so we need to check for the magic bytes.
-      inputStream.mark(3);
-      int testBytes = inputStream.read() & 0xff;
-
-      // Check for the magic bytes and that the compression format is supported.
-      gzipPresent = (((inputStream.read() & 0xff) << 8) | testBytes) == GZIPInputStream.GZIP_MAGIC &&
-          (inputStream.read() & 0xff) == 8;
-
-      inputStream.reset();
+      inputStream = connection.getInputStream();
     }
+
+    inputStream = getDecodedInputStream(connection.getContentEncoding(), inputStream);
 
     InputStreamReader reader;
+    reader = new InputStreamReader(inputStream, SDSession.IN_CHARSET);
 
-    if (gzipPresent)
+    // Process 403 errors based on the returned JSON code.
+    if (errorPresent403)
     {
-      reader = new InputStreamReader(new GZIPInputStream(inputStream), SDSession.IN_CHARSET);
-    }
-    else
-    {
-      reader = new InputStreamReader(inputStream, SDSession.IN_CHARSET);
+      if (SDSession.debugEnabled()){SDSession.writeDebugLine("HTTP 403 processing");}
+
+      JsonElement errorElement = GSON.fromJson(reader, JsonElement.class);
+
+      if (SDSession.debugEnabled())
+      {
+        SDSession.writeDebugLine(errorElement.toString());
+      }
+
+      if (errorElement instanceof JsonObject)
+      {
+        JsonElement codeElement = ((JsonObject) errorElement).get("code");
+        int code = codeElement != null ? codeElement.getAsInt() : -1;
+
+        // 2055 means RouteTo:debug is set but not enabled server-side.
+        if (code == 2055)
+        {
+          if (SDSession.debugEnabled())
+          {
+            SDSession.writeDebugLine("HTTP 403 received with ERROR 2055. Disabling debug_sd_support.");
+          }
+          if (Sage.getBoolean("debug_sd_support", false))
+          {
+            Sage.putBoolean("debug_sd_support", false);
+          }
+        }
+
+        SDErrors.throwErrorForCode(code);
+      }
+
+      throw new SDException(SDErrors.SAGETV_UNKNOWN);
     }
 
     //process 400 error
@@ -253,8 +258,6 @@ public class SDUtils
           if (SDSession.debugEnabled())
           {
               SDSession.writeDebugLine("HTTP 400 received with ERROR 4009. Process will restart");
-              //NEED TO ADD A WAIT
-              
           }
         }        
 
@@ -262,6 +265,35 @@ public class SDUtils
       }
 
       throw new SDException(SDErrors.SAGETV_UNKNOWN);
+    }
+    
+    // Check for error codes in HTTP 200 responses. During service outages, SD may return
+    // HTTP 200 with error codes in the JSON body (e.g., "code": 3000 for SERVICE_OFFLINE).
+    // This must be checked before treating the response as successful.
+    if (connection.getResponseCode() >= 200 && connection.getResponseCode() < 300)
+    {
+      // Peek at the JSON to check for error codes
+      JsonElement element = GSON.fromJson(reader, JsonElement.class);
+      
+      if (element instanceof JsonObject)
+      {
+        JsonElement codeElement = ((JsonObject) element).get("code");
+        int code = codeElement != null ? codeElement.getAsInt() : 0;
+        
+        // If there's a non-zero error code in a 2xx response, treat it as an error
+        if (code > 0 && code != 1)  // code 0 or 1 may indicate success
+        {
+          if (SDSession.debugEnabled())
+          {
+            SDSession.writeDebugLine("HTTP " + connection.getResponseCode() + " received with error code " + code + ": " + SDErrors.getErrorForCode(code));
+          }
+          SDErrors.throwErrorForCode(code);
+        }
+      }
+      
+      // Convert the parsed element back to a reader for normal processing
+      String jsonString = element.toString();
+      reader = new InputStreamReader(new ByteArrayInputStream(jsonString.getBytes(StandardCharsets.UTF_8)), SDSession.IN_CHARSET);
     }
     
     if (SDSession.debugEnabled())
@@ -293,10 +325,41 @@ public class SDUtils
 
       SDSession.writeDebugLine("");
       writer.flush();
-      reader = new InputStreamReader(new ByteArrayInputStream(outputStream.toByteArray()));
+      reader = new InputStreamReader(new ByteArrayInputStream(outputStream.toByteArray()), SDSession.IN_CHARSET);
     }
 
     return reader;
+  }
+
+  static InputStream getDecodedInputStream(String contentEncoding, InputStream inputStream) throws IOException
+  {
+    if (inputStream == null)
+      return null;
+
+    BufferedInputStream bufferedInputStream = inputStream instanceof BufferedInputStream ?
+      (BufferedInputStream)inputStream : new BufferedInputStream(inputStream);
+
+    if (contentEncoding != null)
+    {
+      String normalizedEncoding = contentEncoding.toLowerCase();
+      if (normalizedEncoding.contains("gzip"))
+        return new GZIPInputStream(bufferedInputStream);
+      if (normalizedEncoding.contains("deflate"))
+        return new InflaterInputStream(bufferedInputStream);
+    }
+
+    // Some responses do not include Content-Encoding. Keep gzip auto-detection as a fallback.
+    bufferedInputStream.mark(3);
+    int firstByte = bufferedInputStream.read() & 0xff;
+    int secondByte = bufferedInputStream.read() & 0xff;
+    int thirdByte = bufferedInputStream.read() & 0xff;
+    bufferedInputStream.reset();
+
+    boolean gzipPresent = (((secondByte << 8) | firstByte) == GZIPInputStream.GZIP_MAGIC && thirdByte == 8);
+    if (gzipPresent)
+      return new GZIPInputStream(bufferedInputStream);
+
+    return bufferedInputStream;
   }
 
   /**

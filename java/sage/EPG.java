@@ -633,20 +633,22 @@ public final class EPG implements Runnable
 
       try{
 
-        if(Sage.getBoolean("wizard/" + SCHEDULED_EPG_UPDATE, false)){
-            if (Sage.DBG) System.out.println("EPG next scheduled maintenance offset is " + Sage.getInt("wizard/" + SCHEDULED_EPG_UPDATE_OFFSET, 0));
+        boolean scheduledUpdateEnabled = Sage.getBoolean("wizard/" + SCHEDULED_EPG_UPDATE, false);
+        boolean scheduledExpandDue = false;
+        if (scheduledUpdateEnabled)
+        {
+          int scheduledOffset = Sage.getInt("wizard/" + SCHEDULED_EPG_UPDATE_OFFSET, 0);
+          if (Sage.DBG) System.out.println("EPG next scheduled maintenance offset is " + scheduledOffset);
+          nextScheduledEPGUpdateTime = getNextScheduledEPGUpdateTime();
+          long scheduledWindowStart = nextScheduledEPGUpdateTime - MAINTENANCE_FREQ;
+          scheduledExpandDue = (scheduledWindowStart < Sage.time()) && (getLastRun() < scheduledWindowStart);
+          if (scheduledExpandDue && Sage.DBG)
+            System.out.println("EPG scheduled update window is due; running EPG expand");
+        }
 
-            nextScheduledEPGUpdateTime = getNextScheduledEPGUpdateTime();
-
-            if ((Sage.time() - wiz.getLastMaintenance() > MAINTENANCE_FREQ) || ((nextScheduledEPGUpdateTime - MAINTENANCE_FREQ) < Sage.time())){
-                if (Sage.DBG) System.out.println("EPG next scheduled update is ready to run as we are past the maintenance window and/or scheduled time");
-                reqMaintenanceType = MaintenanceType.FULL;
-            }
-        }else{
-            if (Sage.time() - wiz.getLastMaintenance() > MAINTENANCE_FREQ){
-              if (Sage.DBG) System.out.println("EPG next maintenance update is ready to run based on 24 hour frequency");
-              reqMaintenanceType = MaintenanceType.FULL;
-            }
+        if (Sage.time() - wiz.getLastMaintenance() > MAINTENANCE_FREQ){
+          if (Sage.DBG) System.out.println("EPG next maintenance update is ready to run based on 24 hour frequency");
+          reqMaintenanceType = MaintenanceType.FULL;
         }
 
         if (reqMaintenanceType != MaintenanceType.NONE)
@@ -674,11 +676,16 @@ public final class EPG implements Runnable
         {
           for (int i = 0; (i < sources.size()) && alive; i++)
           {
-            if(Sage.getBoolean("wizard/" + SCHEDULED_EPG_UPDATE, false)){
+            if (scheduledUpdateEnabled){
                 //determine the wait until the next scheduled update time
                 //calc the next time as the user may have changed the schedule settings
-                nextScheduledEPGUpdateTime = getNextScheduledEPGUpdateTime();
-                minWait = nextScheduledEPGUpdateTime - Sage.time();
+                if (scheduledExpandDue)
+                  minWait = 0;
+                else
+                {
+                  nextScheduledEPGUpdateTime = getNextScheduledEPGUpdateTime();
+                  minWait = nextScheduledEPGUpdateTime - Sage.time();
+                }
                 //if (Sage.DBG) System.out.println(sources.elementAt(i) + " needs a scheduled update in " + Sage.durFormat(minWait));
             }else{
                 long currWait = sources.elementAt(i).getTimeTillUpdate();
@@ -879,7 +886,7 @@ public final class EPG implements Runnable
     long calcNextScheduledEPGUpdateTime = cal.getTimeInMillis();
 
     //determine if we need to add 1 to the date if we are AFTER the scheduledMaintenance time for today
-    if(Sage.time()>nextScheduledEPGUpdateTime){
+    if(Sage.time()>calcNextScheduledEPGUpdateTime){
         cal.add(java.util.Calendar.DATE,1);
         calcNextScheduledEPGUpdateTime = cal.getTimeInMillis();
     }

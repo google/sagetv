@@ -1513,6 +1513,12 @@ public class MetaImage
       {
         if (imageIndex == 0)
         {
+          if ((localCacheFile == null || !localCacheFile.isFile() || localCacheFile.length() == 0) && DEBUG_MI)
+            System.out.println("Sync-loading in getJavaImage() because local cache file is not available for URL " + src);
+
+          if (localCacheFile == null || !localCacheFile.isFile() || localCacheFile.length() == 0)
+            loadCacheFile();
+
           if (localCacheFile != null && localCacheFile.isFile() && localCacheFile.length() > 0)
           {
             setJavaImage(ImageUtils.fullyLoadImage(localCacheFile), imageIndex, javaCacheReserve);
@@ -1521,8 +1527,16 @@ public class MetaImage
               deleteLocalCacheFile();
             }
           } else {
-            if ( DEBUG_MI ) System.out.println("Sync-loading in getJavaImage() from URL "+src+" because local cache file does not exist");
-            setJavaImage(ImageUtils.fullyLoadImage((URL) src), imageIndex, javaCacheReserve);
+            if (src.toString().startsWith(SDSession.URL_VERSIONED))
+            {
+              if (Sage.DBG) System.out.println("GetJavaImage(): SD image cache file is unavailable; refusing direct URL load for " + src);
+              setJavaImage(ImageUtils.getNullImage(), imageIndex, javaCacheReserve);
+            }
+            else
+            {
+              if ( DEBUG_MI ) System.out.println("Sync-loading in getJavaImage() from URL "+src+" because local cache file does not exist");
+              setJavaImage(ImageUtils.fullyLoadImage((URL) src), imageIndex, javaCacheReserve);
+            }
           }
         }
         else
@@ -2445,6 +2459,11 @@ public class MetaImage
     }
     else if (src instanceof URL)
     {
+      // SD image URLs require an authenticated request with a proper User-Agent header.
+      // If localCacheFile was not set (loadCacheFile failed), do not fall back to a plain
+      // openStream() call which would send Java's default User-Agent to SD's servers.
+      if (src.toString().startsWith(SDSession.URL_VERSIONED))
+        return null;
       try
       {
         InputStream is = ((URL) src).openStream();
@@ -3230,11 +3249,11 @@ public class MetaImage
                 //this is an SD supplied image so a token is required to retreive it
                 if (Sage.DBG) System.out.println("MetaImage.loadCacheFile: Found SD image url. src = '" + src + "'");
 
-                //skip the image loading if the bypass properties are set
+                //skip the image loading if either bypass property is set
                 //2025-09-18 to ensure the server property is used even on a client SageProperties.java was updated to transfer these properties from the server
                 //  - as we don't know the image is Celebrity vs Program then skip loading for either setting to be safe
                 if(Sage.getBoolean("sdepg_core/bypassCelebrityImages", false) || Sage.getBoolean("sdepg_core/bypassProgramImages", false)){
-                    if (Sage.DBG) System.out.println("MetaImage.loadCacheFile: skipping image load as both bypass properties are set. src = '" + src + "'");
+                  if (Sage.DBG) System.out.println("MetaImage.loadCacheFile: skipping SD image load because a bypass image property is enabled. src = '" + src + "'");
                     break;
                 }
                 
@@ -3273,7 +3292,7 @@ public class MetaImage
                         if (Sage.DBG) System.out.println("MetaImage.loadCacheFile: error 5000 - SD image does not exist - creating a blank image for the cache to avoid re-requesting");
                         is = SDUtils.createBlankImageInputStream(270,360,"jpg");
                         break;
-                      }else if(imageErrorCode==5002 || imageErrorCode==5003){ //5002-max downloads, 5003-max downloads trial
+                      }else if(imageErrorCode==5002 || imageErrorCode==5003 || imageErrorCode==5004){ //5002-max downloads, 5003-max downloads trial, 5004-max invalid URI errors
                         is.close();
                         is = null;
                         break;
