@@ -229,16 +229,24 @@ public class EncodingServer implements Runnable
         //mySock.setTcpNoDelay(true);
         outStream = new java.io.DataOutputStream(new java.io.BufferedOutputStream(mySock.getOutputStream()));
         inStream = new java.io.DataInputStream(new java.io.BufferedInputStream(mySock.getInputStream()));
-        /*				String pass = Sage.readLineBytes(inStream);
-				if (!pass.equalsIgnoreCase(Sage.get(ENCODING_SERVER_PASSWORD_MD5, "")))
-				{
-					outStream.write("INVALID_PASSWORD\r\n".getBytes(Sage.CHARSET));
-					outStream.flush();
-				}
-				else // valid password, accept the encoding command
-         */
-        //					outStream.write("OK\r\n".getBytes(Sage.CHARSET));
-        //					outStream.flush();
+        String configuredPass = Sage.get(ENCODING_SERVER_PASSWORD_MD5, "");
+        if (configuredPass.length() > 0)
+        {
+          String pass = Sage.readLineBytes(inStream);
+          if (!pass.equalsIgnoreCase(configuredPass))
+          {
+            outStream.write("INVALID_PASSWORD\r\n".getBytes(Sage.BYTE_CHARSET));
+            outStream.flush();
+            if (Sage.DBG) System.out.println("EncodingServer auth failed, closing connection from " + mySock);
+            return;
+          }
+          else
+          {
+            outStream.write("OK\r\n".getBytes(Sage.BYTE_CHARSET));
+            outStream.flush();
+            if (Sage.DBG) System.out.println("EncodingServer auth succeeded from " + mySock);
+          }
+        }
         while (true)
         {
           String str = Sage.readLineBytes(inStream);
