@@ -871,7 +871,10 @@ public class SageTV implements Runnable
         {
           try
           {
-            miniDiscoverySocket = new java.net.DatagramSocket(Sage.getInt("mini_discovery_port", 31100));
+            int discoveryPort = Sage.getInt("mini_discovery_port", 31100);
+            miniDiscoverySocket = new java.net.DatagramSocket(null);
+            miniDiscoverySocket.setReuseAddress(true);
+            miniDiscoverySocket.bind(new java.net.InetSocketAddress(discoveryPort));
             //discoverySocket.setBroadcast(true);
           }
           catch (java.io.IOException e)
@@ -880,7 +883,8 @@ public class SageTV implements Runnable
             try{Thread.sleep(15000);}catch(Exception e1){}
           }
         }
-        if (Sage.DBG) System.out.println("SageTVMiniDiscoveryServer was instantiated.");
+        if (Sage.DBG) System.out.println("SageTVMiniDiscoveryServer was instantiated on " +
+            miniDiscoverySocket.getLocalSocketAddress());
         MiniClientSageRenderer.startUIServer(serverEnabled);
         while (alive && serverEnabled && miniDiscoverySocket != null)
         {
@@ -917,6 +921,10 @@ public class SageTV implements Runnable
                 packet.setLength(packLength);
                 if (Sage.DBG) System.out.println("Server sent back mini discovery data:" +
                     packet + " to " + packet.getAddress() + " " + packet.getPort());
+                // Reply from the socket that received the request so the kernel
+                // selects the correct source address on multi-interface hosts
+                // and container macvlan/ipvlan networks. A second socket bound
+                // to this UDP port can lose broadcasts or bind the wrong path.
                 miniDiscoverySocket.send(packet);
                 // Convert the MAC address to string
                 /*String str = "";
