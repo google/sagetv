@@ -1996,8 +1996,15 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
           else if (currFile != null && currFile.isDVD() && !alreadySkippedDVDMenus && uiMgr.getBoolean(prefs + SKIP_DVD_MENUS, false))
           {
             if (Sage.DBG) System.out.println("DVD MENU SKIP attempt");
-            // Attempt to do the chapter/title skip to the beginning of the DVD
-            dplayer.playControlEx(DVD_CONTROL_TITLE_SET, 1, 1);
+            // Title 1 is frequently a studio logo or preview. The Java/Ogle
+            // player can inspect authored title durations and choose the main
+            // feature; local and legacy DVD players retain the historical
+            // title-1 fallback because their navigation APIs expose no such
+            // selection helper.
+            int mainFeatureTitle = dplayer instanceof MiniDVDPlayer ?
+                ((MiniDVDPlayer) dplayer).getDVDMainFeatureTitle() : 1;
+            if (Sage.DBG) System.out.println("DVD main feature title=" + mainFeatureTitle);
+            dplayer.playControlEx(DVD_CONTROL_TITLE_SET, mainFeatureTitle, mainFeatureTitle);
             alreadySkippedDVDMenus = true;
           }
         }

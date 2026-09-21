@@ -598,6 +598,15 @@ public class MiniDVDPlayer implements DVDMediaPlayer, MiniDVDPlayerIdentifier
     return 0;
   }
 
+  /** Returns the Java/Ogle VM's best authored main-feature title candidate. */
+  public int getDVDMainFeatureTitle()
+  {
+    synchronized (this)
+    {
+      return reader == null ? 1 : reader.getDVDMainFeatureTitle();
+    }
+  }
+
   /*
 	public static final int DVD_CONTROL_MENU = 201; // 1 for title, 2 for root
 	public  static final int DVD_CONTROL_TITLE_SET = 202;

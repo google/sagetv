@@ -2741,6 +2741,64 @@ public class VM
     return vmgifo.tt_srpt.nr_of_srpts.get();
   }
 
+  /**
+   * Returns the authored title whose first referenced PGC has the greatest
+   * playback duration. Title 1 is only a trailer or logo on many discs, so it
+   * is not a reliable implementation of "skip menus." Malformed or incomplete
+   * IFO entries are ignored independently, and title 1 remains the conservative
+   * compatibility fallback if no valid duration can be read.
+   */
+  public synchronized int getDVDMainFeatureTitle()
+  {
+    int bestTitle = 1;
+    long bestDuration = -1;
+    if(vmgifo == null || vmgifo.tt_srpt == null || vmgifo.tt_srpt.title == null)
+      return bestTitle;
+    int titleCount = vmgifo.tt_srpt.nr_of_srpts.get();
+    for(int titleNumber = 1; titleNumber <= titleCount; titleNumber++)
+    {
+      DVDSource titleFile = null;
+      try
+      {
+        title_info_t title = vmgifo.tt_srpt.title[titleNumber - 1];
+        int titleSet = title.title_set_nr.get();
+        int titleWithinSet = title.vts_ttn.get();
+        titleFile = reader.openFile(titleSet, DVDReader.DVD_TYPE_IFO);
+        if(titleFile == null)
+          continue;
+        IFO titleIfo = new IFO(titleFile);
+        if(titleIfo.vts_ptt_srpt == null || titleIfo.vts_pgcit == null ||
+            titleWithinSet <= 0 || titleWithinSet > titleIfo.vts_ptt_srpt.title.length ||
+            titleIfo.vts_ptt_srpt.title[titleWithinSet - 1].ptt.length == 0)
+          continue;
+        int pgcNumber = titleIfo.vts_ptt_srpt.title[titleWithinSet - 1].ptt[0].pgcn.get();
+        if(pgcNumber <= 0 || pgcNumber > titleIfo.vts_pgcit.pgci_srp.length ||
+            titleIfo.vts_pgcit.pgci_srp[pgcNumber - 1].pgc == null)
+          continue;
+        long duration = titleIfo.vts_pgcit.pgci_srp[pgcNumber - 1].pgc.playback_time.toPTS();
+        if(duration > bestDuration)
+        {
+          bestDuration = duration;
+          bestTitle = titleNumber;
+        }
+      }
+      catch(Throwable malformedTitle)
+      {
+        // One damaged title table must not prevent the remaining authored
+        // titles from being evaluated or stop DVD playback entirely.
+        if(sage.MiniDVDPlayer.DEBUG_MINIDVD)
+          System.out.println("Ignoring malformed DVD title " + titleNumber +
+              " while selecting main feature: " + malformedTitle);
+      }
+      finally
+      {
+        if(titleFile != null)
+          titleFile.close();
+      }
+    }
+    return bestTitle;
+  }
+
   public synchronized int getDVDChapter()
   {
     return program;
