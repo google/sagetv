@@ -1589,7 +1589,10 @@ public class VM
           break;
           // Added types for indirectly specified links/calls with params comments
         case LINK_PGCN: // pgcn
-          set_PGCN(operand1);
+          // Ignore a stale or malformed program-chain link instead of
+          // dereferencing outside the parsed PGC table.
+          if(!set_PGCN(operand1))
+            return false;
           link = play_PGC();
           break;
         case LINK_PTTN: // hl_bn, pttn
@@ -1768,8 +1771,17 @@ public class VM
     pgcit_t pgcit;
 
     if(debugVM) System.out.println("set PGCN "+pgcN);
-    if(pgcN<1) return false;
     pgcit = get_PGCIT();
+    int declaredCount = pgcit == null ? 0 : pgcit.nr_of_pgci_srp.get();
+    int actualCount = pgcit == null || pgcit.pgci_srp == null ? 0 : pgcit.pgci_srp.length;
+    if(!isValidProgramChainNumber(pgcN, declaredCount, actualCount) ||
+        pgcit.pgci_srp[pgcN - 1] == null || pgcit.pgci_srp[pgcN - 1].pgc == null)
+    {
+      System.out.println("Ignoring invalid DVD PGC link target " + pgcN +
+          " in domain " + domain + " VTS " + vts +
+          " (declared=" + declaredCount + " parsed=" + actualCount + ")");
+      return false;
+    }
     pgc = pgcit.pgci_srp[pgcN - 1].pgc;
     program = 1;
 
@@ -1777,6 +1789,11 @@ public class VM
       SPRM[TT_PGCN] = pgcN;
 
     return true;
+  }
+
+  static boolean isValidProgramChainNumber(int pgcN, int declaredCount, int actualCount)
+  {
+    return pgcN >= 1 && pgcN <= declaredCount && pgcN <= actualCount;
   }
 
   private boolean set_PGN()
