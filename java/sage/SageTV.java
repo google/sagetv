@@ -1163,6 +1163,8 @@ public class SageTV implements Runnable
     if (!alive)
       return;
     alive = false;
+    try
+    {
     if (Sage.WINDOWS_OS)
       Sage.releaseSystemHooks0(Sage.mainHwnd);
     if (Sage.DBG) System.out.println("Sage.exit() called.");
@@ -1218,8 +1220,16 @@ public class SageTV implements Runnable
     dead = true;
     if (Sage.DBG) System.out.println("Bye-bye.");
     Sage.postKillMsg();
-    if (Sage.getBoolean("quit_jvm_on_exit", true) && killSys)
-      System.exit(exitCode);
+    }
+    finally
+    {
+      // A shutdown-time linkage or plugin error must never strand a headless
+      // server after its listeners have already been closed. The container
+      // supervisor can only restart SageTV after this JVM actually exits.
+      dead = true;
+      if (Sage.getBoolean("quit_jvm_on_exit", true) && killSys)
+        System.exit(exitCode);
+    }
   }
 
   public static final String oneWayEncrypt(String x)
