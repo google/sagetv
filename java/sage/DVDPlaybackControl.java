@@ -36,4 +36,20 @@ final class DVDPlaybackControl
   {
     return controlCode == DVD_CONTROL_ACTIVATE_CURRENT && domain != TITLE_DOMAIN;
   }
+
+  static boolean shouldUseServerNavigation(boolean remoteNavigationSupport, String inputDevices,
+      String discPolicy, boolean nativeFallback, boolean transformAvailable)
+  {
+    boolean unavailableExplicitMode = ("hybrid".equals(discPolicy) ||
+        "transformed_main_feature".equals(discPolicy)) && !transformAvailable && !nativeFallback;
+    boolean navigationCapable = remoteNavigationSupport || inputDevices == null ||
+        inputDevices.indexOf("MOUSE") == -1;
+    return !unavailableExplicitMode && navigationCapable;
+  }
+
+  static boolean shouldUseTransform(String discPolicy, boolean transformAvailable)
+  {
+    return ("hybrid".equals(discPolicy) ||
+        "transformed_main_feature".equals(discPolicy)) && transformAvailable;
+  }
 }

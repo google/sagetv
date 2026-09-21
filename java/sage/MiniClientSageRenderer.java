@@ -6600,21 +6600,19 @@ public class MiniClientSageRenderer extends SageRenderer
     return dvdRemoteNavigationSupport;
   }
 
-  public boolean supportsDvdDiscMimTransport()
+  public boolean supportsDvdDiscTransport(String transportId)
   {
-    String[] transports = dvdDiscTransports.split(",");
-    for (int i = 0; i < transports.length; i++)
-      if ("mim_ts_v1".equalsIgnoreCase(transports[i].trim()))
-        return true;
-    return false;
+    return DVDStreamTransformRegistry.supportsTransport(dvdDiscTransports, transportId);
   }
+
+  public String getDvdDiscTransports() { return dvdDiscTransports; }
 
   static String normalizeDvdDiscPolicy(String value)
   {
     // Unknown future values must fail safely to auto rather than selecting a
     // transport that this server does not understand.
     if ("native".equalsIgnoreCase(value) || "hybrid".equalsIgnoreCase(value) ||
-        "mim_main_feature".equalsIgnoreCase(value))
+        "transformed_main_feature".equalsIgnoreCase(value))
       return value.toLowerCase(java.util.Locale.ROOT);
     return "auto";
   }

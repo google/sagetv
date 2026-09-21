@@ -5006,8 +5006,12 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
           // Check if it's a Placeshifter, if it is then DVD playback is not supported
           if (!Sage.getBoolean("enable_ps_dvd_playback", false) && uiMgr.getRootPanel().getRenderEngine() instanceof MiniClientSageRenderer)
           {
-            String ipdp = ((MiniClientSageRenderer) uiMgr.getRootPanel().getRenderEngine()).getInputDevsProp();
-            if (ipdp != null && ipdp.indexOf("MOUSE") != -1)
+            MiniClientSageRenderer dvdRenderer =
+                (MiniClientSageRenderer) uiMgr.getRootPanel().getRenderEngine();
+            if (!DVDPlaybackControl.shouldUseServerNavigation(
+                dvdRenderer.supportsRemoteDVDNavigation(), dvdRenderer.getInputDevsProp(),
+                dvdRenderer.getDvdDiscPolicy(), dvdRenderer.isDvdDiscNativeFallback(),
+                DVDStreamTransformRegistry.findAvailable(dvdRenderer.getDvdDiscTransports()) != null))
               return false;
           }
           return true;
@@ -5118,8 +5122,12 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
       {
         if (uiMgr.getRootPanel().getRenderEngine() instanceof MiniClientSageRenderer)
         {
-          String ipdp = ((MiniClientSageRenderer) uiMgr.getRootPanel().getRenderEngine()).getInputDevsProp();
-          if (ipdp != null && ipdp.indexOf("MOUSE") != -1)
+          MiniClientSageRenderer dvdRenderer =
+              (MiniClientSageRenderer) uiMgr.getRootPanel().getRenderEngine();
+          if (!DVDPlaybackControl.shouldUseServerNavigation(
+              dvdRenderer.supportsRemoteDVDNavigation(), dvdRenderer.getInputDevsProp(),
+              dvdRenderer.getDvdDiscPolicy(), dvdRenderer.isDvdDiscNativeFallback(),
+              DVDStreamTransformRegistry.findAvailable(dvdRenderer.getDvdDiscTransports()) != null))
             return new MiniPlayer();
         }
         try

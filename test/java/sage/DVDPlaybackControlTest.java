@@ -31,4 +31,24 @@ public class DVDPlaybackControlTest
     assertFalse(DVDPlaybackControl.menuActivationOwnsLanguageSelections(208, 4));
     assertFalse(DVDPlaybackControl.menuActivationOwnsLanguageSelections(210, 3));
   }
+
+  @Test
+  public void transformRequiresExplicitPolicyAndAvailableProvider()
+  {
+    assertTrue(DVDPlaybackControl.shouldUseTransform("hybrid", true));
+    assertTrue(DVDPlaybackControl.shouldUseTransform("transformed_main_feature", true));
+    assertFalse(DVDPlaybackControl.shouldUseTransform("auto", true));
+    assertFalse(DVDPlaybackControl.shouldUseTransform("hybrid", false));
+  }
+
+  @Test
+  public void missingExplicitTransformFallsBackOnlyWhenAllowed()
+  {
+    assertFalse(DVDPlaybackControl.shouldUseServerNavigation(
+        false, "IR,TV", "hybrid", false, false));
+    assertTrue(DVDPlaybackControl.shouldUseServerNavigation(
+        false, "IR,TV", "hybrid", true, false));
+    assertTrue(DVDPlaybackControl.shouldUseServerNavigation(
+        true, "MOUSE", "native", true, false));
+  }
 }

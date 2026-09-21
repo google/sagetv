@@ -105,6 +105,11 @@ sourceSets {
         'test/java'
       ]
     }
+    resources {
+      srcDirs = [
+        'test/resources'
+      ]
+    }
   }
 
   // Miniclient configuration only specifies the Minimal files and
@@ -506,4 +511,3 @@ Source code for SageTV:  https://github.com/google/sagetv
 
 // This get run when you call ./gradlew without any targets
 defaultTasks 'sageJar'
-

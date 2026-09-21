@@ -23,7 +23,8 @@ public class MiniClientCapabilityProtocolTest
   {
     assertEquals(MiniClientSageRenderer.normalizeDvdDiscPolicy("native"), "native");
     assertEquals(MiniClientSageRenderer.normalizeDvdDiscPolicy("HYBRID"), "hybrid");
-    assertEquals(MiniClientSageRenderer.normalizeDvdDiscPolicy("mim_main_feature"), "mim_main_feature");
+    assertEquals(MiniClientSageRenderer.normalizeDvdDiscPolicy("transformed_main_feature"),
+        "transformed_main_feature");
     assertEquals(MiniClientSageRenderer.normalizeDvdDiscPolicy("future-mode"), "auto");
     assertEquals(MiniClientSageRenderer.normalizeDvdDiscPolicy(null), "auto");
   }
