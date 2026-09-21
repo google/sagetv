@@ -2205,6 +2205,10 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
     }
     else if (daJob.id == WATCH_MF)
     {
+      // Repair only the opt-in, corroborated one-millisecond sentinel before
+      // the STV computes its first timeline and seek target.
+      ImportedMediaMetadataRepair.repairBeforePlayback(daJob.file);
+
       MediaFile previousFile = currFile;
       if (currFile != null && !currFile.isAnyLiveStream())
       {
