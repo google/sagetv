@@ -328,12 +328,15 @@ public final class NetworkCaptureDevice extends CaptureDevice
 
   protected boolean doScanChannel(String tuneString)
   {
-    String res = submitHostCommand("AUTOSCAN " + tuneString, "AUTOSCAN " + getNetworkSourceName() + "|" + tuneString, true);
+    // OpenDCT registers the encoder by its local capture-device name. The
+    // input cross-name can be accepted for tuning while resolving AUTOSCAN to
+    // an unrelated fallback device, so send the registered local identity.
+    String res = submitHostCommand("AUTOSCAN " + tuneString, "AUTOSCAN " + getLocalName() + "|" + tuneString, true);
     return "OK".equals(res);
   }
   protected String doScanChannelInfo(String tuneString)
   {
-    String res = submitHostCommand("AUTOINFOSCAN " + tuneString, "AUTOINFOSCAN " + getNetworkSourceName() + "|" + tuneString, true);
+    String res = submitHostCommand("AUTOINFOSCAN " + tuneString, "AUTOINFOSCAN " + getLocalName() + "|" + tuneString, true);
     return (res == null || "null".equals(res)) ? null : res;
   }
 
