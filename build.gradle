@@ -399,17 +399,19 @@ task(restoreSageConstants) {
     if (fileBak.exists()) {
       file.text = fileBak.text
       System.out.println("Restored ${file}");
-      fileBak.deleteOnExit()
+      if (!fileBak.delete()) {
+        throw new GradleException("Unable to remove build-number backup ${fileBak}")
+      }
     }
   }
 }
 
 // task dependencies
 compileJava.dependsOn updateBuildNumber
+compileJava.finalizedBy restoreSageConstants
 sageJar.dependsOn cleanSageJar, classes, test
 miniclientJar.dependsOn clean, miniclientClasses, cleanMiniJar
 linuxMiniClientRelease.dependsOn miniclientJar
-sageJar.finalizedBy restoreSageConstants
 
 // Eclipse project setup
 eclipse {
