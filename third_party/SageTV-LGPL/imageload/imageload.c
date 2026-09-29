@@ -16,12 +16,28 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
 #include "imageload.h"
 #include "swscale.h"
-#include "../../codecs/libpng/png.h"
-#include "../../codecs/giflib/lib/gif_lib.h"
-#include "../../codecs/jpeg-6b/jpeglib.h"
-#include "../../codecs/tiff/libtiff/tiffio.h"
+#include <png.h>
+#include <gif_lib.h>
+#include <jpeglib.h>
+#include <tiffio.h>
+
+static GifFileType *sage_dgif_open_file_handle(int fd)
+{
+    int error = 0;
+    return DGifOpenFileHandle(fd, &error);
+}
+
+static int sage_dgif_close_file(GifFileType *file)
+{
+    int error = 0;
+    return DGifCloseFile(file, &error);
+}
+
+#define DGifOpenFileHandle(fd) sage_dgif_open_file_handle(fd)
+#define DGifCloseFile(file) sage_dgif_close_file(file)
 
 static int resizew;
 static int resizeh;
@@ -57,7 +73,7 @@ int LoadPNGDimensions(FILE* fp, int *imgwidth, int *imgheight)
     {
         printf("Encountered an error reading the png...\n");
         fflush(stdout);
-        png_destroy_read_struct(&png_ptr, &info_ptr, png_infopp_NULL);
+        png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
         return 1;
     }
     
@@ -67,9 +83,9 @@ int LoadPNGDimensions(FILE* fp, int *imgwidth, int *imgheight)
     png_read_info(png_ptr, info_ptr);
     
     png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
-       &interlace_type, int_p_NULL, int_p_NULL);
+       &interlace_type, NULL, NULL);
 
-    png_destroy_read_struct(&png_ptr, &info_ptr, png_infopp_NULL);
+    png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
 
 	if (imgwidth)
 		*imgwidth = width;
@@ -81,11 +97,13 @@ int LoadPNGDimensions(FILE* fp, int *imgwidth, int *imgheight)
 // Based on example from png library
 RawImage_t* LoadPNG(FILE* fp, int imgwidth, int imgheight)
 {
-    RawImage_t *newimage;
+    RawImage_t *newimage = NULL;
+    unsigned char *decoded = NULL;
+    png_bytep *rows = NULL;
     char header[8];
     png_uint_32 width, height;
     int bit_depth, color_type, interlace_type;
-    int number_passes,pass,y;
+    int y;
     if(!fp) return 0;
     if(fread(header, 8, 1, fp)!=1) return 0;
     int is_png = !png_sig_cmp((png_bytep)header, 0, 8);
@@ -106,9 +124,13 @@ RawImage_t* LoadPNG(FILE* fp, int imgwidth, int imgheight)
 
     if(setjmp(png_jmpbuf(png_ptr)))
     {
-        printf("Encountered an error reading the png...\n");
-        fflush(stdout);
-        png_destroy_read_struct(&png_ptr, &info_ptr, png_infopp_NULL);
+        free(rows);
+        free(decoded);
+        if (newimage) {
+            free(newimage->pPlane);
+            free(newimage);
+        }
+        png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
         return 0;
     }
     
@@ -118,114 +140,94 @@ RawImage_t* LoadPNG(FILE* fp, int imgwidth, int imgheight)
     png_read_info(png_ptr, info_ptr);
     
     png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
-       &interlace_type, int_p_NULL, int_p_NULL);
+       &interlace_type, NULL, NULL);
 
     if (imgwidth == 0 || imgheight == 0) {
       imgwidth = width;
       imgheight = height;
     }
 
-    newimage=(RawImage_t *) malloc(sizeof(RawImage_t));
-    if(newimage==NULL)
-    {
-        printf("Couldn't allocate RawImage_t for new image\n");
-        fflush(stdout);
-        png_destroy_read_struct(&png_ptr, &info_ptr, png_infopp_NULL);
-        return 0;
-    }
-    memset(newimage, 0, sizeof(RawImage_t));
-    // TODO: add checks for odd width
-    newimage->hasAlpha=1; // jpeg don't have alpha
-    newimage->pPlane = (unsigned char*) malloc(imgwidth * imgheight * 4);
-    newimage->uWidth = imgwidth;
-    newimage->uHeight = imgheight;
-    newimage->uBytePerLine = imgwidth*4;
-
-    if(!newimage->pPlane)
-    {
-        printf("Couldn't create surface for new image\n");
-        fflush(stdout);
-        png_destroy_read_struct(&png_ptr, &info_ptr, png_infopp_NULL);
-        free(newimage);
-        return 0;
-    }
-          
-    // We don't want 16 bit colors
+    /* Normalize every supported PNG to 8-bit RGB or RGBA first. */
     png_set_strip_16(png_ptr);
-    png_set_packing(png_ptr);
     if(color_type == PNG_COLOR_TYPE_PALETTE)
         png_set_palette_to_rgb(png_ptr);
     if(color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)
-        png_set_gray_1_2_4_to_8(png_ptr);
+        png_set_expand_gray_1_2_4_to_8(png_ptr);
     if(png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))
         png_set_tRNS_to_alpha(png_ptr);
     if(color_type == PNG_COLOR_TYPE_GRAY ||
        color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
       png_set_gray_to_rgb(png_ptr);
-    /* flip the RGB pixels to BGR (or RGBA to BGRA) */
-//    if(color_type & PNG_COLOR_MASK_COLOR)
-//        png_set_bgr(png_ptr);
-
-    /* swap the RGBA or GA data to ARGB or AG (or BGRA to ABGR) */
-    png_set_swap_alpha(png_ptr);
-    png_set_filler(png_ptr, 0xff, PNG_FILLER_BEFORE);
-    number_passes = png_set_interlace_handling(png_ptr);
+    png_set_interlace_handling(png_ptr);
     png_read_update_info(png_ptr, info_ptr);
-    
+
+    int channels = png_get_channels(png_ptr, info_ptr);
+    png_size_t rowbytes = png_get_rowbytes(png_ptr, info_ptr);
+    if ((channels != 3 && channels != 4) || width == 0 || height == 0 ||
+        rowbytes < width * (png_size_t)channels)
+        png_error(png_ptr, "unsupported transformed PNG layout");
+
+    decoded = (unsigned char *)malloc(rowbytes * height);
+    rows = (png_bytep *)malloc(sizeof(png_bytep) * height);
+    if (!decoded || !rows)
+        png_error(png_ptr, "out of memory decoding PNG");
+    for (y = 0; y < (int)height; y++)
+        rows[y] = decoded + y * rowbytes;
+    png_read_image(png_ptr, rows);
+    png_read_end(png_ptr, info_ptr);
+    free(rows);
+    rows = NULL;
+
+    newimage=(RawImage_t *)calloc(1, sizeof(RawImage_t));
+    if (!newimage)
+        png_error(png_ptr, "out of memory allocating image");
+    newimage->hasAlpha = channels == 4;
+    newimage->pPlane = (unsigned char*)malloc((size_t)imgwidth * imgheight * 4);
+    newimage->uWidth = imgwidth;
+    newimage->uHeight = imgheight;
+    newimage->uBytePerLine = imgwidth * 4;
+    if (!newimage->pPlane)
+        png_error(png_ptr, "out of memory allocating image pixels");
+
+    /* SageTV's 32-bit image layout is premultiplied A,R,G,B bytes. */
+    unsigned char *argb = (unsigned char *)malloc((size_t)width * height * 4);
+    if (!argb)
+        png_error(png_ptr, "out of memory converting PNG");
+    for (y = 0; y < (int)height; y++) {
+        unsigned char *src = decoded + y * rowbytes;
+        unsigned char *dst = argb + (size_t)y * width * 4;
+        int x;
+        for (x = 0; x < (int)width; x++) {
+            unsigned int alpha = channels == 4 ? src[x * channels + 3] : 255;
+            dst[x * 4] = alpha;
+            dst[x * 4 + 1] = src[x * channels] * alpha / 255;
+            dst[x * 4 + 2] = src[x * channels + 1] * alpha / 255;
+            dst[x * 4 + 3] = src[x * channels + 2] * alpha / 255;
+        }
+    }
+    free(decoded);
+    decoded = NULL;
+
 	// Create the image scaler if we're doing a resize
 	if (imgwidth != width || imgheight != height)
 	{
 		struct SwsContext *sws = sws_getContext(width, height, PIX_FMT_RGB32, imgwidth, imgheight, PIX_FMT_RGB32, 0x0002, NULL);
 		if (!sws)
 		{
-	        png_destroy_read_struct(&png_ptr, &info_ptr, png_infopp_NULL);
+	        png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
 		    free(newimage->pPlane);
 			free(newimage);
 			return 0;
 		}
-	    unsigned char *buffer = (unsigned char *) malloc(png_get_rowbytes(png_ptr,info_ptr));
-		for(pass = 0; pass < number_passes; pass++)
-		{
-			for(y = 0; y < height; y++)
-			{
-				png_read_rows(png_ptr, &buffer, png_bytepp_NULL, 1);
-				sws_scale(sws, buffer, width*4, y, 1, newimage->pPlane, imgwidth*4);
-			}
-		}
-	    free(buffer);
+		sws_scale(sws, argb, width*4, 0, height, newimage->pPlane, imgwidth*4);
 		sws_freeContext(sws);
 	}
 	else
-	{
-		for(pass = 0; pass < number_passes; pass++)
-		{
-			for(y = 0; y < height; y++)
-			{
-				unsigned char* buffer = newimage->pPlane + y*imgwidth*4;
-				png_read_rows(png_ptr, &buffer, png_bytepp_NULL, 1);
-			}
-		}
-	}
-
-	// Now go through and premultiply the alpha channel data
-	int x;
-	for (x = 0; x < imgwidth*imgheight; x++)
-	{
-		int base = x*4;
-		int alpha = newimage->pPlane[base];
-		if (alpha < 0xFF)
-		{
-			newimage->pPlane[base + 1] = newimage->pPlane[base + 1] * alpha / 255;
-			newimage->pPlane[base + 2] = newimage->pPlane[base + 2] * alpha / 255;
-			newimage->pPlane[base + 3] = newimage->pPlane[base + 3] * alpha / 255;
-		}
-	}
-    
-    /* read rest of file, and get additional chunks in info_ptr - REQUIRED */
-    png_read_end(png_ptr, info_ptr);
+		memcpy(newimage->pPlane, argb, (size_t)width * height * 4);
+    free(argb);
 
     /* clean up after the read, and free any memory allocated - REQUIRED */
-    png_destroy_read_struct(&png_ptr, &info_ptr, png_infopp_NULL);
+    png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
 
     /* that's it */
     return newimage;
@@ -264,7 +266,7 @@ int SavePNG(RawImage_t* image, FILE* outfile)
        PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 
 	png_bytep* row_pointers = png_malloc(png_ptr,
-		image->uHeight*png_sizeof(png_bytep));
+		image->uHeight*sizeof(png_bytep));
 	int i;
 	for (i=0; i<image->uHeight; i++)
 		row_pointers[i]=image->pPlane + i*image->uBytePerLine;

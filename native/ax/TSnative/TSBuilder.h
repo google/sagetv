@@ -78,7 +78,7 @@ TS_BUILDER* TSBuilderOpen( );
 void TSBuilderClose( TS_BUILDER* buider );
 int  AddProgram( TS_BUILDER* buider, int PrgrmID, unsigned short PCRPID, DESC* PmtDesc, 
 				                      int StreamNum, short *StreamType, short *StreamPid, DESC *ESDesc  );
-void ClearProgram();
+void ClearProgram(TS_BUILDER* pBuilder);
 void TSResetBuilder(TS_BUILDER* buider);
 //int  GetProgramNum();
 

@@ -17,6 +17,8 @@
 #include <stdint.h>
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include FT_OUTLINE_H
+#include FT_SIZES_H
 #include "sage_FreetypeFont.h"
 
 typedef struct

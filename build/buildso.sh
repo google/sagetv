@@ -46,27 +46,9 @@ make -C ../../../native/so/FirewireTuning || { echo "Build failed, exiting."; ex
 cp ../../../native/so/FirewireTuning/*.so .
 cd ..
 
-# build the image library dependencies
+# Build SageTV's small legacy scaler; image codecs come from Ubuntu.
 make -C ../../third_party/swscale || { echo "Build failed, exiting."; exit 1; }
 cp ../../third_party/swscale/*.so .
-
-cd ../../third_party/codecs/giflib
-./configure --with-pic || { echo "Build failed, exiting."; exit 1; }
-make || { echo "Build failed, exiting."; exit 1; }
-
-cd ../jpeg-6b
-./configure CFLAGS=-fPIC || { echo "Build failed, exiting."; exit 1; }
-make
-
-cd ../libpng
-./configure --with-pic || { echo "Build failed, exiting."; exit 1; }
-make
-
-cd ../tiff
-./configure --with-pic || { echo "Build failed, exiting."; exit 1; }
-make
-
-cd ../../../build/so
 
 make -C ../../third_party/SageTV-LGPL/imageload || { echo "Build failed, exiting."; exit 1; }
 cp ../../third_party/SageTV-LGPL/imageload/*.so .
@@ -80,6 +62,7 @@ cd ../../third_party/ffmpeg
 # in a different configuration previously
 make clean
 ./configure --build-suffix=-minimal --disable-static --enable-shared \
+  --disable-asm \
   --disable-decoders --disable-encoders --disable-parsers --disable-filters \
   --disable-protocols --disable-muxers --disable-demuxers --disable-bsfs --disable-hwaccels \
   --enable-encoder=mpeg1video --enable-encoder=mpeg2video \
@@ -91,7 +74,7 @@ make clean
   --enable-parser=mpegaudio \
   --enable-protocol=pipe --enable-protocol=http --enable-protocol=file --enable-protocol=stv \
   --enable-pthreads \
-  --disable-ffmpeg --disable-ffserver --disable-ffplay \
+  --disable-ffmpeg --disable-ffprobe --disable-ffserver --disable-ffplay \
   --disable-demuxer=ea || { echo "Build failed, exiting."; exit 1; }
 make -j32 || { echo "Build failed, exiting."; exit 1; }
 cp libavutil/libavutil-minimal.so.* ../../build/so
@@ -101,4 +84,3 @@ cd ../../build/so
 
 make -C ../../native/so/Mpeg2Transcoder || { echo "Build failed, exiting."; exit 1; }
 cp ../../native/so/Mpeg2Transcoder/*.so .
-

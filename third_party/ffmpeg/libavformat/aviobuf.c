@@ -26,6 +26,13 @@
 #include "internal.h"
 #include <stdarg.h>
 
+static int url_read_opaque(void *opaque, uint8_t *buf, int size)
+{ return url_read((URLContext *)opaque, buf, size); }
+static int url_write_opaque(void *opaque, uint8_t *buf, int size)
+{ return url_write((URLContext *)opaque, buf, size); }
+static int64_t url_seek_opaque(void *opaque, int64_t pos, int whence)
+{ return url_seek((URLContext *)opaque, pos, whence); }
+
 #define IO_BUFFER_SIZE 32768
 
 static void fill_buffer(ByteIOContext *s);
@@ -588,7 +595,7 @@ int url_fdopen(ByteIOContext **s, URLContext *h)
 
     if (init_put_byte(*s, buffer, buffer_size,
                       (h->flags & URL_WRONLY || h->flags & URL_RDWR), h,
-                      url_read, url_write, url_seek) < 0) {
+                      url_read_opaque, url_write_opaque, url_seek_opaque) < 0) {
         av_free(buffer);
         av_freep(s);
         return AVERROR(EIO);

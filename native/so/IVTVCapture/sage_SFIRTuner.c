@@ -158,25 +158,25 @@ typedef int (*LPFNSetup)(int);
 typedef struct command* (*LPFNGetCommand)(unsigned char*);
 typedef unsigned long (*LPFNCarrier_Frequency)(void);
 typedef unsigned long (*LPFNBit_Time)(void);
-typedef (*LPFNTakedown)(void);
-typedef (*LPFNMacroTune)(int);
-typedef (*LPFNPLAY)(remote*, unsigned char*, int);
+typedef void (*LPFNTakedown)(void);
+typedef void (*LPFNMacroTune)(int);
+typedef void (*LPFNPLAY)(remote*, unsigned char*, int);
 #else
 typedef void* (*LPFNSetup)(int);
 typedef struct command* (*LPFNGetCommand)(int,unsigned char*);
-typedef unsigned long (*LPFNCarrier_Frequency)(int);
-typedef unsigned long (*LPFNBit_Time)(int);
-typedef (*LPFNTakedown)(void*);
-typedef (*LPFNMacroTune)(int,int);
-typedef (*LPFNPLAY)(void*,remote*, unsigned char*, int);
+typedef unsigned long (*LPFNCarrier_Frequency)(void*);
+typedef unsigned long (*LPFNBit_Time)(void*);
+typedef void (*LPFNTakedown)(void*);
+typedef void (*LPFNMacroTune)(int,int);
+typedef void (*LPFNPLAY)(void*,remote*, unsigned char*, int);
 #endif
 typedef const char* (*FARPROC)();
-typedef (*LPFNINIT)(void);
+typedef void (*LPFNINIT)(void);
 typedef struct remote* (*LPFNLOAD)(const char*);
 typedef struct remote* (*LPFNCreateRemote)(unsigned char*, unsigned long, unsigned long, command*);
-typedef (*LPFNAddRemote)(remote*, remote**);
-typedef (*LPFNAddCommand)(command*, command**);
-typedef (*LPFNSave)(remote*, const char*);
+typedef void (*LPFNAddRemote)(remote*, remote**);
+typedef void (*LPFNAddCommand)(command*, command**);
+typedef void (*LPFNSave)(remote*, const char*);
 typedef int (*LPFNNeedCarrier)(void);
 typedef int (*LPFNNeedBitrate)(void);
 typedef int (*LPFNCanMacroTune)(void);
@@ -710,4 +710,3 @@ JNIEXPORT void JNICALL Java_sage_SFIRTuner_macroTune(JNIEnv *env, jobject jo, ji
 		fnMacroTune((int)GetLongField(env, jo, "nativePort"), num);
 #endif
 }
-

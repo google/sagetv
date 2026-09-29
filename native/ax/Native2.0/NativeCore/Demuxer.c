@@ -899,7 +899,7 @@ static int CreateTSFileSource( DEMUXER* pDemuxer, char* pFileName, int nFileForm
 	fp = _sopen( pFileName, _O_RDONLY|_O_BINARY, _SH_DENYNO , _S_IREAD );
 #else
 #ifdef 	O_LARGEFILE
-	fp  = open( pFileName, O_RDONLY|O_LARGEFILE );
+	fp  = open( (char*)pFileName, O_RDONLY|O_LARGEFILE );
 #else
 	fp  = open( pFileName, O_RDONLY );
 #endif
@@ -929,7 +929,7 @@ static int CreateTSFileSourceW( DEMUXER* pDemuxer, wchar_t* pFileName, int nFile
 	fp = _wsopen( (wchar_t*)pFileName, _O_RDONLY|_O_BINARY, _SH_DENYNO , _S_IREAD );
 #else
 #ifdef 	O_LARGEFILE
-	fp  = open( pFileName, O_RDONLY|O_LARGEFILE );
+	fp  = open( (char*)pFileName, O_RDONLY|O_LARGEFILE );
 #else
 	fp  = open( (char*)pFileName, O_RDONLY );
 #endif

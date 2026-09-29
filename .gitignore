@@ -1036,3 +1036,7 @@ native/SageWorkspace.VC.VC.opendb
 /dist/
 .github/copilot-instructions.md
 .vscode/settings.json
+output/
+third_party/ffmpeg/**/*.d
+third_party/ffmpeg/**/*.so
+third_party/ffmpeg/**/*.so.*
