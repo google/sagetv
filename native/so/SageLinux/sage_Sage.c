@@ -241,7 +241,7 @@ JNIEXPORT jstring JNICALL Java_sage_Sage_getFileSystemType(JNIEnv *env, jclass j
   
   (*env)->ReleaseStringUTFChars(env, volRoot, str);
 
-  sprintf(filetype, "0x%x", fs.f_type);
+  sprintf(filetype, "0x%lx", (unsigned long)fs.f_type);
   printf("Type of filesystem = %s\n", filetype);
 
   ftype = (*env)->NewStringUTF(env, filetype);

@@ -29,7 +29,7 @@ ACL_mutex * ACL_CreateMutex()
     if(NULL!=mutex)
     {
         pthread_mutexattr_init(&attr);
-        pthread_mutexattr_setkind_np(&attr, PTHREAD_MUTEX_RECURSIVE_NP);
+        pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
         if(pthread_mutex_init(&mutex->id, &attr)!=0)
         {
             free(mutex);
@@ -176,4 +176,3 @@ void ACL_Delay(unsigned int delay)
     }
     //usleep(delay*1000);
 }
-

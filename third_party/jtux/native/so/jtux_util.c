@@ -610,6 +610,7 @@ struct iovec *iovec_jtoc(JNIEnv *env, jobject iov, int iovcnt, jbyteArray **ba)
 	}
 	for (i = 0; i < iovcnt; i++) {
 		jobject v_obj = (*env)->GetObjectArrayElement(env, iov, i);
+		int iov_len;
 
 		if (v_obj == NULL) {
 			free(v);
@@ -622,11 +623,12 @@ struct iovec *iovec_jtoc(JNIEnv *env, jobject iov, int iovcnt, jbyteArray **ba)
 			free(*ba);
 			return NULL;
 		}
-		if (!field_jtoc_int(env, cls, "iov_len", v_obj, &v[i].iov_len)) {
+		if (!field_jtoc_int(env, cls, "iov_len", v_obj, &iov_len)) {
 			free(v);
 			free(*ba);
 			return NULL;
 		}
+		v[i].iov_len = (size_t)iov_len;
 	}
 	return v;
 }

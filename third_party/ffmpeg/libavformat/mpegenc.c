@@ -24,6 +24,9 @@
 #include "avformat.h"
 #include "mpeg.h"
 
+static void put_buffer_opaque(void *opaque, void *buf, int size)
+{ put_buffer((ByteIOContext *)opaque, (const unsigned char *)buf, size); }
+
 #define MAX_PAYLOAD_SIZE 4096
 //#define DEBUG_SEEK
 
@@ -921,7 +924,7 @@ static int flush_packet(AVFormatContext *ctx, int stream_index,
 
         /* output data */
         assert(payload_size - stuffing_size <= av_fifo_size(stream->fifo));
-        av_fifo_generic_read(stream->fifo, ctx->pb, payload_size - stuffing_size, &put_buffer);
+        av_fifo_generic_read(stream->fifo, ctx->pb, payload_size - stuffing_size, put_buffer_opaque);
         stream->bytes_to_iframe -= payload_size - stuffing_size;
     }else{
         payload_size=
