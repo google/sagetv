@@ -14,16 +14,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-userkey=`cat activkey`
+# The legacy license is optional. SageTV itself no longer requires this file.
+userkey=""
+if [ -r activkey ]; then
+	userkey=$(cat activkey)
+fi
 export LD_LIBRARY_PATH=.:lib:irtunerplugins
 export LANG=en_US.ISO-8859-1
 echo Executing pre-scripts
 restartApp=1
 
-PIDFILE=/var/run/sagetv.pid
-HEADLESS=true
-JAVAMEM=-Xmx768m
-JAVAOPTS=
+PIDFILE=${PIDFILE:-/tmp/sagetv.pid}
+HEADLESS=${HEADLESS:-true}
+JAVAMEM=${JAVAMEM:--Xmx768m}
+JAVAOPTS=${JAVAOPTS:-}
 
 # You can use the sagesettings file to overwrite settings
 if [ -e sagesettings ] ; then
