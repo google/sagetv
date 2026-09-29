@@ -134,7 +134,7 @@ static int FindMainAudioTrack( TSSPLT* ts, int channel );
 static void DumpChannelPid( TSSPLT* ts, AVSTREAM_INFO* StreamInfo, int stream_num );
 static void ResetPTSFIX( TSSPLT* ts );
 
-int    GetBlockSize();
+int    GetBlockSize(TSSPLT* splt);
 //////////////////////////////////////////////////////////////////////////////////////////////////
 unsigned long TSAVStreamHook( void* handle, short channel, void* data )
 {

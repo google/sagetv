@@ -52,7 +52,7 @@
 // Tweak this if needed
 #define CAPCIRCBUFFERSIZE 16*1024*1024 
 
-static int CaptureThread(void *data);
+static void *CaptureThread(void *data);
 
 
 // Should we use new file transition
@@ -825,7 +825,7 @@ JNIEXPORT void JNICALL Java_sage_DVBCaptureDevice_destroyEncoder0
 }
 
 
-static int CaptureThread(void *data)
+static void *CaptureThread(void *data)
 {
     DVBCaptureDev *x =  (DVBCaptureDev *)data;
     fd_set rfds;
@@ -852,7 +852,7 @@ static int CaptureThread(void *data)
         tv.tv_usec = 100000;
         retval = select(maxfd+1, &rfds, NULL, NULL, &tv);
         if (retval == -1)
-            return -1;
+            return NULL;
         if(FD_ISSET(x->dvrFd, &rfds))
         {
             FD_CLR(x->dvrFd, &rfds);
@@ -893,7 +893,7 @@ static int CaptureThread(void *data)
             ACL_UnlockMutex(x->capMutex);
         }
     }
-    return 0;
+    return NULL;
 }
 
 /*
