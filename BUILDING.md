@@ -1,5 +1,7 @@
 # Gradle Builds #
 
+For the reproducible Ubuntu 26.04 server build, tests, package, and same-container smoke run, see [docs/UBUNTU26_BUILD.md](docs/UBUNTU26_BUILD.md) and run `./sagetv-dev.sh all`.
+
 The gradle.build build file can be used to recreate the Sage.jar and/or the MiniClient.jar on Windows, Linux or Mac.
 
 After cloning the repository, you can re-create the Sage.jar by running the **sageJar** task
