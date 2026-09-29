@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include <stdio.h>
+#include <stdint.h>
 
  #include <stdio.h>
  #include <string.h>
@@ -387,7 +388,7 @@ static void ProcessFrames(JNIEnv *env, Transcoder *t1)
                     //sysOutPrint(env, "encoding\n");
                     
 					sws_scale(t1->imgscaler, 
-							  t1->tcFrame->data, t1->tcFrame->linesize, 0, t1->srcHeight,
+                                                          (const uint8_t * const *)t1->tcFrame->data, t1->tcFrame->linesize, 0, t1->srcHeight,
 							  t1->ovFrame->data, t1->ovFrame->linesize);
                     t1->ovFrame->pict_type=FF_I_TYPE;
                     int packetSize = avcodec_encode_video(
@@ -595,7 +596,7 @@ JNIEXPORT jlong JNICALL Java_sage_Mpeg2Transcoder_openTranscode0
     const char* filename = (*env)->GetStringUTFChars(env, jfilename, NULL);
     t1 = openTranscoder(env, filename);
     (*env)->ReleaseStringUTFChars(env, jfilename, filename);
-    return (jlong) (int) t1;
+    return (jlong)(intptr_t)t1;
 }
 
 /*
@@ -607,7 +608,7 @@ JNIEXPORT void JNICALL Java_sage_Mpeg2Transcoder_closeTranscode0
   (JNIEnv *env, jobject jo, jlong handle)
 {
     if(handle==0) return;
-    Transcoder *t1 = (Transcoder *) (int) handle;
+    Transcoder *t1 = (Transcoder *)(intptr_t)handle;
     closeTranscoder(env, t1);
 }
 
@@ -620,7 +621,7 @@ JNIEXPORT jlong JNICALL Java_sage_Mpeg2Transcoder_getFirstTime0
   (JNIEnv *env, jobject jo, jlong handle)
 {
     if(handle==0) return (jlong) 0;
-    Transcoder *t1 = (Transcoder *) (int) handle;
+    Transcoder *t1 = (Transcoder *)(intptr_t)handle;
     
     return t1->context->start_time/AV_TIME_BASE*1000;
 }
@@ -633,7 +634,7 @@ JNIEXPORT jlong JNICALL Java_sage_Mpeg2Transcoder_getLastParsedTime0
   (JNIEnv *env, jobject jo, jlong handle)
 {
     if(handle==0) return (jlong) 0;
-    Transcoder *t1 = (Transcoder *) (int) handle;
+    Transcoder *t1 = (Transcoder *)(intptr_t)handle;
 
     //sysOutPrint(env, "getLastParsedTime0 returning %lld\n",t1->lastPTSmsec);
     return t1->lastPTSmsec;
@@ -646,8 +647,8 @@ JNIEXPORT jlong JNICALL Java_sage_Mpeg2Transcoder_getLastParsedTime0
 JNIEXPORT jlong JNICALL Java_sage_Mpeg2Transcoder_getDurationMillis0
   (JNIEnv *env, jobject jo, jlong handle)
 {
-    if(handle==0) return;
-    Transcoder *t1 = (Transcoder *) (int) handle;
+    if(handle==0) return 0;
+    Transcoder *t1 = (Transcoder *)(intptr_t)handle;
 
     return t1->context->duration/AV_TIME_BASE*1000;
 }
@@ -661,7 +662,7 @@ JNIEXPORT void JNICALL Java_sage_Mpeg2Transcoder_seek0
 {
     int retval;
     if(handle==0) return;
-    Transcoder *t1 = (Transcoder *) (int) handle;
+    Transcoder *t1 = (Transcoder *)(intptr_t)handle;
     retval = av_seek_frame(t1->context, -1, time*AV_TIME_BASE/1000, AVSEEK_FLAG_BACKWARD);
     FlushBuffer(env, t1);
     ProcessFrames(env, t1);
@@ -677,8 +678,8 @@ JNIEXPORT jlong JNICALL Java_sage_Mpeg2Transcoder_availableToRead0
   (JNIEnv *env, jobject jo, jlong handle)
 {
     int len;
-    if(handle==0) return;
-    Transcoder *t1 = (Transcoder *) (int) handle;
+    if(handle==0) return 0;
+    Transcoder *t1 = (Transcoder *)(intptr_t)handle;
     
     ProcessFrames(env, t1);
     len=t1->outputend < t1->outputstart ? 
@@ -698,8 +699,8 @@ JNIEXPORT jint JNICALL Java_sage_Mpeg2Transcoder_read0
   (JNIEnv *env, jobject jo, jlong handle, jbyteArray buf, jint off, jint len)
 {
     unsigned char* critArr;
-    if(handle==0) return;
-    Transcoder *t1 = (Transcoder *) (int) handle;
+    if(handle==0) return 0;
+    Transcoder *t1 = (Transcoder *)(intptr_t)handle;
 
     critArr = (unsigned char*)(*env)->GetPrimitiveArrayCritical(env, buf, NULL);
     if(critArr!=NULL)

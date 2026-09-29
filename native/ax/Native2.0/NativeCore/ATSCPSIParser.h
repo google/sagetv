@@ -148,7 +148,7 @@ typedef struct ATSC_PSI
 
 } ATSC_PSI;
 
-ATSC_PSI* CreateATSCPSI(  );
+ATSC_PSI* CreateATSCPSI( PSI_PARSER* pPSIParser );
 void ReleaseATSCPSI( ATSC_PSI* pATSCPSI );
 void ResetATSCPSI( ATSC_PSI* pATSCPSI );
 int  ProcessATSCPSI( ATSC_PSI* pATSCPSI, TS_PACKET *pTSPacket );

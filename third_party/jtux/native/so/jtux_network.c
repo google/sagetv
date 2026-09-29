@@ -560,16 +560,19 @@ JNIEXPORT jint JNICALL Java_jtux_UNetwork_recvmsg(JNIEnv *env, jclass obj,
 	struct sockaddr_storage sa_c;
 	ssize_t nrcv;
 	jbyteArray *v_bytearray;
+	int msg_iovlen, msg_controllen;
 
 	msg_c.msg_name = &sa_c;
 	if (!field_jtoc_object(env, cls_s_msghdr, "msg_iov", "[Ljtux/UFile$s_iovec;", message, &msg_iov))
 		return -1;
-	if (!field_jtoc_int(env, cls_s_msghdr, "msg_iovlen", message, &msg_c.msg_iovlen))
+	if (!field_jtoc_int(env, cls_s_msghdr, "msg_iovlen", message, &msg_iovlen))
 		return -1;
+	msg_c.msg_iovlen = (size_t)msg_iovlen;
 	if (!field_jtoc_object(env, cls_s_msghdr, "msg_control", "[B", message, &msg_control))
 		return -1;
-	if (!field_jtoc_int(env, cls_s_msghdr, "msg_controllen", message, &msg_c.msg_controllen))
+	if (!field_jtoc_int(env, cls_s_msghdr, "msg_controllen", message, &msg_controllen))
 		return -1;
+	msg_c.msg_controllen = (size_t)msg_controllen;
 	if (!field_jtoc_int(env, cls_s_msghdr, "msg_flags", message, &msg_c.msg_flags))
 		return -1;
 	if ((msg_c.msg_iov = iovec_jtoc(env, msg_iov, msg_c.msg_iovlen, &v_bytearray)) == NULL)
@@ -614,6 +617,7 @@ JNIEXPORT jint JNICALL Java_jtux_UNetwork_sendmsg(JNIEnv *env, jclass obj,
 	struct sockaddr_storage sa_c;
 	ssize_t nsent;
 	jbyteArray *v_bytearray;
+	int msg_iovlen, msg_controllen;
 
 	if (!field_jtoc_object(env, cls_s_msghdr, "msg_name", "Ljtux/UNetwork$s_sockaddr;", message, &msg_name))
 		return -1;
@@ -622,12 +626,14 @@ JNIEXPORT jint JNICALL Java_jtux_UNetwork_sendmsg(JNIEnv *env, jclass obj,
 	msg_c.msg_name = &sa_c;
 	if (!field_jtoc_object(env, cls_s_msghdr, "msg_iov", "[Ljtux/UFile$s_iovec;", message, &msg_iov))
 		return -1;
-	if (!field_jtoc_int(env, cls_s_msghdr, "msg_iovlen", message, &msg_c.msg_iovlen))
+	if (!field_jtoc_int(env, cls_s_msghdr, "msg_iovlen", message, &msg_iovlen))
 		return -1;
+	msg_c.msg_iovlen = (size_t)msg_iovlen;
 	if (!field_jtoc_object(env, cls_s_msghdr, "msg_control", "[B", message, &msg_control))
 		return -1;
-	if (!field_jtoc_int(env, cls_s_msghdr, "msg_controllen", message, &msg_c.msg_controllen))
+	if (!field_jtoc_int(env, cls_s_msghdr, "msg_controllen", message, &msg_controllen))
 		return -1;
+	msg_c.msg_controllen = (size_t)msg_controllen;
 	if (!field_jtoc_int(env, cls_s_msghdr, "msg_flags", message, &msg_c.msg_flags))
 		return -1;
 	if ((msg_c.msg_iov = iovec_jtoc(env, msg_iov, msg_c.msg_iovlen, &v_bytearray)) == NULL)
@@ -751,5 +757,4 @@ JNIEXPORT jint JNICALL Java_jtux_UNetwork_socket(JNIEnv *env, jclass obj,
 	JTHROW_neg1(fd = socket(domain, type, protocol));
 	return fd;
 }
-
 

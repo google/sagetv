@@ -32,6 +32,7 @@ static bool field_jtoc_perm(JNIEnv *env, jclass cls, const char *field, jobject 
 	jclass clsperm = (*env)->FindClass(env, "jtux/USysVIPC$s_ipc_perm");
 	jobject objperm;
 	int mode;
+	long uid, gid, cuid, cgid;
 
 	if (cls == NULL || clsperm == NULL)
 		return false;
@@ -41,16 +42,20 @@ static bool field_jtoc_perm(JNIEnv *env, jclass cls, const char *field, jobject 
 		JNU_ThrowByName(env, "NullPointerException", "s_ipc_perm field not initialized");
 		return false;
 	}
-	if (!field_jtoc_long(env, clsperm, "uid", objperm, &perm->uid))
+	if (!field_jtoc_long(env, clsperm, "uid", objperm, &uid))
 		return false;
-	if (!field_jtoc_long(env, clsperm, "gid", objperm, &perm->gid))
+	if (!field_jtoc_long(env, clsperm, "gid", objperm, &gid))
 		return false;
-	if (!field_jtoc_long(env, clsperm, "cuid", objperm, &perm->cuid))
+	if (!field_jtoc_long(env, clsperm, "cuid", objperm, &cuid))
 		return false;
-	if (!field_jtoc_long(env, clsperm, "cgid", objperm, &perm->cgid))
+	if (!field_jtoc_long(env, clsperm, "cgid", objperm, &cgid))
 		return false;
 	if (!field_jtoc_int(env, clsperm, "mode", objperm, &mode))
 		return false;
+	perm->uid = (uid_t)uid;
+	perm->gid = (gid_t)gid;
+	perm->cuid = (uid_t)cuid;
+	perm->cgid = (gid_t)cgid;
 	perm->mode = mode;
 	return true;
 }
