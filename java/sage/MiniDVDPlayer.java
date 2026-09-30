@@ -367,6 +367,11 @@ public class MiniDVDPlayer implements DVDMediaPlayer, MiniDVDPlayerIdentifier
         synchronized (decoderLock)
         {
           if (Sage.DBG) System.out.println("MiniDVD seek to "+seekTimeMillis);
+          // Keep an explicit seek anchor until the first NAV packet at the
+          // destination supplies its elapsed PTS. Ordinary cell processing
+          // may otherwise clear updateSTC and leave the client on the old
+          // decoder clock after a successful server-side VM seek.
+          forceStcAfterSeek = true;
           long rv = reader.seek(seekTimeMillis);
           removeYieldDecoderLock();
           decoderLock.notifyAll();
@@ -790,7 +795,7 @@ public class MiniDVDPlayer implements DVDMediaPlayer, MiniDVDPlayerIdentifier
     if (DEBUG_MINIDVD) System.out.println("PGC length "+duration);
     if (DEBUG_MINIDVD) System.out.println("discont detected "+discont);
     // For now disable that because NAV packet handling depends on cells flush.
-    updateSTC = (discont!=0);
+    updateSTC = forceStcAfterSeek || (discont!=0);
     return discont;
   }
 
@@ -905,6 +910,7 @@ public class MiniDVDPlayer implements DVDMediaPlayer, MiniDVDPlayerIdentifier
       {
         updateSTC = false;
         DVDSTC(ptr, cellStart+temp_pci.pci_gi.e_eltm.toPTS());//temp_pci.pci_gi.vobu_s_ptm.get());
+        forceStcAfterSeek = false;
       }
       // Don't re-allocate if we're not going to put it in the queue.
       // NARFLEX 8/1/08 - use a pool for this since its' LOTS of reallocations for the nested objects
@@ -1094,6 +1100,10 @@ public class MiniDVDPlayer implements DVDMediaPlayer, MiniDVDPlayerIdentifier
                 }
                 catch (InterruptedException e)
                 {}
+                // A control operation is waiting for this monitor. End this
+                // iteration so the synchronized block is released before any
+                // additional parsing or socket writes are attempted.
+                continue;
               }
               if(myReader != reader)
                 break;
@@ -1112,7 +1122,13 @@ public class MiniDVDPlayer implements DVDMediaPlayer, MiniDVDPlayerIdentifier
                 boolean newHighlightOn = lastCurrentTracker.pci.hli.hl_gi.hli_ss.get() != 0;
                 if (newHighlightOn || highlightOn != newHighlightOn)
                 {
-                  ProcessHighlight(null, 0, theButton);
+                  // Program-chain transitions can change the VM's selected
+                  // button without a distinct highlight event. Synchronize
+                  // the client cursor with the VM rather than reusing a stale
+                  // button from the preceding menu cell.
+                  int navButton = DVDPlaybackControl.currentNavButton(
+                      reader.player_button, theButton);
+                  ProcessHighlight(null, 0, navButton);
                 }
               }
               if (freeSpace < 32768 || dvdEos)
@@ -2024,6 +2040,7 @@ public class MiniDVDPlayer implements DVDMediaPlayer, MiniDVDPlayerIdentifier
   private Object yieldDecoderLockCountLock = new Object();
 
   private boolean updateSTC;
+  private volatile boolean forceStcAfterSeek;
   private boolean needclear;
   private boolean neednewcell;
 
