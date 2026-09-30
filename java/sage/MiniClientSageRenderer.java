@@ -3868,6 +3868,18 @@ public class MiniClientSageRenderer extends SageRenderer
         sendGetPropertyAsync("OFFLINE_CACHE_CONTENTS");
         sendGetPropertyAsync("ADVANCED_IMAGE_CACHING");
         sendGetPropertyAsync("VIDEO_ADVANCED_ASPECT");
+        // These optional properties extend the existing request/reply
+        // capability exchange. A legacy client returns an empty or unknown
+        // value, which leaves every new behavior disabled and preserves its
+        // established playback path.
+        sendGetPropertyAsync("MEDIA_STATE_URL");
+        sendGetPropertyAsync("DVD_REMOTE_NAV");
+        sendGetPropertyAsync("DVD_DISC_TRANSPORTS");
+        sendGetPropertyAsync("DVD_DISC_POLICY");
+        sendGetPropertyAsync("DVD_DISC_SKIP_MENUS");
+        sendGetPropertyAsync("DVD_DISC_SKIP_PREVIEWS");
+        sendGetPropertyAsync("DVD_DISC_NATIVE_FALLBACK");
+        sendGetPropertyAsync("VIDEO_PLAYBACK_RATE");
         sendBufferNow();
         // Now get capabilities properties for this specific miniclient
         // The default is to use image maps for text rendering
@@ -4454,6 +4466,28 @@ public class MiniClientSageRenderer extends SageRenderer
             }
           }
         }
+
+        String mediaStateUrlProp = recvr.getStringReply();
+        mediaStateUrlSupport = "TRUE".equalsIgnoreCase(mediaStateUrlProp);
+        if (Sage.DBG) System.out.println("MiniClient MEDIA_STATE_URL=" + mediaStateUrlProp);
+
+        String dvdRemoteNavProp = recvr.getStringReply();
+        dvdRemoteNavigationSupport = "TRUE".equalsIgnoreCase(dvdRemoteNavProp);
+        if (Sage.DBG) System.out.println("MiniClient DVD_REMOTE_NAV=" + dvdRemoteNavProp);
+
+        dvdDiscTransports = recvr.getStringReply();
+        if (dvdDiscTransports == null)
+          dvdDiscTransports = "";
+        dvdDiscPolicy = normalizeDvdDiscPolicy(recvr.getStringReply());
+        dvdDiscSkipMenus = "TRUE".equalsIgnoreCase(recvr.getStringReply());
+        dvdDiscSkipPreviews = "TRUE".equalsIgnoreCase(recvr.getStringReply());
+        dvdDiscNativeFallback = "TRUE".equalsIgnoreCase(recvr.getStringReply());
+        String videoPlaybackRateProp = recvr.getStringReply();
+        videoPlaybackRateSupport = isVideoPlaybackRateSupported(videoPlaybackRateProp);
+        if (Sage.DBG) System.out.println("MiniClient DVD policy=" + dvdDiscPolicy +
+            " transports=" + dvdDiscTransports + " skipMenus=" + dvdDiscSkipMenus +
+            " skipPreviews=" + dvdDiscSkipPreviews + " nativeFallback=" + dvdDiscNativeFallback);
+        if (Sage.DBG) System.out.println("MiniClient VIDEO_PLAYBACK_RATE=" + videoPlaybackRateProp);
 
         if (advImageCaching)
         {
@@ -6543,6 +6577,53 @@ public class MiniClientSageRenderer extends SageRenderer
     return frameStepSupport;
   }
 
+  public boolean supportsMediaStateUrl()
+  {
+    return mediaStateUrlSupport;
+  }
+
+  public boolean supportsVideoPlaybackRate()
+  {
+    return videoPlaybackRateSupport;
+  }
+
+  static boolean isVideoPlaybackRateSupported(String propertyValue)
+  {
+    // The value describes the client's supported rate ranges. Treat any
+    // non-empty value as negotiation success; the client remains responsible
+    // for clamping a requested rate to the ranges it advertised.
+    return propertyValue != null && propertyValue.trim().length() > 0;
+  }
+
+  public boolean supportsRemoteDVDNavigation()
+  {
+    return dvdRemoteNavigationSupport;
+  }
+
+  public boolean supportsDvdDiscMimTransport()
+  {
+    String[] transports = dvdDiscTransports.split(",");
+    for (int i = 0; i < transports.length; i++)
+      if ("mim_ts_v1".equalsIgnoreCase(transports[i].trim()))
+        return true;
+    return false;
+  }
+
+  static String normalizeDvdDiscPolicy(String value)
+  {
+    // Unknown future values must fail safely to auto rather than selecting a
+    // transport that this server does not understand.
+    if ("native".equalsIgnoreCase(value) || "hybrid".equalsIgnoreCase(value) ||
+        "mim_main_feature".equalsIgnoreCase(value))
+      return value.toLowerCase(java.util.Locale.ROOT);
+    return "auto";
+  }
+
+  public String getDvdDiscPolicy() { return dvdDiscPolicy; }
+  public boolean isDvdDiscSkipMenus() { return dvdDiscSkipMenus; }
+  public boolean isDvdDiscSkipPreviews() { return dvdDiscSkipPreviews; }
+  public boolean isDvdDiscNativeFallback() { return dvdDiscNativeFallback; }
+
   public java.awt.Dimension getMaxClientResolution()
   {
     return maxClientResolution;
@@ -7435,6 +7516,14 @@ public class MiniClientSageRenderer extends SageRenderer
   private String fixedPushRemuxFormatProp;
   private boolean detailedPushBufferStats;
   private boolean pushBufferSeeking;
+  private boolean mediaStateUrlSupport;
+  private boolean dvdRemoteNavigationSupport;
+  private String dvdDiscTransports = "";
+  private String dvdDiscPolicy = "auto";
+  private boolean dvdDiscSkipMenus;
+  private boolean dvdDiscSkipPreviews;
+  private boolean dvdDiscNativeFallback = true;
+  private boolean videoPlaybackRateSupport;
 
   private java.awt.Dimension maxClientResolution;
   private sage.media.format.VideoFormat displayResolution;
