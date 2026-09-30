@@ -1943,6 +1943,16 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
             oldTime = getMediaTimeMillis();
             oldStream = (daJob.dvdControlCode == DVD_CONTROL_AUDIO_CHANGE) ? dplayer.getDVDLanguage() : dplayer.getDVDSubpicture();
           }
+          if (dplayer instanceof MiniDVDPlayerIdentifier &&
+              DVDPlaybackControl.menuActivationOwnsLanguageSelections(
+                  daJob.dvdControlCode, dplayer.getDVDDomain()))
+          {
+            // The authored button command now owns both selections. Do not
+            // replace its SetSTN result with SageTV's defaults after the next
+            // menu-to-title transition.
+            alreadySelectedDefaultDVDAudio = true;
+            alreadySelectedDefaultDVDSub = true;
+          }
           dplayer.playControlEx(daJob.dvdControlCode, daJob.dvdParam1, daJob.dvdParam2);
           if (dplayer instanceof MiniDVDPlayerIdentifier && (daJob.dvdControlCode == DVD_CONTROL_AUDIO_CHANGE ||
               daJob.dvdControlCode == DVD_CONTROL_SUBTITLE_CHANGE || daJob.dvdControlCode == DVD_CONTROL_SUBTITLE_TOGGLE))
@@ -1986,8 +1996,15 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
           else if (currFile != null && currFile.isDVD() && !alreadySkippedDVDMenus && uiMgr.getBoolean(prefs + SKIP_DVD_MENUS, false))
           {
             if (Sage.DBG) System.out.println("DVD MENU SKIP attempt");
-            // Attempt to do the chapter/title skip to the beginning of the DVD
-            dplayer.playControlEx(DVD_CONTROL_TITLE_SET, 1, 1);
+            // Title 1 is frequently a studio logo or preview. The Java/Ogle
+            // player can inspect authored title durations and choose the main
+            // feature; local and legacy DVD players retain the historical
+            // title-1 fallback because their navigation APIs expose no such
+            // selection helper.
+            int mainFeatureTitle = dplayer instanceof MiniDVDPlayer ?
+                ((MiniDVDPlayer) dplayer).getDVDMainFeatureTitle() : 1;
+            if (Sage.DBG) System.out.println("DVD main feature title=" + mainFeatureTitle);
+            dplayer.playControlEx(DVD_CONTROL_TITLE_SET, mainFeatureTitle, mainFeatureTitle);
             alreadySkippedDVDMenus = true;
           }
         }
@@ -1996,7 +2013,13 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
           if (Sage.DBG) e.printStackTrace();
           Catbert.processUISpecificHook("MediaPlayerError", new Object[] { Sage.rez("DVD"), e.getMessage() }, uiMgr, true);
         }
-        watchQueue.remove(daJob);
+        finally
+        {
+          // A malformed navigation command must not leave the same direct
+          // control job at the queue head. Without this, an unchecked DVD
+          // failure can become a tight retry loop on the VideoFrame worker.
+          watchQueue.remove(daJob);
+        }
 
         // If the info fields for the DVD have changed then fire the hook
         int newDVDTitle = dplayer.getDVDTitle();
@@ -3274,6 +3297,10 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
     long circSize = 0;
     if (currFile.isDVD() || currFile.isBluRay())
     {
+      // Disc seeks historically bypassed the normal file bounds below. Clamp
+      // them explicitly so Skip Back near title start cannot send a negative
+      // PTS or sector request into the Java DVD VM.
+      milliTime = DVDPlaybackControl.clampDiscSeekTime(milliTime);
       // Update this milliTime after its initially loaded so we can use the proper bluray title
       newSeg = 0;
       newSegFile = currFile.getFile(newSeg);
@@ -4979,8 +5006,12 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
           // Check if it's a Placeshifter, if it is then DVD playback is not supported
           if (!Sage.getBoolean("enable_ps_dvd_playback", false) && uiMgr.getRootPanel().getRenderEngine() instanceof MiniClientSageRenderer)
           {
-            String ipdp = ((MiniClientSageRenderer) uiMgr.getRootPanel().getRenderEngine()).getInputDevsProp();
-            if (ipdp != null && ipdp.indexOf("MOUSE") != -1)
+            MiniClientSageRenderer dvdRenderer =
+                (MiniClientSageRenderer) uiMgr.getRootPanel().getRenderEngine();
+            if (!DVDPlaybackControl.shouldUseServerNavigation(
+                dvdRenderer.supportsRemoteDVDNavigation(), dvdRenderer.getInputDevsProp(),
+                dvdRenderer.getDvdDiscPolicy(), dvdRenderer.isDvdDiscNativeFallback(),
+                DVDStreamTransformRegistry.findAvailable(dvdRenderer.getDvdDiscTransports()) != null))
               return false;
           }
           return true;
@@ -5091,8 +5122,12 @@ public final class VideoFrame extends BasicVideoFrame implements Runnable
       {
         if (uiMgr.getRootPanel().getRenderEngine() instanceof MiniClientSageRenderer)
         {
-          String ipdp = ((MiniClientSageRenderer) uiMgr.getRootPanel().getRenderEngine()).getInputDevsProp();
-          if (ipdp != null && ipdp.indexOf("MOUSE") != -1)
+          MiniClientSageRenderer dvdRenderer =
+              (MiniClientSageRenderer) uiMgr.getRootPanel().getRenderEngine();
+          if (!DVDPlaybackControl.shouldUseServerNavigation(
+              dvdRenderer.supportsRemoteDVDNavigation(), dvdRenderer.getInputDevsProp(),
+              dvdRenderer.getDvdDiscPolicy(), dvdRenderer.isDvdDiscNativeFallback(),
+              DVDStreamTransformRegistry.findAvailable(dvdRenderer.getDvdDiscTransports()) != null))
             return new MiniPlayer();
         }
         try

@@ -3635,8 +3635,20 @@ public class Wizard implements EPGDBPublic2
     return mf;
   }
 
-  private File checkForDVDPath(File f)
+  /**
+   * Normalizes the common ways callers identify a DVD-Video volume.
+   *
+   * Library scanning stores the VIDEO_TS directory as the DVD MediaFile, but
+   * external/local-playback callers commonly provide the parent volume folder
+   * or its VIDEO_TS.VOB file. Resolve all three forms before consulting the
+   * database so local playback receives the DVD media mask and format instead
+   * of a format-less directory. Existing VIDEO_TS-directory callers are
+   * returned unchanged, preserving the historical path contract.
+   */
+  static File normalizePlayableDiscPath(File f)
   {
+    if (f == null)
+      return null;
     if (f.getName().equalsIgnoreCase("VIDEO_TS.VOB") && f.getParentFile() != null &&
         (new File(f.getParentFile(), "VIDEO_TS.IFO").isFile() || new File(f.getParentFile(), "video_ts.ifo").isFile()))
     {
@@ -3644,7 +3656,24 @@ public class Wizard implements EPGDBPublic2
       if (Sage.DBG) System.out.println("DVD file playback detected; use the parent DVD folder instead");
       return f.getParentFile();
     }
+    if (f.isDirectory())
+    {
+      File videoTs = new File(f, "VIDEO_TS");
+      if (!videoTs.isDirectory())
+        videoTs = new File(f, "video_ts");
+      if (videoTs.isDirectory() &&
+          (new File(videoTs, "VIDEO_TS.IFO").isFile() || new File(videoTs, "video_ts.ifo").isFile()))
+      {
+        if (Sage.DBG) System.out.println("DVD volume root playback detected; use the VIDEO_TS folder instead");
+        return videoTs;
+      }
+    }
     return f;
+  }
+
+  private File checkForDVDPath(File f)
+  {
+    return normalizePlayableDiscPath(f);
   }
 
   // This can take a file path (uses the DB to resolve first, then local filesystem, then server's filesystem if we're a client),

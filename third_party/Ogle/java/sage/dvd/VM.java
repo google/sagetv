@@ -1589,7 +1589,10 @@ public class VM
           break;
           // Added types for indirectly specified links/calls with params comments
         case LINK_PGCN: // pgcn
-          set_PGCN(operand1);
+          // Ignore a stale or malformed program-chain link instead of
+          // dereferencing outside the parsed PGC table.
+          if(!set_PGCN(operand1))
+            return false;
           link = play_PGC();
           break;
         case LINK_PTTN: // hl_bn, pttn
@@ -1768,8 +1771,17 @@ public class VM
     pgcit_t pgcit;
 
     if(debugVM) System.out.println("set PGCN "+pgcN);
-    if(pgcN<1) return false;
     pgcit = get_PGCIT();
+    int declaredCount = pgcit == null ? 0 : pgcit.nr_of_pgci_srp.get();
+    int actualCount = pgcit == null || pgcit.pgci_srp == null ? 0 : pgcit.pgci_srp.length;
+    if(!isValidProgramChainNumber(pgcN, declaredCount, actualCount) ||
+        pgcit.pgci_srp[pgcN - 1] == null || pgcit.pgci_srp[pgcN - 1].pgc == null)
+    {
+      System.out.println("Ignoring invalid DVD PGC link target " + pgcN +
+          " in domain " + domain + " VTS " + vts +
+          " (declared=" + declaredCount + " parsed=" + actualCount + ")");
+      return false;
+    }
     pgc = pgcit.pgci_srp[pgcN - 1].pgc;
     program = 1;
 
@@ -1777,6 +1789,11 @@ public class VM
       SPRM[TT_PGCN] = pgcN;
 
     return true;
+  }
+
+  static boolean isValidProgramChainNumber(int pgcN, int declaredCount, int actualCount)
+  {
+    return pgcN >= 1 && pgcN <= declaredCount && pgcN <= actualCount;
   }
 
   private boolean set_PGN()
@@ -2722,6 +2739,64 @@ public class VM
   public synchronized int getDVDTotalTitles()
   {
     return vmgifo.tt_srpt.nr_of_srpts.get();
+  }
+
+  /**
+   * Returns the authored title whose first referenced PGC has the greatest
+   * playback duration. Title 1 is only a trailer or logo on many discs, so it
+   * is not a reliable implementation of "skip menus." Malformed or incomplete
+   * IFO entries are ignored independently, and title 1 remains the conservative
+   * compatibility fallback if no valid duration can be read.
+   */
+  public synchronized int getDVDMainFeatureTitle()
+  {
+    int bestTitle = 1;
+    long bestDuration = -1;
+    if(vmgifo == null || vmgifo.tt_srpt == null || vmgifo.tt_srpt.title == null)
+      return bestTitle;
+    int titleCount = vmgifo.tt_srpt.nr_of_srpts.get();
+    for(int titleNumber = 1; titleNumber <= titleCount; titleNumber++)
+    {
+      DVDSource titleFile = null;
+      try
+      {
+        title_info_t title = vmgifo.tt_srpt.title[titleNumber - 1];
+        int titleSet = title.title_set_nr.get();
+        int titleWithinSet = title.vts_ttn.get();
+        titleFile = reader.openFile(titleSet, DVDReader.DVD_TYPE_IFO);
+        if(titleFile == null)
+          continue;
+        IFO titleIfo = new IFO(titleFile);
+        if(titleIfo.vts_ptt_srpt == null || titleIfo.vts_pgcit == null ||
+            titleWithinSet <= 0 || titleWithinSet > titleIfo.vts_ptt_srpt.title.length ||
+            titleIfo.vts_ptt_srpt.title[titleWithinSet - 1].ptt.length == 0)
+          continue;
+        int pgcNumber = titleIfo.vts_ptt_srpt.title[titleWithinSet - 1].ptt[0].pgcn.get();
+        if(pgcNumber <= 0 || pgcNumber > titleIfo.vts_pgcit.pgci_srp.length ||
+            titleIfo.vts_pgcit.pgci_srp[pgcNumber - 1].pgc == null)
+          continue;
+        long duration = titleIfo.vts_pgcit.pgci_srp[pgcNumber - 1].pgc.playback_time.toPTS();
+        if(duration > bestDuration)
+        {
+          bestDuration = duration;
+          bestTitle = titleNumber;
+        }
+      }
+      catch(Throwable malformedTitle)
+      {
+        // One damaged title table must not prevent the remaining authored
+        // titles from being evaluated or stop DVD playback entirely.
+        if(sage.MiniDVDPlayer.DEBUG_MINIDVD)
+          System.out.println("Ignoring malformed DVD title " + titleNumber +
+              " while selecting main feature: " + malformedTitle);
+      }
+      finally
+      {
+        if(titleFile != null)
+          titleFile.close();
+      }
+    }
+    return bestTitle;
   }
 
   public synchronized int getDVDChapter()
