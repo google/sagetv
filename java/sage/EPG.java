@@ -635,14 +635,22 @@ public final class EPG implements Runnable
 
         boolean scheduledUpdateEnabled = Sage.getBoolean("wizard/" + SCHEDULED_EPG_UPDATE, false);
         boolean scheduledExpandDue = false;
+        long scheduledExpandWait = Long.MAX_VALUE;
         if (scheduledUpdateEnabled)
         {
           int scheduledOffset = Sage.getInt("wizard/" + SCHEDULED_EPG_UPDATE_OFFSET, 0);
           if (Sage.DBG) System.out.println("EPG next scheduled maintenance offset is " + scheduledOffset);
           nextScheduledEPGUpdateTime = getNextScheduledEPGUpdateTime();
           long scheduledWindowStart = nextScheduledEPGUpdateTime - MAINTENANCE_FREQ;
-          scheduledExpandDue = (scheduledWindowStart < Sage.time()) && (getLastRun() < scheduledWindowStart);
-          if (scheduledExpandDue && Sage.DBG)
+          long now = Sage.time();
+          synchronized (sources)
+          {
+            for (EPGDataSource source : sources)
+              scheduledExpandWait = Math.min(scheduledExpandWait,
+                getScheduledUpdateWait(source, scheduledWindowStart, now));
+          }
+          scheduledExpandDue = scheduledExpandWait != Long.MAX_VALUE;
+          if (scheduledExpandDue && scheduledExpandWait == 0 && Sage.DBG)
             System.out.println("EPG scheduled update window is due; running EPG expand");
         }
 
@@ -680,7 +688,7 @@ public final class EPG implements Runnable
                 //determine the wait until the next scheduled update time
                 //calc the next time as the user may have changed the schedule settings
                 if (scheduledExpandDue)
-                  minWait = 0;
+                  minWait = Math.min(minWait, scheduledExpandWait);
                 else
                 {
                   nextScheduledEPGUpdateTime = getNextScheduledEPGUpdateTime();
@@ -877,6 +885,17 @@ public final class EPG implements Runnable
     }
   }
   
+  static long getScheduledUpdateWait(EPGDataSource source, long scheduledWindowStart, long now)
+  {
+    if (!source.getEnabled() || scheduledWindowStart >= now || source.getLastRun() >= scheduledWindowStart)
+      return Long.MAX_VALUE;
+
+    // Make expand() eligible for this window without resetting channel state or SD retry delays.
+    if (source.getExpandedUntil() != 0)
+      source.setExpandedUntil(0);
+    return source.getTimeTillUpdate();
+  }
+
   private long getNextScheduledEPGUpdateTime(){
     java.util.Calendar cal = new java.util.GregorianCalendar();
     cal.set(java.util.Calendar.MINUTE, 0);

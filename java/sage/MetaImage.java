@@ -49,6 +49,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Vector;
 import java.util.WeakHashMap;
+import sage.epg.sd.SDImages;
 import sage.epg.sd.SDRipper;
 import sage.epg.sd.SDSession;
 import sage.epg.sd.SDUtils;
@@ -1527,7 +1528,7 @@ public class MetaImage
               deleteLocalCacheFile();
             }
           } else {
-            if (src.toString().startsWith(SDSession.URL_VERSIONED))
+            if (src.toString().startsWith(SDSession.URL_VERSIONED) || SDImages.isSDLogoURL((URL) src))
             {
               if (Sage.DBG) System.out.println("GetJavaImage(): SD image cache file is unavailable; refusing direct URL load for " + src);
               setJavaImage(ImageUtils.getNullImage(), imageIndex, javaCacheReserve);
@@ -2459,10 +2460,10 @@ public class MetaImage
     }
     else if (src instanceof URL)
     {
-      // SD image URLs require an authenticated request with a proper User-Agent header.
+      // SD API images require authentication; station logos also need a proper User-Agent.
       // If localCacheFile was not set (loadCacheFile failed), do not fall back to a plain
       // openStream() call which would send Java's default User-Agent to SD's servers.
-      if (src.toString().startsWith(SDSession.URL_VERSIONED))
+      if (src.toString().startsWith(SDSession.URL_VERSIONED) || SDImages.isSDLogoURL((URL) src))
         return null;
       try
       {
@@ -3244,6 +3245,11 @@ public class MetaImage
             myURLConn = myURL.openConnection();
             myURLConn.setConnectTimeout(30000);
             myURLConn.setReadTimeout(30000);
+            if (SDImages.isSDLogoURL(myURL))
+            {
+              // Direct station logos need no token, but must identify SageTV.
+              myURLConn.setRequestProperty("User-Agent", SDSession.USER_AGENT);
+            }
             if(src.toString().startsWith(SDSession.URL_VERSIONED)){
                 isSDURL = true;
                 //this is an SD supplied image so a token is required to retreive it

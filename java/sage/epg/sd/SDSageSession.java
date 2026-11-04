@@ -70,7 +70,7 @@ public class SDSageSession extends SDSession
     connection.setRequestProperty("Content-Type", "application/json; charset=utf-8");
     connection.setRequestProperty("Accept", "application/json");
     connection.setRequestProperty("Accept-Encoding", "deflate,gzip");
-    connection.setRequestProperty("Accept-Charset", "ISO-8859-1");
+    connection.setRequestProperty("Accept-Charset", "UTF-8");
     // PUT must have a length or we will not get a reply.
     connection.setRequestProperty("Content-Length", Integer.toString(len));
     //secret SD debug mode that will send requests to their debug server. Only enable when working with SD Support
@@ -143,7 +143,7 @@ public class SDSageSession extends SDSession
     connection.setRequestProperty("Content-Type", "application/json; charset=utf-8");
     connection.setRequestProperty("Accept", "application/json");
     connection.setRequestProperty("Accept-Encoding", "deflate,gzip");
-    connection.setRequestProperty("Accept-Charset", "ISO-8859-1");
+    connection.setRequestProperty("Accept-Charset", "UTF-8");
     // POST must have a length or we will not get a reply.
     connection.setRequestProperty("Content-Length", Integer.toString(len));
     //secret SD debug mode that will send requests to their debug server. Only enable when working with SD Support
@@ -232,7 +232,7 @@ public class SDSageSession extends SDSession
     connection.setRequestProperty("User-Agent", USER_AGENT);
     connection.setRequestProperty("Accept", "application/json");
     connection.setRequestProperty("Accept-Encoding", "deflate,gzip");
-    connection.setRequestProperty("Accept-Charset", "ISO-8859-1");
+    connection.setRequestProperty("Accept-Charset", "UTF-8");
     //secret SD debug mode that will send requests to their debug server. Only enable when working with SD Support
     if(Sage.getBoolean("debug_sd_support", false)) {
       connection.setRequestProperty("RouteTo", "debug");
@@ -315,7 +315,7 @@ public class SDSageSession extends SDSession
     connection.setRequestProperty("User-Agent", USER_AGENT);
     connection.setRequestProperty("Accept", "application/json");
     connection.setRequestProperty("Accept-Encoding", "deflate,gzip");
-    connection.setRequestProperty("Accept-Charset", "ISO-8859-1");
+    connection.setRequestProperty("Accept-Charset", "UTF-8");
     //secret SD debug mode that will send requests to their debug server. Only enable when working with SD Support
     if(Sage.getBoolean("debug_sd_support", false)) {
       connection.setRequestProperty("RouteTo", "debug");
