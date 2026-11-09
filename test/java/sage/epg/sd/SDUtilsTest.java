@@ -22,11 +22,20 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.lang.reflect.Field;
 import java.text.ParseException;
 import java.nio.charset.StandardCharsets;
 import java.util.TimeZone;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPOutputStream;
+import javax.net.ssl.HttpsURLConnection;
+import sage.epg.sd.gson.JsonObject;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class SDUtilsTest
 {
@@ -111,6 +120,55 @@ public class SDUtilsTest
     String decoded = new String(readAll(decodedStream), StandardCharsets.ISO_8859_1);
 
     assert payload.equals(decoded) : "Expected decoded deflate payload to match original payload.";
+  }
+
+  @Test(groups = {"gson", "schedulesDirect", "stream", "conversion"})
+  public void testStreamUnicode() throws Exception
+  {
+    String expected = "Nido de \u00e1guilas \u00f1 \u4e2d\u6587 \ud83d\ude00";
+    String[] payloads = {
+      "{\"code\":0,\"title\":\"Nido de \\u00e1guilas \\u00f1 \\u4e2d\\u6587 \\ud83d\\ude00\"}",
+      "{\"code\":0,\"title\":\"" + expected + "\"}"
+    };
+    // Exercise debug buffering without opening a log file or changing user settings.
+    Field debugWriterField = SDSession.class.getDeclaredField("debugWriter");
+    debugWriterField.setAccessible(true);
+    Object previousWriter = debugWriterField.get(null);
+    try
+    {
+      for (boolean debug : new boolean[] {false, true})
+      {
+        StringWriter debugOutput = new StringWriter();
+        debugWriterField.set(null, debug ? new PrintWriter(debugOutput) : null);
+        for (String payload : payloads)
+        {
+          for (String encoding : new String[] {"identity", "gzip", "deflate"})
+          {
+            byte[] bytes = payload.getBytes(StandardCharsets.UTF_8);
+            if ("gzip".equals(encoding))
+              bytes = gzip(bytes);
+            else if ("deflate".equals(encoding))
+              bytes = deflate(bytes);
+            HttpsURLConnection connection = mock(HttpsURLConnection.class);
+            when(connection.getResponseCode()).thenReturn(200);
+            when(connection.getContentEncoding()).thenReturn(encoding);
+            when(connection.getInputStream()).thenReturn(new ByteArrayInputStream(bytes));
+            try (InputStreamReader reader = SDUtils.getStream(connection))
+            {
+              JsonObject result = SDUtils.GSON.fromJson(reader, JsonObject.class);
+              assert expected.equals(result.get("title").getAsString()) :
+                "Unicode changed with debug=" + debug + ", encoding=" + encoding;
+            }
+          }
+        }
+        if (debug)
+          assert debugOutput.toString().contains(expected);
+      }
+    }
+    finally
+    {
+      debugWriterField.set(null, previousWriter);
+    }
   }
 
   private static byte[] gzip(byte[] source) throws IOException

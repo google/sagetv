@@ -101,7 +101,7 @@ public class SDUtils
     connection.setRequestProperty("User-Agent", USER_AGENT);
     connection.setRequestProperty("Accept", "application/json");
     connection.setRequestProperty("Accept-Encoding", "deflate,gzip");
-    connection.setRequestProperty("Accept-Charset", "ISO-8859-1");
+    connection.setRequestProperty("Accept-Charset", "UTF-8");
     //secret SD debug mode that will send requests to their debug server. Only enable when working with SD Support
     if(Sage.getBoolean("debug_sd_support", false)) {
       connection.setRequestProperty("RouteTo", "debug");
@@ -293,7 +293,7 @@ public class SDUtils
       
       // Convert the parsed element back to a reader for normal processing
       String jsonString = element.toString();
-      reader = new InputStreamReader(new ByteArrayInputStream(jsonString.getBytes(StandardCharsets.UTF_8)), SDSession.IN_CHARSET);
+      reader = new InputStreamReader(new ByteArrayInputStream(jsonString.getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
     }
     
     if (SDSession.debugEnabled())
@@ -309,7 +309,7 @@ public class SDUtils
 
       char[] transferBuffer = new char[32768];
       ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-      OutputStreamWriter writer = new OutputStreamWriter(outputStream);
+      OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
       int bytesRead;
 
       while (true)
@@ -325,7 +325,7 @@ public class SDUtils
 
       SDSession.writeDebugLine("");
       writer.flush();
-      reader = new InputStreamReader(new ByteArrayInputStream(outputStream.toByteArray()), SDSession.IN_CHARSET);
+      reader = new InputStreamReader(new ByteArrayInputStream(outputStream.toByteArray()), StandardCharsets.UTF_8);
     }
 
     return reader;

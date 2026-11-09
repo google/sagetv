@@ -83,7 +83,7 @@ public abstract class SDSession
   // The character set to be used for outgoing communications.
   protected static final Charset OUT_CHARSET = StandardCharsets.UTF_8;
   // The expected character set to be used for incoming communications.
-  public static final Charset IN_CHARSET = StandardCharsets.ISO_8859_1;
+  public static final Charset IN_CHARSET = StandardCharsets.UTF_8;
 
   // These are set in the static constructor because they can throw format exceptions.
   // Returns a token if the credentials are valid.

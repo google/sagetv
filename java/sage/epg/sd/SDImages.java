@@ -28,6 +28,7 @@ public class SDImages
       "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/"; // *.png
   private static final short LOGO_S3_AWS = 0x80;
   private static final short LOGO_HAS_ID = 0x40;
+  private static final short LOGO_FULL_URL = 0x20;
 
   // Shows, Movies, Series and Persons
   private static final String SOURCE_S3_AWS_STRING =
@@ -348,7 +349,13 @@ public class SDImages
     logoID[0] = 0;
 
     byte attributes = 0;
-    if (url.startsWith(LOGO_S3_AWS_STRING))
+    if (!url.startsWith("https://") || !url.endsWith(".png") ||
+      url.indexOf('?') != -1 || url.indexOf('#') != -1)
+    {
+      // Preserve URLs that cannot be reconstructed by the legacy PNG encoding.
+      attributes |= LOGO_FULL_URL;
+    }
+    else if (url.startsWith(LOGO_S3_AWS_STRING))
     {
       attributes |= LOGO_S3_AWS;
       int urlLength = LOGO_S3_AWS_STRING.length();
@@ -401,10 +408,24 @@ public class SDImages
     return returnValue;
   }
 
+  // Current logo servers; legacy storage prefixes above remain for decoding saved URLs.
+  private static final String LOGO_CDN_HOST = "logos.json.schedulesdirect.org";
+  private static final String LOGO_S3_HOST = "schedulesdirect-api20141201-logos.s3.dualstack.us-east-1.amazonaws.com";
+
+  public static boolean isSDLogoURL(java.net.URL url)
+  {
+    return url != null && "https".equals(url.getProtocol()) &&
+      (LOGO_CDN_HOST.equalsIgnoreCase(url.getHost()) || LOGO_S3_HOST.equalsIgnoreCase(url.getHost())) &&
+      url.getPath().startsWith("/stationLogos/");
+  }
+
   public static String decodeLogoURL(byte[] url, int logoID)
   {
     if (url.length == 0)
       return null;
+
+    if ((url[0] & LOGO_FULL_URL) != 0)
+      return new String(url, 1, url.length - 1, StandardCharsets.UTF_8);
 
     if ((url[0] & LOGO_S3_AWS) != 0)
     {

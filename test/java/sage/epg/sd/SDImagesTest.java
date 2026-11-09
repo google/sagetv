@@ -25,6 +25,7 @@ import sage.epg.sd.json.map.station.SDStation;
 import sage.epg.sd.json.programs.SDProgram;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -112,6 +113,86 @@ public class SDImagesTest extends DeserializeTest
     byte[][] packedImages = SDImages.encodeEpisodeImage(program.getEpisodeImage(), showcardID);
     assert packedImages.length == 2;
     assert SDImages.getImageCount(SDImages.getSDIndexForShowType(Show.IMAGE_PHOTO_THUMB_TALL), packedImages) == 1;
+  }
+
+  @Test(groups = {"schedulesDirect", "images", "channelLogo" })
+  public void channelLogoURLRoundTripTest()
+  {
+    String[] urls = {
+      "https://logos.json.schedulesdirect.org/stationLogos/s28711_dark_360w_270h.png?v=c67e14989b4756c3c672",
+      "https://logos.json.schedulesdirect.org/stationLogos/s28711_dark_360w_270h.png?v=123&other=value.png",
+      "https://schedulesdirect-api20141201-logos.s3.dualstack.us-east-1.amazonaws.com/stationLogos/s28711_dark_360w_270h.png",
+      "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s28711_h3_aa.png?v=c67e14989b4756c3c672",
+      "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s28711_h3_aa.png",
+      "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/custom.png",
+      "https://schedulesdirect-api20141201.s3.us-east-1.amazonaws.com/assets/stationLogos/s28711_dark_360w_270h.png",
+      "https://logos.json.schedulesdirect.org/stationLogos/s28711.jpg",
+      "https://logos.json.schedulesdirect.org/stationLogos/s28711",
+      "https://logos.json.schedulesdirect.org/stationLogos/s28711.png#logo.png",
+      "http://logos.json.schedulesdirect.org/stationLogos/s28711.png"
+    };
+
+    int[] logoID = new int[1];
+    for (String url : urls)
+    {
+      byte[] encodedLogo = SDImages.encodeLogoURL(url, logoID);
+      String decodedLogo = SDImages.decodeLogoURL(encodedLogo, logoID[0]);
+      assert url.equals(decodedLogo) : "Logo URL changed: " + decodedLogo;
+    }
+  }
+
+  @Test(groups = {"schedulesDirect", "images", "channelLogo" })
+  public void sdLogoURLIdentificationTest() throws IOException
+  {
+    String[] logoURLs = {
+      "https://logos.json.schedulesdirect.org/stationLogos/s28711_dark_360w_270h.png?v=c67e14989b4756c3c672",
+      "https://LOGOS.JSON.SCHEDULESDIRECT.ORG/stationLogos/s28711.png",
+      "https://schedulesdirect-api20141201-logos.s3.dualstack.us-east-1.amazonaws.com/stationLogos/s28711_dark_360w_270h.png"
+    };
+    for (String url : logoURLs)
+      assert SDImages.isSDLogoURL(new java.net.URL(url)) : "SD logo not recognized: " + url;
+
+    String[] otherURLs = {
+      "http://logos.json.schedulesdirect.org/stationLogos/s28711.png",
+      "https://logos.json.schedulesdirect.org/other/s28711.png",
+      "https://schedulesdirect-api20141201-logos.s3.dualstack.us-east-1.amazonaws.com/other/s28711.png",
+      "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s28711_h3_aa.png",
+      "https://schedulesdirect-api20141201.s3.us-east-1.amazonaws.com/assets/stationLogos/s28711.png",
+      "https://logos.json.schedulesdirect.org.example.com/stationLogos/s28711.png",
+      "https://logos.json.schedulesdirect.org@other.example.com/stationLogos/s28711.png",
+      "https://other.example.com/stationLogos/s28711.png",
+      "https://s3.amazonaws.com/other/assets/stationLogos/s28711.png",
+      "https://s3.amazonaws.com/schedulesdirect/assets/p123.jpg",
+      "https://schedulesdirect-api20141201.s3.us-east-1.amazonaws.com/assets/p123.jpg",
+      "https://json.schedulesdirect.org/20141201/image/example.jpg",
+      "ftp://logos.json.schedulesdirect.org/stationLogos/s28711.png"
+    };
+    for (String url : otherURLs)
+      assert !SDImages.isSDLogoURL(new java.net.URL(url)) : "Unrelated URL recognized as SD logo: " + url;
+    assert !SDImages.isSDLogoURL(null);
+  }
+
+  @Test(groups = {"schedulesDirect", "images", "channelLogo" })
+  public void legacyChannelLogoDecodingTest()
+  {
+    // Construct previously stored records independently of the current encoder.
+    String[] payloads = {" h3_aa", " custom", " logos.example.org/station"};
+    int[] attributes = {0xC0, 0x80, 0};
+    String[] expected = {
+      "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/s28711_h3_aa.png",
+      "https://s3.amazonaws.com/schedulesdirect/assets/stationLogos/custom.png",
+      "https://logos.example.org/station.png"
+    };
+
+    for (int i = 0; i < payloads.length; i++)
+    {
+      byte[] encodedLogo = payloads[i].getBytes(StandardCharsets.UTF_8);
+      encodedLogo[0] = (byte) attributes[i];
+      assert expected[i].equals(SDImages.decodeLogoURL(encodedLogo, 28711));
+      int[] logoID = new int[1];
+      assert java.util.Arrays.equals(encodedLogo, SDImages.encodeLogoURL(expected[i], logoID));
+    }
+    assert SDImages.decodeLogoURL(new byte[0], 0) == null;
   }
 
   @Test(groups = {"gson", "schedulesDirect", "images", "channelLogo" })
