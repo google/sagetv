@@ -22,6 +22,7 @@ param(
 	[switch]$nj,
 	[switch]$u,
 	[switch]$Java,
+    [string]$SupportFilesPath = "",
 	[switch]$h
 )
  
@@ -78,6 +79,9 @@ if ( $h -Or $PSBoundParameters.Count -eq 0 ) {
 	Write-Host
 	Write-Host "         -Java       " -ForegroundColor White -NoNewline
 	Write-Host " - include Java in the build - otherwise java redistributable downloads as required"
+        Write-Host
+        Write-Host "         -SupportFilesPath <path>" -ForegroundColor White -NoNewline
+        Write-Host " - source root for Windows-only support files (default: sibling support-files folder)"
 	Write-Host
 	Write-Host "Note:    Return code is 0 if all targets processed successfully,"
 	Write-Host "         1 if any failures."
@@ -97,6 +101,75 @@ function log {
 	)
     $calling = Get-PSCallStack | Select-Object FunctionName -Skip 1 -First 1
     Write-Host "**" $calling "*" $logString
+}
+
+function Copy-SupportTree {
+    param(
+        [parameter(Mandatory = $true)]
+        [string]$RelativePath
+    )
+
+    $source = Join-Path $script:SupportFilesRoot $RelativePath
+    $destination = Join-Path $script:RepositoryRoot $RelativePath
+    if (-not (Test-Path -LiteralPath $source -PathType Container)) {
+        throw "Required support directory is missing: $source"
+    }
+
+    New-Item -ItemType Directory -Force -Path $destination | Out-Null
+    & robocopy.exe $source $destination /E /COPY:DAT /DCOPY:DAT /R:2 /W:2 /NFL /NDL /NJH /NJS | Out-Host
+    $copyExitCode = $LASTEXITCODE
+    if ($copyExitCode -ge 8) {
+        throw "Robocopy failed for '$RelativePath' with exit code $copyExitCode."
+    }
+}
+
+function Stage-SupportFiles {
+    $script:RepositoryRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot "..\..\.."))
+    $buildLock = Join-Path (Split-Path -Parent $script:RepositoryRoot) ".sagetv-build.lock"
+    if (Test-Path -LiteralPath $buildLock) {
+        throw "A Fedora build is active in the shared checkout. Wait for it to finish: $buildLock"
+    }
+    if ([string]::IsNullOrWhiteSpace($SupportFilesPath)) {
+        $script:SupportFilesRoot = Join-Path (Split-Path -Parent $script:RepositoryRoot) "support-files"
+    } else {
+        $script:SupportFilesRoot = [System.IO.Path]::GetFullPath($SupportFilesPath)
+    }
+
+    $requiredFiles = @(
+        "installer\SageSupportFiles\elf\SageTVPlayer.exe",
+        "installer\SageSupportFiles\SupportBinaries\SageTV\pthreadGC2.dll",
+        "installer\wix\SageTVSetup\redist\jre-8u191-windows-i586.exe",
+        "installer\wix\SageTVSetup\redist\jre-8u191-windows-x64.exe",
+        "buildwin\Win32\ImageLoader.dll",
+        "buildwin\Win32\swscale.dll",
+        "buildwin\Win32\FreetypeFontJNI.dll",
+        "buildwin\Win32\Mpeg2Transcoder.dll",
+        "buildwin\Win32\Pushreader.dll",
+        "buildwin\x64\ImageLoader.dll",
+        "buildwin\x64\swscale.dll",
+        "buildwin\x64\FreetypeFontJNI.dll",
+        "buildwin\x64\Mpeg2Transcoder.dll",
+        "buildwin\x64\Pushreader.dll"
+    )
+    foreach ($relativeFile in $requiredFiles) {
+        $source = Join-Path $script:SupportFilesRoot $relativeFile
+        if (-not (Test-Path -LiteralPath $source -PathType Leaf)) {
+            throw "Required support source file is missing: $source"
+        }
+    }
+
+    log "Staging Windows support files from" $script:SupportFilesRoot
+    Copy-SupportTree "installer\SageSupportFiles"
+    Copy-SupportTree "installer\wix\SageTVSetup\redist"
+    Copy-SupportTree "buildwin\Win32"
+    Copy-SupportTree "buildwin\x64"
+
+    foreach ($relativeFile in $requiredFiles) {
+        $destination = Join-Path $script:RepositoryRoot $relativeFile
+        if (-not (Test-Path -LiteralPath $destination -PathType Leaf)) {
+            throw "Required support file was not staged: $destination"
+        }
+    }
 }
 
 ####################################################################################################
@@ -199,17 +272,18 @@ function run-Gradle {
 		[string]$GradleTask
 	)
  
-	[boolean]$rc = $true
     log "Running Gradlew for task " $GradleTask
 
     $GradleBat = ".\runGradle.bat"
-    $Cmd = ("{0} *>&1" -f $GradleBat + " " + $GradleTask)
-    $ReturnOutput = Invoke-Expression $Cmd
-    $ReturnOutput | out-file ("{0}.log" -f $GradleBat)
-    Write-Host $ReturnOutput
-    #Remove-Item out-file ("{0}.log" -f $GradleBat)
-    Remove-Item ("{0}.log" -f $GradleBat)
+    & $GradleBat $GradleTask | Out-Host
+    $buildExitCode = $LASTEXITCODE
+    if ($buildExitCode -ne 0) {
+        log "Gradle task" $GradleTask "failed with exit code" $buildExitCode
+        return $false
+    }
+
     log "Gradlew for task " $GradleTask "completed"
+    return $true
 }
 
 ####################################################################################################
@@ -237,7 +311,7 @@ function Compile-Source {
         $targetconfig = "Service Release"
     }Else{
         $rc = $false
-    	return $rc 
+        return $rc
     }
 
     foreach ( $platform in $platforms ) {
@@ -252,9 +326,14 @@ function Compile-Source {
         $VCTargetsPath = $env:MSBuildVCTargets + "\\"
         $SolutionDir = (get-item $PSScriptRoot).parent.Parent.Parent.FullName + "\native\"
         & msbuild $solution /p:Configuration=$targetconfig /p:Platform=$CompilePlatform /p:SolutionDir=$SolutionDir /p:VCTargetsPath=$VCTargetsPath | Out-Host
+        $buildExitCode = $LASTEXITCODE
+        if ($buildExitCode -ne 0) {
+            log "Native build failed for" $targetconfig $CompilePlatform "with exit code" $buildExitCode
+            return $false
+        }
         log "Compile for " $targetconfig " complete"
-    } 
-    return $rc 
+    }
+    return $rc
 }
 
 ####################################################################################################
@@ -298,9 +377,25 @@ function Build-Target {
         }
         log "Building" $target " - " $InstallType " - " $InstallPlatform " - " $ProductVersion
         & msbuild SageTVSetupBootstrapper.wixproj /p:Configuration=$targetconfig /p:Platform=$InstallPlatform /p:InstallType=$InstallType /p:ProdVersionStr=$ProductVersion | Out-Host
+        $buildExitCode = $LASTEXITCODE
+        if ($buildExitCode -ne 0) {
+            log "Installer build failed for" $target $InstallPlatform "with exit code" $buildExitCode
+            return $false
+        }
+
+        $installerPrefix = switch ($target) {
+            "Server" { "SageTVSetup" }
+            "Client" { "SageTVClientSetup" }
+            "Placeshifter" { "SageTVPlaceshifterSetup" }
+        }
+        $expectedInstaller = Join-Path $PSScriptRoot ("release\{0}{1}\{2}{1}_{3}.exe" -f $targetconfig, $InstallPlatform, $installerPrefix, $ProductVersion)
+        if (-not (Test-Path -LiteralPath $expectedInstaller -PathType Leaf)) {
+            log "Installer output missing:" $expectedInstaller
+            return $false
+        }
         log "Build of" $target $InstallType $InstallPlatform $ProductVersion "complete"
-    } 
-	return $rc 
+    }
+    return $rc
 }
 
 ####################################################################################################
@@ -733,31 +828,57 @@ If ($xAll) { #do All Platforms
 
 Write-Host "Processing" $targets
 
+if (($result -eq 0) -and $nj) {
+    $requiredJavaArtifacts = @()
+    if ($javaJar) {
+        $requiredJavaArtifacts += "build\release\Sage.jar"
+    }
+    if ($javaMiniJar) {
+        $requiredJavaArtifacts += "build\minirelease\MiniClient.jar"
+    }
+    foreach ($relativeArtifact in $requiredJavaArtifacts) {
+        $artifactPath = Join-Path $PSScriptRoot ("..\..\..\" + $relativeArtifact)
+        if (-not (Test-Path -LiteralPath $artifactPath -PathType Leaf)) {
+            Write-Error "-nj was specified, but the Fedora-built Java artifact is missing: $artifactPath"
+            $result = 1
+        }
+    }
+}
+
+if (($buildneeded) -and (!$b) -and (!$j) -and (!$ni)) {
+    try {
+        Stage-SupportFiles
+    } catch {
+        Write-Error $_
+        $result = 1
+    }
+}
+
 # perform source build
-If ((!$i) -and (!$j) -and (!$nb) -and ($buildneeded)){
-    if ( -not ( Compile-Source "Release" ) ) {
+If (($result -eq 0) -and (!$i) -and (!$j) -and (!$nb) -and ($buildneeded)){
+    if (-not (Compile-Source "Release")) {
 	    $result = 1
     }
-    if ( -not ( Compile-Source "Client" ) ) {
+    if (($result -eq 0) -and (-not (Compile-Source "Client"))) {
 	    $result = 1
     }
-    if ( -not ( Compile-Source "Service" ) ) {
+    if (($result -eq 0) -and (-not (Compile-Source "Service"))) {
 	    $result = 1
     }
 }
 
 # build java source if required
-If ((!$b) -and (!$i) -and (!$nj)){
+If (($result -eq 0) -and (!$b) -and (!$i) -and (!$nj)){
     If ($javaJar){
-        run-Gradle sageJar
+        if (-not (run-Gradle sageJar)) { $result = 1 }
     }
-    If ($javaMiniJar){
-        run-Gradle miniclientJar
+    If (($result -eq 0) -and $javaMiniJar){
+        if (-not (run-Gradle miniclientJar)) { $result = 1 }
     }
 }
 
 # build all installer targets first
-If ((!$b) -and (!$j) -and (!$ni)){
+If (($result -eq 0) -and (!$b) -and (!$j) -and (!$ni)){
     foreach ( $target in $targets ) {
 	    if ( -not ( Build-Target $target ) ) {
 		    $result = 1
@@ -767,7 +888,7 @@ If ((!$b) -and (!$j) -and (!$ni)){
 
 # upload to bintray or github
 # Upload will only occur if the -u parameter is passed
-If ($u){
+If (($u) -and ($result -eq 0)){
 
     # one time prep for webRequests due to SSL
     PrepareWebRequest
