@@ -1,3 +1,6 @@
+@echo off
 pushd ..\..\..
-gradlew.bat %1
+call gradlew.bat %1
+set "gradleExitCode=%ERRORLEVEL%"
 popd
+exit /b %gradleExitCode%
