@@ -24,10 +24,14 @@ set _supportDir=%_projectDir%..\..\SageSupportFiles
 @REM do common processing needed for all configurations
 echo Preparing pre-build for %_configName% %_platform%
 @REM Start with a clean source folder
-rd /S /Q "%_targetDir%"
+if exist "%_targetDir%" (
+	rd /S /Q "%_targetDir%"
+	if errorlevel 1 goto CopyFailure
+)
 
 @REM Create the proper source folder for this configuration
 if not exist "%_targetDir%" mkdir "%_targetDir%"
+if errorlevel 1 goto CopyFailure
 
 if %_configName% == SetupServer goto ProcessServer
 if %_configName% == SetupClient goto ProcessClient
@@ -73,6 +77,7 @@ if errorlevel 1 goto CopyFailure
 
 @REM Copy the thirdparty JDIC components
 xcopy "%_projectDir%..\..\..\third_party\JDIC\jdic.jar" "%_targetDir%\SageTV\JARs\" /q
+if errorlevel 1 goto CopyFailure
 xcopy "%_projectDir%..\..\..\third_party\JDIC\packager.jar" "%_targetDir%\SageTV\JARs\" /q
 if errorlevel 1 goto CopyFailure
 xcopy "%_projectDir%..\..\..\third_party\JDIC\*.exe" "%_targetDir%\SageTV" /i /q /e
@@ -92,9 +97,13 @@ if errorlevel 1 goto CopyFailure
 
 @REM Copy the MinGW built Binaries - from buildwin\_vsplatform
 xcopy "%_projectDir%..\..\..\buildwin\%_vsplatform%\ImageLoader.dll" "%_targetDir%\SageTV\" /q
+if errorlevel 1 goto CopyFailure
 xcopy "%_projectDir%..\..\..\buildwin\%_vsplatform%\swscale.dll" "%_targetDir%\SageTV\" /q
+if errorlevel 1 goto CopyFailure
 xcopy "%_projectDir%..\..\..\buildwin\%_vsplatform%\FreetypeFontJNI.dll" "%_targetDir%\SageTV\" /q
+if errorlevel 1 goto CopyFailure
 xcopy "%_projectDir%..\..\..\buildwin\%_vsplatform%\Mpeg2Transcoder.dll" "%_targetDir%\SageTV\" /q
+if errorlevel 1 goto CopyFailure
 xcopy "%_projectDir%..\..\..\buildwin\%_vsplatform%\pushreader.dll" "%_targetDir%\Common\" /q
 if errorlevel 1 goto CopyFailure
 
@@ -104,9 +113,12 @@ if errorlevel 1 goto CopyFailure
 
 @REM generate Heat output for the above files
 heat dir "%_projectDir%\source\SageTV\SageTV" -sw -gg -dr INSTALLFOLDER -cg SageTVSourceComponents -var var.SourceSageTVSource -platform %_platform% -sfrag -out "%_projectDir%\source-dir-sagetv.wxs"
+if errorlevel 1 goto PreBuildFailure
 heat dir "%_projectDir%\source\SageTV\Common" -sw -gg -dr INSTALLFOLDER -cg CommonSourceComponents -var var.SourceCommonSource -platform %_platform% -sfrag -out "%_projectDir%\source-dir-common.wxs"
+if errorlevel 1 goto PreBuildFailure
 @REM generate Heat output for the STVs
 heat dir "%_projectDir%\..\..\..\stvs\SageTV7" -gg -dr STVs -cg STVsComponents -var var.SourceSTV -platform %_platform% -sfrag -out "%_projectDir%\stvs-dir-sagetv7.wxs"
+if errorlevel 1 goto PreBuildFailure
 
 goto PreBuildSuccess
 
@@ -120,6 +132,7 @@ if errorlevel 1 goto CopyFailure
 
 @REM Copy the MinGW built Binaries - from buildwin\_vsplatform
 xcopy "%_projectDir%..\..\..\buildwin\%_vsplatform%\ImageLoader.dll" "%_targetDir%\Placeshifter\" /q
+if errorlevel 1 goto CopyFailure
 xcopy "%_projectDir%..\..\..\buildwin\%_vsplatform%\swscale.dll" "%_targetDir%\Placeshifter\" /q
 if errorlevel 1 goto CopyFailure
 
@@ -133,15 +146,20 @@ if errorlevel 1 goto CopyFailure
 
 @REM generate Heat output for the above files
 heat dir "%_projectDir%\source\SageTV\Placeshifter" -sw -gg -dr INSTALLFOLDER -cg PlaceshifterSourceComponents -var var.SourcePlaceshifterSource -platform %_platform% -sfrag -out "%_projectDir%\source-dir-placeshifter.wxs"
+if errorlevel 1 goto PreBuildFailure
 
 goto PreBuildSuccess
 
 @REM Failure labels
 :CopyFailure
 echo Pre-build processing for %_projectName% %_configName% %_platform% FAILED: Failed to copy file(s) to common source directory!
-@REM exit 1
+exit /b 1
+
+:PreBuildFailure
+echo Pre-build processing for %_projectName% %_configName% %_platform% FAILED.
+exit /b 1
 
 @REM Pre-build success
 :PreBuildSuccess
 echo Pre-build processing for %_projectName% %_configName% %_platform% completed OK.
-@REM exit 0
+exit /b 0
